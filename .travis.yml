@@ -1,0 +1,18 @@
+# Enable C++ support
+language: cpp
+
+# Compiler selection
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libopencv-dev
+
+# Build steps
+script:
+  - mkdir build
+  - cd build
+  - cmake .. && make
+
