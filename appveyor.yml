@@ -1,0 +1,13 @@
+environment:
+  matrix:
+     - GENERATOR: "Visual Studio 13"
+       CONFIG: Release
+
+build_script:
+  - mkdir build
+  - cd build
+  - cmake .. -G"Visual Studio 13"
+
+matrix:
+  fast_finish: true
+
