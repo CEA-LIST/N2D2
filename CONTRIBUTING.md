@@ -1,4 +1,11 @@
-<h1 id="i-tmp-title">Contributor Agreement</h1>
+<h1 id="i-tmp-title">Contributing</h1>
+
+<p>N2D2 design and development issues, bugs and feature requests are maintained by <a href="https://github.com/CEA-LIST/N2D2/issues">GitHub Issues</a>.</p>
+
+<p>N2D2 also welcomes all code contributions, through <a href="https://github.com/CEA-LIST/N2D2/pulls">Pull requests</a>. Before we can take them, please make sure to first read and understand the following Contributor Agreement.</p>
+
+
+<h2 id="i-tmp-title">Contributor Agreement</h2>
 
 <p>Thank you for your interest in contributing to <span id="i-tmp-project-name">N2D2</span> ("We" or "Us").</p>
  
@@ -6,10 +13,10 @@
 
 
 
-<h2 id="i-tmp-subtitle"><span id="i-tmp-contributor-type">Individual</span> Contributor <span id="i-tmp-contributor-exclusivity">Non-Exclusive</span> License Agreement</h2>
+<h3 id="i-tmp-subtitle"><span id="i-tmp-contributor-type">Individual</span> Contributor <span id="i-tmp-contributor-exclusivity">Non-Exclusive</span> License Agreement</h3>
 
  
-<h3>1. DEFINITIONS</h3>
+<h4>1. DEFINITIONS</h4>
 
 <section id="definition-option-2"><!-- Individual Contributor Agreement -->
 
@@ -30,7 +37,7 @@
 </section>
  
  
-<h3>2. LICENSE GRANT</h3>
+<h4>2. LICENSE GRANT</h4>
 
 
 
@@ -53,7 +60,7 @@
 </section>
 
  
-<h3>3. PATENTS</h3>
+<h4>3. PATENTS</h4>
  
 <section id="i-tmp-patent-option-1"><!-- Traditional Patent License -->
 
@@ -73,19 +80,19 @@
 
  
  
-<h3><span id="i-tmp-digit-disclaimer">4</span>. DISCLAIMER</h3>
+<h4><span id="i-tmp-digit-disclaimer">4</span>. DISCLAIMER</h4>
  
 <p>THE CONTRIBUTION IS PROVIDED "AS IS". MORE PARTICULARLY, ALL EXPRESS OR IMPLIED WARRANTIES INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE EXPRESSLY DISCLAIMED BY YOU TO US AND BY US TO YOU. TO THE EXTENT THAT ANY SUCH WARRANTIES CANNOT BE DISCLAIMED, SUCH WARRANTY IS LIMITED IN DURATION TO THE MINIMUM PERIOD PERMITTED BY LAW.</p>
 
-<h3><span id="i-tmp-digit-waiver">5</span>. Consequential Damage Waiver</h3>
+<h4><span id="i-tmp-digit-waiver">5</span>. Consequential Damage Waiver</h4>
  
 <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL YOU OR US BE LIABLE FOR ANY LOSS OF PROFITS, LOSS OF ANTICIPATED SAVINGS, LOSS OF DATA, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL AND EXEMPLARY DAMAGES ARISING OUT OF THIS AGREEMENT REGARDLESS OF THE LEGAL OR EQUITABLE THEORY (CONTRACT, TORT OR OTHERWISE) UPON WHICH THE CLAIM IS BASED.</p>
  
-<h3><span id="i-tmp-digit-approx-waiver">6</span>. Approximation of Disclaimer and Damage Waiver</h3>
+<h4><span id="i-tmp-digit-approx-waiver">6</span>. Approximation of Disclaimer and Damage Waiver</h4>
  
 <p>IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION <span id="i-tmp-digit-waiver-2">4</span> AND SECTION <span id="i-tmp-digit-approx-waiver-2">5</span> CANNOT BE GIVEN LEGAL EFFECT UNDER APPLICABLE LOCAL LAW, REVIEWING COURTS SHALL APPLY LOCAL LAW THAT MOST CLOSELY APPROXIMATES AN ABSOLUTE WAIVER OF ALL CIVIL LIABILITY IN CONNECTION WITH THE CONTRIBUTION.</p>
 
-<h3><span id="i-tmp-digit-term">7</span>. Term</h3>
+<h4><span id="i-tmp-digit-term">7</span>. Term</h4>
  
 <p><span id="i-tmp-digit-term-1">7.1</span> This Agreement shall come into effect upon Your acceptance of the terms and conditions.</p>
  
@@ -93,7 +100,7 @@
   
 <p><span id="i-tmp-digit-term-3">7.2</span> In the event of a termination of this Agreement Sections <span id="i-tmp-digit-term-special">4, 5, 6, 7 and 8</span> shall survive such termination and shall remain in full force thereafter. For the avoidance of doubt, Contributions  that are already licensed under a free and open source license at the date of the termination shall remain in full force after the termination of this Agreement.</p>
  
-<h3><span id="i-tmp-digit-misc">8</span>. Miscellaneous</h3>
+<h4><span id="i-tmp-digit-misc">8</span>. Miscellaneous</h4>
 
 <p><span id="i-tmp-digit-misc-1">8.1</span> This Agreement and all disputes, claims, actions, suits or other proceedings arising out of this agreement or relating in any way to it shall be governed by the laws of <span id="i-tmp-project-jurisdiction">France</span> excluding its private international law provisions.</p>
  
@@ -119,10 +126,10 @@
 
 
 
-<h2 id="e-tmp-subtitle"><span id="e-tmp-contributor-type">Entity</span> Contributor <span id="e-tmp-contributor-exclusivity">Non-Exclusive</span> License Agreement</h2>
+<h3 id="e-tmp-subtitle"><span id="e-tmp-contributor-type">Entity</span> Contributor <span id="e-tmp-contributor-exclusivity">Non-Exclusive</span> License Agreement</h3>
   
  
-<h3>1. DEFINITIONS</h3>
+<h4>1. DEFINITIONS</h4>
 
 <section id="definition-option-1"><!-- Entity Contributor Agreement -->
 
@@ -148,7 +155,7 @@
 </section>
 
  
-<h3>2. LICENSE GRANT</h3>
+<h4>2. LICENSE GRANT</h4>
 
 
 
@@ -171,7 +178,7 @@
 </section>
 
  
-<h3>3. PATENTS</h3>
+<h4>3. PATENTS</h4>
  
 <section id="e-tmp-patent-option-1"><!-- Traditional Patent License -->
 
@@ -191,19 +198,19 @@
 
  
  
-<h3><span id="e-tmp-digit-disclaimer">4</span>. DISCLAIMER</h3>
+<h4><span id="e-tmp-digit-disclaimer">4</span>. DISCLAIMER</h4>
  
 <p>THE CONTRIBUTION IS PROVIDED "AS IS". MORE PARTICULARLY, ALL EXPRESS OR IMPLIED WARRANTIES INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE EXPRESSLY DISCLAIMED BY YOU TO US AND BY US TO YOU. TO THE EXTENT THAT ANY SUCH WARRANTIES CANNOT BE DISCLAIMED, SUCH WARRANTY IS LIMITED IN DURATION TO THE MINIMUM PERIOD PERMITTED BY LAW.</p>
 
-<h3><span id="e-tmp-digit-waiver">5</span>. Consequential Damage Waiver</h3>
+<h4><span id="e-tmp-digit-waiver">5</span>. Consequential Damage Waiver</h4>
  
 <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL YOU OR US BE LIABLE FOR ANY LOSS OF PROFITS, LOSS OF ANTICIPATED SAVINGS, LOSS OF DATA, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL AND EXEMPLARY DAMAGES ARISING OUT OF THIS AGREEMENT REGARDLESS OF THE LEGAL OR EQUITABLE THEORY (CONTRACT, TORT OR OTHERWISE) UPON WHICH THE CLAIM IS BASED.</p>
  
-<h3><span id="e-tmp-digit-approx-waiver">6</span>. Approximation of Disclaimer and Damage Waiver</h3>
+<h4><span id="e-tmp-digit-approx-waiver">6</span>. Approximation of Disclaimer and Damage Waiver</h4>
  
 <p>IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION <span id="e-tmp-digit-waiver-2">4</span> AND SECTION <span id="e-tmp-digit-approx-waiver-2">5</span> CANNOT BE GIVEN LEGAL EFFECT UNDER APPLICABLE LOCAL LAW, REVIEWING COURTS SHALL APPLY LOCAL LAW THAT MOST CLOSELY APPROXIMATES AN ABSOLUTE WAIVER OF ALL CIVIL LIABILITY IN CONNECTION WITH THE CONTRIBUTION.</p>
 
-<h3><span id="e-tmp-digit-term">7</span>. Term</h3>
+<h4><span id="e-tmp-digit-term">7</span>. Term</h4>
  
 <p><span id="e-tmp-digit-term-1">7.1</span> This Agreement shall come into effect upon Your acceptance of the terms and conditions.</p>
  
@@ -211,7 +218,7 @@
   
 <p><span id="e-tmp-digit-term-3">7.2</span> In the event of a termination of this Agreement Sections <span id="e-tmp-digit-term-special">4, 5, 6, 7 and 8</span> shall survive such termination and shall remain in full force thereafter. For the avoidance of doubt, Contributions  that are already licensed under a free and open source license at the date of the termination shall remain in full force after the termination of this Agreement.</p>
  
-<h3><span id="e-tmp-digit-misc">8</span>. Miscellaneous</h3>
+<h4><span id="e-tmp-digit-misc">8</span>. Miscellaneous</h4>
 
 <p><span id="e-tmp-digit-misc-1">8.1</span> This Agreement and all disputes, claims, actions, suits or other proceedings arising out of this agreement or relating in any way to it shall be governed by the laws of <span id="e-tmp-project-jurisdiction">France</span> excluding its private international law provisions.</p>
  
