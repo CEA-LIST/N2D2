@@ -16,13 +16,11 @@ environment:
   OpenCV_DIR: C:\tools\opencv\build
 
 platform:
-  - x64
+  - x86
 
 before_build:
   - mkdir build
   - cd build
-  - cmd: dir C:\tools
-  - cmd: dir C:\tools\opencv
   - cmake .. -G"Visual Studio 12 2013"
   - cmd: SET PATH=C:\Tools\opencv\build\x86\vc12\bin;%PATH%
 
