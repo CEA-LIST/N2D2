@@ -4,10 +4,17 @@ configuration: Release
 install:
   - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
   - cmd: choco install gnuplot
+  - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
   - cmd: choco install opencv -version 2.4.13
+  - cmd: SET PATH=%OPENCV_DIR%\bin;%PATH%
+
+cache:
+  - C:\ProgramData\chocolatey\bin -> appveyor.yml
+  - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
 environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
+  OpenCV_DIR: C:\tools
 
 build_script:
   - mkdir build
