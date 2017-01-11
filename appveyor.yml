@@ -3,7 +3,8 @@ configuration: Release
 
 install:
   - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
-#  - cmd: choco install OpenCV
+  - cmd: choco install gnuplot
+  - cmd: choco install opencv -version 2.4.13
 
 environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
@@ -11,8 +12,6 @@ environment:
 build_script:
   - mkdir build
   - cd build
-  - cmd: dir C:\projects\dirent
-  - cmd: dir C:\projects\dirent\include
   - cmake .. -G"Visual Studio 12 2013"
 
 matrix:
