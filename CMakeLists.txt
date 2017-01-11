@@ -9,6 +9,8 @@ endif()
 
 # Find required & optional packages
 if(MSVC)
+    MESSAGE(WARNING "$ENV{DIRENT_INCLUDE_DIR}")
+
     if (EXISTS "$ENV{DIRENT_INCLUDE_DIR}")
         INCLUDE_DIRECTORIES(SYSTEM "$ENV{DIRENT_INCLUDE_DIR}")
     endif()
