@@ -3,7 +3,7 @@ configuration: Release
 
 install:
   - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
-  - set PATH=C:\projects\dirent\include;%PATH%
+  - set CMAKE_INCLUDE_PATH=C:\projects\dirent\include;%CMAKE_INCLUDE_PATH%
 
 build_script:
   - mkdir build
