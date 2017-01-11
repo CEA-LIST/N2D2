@@ -15,9 +15,6 @@ environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
   OpenCV_DIR: C:\tools\opencv\build
 
-platform:
-  - x86
-
 before_build:
   - mkdir build
   - cd build
