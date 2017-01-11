@@ -6,7 +6,6 @@ install:
   - cmd: choco install gnuplot
   - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
   - cmd: choco install opencv -version 2.4.13
-  - cmd: SET PATH=%OPENCV_DIR%\bin;%PATH%
 
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
@@ -16,12 +15,16 @@ environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
   OpenCV_DIR: C:\tools\opencv\build
 
-build_script:
+platform:
+  - x64
+
+before_build:
   - mkdir build
   - cd build
   - cmd: dir C:\tools
   - cmd: dir C:\tools\opencv
   - cmake .. -G"Visual Studio 12 2013"
+  - cmd: SET PATH=C:\Tools\opencv\build\x86\vc12\bin;%PATH%
 
 matrix:
   fast_finish: true
