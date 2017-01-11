@@ -9,6 +9,10 @@ endif()
 
 # Find required & optional packages
 if(MSVC)
+    if (EXISTS "$ENV{DIRENT_INCLUDE_DIR}")
+        INCLUDE_DIRECTORIES(SYSTEM "$ENV{DIRENT_INCLUDE_DIR}")
+    endif()
+
     INCLUDE(CheckIncludeFile)
     CHECK_INCLUDE_FILE(dirent.h HAVE_DIRENT_H)
 
