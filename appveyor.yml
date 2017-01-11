@@ -7,7 +7,7 @@ install:
 build_script:
   - mkdir build
   - cd build
-  - cmake .. -G"Visual Studio 12 2013" -DCMAKE_INCLUDE_PATH:PATH=C:\projects\dirent\include
+  - cmake .. -G"Visual Studio 12 2013" -DCMAKE_INCLUDE_PATH="C:\projects\dirent\include"
 
 matrix:
   fast_finish: true
