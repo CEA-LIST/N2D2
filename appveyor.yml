@@ -14,11 +14,13 @@ cache:
 
 environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
-  OpenCV_DIR: C:\tools
+  OpenCV_DIR: C:\tools\opencv\build
 
 build_script:
   - mkdir build
   - cd build
+  - cmd: dir C:\tools
+  - cmd: dir C:\tools\opencv
   - cmake .. -G"Visual Studio 12 2013"
 
 matrix:
