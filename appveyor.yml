@@ -3,10 +3,13 @@ configuration: Release
 
 install:
   - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
+#  - cmd: choco install OpenCV
 
 build_script:
   - mkdir build
   - cd build
+  - cmd: dir C:\projects\dirent
+  - cmd: dir C:\projects\dirent\include
   - cmake .. -G"Visual Studio 12 2013" -DCMAKE_INCLUDE_PATH="C:\projects\dirent\include"
 
 matrix:
