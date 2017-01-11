@@ -4,7 +4,6 @@ configuration: Release
 install:
   - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
   - cmd: choco install gnuplot
-  - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
   - cmd: choco install opencv -version 2.4.13
 
 cache:
@@ -16,6 +15,7 @@ environment:
   OpenCV_DIR: C:\tools\opencv\build
 
 before_build:
+  - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
   - mkdir build
   - cd build
   - cmake .. -G"Visual Studio 12 2013"
