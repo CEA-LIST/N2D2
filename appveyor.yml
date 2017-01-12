@@ -9,6 +9,8 @@ install:
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
+  - C:\Program Files\gnuplot -> appveyor.yml
+  - C:\tools\opencv -> appveyor.yml
 
 environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
