@@ -92,7 +92,7 @@ MACRO(GET_DIRECTORIES return_list exp)
     SET(${return_list} ${dir_list})
 ENDMACRO()
 
-# N2D2_Core
+# N2D2
 GET_DIRECTORIES(headers_dirs include/*.h)
 INCLUDE_DIRECTORIES(${headers_dirs})
 
@@ -109,69 +109,34 @@ if (CUDA_FOUND)
     FILE(GLOB_RECURSE CU_SRC "src/*.cu")
 
     if (NOT "${CU_SRC}" STREQUAL "")
-        CUDA_ADD_LIBRARY(N2D2_Core STATIC ${SRC} ${CU_SRC})
+        CUDA_ADD_LIBRARY(N2D2 STATIC ${SRC} ${CU_SRC})
     else()
-        ADD_LIBRARY(N2D2_Core STATIC ${SRC})
+        ADD_LIBRARY(N2D2 STATIC ${SRC})
     endif()
 
     LINK_DIRECTORIES(${CUDNN_LIB_DIR})
-    TARGET_LINK_LIBRARIES(N2D2_Core ${CUDA_LIBS})
-    TARGET_LINK_LIBRARIES(N2D2_Core ${CUDNN_LIBS})
+    TARGET_LINK_LIBRARIES(N2D2 ${CUDA_LIBS})
+    TARGET_LINK_LIBRARIES(N2D2 ${CUDNN_LIBS})
 else()
-    ADD_LIBRARY(N2D2_Core STATIC ${SRC})
+    ADD_LIBRARY(N2D2 STATIC ${SRC})
 endif()
 
 if (PUGIXML_FOUND)
-    TARGET_LINK_LIBRARIES(N2D2_Core ${PUGIXML_LIBRARIES})
+    TARGET_LINK_LIBRARIES(N2D2 ${PUGIXML_LIBRARIES})
 endif()
 
 if (MongoDB_FOUND)
-    TARGET_LINK_LIBRARIES(N2D2_Core ${MongoDB_LIBRARIES})
-    TARGET_LINK_LIBRARIES(N2D2_Core ${Boost_THREAD_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    TARGET_LINK_LIBRARIES(N2D2 ${MongoDB_LIBRARIES})
+    TARGET_LINK_LIBRARIES(N2D2 ${Boost_THREAD_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}
         ${Boost_SYSTEM_LIBRARY} ${OPENSSL_LIBRARIES})
 endif()
 
-TARGET_LINK_LIBRARIES(N2D2_Core ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(N2D2 ${OpenCV_LIBS})
 
-# Binaries directory (if you want them in the project file, use ${PROJECT_SOURCE_DIR})
-SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Simulations
-AUX_SOURCE_DIRECTORY("simus" SIMUS)
-
-foreach(f ${SIMUS})
-    GET_FILENAME_COMPONENT(bin ${f} NAME_WE)
-
-    ADD_EXECUTABLE(${bin} ${f})
-    TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive N2D2_Core -Wl,-no-whole-archive)
-endforeach(f)
-
-# Unit Tests
-SET(UNIT_TESTS "")
-GET_DIRECTORIES(unit_tests_dirs unit_tests/*.cpp)
-FOREACH(unit_tests_dir ${unit_tests_dirs})
-    AUX_SOURCE_DIRECTORY(${unit_tests_dir} UNIT_TESTS)
-
-    GET_FILENAME_COMPONENT(unit_tests_bin ${unit_tests_dir} NAME_WE)
-    FILE(MAKE_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/${unit_tests_bin})
-ENDFOREACH()
-
-foreach(f ${UNIT_TESTS})
-    GET_FILENAME_COMPONENT(bin ${f} NAME_WE)
-    SET(bin "unit_tests_${bin}")
-
-    ADD_EXECUTABLE(${bin} ${f})
-    TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive N2D2_Core -Wl,-no-whole-archive)
-
-    ADD_CUSTOM_COMMAND(
-        OUTPUT ${bin}.log
-        COMMAND ${bin}
-        WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
-    )
-    ADD_CUSTOM_TARGET(
-        run_${bin} ALL
-        DEPENDS ${bin}.log
-        WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
-    )
-endforeach(f)
+add_subdirectory(exec)
+add_subdirectory(tests)
 
