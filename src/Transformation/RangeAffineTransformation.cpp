@@ -1,0 +1,75 @@
+/*
+    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+
+    This software is governed by the CeCILL-C license under French law and
+    abiding by the rules of distribution of free software.  You can  use,
+    modify and/ or redistribute the software under the terms of the CeCILL-C
+    license as circulated by CEA, CNRS and INRIA at the following URL
+    "http://www.cecill.info".
+
+    As a counterpart to the access to the source code and  rights to copy,
+    modify and redistribute granted by the license, users are provided only
+    with a limited warranty  and the software's author,  the holder of the
+    economic rights,  and the successive licensors  have only  limited
+    liability.
+
+    The fact that you are presently reading this means that you have had
+    knowledge of the CeCILL-C license and that you accept its terms.
+*/
+
+#include "Transformation/RangeAffineTransformation.hpp"
+
+N2D2::RangeAffineTransformation::RangeAffineTransformation(
+    Operator firstOperator,
+    double firstValue,
+    Operator secondOperator,
+    double secondValue)
+    : mFirstOperator(firstOperator),
+      mFirstValue(firstValue),
+      mSecondOperator(secondOperator),
+      mSecondValue(secondValue)
+{
+    // ctor
+}
+
+void
+N2D2::RangeAffineTransformation::apply(cv::Mat& frame,
+                                       cv::Mat& /*labels*/,
+                                       std::vector
+                                       <std::shared_ptr<ROI> >& /*labelsROI*/,
+                                       int /*id*/)
+{
+    cv::Mat frame64F;
+    frame.convertTo(frame64F, CV_64F);
+
+    const int nbChannels = frame64F.channels();
+    frame64F = frame64F.reshape(1);
+
+    applyOperator(frame64F, mFirstOperator, mFirstValue);
+
+    if (mSecondValue != 0.0)
+        applyOperator(frame64F, mSecondOperator, mSecondValue);
+
+    frame = frame64F.reshape(nbChannels);
+}
+
+void N2D2::RangeAffineTransformation::applyOperator(cv::Mat& mat,
+                                                    const Operator& op,
+                                                    double value) const
+{
+    switch (op) {
+    case Plus:
+        mat += value;
+        break;
+    case Minus:
+        mat -= value;
+        break;
+    case Multiplies:
+        mat *= value;
+        break;
+    case Divides:
+        mat /= value;
+        break;
+    }
+}

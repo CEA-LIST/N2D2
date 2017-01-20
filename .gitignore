@@ -1,0 +1,13 @@
+*.obj/
+bin*/
+doc/
+*.jpg
+*.gif
+*.png
+*.eps
+*.ps
+*.depend
+*.layout
+*.workspace
+*.pyc
+*~

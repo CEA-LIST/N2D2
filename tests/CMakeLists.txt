@@ -1,3 +1,23 @@
+################################################################################
+#    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+#    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+#
+#    This software is governed by the CeCILL-C license under French law and
+#    abiding by the rules of distribution of free software.  You can  use,
+#    modify and/ or redistribute the software under the terms of the CeCILL-C
+#    license as circulated by CEA, CNRS and INRIA at the following URL
+#    "http://www.cecill.info".
+#
+#    As a counterpart to the access to the source code and  rights to copy,
+#    modify and redistribute granted by the license, users are provided only
+#    with a limited warranty  and the software's author,  the holder of the
+#    economic rights,  and the successive licensors  have only  limited
+#    liability.
+#
+#    The fact that you are presently reading this means that you have had
+#    knowledge of the CeCILL-C license and that you accept its terms.
+################################################################################
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
 
 SET(TESTS "")
@@ -6,23 +26,24 @@ FOREACH(tests_dir ${tests_dirs})
     AUX_SOURCE_DIRECTORY(${tests_dir} TESTS)
 
     GET_FILENAME_COMPONENT(tests_bin ${tests_dir} NAME_WE)
-    FILE(MAKE_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/${tests_bin})
+    FILE(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${tests_bin})
 ENDFOREACH()
+
+FILE(COPY tests_data DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 foreach(f ${TESTS})
     GET_FILENAME_COMPONENT(bin ${f} NAME_WE)
     ADD_EXECUTABLE(${bin} ${f})
-    TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive N2D2 -Wl,-no-whole-archive)
+    TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive ${N2D2_LIB} -Wl,-no-whole-archive)
 
     ADD_CUSTOM_COMMAND(
         OUTPUT ${bin}.log
         COMMAND ${bin}
-        WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
     ADD_CUSTOM_TARGET(
         run_${bin} ALL
         DEPENDS ${bin}.log
-        WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 endforeach(f)
-

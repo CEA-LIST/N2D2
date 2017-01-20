@@ -1,0 +1,3849 @@
+%% Based on a TeXnicCenter-Template by Tino Weinkauf.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% HEADER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[a4paper,11pt,oneside]{article}
+% Alternative Options:
+%	Paper Size: a4paper / a5paper / b5paper / letterpaper / legalpaper
+% / executivepaper
+% Duplex: oneside / twoside
+% Base Font Size: 10pt / 11pt / 12pt
+
+\pdfminorversion=6
+
+%\usepackage{chapterbib}
+\usepackage[round]{natbib}
+
+%% Language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[english]{babel} %francais, polish, spanish, ...
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{lmodern} %Type1-font for non-english texts and characters
+\usepackage{textcomp}
+\usepackage{pdfpages}
+\usepackage{datetime}
+\usepackage{marginnote}
+
+
+%% Packages for Graphics & Figures %%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx} %%For loading graphic files
+%\usepackage{subfig} %%Subfigures inside a figure
+%\usepackage{pst-all} %%PSTricks - not useable with pdfLaTeX
+
+%% Please note:
+%% Images can be included using \includegraphics{Dateiname}
+%% resp. using the dialog in the Insert menu.
+%%
+%% The mode "LaTeX => PDF" allows the following formats:
+%%   .jpg  .png  .pdf  .mps
+%%
+%% The modes "LaTeX => DVI", "LaTeX => PS" und "LaTeX => PS => PDF"
+%% allow the following formats:
+%%   .eps  .ps  .bmp  .pict  .pntg
+
+
+%% Math Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+
+
+%% Line Spacing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{setspace}
+%\singlespacing        %% 1-spacing (default)
+%\onehalfspacing       %% 1,5-spacing
+%\doublespacing        %% 2-spacing
+
+%% Other Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[left=1.5cm, right=1.5cm, hmargin=2.3cm, vmargin=2.5cm,
+    heightrounded]{geometry}
+%\usepackage[hmargin=2.5cm, vmargin=2.5cm]{geometry}
+\usepackage{fancyhdr} %%Fancy headings
+%\usepackage{longtable} %%For tables, that exceed one page
+\usepackage{float}
+\usepackage{xcolor,soul}						% Pour la gestion des couleurs
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{titling}
+\usepackage{color, colortbl}
+
+
+% Définition des couleurs utilisées dans le document
+\definecolor{purple}{rgb}{0.8, 0, 0.8}
+\definecolor{red}{rgb}{1.0, 0, 0}
+\definecolor{gray}{rgb}{0.5, 0.5, 0.5}
+\definecolor{clrgray}{rgb}{0.9, 0.9, 0.9}
+\definecolor{black}{rgb}{0, 0, 0}
+\definecolor{green}{rgb}{0, 0.7, 0}
+\definecolor{drkgreen}{rgb}{0, 0.3, 0}
+\definecolor{drkblue}{rgb}{0, 0, 0.5}
+\definecolor{listletiblue}{rgb}{0, 0.4, 0.63}
+\definecolor{requiredcolor}{rgb}{1.0, 1.0, 0.7}
+\definecolor{expercolor}{rgb}{0.7, 1.0, 1.0}
+
+\usepackage{listings}					% Pour mettre en forme les codes sources
+
+\lstset{
+	%numbers=left,
+	numberstyle=\sffamily\scriptsize,
+	%tabsize=2,
+	breaklines=true,
+	basicstyle=\ttfamily\footnotesize,
+    %delimstyle=\color{purple},
+	keywordstyle={\bfseries\color{purple}},
+	commentstyle={\color{green}},
+	stringstyle=\color{blue},
+	%lineskip=-1pt,
+    stepnumber=1,
+    columns=fullflexible
+}
+
+\lstdefinelanguage{ini}{% new language for listings
+	backgroundcolor=\color{clrgray},
+    sensitive=true,
+    morecomment=[l]{;},      % comment
+    moredelim=[s][keywordstyle]{[}{]}, % s is for start and end delimiter
+    morestring=[b]",          % string def
+    literate={\\\$}{{\textcolor{blue}{\$}}}1 {\\\%}{\%}1
+}
+
+\lstdefinestyle{console}{
+	basicstyle=\ttfamily\footnotesize\it,
+	columns=fixed
+}
+
+\lstdefinestyle{c++}{
+    language=c++,
+	backgroundcolor=\color{clrgray}
+}
+
+\lstdefinestyle{matlab}{
+    language=matlab,
+	backgroundcolor=\color{clrgray}
+}
+
+\usepackage[pdftex,
+	bookmarks,						% Signets
+	bookmarksnumbered,				% Signets numérotés
+%	pdfpagemode = UseOutlines,		% Signets/vignettes
+	pdfstartview = FitH,			% La page prend toute la largeur
+%	pdfpagelayout = SinglePage,		% Vue par page
+	colorlinks,						% Liens en couleur
+	citecolor=drkblue,
+	filecolor=black,
+	linkcolor=black,
+	urlcolor=blue,					% Couleur des liens externes
+	pdfborder={0 0 0}				% Style de bordure : ici, pas de bordure
+]{hyperref}							% Pour les liens et le sommaire PDF
+
+\usepackage{url}
+\usepackage[small]{caption}
+\usepackage{tikz}
+\usepackage{microtype}
+\usepackage{lastpage}
+
+\newenvironment{myitemize}
+{ \begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \setlength{\parskip}{0pt}
+    \setlength{\parsep}{0pt}     }
+{ \end{itemize}                  }
+
+\setulcolor{black}
+
+\newdateformat{datefr}{\twodigit{\THEDAY}/\twodigit{\THEMONTH}/\THEYEAR}
+\mathchardef\mhyphen="2D % Define a "math hyphen"
+
+\newcommand{\subf}[2]{%
+  {\small\begin{tabular}[t]{@{}c@{}}
+  #1\\#2
+  \end{tabular}}%
+}
+
+\newcommand{\subsubsubsection}[1]{
+	\paragraph{#1\newline}
+}
+
+
+\newcommand{\iponly}{\reversemarginpar
+    \marginnote{\color{listletiblue}\normalfont\scriptsize
+    {\ttfamily{}N2D2 IP} \emph{only}}}
+
+\widowpenalty=1000
+\clubpenalty=1000
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Options / Modifications
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\input{options} %You need a file 'options.tex' for this
+%% ==> TeXnicCenter supplies some possible option files
+%% ==> with its templates (File | New from Template...).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DOCUMENT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Exploration of Neural Networks \& Benchmarking of Computing Solutions
+with the N2D2 Platform}
+\author{Olivier Bichler, David Briand, Benjamin Bertelone}
+
+\newif\ifidentification
+%\identificationtrue
+
+\newif\iffullmanual
+\fullmanualtrue
+
+\iffullmanual\else
+\makeatletter
+\renewcommand\thesection{}
+\renewcommand\thesubsection{\@arabic\c@subsection}
+\makeatother
+\fi
+
+\begin{document}
+
+  \begin{tikzpicture}[remember picture,overlay,anchor=west]
+      \node[minimum width=\paperwidth] at ([yshift=-2.6cm,xshift=-0.1cm]current
+      page.north west) {\includegraphics[width=\paperwidth]{figs/head.jpg}};
+      \node[minimum width=\paperwidth] at ([yshift=2.5cm]current page.south
+       west) {\textsf{\scriptsize{
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}ll}
+          \includegraphics[height=0.5cm]{figs/list.png}
+           & \includegraphics[height=0.5cm]{figs/leti.png} \\
+          \color{listletiblue}Laboratoire d'Intégration des Systèmes et des
+           Technologies & \color{listletiblue}Laboratoire d'Electronique et
+           de Technologie de l'Information\\
+           & \\
+          \includegraphics[width=0.85cm]{figs/delim.jpg} & \\
+          Commissariat à l'Energie Atomique et aux Energies Alternatives
+          & \color{drkgreen}Direction de la Recherche Technologique\\
+          Institut Carnot CEA LIST	& \color{drkgreen}{Département Architecture
+           Conception et Logiciels Embarqués}\\
+          Centre de Saclay | Nano-Innov Bât 862 | PC 172 & \\
+          91191 Gif sur Yvette Cedex & \\
+          Tel. : +33 (0)1.69.08.49.67 | Fax : +33(0)1.69.08.83.95 & \\
+          \href{mailto:thierry.collette@cea.fr}{\color{black}
+          \ul{thierry.collette@cea.fr}} & \\
+          \tiny{Établissement Public à caractère Industriel et Commercial
+          RCS Paris B 775 685 019} & \\
+        \end{tabular*}
+      }}};
+      \node[minimum width=\paperwidth] at ([yshift=1.4cm,xshift=9cm]current
+      page.south west) {\includegraphics[width=1.11cm]{figs/isolabel.jpg}};
+  \end{tikzpicture}
+
+\vspace{5cm}
+
+\begin{center}
+\textbf{\textsf{\Large{Département\\
+Architecture, Conception et Logiciels Embarqués}}}
+\end{center}
+
+\vspace{2cm}
+
+\noindent\makebox[\textwidth][c]{\fbox{\begin{minipage}{0.8\textwidth}
+\vspace{-1cm}
+\textsf{\maketitle}
+\end{minipage}}}
+
+
+\thispagestyle{empty}
+\clearpage
+
+
+\pagestyle{fancy}
+
+\fancyhf{} % clear all header and footer fields
+%\fancyhead[C]{Name}
+
+\renewcommand{\footrulewidth}{0.4pt}%
+
+\fancyfoot[R]{\thepage/\pageref{LastPage}
+  \begin{tikzpicture}[remember picture,overlay,anchor=west]
+      \node[minimum width=\paperwidth] at ([yshift=0.8cm]current page.south
+       west) {\includegraphics[width=0.95\paperwidth]{figs/foot.jpg}};
+      \node[minimum width=\paperwidth] at ([yshift=0.8cm]current page.south
+      west) {\textls[-50]{\scriptsize\textbf{\textcolor{white}{
+        \begin{tabular}{c}
+          Ce document et les informations qu'il contient, sont la propriété
+          exclusive du CEA.\\
+          Ils ne peuvent pas être communiqués ou divulgués sans une autorisation
+           préalable du CEA LIST
+        \end{tabular}
+      }}}};
+  \end{tikzpicture}
+}
+
+\ifidentification
+
+\begin{sffamily}
+\noindent Ce document est la propriété du CEA. Il ne peut être reproduit ou
+communiqué sans son autorisation.
+
+\vspace{1cm}
+
+\begin{tabular*}{\textwidth}{ m{4.56cm} l @{\extracolsep{\fill}}}
+  IDENTIFICATION : & \\ %Rapport LIST/DACLE/2016-xx/xx \\
+   & \\
+   & \\
+  TITRE : & \thetitle \\
+   & \\
+   & \\
+  AUTEURS : & \theauthor \\
+  Mots-clefs : & \\
+   & \\
+   & \\
+  UNITE :	& DRT/LIST/DACLE/SCSN/LCE \\
+   & \\
+  RESUME/Contexte & \\
+\end{tabular*}
+\end{sffamily}
+
+\vspace{2cm}
+
+\noindent Ce document est la propriété du CEA. Il ne peut être reproduit ou
+communiqué sans son autorisation.\\
+This document is the property of the CEA. It can not be copied or disseminated
+ without its authorization
+
+
+\vspace{2cm}
+
+\begin{sffamily}
+\noindent \begin{tabular}{|p{3.65cm}|*3{>{\centering\arraybackslash}p{3.65cm}|}
+ @{}m{0pt}@{}}
+  \cline{2-4}
+   \multicolumn{1}{l|}{} & REDACTEUR \newline \emph{WRITERS} & VERIFICATEUR
+   \newline \emph{CONTROLLER} & CHEF DE \newline DEPARTEMENT
+   \newline \emph{HEAD of DIVISION} &\\
+  \hline
+  NOM & \expandafter\MakeUppercase\expandafter{\theauthor} &
+  & T. COLLETTE &\\[1cm]
+  \hline
+  DATE & \datefr\today  & & &\\[1cm]
+  \hline
+  SIGNATURE &  & & &\\[1.5cm]
+  \hline
+\end{tabular}
+\end{sffamily}
+
+\clearpage
+\fi
+
+
+\iffullmanual
+\setcounter{tocdepth}{4}
+\tableofcontents
+\clearpage
+
+
+\section{Presentation}
+\fi
+
+The N2D2 platform is a comprehensive solution for fast and accurate Deep Neural
+Network (DNN) simulation and full and automated DNN-based applications
+building. The platform integrates database construction, data pre-processing,
+network building, benchmarking and hardware export to various targets. It is
+particularly useful for DNN design and exploration, allowing simple and fast
+prototyping of DNN with different topologies. It is possible to define and
+learn multiple network topology variations and compare the performances (in
+terms of recognition rate and computationnal cost) automatically.
+Export targets include CPU, DSP and GPU with OpenMP, OpenCL, Cuda and CuDNN
+programming models as well as custom hardware IP code generation with High-Level
+Synthesis for FPGA and dedicated configurable DNN accelerator
+IP\footnote{Ongoing work}. The N2D2 platform also supports the PNeuro DNN
+programmable architecture\footnote{Currently at the instruction set level}.
+
+In the following, the first section describes the database handling capabilities
+of the tool, which can automatically generate learning, validation and testing
+data sets from any hand made database (for example from simple files
+directories). The second section briefly describes the data pre-processing
+capabilites built-in the tool, which does not require any external
+pre-processing step and can handle many data transformation, normalization and
+augmentation (for example using elastic distortion to improve the learning).
+The third section show an example of DNN building using a simple INI text
+configuration file. The fourth section show some examples of metrics obtained
+after the learning and testing to evaluate the performances of the learned DNN.
+Next, the fifth section introduces the DNN hardware export capabilities of the
+toolflow, which can automatically generate ready to use code for various
+targets such as embedded GPUs or full custom dedicated FPGA IP. Finally, we
+conclude by summarising the main features of the tool.
+
+
+\subsection{Database handling}
+
+The tool integrates everything needed to handle custom or hand made databases:
+\begin{myitemize}
+    \item Genericity: load image and sound, 1D, 2D or 3D data;
+    \item Associate a label for each data point (useful for scene labeling for
+    example) or a single label to each data file (one object/class per image for
+     example), 1D or 2D labels;
+    \item Advanced Region of Interest (ROI) handling:
+    \subitem Support arbitrary ROI shapes (circular, rectangular, polygonal or
+    pixelwise defined);
+    \subitem Convert ROIs to data point (pixelwise) labels;
+    \subitem Extract one or multiple ROIs from an initial dataset to create as
+    many corresponding additional data to feed the DNN;
+    \item Native support of file directory-based databases, where each
+    sub-directory represents a different label. Most used image file formats are
+     supported (JPEG, PNG, PGM...);
+    \item Possibility to add custom datafile format in the tool without any
+    change in the code base;
+    \item Automatic random partitionning of the database into learning,
+    validation and testing sets.
+\end{myitemize}
+
+
+\subsection{Data pre-processing}
+
+Data pre-processing, such as image rescaling, normalization, filtering... is
+ directly integrated into the toolflow, with no need for external tool or
+  pre-processing.
+Each pre-processing step is called a \emph{transformation}.
+
+The full sequence of transformations can be specified easily in a INI text
+configuration file. For example:
+\begin{lstlisting}[language=ini]
+; First step: convert the image to grayscale
+[env.Transformation-1]
+Type=ChannelExtractionTransformation
+CSChannel=Gray
+
+; Second step: rescale the image to a 29x29 size
+[env.Transformation-2]
+Type=RescaleTransformation
+Width=29
+Height=29
+
+; Third step: apply histogram equalization to the image
+[env.Transformation-3]
+Type=EqualizeTransformation
+
+; Fourth step (only during learning): apply random elastic distortions to the images to extent the learning set
+[env.OnTheFlyTransformation]
+Type=DistortionTransformation
+ApplyTo=LearnOnly
+ElasticGaussianSize=21
+ElasticSigma=6.0
+ElasticScaling=20.0
+Scaling=15.0
+Rotation=15.0
+\end{lstlisting}
+
+Example of pre-processing transformations built-in in the tool are:
+\begin{myitemize}
+    \item Image color space change and color channel extraction;
+    \item Elastic distortion;
+    \item Histogram equalization (including CLAHE);
+    \item Convolutional filtering of the image with custom or pre-defined
+    kernels (Gaussian, Gabor...);
+    \item (Random) image flipping;
+    \item (Random) extraction of fixed-size slices in a given label (for
+    multi-label images)
+    \item Normalization;
+    \item Rescaling, padding/cropping, triming;
+    \item Image data range clipping;
+    \item (Random) extraction of fixed-size slices.
+\end{myitemize}
+
+
+\subsection{Deep network building}
+
+The building of a deep network is straightforward and can be done withing the
+same INI configuration file. Several layer types are available: convolutional,
+pooling, fully connected, Radial-basis function (RBF) and softmax. The tool is
+ highly modular and new layer types can be added without any change in the code
+  base.
+Parameters of each layer type are modifiable, for example for the convolutional
+ layer, one can specify the size of the convolution kernels, the stride,
+ the number of kernels per input map and the learning parameters (learning rate,
+  initial weights value...).
+For the learning, the data dynamic can be chosen between 16 bits (with
+ NVIDIA\textregistered{} CuDNN\footnote{On future GPUs}), 32 bit and 64 bit
+  floating point numbers.
+
+The following example, which will serve as the use case for the rest of this
+ presentation, shows how to build a DNN with 5 layers: one convolution layer,
+  followed by one MAX pooling layer, followed by two fully connected layers
+  and a softmax output layer.
+
+\begin{lstlisting}[language=ini]
+; Specify the input data format
+[env]
+SizeX=24
+SizeY=24
+BatchSize=12
+
+; First layer: convolutionnal with 3x3 kernels
+[conv1]
+Input=env
+Type=Conv
+KernelWidth=3
+KernelHeight=3
+NbChannels=32
+Stride=1
+
+; Second layer: MAX pooling with pooling area 2x2
+[pool1]
+Input=conv1
+Type=Pool
+Pooling=Max
+PoolWidth=2
+PoolHeight=2
+NbChannels=32
+Stride=2
+Mapping.Size=1 ; one to one connection between convolution output maps and pooling input maps
+
+; Third layer: fully connected layer with 60 neurons
+[fc1]
+Input=pool1
+Type=Fc
+NbOutputs=60
+
+; Fourth layer: fully connected with 10 neurons
+[fc2]
+Input=fc1
+Type=Fc
+NbOutputs=10
+
+; Final layer: softmax
+[softmax]
+Input=fc2
+Type=Softmax
+NbOutputs=10
+WithLoss=1
+
+[softmax.Target]
+TargetValue=1.0
+DefaultValue=0.0
+\end{lstlisting}
+
+The resulting DNN is shown in figure \ref{fig:DNNExample}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.75\linewidth]{figs/dnn_example.pdf}
+  \caption{Automatically generated and ready to learn DNN from the INI
+  configuration file example.}
+  \label{fig:DNNExample}
+\end{figure}
+
+The learning is accelerated in GPU using the NVIDIA\textregistered{} CuDNN
+framework, integrated into the toolflow. Using GPU acceleration, learning times
+ can be reduced typically by two orders of magnitude, enabling the learning of
+  large databases within tens of minutes to a few hours instead of several days
+   or weeks for non-GPU accelerated learning.
+
+
+\subsection{Performances evaluation}
+
+The software automatically outputs all the information needed for the network
+ applicative performances analysis, such as the recognition rate and the
+ validation score during the learning; the confusion matrix during learning,
+  validation and test; the memory and computation requirements of the network;
+  the output maps activity for each layer, and so on, as shown in figure
+   \ref{fig:metrics}.
+
+\begin{figure}[!htb]
+    \centering
+    \begin{tabular}{cc}
+    \subf{\includegraphics[width=0.45\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/validation_score.png}}
+         {Recognition rate and validation score}
+    &
+    \subf{\includegraphics[width=0.45\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/confusion_matrix.png}}
+         {Confusion matrix}
+    \\
+    \subf{\includegraphics[width=0.45\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/stats.png}}
+         {Memory and computation requirements}
+    &
+    \subf{\includegraphics[width=0.38\linewidth,height=0.35\linewidth,
+    keepaspectratio]{figs/conv1-dat.png}}
+         {Output maps activity}
+    \\
+    \end{tabular}
+  \caption{Example of information automatically generated by the software
+  during and after learning.}
+  \label{fig:metrics}
+\end{figure}
+
+
+\subsection{Hardware exports}
+
+Once the learned DNN recognition rate performances are satisfying, an optimized
+version of the network can be automatically exported for various embedded
+targets. An automated network computation performances benchmarking can also
+ be performed among different targets.
+
+The following targets are currently supported by the toolflow:
+\begin{myitemize}
+    \item Plain C code (no dynamic memory allocation, no floating
+    point processing);
+    \item C code accelerated with OpenMP;
+    \item C code tailored for High-Level Synthesis (HLS) with
+    Xilinx\textregistered{} Vivado\textregistered{} HLS;
+    \subitem Direct synthesis to FPGA, with timing and utilization after
+     routing;
+    \subitem Possibility to constrain the maximum number of clock cycles desired
+     to compute the whole network;
+    \subitem FPGA utilization vs number of clock cycle trade-off analysis;
+    \item OpenCL code optimized for either CPU/DSP or GPU;
+    \item Cuda kernels and CuDNN code optimized for NVIDIA\textregistered{}
+    GPUs.
+\end{myitemize}
+
+Different automated optimizations are embedded in the exports:
+\begin{myitemize}
+    \item DNN weights and signal data precision reduction (down to 8 bit
+    integers or less for custom FPGA IPs);
+    \item Non-linear network activation functions approximations;
+    %\item Sparse weights storage when the percentage of weights close to
+    % 0 is high;
+    \item Different weights discretization methods.
+\end{myitemize}
+
+The exports are generated automatically and come with a Makefile and a working
+ testbench, including the pre-processed testing dataset.
+Once generated, the testbench is ready to be compiled and executed on the target
+ platform. The applicative performance (recognition rate) as well as the
+ computing time per input data can then be directly mesured by the testbench.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figs/targets_benchmarking.pdf}
+  \caption{Example of network benchmarking on different hardware targets.}
+  \label{fig:TargetsBenchmarking}
+\end{figure}
+
+The figure \ref{fig:TargetsBenchmarking} shows an example of benchmarking
+results of the previous DNN on different targets (in log scale).
+Compared to desktop CPUs, the number of input image pixels processed per second
+ is more than one order of magnitude higher with GPUsand at least two orders
+ of magnitude better with synthesized DNN on FPGA.
+
+\subsection{Summary}
+
+The N2D2 platform is today a complete and production ready neural network
+building tool, which does not require advanced knownledges in deep learning to
+be used. It is tailored for fast neural network applications generation and
+porting with minimum overhead in terms of database creation and management,
+data pre-processing, networks configuration and optimized code generation,
+which can save months of manual porting and verification effort to a single
+automated step in the tool.
+
+
+\clearpage
+
+
+\iffullmanual
+
+\section{Performing simulations}
+
+\subsection{Obtaining the latest version of this manual}
+
+Before going further, please make sure you are reading the latest version of
+ this manual.
+It is located in the {\tt{}manual} sub-directory. To compile the manual
+in PDF, just run
+the following command:
+\begin{lstlisting}
+cd manual && make
+\end{lstlisting}
+
+\subsection{Obtaining N2D2}
+
+\subsubsection{Prerequisites}
+
+First, make sure you have the following packages installed:
+\begin{myitemize}
+    \item gnuplot
+    \item opencv
+    \item opencv-devel (on RHEL 6, requires rhel-x86\_64-workstation-optional-6
+     repository channel)
+\end{myitemize}
+Plus, to be able to use GPU acceleration:
+\begin{myitemize}
+    \item cuda
+    \subitem To install cuda, add the cuda repository for RHEL 6:
+\begin{lstlisting}
+rpm -Uhv http://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64/cuda-repo-rhel6-7.5-18.x86_64.rpm
+yum clean expire-cache
+yum install cuda
+\end{lstlisting}
+    Make sure the cuda library path (by default: {\tt{}/usr/local/cuda/lib64})
+     is added to the {\tt{}LD\_LIBRARY\_PATH} environment variable.
+    \item cudnn
+    \subitem Manual installation required: register to
+    \href{https://developer.nvidia.com/cudnn}{NVIDIA Developer} and download
+    the latest version of CuDNN.
+    Simply copy the header and library files from the CuDNN archive to the
+    corresponding directories in the cuda installation path (by default:
+     {\tt{}/usr/local/cuda/include} and {\tt{}/usr/local/cuda/lib64},
+     respectively).
+\end{myitemize}
+
+\subsubsection{Getting the sources}
+
+\noindent Use the following command:
+\begin{lstlisting}
+git clone git@github.com:CEA-LIST/N2D2.git
+\end{lstlisting}
+
+\subsubsection{Compilation}
+
+\noindent To compile the program:
+\begin{lstlisting}
+mkdir build
+cd build
+cmake .. && make
+\end{lstlisting}
+
+\subsection{Downloading training datasets}
+
+A python script located in the repository root directory allows you to
+ automatically download some well-known datasets,
+like MNIST and GTSRB:
+\begin{lstlisting}
+./tools/install_stimuli.py
+\end{lstlisting}
+
+By default, the datasets are downloaded in the path specified in the
+ \lstinline!N2D2_DATA! environment variable, which is the root path used by the
+ N2D2 tool to locate the databases. If the \lstinline!N2D2_DATA! variable is
+  not set, the default value used is {\tt{}/local/\$USER/n2d2\_data/}
+  (or {\tt{}/local/n2d2\_data/} if the \lstinline!USER! environment variable
+   is not set) on Linux and {\tt{}C:\textbackslash{}n2d2\_data\textbackslash{}}
+    on Windows.
+
+
+\subsection{Run the learning}
+
+The following command will run the learning for 600,000 image
+presentations/steps and log the performances of the network every 10,000 steps:
+\begin{lstlisting}
+./n2d2 "ini/mnist24_16c4s2_24c5s2_150_10.ini" -learn 600000 -log 10000
+\end{lstlisting}
+
+Note: you may want to check the gradient computation using the
+ \lstinline!-check! option. Note that it can be extremely long and can
+occasionally fail if the required precision is too high.
+
+\subsection{Test a learned network}
+
+After the learning is completed, this command evaluate the network performances
+ on the test data set:
+\begin{lstlisting}
+./n2d2 "ini/mnist24_16c4s2_24c5s2_150_10.ini" -test
+\end{lstlisting}
+
+
+\subsubsection{Interpreting the results}
+
+\paragraph{Recognition rate}
+
+The recognition rate and the validation score are reported during the learning
+ in the \emph{TargetScore\_*/Success\_validation.png} file, as shown in
+ figure \ref{fig:validationScore}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/validation_score.png}
+  \caption{Recognition rate and validation score during learning.}
+  \label{fig:validationScore}
+\end{figure}
+
+\paragraph{Confusion matrix}
+
+The software automatically outputs the confusion matrix during learning,
+validation and test, with an example shown in figure \ref{fig:ConfusionMatrix}.
+Each row of the matrix contains the number of occurrences estimated by the
+ network for each label, for all the data corresponding to a single actual,
+ target label.
+Or equivalently, each column of the matrix contains the number of actual,
+target label occurrences, corresponding to the same estimated label.
+Idealy, the matrix should be diagonal, with no occurrence of an estimated
+ label for a different actual label (network mistake).
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/confusion_matrix.png}
+  \caption{Example of confusion matrix obtained after the learning.}
+  \label{fig:ConfusionMatrix}
+\end{figure}
+
+The confusion matrix reports can be found in the simulation directory:
+\begin{myitemize}
+\item \emph{TargetScore\_*/ConfusionMatrix\_learning.png};
+\item \emph{TargetScore\_*/ConfusionMatrix\_validation.png};
+\item \emph{TargetScore\_*/ConfusionMatrix\_test.png}.
+\end{myitemize}
+
+\paragraph{Memory and computation requirements}
+
+The software also report the memory and computation requirements of the network,
+ as shown in figure \ref{fig:stats}. The corresponding report can be found in
+ the \emph{stats} sub-directory of the simulation.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/stats.png}
+  \caption{Example of memory and computation requirements of the network.}
+  \label{fig:stats}
+\end{figure}
+
+
+\paragraph{Kernels and weights distribution}
+
+The synaptic weights obtained during and after the learning can be analyzed,
+in terms of distribution (\emph{weights} sub-directory of the simulation) or in
+terms of kernels (\emph{kernels} sub-directory of the simulation), as shown
+in \ref{fig:weights}.
+
+
+\begin{figure}[!htb]
+    \centering
+    \begin{tabular}{cc}
+    \subf{\includegraphics[width=0.48\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/conv1.png}}
+         {\emph{conv1} kernels}
+    &
+    \subf{\includegraphics[width=0.48\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/conv2.png}}
+         {\emph{conv2} kernels}
+    \\
+    \subf{\includegraphics[width=0.48\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/conv1-distrib.png}}
+         {\emph{conv1} weights distribution}
+    &
+    \subf{\includegraphics[width=0.48\linewidth,height=0.5\linewidth,
+    keepaspectratio]{figs/conv2-distrib.png}}
+         {\emph{conv2} weights distribution}
+    \\
+    \end{tabular}
+  \caption{Example of kernels and weights distribution analysis for two
+   convolutional layers.}
+  \label{fig:weights}
+\end{figure}
+
+
+\paragraph{Output maps activity}
+
+The initial output maps activity for each layer can be visualized in the
+ \emph{outputs\_init} sub-directory of the simulation, as shown in figure
+  \ref{fig:outputs}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figs/conv1-dat.png}
+  \caption{Output maps activity example of the first convolutional layer of
+  the network.}
+  \label{fig:outputs}
+\end{figure}
+
+
+
+\subsection{Export a learned network}
+
+
+\begin{lstlisting}
+./n2d2 "ini/mnist24_16c4s2_24c5s2_150_10.ini" -export CPP_OpenCL
+\end{lstlisting}
+
+Export types:
+\begin{myitemize}
+\item \lstinline!C! C export using OpenMP;
+\item \lstinline!C_HLS! C export tailored for HLS with Vivado HLS;
+\item \lstinline!CPP_OpenCL! C++ export using OpenCL;
+\item \lstinline!CPP_Cuda! C++ export using Cuda;
+\item \lstinline!CPP_cuDNN! C++ export using CuDNN;
+\item \lstinline!SC_Spike! SystemC spike export.
+\end{myitemize}
+
+Other program options related to the exports:
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!-uenv! & If present, treat the input stimuli data as unsigned \\
+  \lstinline!-nbbits! [8] & Number of bits for the weights and signals.
+  Must be 8, 16, 32 or 64 for integer export, or -32, -64 for floating
+  point export. The number of bits can be arbitrary for the \lstinline!C_HLS!
+  export (for example, 6 bits) \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!C! export}{C export}}
+
+Test the exported network:
+\begin{lstlisting}
+cd export_C_int8
+make
+./bin/n2d2_test
+\end{lstlisting}
+
+The result should look like:
+\begin{lstlisting}[style=console]
+...
+1652.00/1762    (avg = 93.757094%)
+1653.00/1763    (avg = 93.760635%)
+1654.00/1764    (avg = 93.764172%)
+Tested 1764 stimuli
+Success rate = 93.764172%
+Process time per stimulus = 187.548186 us (12 threads)
+
+Confusion matrix:
+-------------------------------------------------
+| T \ E |       0 |       1 |       2 |       3 |
+-------------------------------------------------
+|     0 |     329 |       1 |       5 |       2 |
+|       |  97.63% |   0.30% |   1.48% |   0.59% |
+|     1 |       0 |     692 |       2 |       6 |
+|       |   0.00% |  98.86% |   0.29% |   0.86% |
+|     2 |      11 |      27 |     609 |      55 |
+|       |   1.57% |   3.85% |  86.75% |   7.83% |
+|     3 |       0 |       0 |       1 |      24 |
+|       |   0.00% |   0.00% |   4.00% |  96.00% |
+-------------------------------------------------
+T: Target    E: Estimated
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!CPP_OpenCL! export\protect\iponly}
+{CPP\_OpenCL export}}
+The OpenCL export can run the generated program in GPU or CPU architectures.
+Compilation features:
+\begin{center}
+ \begin{tabular}{| p{7cm} | p{8cm} | }
+ \hline
+ Preprocessor command [default value] & Description\\
+ \hline\hline
+  \lstinline!PROFILING! [0] & Compile the binary with a synchronization between
+   each layers and return the mean execution time of each layer.
+  This preprocessor option can decrease performances.\\
+  \lstinline!GENERATE_KBIN! [0] & Generate the binary output of the OpenCL
+  kernel .cl file use. The binary is store in the /bin folder. \\
+  \lstinline!LOAD_KBIN! [0] & Indicate to the program to load an OpenCL
+  kernel as a binary from the /bin folder instead of a .cl file. \\
+  \lstinline!CUDA! [0] & Use the CUDA OpenCL SDK locate at
+  ${/usr/local/cuda}$ \\
+  \lstinline!MALI! [0] & Use the MALI OpenCL SDK locate at
+  ${/usr/Mali_OpenCL_SDK_vXXX}$ \\
+  \lstinline!INTEL! [0] & Use the INTEL OpenCL SDK locate at
+  ${/opt/intel/opencl}$ \\
+  \lstinline!AMD! [1] & Use the AMD OpenCL SDK locate at
+  ${/opt/AMDAPPSDK-XXX}$ \\
+ \hline
+\end{tabular}
+\end{center}
+
+Program options related to the OpenCL export:
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!-cpu! & If present, force to use a CPU architecture to run
+  the program \\
+  \lstinline!-gpu! & If present, force to use a GPU architecture to run
+  the program \\
+  \lstinline!-batch! [1] & Size of the batch to use \\
+  \lstinline!-stimulus! [NULL] & Path to a specific input stimulus to test.
+  For example: -stimulus ${/stimulus/env0000.pgm}$ command will test the file
+  env0000.pgm  of the stimulus folder.\\
+ \hline
+\end{tabular}
+\end{center}
+
+Test the exported network:
+\begin{lstlisting}
+cd export_CPP_OpenCL_float32
+make
+./bin/n2d2_opencl_test -gpu
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!CPP_cuDNN! export}{CPP\_cuDNN export}}
+The cuDNN export can run the generated program in NVIDIA GPU architecture.
+It use CUDA and cuDNN library.
+Compilation features:
+\begin{center}
+ \begin{tabular}{| p{7cm} | p{8cm} | }
+ \hline
+ Preprocessor command [default value] & Description\\
+ \hline\hline
+  \lstinline!PROFILING! [0] & Compile the binary with a synchronization
+  between each layers and return the mean execution time of each layer.
+  This preprocessor option can decrease performances.\\
+  \lstinline!ARCH32! [0] & Compile the binary with the 32-bits architecture
+   compatibility.\\
+ \hline
+\end{tabular}
+\end{center}
+
+Program options related to the cuDNN export:
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!-batch! [1] & Size of the batch to use \\
+  \lstinline!-stimulus! [NULL] & Path to a specific input stimulus to test.
+  For example: -stimulus ${/stimulus/env0000.pgm}$ command will test the file
+   env0000.pgm  of the stimulus folder.\\
+ \hline
+\end{tabular}
+\end{center}
+
+Test the exported network:
+\begin{lstlisting}
+cd export_CPP_cuDNN_float32
+make
+./bin/n2d2_cudnn_test
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!C_HLS! export\protect\iponly}
+{C\_HLS export}}
+
+Test the exported network:
+\begin{lstlisting}
+cd export_C_HLS_int8
+make
+./bin/n2d2_test
+\end{lstlisting}
+
+Run the High-Level Synthesis (HLS) with Xilinx\textregistered{}
+Vivado\textregistered{} HLS:
+\begin{lstlisting}
+vivado_hls -f run_hls.tcl
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!PNeuro! export\protect\iponly}{PNeuro export}}
+
+Exports allow generating standalone systems from calibrated neural network.
+
+Can be used from the neural network directory using :
+\begin{lstlisting}[language=bash]
+./test.sh -export <export_target> [-no-db-export] [-export-parameters <export_paramaters|"">] [-nbbits <number_of_bits|8>]
+\end{lstlisting}
+Where <export\_target> is the target system, can be \emph{C}, \emph{C++},
+\emph{PNeuro}... (see below for a more detailled list), -no-db-export to disable
+ the database export, <export\_paramaters> are specific parameters for each
+ export, default empty, and <number\_of\_bits> is the number of bits to use
+ during export, positive for integer, negative for float, default 8.
+
+
+PNeuro export generates code for PNeuro and memory blocks.
+
+The <export\_paramaters> need to be the path to an ini configuration file
+which describe the global behaviour and memory accesses.
+This export can only be done in 8 bits.
+
+\paragraph{Ini configuration file}
+
+Each sections of the ini file refers to neural network layer by its name.
+Only Conv, Pool and Fc layers are supported.
+The order of sections determines the order of execution on the PNeuro.
+
+The global parameters :
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!outputFile! [pneuro.pas] & Output filename \\
+  \lstinline!weightsDir! [weights] & Directory to place weights \\
+  \lstinline!kernelsDir! [kernels] & Directory to place kernels \\
+  \lstinline!neuroBlock! [1] & Number of NeuroBlock to use (1/2/4) \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subparagraph{Each layers}
+All layers have those parameters :
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!in! [0m(0)] & Base address for input data \\
+  \lstinline!inFmGap! [0] & Gap, in word, they have between each input
+  feature map \\
+  \lstinline!out! [0m(0)] & Base address for output data \\
+  \lstinline!outFmGap! [0] & Gap, in word, to leave between each output
+  feature map \\
+
+ \hline
+\end{tabular}
+\end{center}
+
+\subparagraph{\emph{Convolutionnal} layers}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!weightsIn! [0m(0)] & Base address for weights \\
+  \lstinline!weightsInOffset! [0] & \emph{Horizontal} offset for weights
+  (0 = full left)  \\
+  \lstinline!loadWeights! [onInit] & Time to load weights in memory (onInit/onStart/onTheFly) \\
+  \lstinline!sign! [us] & Signs of operation, first letter for inputs,
+  second weights  \\
+ \hline
+\end{tabular}
+\end{center}
+
+Parameters available after processing for further usage :
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Parameter & Description\\
+ \hline\hline
+  \lstinline!_in_after! & Address just after the last input \\
+  \lstinline!_out_after! & Address just after the last output \\
+  \lstinline!_weights_after! & Address just after the last weight \\
+ \hline
+\end{tabular}
+\end{center}
+
+\textit{\textbf{Limitations}}
+
+	\emph{Kernel}
+
+		Width of the kernel is limited by :
+		\[
+			1 \le Kernel_{width} \le 2*M+1
+		\]
+
+		Where M is the interleaving, defined by :
+		\[
+			M = ceil\left(\frac{Input_{width}}{8*Nb_NeuroBlock}\right)
+		\]
+
+		Height of the kernel is limited by :
+		\[
+			1 \le Kernel_{height} \le 8 - WeightsOffset_x
+		\]
+
+	\emph{Padding}
+
+		X padding is limited by :
+		\[
+			Kernel_{width} - M - 1 \le Padding_{x} \le M
+		\]
+
+		Y padding isn't limited.
+
+	\emph{Stride}
+
+		X stride is limited by :
+		\[
+			\begin{cases}
+				1 \le Stride_{x} \le M \\
+				M \equiv 0 \pmod{Stride_{x}}
+			\end{cases}
+		\]
+
+		Y stride is limited by :
+		\[
+			1 \le Stride_{y}
+		\]
+
+	\emph{Activation Function}
+
+		Only TanH and Rectifier are currently supported.
+
+\subparagraph{\emph{Pooling} layers}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!sign! [s] & Sign of operation  \\
+  \lstinline!fullSize! [0] & Force to compute missing pixels (do not use) \\
+ \hline
+ \end{tabular}
+\end{center}
+
+Parameters available after processing for further usage :
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Parameter & Description\\
+ \hline\hline
+  \lstinline!_in_after! & Address just after the last input \\
+  \lstinline!_out_after! & Address just after the last output \\
+ \hline
+ \end{tabular}
+\end{center}
+
+\textit{\textbf{Limitations}}
+
+	\emph{Kernel \& Stride}
+
+		Width of the kernel and X stride are limited by :
+		\[
+			\begin{cases}
+				1 \le Kernel_{width} \le M \\
+				M \equiv 0 \pmod{Kernel_{width}} \\
+				Stride_{x} = Kernel_{width}
+			\end{cases}
+		\]
+
+		Where M is the interleaving, defined by :
+		\[
+			M = ceil\left(\frac{Input_{width}}{8*Nb_NeuroBlock}\right)
+		\]
+
+		Height of the kernel and Y stride are limited by :
+		\[
+			\begin{cases}
+				1 \le Kernel_{height}\\
+				Stride_{Y} = Kernel_{width}
+			\end{cases}
+		\]
+
+	\emph{Padding}
+
+		X padding is limited by :
+		\[
+			Kernel_{width} - M - 1 \le Padding_{x} \le M
+		\]
+
+		Y padding isn't limited.
+
+
+\subparagraph{\emph{Fully Connected} layers}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description \\
+ \hline\hline
+  \lstinline!weightMemA! [0m(0)] & Base address for weights in first memory \\
+  \lstinline!weightMemB! [0m(0)] & Base address for weights in second memory \\
+  \lstinline!loadWeights! [onTheFly] & Time to load weights in memory (onInit/onStart/onTheFly)  \\
+  \lstinline!sign! [ss] & Signs of operation, first letter for inputs,
+   second weights  \\
+  \lstinline!inputType! [auto] & Set the type of the previous layer
+  (auto/2d/fc) \\
+ \hline
+ \end{tabular}
+\end{center}
+
+Parameters available after processing for further usage :
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Parameter & Description\\
+ \hline\hline
+  \lstinline!_in_after! & Address just after the last input \\
+  \lstinline!_out_after! & Address just after the last output \\
+  \lstinline!_temp_after! & Address just after the last temporary value \\
+  \lstinline!_weightsMemA_after! & Address just after the last weight of
+  first memory \\
+  \lstinline!_weightsMemB_after! & Address just after the last weight of
+  second memory \\
+ \hline
+ \end{tabular}
+\end{center}
+
+\textit{\textbf{Limitations}}
+
+	\emph{Activation Function}
+
+		Only TanH and Rectifier are currently supported.
+
+
+\paragraph{Example}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/nn.png}
+  \caption{Example of Neural Network for PNeuro export}
+  \label{fig:nnPNExport}
+\end{figure}
+
+Assiociated ini configuration file :
+\begin{lstlisting}[language=ini]
+neuroBlock=1
+
+[conv1_3x3]
+in=3m(512)
+inFmGap=6
+out=2m(0)
+weightsIn=1m(0)
+weightsInOffset=0
+loadWeights=onInit
+sign=us
+
+[pool1_3x3]
+in=[conv1_3x3]out
+out=3m(0)
+sign=s
+
+[conv1_5x5]
+in=3m(512)
+inFmGap=6
+out=2m(0)
+weightsIn=1m(0)
+weightsInOffset=3
+loadWeights=onInit
+sign=ss
+
+[pool1_5x5]
+in=[conv1_5x5]out
+out=[pool1_3x3]_out_after
+sign=s
+
+[fc1]
+in=[pool1_3x3]out
+out=2m(0)
+weightMemA=1m(26)
+weightMemB=0m(0)
+loadWeights=onTheFly
+sign=ss
+
+[fc2]
+in=[fc1]out
+out=3m(0)
+weightMemA=[conv1_5x5]_weights_after
+weightMemB=0m(0)
+loadWeights=onInit
+sign=ss
+\end{lstlisting}
+
+\paragraph{Memory map}
+
+Memory map is generating during the export.
+
+The file memories.data describes the memory map.
+
+Each lines are a new subpart. They start wich the neuroblock, then the first
+adress and then the size of the subpart.
+
+The files <loadWeights>-<subpart>-<neuroblock>.data are the content of memories.
+ 4 LSB first then 4 MSB.
+
+
+\section{INI file interface}
+
+\subsection{Global parameters}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!DefaultModel! [\lstinline!Transcode!] & Default layers model.
+  Can be \lstinline!Frame!, \lstinline!Frame_CUDA!, \lstinline!Transcode!
+  or \lstinline!Spike! \\
+  \lstinline!SignalsDiscretization! [0] & Number of levels for signal
+  discretization \\
+  \lstinline!FreeParametersDiscretization! [0] & Number of levels for weights discretization \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subsection{Databases}
+
+The tool integrates pre-defined modules for several well-known database used
+in the deep learning community, such as MNIST, GTSRB, CIFAR10 and so on.
+That way, no extra step is necessary to be able to directly build a network
+and learn it on these database.
+
+\subsubsection{MNIST}
+
+MNIST \citep{LeCun1998} is already fractionned into a learning set and
+a testing set, with:
+\begin{myitemize}
+\item 60,000 digits in the learning set;
+\item 10,000 digits in the testing set.
+\end{myitemize}
+
+Example:
+\begin{lstlisting}[language=ini]
+[database]
+Type=MNIST_IDX_Database
+Validation=0.2  ; Fraction of learning stimuli used for the validation [default: 0.0]
+\end{lstlisting}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Validation! [0.0] & Fraction of the learning set used for
+  validation \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/mnist] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection{GTSRB}
+
+GTSRB \citep{Stallkamp2012} is already fractionned into a learning set
+and a testing set, with:
+\begin{myitemize}
+\item 39,209 digits in the learning set;
+\item 12,630 digits in the testing set.
+\end{myitemize}
+
+Example:
+\begin{lstlisting}[language=ini]
+[database]
+Type=GTSRB_DIR_Database
+Validation=0.2  ; Fraction of learning stimuli used for the validation [default: 0.0]
+\end{lstlisting}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Validation! [0.0] & Fraction of the learning set used for
+   validation \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/GTSRB] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Directory}
+
+Hand made database stored in files directories are directly supported with
+the \lstinline!DIR_Database! module.
+For example, suppose your database is organized as following (in the path
+specified in the \lstinline!N2D2_DATA! environment variable):
+\begin{myitemize}
+\item \lstinline!GST/airplanes!: 800 images
+\item \lstinline!GST/car_side!: 123 images
+\item \lstinline!GST/Faces!: 435 images
+\item \lstinline!GST/Motorbikes!: 798 images
+\end{myitemize}
+
+You can then instanciate this database as input of your neural network using
+the following parameters:
+\begin{lstlisting}[language=ini]
+[database]
+Type=DIR_Database
+DataPath=\${N2D2_DATA}/GST
+Learn=0.4 ; 40\% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning
+Validation=0.2 ; 20\% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation
+; the remaining images will be used for testing
+\end{lstlisting}
+
+Each subdirectory will be treated as a different label, so there will be
+4 different labels, named after the directory name.
+
+The stimuli are equi-partitioned for the learning set and the validation set,
+meaning that the same number of stimuli for each category is used.
+If the learn fraction is 0.4 and the validation fraction is 0.2, as in the
+example above, the partitioning will be the following:
+
+
+\begin{center}
+ \begin{tabular}{c c c c c}
+ \hline
+ Label ID & Label name & Learn set & Validation set & Test set \\ [0.5ex]
+ \hline\hline
+ 0 & \lstinline!airplanes! & 49 & 25 & 726 \\
+ \hline
+ 1 & \lstinline!car_side! & 49 & 25 & 49 \\
+ \hline
+ 2 & \lstinline!Faces! & 49 & 25 & 361 \\
+ \hline
+ 3 & \lstinline!Motorbikes! & 49 & 25 & 724 \\
+ \hline\hline
+  & Total: & 196 & 100 & 1860 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\fcolorbox{black}{requiredcolor}{\rule{0pt}{6pt}\rule{6pt}{0pt}}
+\emph{Mandatory option}
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!DataPath! & Path to the root stimuli directory \\
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & If \lstinline!PerLabelPartitioning! is true, fraction of
+  images used for the learning; else, number of images
+  used for the learning, regardless of their labels \\
+  \lstinline!LoadInMemory! [0] & Load the whole database into memory \\
+  \lstinline!Depth! [1] & Number of sub-directory levels to include.
+  Examples: \\
+    & \lstinline!Depth! = 0: load stimuli only from the current directory (\lstinline!DataPath!) \\
+    & \lstinline!Depth! = 1: load stimuli from \lstinline!DataPath! and stimuli
+     contained in the sub-directories of \lstinline!DataPath! \\
+    & \lstinline!Depth! < 0: load stimuli recursively from \lstinline!DataPath!
+    and all its sub-directories \\
+  \lstinline!LabelName! [] & Base stimuli label name \\
+  \lstinline!LabelDepth! [1] & Number of sub-directory name levels used to form
+   the stimuli labels. Examples: \\
+    & \lstinline!LabelDepth! = -1: no label for all stimuli (label ID = -1) \\
+    & \lstinline!LabelDepth! = 0: uses \lstinline!LabelName! for all stimuli \\
+    & \lstinline!LabelDepth! = 1: uses \lstinline!LabelName! for stimuli in the
+     current directory (\lstinline!DataPath!) and
+     \lstinline!LabelName!/\emph{sub-directory name} for stimuli in the
+     sub-directories \\
+  \lstinline!PerLabelPartitioning! [1] & If true, the stimuli are
+  equi-partitioned for the learn/validation/test sets, meaning that the same
+  number of stimuli for each label is used \\
+  \lstinline!Validation! [0.0] & If \lstinline!PerLabelPartitioning! is true,
+  fraction of images used for the validation; else, number of images used for
+  the validation, regardless of their labels \\
+  \lstinline!Test! [1.0-\lstinline!Learn!-\lstinline!Validation!] & If
+  \lstinline!PerLabelPartitioning! is true, fraction of images used for the
+  test; else, number of images used for the test, regardless of their labels \\
+ \hline
+  \lstinline!ROIFile! [] & File containing the stimuli ROIs. If a ROI file is
+   specified, \lstinline!LabelDepth! should be set to -1 \\
+  \lstinline!DefaultLabel! [] & Label name for pixels outside any ROI (default
+   is no label, pixels are ignored) \\
+  \lstinline!ROIsMargin! [0] & Number of pixels around ROIs that are ignored
+  (and not considered as \lstinline!DefaultLabel! pixels) \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{Other built-in databases}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!CIFAR10_Database!}{CIFAR10\_Database}}
+CIFAR10 database \citep{Krizhevsky2009}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Validation! [0.0] & Fraction of the learning set used for
+  validation \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/cifar-10-batches-bin] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!CIFAR100_Database!}
+{CIFAR100\_Database}}
+CIFAR100 database \citep{Krizhevsky2009}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Validation! [0.0] & Fraction of the learning set used for
+  validation \\
+  \lstinline!UseCoarse! [0] & If true, use the coarse labeling
+  (10 labels instead of 100) \\
+  \lstinline!DataPath! & Path to the database \\
+   \noindent [\lstinline!$N2D2_DATA!/cifar-100-binary] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!CKP_Database!}{CKP\_Database}}
+The Extended Cohn-Kanade (CK+) database for expression recognition
+\citep{Lucey2010}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.0] & Fraction of images used for the validation \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/cohn-kanade-images] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!Caltech101_DIR_Database!}{Caltech101\_DIR\_Database}}
+Caltech 101 database \citep{FeiFei2004}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.0] & Fraction of images used for the validation \\
+  \lstinline!IncClutter! [0] & If true, includes the BACKGROUND\_Google
+  directory of the database \\
+  \lstinline!DataPath! & Path to the database \\
+   \noindent [\lstinline!$N2D2_DATA!/ & \\
+   \noindent 101\_ObjectCategories] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!Caltech256_DIR_Database!}{Caltech256\_DIR\_Database}}
+Caltech 256 database \citep{Griffin2007}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.0] & Fraction of images used for the validation \\
+  \lstinline!IncClutter! [0] & If true, includes the BACKGROUND\_Google
+  directory of the database \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/ & \\
+  \noindent 256\_ObjectCategories] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!CaltechPedestrian_Database!}{CaltechPedestrian\_Database}}
+Caltech Pedestrian database \citep{Dollar2009}.
+
+Note that the images and annotations must first be extracted from the seq video
+ data located in the \emph{videos} directory using the \lstinline!dbExtract.m!
+ Matlab tool provided in the "Matlab evaluation/labeling code" downloadable on
+ the dataset website.
+
+Assuming the following directory structure (in the path specified in the \lstinline!N2D2_DATA! environment variable):
+\begin{myitemize}
+\item \lstinline!CaltechPedestrians/data-USA/videos/...!
+(from the \emph{setxx.tar} files)
+\item \lstinline!CaltechPedestrians/data-USA/annotations/...!
+(from the \emph{setxx.tar} files)
+\item \lstinline!CaltechPedestrians/tools/piotr_toolbox/toolbox!
+(from the Piotr's Matlab Toolbox archive)
+\item \lstinline!CaltechPedestrians/*.m! including \lstinline!dbExtract.m!
+(from the Matlab evaluation/labeling code)
+\end{myitemize}
+
+Use the following command in Matlab to generate the images and annotations:
+\begin{lstlisting}[style=matlab]
+cd([getenv('N2D2_DATA') '/CaltechPedestrians'])
+addpath(genpath('tools/piotr_toolbox/toolbox')) % add the Piotr's Matlab Toolbox in the Matlab path
+dbInfo('USA')
+dbExtract()
+\end{lstlisting}
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Validation! [0.0] & Fraction of the learning set used for
+  validation \\
+  \lstinline!SingleLabel! [1] & Use the same label for "person" and "people"
+  bounding box \\
+  \lstinline!IncAmbiguous! [0] & Include ambiguous bounding box labeled
+  "person?" using the same label as "person" \\
+  \lstinline!DataPath! & Path to the database images \\
+   \noindent [\lstinline!$N2D2_DATA!/ & \\
+   \noindent CaltechPedestrians/data-USA/images] & \\
+  \lstinline!LabelPath! & Path to the database annotations \\
+   \noindent [\lstinline!$N2D2_DATA!/ & \\
+   \noindent CaltechPedestrians/data-USA/annotations] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Daimler_Database!}{Daimler\_Database}}
+Daimler Monocular Pedestrian Detection Benchmark (Daimler Pedestrian).
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! [1.0] & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.0] & Fraction of images used for the validation \\
+  \lstinline!Test! [0.0] & Fraction of images used for the test \\
+  \lstinline!Fully! [0] & When activate it use the test dataset to learn.
+  Use only on fully-cnn mode\\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!FDDB_Database!}{FDDB\_Database}}
+Face Detection Data Set and Benchmark (FDDB) \citep{Jain2010}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.0] & Fraction of images used for the validation \\
+  \lstinline!DataPath! & Path to the images
+  (decompressed originalPics.tar.gz) \\
+  \noindent [\lstinline!$N2D2_DATA!/FDDB] & \\
+  \lstinline!LabelPath! & Path to the annotations
+  (decompressed FDDB-folds.tgz) \\
+  \noindent [\lstinline!$N2D2_DATA!/FDDB] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!GTSDB_DIR_Database!}
+{GTSDB\_DIR\_Database}}
+GTSDB database \citep{Houben2013}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.0] & Fraction of images used for the validation \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/FullIJCNN2013] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ILSVRC2012_Database!}
+{ILSVRC2012\_Database}}
+ILSVRC2012 database \citep{ILSVRC15}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! & Fraction of images used for the learning \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/ILSVRC2012] & \\
+  \lstinline!LabelPath! & Path to the database labels list file \\
+  \noindent [\lstinline!$N2D2_DATA!/ILSVRC2012/synsets.txt] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!KITTY_Database!}{KITTY\_Database}}
+KITTY Database.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! [0.8] & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.2] & Fraction of images used for the validation \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!KITTY_Road_Database!}
+{KITTY_Road\_Database}}
+KITTY Road Database.
+The KITTY Road Database provide ROI which can be used to road segmentation.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! [0.8] & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.2] & Fraction of images used for the validation \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!LITISRouen_Database!}
+{LITISRouen\_Database}}
+LITIS Rouen audio scene dataset \citep{Rakotomamonjy2014}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Learn! [0.4] & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.4] & Fraction of images used for the validation \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/data\_rouen] & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Dataset images slicing}
+
+It is possible to automatically slice images from a dataset, with a given slice
+ size and stride, using the \lstinline!.slicing! attribute. This effectively
+ increases the number of stimuli in the set.
+
+\begin{lstlisting}[language=ini]
+[database.slicing]
+ApplyTo=NoLearn
+Width=2048
+Height=1024
+StrideX=2048
+StrideY=1024
+\end{lstlisting}
+
+\subsection{Stimuli data analysis}
+
+You can enable stimuli data reporting with the following section (the name of
+the section must start with \lstinline!env.StimuliData!):
+\begin{lstlisting}[language=ini]
+[env.StimuliData-raw]
+ApplyTo=LearnOnly
+LogSizeRange=1
+LogValueRange=1
+\end{lstlisting}
+
+The stimuli data reported for the full MNIST learning set will look like:
+\begin{lstlisting}[style=console]
+env.StimuliData-raw data:
+Number of stimuli: 60000
+Data width range: [28, 28]
+Data height range: [28, 28]
+Data channels range: [1, 1]
+Value range: [0, 255]
+Value mean: 33.3184
+Value std. dev.: 78.5675
+\end{lstlisting}
+
+\subsubsection{Zero-mean and unity standard deviation normalization}
+
+It it possible to normalize the whole database to have zero mean and unity
+standard deviation on the learning set using a
+\lstinline!RangeAffineTransformation! transformation:
+\begin{lstlisting}[language=ini]
+; Stimuli normalization based on learning set global mean and std.dev.
+[env.Transformation-normalize]
+Type=RangeAffineTransformation
+FirstOperator=Minus
+FirstValue=[env.StimuliData-raw]_GlobalValue.mean
+SecondOperator=Divides
+SecondValue=[env.StimuliData-raw]_GlobalValue.stdDev
+\end{lstlisting}
+The variables \lstinline!_GlobalValue.mean! and \lstinline!_GlobalValue.stdDev!
+are automatically generated in the \lstinline![env.StimuliData-raw]! block.
+Thanks to this facility, unknown and arbitrary database can be analysed and
+normalized in one single step without requiring any external data manipulation.
+
+After normalization, the stimuli data reported is:
+\begin{lstlisting}[style=console]
+env.StimuliData-normalized data:
+Number of stimuli: 60000
+Data width range: [28, 28]
+Data height range: [28, 28]
+Data channels range: [1, 1]
+Value range: [-0.424074, 2.82154]
+Value mean: 2.64796e-07
+Value std. dev.: 1
+\end{lstlisting}
+
+Where we can check that the global mean is close to 0 and the standard deviation
+ is 1 on the whole dataset. The result of the transformation on the first images
+ of the set can be checked in the generated \emph{frames} folder, as shown in
+ figure \ref{fig:frame0Mean1StdDev}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/frame0Mean1StdDev.png}
+  \caption{Image of the set after normalization.}
+  \label{fig:frame0Mean1StdDev}
+\end{figure}
+
+
+\subsubsection{Substracting the mean image of the set}
+
+Using the \lstinline!StimuliData! object followed with an
+\lstinline!AffineTransformation!, it is also possible to use the mean image of
+ the dataset to normalize the data:
+\begin{lstlisting}[language=ini]
+[env.StimuliData-meanData]
+ApplyTo=LearnOnly
+MeanData=1 ; Provides the _MeanData parameter used in the transformation
+
+[env.Transformation]
+Type=AffineTransformation
+FirstOperator=Minus
+FirstValue=[env.StimuliData-meanData]_MeanData
+\end{lstlisting}
+
+The resulting global mean image can be visualized in
+ \emph{env.StimuliData-meanData/meanData.bin.png} an is shown in figure
+ \ref{fig:meanData}.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/meanData.png}
+  \caption{Global mean image generated by \lstinline!StimuliData! with
+  the \lstinline!MeanData! parameter enabled.}
+  \label{fig:meanData}
+\end{figure}
+
+After this transformation, the reported stimuli data becomes:
+\begin{lstlisting}[style=console]
+env.StimuliData-processed data:
+Number of stimuli: 60000
+Data width range: [28, 28]
+Data height range: [28, 28]
+Data channels range: [1, 1]
+Value range: [-139.554, 254.979]
+Value mean: -3.45583e-08
+Value std. dev.: 66.1288
+\end{lstlisting}
+
+The result of the transformation on the first images of the set can be checked
+ in the generated \emph{frames} folder, as shown in figure
+  \ref{fig:frameMinusMean}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/frameMinusMean.png}
+  \caption{Image of the set after the \lstinline!AffineTransformation!
+  substracting the global mean image (keep in mind that the original image
+  value range is [0, 255]).}
+  \label{fig:frameMinusMean}
+\end{figure}
+
+
+\subsection{Environment}
+
+The environment simply specify the input data format of the network (width,
+height and batch size). Example:
+\begin{lstlisting}[language=ini]
+[env]
+SizeX=24
+SizeY=24
+BatchSize=12 ; [default: 1]
+\end{lstlisting}
+
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!SizeX! & Environment width \\
+  \cellcolor{requiredcolor}
+  \lstinline!SizeY! & Environment height \\
+  \lstinline!NbChannels! [1] & Number of channels (applicable only if there is
+   no \lstinline!env.ChannelTransformation[...]!) \\
+  \lstinline!BatchSize! [1] & Batch size \\
+  \lstinline!CompositeStimuli! [0] & If true, use pixel-wise stimuli labels \\
+  \lstinline!CachePath! [] & Stimuli cache path (no cache if left empty) \\
+  \hline
+  \lstinline!StimulusType! [\lstinline!SingleBurst!] & Method for converting
+  stimuli into spike trains. Can be any of \lstinline!SingleBurst!,
+   \lstinline!Periodic!, \lstinline!JitteredPeriodic! or
+   \lstinline!Poissonian! \\
+  \lstinline!DiscardedLateStimuli! [1.0] & The pixels in the pre-processed
+  stimuli with a value above this limit never generate spiking events \\
+  \lstinline!PeriodMeanMin! [50 \lstinline!TimeMs!] & Mean minimum period
+  $\overline{T_{min}}$, used for periodic temporal codings, corresponding to
+  pixels in the pre-processed stimuli with a value of 0 (which are supposed to
+   be the most significant pixels) \\
+  \lstinline!PeriodMeanMax! [12 \lstinline!TimeS!] & Mean maximum period
+  $\overline{T_{max}}$, used for periodic temporal codings, corresponding to
+  pixels in the pre-processed stimuli with a value of 1 (which are supposed
+  to be the least significant pixels). This maximum period may be never reached
+   if \lstinline!DiscardedLateStimuli! is lower than 1.0 \\
+  \lstinline!PeriodRelStdDev! [0.1] & Relative standard deviation, used for
+  periodic temporal codings, applied to the spiking period of a pixel \\
+  \lstinline!PeriodMin! [11 \lstinline!TimeMs!] & Absolute minimum period,
+  or spiking interval, used for periodic temporal codings, for any pixel \\
+ \hline
+\end{longtable}
+\end{center}
+
+\subsubsection{\label{sec:transformations}Built-in transformations}
+
+There are 6 possible categories of transformations:
+\begin{myitemize}
+\item \lstinline!env.Transformation[...]! Transformations applied to the
+input images before channels creation;
+\item \lstinline!env.OnTheFlyTransformation[...]! On-the-fly transformations
+applied to the input images before channels creation;
+\item \lstinline!env.ChannelTransformation[...]! Create or add transformation
+for a specific channel;
+\item \lstinline!env.ChannelOnTheFlyTransformation[...]! Create or add
+on-the-fly transformation for a specific channel;
+\item \lstinline!env.ChannelsTransformation[...]! Transformations applied to
+all the channels of the input images;
+\item \lstinline!env.ChannelsOnTheFlyTransformation[...]! On-the-fly
+transformations applied to all the channels of the input images.
+\end{myitemize}
+
+Example:
+\begin{lstlisting}[language=ini]
+[env.Transformation]
+Type=PadCropTransformation
+Width=24
+Height=24
+\end{lstlisting}
+
+Several transformations can applied successively. In this case, to be able
+to apply multiple transformations of the same category, a different suffix
+ (\lstinline![...]!) must be added to each transformation.
+
+\textbf{The transformations will be processed in the order of appearance in the
+ INI file regardless of their suffix.}
+
+Common set of parameters for any kind of transformation:
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!ApplyTo! [\lstinline!All!] & Apply the transformation only to the
+  specified stimuli sets. Can be: \\
+    & \lstinline!LearnOnly!: learning set only \\
+    & \lstinline!ValidationOnly!: validation set only \\
+    & \lstinline!TestOnly!: testing set only \\
+    & \lstinline!NoLearn!: validation and testing sets only \\
+    & \lstinline!NoValidation!: learning and testing sets only \\
+    & \lstinline!NoTest!: learning and validation sets only \\
+    & \lstinline!All!: all sets (default) \\
+ \hline
+\end{longtable}
+\end{center}
+
+Example:
+\begin{lstlisting}[language=ini]
+[env.Transformation-1]
+Type=ChannelExtractionTransformation
+CSChannel=Gray
+
+[env.Transformation-2]
+Type=RescaleTransformation
+Width=29
+Height=29
+
+[env.Transformation-3]
+Type=EqualizeTransformation
+
+[env.OnTheFlyTransformation]
+Type=DistortionTransformation
+ApplyTo=LearnOnly ; Apply this transformation for the Learning set only
+ElasticGaussianSize=21
+ElasticSigma=6.0
+ElasticScaling=20.0
+Scaling=15.0
+Rotation=15.0
+\end{lstlisting}
+
+
+List of available transformations:
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!AffineTransformation!}
+{AffineTransformation}}
+Apply an element-wise affine transformation to the image with matrixes of the
+ same size.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!FirstOperator! & First element-wise operator, can be
+  \lstinline!Plus!, \lstinline!Minus!, \lstinline!Multiplies!,
+  \lstinline!Divides!  \\
+  \cellcolor{requiredcolor}
+  \lstinline!FirstValue! & First matrix file name \\
+  \lstinline!SecondOperator! [\lstinline!Plus!] & Second element-wise operator,
+  can be \lstinline!Plus!, \lstinline!Minus!, \lstinline!Multiplies!,
+  \lstinline!Divides!  \\
+  \lstinline!SecondValue! [] & Second matrix file name \\
+ \hline
+\end{tabular}
+\end{center}
+
+The final operation is the following, with $A$ the image matrix, $B_{1st}$,
+$B_{2nd}$ the matrixes to add/substract/multiply/divide and $\odot$ the
+element-wise operator :
+\[f(A) = \left(A\;\substack{\odot\\op_{1st}}\;B_{1st}\right)\;
+\substack{\odot\\op_{2nd}}\;B_{2nd}\]
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ApodizationTransformation!}
+{ApodizationTransformation}}
+Apply an apodization window to each data row.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Size! & Window total size (must match the number of data
+  columns) \\
+  \lstinline!WindowName! [\lstinline!Rectangular!] & Window name.
+  Possible values are: \\
+   & \lstinline!Rectangular!: Rectangular \\
+   & \lstinline!Hann!: Hann \\
+   & \lstinline!Hamming!: Hamming \\
+   & \lstinline!Cosine!: Cosine \\
+   & \lstinline!Gaussian!: Gaussian \\
+   & \lstinline!Blackman!: Blackman \\
+   & \lstinline!Kaiser!: Kaiser \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Gaussian! window}{Gaussian window}}
+Gaussian window.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \emph{WindowName}\lstinline!.Sigma! [0.4] & Sigma\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Blackman! window}{Blackman window}}
+Blackman window.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \emph{WindowName}\lstinline!.Alpha! [0.16] & Alpha\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Kaiser! window}{Kaiser window}}
+Kaiser window.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \emph{WindowName}\lstinline!.Beta! [5.0] & Beta\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ChannelExtractionTransformation!}
+{ChannelExtractionTransformation}}
+Extract an image channel.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!CSChannel! & \lstinline!Blue!: blue
+  channel in the BGR colorspace, or first channel of any colorspace \\
+ & \lstinline!Green!: green channel in the BGR colorspace, or second channel
+ of any colorspace \\
+ & \lstinline!Red!: red channel in the BGR colorspace, or third channel of any
+  colorspace \\
+ & \lstinline!Hue!: hue channel in the HSV colorspace \\
+ & \lstinline!Saturation!: saturation channel in the HSV colorspace \\
+ & \lstinline!Value!: value channel in the HSV colorspace \\
+ & \lstinline!Gray!: gray conversion \\
+ & \lstinline!Y!: Y channel in the YCbCr colorspace \\
+ & \lstinline!Cb!: Cb channel in the YCbCr colorspace \\
+ & \lstinline!Cr!: Cr channel in the YCbCr colorspace \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ColorSpaceTransformation!}
+{ColorSpaceTransformation}}
+Change the current image colorspace.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!ColorSpace! & \lstinline!BGR!: if the
+  image is in grayscale, convert it in BGR \\
+ & \lstinline!HSV! \\
+ & \lstinline!HLS! \\
+ & \lstinline!YCrCb! \\
+ & \lstinline!CIELab! \\
+ & \lstinline!CIELuv! \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!DFTTransformation!}
+{DFTTransformation}}
+Apply a DFT to the data.
+The input data must be single channel, the resulting data is two channels,
+the first for the real part and the second for the imaginary part.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!TwoDimensional! [1] & If true, compute a 2D image DFT. Otherwise,
+   compute the 1D DFT of each data row \\
+ \hline
+\end{tabular}
+\end{center}
+
+Note that this transformation can add zero-padding if required by the underlying
+ FFT implementation.
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!DistortionTransformation!\protect\iponly}
+{DistortionTransformation}}
+Apply elastic distortion to the image. This transformation is generally used
+on-the-fly (so that a different distortion is performed for each image), and
+for the learning only.
+
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!ElasticGaussianSize! [15] & Size of the gaussian for elastic
+  distortion (in pixels) \\
+  \lstinline!ElasticSigma! [6.0] & Sigma of the gaussian for elastic
+  distortion \\
+  \lstinline!ElasticScaling! [0.0] & Scaling of the gaussian for elastic
+  distortion \\
+  \lstinline!Scaling! [0.0] & Maximum random scaling amplitude
+  (+/-, in percentage) \\
+  \lstinline!Rotation! [0.0] & Maximum random rotation amplitude
+  (+/-, in °) \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!EqualizeTransformation!%%
+\protect\iponly}{EqualizeTransformation}}
+Image histogram equalization.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Method! [\lstinline!Standard!] & \lstinline!Standard!: standard
+  histogram equalization \\
+   & \lstinline!CLAHE!: contrast limited adaptive histogram equalization \\
+  \lstinline!CLAHE_ClipLimit! [40.0] & Threshold for contrast limiting
+  (for \lstinline!CLAHE! only) \\
+  \lstinline!CLAHE_GridSize! [8] & Size of grid for histogram equalization
+   (for \lstinline!CLAHE! only).
+  Input image will be divided into equally sized rectangular tiles.
+  This parameter defines the number of tiles in row and column. \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!FilterTransformation!}
+{FilterTransformation}}
+Apply a convolution filter to the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Kernel! & Convolution kernel.
+  Possible values are: \\
+   & \lstinline!*!: custom kernel \\
+   & \lstinline!Gaussian!: Gaussian kernel \\
+   & \lstinline!LoG!: Laplacian Of Gaussian kernel \\
+   & \lstinline!DoG!: Difference Of Gaussian kernel \\
+   & \lstinline!Gabor!: Gabor kernel \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!*! kernel}{* kernel}}
+Custom kernel.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option & Description\\
+ \hline\hline
+  \lstinline!Kernel.SizeX! [0] & Width of the kernel (numer of columns)\\
+  \lstinline!Kernel.SizeY! [0] & Height of the kernel (number of rows)\\
+  \cellcolor{requiredcolor}\lstinline!Kernel.Mat! & List of row-major ordered
+   coefficients of the kernel\\
+ \hline
+\end{tabular}
+\end{center}
+
+If both \lstinline!Kernel.SizeX! and \lstinline!Kernel.SizeY! are 0, the kernel
+ is assumed to be square.
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Gaussian! kernel}{Gaussian kernel}}
+Gaussian kernel.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeX! & Width of the kernel
+  (numer of columns)\\
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeY! & Height of the kernel
+  (number of rows)\\
+  \lstinline!Kernel.Positive! [1] & If true, the center of the kernel is
+  positive\\
+  \lstinline!Kernel.Sigma! [$\sqrt{2.0}$] & Sigma of the kernel\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!LoG! kernel}{LoG kernel}}
+Laplacian Of Gaussian kernel.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeX! & Width of the kernel
+  (numer of columns)\\
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeY! & Height of the kernel
+  (number of rows)\\
+  \lstinline!Kernel.Positive! [1] & If true, the center of the kernel is
+  positive\\
+  \lstinline!Kernel.Sigma! [$\sqrt{2.0}$] & Sigma of the kernel\\
+ \hline
+\end{tabular}
+\end{center}
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!DoG! kernel}{DoG kernel}}
+Difference Of Gaussian kernel kernel.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeX! & Width of the kernel
+  (numer of columns)\\
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeY! & Height of the kernel
+   (number of rows)\\
+  \lstinline!Kernel.Positive! [1] & If true, the center of the kernel is
+  positive\\
+  \lstinline!Kernel.Sigma1! [2.0] & Sigma1 of the kernel\\
+  \lstinline!Kernel.Sigma2! [1.0] & Sigma2 of the kernel\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\subparagraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Gabor! kernel}{Gabor kernel}}
+Gabor kernel.
+
+\begin{center}
+ \begin{tabular}{| m{4cm} | m{7cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeX! & Width of the kernel
+  (numer of columns)\\
+  \cellcolor{requiredcolor}\lstinline!Kernel.SizeY! & Height of the kernel
+  (number of rows)\\
+  \cellcolor{requiredcolor}\lstinline!Kernel.Theta! & Theta of the kernel\\
+  \lstinline!Kernel.Sigma! [$\sqrt{2.0}$] & Sigma of the kernel\\
+  \lstinline!Kernel.Lambda! [10.0] & Lambda of the kernel\\
+  \lstinline!Kernel.Psi! [$\pi/2.0$] & Psi of the kernel\\
+  \lstinline!Kernel.Gamma! [0.5] & Gamma of the kernel\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!FlipTransformation!}
+{FlipTransformation}}
+Image flip transformation.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!HorizontalFlip! [0] & If true, flip the image horizontally \\
+  \lstinline!VerticalFlip! [0] & If true, flip the image vertically \\
+  \lstinline!RandomHorizontalFlip! [0] & If true, randomly flip the image
+   horizontally \\
+  \lstinline!RandomVerticalFlip! [0] & If true, randomly flip the image
+  vertically \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!LabelSliceExtractionTransformation!%%
+\protect\iponly}{LabelSliceExtractionTransformation}}
+Extract a slice from an image belonging to a given label.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Width! & Width of the slice to extract \\
+  \cellcolor{requiredcolor}\lstinline!Height! & Height of the slice to
+  extract \\
+  \lstinline!Label! [-1] & Slice should belong to this label ID. If -1, the
+  label ID is random \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!MagnitudePhaseTransformation!}
+{MagnitudePhaseTransformation}}
+Compute the magnitude and phase of a complex two channels input data, with the
+first channel $x$ being the real part and the second channel $y$ the imaginary
+part. The resulting data is two channels, the first one with the magnitude and
+ the second one with the phase.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!LogScale! [0] & If true, compute the magnitude in log scale \\
+ \hline
+\end{tabular}
+\end{center}
+
+The magnitude is:
+
+\[ M_{i,j} = \sqrt{x_{i,j}^2 + x_{i,j}^2} \]
+
+If \lstinline!LogScale! = 1, compute $M'_{i,j} = log(1 + M_{i,j})$.
+
+The phase is:
+
+\[ \theta_{i,j} = atan2(y_{i,j}, x_{i,j}) \]
+
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]
+!MorphologicalReconstructionTransformation!\protect\iponly}
+{MorphologicalReconstructionTransformation}}
+Apply a morphological reconstruction transformation to the image.
+This transformation is also useful for post-processing.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Operation! & Morphological operation to
+  apply. Can be:\\
+   & \lstinline!ReconstructionByErosion!: reconstruction by erosion operation \\
+   & \lstinline!ReconstructionByDilation!: reconstruction by dilation
+   operation \\
+   & \lstinline!OpeningByReconstruction!: opening by reconstruction operation \\
+   & \lstinline!ClosingByReconstruction!: closing by reconstruction operation \\
+  \cellcolor{requiredcolor}\lstinline!Size! & Size of the structuring element \\
+  \lstinline!ApplyToLabels! [0] & If true, apply the transformation to the
+  labels instead of the image \\
+  \lstinline!Shape! [\lstinline!Rectangular!] & Shape of the structuring element
+   used for morphology operations. Can be \lstinline!Rectangular!,
+   \lstinline!Elliptic! or \lstinline!Cross!. \\
+  \lstinline!NbIterations! [1] & Number of times erosion and dilation are
+  applied for opening and closing reconstructions \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!MorphologyTransformation!\protect\iponly}
+{MorphologyTransformation}}
+Apply a morphology transformation to the image.
+This transformation is also useful for post-processing.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Operation! & Morphological operation to
+  apply. Can be:\\
+   & \lstinline!Erode!: erode operation ($=erode(src)$) \\
+   & \lstinline!Dilate!: dilate operation ($=dilate(src)$) \\
+   & \lstinline!Opening!: opening operation ($open(src)=dilate(erode(src))$) \\
+   & \lstinline!Closing!: closing operation ($close(src)=erode(dilate(src))$) \\
+   & \lstinline!Gradient!: morphological gradient ($=dilate(src)-erode(src)$) \\
+   & \lstinline!TopHat!: top hat ($=src-open(src)$) \\
+   & \lstinline!BlackHat!: black hat ($=close(src)-src$) \\
+  \cellcolor{requiredcolor}\lstinline!Size! & Size of the structuring element \\
+  \lstinline!ApplyToLabels! [0] & If true, apply the transformation to the
+  labels instead of the image \\
+  \lstinline!Shape! [\lstinline!Rectangular!] & Shape of the structuring element
+   used for morphology operations. Can be \lstinline!Rectangular!,
+   \lstinline!Elliptic! or \lstinline!Cross!. \\
+  \lstinline!NbIterations! [1] & Number of times erosion and dilation are
+  applied \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!NormalizeTransformation!}{NormalizeTransformation}}
+Normalize the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Norm! [\lstinline!MinMax!] & Norm type, can be: \\
+   & \lstinline!L1!: L1 normalization \\
+   & \lstinline!L2!: L2 normalization \\
+   & \lstinline!Linf!: Linf normalization \\
+   & \lstinline!MinMax!: min-max normalization \\
+  \lstinline!NormValue! [1.0] & Norm value (for \lstinline!L1!, \lstinline!L2!
+   and \lstinline!Linf!) \\
+   & Such that $||data||_{L_{p}} = NormValue$ \\
+  \lstinline!NormMin! [0.0] & Min value (for \lstinline!MinMax! only) \\
+   & Such that $min(data) = NormMin$ \\
+  \lstinline!NormMax! [1.0] & Max value (for \lstinline!MinMax! only) \\
+   & Such that $max(data) = NormMax$ \\
+  \lstinline!PerChannel! [0] & If true, normalize each channel individually \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!PadCropTransformation!}
+{PadCropTransformation}}
+Pad/crop the image to a specified size.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Width! & Width of the padded/cropped
+  image \\
+  \cellcolor{requiredcolor}\lstinline!Height! & Height of the padded/cropped
+   image \\
+  \lstinline!PaddingBackground! [\lstinline!MeanColor!] & Background color
+  used when padding. Possible values: \\
+   & \lstinline!MeanColor!: pad with the mean color of the image \\
+   & \lstinline!BlackColor!: pad with black \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!RandomAffineTransformation!%%
+\protect\iponly}{RandomAffineTransformation}}
+Apply a global random affine transformation to the values of the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!GainVar! & Random gain is in range $\pm$\lstinline!GainVar! \\
+  \lstinline!BiasVar! [0.0] & Random bias is in range $\pm$\lstinline!BiasVar!\\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!RangeAffineTransformation!}
+{RangeAffineTransformation}}
+Apply an affine transformation to the values of the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!FirstOperator! & First operator, can be
+   \lstinline!Plus!, \lstinline!Minus!, \lstinline!Multiplies!,
+   \lstinline!Divides!  \\
+  \cellcolor{requiredcolor}\lstinline!FirstValue! & First value \\
+  \lstinline!SecondOperator! [\lstinline!Plus!] & Second operator, can be
+  \lstinline!Plus!, \lstinline!Minus!, \lstinline!Multiplies!,
+  \lstinline!Divides!  \\
+  \lstinline!SecondValue! [0.0] & Second value \\
+ \hline
+\end{tabular}
+\end{center}
+
+The final operation is the following:
+\[f(x) = \left(x\;\substack{o\\op_{1st}}\;val_{1st}\right)\;
+\substack{o\\op_{2nd}}\;val_{2nd}\]
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!RangeClippingTransformation!\protect\iponly}
+{RangeClippingTransformation}}
+Clip the value range of the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!RangeMin! [$min(data)$] & Image values below \lstinline!RangeMin!
+  are clipped to 0 \\
+  \lstinline!RangeMax! [$max(data)$] & Image values above \lstinline!RangeMax!
+   are clipped to 1 (or the maximum integer value of the data type) \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!RescaleTransformation!}
+{RescaleTransformation}}
+Rescale the image to a specified size.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Width! & Width of the rescaled image \\
+  \cellcolor{requiredcolor}\lstinline!Height! & Height of the rescaled image \\
+  \lstinline!KeepAspectRatio! [0] & If true, keeps the aspect ratio of the
+  image \\
+  \lstinline!ResizeToFit! [1] & If true, resize along the longest dimension
+  when \lstinline!KeepAspectRatio! is true \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ReshapeTransformation!}
+{ReshapeTransformation}}
+Reshape the data to a specified size.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbRows! & New number of rows \\
+  \lstinline!NbCols! [0] & New number of cols (0 = no check) \\
+  \lstinline!NbChannels! [0] & New number of channels (0 = no change) \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!SliceExtractionTransformation!%%
+\protect\iponly}{SliceExtractionTransformation}}
+Extract a slice from an image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Width! & Width of the slice to extract \\
+  \cellcolor{requiredcolor}\lstinline!Height! & Height of the slice to
+  extract \\
+  \lstinline!OffsetX! [0] & X offset of the slice to extract \\
+  \lstinline!OffsetY! [0] & Y offset of the slice to extract \\
+  \lstinline!RandomOffsetX! [0] & If true, the X offset is chosen randomly \\
+  \lstinline!RandomOffsetY! [0] & If true, the Y offset is chosen randomly \\
+  \lstinline!AllowPadding! [0] & If true, zero-padding is allowed if the image
+  is smaller than the slice to extract \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!ThresholdTransformation!}{ThresholdTransformation}}
+Apply a thresholding transformation to the image.
+This transformation is also useful for post-processing.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Threshold! & Threshold value \\
+  \lstinline!OtsuMethod! [0] & Use Otsu's method to determine the optimal
+  threshold (if true, the \lstinline!Threshold! value is ignored) \\
+  \lstinline!Operation! [Binary] & Thresholding operation to apply. Can be:\\
+   & \lstinline!Binary! \\
+   & \lstinline!BinaryInverted! \\
+   & \lstinline!Truncate! \\
+   & \lstinline!ToZero! \\
+   & \lstinline!ToZeroInverted! \\
+  \lstinline!MaxValue! [1.0] & Max. value to use with \lstinline!Binary! and \lstinline!BinaryInverted! operations \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!TrimTransformation!}
+{TrimTransformation}}
+Trim the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbLevels! & Number of levels for the color discretization of the image \\
+  \lstinline!Method! [\lstinline!Discretize!] & Possible values are: \\
+   & \lstinline!Reduce!: discretization using K-means \\
+   & \lstinline!Discretize!: simple discretization \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!WallisFilterTransformation!%%
+\protect\iponly}{WallisFilterTransformation}}
+Apply Wallis filter to the image.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Size! & Size of the filter \\
+  \lstinline!Mean! [0.0] & Target mean value \\
+  \lstinline!StdDev! [1.0] & Target standard deviation \\
+  \lstinline!PerChannel! [0] & If true, apply Wallis filter to each channel
+  individually (this parameter is meaningful only if \lstinline!Size! is 0) \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Network layers}
+
+\subsubsection{Layer definition}
+Common set of parameters for any kind of layer.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Input! & Name of the section(s) for the
+  input layer(s). Comma separated \\
+  \cellcolor{requiredcolor}\lstinline!Type! & Type of the layer. Can be any of
+  the type described below \\
+  \lstinline!Model! [\lstinline!DefaultModel!] & Layer model to use \\
+  \lstinline!ConfigSection! [] & Name of the configuration section for layer \\
+ \hline
+\end{tabular}
+\end{center}
+
+To specify that the back-propagated error must be computed at the output of a
+given layer (generally the last layer, or output layer), one must add a target
+section named \emph{LayerName}\lstinline!.Target!:
+\begin{lstlisting}[language=ini]
+...
+[LayerName.Target]
+TargetValue=1.0 ; default: 1.0
+DefaultValue=0.0 ; default: -1.0
+\end{lstlisting}
+
+
+\subsubsection{Weight fillers}
+Fillers to initialize weights and biases in the different type of layer.
+
+Usage example:
+\begin{lstlisting}[language=ini]
+[conv1]
+...
+WeightsFiller=NormalFiller
+WeightsFiller.Mean=0.0
+WeightsFiller.StdDev=0.05
+...
+\end{lstlisting}
+
+The initial weights distribution for each layer can be checked in the
+ \emph{weights\_init} folder, with an example shown in figure
+ \ref{fig:weightsInitDistrib}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/weightsInitDistrib.png}
+  \caption{Initial weights distribution of a layer using a normal distribution
+  (\lstinline!NormalFiller!) with a 0 mean and a 0.05 standard deviation.}
+  \label{fig:weightsInitDistrib}
+\end{figure}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ConstantFiller!}{ConstantFiller}}
+Fill with a constant value.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\emph{FillerName}\lstinline!.Value! & Value for the
+  filling \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!NormalFiller!}{NormalFiller}}
+Fill with a normal distribution.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+    \emph{FillerName}\lstinline!.Mean! [0.0] & Mean value of the distribution \\
+    \emph{FillerName}\lstinline!.StdDev! [1.0] & Standard deviation of the
+    distribution \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!UniformFiller!}{UniformFiller}}
+Fill with an uniform distribution.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+    \emph{FillerName}\lstinline!.Min! [0.0] & Min. value \\
+    \emph{FillerName}\lstinline!.Max! [1.0] & Max. value \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!XavierFiller!}{XavierFiller}}
+Fill with an uniform distribution with normalized variance \citep{Glorot2010}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+    \emph{FillerName}\lstinline!.VarianceNorm! [\lstinline!FanIn!]
+    & Normalization, can be \lstinline!FanIn!, \lstinline!Average!
+    or \lstinline!FanOut! \\
+    \emph{FillerName}\lstinline!.Distribution! [\lstinline!Uniform!]
+    & Distribution, can be \lstinline!Uniform! or \lstinline!Normal! \\
+ \hline
+\end{tabular}
+\end{center}
+
+Use an uniform distribution with interval $[-scale,scale]$, with $scale = \sqrt{\frac{3.0}{n}}$.
+
+\begin{myitemize}
+\item $n$ = $fan\mhyphen{}in$ with \lstinline!FanIn!, resulting in
+$Var(W)=\frac{1}{fan\mhyphen{}in}$ \\
+\item $n$ = $\frac{(fan\mhyphen{}in + fan\mhyphen{}out)}{2}$ with
+\lstinline!Average!, resulting in
+$Var(W)=\frac{2}{fan\mhyphen{}in + fan\mhyphen{}out}$ \\
+\item $n$ = $fan\mhyphen{}out$ with \lstinline!FanOut!, resulting in
+$Var(W)=\frac{1}{fan\mhyphen{}out}$
+\end{myitemize}
+
+
+\subsubsection{Weight solvers}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!SGDSolver\_Frame!}{SGDSolver\_Frame}}
+SGD Solver for \lstinline!Frame! models.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+   \emph{SolverName}\lstinline!.LearningRate! [0.01] & Learning rate \\
+   \emph{SolverName}\lstinline!.Momentum! [0.0] & Momentum \\
+   \emph{SolverName}\lstinline!.Decay! [0.0] & Decay \\
+   \emph{SolverName}\lstinline!.LearningRatePolicy! [\lstinline!None!]
+   & Learning rate decay policy. Can be any of \lstinline!None!,
+   \lstinline!StepDecay!, \lstinline!ExponentialDecay!, \lstinline!InvTDecay!,
+    \lstinline!PolyDecay! \\
+   \emph{SolverName}\lstinline!.LearningRateStepSize! [1] & Learning rate
+    step size (in number of stimuli) \\
+   \emph{SolverName}\lstinline!.LearningRateDecay! [0.1] & Learning rate
+    decay \\
+   \emph{SolverName}\lstinline!.Clamping! [0] & If true, clamp the weights and
+   bias between -1 and 1 \\
+   \emph{SolverName}\lstinline!.Power! [0.0] & Polynomial learning rule power
+    parameter \\
+   \emph{SolverName}\lstinline!.MaxIterations! [0.0] & Polynomial learning
+   rule maximum number of iterations \\
+
+ \hline
+\end{tabular}
+\end{center}
+
+The learning rate decay policies are the following:
+
+\begin{myitemize}
+\item \lstinline!StepDecay!: every
+\emph{SolverName}\lstinline!.LearningRateStepSize! stimuli, the learning rate
+is reduced by a factor \emph{SolverName}\lstinline!.LearningRateDecay!; \\
+\item \lstinline!ExponentialDecay!: the learning rate is
+$\alpha = \alpha_{0}\exp(-k t)$, with $\alpha_{0}$ the initial learning rate
+\emph{SolverName}\lstinline!.LearningRate!, $k$ the rate decay \emph{SolverName}
+\lstinline!.LearningRateDecay! and $t$ the step number (one step every
+ \emph{SolverName}\lstinline!.LearningRateStepSize! stimuli); \\
+\item \lstinline!InvTDecay!: the learning rate is
+$\alpha = \alpha_{0} / (1 + k t)$, with $\alpha_{0}$ the initial learning rate
+ \emph{SolverName}\lstinline!.LearningRate!, $k$ the rate decay
+ \emph{SolverName}\lstinline!.LearningRateDecay! and $t$ the step number
+ (one step every \emph{SolverName}\lstinline!.LearningRateStepSize! stimuli). \\
+\item \lstinline!PolyDecay!: the learning rate is
+$\alpha = \alpha_{0} * (1 - \frac{k}{t})^n$, with $\alpha_{0}$ the initial
+learning rate \emph{SolverName}\lstinline!.LearningRate!, $k$ the current
+iteration, $t$ the maximum number of iteration
+\emph{SolverName}\lstinline!.MaxIterations! and $n$ the power parameter
+\emph{SolverName}\lstinline!.Power! \\
+\end{myitemize}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!SGDSolver\_Frame\_CUDA!}
+{SGDSolver\_Frame\_CUDA}}
+SGD Solver for \lstinline!Frame_CUDA! models.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+   \emph{SolverName}\lstinline!.LearningRate! [0.01] & Learning rate \\
+   \emph{SolverName}\lstinline!.Momentum! [0.0] & Momentum \\
+   \emph{SolverName}\lstinline!.Decay! [0.0] & Decay \\
+   \emph{SolverName}\lstinline!.LearningRatePolicy! [\lstinline!None!]
+   & Learning rate decay policy. Can be any of
+    \lstinline!None!, \lstinline!StepDecay!, \lstinline!ExponentialDecay!, \lstinline!InvTDecay! \\
+   \emph{SolverName}\lstinline!.LearningRateStepSize! [1] & Learning rate step
+   size (in number of stimuli) \\
+   \emph{SolverName}\lstinline!.LearningRateDecay! [0.1] & Learning rate
+   decay \\
+   \emph{SolverName}\lstinline!.Clamping! [0] & If true, clamp the weights and
+    bias between -1 and 1 \\
+ \hline
+\end{tabular}
+\end{center}
+
+The learning rate decay policies are identical to the ones in the \lstinline!SGDSolver\_Frame! solver.
+
+
+
+\subsubsection{Activation functions}
+Activation function to be used at the output of layers.
+
+Usage example:
+\begin{lstlisting}[language=ini]
+[conv1]
+...
+ActivationFunction=Rectifier
+ActivationFunction.LeakSlope=0.01
+ActivationFunction.Clipping=20
+...
+\end{lstlisting}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Logistic!}{Logistic}}
+Logistic activation function.
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!LogisticWithLoss!}{LogisticWithLoss}}
+Logistic with loss activation function.
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Rectifier!}{Rectifier}}
+Rectifier or ReLU activation function.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+    \lstinline!ActivationFunction.LeakSlope! [0.0] & Leak slope for negative
+    inputs \\
+    \lstinline!ActivationFunction.Clipping! [0.0] & Clipping value for positive
+     outputs \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Saturation!}{Saturation}}
+Saturation activation function.
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Softplus!}{Softplus}}
+Softplus activation function.
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Tanh!}{Tanh}}
+Tanh activation function.
+
+Computes $y = tanh(\alpha x)$.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+    \lstinline!ActivationFunction.Alpha! [1.0] & $\alpha$ parameter \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!TanhLeCun!}{TanhLeCun}}
+Tanh activation function with an $\alpha$ parameter of
+$1.7159 \times (2.0/3.0)$.
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Conv!}{Conv}}
+Convolutional layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!KernelWidth! & Width of the kernel \\
+  \cellcolor{requiredcolor}\lstinline!KernelHeight! & Height of the kernel \\
+  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \lstinline!SubSampleX! [1] & X-axis subsampling factor of the output
+  feature maps \\
+  \lstinline!SubSampleY! [1] & Y-axis subsampling factor of the output
+   feature maps \\
+  \lstinline!SubSample! [1] & Subsampling factor of the output feature maps \\
+   & (mutually exclusive with \lstinline!SubSampleX!
+    and \lstinline!SubSampleY!) \\
+  \lstinline!StrideX! [1] & X-axis stride of the kernels \\
+  \lstinline!StrideY! [1] & Y-axis stride of the kernels \\
+  \lstinline!Stride! [1] & Stride of the kernels \\
+   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \lstinline!PaddingX! [0] & X-axis input padding \\
+  \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!Padding! [0] & Input padding \\
+   & (mutually exclusive with \lstinline!PaddingX! and \lstinline!PaddingY!) \\
+  \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+  \lstinline!WeightsFiller! & Weights initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.0, 0.05)!] & \\
+  \lstinline!BiasFiller! & Biases initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.0, 0.05)!] & \\
+  \lstinline!Mapping.SizeX! [1] & Mapping canvas pattern default width \\
+  \lstinline!Mapping.SizeY! [1] & Mapping canvas pattern default height \\
+  \lstinline!Mapping.Size! [1] & Mapping canvas pattern default size \\
+   & (mutually exclusive with \lstinline!Mapping.SizeX!
+   and \lstinline!Mapping.SizeY!) \\
+  \lstinline!Mapping.StrideX! [1] & Mapping canvas default X-axis step \\
+  \lstinline!Mapping.StrideY! [1] & Mapping canvas default Y-axis step \\
+  \lstinline!Mapping.Stride! [1] & Mapping canvas default step \\
+   & (mutually exclusive with \lstinline!Mapping.StrideX!
+   and \lstinline!Mapping.StrideY!) \\
+  \lstinline!Mapping.OffsetX! [0] & Mapping canvas default X-axis offset \\
+  \lstinline!Mapping.OffsetY! [0] & Mapping canvas default Y-axis offset \\
+  \lstinline!Mapping.Offset! [0] & Mapping canvas default offset \\
+   & (mutually exclusive with \lstinline!Mapping.OffsetX!
+   and \lstinline!Mapping.OffsetY!) \\
+  \lstinline!Mapping.NbIterations! [0] & Mapping canvas pattern default number
+  of iterations (0 means no limit) \\
+  \lstinline!Mapping(in).SizeX! [1] & Mapping canvas pattern default width
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).SizeY! [1] & Mapping canvas pattern default height
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Size! [1] & Mapping canvas pattern default size
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).SizeX! and \\
+   & \lstinline!Mapping(in).SizeY!) \\
+  \lstinline!Mapping(in).StrideX! [1] & Mapping canvas default X-axis step
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).StrideY! [1] & Mapping canvas default Y-axis step
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Stride! [1] & Mapping canvas default step
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).StrideX! and \\
+   & \lstinline!Mapping(in).StrideY!) \\
+  \lstinline!Mapping(in).OffsetX! [0] & Mapping canvas default X-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).OffsetY! [0] & Mapping canvas default Y-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Offset! [0] & Mapping canvas default offset
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).OffsetX! and \\
+   & \lstinline!Mapping(in).OffsetY!) \\
+  \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
+  number of iterations for input layer \lstinline!in! (0 means no limit) \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!NoBias! [1] & \emph{all Frame} & If true, don't use bias \\
+  \lstinline!Solvers.!* & \emph{all Frame} & Any solver parameters \\
+  \lstinline!WeightsSolver.!* & \emph{all Frame} & Weights solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!BiasSolver.!* & \emph{all Frame} & Bias solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\paragraph{Configuration parameters (\emph{Spike} models)}
+
+\begin{flushleft}
+\fcolorbox{black}{expercolor}{\rule{0pt}{6pt}\rule{6pt}{0pt}}
+\emph{Experimental option (implementation may be wrong or susceptible
+to change)}
+\end{flushleft}
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!IncomingDelay! [1 \lstinline!TimePs!;100 \lstinline!TimeFs!]
+  & \emph{all Spike} & Synaptic incoming delay $w_{delay}$ \\
+  \lstinline!Threshold! [1.0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+  & Threshold of the neuron $I_{thres}$ \\
+  \lstinline!BipolarThreshold! [1] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+  & If true, the threshold is also applied to the absolute value of negative
+  values (generating negative spikes) \\
+  \lstinline!Leak! [0.0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+  & Neural leak time constant $\tau_{leak}$ (if 0, no leak) \\
+  \lstinline!Refractory! [0.0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+  & Neural refractory period $T_{refrac}$ \\
+  \lstinline!WeightsRelInit! [0.0;0.05] & \lstinline!Spike!
+  & Relative initial synaptic weight $w_{init}$ \\
+  \lstinline!WeightsMinMean! [1;0.1] & \lstinline!Spike_RRAM!
+  & Mean minimum synaptic weight $w_{min}$ \\
+  \lstinline!WeightsMaxMean! [100;10.0] & \lstinline!Spike_RRAM!
+  & Mean maximum synaptic weight $w_{max}$ \\
+  \lstinline!WeightsMinVarSlope! [0.0] & \lstinline!Spike_RRAM!
+  & OXRAM specific parameter \\
+  \lstinline!WeightsMinVarOrigin! [0.0] & \lstinline!Spike_RRAM!
+  & OXRAM specific parameter \\
+  \lstinline!WeightsMaxVarSlope! [0.0] & \lstinline!Spike_RRAM!
+  & OXRAM specific parameter \\
+  \lstinline!WeightsMaxVarOrigin! [0.0] & \lstinline!Spike_RRAM!
+  & OXRAM specific parameter \\
+  \lstinline!WeightsSetProba! [1.0] & \lstinline!Spike_RRAM!
+  & Intrinsic SET switching probability $P_{SET}$ (upon receiving a SET
+   programming pulse). Assuming uniform statistical distribution (not well
+   supported by experiments on RRAM) \\
+  \lstinline!WeightsResetProba! [1.0] & \lstinline!Spike_RRAM!
+  & Intrinsic RESET switching probability $P_{RESET}$ (upon receiving a RESET
+  programming pulse). Assuming uniform statistical distribution (not well
+  supported by experiments on RRAM) \\
+  \lstinline!SynapticRedundancy! [1] & \lstinline!Spike_RRAM!
+  & Synaptic redundancy (number of RRAM device per synapse) \\
+  \cellcolor{expercolor}\lstinline!BipolarWeights! [0] & \lstinline!Spike_RRAM!
+  & Bipolar weights \\
+  \cellcolor{expercolor}\lstinline!BipolarIntegration! [0]
+  & \lstinline!Spike_RRAM! & Bipolar integration \\
+  \cellcolor{expercolor}\lstinline!LtpProba! [0.2] & \lstinline!Spike_RRAM!
+  & Extrinsic STDP LTP probability (cumulative with intrinsic SET switching
+  probability $P_{SET}$) \\
+  \cellcolor{expercolor}\lstinline!LtdProba! [0.1] & \lstinline!Spike_RRAM!
+  & Extrinsic STDP LTD probability (cumulative with intrinsic RESET switching
+   probability $P_{RESET}$) \\
+  \cellcolor{expercolor}\lstinline!StdpLtp! [1000 \lstinline!TimePs!] & \lstinline!Spike_RRAM! & STDP LTP time window $T_{LTP}$ \\
+  \cellcolor{expercolor}\lstinline!InhibitRefractory! [0 \lstinline!TimePs!] & \lstinline!Spike_RRAM! & Neural lateral inhibition period $T_{inhibit}$ \\
+  \cellcolor{expercolor}\lstinline!EnableStdp! [1] & \lstinline!Spike_RRAM!
+  & If false, STDP is disabled (no synaptic weight change) \\
+  \cellcolor{expercolor}\lstinline!RefractoryIntegration! [1]
+   & \lstinline!Spike_RRAM! & If true, reset the integration to 0 during
+   the refractory period \\
+  \cellcolor{expercolor}\lstinline!DigitalIntegration! [0]
+  & \lstinline!Spike_RRAM! & If false, the analog value of the devices is
+  integrated, instead of their binary value \\
+ \hline
+\end{longtable}
+\end{center}
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Deconv!}{Deconv}}
+Deconvolutionlayer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!KernelWidth! & Width of the kernel \\
+  \cellcolor{requiredcolor}\lstinline!KernelHeight! & Height of the kernel \\
+  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \lstinline!StrideX! [1] & X-axis stride of the kernels \\
+  \lstinline!StrideY! [1] & Y-axis stride of the kernels \\
+  \lstinline!Stride! [1] & Stride of the kernels \\
+   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \lstinline!PaddingX! [0] & X-axis input padding \\
+  \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!Padding! [0] & Input padding \\
+   & (mutually exclusive with \lstinline!PaddingX! and \lstinline!PaddingY!) \\
+  \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+  \lstinline!WeightsFiller! & Weights initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.0, 0.05)!] & \\
+  \lstinline!BiasFiller! & Biases initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.0, 0.05)!] & \\
+  \lstinline!Mapping.SizeX! [1] & Mapping canvas pattern default width \\
+  \lstinline!Mapping.SizeY! [1] & Mapping canvas pattern default height \\
+  \lstinline!Mapping.Size! [1] & Mapping canvas pattern default size \\
+   & (mutually exclusive with \lstinline!Mapping.SizeX!
+   and \lstinline!Mapping.SizeY!) \\
+  \lstinline!Mapping.StrideX! [1] & Mapping canvas default X-axis step \\
+  \lstinline!Mapping.StrideY! [1] & Mapping canvas default Y-axis step \\
+  \lstinline!Mapping.Stride! [1] & Mapping canvas default step \\
+   & (mutually exclusive with \lstinline!Mapping.StrideX!
+   and \lstinline!Mapping.StrideY!) \\
+  \lstinline!Mapping.OffsetX! [0] & Mapping canvas default X-axis offset \\
+  \lstinline!Mapping.OffsetY! [0] & Mapping canvas default Y-axis offset \\
+  \lstinline!Mapping.Offset! [0] & Mapping canvas default offset \\
+   & (mutually exclusive with \lstinline!Mapping.OffsetX!
+   and \lstinline!Mapping.OffsetY!) \\
+  \lstinline!Mapping.NbIterations! [0] & Mapping canvas pattern default number
+  of iterations (0 means no limit) \\
+  \lstinline!Mapping(in).SizeX! [1] & Mapping canvas pattern default width
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).SizeY! [1] & Mapping canvas pattern default height
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Size! [1] & Mapping canvas pattern default size
+   for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).SizeX! and \\
+   & \lstinline!Mapping(in).SizeY!) \\
+  \lstinline!Mapping(in).StrideX! [1] & Mapping canvas default X-axis step
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).StrideY! [1] & Mapping canvas default Y-axis step
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Stride! [1] & Mapping canvas default step
+   for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).StrideX! and \\
+   & \lstinline!Mapping(in).StrideY!) \\
+  \lstinline!Mapping(in).OffsetX! [0] & Mapping canvas default X-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).OffsetY! [0] & Mapping canvas default Y-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Offset! [0] & Mapping canvas default offset
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).OffsetX! and \\
+   & \lstinline!Mapping(in).OffsetY!) \\
+  \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
+   number of iterations for input layer \lstinline!in! (0 means no limit) \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!NoBias! [1] & \emph{all Frame} & If true, don't use bias \\
+  \lstinline!BackPropagate! [1] & \emph{all Frame} & If true, enable
+  backpropogation \\
+  \lstinline!Solvers.!* & \emph{all Frame} & Any solver parameters \\
+  \lstinline!WeightsSolver.!* & \emph{all Frame} & Weights solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!BiasSolver.!* & \emph{all Frame} & Bias solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Pool!}{Pool}}
+Pooling layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!PoolWidth! & Width of the pooling area \\
+  \cellcolor{requiredcolor}\lstinline!PoolHeight! & Height of the pooling
+area \\
+  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \lstinline!StrideX! [1] & X-axis stride of the pooling areas \\
+  \lstinline!StrideY! [1] & Y-axis stride of the pooling areas \\
+  \lstinline!Stride! [1] & Stride of the pooling areas \\
+   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \lstinline!PaddingX! [0] & X-axis input padding \\
+  \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!Padding! [0] & Input padding \\
+  \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+  \lstinline!Mapping.SizeX! [1] & Mapping canvas pattern default width \\
+  \lstinline!Mapping.SizeY! [1] & Mapping canvas pattern default height \\
+  \lstinline!Mapping.Size! [1] & Mapping canvas pattern default size \\
+   & (mutually exclusive with \lstinline!Mapping.SizeX!
+   and \lstinline!Mapping.SizeY!) \\
+  \lstinline!Mapping.StrideX! [1] & Mapping canvas default X-axis step \\
+  \lstinline!Mapping.StrideY! [1] & Mapping canvas default Y-axis step \\
+  \lstinline!Mapping.Stride! [1] & Mapping canvas default step \\
+   & (mutually exclusive with \lstinline!Mapping.StrideX!
+   and \lstinline!Mapping.StrideY!) \\
+  \lstinline!Mapping.OffsetX! [0] & Mapping canvas default X-axis offset \\
+  \lstinline!Mapping.OffsetY! [0] & Mapping canvas default Y-axis offset \\
+  \lstinline!Mapping.Offset! [0] & Mapping canvas default offset \\
+   & (mutually exclusive with \lstinline!Mapping.OffsetX!
+   and \lstinline!Mapping.OffsetY!) \\
+  \lstinline!Mapping.NbIterations! [0] & Mapping canvas pattern default number
+   of iterations (0 means no limit) \\
+  \lstinline!Mapping(in).SizeX! [1] & Mapping canvas pattern default width
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).SizeY! [1] & Mapping canvas pattern default height
+   for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Size! [1] & Mapping canvas pattern default size
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).SizeX! and \\
+   & \lstinline!Mapping(in).SizeY!) \\
+  \lstinline!Mapping(in).StrideX! [1] & Mapping canvas default X-axis step
+   for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).StrideY! [1] & Mapping canvas default Y-axis step
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Stride! [1] & Mapping canvas default step
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).StrideX! and \\
+   & \lstinline!Mapping(in).StrideY!) \\
+  \lstinline!Mapping(in).OffsetX! [0] & Mapping canvas default X-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).OffsetY! [0] & Mapping canvas default Y-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Offset! [0] & Mapping canvas default offset for input
+   layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).OffsetX! and \\
+   & \lstinline!Mapping(in).OffsetY!) \\
+  \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
+  number of iterations for input layer \lstinline!in! (0 means no limit) \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Spike} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!IncomingDelay! [1 \lstinline!TimePs!;100 \lstinline!TimeFs!]
+    & \emph{all Spike} & Synaptic incoming delay $w_{delay}$ \\value \\
+ \hline
+\end{longtable}
+\end{center}
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!FMP!}{FMP}}
+Fractional max pooling layer \citep{Graham2014}.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!ScalingRatio! & Scaling ratio.
+  The output size is $round\left(\frac{\text{input size}}
+  {\text{scaling ratio}}\right)$. \\
+  \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!Overlapping! [1] & \emph{all Frame} & If true, use overlapping
+  regions, else use disjoint regions \\
+  \lstinline!PseudoRandom! [1] & \emph{all Frame} & If true, use pseudorandom
+  sequences, else use random sequences \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Fc!}{Fc}}
+Fully connected layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+  \lstinline!WeightsFiller! & Weights initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.0, 0.05)!] & \\
+  \lstinline!BiasFiller! & Biases initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.0, 0.05)!] & \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!NoBias! [1] & \emph{all Frame} & If true, don't use bias \\
+  \lstinline!BackPropagate! [1] & \emph{all Frame} & If true, enable
+  backpropogation \\
+  \lstinline!Solvers.!* & \emph{all Frame} & Any solver parameters \\
+  \lstinline!WeightsSolver.!* & \emph{all Frame} & Weights solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!BiasSolver.!* & \emph{all Frame} & Bias solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!DropConnect! [1.0] & \lstinline!Frame! & If below 1.0, fraction of
+  synapses that are disabled with drop connect \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\paragraph{Configuration parameters (\emph{Spike} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!IncomingDelay! [1 \lstinline!TimePs!;100 \lstinline!TimeFs!]
+    & \emph{all Spike} & Synaptic incoming delay $w_{delay}$ \\
+  \lstinline!Threshold! [1.0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+    & Threshold of the neuron $I_{thres}$ \\
+  \lstinline!BipolarThreshold! [1] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+    & If true, the threshold is also applied to the absolute value of negative
+   values (generating negative spikes) \\
+  \lstinline!Leak! [0.0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+    & Neural leak time constant $\tau_{leak}$ (if 0, no leak) \\
+  \lstinline!Refractory! [0.0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+    & Neural refractory period $T_{refrac}$ \\
+  \lstinline!TerminateDelta! [0] & \lstinline!Spike!, \lstinline!Spike_RRAM!
+    & Terminate delta \\
+  \lstinline!WeightsRelInit! [0.0;0.05] & \lstinline!Spike!
+    & Relative initial synaptic weight $w_{init}$ \\
+  \lstinline!WeightsMinMean! [1;0.1] & \lstinline!Spike_RRAM!
+    & Mean minimum synaptic weight $w_{min}$ \\
+  \lstinline!WeightsMaxMean! [100;10.0] & \lstinline!Spike_RRAM!
+    & Mean maximum synaptic weight $w_{max}$ \\
+  \lstinline!WeightsMinVarSlope! [0.0] & \lstinline!Spike_RRAM!
+    & OXRAM specific parameter \\
+  \lstinline!WeightsMinVarOrigin! [0.0] & \lstinline!Spike_RRAM!
+    & OXRAM specific parameter \\
+  \lstinline!WeightsMaxVarSlope! [0.0] & \lstinline!Spike_RRAM!
+    & OXRAM specific parameter \\
+  \lstinline!WeightsMaxVarOrigin! [0.0] & \lstinline!Spike_RRAM!
+    & OXRAM specific parameter \\
+  \lstinline!WeightsSetProba! [1.0] & \lstinline!Spike_RRAM!
+    & Intrinsic SET switching probability $P_{SET}$ (upon receiving a SET
+  programming pulse). Assuming uniform statistical distribution (not well
+  supported by experiments on RRAM) \\
+  \lstinline!WeightsResetProba! [1.0] & \lstinline!Spike_RRAM!
+    & Intrinsic RESET switching probability $P_{RESET}$ (upon receiving a RESET
+    programming pulse). Assuming uniform statistical distribution (not well
+    supported by experiments on RRAM) \\
+  \lstinline!SynapticRedundancy! [1] & \lstinline!Spike_RRAM!
+    & Synaptic redundancy (number of RRAM device per synapse) \\
+  \cellcolor{expercolor}\lstinline!BipolarWeights! [0] & \lstinline!Spike_RRAM!
+    & Bipolar weights \\
+  \cellcolor{expercolor}\lstinline!BipolarIntegration! [0]
+    & \lstinline!Spike_RRAM! & Bipolar integration \\
+  \cellcolor{expercolor}\lstinline!LtpProba! [0.2] & \lstinline!Spike_RRAM!
+    & Extrinsic STDP LTP probability (cumulative with intrinsic SET switching
+    probability $P_{SET}$) \\
+  \cellcolor{expercolor}\lstinline!LtdProba! [0.1] & \lstinline!Spike_RRAM!
+    & Extrinsic STDP LTD probability (cumulative with intrinsic RESET switching
+    probability $P_{RESET}$) \\
+  \cellcolor{expercolor}\lstinline!StdpLtp! [1000 \lstinline!TimePs!]
+    & \lstinline!Spike_RRAM! & STDP LTP time window $T_{LTP}$ \\
+  \cellcolor{expercolor}\lstinline!InhibitRefractory! [0 \lstinline!TimePs!]
+    & \lstinline!Spike_RRAM! & Neural lateral inhibition period $T_{inhibit}$ \\
+  \cellcolor{expercolor}\lstinline!EnableStdp! [1] & \lstinline!Spike_RRAM!
+    & If false, STDP is disabled (no synaptic weight change) \\
+  \cellcolor{expercolor}\lstinline!RefractoryIntegration! [1]
+    & \lstinline!Spike_RRAM! & If true, reset the integration to 0 during the
+    refractory period \\
+  \cellcolor{expercolor}\lstinline!DigitalIntegration! [0]
+    & \lstinline!Spike_RRAM! & If false, the analog value of the devices is
+    integrated, instead of their binary value \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Rbf!\protect\iponly}{Rbf}}
+Radial basis function fully connected layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+  \lstinline!CentersFiller! & Centers initial values filler \\
+  \noindent [\lstinline!NormalFiller(0.5, 0.05)!] & \\
+  \lstinline!ScalingFiller! & Scaling initial values filler \\
+  \noindent [\lstinline!NormalFiller(10.0, 0.05)!] & \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!Solvers.!* & \emph{all Frame} & Any solver parameters \\
+  \lstinline!CentersSolver.!* & \emph{all Frame} & Centers solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!ScalingSolver.!* & \emph{all Frame} & Scaling solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!RbfApprox! [\lstinline!None!] & \lstinline!Frame! & Approximation
+  for the Gaussian function, can be any of: \lstinline!None!,
+  \lstinline!Rectangular! or \lstinline!SemiLinear! \\
+ \hline
+\end{longtable}
+\end{center}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Softmax!}{Softmax}}
+Softmax layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+  \lstinline!WithLoss! [0] & Softmax followed with a multinomial logistic
+  layer \\
+ \hline
+\end{longtable}
+\end{center}
+
+The softmax function performs the following operation, with $a_{x,y}^{i}$ and
+$b_{x,y}^{i}$ the input and the output respectively at position $(x,y)$ on
+channel $i$:
+
+\[ b_{x,y}^{i} = \frac{\exp(a_{x,y}^{i})}{\sum\limits_{j=0}^{N}
+    {\exp(a_{x,y}^{j})}} \]
+
+and
+
+\[ \text{d}a_{x,y}^{i} = \sum\limits_{j=0}^{N}{\left(\delta_{ij}
+- a_{x,y}^{i}\right) a_{x,y}^{j} \text{d}b_{x,y}^{j}} \]
+
+
+When the \lstinline!WithLoss! option is enabled, compute the gradient directly
+in respect of the cross-entropy loss:
+
+\[ L_{x,y} = \sum\limits_{j=0}^{N}{t_{x,y}^{j} \log(b_{x,y}^{j})} \]
+
+In this case, the gradient output becomes:
+
+\[ \text{d}a_{x,y}^{i} = \text{d}b_{x,y}^{i} \]
+
+with
+
+\[ \text{d}b_{x,y}^{i} = t_{x,y}^{i} - b_{x,y}^{i} \]
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!LRN!}{LRN}}
+Local Response Normalization (LRN) layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+ \hline
+\end{longtable}
+\end{center}
+
+The response-normalized activity $b_{x,y}^{i}$ is given by the expression:
+
+\[ b_{x,y}^{i} = \frac{a_{x,y}^{i}}{\left(k + \alpha \sum\limits_{j=max(0,i-n/2)}^{min(N-1,i+n/2)}{\left(a_{x,y}^{j}\right)^2}\right)^{\beta}} \]
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!N! [5] & \lstinline! all Frame ! & Normalization window width in
+  elements \\
+  \lstinline!Alpha! [1.0e-4] & \lstinline! all Frame ! & Value of the alpha
+  variance scaling parameter in the normalization formula \\
+  \lstinline!Beta! [0.75] & \lstinline! all Frame ! & Value of the beta power
+  parameter in the normalization formula \\
+  \lstinline!K! [2.0] & \lstinline! all Frame ! & Value of the k parameter in
+  normalization formula \\
+ \hline
+\end{longtable}
+\end{center}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Dropout!}{Dropout}}
+Dropout layer \citep{Srivastava2014}.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!Dropout! [0.5] & \lstinline!Frame_CUDA! & The probability with
+  which the value from input would be dropped \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!BatchNorm!}{BatchNorm}}
+Batch Normalization layer \citep{Ioffe2015}.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+  \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+  \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!Solvers.!* & \emph{all Frame} & Any solver parameters \\
+  \lstinline!ScaleSolver.!* & \emph{all Frame} & Scale solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!BiasSolver.!* & \emph{all Frame} & Bias solver parameters,
+  take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!Epsilon! [0.0] & \emph{all Frame} & Epsilon value used in the batch normalization formula. If 0.0, automatically choose the minimum possible
+  value. \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Transformation!}{Transformation}}
+Transformation layer, which can apply any transformation described in \ref{sec:transformations}. Useful for fully CNN post-processing for example.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of outputs \\
+  \cellcolor{requiredcolor}\lstinline!Transformation! & Name of the
+  transformation to apply \\
+ \hline
+\end{longtable}
+\end{center}
+
+The \lstinline!Transformation! options must be placed in the same section.
+
+
+Usage example for fully CNNs:
+\begin{lstlisting}[language=ini]
+[post.Transformation-thres]
+Input=... ; for example, network's logistic of softmax output layer
+NbOutputs=1
+Type=Transformation
+Transformation=ThresholdTransformation
+Operation=ToZero
+Threshold=0.75
+
+[post.Transformation-morpho]
+Input=post.Transformation-thres
+NbOutputs=1
+Type=Transformation
+Transformation=MorphologyTransformation
+Operation=Opening
+Size=3
+\end{lstlisting}
+
+\clearpage
+
+%\section{C++ Interface}
+%
+%\subsection{Databases}
+%
+%\subsubsection{Directory}
+%
+%Example:
+%\begin{lstlisting}[style=c++]
+%const double fracLearn = 0.5; // Fraction of stimuli used for the learning set
+%const double fracValidation = 0.2; // Fraction of stimuli used for the validation set
+%
+%DIR_Database db;
+%db.loadDir("path/to/images", 1, "", 1);
+%db.partitionStimuliPerLabel(fracLearn, fracValidation, 1.0 - fracLearn - fracValidation, true);
+%
+%// Put the remaining stimuli in the testing set
+%db.partitionStimuli(0.0, 0.0, 1.0);
+%\end{lstlisting}
+%
+%\subsection{Environment}
+%
+%Example:
+%\begin{lstlisting}[style=c++]
+%Environment env(db,
+%    /*SizeX=*/24,
+%    /*SizeY=*/24,
+%    /*BatchSize=*/12,
+%    /*CompositeStimuli=*/false);
+%env.addTransformation(PadCropTransformation(/*Width=*/24, /*Height=*/24));
+%\end{lstlisting}
+
+
+\bibliographystyle{abbrvnat}
+\bibliography{biblio}
+
+\fi
+
+\end{document}

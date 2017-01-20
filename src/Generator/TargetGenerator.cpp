@@ -1,0 +1,97 @@
+/*
+    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+
+    This software is governed by the CeCILL-C license under French law and
+    abiding by the rules of distribution of free software.  You can  use,
+    modify and/ or redistribute the software under the terms of the CeCILL-C
+    license as circulated by CEA, CNRS and INRIA at the following URL
+    "http://www.cecill.info".
+
+    As a counterpart to the access to the source code and  rights to copy,
+    modify and redistribute granted by the license, users are provided only
+    with a limited warranty  and the software's author,  the holder of the
+    economic rights,  and the successive licensors  have only  limited
+    liability.
+
+    The fact that you are presently reading this means that you have had
+    knowledge of the CeCILL-C license and that you accept its terms.
+*/
+
+#include "Generator/TargetGenerator.hpp"
+
+std::shared_ptr<N2D2::Target>
+N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
+                                const std::shared_ptr<DeepNet>& deepNet,
+                                IniParser& iniConfig,
+                                const std::string& section)
+{
+    if (!iniConfig.currentSection(section))
+        throw std::runtime_error("Missing [" + section + "] section.");
+
+    const std::string targetType = iniConfig.getProperty
+                                   <std::string>("Type", "TargetScore");
+    const double targetValue = iniConfig.getProperty
+                               <double>("TargetValue", 1.0);
+    const double defaultValue = iniConfig.getProperty
+                                <double>("DefaultValue", 0.0);
+    const unsigned int targetTopN = iniConfig.getProperty
+                                    <unsigned int>("TopN", 1U);
+    const std::string labelsMapping = Utils::expandEnvVars(
+        iniConfig.getProperty<std::string>("LabelsMapping", ""));
+    iniConfig.getProperty<std::string>("ROIsLabelTarget", "");
+
+    std::cout << "Target: " << cell->getName()
+              << " (target value: " << targetValue
+              << " / default value: " << defaultValue
+              << " / top-n value: " << targetTopN << ")" << std::endl;
+
+    std::shared_ptr<Target> target = Registrar
+        <Target>::create(targetType)(section,
+                                     cell,
+                                     deepNet->getStimuliProvider(),
+                                     targetValue,
+                                     defaultValue,
+                                     targetTopN,
+                                     labelsMapping);
+    target->setParameters(iniConfig.getSection(section, true));
+    return target;
+}
+
+void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
+                                         const std::shared_ptr
+                                         <DeepNet>& deepNet,
+                                         IniParser& iniConfig,
+                                         const std::string& section)
+{
+    if (!iniConfig.currentSection(section))
+        throw std::runtime_error("Missing [" + section + "] section.");
+
+    if (target->getType() == std::string("TargetROIs")
+        && iniConfig.isProperty("ROIsLabelTarget")) {
+        const std::string labelTarget = iniConfig.getProperty
+                                        <std::string>("ROIsLabelTarget");
+        bool found = false;
+
+        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+             = deepNet->getTargets().begin(),
+             itTargetsEnd = deepNet->getTargets().end();
+             itTargets != itTargetsEnd;
+             ++itTargets) {
+            if ((*itTargets)->getName() == labelTarget) {
+                std::static_pointer_cast
+                    <TargetROIs>(target)->setROIsLabelTarget(*itTargets);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Target name \"" + labelTarget
+                                     + "\" not found for ROIsLabelTarget ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
+}
