@@ -25,7 +25,6 @@ DIR=`date '+%y.%m.%d-%Hh%M'`_`basename $1`
 mkdir $DIR
 cp n2d2 n2d2.* $DIR/
 chmod -w $DIR/n2d2 $DIR/n2d2.*
-ln -s ../ini $DIR/ini
 INI_FILE=`basename $1`
 ORG_INI_FILE=$1
 cp ${ORG_INI_FILE} $DIR/${INI_FILE}
@@ -65,7 +64,7 @@ printf "#!/bin/sh\n"\
 "NOW=\`date +'.before_%%y.%%m.%%d-%%Hh%%Ms%%S'\`\n"\
 "mkdir \$NOW\n"\
 "mv n2d2 n2d2.* ${INI_FILE} \$NOW/\n"\
-"cp ../n2d2 ../n2d2.* ../${ORG_INI_FILE} .\n"\
+"cp ../n2d2 ../n2d2.* ${ORG_INI_FILE} .\n"\
 "chmod -w n2d2 n2d2.* ${INI_FILE}\n"\
 "echo \"\$NOW\" >> history.log" > $DIR/update.sh
 chmod +x $DIR/update.sh
