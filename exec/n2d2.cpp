@@ -25,24 +25,24 @@
  *
  * The 101_ObjectCategories database
  * ---------------------------------
- * ./n2d2 ini/caltech101-Scherer2010.ini 101_ObjectCategories -pc 30 -test-pc 0
+ * ./n2d2 $N2D2_MODELS/caltech101-Scherer2010.ini 101_ObjectCategories -pc 30 -test-pc 0
  *-learn 1000000 -log 10000
  *
  * The German Traffic Sign Recognition Benchmark (GTSRB)
  * -----------------------------------------------------
- * ./n2d2 ini/GTSRB-Ciresan2012.ini GTSRB -pc 0 -test-pc 0 -learn 1000000 -log
+ * ./n2d2 $N2D2_MODELS/GTSRB-Ciresan2012.ini GTSRB -pc 0 -test-pc 0 -learn 1000000 -log
  *10000
  *
  * MNIST
  * -----
- * ./n2d2 ini/mnist-29x29-6(5x5)-12(5x5)-100-10.ini mnist -learn 6000000 -log
+ * ./n2d2 $N2D2_MODELS/mnist-29x29-6(5x5)-12(5x5)-100-10.ini mnist -learn 6000000 -log
  *10000
  * or
- * ./n2d2 ini/mnist-Scherer2010.ini mnist -learn 6000000 -log 10000
+ * ./n2d2 $N2D2_MODELS/mnist-Scherer2010.ini mnist -learn 6000000 -log 10000
  *
  * MNIST RBF
  * ---------
- * ./n2d2 ini/mnist-28x28-rbf.ini mnist -learn 6000000 -log 100000
+ * ./n2d2 $N2D2_MODELS/mnist-28x28-rbf.ini mnist -learn 6000000 -log 100000
 */
 
 #include "N2D2.hpp"

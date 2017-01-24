@@ -726,7 +726,7 @@ By default, the datasets are downloaded in the path specified in the
 The following command will run the learning for 600,000 image
 presentations/steps and log the performances of the network every 10,000 steps:
 \begin{lstlisting}
-./n2d2 "ini/mnist24_16c4s2_24c5s2_150_10.ini" -learn 600000 -log 10000
+./n2d2 "mnist24_16c4s2_24c5s2_150_10.ini" -learn 600000 -log 10000
 \end{lstlisting}
 
 Note: you may want to check the gradient computation using the
@@ -738,7 +738,7 @@ occasionally fail if the required precision is too high.
 After the learning is completed, this command evaluate the network performances
  on the test data set:
 \begin{lstlisting}
-./n2d2 "ini/mnist24_16c4s2_24c5s2_150_10.ini" -test
+./n2d2 "mnist24_16c4s2_24c5s2_150_10.ini" -test
 \end{lstlisting}
 
 
@@ -851,7 +851,7 @@ The initial output maps activity for each layer can be visualized in the
 
 
 \begin{lstlisting}
-./n2d2 "ini/mnist24_16c4s2_24c5s2_150_10.ini" -export CPP_OpenCL
+./n2d2 "mnist24_16c4s2_24c5s2_150_10.ini" -export CPP_OpenCL
 \end{lstlisting}
 
 Export types:
