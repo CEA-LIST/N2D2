@@ -118,8 +118,8 @@ class TargetViewer(object):
                     cv2.moveWindow("legend", 1024 + 10, 0)
 
                 frameName = self._run()
-                print "Frame #%d/%d: %s"
-                    % (self.index+1, len(self.files), frameName)
+                print "Frame #%d/%d: %s" % (
+                    self.index+1, len(self.files), frameName)
 
             newIndex = self.index
             key = cv2.waitKey(0)

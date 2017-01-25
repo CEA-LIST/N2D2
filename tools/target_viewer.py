@@ -94,8 +94,8 @@ class Viewer(TargetViewer.TargetViewer):
                 /180.0))
             score = self.imgEstimatedHsv[y,x][2]/255.0
 
-            print "  (%d,%d): target = %d / estimated = %d (score = %.02f)"
-                % (x, y, target, estimated, score)
+            print "  (%d,%d): target = %d / estimated = %d (score = %.02f)" % (
+                x, y, target, estimated, score)
 
             if self.imgLegend is not None:
                 newImgLegend = self.imgLegend.copy()
