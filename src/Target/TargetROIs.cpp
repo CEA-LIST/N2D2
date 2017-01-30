@@ -442,7 +442,11 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     }
 
     // Merge all ROIs logs
+#ifdef WIN32
+    const std::string cmd = "type " + dirPath + "/*.log > " + dirPath + ".log";
+#else
     const std::string cmd = "cat " + dirPath + "/*.log > " + dirPath + ".log";
+#endif
     ret = system(cmd.c_str());
     if (ret < 0) {
     } // avoid ignoring return value warning
