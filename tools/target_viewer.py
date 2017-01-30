@@ -22,7 +22,7 @@
 
 import glob
 import cv2
-import os
+import os, errno
 import re
 
 from python import TargetViewer
@@ -116,6 +116,16 @@ class Viewer(TargetViewer.TargetViewer):
                         (0, 0, 255), 5)
 
                 cv2.imshow("legend", newImgLegend)
+        elif event == cv2.EVENT_RBUTTONDOWN:
+            try:
+                os.makedirs("capture")
+            except OSError, exc:
+                if exc.errno == errno.EEXIST:
+                    pass
+                else: raise
+
+            cv2.imwrite(os.path.join("capture", self.estimatedWindow + ".png"),
+                self.imgEstimated)
 
 viewer = Viewer()
 viewer.run()
