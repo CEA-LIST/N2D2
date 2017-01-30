@@ -33,6 +33,8 @@ N2D2::Target::Target(const std::string& name,
                      unsigned int targetTopN,
                      const std::string& labelsMapping_)
     : mDataAsTarget(this, "DataAsTarget", false),
+      mNoDisplayLabel(this, "NoDisplayLabel", -1),
+      mLabelsHueOffset(this, "LabelsHueOffset", 0),
       mName(name),
       mCell(cell),
       mStimuliProvider(sp),
@@ -543,15 +545,24 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
+                const int targetHue = (180 * target(ox, oy) / nbTargets
+                                       + mLabelsHueOffset) % 180;
+
                 targetImgHsv.at<cv::Vec3b>(oy, ox)
                     = (target(ox, oy) >= 0)
-                          ? cv::Vec3f(
-                                180 * target(ox, oy) / nbTargets, 255, 255)
-                          : cv::Vec3f(0, 0, 127); // ignore = no color
+                        ? ((target(ox, oy) != mNoDisplayLabel)
+                            ? cv::Vec3f(targetHue, 255, 255)
+                            : cv::Vec3f(targetHue, 10, 127)) // no color
+                        : cv::Vec3f(0, 0, 127); // ignore = no color
+
+                const int estimatedHue = (180 * estimatedLabels(ox, oy)
+                                          / nbTargets + mLabelsHueOffset) % 180;
+
                 estimatedImgHsv.at<cv::Vec3b>(oy, ox)
-                    = cv::Vec3f(180 * estimatedLabels(ox, oy) / nbTargets,
-                                255,
-                                255 * estimatedLabelsValue(ox, oy));
+                    = (estimatedLabels(ox, oy) != mNoDisplayLabel)
+                        ? cv::Vec3f(estimatedHue, 255,
+                                    255 * estimatedLabelsValue(ox, oy))
+                        : cv::Vec3f(estimatedHue, 10, 127); // no color
             }
         }
 
@@ -647,7 +658,8 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
             legendImg,
             cv::Point(margin, target * cellHeight + margin),
             cv::Point(cellWidth - margin, (target + 1) * cellHeight - margin),
-            cv::Scalar(180 * target / nbTargets, 255, 255),
+            cv::Scalar((180 * target / nbTargets + mLabelsHueOffset) % 180,
+                        255, 255),
             CV_FILLED);
 
         std::stringstream legendStr;

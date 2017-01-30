@@ -147,6 +147,8 @@ public:
 
 protected:
     Parameter<bool> mDataAsTarget;
+    Parameter<int> mNoDisplayLabel;
+    Parameter<int> mLabelsHueOffset;
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;

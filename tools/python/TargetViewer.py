@@ -34,6 +34,7 @@ class TargetViewer(object):
         # Same as in N2D2::Target::logLabelsLegend()
         self.cellHeight = 50
         self.imgLegend = []
+        self.labelsHueOffset = 0
 
     def run(self):
         newIndex = 0

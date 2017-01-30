@@ -60,6 +60,11 @@ class RoisViewer(TargetViewer.TargetViewer):
             self.imgLegend = cv2.imread(os.path.join(
                 os.path.dirname(self.estimatedPath), "labels_legend.png"));
 
+            if self.imgLegend is not None:
+                imgLegendHsv = cv2.cvtColor(self.imgLegend, cv2.COLOR_BGR2HSV)
+                self.labelsHueOffset = imgLegendHsv[self.cellHeight/2,
+                    self.cellHeight/2][0]
+
     # PRIVATE
     def _run(self):
         roiName = self.files[self.index]
@@ -109,8 +114,8 @@ class RoisViewer(TargetViewer.TargetViewer):
             legendHeight, legendWidth = self.imgLegend.shape[:2]
             nbTargets = legendHeight/self.cellHeight
 
-            estimated = int(round((self.imgEstimatedHsv[y,x][0]*nbTargets)
-                /180.0))
+            estimated = int(round(((self.imgEstimatedHsv[y,x][0]
+                + 180 - self.labelsHueOffset) % 180)*nbTargets/180.0))
             score = self.imgEstimatedHsv[y,x][2]/255.0
 
             print "  (%d,%d): estimated = %d (score = %.02f)" % (
