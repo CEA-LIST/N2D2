@@ -238,11 +238,13 @@ void N2D2::StimuliProvider::future()
 
 void N2D2::StimuliProvider::synchronize()
 {
-    mBatch.swap(mFutureBatch);
-    mData.swap(mFutureData);
-    mLabelsData.swap(mFutureLabelsData);
-    mLabelsROI.swap(mFutureLabelsROI);
-    mFuture = false;
+    if (mFuture) {
+        mBatch.swap(mFutureBatch);
+        mData.swap(mFutureData);
+        mLabelsData.swap(mFutureLabelsData);
+        mLabelsROI.swap(mFutureLabelsROI);
+        mFuture = false;
+    }
 }
 
 unsigned int N2D2::StimuliProvider::getRandomIndex(Database::StimuliSet set)

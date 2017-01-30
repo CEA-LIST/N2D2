@@ -252,6 +252,7 @@ int main(int argc, char* argv[]) try
         for (unsigned int b = 0; b < nbBatch; ++b) {
             const unsigned int i = b * batchSize;
 
+            sp.synchronize();
             std::thread learnThread(learnThreadWrapper, deepNet);
 
             sp.future();
@@ -266,8 +267,6 @@ int main(int argc, char* argv[]) try
                 deepNet->logOutputs("outputs_init");
                 deepNet->logDiffInputs("diffinputs_init");
             }
-
-            sp.synchronize();
 
             if (i >= nextReport || b == nbBatch - 1) {
                 nextReport += report;
@@ -356,14 +355,13 @@ int main(int argc, char* argv[]) try
                     for (unsigned int bv = 0; bv < nbBatchValid; ++bv) {
                         const unsigned int k = bv * batchSize;
 
+                        sp.synchronize();
                         std::thread validationThread(validationThreadWrapper,
                                                      deepNet);
 
                         sp.future();
                         sp.readBatch(Database::Validation, k);
-
                         validationThread.join();
-                        sp.synchronize();
 
                         // Progress bar
                         progress
