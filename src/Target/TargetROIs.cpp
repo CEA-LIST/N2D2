@@ -71,7 +71,8 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
     mDetectedBB.clear();
 
     const unsigned int nbTargets = getNbTargets();
-    ConfusionMatrix& confusionMatrix = mScoreSet[set].confusionMatrix;
+    ConfusionMatrix<unsigned long long int>& confusionMatrix
+        = mScoreSet[set].confusionMatrix;
 
     if (confusionMatrix.empty())
         confusionMatrix.resize(nbTargets, nbTargets, 0);

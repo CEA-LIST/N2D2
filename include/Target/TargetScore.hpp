@@ -34,7 +34,7 @@ class TargetScore : public Target {
 public:
     struct Score {
         std::deque<double> success;
-        ConfusionMatrix confusionMatrix;
+        ConfusionMatrix<unsigned long long int> confusionMatrix;
         std::vector<std::pair<unsigned int, unsigned int> > misclassified;
     };
 

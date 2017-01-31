@@ -33,7 +33,7 @@ namespace N2D2 {
 class TargetROIs : public Target {
 public:
     struct Score {
-        ConfusionMatrix confusionMatrix;
+        ConfusionMatrix<unsigned long long int> confusionMatrix;
     };
 
     struct DetectedBB {

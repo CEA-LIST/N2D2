@@ -637,7 +637,6 @@
 		<Unit filename="src/Transformation/TrimTransformation.cpp" />
 		<Unit filename="src/Xcell.cpp" />
 		<Unit filename="src/utils/BinaryCvMat.cpp" />
-		<Unit filename="src/utils/ConfusionMatrix.cpp" />
 		<Unit filename="src/utils/Gnuplot.cpp" />
 		<Unit filename="src/utils/IniParser.cpp" />
 		<Unit filename="src/utils/Parameterizable.cpp" />

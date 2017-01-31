@@ -25,13 +25,15 @@
 #include "utils/Gnuplot.hpp"
 
 namespace N2D2 {
-class ConfusionMatrix : public Matrix<unsigned int> {
+template <class T>
+class ConfusionMatrix : public Matrix<T> {
 public:
     void log(const std::string& fileName,
              const std::vector<std::string>& labels = std::vector
              <std::string>()) const;
 };
 
+template <class T>
 class ConfusionTable {
 public:
     ConfusionTable() : mTp(0), mTn(0), mFp(0), mFn(0) {};
@@ -47,45 +49,171 @@ public:
     {
         return (mTp > 0) ? (2 * mTp / (double)(2 * mTp + mFp + mFn)) : 0.0;
     };
-    void tp(unsigned int tp)
+    void tp(T tp)
     {
         mTp += tp;
     };
-    void tn(unsigned int tn)
+    void tn(T tn)
     {
         mTn += tn;
     };
-    void fp(unsigned int fp)
+    void fp(T fp)
     {
         mFp += fp;
     };
-    void fn(unsigned int fn)
+    void fn(T fn)
     {
         mFn += fn;
     };
-    unsigned int tp() const
+    T tp() const
     {
         return mTp;
     };
-    unsigned int tn() const
+    T tn() const
     {
         return mTn;
     };
-    unsigned int fp() const
+    T fp() const
     {
         return mFp;
     };
-    unsigned int fn() const
+    T fn() const
     {
         return mFn;
     };
 
 private:
-    unsigned int mTp;
-    unsigned int mTn;
-    unsigned int mFp;
-    unsigned int mFn;
+    T mTp;
+    T mTn;
+    T mFp;
+    T mFn;
 };
+}
+
+template <class T>
+void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
+                                const std::vector<std::string>& labels) const
+{
+    std::ofstream confData(fileName);
+
+    if (!confData.good())
+        throw std::runtime_error("Could not save confusion matrix data file: "
+                                 + fileName);
+
+    confData << "target estimated # %\n";
+
+    std::stringstream tics;
+    tics << "(";
+
+    T total = 0;
+    T totalCorrect = 0;
+
+    const unsigned int nbTargets = this->rows();
+    std::vector<ConfusionTable<T> > conf(nbTargets, ConfusionTable<T>());
+
+    for (unsigned int target = 0; target < nbTargets; ++target) {
+        const std::vector<T>& row = this->row(target);
+        const T targetCount = std::accumulate(row.begin(), row.end(), 0);
+
+        total += targetCount;
+        totalCorrect += (*this)(target, target);
+
+        for (unsigned int estimated = 0; estimated < nbTargets; ++estimated) {
+            if (target == estimated) {
+                conf[target].tp((*this)(target, estimated));
+            } else {
+                conf[target].fn((*this)(target, estimated));
+                conf[target].fp((*this)(estimated, target));
+
+                for (unsigned int other = 0; other < nbTargets; ++other) {
+                    if (other != target)
+                        conf[target].tn((*this)(other, estimated));
+                }
+            }
+
+            confData << target << " " << estimated << " "
+                     << (*this)(target, estimated) << " "
+                     << ((targetCount > 0) ? ((*this)(target, estimated)
+                                              / (double)targetCount)
+                                           : 0.0) << "\n";
+        }
+
+        if (target > 0)
+            tics << ", ";
+
+        tics << "\"";
+
+        if (!labels.empty())
+            tics << labels[target];
+        else
+            tics << target;
+
+        tics << "\" " << target;
+    }
+
+    tics << ")";
+    confData.close();
+
+    const std::string confFile = Utils::fileBaseName(fileName) + "_score."
+                                 + Utils::fileExtension(fileName);
+    confData.open(confFile);
+
+    if (!confData.good())
+        throw std::runtime_error("Could not save confusion data file: "
+                                 + confFile);
+
+    confData << "target precision recall F1-score\n";
+
+    for (unsigned int target = 0; target < nbTargets; ++target) {
+        confData << target << " " << conf[target].precision() << " "
+                 << conf[target].recall() << " " << conf[target].F1Score()
+                 << "\n";
+    }
+
+    confData.close();
+
+    Gnuplot::setDefaultOutput("png", "size 800,600 tiny", "png");
+
+    Gnuplot gnuplot;
+    gnuplot.set("key off").unset("colorbox");
+
+    std::stringstream xlabel;
+    xlabel << "Estimated class ("
+              "total correct: " << totalCorrect << ", "
+              "total misclassified: "
+            << ((long long int)total - (long long int)totalCorrect)
+           << ", error rate: " << std::fixed << std::setprecision(2)
+           << ((total > 0.0)
+               ? (100.0 * (1.0 - (long long int)totalCorrect / (double)total))
+               : 0.0) << "%)";
+
+    gnuplot.setXlabel(xlabel.str());
+    gnuplot.setYlabel("Target (actual) class");
+    gnuplot.set("xtics rotate by 90", tics.str());
+    gnuplot.set("ytics", tics.str());
+    gnuplot.set(
+        "palette",
+        "defined (-2 'red', -1.01 '#FFEEEE', -1 'white', 0 'red', 1 'cyan')");
+    gnuplot.set("yrange", "[] reverse");
+    gnuplot.set("cbrange", "[-2:1]");
+
+    std::stringstream plotCmd;
+    plotCmd << "every ::1 using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
+
+    if (nbTargets <= 10) {
+        plotCmd << ", \"\" using 2:1:($3 > 0 ? "
+                   "sprintf(\"%.f\\n%.02f%%\",$3,100.0*$4) : \"\") "
+                   "with labels";
+    }
+    else if (nbTargets <= 50) {
+        plotCmd << ", \"\" using 2:1:($3 > 0 ? sprintf(\"%.f\",$3) : \"\") "
+                   "with labels";
+    }
+
+    gnuplot.saveToFile(fileName);
+    gnuplot.plot(fileName, plotCmd.str());
+
+    Gnuplot::setDefaultOutput();
 }
 
 #endif // N2D2_CONFUSIONMATRIX_H

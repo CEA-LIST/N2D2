@@ -321,7 +321,8 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
 
     const unsigned int nbTargets = getNbTargets();
 
-    ConfusionMatrix& confusionMatrix = mScoreSet[set].confusionMatrix;
+    ConfusionMatrix<unsigned long long int>& confusionMatrix
+        = mScoreSet[set].confusionMatrix;
     std::vector<std::pair<unsigned int, unsigned int> >& misclassified
         = mScoreSet[set].misclassified;
 
