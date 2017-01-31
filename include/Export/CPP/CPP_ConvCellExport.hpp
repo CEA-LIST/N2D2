@@ -21,8 +21,8 @@
 #ifndef N2D2_CPP_CONVCELLEXPORT_H
 #define N2D2_CPP_CONVCELLEXPORT_H
 
-#include "C_ConvCellExport.hpp"
-#include "ConvCellExport.hpp"
+#include "Export/C/C_ConvCellExport.hpp"
+#include "Export/ConvCellExport.hpp"
 
 namespace N2D2 {
 /**

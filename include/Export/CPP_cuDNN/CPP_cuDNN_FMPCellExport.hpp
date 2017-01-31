@@ -22,9 +22,9 @@
 #ifndef N2D2_CPP_CUDNN_FMPCELLEXPORT_H
 #define N2D2_CPP_CUDNN_FMPCELLEXPORT_H
 
-#include "CPP_OpenCL/CPP_OpenCL_FMPCellExport.hpp"
-#include "CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
-#include "FMPCellExport.hpp"
+#include "Export/CPP_OpenCL/CPP_OpenCL_FMPCellExport.hpp"
+#include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
+#include "Export/FMPCellExport.hpp"
 
 namespace N2D2 {
 /**

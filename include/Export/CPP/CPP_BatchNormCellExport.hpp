@@ -22,9 +22,9 @@
 #ifndef N2D2_CPP_BATCHNORMCELLEXPORT_H
 #define N2D2_CPP_BATCHNORMCELLEXPORT_H
 
-#include "BatchNormCellExport.hpp"
-#include "CPP_OpenCL_CellExport.hpp"
-#include "C_CellExport.hpp"
+#include "Export/BatchNormCellExport.hpp"
+#include "Export/CPP_OpenCL/CPP_OpenCL_CellExport.hpp"
+#include "Export/C/C_CellExport.hpp"
 namespace N2D2 {
 /**
  * Class for methods for the BatchNorm type for the CPP_OpenCL export

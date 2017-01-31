@@ -21,8 +21,8 @@
 #ifndef N2D2_CPP_FCCELLEXPORT_H
 #define N2D2_CPP_FCCELLEXPORT_H
 
-#include "C_FcCellExport.hpp"
-#include "FcCellExport.hpp"
+#include "Export/C/C_FcCellExport.hpp"
+#include "Export/FcCellExport.hpp"
 
 namespace N2D2 {
 /**

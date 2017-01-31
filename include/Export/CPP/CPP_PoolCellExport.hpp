@@ -21,8 +21,8 @@
 #ifndef N2D2_CPP_POOLCELLEXPORT_H
 #define N2D2_CPP_POOLCELLEXPORT_H
 
-#include "C_PoolCellExport.hpp"
-#include "PoolCellExport.hpp"
+#include "Export/C/C_PoolCellExport.hpp"
+#include "Export/PoolCellExport.hpp"
 
 namespace N2D2 {
 /**

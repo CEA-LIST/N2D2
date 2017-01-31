@@ -21,10 +21,10 @@
 #ifndef N2D2_CPP_CUDNN_DEEPNETEXPORT_H
 #define N2D2_CPP_CUDNN_DEEPNETEXPORT_H
 
-#include "CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
-#include "CPP_OpenCL/CPP_OpenCL_DeepNetExport.hpp"
-#include "C/C_DeepNetExport.hpp"
-#include "DeepNetExport.hpp"
+#include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
+#include "Export/CPP_OpenCL/CPP_OpenCL_DeepNetExport.hpp"
+#include "Export/C/C_DeepNetExport.hpp"
+#include "Export/DeepNetExport.hpp"
 
 namespace N2D2 {
 class CPP_cuDNN_DeepNetExport : public DeepNetExport {

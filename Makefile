@@ -130,12 +130,15 @@ endif
 
 OBJDIR=$(BINDIR).obj
 SRC=$(foreach path,$(PARENT),$(wildcard $(path)/src/*.$(EXT)) \
- $(wildcard $(path)/src/*/*.$(EXT)))
+ $(wildcard $(path)/src/*/*.$(EXT)) \
+ $(wildcard $(path)/src/*/*/*.$(EXT)))
 SRC_CUDA=$(foreach path,$(PARENT),$(wildcard $(path)/src/*.$(EXT_CUDA)) \
- $(wildcard $(path)/src/*/*.$(EXT_CUDA)))
+ $(wildcard $(path)/src/*/*.$(EXT_CUDA)) \
+ $(wildcard $(path)/src/*/*/*.$(EXT_CUDA)))
 INCLUDES=$(foreach path,$(PARENT),$(wildcard $(path)/*.hpp) \
  $(wildcard $(path)/include/*.hpp) \
- $(wildcard $(path)/include/*/*.hpp))
+ $(wildcard $(path)/include/*/*.hpp) \
+ $(wildcard $(path)/include/*/*/*.hpp))
 
 OBJ:=$(SRC:%.$(EXT)=$(OBJDIR)/%.o)
 ifdef CUDA
