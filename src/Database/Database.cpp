@@ -419,7 +419,10 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
                                                      itEnd = labelStats.end();
          it != itEnd;
          ++it)
-        labelData << getLabelName((*it).first) << " " << (*it).second << "\n";
+    {
+        labelData << "\"" << getLabelName((*it).first) << "\" "
+            << (*it).second << "\n";
+    }
 
     labelData.close();
 
