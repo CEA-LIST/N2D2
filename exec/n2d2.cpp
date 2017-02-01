@@ -456,6 +456,9 @@ int main(int argc, char* argv[]) try
         }
 
         deepNet->logFreeParameters("kernels");
+
+        // We are still in future batch, need to synchronize for the following
+        sp.synchronize();
     }
 
     if (weights.empty() || learn > 0) {
