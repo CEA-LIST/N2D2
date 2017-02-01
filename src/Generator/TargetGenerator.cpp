@@ -39,7 +39,10 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
                                     <unsigned int>("TopN", 1U);
     const std::string labelsMapping = Utils::expandEnvVars(
         iniConfig.getProperty<std::string>("LabelsMapping", ""));
+
+    // These options are processed afterwards in postGenerate()
     iniConfig.getProperty<std::string>("ROIsLabelTarget", "");
+    iniConfig.getProperty<std::string>("MaskLabelTarget", "");
 
     std::cout << "Target: " << cell->getName()
               << " (target value: " << targetValue
@@ -89,6 +92,33 @@ void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
         if (!found) {
             throw std::runtime_error("Target name \"" + labelTarget
                                      + "\" not found for ROIsLabelTarget ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
+
+    if (iniConfig.isProperty("MaskLabelTarget")) {
+        const std::string labelTarget = iniConfig.getProperty
+                                        <std::string>("MaskLabelTarget");
+        bool found = false;
+
+        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+             = deepNet->getTargets().begin(),
+             itTargetsEnd = deepNet->getTargets().end();
+             itTargets != itTargetsEnd;
+             ++itTargets) {
+            if ((*itTargets)->getName() == labelTarget) {
+                std::static_pointer_cast
+                    <TargetROIs>(target)->setMaskLabelTarget(*itTargets);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Target name \"" + labelTarget
+                                     + "\" not found for MaskLabelTarget ["
                                      + section
                                      + "] in network configuration file: "
                                      + iniConfig.getFileName());

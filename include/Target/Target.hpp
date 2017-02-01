@@ -120,6 +120,10 @@ public:
     {
         return mDefaultValue;
     }
+    void setMaskLabelTarget(const std::shared_ptr<Target>& target)
+    {
+        mMaskLabelTarget = target;
+    };
     void labelsMapping(const std::string& fileName);
     void setLabelTarget(int label, int output);
     void setDefaultTarget(int output);
@@ -149,6 +153,7 @@ protected:
     Parameter<bool> mDataAsTarget;
     Parameter<int> mNoDisplayLabel;
     Parameter<int> mLabelsHueOffset;
+    Parameter<int> mMaskedLabel;
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;
@@ -163,6 +168,7 @@ protected:
     Tensor4d<int> mEstimatedLabels;
     Tensor4d<Float_T> mEstimatedLabelsValue;
     Tensor4d<Float_T> mEstimatedValues;
+    std::shared_ptr<Target> mMaskLabelTarget;
 
 private:
     static Registrar<Target> mRegistrar;

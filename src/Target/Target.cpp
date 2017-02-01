@@ -35,6 +35,7 @@ N2D2::Target::Target(const std::string& name,
     : mDataAsTarget(this, "DataAsTarget", false),
       mNoDisplayLabel(this, "NoDisplayLabel", -1),
       mLabelsHueOffset(this, "LabelsHueOffset", 0),
+      mMaskedLabel(this, "MaskedLabel", -1),
       mName(name),
       mCell(cell),
       mStimuliProvider(sp),
@@ -543,6 +544,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                 CV_8UC3,
                                 cv::Scalar(0, 0, 0));
 
+        const Tensor2d<int> mask = (mMaskLabelTarget && mMaskedLabel >= 0)
+            ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
+            : Tensor2d<int>();
+
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
                 const int targetHue = (180 * target(ox, oy) / nbTargets
@@ -559,10 +564,12 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                           / nbTargets + mLabelsHueOffset) % 180;
 
                 estimatedImgHsv.at<cv::Vec3b>(oy, ox)
-                    = (estimatedLabels(ox, oy) != mNoDisplayLabel)
-                        ? cv::Vec3f(estimatedHue, 255,
-                                    255 * estimatedLabelsValue(ox, oy))
-                        : cv::Vec3f(estimatedHue, 10, 127); // no color
+                    = (mask.empty() || mask(ox, oy) == mMaskedLabel)
+                        ? ((estimatedLabels(ox, oy) != mNoDisplayLabel)
+                            ? cv::Vec3f(estimatedHue, 255,
+                                        255 * estimatedLabelsValue(ox, oy))
+                            : cv::Vec3f(estimatedHue, 10, 127)) // no color
+                        : cv::Vec3f(0, 0, 127); // not masked = no color
             }
         }
 
