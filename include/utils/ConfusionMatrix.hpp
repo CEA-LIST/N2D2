@@ -21,6 +21,8 @@
 #ifndef N2D2_CONFUSIONMATRIX_H
 #define N2D2_CONFUSIONMATRIX_H
 
+#include <type_traits>
+
 #include "containers/Matrix.hpp"
 #include "utils/Gnuplot.hpp"
 
@@ -113,7 +115,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
     for (unsigned int target = 0; target < nbTargets; ++target) {
         const std::vector<T>& row = this->row(target);
-        const T targetCount = std::accumulate(row.begin(), row.end(), 0);
+        const T targetCount = std::accumulate(row.begin(), row.end(), (T)0);
 
         total += targetCount;
         totalCorrect += (*this)(target, target);
@@ -177,14 +179,16 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     Gnuplot gnuplot;
     gnuplot.set("key off").unset("colorbox");
 
+    typedef typename std::make_signed<T>::type T_Signed;
+
     std::stringstream xlabel;
     xlabel << "Estimated class ("
               "total correct: " << totalCorrect << ", "
               "total misclassified: "
-            << ((long long int)total - (long long int)totalCorrect)
+            << ((T_Signed)total - (T_Signed)totalCorrect)
            << ", error rate: " << std::fixed << std::setprecision(2)
            << ((total > 0.0)
-               ? (100.0 * (1.0 - (long long int)totalCorrect / (double)total))
+               ? (100.0 * (1.0 - (T_Signed)totalCorrect / (double)total))
                : 0.0) << "%)";
 
     gnuplot.setXlabel(xlabel.str());
