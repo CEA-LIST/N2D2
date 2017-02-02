@@ -202,7 +202,8 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     gnuplot.set("cbrange", "[-2:1]");
 
     std::stringstream plotCmd;
-    plotCmd << "every ::1 using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
+    //plotCmd << "every ::1 using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
+    plotCmd << "using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
 
     if (nbTargets <= 10) {
         plotCmd << ", \"\" using 2:1:($3 > 0 ? "
