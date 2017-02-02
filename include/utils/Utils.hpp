@@ -517,6 +517,35 @@ namespace Utils {
             return &rc[0];
         }
     };
+
+    // The following is a partial implementation of C++14 std::quoted()
+    template <class Char, class Traits, class Alloc>
+    struct quotedProxyType {
+        std::basic_string<Char, Traits, Alloc>& str;
+        Char delim;
+        Char escape;
+
+        quotedProxyType(std::basic_string<Char, Traits, Alloc>& str_,
+                        Char delim_,
+                        Char escape_):
+                            str(str_), delim(delim_), escape(escape_) {};
+    };
+
+    template <class Char, class Traits, class Alloc>
+    N2D2::Utils::quotedProxyType<Char, Traits, Alloc>
+    quoted(std::basic_string<Char, Traits, Alloc>& str,
+           Char delim = '\"',
+           Char escape = '\\');
+
+    template <class Char, class Traits, class Alloc>
+    std::basic_ostream<Char, Traits>&
+    operator<<(std::basic_ostream<Char, Traits>& os,
+                            const quotedProxyType<Char, Traits, Alloc>& proxy);
+
+    template <class Char, class Traits, class Alloc>
+    std::basic_istream<Char, Traits>&
+    operator>>(std::basic_istream<Char, Traits>& is,
+                            const quotedProxyType<Char, Traits, Alloc>& proxy);
 }
 }
 
@@ -776,6 +805,65 @@ std::basic_ostream<charT, traits>& N2D2::Utils::cdef(std::basic_ostream
     stream << "\033[39m";
 #endif
     return stream;
+}
+
+template <class Char, class Traits, class Alloc>
+N2D2::Utils::quotedProxyType<Char, Traits, Alloc>
+N2D2::Utils::quoted(std::basic_string<Char, Traits, Alloc>& str,
+                    Char delim,
+                    Char escape)
+{
+    return quotedProxyType<Char, Traits, Alloc>(str, delim, escape);
+}
+
+template <class Char, class Traits, class Alloc>
+std::basic_ostream<Char, Traits>&
+N2D2::Utils::operator<<(std::basic_ostream<Char, Traits>& os,
+                        const quotedProxyType<Char, Traits, Alloc>& proxy)
+{
+    os << "\"";
+
+    for (typename std::basic_string<Char, Traits, Alloc>::const_iterator it
+         = proxy.str.begin(), itEnd = proxy.str.end(); it != itEnd; ++it)
+    {
+        if ((*it) == proxy.delim || (*it) == proxy.escape)
+            os << "\\";
+
+        os << (*it);
+    }
+
+    os << "\"";
+    return os;
+}
+
+template <class Char, class Traits, class Alloc>
+std::basic_istream<Char, Traits>&
+N2D2::Utils::operator>>(std::basic_istream<Char, Traits>& is,
+                        const quotedProxyType<Char, Traits, Alloc>& proxy)
+{
+    if (is.peek() == proxy.delim) {
+        is.get(); // discard delim
+        proxy.str.clear();
+
+        int c = is.get();
+        bool escaped = false;
+
+        while (c != proxy.delim || escaped) {
+            escaped = (!escaped && c == proxy.escape);
+
+            if (!escaped)
+                proxy.str.push_back(c);
+
+            c = is.get();
+
+            if (!is.good())
+                throw std::runtime_error("Error reading quoted string");
+        }
+    }
+    else
+        is >> proxy.str;
+
+    return is;
 }
 
 namespace N2D2 {

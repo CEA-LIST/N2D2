@@ -95,7 +95,7 @@ void N2D2::Target::labelsMapping(const std::string& fileName)
 
         std::stringstream value(line);
 
-        if (!(value >> className) || !(value >> output)
+        if (!(value >> Utils::quoted(className)) || !(value >> output)
             || (output < 0 && output != -1) || !value.eof())
             throw std::runtime_error("Unreadable value: " + line + " in file "
                                      + fileName);
