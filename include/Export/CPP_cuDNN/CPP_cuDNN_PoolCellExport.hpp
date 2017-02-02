@@ -47,19 +47,25 @@ public:
     void generateCellProgramGlobalDefinition(Cell& cell, std::ofstream& prog);
     void generateCellBuffer(const std::string& bufferName, std::ofstream& prog);
 
-    void generateCellProgramInitNetwork(Cell& cell, std::ofstream& prog);
-    void generateCellProgramInitBuffer(const std::string& bufferName,
+    void generateCellProgramInitNetwork(Cell& cell,
+                                       std::vector<std::string>& parentsName,
+                                       std::ofstream& prog);
+    void generateCellProgramInitBuffer(Cell& cell,
+                                       const std::string& bufferName,
                                        std::ofstream& prog);
     void generateCellProgramFunction(Cell& cell,
                                      const std::string& inputName,
                                      const std::string& outputName,
+                                     const std::string& output_pos,
                                      std::ofstream& prog,
                                      const std::string& funcProto = "");
     void generateCellProgramOutputFunction(Cell& cell,
                                            const std::string& outputDataName,
                                            const std::string& outputName,
                                            std::ofstream& prog);
-    void generateCellProgramFree(Cell& cell, std::ofstream& prog);
+    void generateCellProgramFree(Cell& cell,
+                                 std::vector<std::string>& parentsName,
+                                 std::ofstream& prog);
 
 private:
     static Registrar<PoolCellExport> mRegistrar;

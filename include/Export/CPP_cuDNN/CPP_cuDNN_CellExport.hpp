@@ -69,14 +69,19 @@ public:
                                                      std::ofstream& prog) = 0;
     virtual void generateCellBuffer(const std::string& bufferName,
                                     std::ofstream& prog) = 0;
-    virtual void generateCellProgramInitNetwork(Cell& cell, std::ofstream& prog)
-        = 0;
-    virtual void generateCellProgramInitBuffer(const std::string& bufferName,
+
+    virtual void generateCellProgramInitNetwork(Cell& cell,
+                                       std::vector<std::string>& parentsName,
+                                       std::ofstream& prog) = 0;
+
+    virtual void generateCellProgramInitBuffer(Cell& cell,
+                                               const std::string& bufferName,
                                                std::ofstream& prog) = 0;
 
     virtual void generateCellProgramFunction(Cell& cell,
                                              const std::string& inputName,
                                              const std::string& outputName,
+                                             const std::string& output_pos,
                                              std::ofstream& prog,
                                              const std::string& funcProto = "")
         = 0;
@@ -86,7 +91,9 @@ public:
                                                    const std::string
                                                    & outputName,
                                                    std::ofstream& prog) = 0;
-    virtual void generateCellProgramFree(Cell& cell, std::ofstream& prog) = 0;
+    virtual void generateCellProgramFree(Cell& cell,
+                                         std::vector<std::string>& parentsName,
+                                         std::ofstream& prog) = 0;
 };
 }
 

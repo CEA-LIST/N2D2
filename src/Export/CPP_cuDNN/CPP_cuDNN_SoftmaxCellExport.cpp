@@ -112,49 +112,60 @@ void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellBuffer(const std::string
                                                            & bufferName,
                                                            std::ofstream& prog)
 {
-    prog << "DATA_T * " << bufferName << ";\n";
+    prog << "std::vector<DATA_T *> " << bufferName << ";\n";
 }
 
 void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramInitNetwork(
-    Cell& cell, std::ofstream& prog)
+    Cell& cell, std::vector<std::string>& /*parentsName*/, std::ofstream& prog)
 {
     const std::string prefix = Utils::upperCase(cell.getName());
 
-    prog << " cudnnCreateTensorDescriptor(&" << cell.getName()
-         << "_tensorDescIn);\n"
-         << " cudnnCreateTensorDescriptor(&" << cell.getName()
-         << "_tensorDescOut);\n";
+    prog << "    cudnnCreateTensorDescriptor(&"
+        << cell.getName() << "_tensorDescIn);\n"
+        << "    cudnnCreateTensorDescriptor(&"
+        << cell.getName() << "_tensorDescOut);\n";
 
-    prog << " setSoftmax(batchSize, " << prefix << "_NB_CHANNELS, " << prefix
-         << "_CHANNELS_HEIGHT, " << prefix
-         << "_CHANNELS_WIDTH, "
-            "context_tensorFormat, context_dataType," << cell.getName()
-         << "_tensorDescIn, " << cell.getName() << "_tensorDescOut);\n\n";
+    prog << "    setSoftmax(batchSize,\n"
+        << "                " << prefix << "_NB_CHANNELS,\n"
+        << "                " << prefix << "_CHANNELS_HEIGHT,\n"
+        << "                " << prefix << "_CHANNELS_WIDTH,\n"
+        << "                " << "context_tensorFormat,\n"
+        << "                " << "context_dataType,\n"
+        << "                " << cell.getName() << "_tensorDescIn,\n"
+        << "                " << cell.getName() << "_tensorDescOut);\n\n";
 }
 
 void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramInitBuffer(
-    const std::string& bufferName, std::ofstream& prog)
+    Cell& cell, const std::string& bufferName, std::ofstream& prog)
 {
-    prog << " CHECK_CUDA_STATUS(cudaMalloc(&" << bufferName
-         << "buffer, sizeof(DATA_T)*" << Utils::upperCase(bufferName)
-         << "OUTPUTS_SIZE*batchSize));\n";
+    const std::string prefix = Utils::upperCase(cell.getName());
+
+    prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
+        << bufferName << "buffer[" << prefix
+        << "_OUTPUT_OFFSET], sizeof(DATA_T)*"
+        << Utils::upperCase(cell.getName())
+        << "_OUTPUTS_SIZE*batchSize));\n\n\n";
 }
 
 void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramFunction(
     Cell& cell,
     const std::string& inputName,
     const std::string& outputName,
+    const std::string& output_pos,
     std::ofstream& prog,
     const std::string& funcProto)
 {
     const std::string prefix = Utils::upperCase(cell.getName());
-    const std::string proto = (funcProto.empty()) ? " softmax" : funcProto;
+    const std::string proto = (funcProto.empty()) ? "    softmax" : funcProto;
 
-    prog << proto << "( "
-         << "context_handle, "
-         << cell.getName() + "_tensorDescIn, " + inputName + ", "
-         << cell.getName() + "_tensorDescOut, (DATA_T**)&" + outputName
-            + "); \n";
+    prog << proto
+        << "( "
+        << "                " << "context_handle,\n"
+        << "                " << cell.getName() + "_tensorDescIn,\n"
+        << "                " << inputName + ",\n"
+        << "                " << cell.getName() + "_tensorDescOut,\n"
+        << "                " << "(DATA_T**)&" + outputName + "["
+                              <<  output_pos + "]);\n";
 }
 
 void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramOutputFunction(
@@ -165,20 +176,24 @@ void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramOutputFunction(
 {
     const std::string prefix = Utils::upperCase(cell.getName());
 
-    if ((cell.getOutputsWidth() == 1) && (cell.getOutputsHeight() == 1)) {
-        prog << " output_generation(batchSize, " << prefix << "_NB_OUTPUTS, "
-             << outputDataName << ", " << outputName << ");\n";
-    } else {
-        prog << " spatial_output_generation(batchSize, " << prefix
-             << "_NB_OUTPUTS, " << prefix << "_OUTPUTS_HEIGHT, " << prefix
-             << "_OUTPUTS_WIDTH, " << outputDataName << ", " << outputName
-             << ");\n";
+    if( (cell.getOutputsWidth() == 1) && (cell.getOutputsHeight() == 1) ){
+        prog << "    output_generation(batchSize, "
+            << prefix << "_NB_OUTPUTS, "
+            << outputDataName << ", "
+            << outputName << ");\n";
+    }
+    else {
+        prog << "    spatial_output_generation(batchSize, "
+            << prefix << "_NB_OUTPUTS, "
+            << prefix << "_OUTPUTS_HEIGHT, "
+            << prefix << "_OUTPUTS_WIDTH, "
+            << outputDataName << ", "
+            << outputName << ");\n";
     }
 }
 
 void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramFree(Cell& cell,
-                                                                std::ofstream
-                                                                & prog)
+    std::vector<std::string>& /*parentsName*/, std::ofstream& prog)
 {
     prog << " CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
          << cell.getName()

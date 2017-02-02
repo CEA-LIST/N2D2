@@ -110,113 +110,216 @@ void envRead(const std::string& fileName,
                                  + fileName);
 }
 
-/************************************CONVOLUTION*************************************************/
-/************************************************************************************************/
+/**** Convolution Layer ****/
 void setConvolution(unsigned int batchSize,
-                    unsigned int nbChannels,
-                    unsigned int channelsHeight,
-                    unsigned int channelsWidth,
+                    std::vector<int> channelsPerInputLayer,
+                    std::vector<int> channelsHeightPerInputLayer,
+                    std::vector<int> channelsWidthPerInputLayer,
                     unsigned int paddingY,
                     unsigned int paddingX,
                     unsigned int strideY,
                     unsigned int strideX,
                     unsigned int subSampleY,
                     unsigned int subSampleX,
+                    const DATA_T* weights_flatten,
+                    std::vector<DATA_T*>& weights_cudnn,
+                    const DATA_T *bias_flatten,
+                    DATA_T *& bias_cudnn,
                     cudnnHandle_t& context_handle,
                     cudnnTensorFormat_t context_tensorFormat,
                     cudnnDataType_t context_dataType,
-                    cudnnTensorDescriptor_t inputsTensor,
-                    cudnnTensorDescriptor_t outputsTensor,
+                    std::vector<cudnnTensorDescriptor_t>& inputsTensor,
+                    cudnnTensorDescriptor_t& outputsTensor,
                     ActivationFunction_T func,
-                    cudnnConvolutionFwdAlgo_t algo,
-                    size_t sizeInBytes,
-                    void* workSpace,
+                    std::vector<cudnnConvolutionFwdAlgo_t>& algo,
+                    size_t& workSpaceSize,
+                    void** workSpace,
                     unsigned int nbOutputs,
-                    unsigned int outputOffset,
+                    unsigned int outputHeight,
+                    unsigned int outputWidth,
                     unsigned int kernelHeight,
                     unsigned int kernelWidth,
-                    cudnnTensorDescriptor_t biasDesc,
-                    cudnnFilterDescriptor_t filterDesc,
-                    cudnnConvolutionDescriptor_t convDesc)
+                    cudnnTensorDescriptor_t &biasDesc,
+                    std::vector<cudnnFilterDescriptor_t>& filterDesc,
+                    cudnnConvolutionDescriptor_t& convDesc)
 {
     int n = batchSize;
     int k = nbOutputs;
-    int c = nbChannels;
+    std::vector<int> c = channelsPerInputLayer;
 
     int hK = kernelHeight;
     int wK = kernelWidth;
 
-    int hCh = channelsHeight;
-    int wCh = channelsWidth;
+    std::vector<int> hCh = channelsHeightPerInputLayer;
+    std::vector<int> wCh = channelsWidthPerInputLayer;
 
 #ifdef PROFILING
     oclHandles.profiling.push_back(oclProfiling({"Convolution", 0.0}));
 #endif
+    cudnnCreateConvolutionDescriptor(&convDesc);
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
-        biasDesc, context_tensorFormat, context_dataType, 1, k, 1, 1));
+
+    CHECK_CUDNN_STATUS(
+        cudnnSetConvolution2dDescriptor(convDesc,
+                                        paddingY,
+                                        paddingX,
+                                        strideY,
+                                        strideX,
+                                        subSampleY,
+                                        subSampleX,
+                                        CUDNN_CROSS_CORRELATION) );
+
+    cudnnCreateTensorDescriptor(&biasDesc);
+    cudnnCreateTensorDescriptor(&outputsTensor);
+
+    CHECK_CUDNN_STATUS(
+        cudnnSetTensor4dDescriptor(biasDesc,
+                                   context_tensorFormat,
+                                   context_dataType,
+                                   1,
+                                   k,
+                                   1,
+                                   1));
+
+    CHECK_CUDNN_STATUS(
+        cudnnSetTensor4dDescriptor(outputsTensor,
+                                   context_tensorFormat,
+                                   context_dataType,
+                                   n,
+                                   k,
+                                   outputHeight,
+                                   outputWidth));
+
+    for (unsigned int i = 0; i < channelsPerInputLayer.size(); ++ i) {
+
+        filterDesc.push_back(cudnnFilterDescriptor_t());
+        cudnnCreateFilterDescriptor(&filterDesc.back());
+
+        inputsTensor.push_back(cudnnTensorDescriptor_t());
+        cudnnCreateTensorDescriptor(&inputsTensor.back());
 
 #if CUDNN_VERSION >= 5000
-    CHECK_CUDNN_STATUS(cudnnSetFilter4dDescriptor(
-        filterDesc, context_dataType, context_tensorFormat, k, c, hK, wK));
+        CHECK_CUDNN_STATUS(
+            cudnnSetFilter4dDescriptor(filterDesc.back(),
+                                       context_dataType,
+                                       context_tensorFormat,
+                                       k,
+                                       c[i],
+                                       hK,
+                                       wK));
 #else
-    CHECK_CUDNN_STATUS(
-        cudnnSetFilter4dDescriptor(filterDesc, context_dataType, k, c, hK, wK));
+        CHECK_CUDNN_STATUS(
+            cudnnSetFilter4dDescriptor(filterDesc.back(),
+                                       context_dataType,
+                                       k,
+                                       c[i],
+                                       hK,
+                                       wK));
 #endif
 
-    CHECK_CUDNN_STATUS(cudnnSetConvolution2dDescriptor(convDesc,
-                                                       paddingY,
-                                                       paddingX,
-                                                       strideY,
-                                                       strideX,
-                                                       subSampleY,
-                                                       subSampleX,
-                                                       CUDNN_CONVOLUTION));
+        CHECK_CUDNN_STATUS(
+            cudnnSetTensor4dDescriptor(inputsTensor.back(),
+                                       context_tensorFormat,
+                                       context_dataType,
+                                       n,
+                                       c[i],
+                                       hCh[i],
+                                       wCh[i]));
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
-        inputsTensor, context_tensorFormat, context_dataType, n, c, hCh, wCh));
+        CHECK_CUDNN_STATUS(
+            cudnnGetConvolution2dForwardOutputDim(convDesc,
+                                                  inputsTensor.back(),
+                                                  filterDesc.back(),
+                                                  &n,
+                                                  &c[i],
+                                                  &hCh[i],
+                                                  &wCh[i]));
 
-    CHECK_CUDNN_STATUS(cudnnGetConvolution2dForwardOutputDim(
-        convDesc, inputsTensor, filterDesc, &n, &c, &hCh, &wCh));
+        algo.push_back(cudnnConvolutionFwdAlgo_t());
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
-        outputsTensor, context_tensorFormat, context_dataType, n, c, hCh, wCh));
+        CHECK_CUDNN_STATUS(
+            cudnnGetConvolutionForwardAlgorithm(
+                context_handle,
+                inputsTensor.back(),
+                filterDesc.back(),
+                convDesc,
+                outputsTensor,
+                CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+                0,
+                &algo.back()));
 
-    CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardAlgorithm(
-        context_handle,
-        inputsTensor,
-        filterDesc,
-        convDesc,
-        outputsTensor,
-        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-        0,
-        &algo));
+        size_t algoSize = 0;
 
-    CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardWorkspaceSize(context_handle,
-                                                               inputsTensor,
-                                                               filterDesc,
-                                                               convDesc,
-                                                               outputsTensor,
-                                                               algo,
-                                                               &sizeInBytes));
+        CHECK_CUDNN_STATUS(
+            cudnnGetConvolutionForwardWorkspaceSize(context_handle,
+                                                    inputsTensor.back(),
+                                                    filterDesc.back(),
+                                                    convDesc,
+                                                    outputsTensor,
+                                                    algo.back(),
+                                                    &algoSize));
+
+        if (algoSize > workSpaceSize)
+            workSpaceSize = algoSize;
+
+        const unsigned int nbParams
+            = channelsPerInputLayer[i]*nbOutputs*kernelHeight*kernelWidth;
+
+        weights_cudnn.push_back(new DATA_T());
+
+        CHECK_CUDA_STATUS(
+            cudaMalloc(&weights_cudnn.back(), nbParams*sizeof(DATA_T)));
+
+    }
+
+    unsigned int memOffset = 0;
+    unsigned int cudaOffset = 0;
+
+    for (unsigned int out = 0; out < nbOutputs; ++out) {
+        for (unsigned int i = 0 ; i < channelsPerInputLayer.size(); ++i) {
+            unsigned int blockSize = channelsPerInputLayer[i]
+                *kernelHeight*kernelWidth;
+
+            cudaOffset = blockSize*out;
+
+            CHECK_CUDA_STATUS(
+                cudaMemcpy(weights_cudnn[i] + cudaOffset,
+                           weights_flatten + memOffset,
+                           blockSize*sizeof(DATA_T),
+                           cudaMemcpyHostToDevice));
+
+            memOffset += blockSize;
+        }
+    }
+    CHECK_CUDA_STATUS(
+        cudaMalloc(&bias_cudnn, nbOutputs*sizeof(DATA_T)));
+
+    CHECK_CUDA_STATUS(
+        cudaMemcpy(bias_cudnn,
+                   bias_flatten,
+                   nbOutputs*sizeof(DATA_T),
+                   cudaMemcpyHostToDevice));
+
+    if(workSpaceSize > 0)
+        CHECK_CUDA_STATUS(
+            cudaMalloc(workSpace, workSpaceSize));
+
 }
 
 void convcell(cudnnHandle_t& context_handle,
               ActivationFunction_T func,
-              cudnnConvolutionFwdAlgo_t algo,
-              void* workSpace,
-              size_t sizeInBytes,
-              cudnnTensorDescriptor_t inputsTensor,
-              DATA_T* inputs_data,
-              unsigned int outputOffset,
+              std::vector<cudnnConvolutionFwdAlgo_t> algo,
+              void* workSpace, size_t sizeInBytes,
+              std::vector<cudnnTensorDescriptor_t> inputsTensor,
+              std::vector<DATA_T*> inputs_data,
               int noBias,
               cudnnTensorDescriptor_t outputsTensor,
               DATA_T** outputs_data,
               cudnnTensorDescriptor_t biasDesc,
               DATA_T* bias_data,
-              cudnnFilterDescriptor_t filterDesc,
+              std::vector<cudnnFilterDescriptor_t> filterDesc,
               cudnnConvolutionDescriptor_t convDesc,
-              DATA_T* weights_data)
+              std::vector<DATA_T*> weights_data)
 {
 #ifdef PROFILING
     double elapsed = 0.0;
@@ -224,45 +327,56 @@ void convcell(cudnnHandle_t& context_handle,
         = std::chrono::high_resolution_clock::now();
 #endif
 
-    DATA_T ONE_T = DATA_T(1); // Alpha must be set to 1 for all steps
-    DATA_T ZERO_T = DATA_T(0); // Beta must be set to 0 for CONVOLUTION FORWARD
+    DATA_T ONE_T = DATA_T(1);   // Alpha must be set to 1 for all steps
+    DATA_T BETA_T = DATA_T(0);
+    DATA_T ZERO_T = DATA_T(0);   // Beta must be set to 0 for POOLING FORWARD
 
     cudnnActivationMode_t cudnnActivation;
 
-    ((func == Tanh || func == TanhLeCun)
-     ? cudnnActivation = CUDNN_ACTIVATION_TANH
-     : ((func == Rectifier)
-        ? cudnnActivation = CUDNN_ACTIVATION_RELU
-        : ((func == FastSigmoid) ? cudnnActivation = CUDNN_ACTIVATION_SIGMOID
-                                 : cudnnActivation = CUDNN_ACTIVATION_RELU)));
+    ((func == Tanh || func == TanhLeCun) ? cudnnActivation
+        = CUDNN_ACTIVATION_TANH :
+    ((func == Rectifier) ? cudnnActivation
+        = CUDNN_ACTIVATION_RELU :
+    ((func == FastSigmoid) ? cudnnActivation
+        = CUDNN_ACTIVATION_SIGMOID :
+    cudnnActivation= CUDNN_ACTIVATION_RELU)));
 
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t activationDesc;
-    CHECK_CUDNN_STATUS(cudnnCreateActivationDescriptor(&activationDesc));
 
-    CHECK_CUDNN_STATUS(cudnnSetActivationDescriptor(
-        activationDesc, cudnnActivation, NanPolicy, 0.0));
+    CHECK_CUDNN_STATUS(
+        cudnnCreateActivationDescriptor(&activationDesc));
+
+    CHECK_CUDNN_STATUS(
+        cudnnSetActivationDescriptor(activationDesc,
+                                     cudnnActivation,
+                                     NanPolicy,
+                                     0.0));
 #else
     cudnnActivationMode_t activationDesc = cudnnActivation;
 #endif
 
-    /********CONVOLUTION FORWARD***********/
-    CHECK_CUDNN_STATUS(cudnnConvolutionForward(context_handle,
-                                               &ONE_T,
-                                               inputsTensor,
-                                               inputs_data,
-                                               filterDesc,
-                                               weights_data,
-                                               convDesc,
-                                               algo,
-                                               workSpace,
-                                               sizeInBytes,
-                                               &ZERO_T,
-                                               outputsTensor,
-                                               *outputs_data + outputOffset));
+    for (unsigned int i = 0; i < inputsTensor.size(); ++ i) {
+        if (i > 0)
+            BETA_T = DATA_T(1);
 
+        CHECK_CUDNN_STATUS(
+            cudnnConvolutionForward(context_handle,
+                                    &ONE_T,
+                                    inputsTensor[i],
+                                    inputs_data[i],
+                                    filterDesc[i],
+                                    weights_data[i],
+                                    convDesc,
+                                    algo[i],
+                                    workSpace,
+                                    sizeInBytes,
+                                    &BETA_T,
+                                    outputsTensor,
+                                    *outputs_data));
+
+    }
     if (!noBias) {
-/********CONVOLUTION ADD BIAS***********/
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(
             cudnnAddTensor(context_handle,
@@ -271,45 +385,42 @@ void convcell(cudnnHandle_t& context_handle,
                            bias_data,
                            &ONE_T,
                            outputsTensor,
-                           *outputs_data + outputOffset)); // Bias
+                           *outputs_data));
 #else
-        CHECK_CUDNN_STATUS(cudnnAddTensor(context_handle,
-                                          CUDNN_ADD_SAME_C,
-                                          &ONE_T,
-                                          biasDesc,
-                                          bias_data,
-                                          &ONE_T,
-                                          outputsTensor,
-                                          *outputs_data + outputOffset));
+        CHECK_CUDNN_STATUS(
+            cudnnAddTensor(context_handle,
+                           CUDNN_ADD_SAME_C,
+                           &ONE_T,
+                           biasDesc,
+                           bias_data,
+                           &ONE_T,
+                           outputsTensor,
+                           outputs_data));
 #endif
     }
 
-    if (func != Linear) {
-        /********CONVOLUTION ACTIVATION***********/
+    if(func != Linear) {
         CHECK_CUDNN_STATUS(
             cudnnActivationForward(context_handle,
                                    activationDesc,
                                    &ONE_T,
                                    outputsTensor,
-                                   *outputs_data + outputOffset,
+                                   *outputs_data,
                                    &ZERO_T,
                                    outputsTensor,
-                                   *outputs_data + outputOffset)); // Activation
+                                   *outputs_data));
     }
 
-    if (sizeInBytes != 0)
-        CHECK_CUDA_STATUS(cudaFree(workSpace));
-
 #ifdef PROFILING
-    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-    elapsed = 1.0e6
-              * std::chrono::duration_cast<std::chrono::duration<double> >(
-                    std::chrono::high_resolution_clock::now() - start).count();
+    CHECK_CUDA_STATUS( cudaDeviceSynchronize() );
+    elapsed= 1.0e6*std::chrono::duration_cast<std::chrono::duration<double> >
+        (std::chrono::high_resolution_clock::now() - start).count();
     oclHandles.events.push_back(elapsed);
 #endif
+
+
 }
-/************************************BATCHNORM*****************************************************/
-/************************************************************************************************/
+/**** BatchNorm Layer ****/
 void setBatchnorm(unsigned int batchSize,
                   unsigned int nbChannels,
                   unsigned int channelsHeight,
@@ -386,14 +497,13 @@ void batchnormcell(cudnnHandle_t& context_handle,
                    unsigned int channelsHeight,
                    unsigned int channelsWidth,
                    cudnnTensorDescriptor_t inputsTensor,
-                   DATA_T* inputs_data,
+                   std::vector<DATA_T*> inputs_data,
                    DATA_T* scale,
                    cudnnTensorDescriptor_t scaleDesc,
                    DATA_T* bias,
                    DATA_T* mean,
                    DATA_T* variance,
                    DATA_T epsilon,
-                   unsigned int outputOffset,
                    cudnnTensorDescriptor_t outputsTensor,
                    DATA_T** outputs_data,
                    ActivationFunction_T func)
@@ -407,12 +517,13 @@ void batchnormcell(cudnnHandle_t& context_handle,
 
     cudnnActivationMode_t cudnnActivation;
 
-    ((func == Tanh || func == TanhLeCun)
-     ? cudnnActivation = CUDNN_ACTIVATION_TANH
-     : ((func == Rectifier)
-        ? cudnnActivation = CUDNN_ACTIVATION_RELU
-        : ((func == FastSigmoid) ? cudnnActivation = CUDNN_ACTIVATION_SIGMOID
-                                 : cudnnActivation = CUDNN_ACTIVATION_RELU)));
+    ((func == Tanh || func == TanhLeCun) ? cudnnActivation
+        = CUDNN_ACTIVATION_TANH
+    : ((func == Rectifier) ? cudnnActivation
+        = CUDNN_ACTIVATION_RELU
+    : ((func == FastSigmoid) ? cudnnActivation
+        = CUDNN_ACTIVATION_SIGMOID
+    : cudnnActivation = CUDNN_ACTIVATION_RELU)));
 
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t activationDesc;
@@ -427,30 +538,31 @@ void batchnormcell(cudnnHandle_t& context_handle,
     cudnnBatchNormMode_t mMode = CUDNN_BATCHNORM_SPATIAL;
     DATA_T ONE_T = DATA_T(1); // Alpha must be set to 1 for all steps
     DATA_T ZERO_T = DATA_T(0); // Beta must be set to 0 for POOLING FORWARD
-    /********BATCHNORM FORWARD***********/
-    CHECK_CUDNN_STATUS(cudnnBatchNormalizationForwardInference(context_handle,
-                                                               mMode,
-                                                               &ONE_T,
-                                                               &ZERO_T,
-                                                               inputsTensor,
-                                                               inputs_data,
-                                                               outputsTensor,
-                                                               *outputs_data,
-                                                               scaleDesc,
-                                                               scale,
-                                                               bias,
-                                                               mean,
-                                                               variance,
-                                                               epsilon));
+
+    CHECK_CUDNN_STATUS(
+        cudnnBatchNormalizationForwardInference(context_handle,
+                                                mMode,
+                                                &ONE_T,
+                                                &ZERO_T,
+                                                inputsTensor,
+                                                inputs_data[0],
+                                                outputsTensor,
+                                                *outputs_data,
+                                                scaleDesc,
+                                                scale,
+                                                bias,
+                                                mean,
+                                                variance,
+                                                epsilon));
 
 #else
-    cudaSBNPropagate(inputs_data,
+    cudaSBNPropagate(inputs_data[0],
                      bias,
                      variance,
                      mean,
                      scale,
                      epsilon,
-                     &outputs_data + outputOffset,
+                     &outputs_data,
                      nbChannels,
                      channelsHeight,
                      channelsWidth,
@@ -459,16 +571,16 @@ void batchnormcell(cudnnHandle_t& context_handle,
 #endif
 
     if (func != Linear) {
-        /********CONVOLUTION ACTIVATION***********/
+
         CHECK_CUDNN_STATUS(
             cudnnActivationForward(context_handle,
                                    activationDesc,
                                    &ONE_T,
                                    outputsTensor,
-                                   *outputs_data + outputOffset,
+                                   *outputs_data,
                                    &ZERO_T,
                                    outputsTensor,
-                                   *outputs_data + outputOffset)); // Activation
+                                   *outputs_data)); // Activation
     }
 
 #ifdef PROFILING
@@ -480,81 +592,101 @@ void batchnormcell(cudnnHandle_t& context_handle,
 #endif
 }
 
-/************************************POOLING*****************************************************/
-/************************************************************************************************/
+/**** Pooling Layer ****/
 void setPooling(unsigned int batchSize,
-                unsigned int nbChannels,
-                unsigned int channelsHeight,
-                unsigned int channelsWidth,
+                std::vector<int> channelsPerInputLayer,
+                std::vector<int> channelsHeightPerInputLayer,
+                std::vector<int> channelsWidthPerInputLayer,
+                unsigned int paddingY,
+                unsigned int paddingX,
                 unsigned int strideY,
                 unsigned int strideX,
                 unsigned int outputHeight,
                 unsigned int outputWidth,
                 cudnnTensorFormat_t context_tensorFormat,
                 cudnnDataType_t context_dataType,
-                cudnnTensorDescriptor_t inputsTensor,
-                cudnnTensorDescriptor_t outputsTensor,
+                std::vector<cudnnTensorDescriptor_t>& inputsTensor,
+                std::vector<cudnnTensorDescriptor_t>& outputsTensor,
                 Pooling_T func,
                 cudnnPoolingMode_t& cudnnPooling,
                 unsigned int nbOutputs,
-                unsigned int outputOffset,
                 unsigned int poolHeight,
                 unsigned int poolWidth,
-                cudnnPoolingDescriptor_t mapping)
+                cudnnPoolingDescriptor_t& mapping)
 {
     int n = batchSize;
-    int c = nbChannels;
-    int h = channelsHeight;
-    int w = channelsWidth;
+    std::vector<int> c = channelsPerInputLayer;
+    std::vector<int> h = channelsHeightPerInputLayer;
+    std::vector<int> w = channelsWidthPerInputLayer;
 
 #ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({"Pooling", 0.0}));
+    oclHandles.profiling.push_back(oclProfiling({ "Pooling", 0.0}));
 #endif
 
-    ((func == Average)
-     ? cudnnPooling = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
-     : ((func == Max) ? cudnnPooling = CUDNN_POOLING_MAX : cudnnPooling
-        = CUDNN_POOLING_MAX));
+    ((func == Average) ? cudnnPooling
+        = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING :
+    ((func == Max) ? cudnnPooling
+        = CUDNN_POOLING_MAX :
+    cudnnPooling = CUDNN_POOLING_MAX));
+
+    cudnnCreatePoolingDescriptor(&mapping);
 
 #if CUDNN_VERSION >= 5000
-    CHECK_CUDNN_STATUS(cudnnSetPooling2dDescriptor(mapping,
-                                                   cudnnPooling,
-                                                   NanPolicy,
-                                                   poolHeight,
-                                                   poolWidth,
-                                                   0,
-                                                   0,
-                                                   strideY,
-                                                   strideX));
+    CHECK_CUDNN_STATUS(
+        cudnnSetPooling2dDescriptor(mapping,
+                                    cudnnPooling,
+                                    NanPolicy,
+                                    poolHeight,
+                                    poolWidth,
+                                    paddingY,
+                                    paddingX,
+                                    strideY,
+                                    strideX));
 #else
-    CHECK_CUDNN_STATUS(cudnnSetPooling2dDescriptor(
-        mapping,
-        cudnnPooling,
-        poolHeight,
-        poolWidth,
-        0,
-        0,
-        strideX, // BUG in cuDNN v3 (order of the last 2 arguments was
-        // inverted), resolved with cuDNN v5
-        strideY));
+    CHECK_CUDNN_STATUS(
+        cudnnSetPooling2dDescriptor(mapping,
+                                    cudnnPooling,
+                                    poolHeight,
+                                    poolWidth,
+                                    paddingY,
+                                    paddingX,
+                                    strideX,  // BUG in cuDNN v3 (order of the last 2 arguments was inverted), resolved with cuDNN v5
+                                    strideY) );
 #endif
+    for (unsigned int k = 0; k < channelsPerInputLayer.size(); ++k) {
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
-        inputsTensor, context_tensorFormat, context_dataType, n, c, h, w));
+        inputsTensor.push_back(cudnnTensorDescriptor_t());
+        cudnnCreateTensorDescriptor(&inputsTensor.back());
+        outputsTensor.push_back(cudnnTensorDescriptor_t());
+        cudnnCreateTensorDescriptor(&outputsTensor.back());
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(outputsTensor,
-                                                  context_tensorFormat,
-                                                  context_dataType,
-                                                  n,
-                                                  nbOutputs,
-                                                  outputHeight,
-                                                  outputWidth));
+        CHECK_CUDNN_STATUS(
+            cudnnSetTensor4dDescriptor(inputsTensor.back(),
+                                       context_tensorFormat,
+                                       context_dataType,
+                                       n,
+                                       c[k],
+                                       h[k],
+                                       w[k]));
+
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
+            outputsTensor.back(),
+            context_dataType,
+            n,
+            c[k],
+            outputHeight,
+            outputWidth,
+            outputWidth * outputHeight * nbOutputs,
+            outputWidth * outputHeight,
+            outputWidth,
+            1));
+    }
+
 }
 void poolcell(cudnnHandle_t& context_handle,
-              cudnnTensorDescriptor_t inputsTensor,
-              DATA_T* inputs_data,
-              unsigned int outputOffset,
-              cudnnTensorDescriptor_t outputsTensor,
+              std::vector<cudnnTensorDescriptor_t> inputsTensor,
+              std::vector<DATA_T*> inputs_data,
+              std::vector<cudnnTensorDescriptor_t> outputsTensor,
               DATA_T** outputs_data,
               cudnnPoolingDescriptor_t mapping)
 {
@@ -564,17 +696,49 @@ void poolcell(cudnnHandle_t& context_handle,
         = std::chrono::high_resolution_clock::now();
 #endif
 
-    DATA_T ONE_T = DATA_T(1); // Alpha must be set to 1 for all steps
-    DATA_T ZERO_T = DATA_T(0); // Beta must be set to 0 for POOLING FORWARD
-    /********POOLING FORWARD***********/
-    CHECK_CUDNN_STATUS(cudnnPoolingForward(context_handle,
-                                           mapping,
-                                           &ONE_T,
-                                           inputsTensor,
-                                           inputs_data,
-                                           &ZERO_T,
-                                           outputsTensor,
-                                           *outputs_data + outputOffset));
+    DATA_T ONE_T = DATA_T(1);   // Alpha must be set to 1 for all steps
+    DATA_T ZERO_T = DATA_T(0);   // Beta must be set to 0 for POOLING FORWARD
+
+    int inputDimBatch = 0;
+    int inputDimChannel = 0;
+
+    int outputDimY = 0;
+    int outputDimX = 0;
+    int outputStrideBatch = 0;
+    int outputStrideFeaturesMap = 0;
+    int outputStrideHeight = 0;
+    int outputStrideWidth = 0;
+
+    unsigned int offset = 0;
+    cudnnDataType_t tensorDataType;
+
+    for (unsigned int k = 0; k < inputsTensor.size(); ++k) {
+
+        CHECK_CUDNN_STATUS(
+            cudnnGetTensor4dDescriptor(outputsTensor[k],
+                                       &tensorDataType,
+                                       &inputDimBatch,
+                                       &inputDimChannel,
+                                       &outputDimY,
+                                       &outputDimX,
+                                       &outputStrideBatch,
+                                       &outputStrideFeaturesMap,
+                                       &outputStrideHeight,
+                                       &outputStrideWidth ));
+
+        CHECK_CUDNN_STATUS(
+            cudnnPoolingForward(context_handle,
+                                mapping,
+                                &ONE_T,
+                                inputsTensor[k],
+                                inputs_data[k],
+                                &ZERO_T,
+                                outputsTensor[k],
+                                *outputs_data + offset) );
+
+        offset += inputDimChannel * outputDimY * outputDimX ;
+
+    }
 
 #ifdef PROFILING
     CHECK_CUDA_STATUS(cudaDeviceSynchronize());
@@ -584,9 +748,7 @@ void poolcell(cudnnHandle_t& context_handle,
     oclHandles.events.push_back(elapsed);
 #endif
 }
-/************************************FRACTIONNAL MAX
- * POOLING*************************************/
-/************************************************************************************************/
+/**** FractionnalMaxPooling Layer ****/
 void setFmp()
 {
 #ifdef PROFILING
@@ -602,7 +764,7 @@ void fmpcell(cudnnHandle_t& context_handle,
              unsigned int* gridx,
              unsigned int* gridy,
              const bool overlapping,
-             const DATA_T* inputs_data,
+             std::vector<DATA_T*> inputs_data,
              unsigned int nbOutputs_,
              unsigned int outputsHeight,
              unsigned int outputsWidth,
@@ -621,20 +783,26 @@ void fmpcell(cudnnHandle_t& context_handle,
     unsigned int* gridYRand
         = new unsigned int[outputsHeight]; // use array new.  Note that length
     // does not need to be constant!
-    fmpcell_propagate_generateRegions(
-        &gridXRand[0], channelsWidth, outputsWidth);
-    fmpcell_propagate_generateRegions(
-        &gridYRand[0], channelsHeight, outputsHeight);
-    CHECK_CUDA_STATUS(cudaMemcpy(gridx,
-                                 gridXRand,
-                                 outputsWidth * sizeof(unsigned int),
-                                 cudaMemcpyHostToDevice));
-    CHECK_CUDA_STATUS(cudaMemcpy(gridy,
-                                 gridYRand,
-                                 outputsHeight * sizeof(unsigned int),
-                                 cudaMemcpyHostToDevice));
+    fmpcell_propagate_generateRegions(&gridXRand[0],
+                                      channelsWidth,
+                                      outputsWidth);
 
-    cudaSFMPPropagate(inputs_data,
+    fmpcell_propagate_generateRegions(&gridYRand[0],
+                                      channelsHeight,
+                                      outputsHeight);
+    CHECK_CUDA_STATUS(
+        cudaMemcpy(gridx,
+                   gridXRand,
+                   outputsWidth * sizeof(unsigned int),
+                   cudaMemcpyHostToDevice));
+
+    CHECK_CUDA_STATUS(
+        cudaMemcpy(gridy,
+                   gridYRand,
+                   outputsHeight * sizeof(unsigned int),
+                   cudaMemcpyHostToDevice));
+
+    cudaSFMPPropagate(inputs_data[0],
                       gridx,
                       gridy,
                       outputs_data,
@@ -667,65 +835,105 @@ void fmpcell_propagate_generateRegions(unsigned int* grid,
         grid[i] = (unsigned int)std::ceil(scalingRatio * (i + u));
 }
 
-/************************************FULLY
- * CONNECTED*********************************************/
-/************************************************************************************************/
+/**** FullyConnected Layer ****/
 void setFc(unsigned int batchSize,
-           unsigned int nbChannels,
-           unsigned int channelsHeight,
-           unsigned int channelsWidth,
-           cudnnHandle_t& context_handle,
+           std::vector<int> channelsPerInputLayer,
+           std::vector<int> channelsHeightPerInputLayer,
+           std::vector<int> channelsWidthPerInputLayer,
+           std::vector<cudnnTensorDescriptor_t>& inputsTensor,
+           const DATA_T* weights_flatten,
+           std::vector<DATA_T*>& weights_cudnn,
+           const DATA_T *bias_flatten,
+           DATA_T *& bias_cudnn,
            cudnnTensorFormat_t context_tensorFormat,
            cudnnDataType_t context_dataType,
-           cudnnTensorDescriptor_t inputsTensor,
-           cudnnTensorDescriptor_t outputsTensor,
+           cudnnTensorDescriptor_t& outputsTensor,
            ActivationFunction_T func,
-           unsigned int nbOutputs,
-           cudnnTensorDescriptor_t biasDesc)
+           unsigned int nbOutputs)
 {
     int n = batchSize;
-    int c = nbChannels;
-    int hCh = channelsHeight;
-    int wCh = channelsWidth;
     int k = nbOutputs;
     int hOut = 1;
     int wOut = 1;
+    std::vector<int> c = channelsPerInputLayer;
+    std::vector<int> h = channelsHeightPerInputLayer;
+    std::vector<int> w = channelsWidthPerInputLayer;
 
 #ifdef PROFILING
     oclHandles.profiling.push_back(oclProfiling({"FullyConnected", 0.0}));
 #endif
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
-        biasDesc, context_tensorFormat, context_dataType, 1, k, 1, 1));
+    for (unsigned int k = 0; k < channelsPerInputLayer.size(); ++k) {
+        const unsigned int nbParams = c[k]*h[k]*w[k]*nbOutputs;
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
-        inputsTensor, context_tensorFormat, context_dataType, n, c, hCh, wCh));
+        inputsTensor.push_back(cudnnTensorDescriptor_t());
+        cudnnCreateTensorDescriptor(&inputsTensor.back());
 
-    CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(outputsTensor,
-                                                  context_tensorFormat,
-                                                  context_dataType,
-                                                  n,
-                                                  k,
-                                                  hOut,
-                                                  wOut));
+        CHECK_CUDNN_STATUS(
+            cudnnSetTensor4dDescriptor(inputsTensor.back(),
+                                       context_tensorFormat,
+                                       context_dataType,
+                                       n,
+                                       c[k],
+                                       h[k],
+                                       w[k]));
+
+        weights_cudnn.push_back(new DATA_T());
+        CHECK_CUDA_STATUS(
+            cudaMalloc(&weights_cudnn.back(), nbParams*sizeof(DATA_T)));
+    }
+
+    unsigned int memOffset = 0;
+    unsigned int cudaOffset = 0;
+    for (unsigned int out = 0; out < nbOutputs; ++out) {
+        for (unsigned int k = 0 ; k < channelsPerInputLayer.size(); ++k) {
+            unsigned int blockSize = c[k]*h[k]*w[k];
+
+            cudaOffset = blockSize*out;
+
+            CHECK_CUDA_STATUS( cudaMemcpy(weights_cudnn[k] + cudaOffset,
+                    weights_flatten + memOffset,
+                    blockSize*sizeof(DATA_T),
+                    cudaMemcpyHostToDevice) );
+
+            memOffset += blockSize;
+        }
+    }
+
+    CHECK_CUDA_STATUS(
+        cudaMalloc(&bias_cudnn, nbOutputs*sizeof(DATA_T)));
+
+    CHECK_CUDA_STATUS(
+        cudaMemcpy(bias_cudnn,
+                   bias_flatten,
+                   nbOutputs*sizeof(DATA_T),
+                   cudaMemcpyHostToDevice));
+
+    cudnnCreateTensorDescriptor(&outputsTensor);
+
+    CHECK_CUDNN_STATUS(
+        cudnnSetTensor4dDescriptor(outputsTensor,
+                                   context_tensorFormat,
+                                   context_dataType,
+                                   n,
+                                   k,
+                                   hOut,
+                                   wOut));
 }
 
-void fullyConnected(unsigned int batchSize,
-                    unsigned int nbChannels,
+void fullyConnected(unsigned int nbChannels,
                     cudnnHandle_t& context_handle,
                     cublasHandle_t& context_cublasHandle,
                     ActivationFunction_T func,
-                    cudnnTensorDescriptor_t inputsTensor,
-                    DATA_T* inputs_data,
+                    std::vector<cudnnTensorDescriptor_t> inputsTensor,
+                    std::vector<DATA_T*> inputs_data,
                     cudnnTensorDescriptor_t outputsTensor,
                     unsigned int nbOutputs,
-                    unsigned int outputOffset,
                     int noBias,
                     DATA_T** outputs_data,
-                    cudnnTensorDescriptor_t biasDesc,
-                    DATA_T* bias_data,
-                    DATA_T* ones_vec_data,
-                    DATA_T* weights_data)
+                    DATA_T *bias_data,
+                    DATA_T *ones_vec_data,
+                    std::vector<DATA_T*> weights_data)
 {
 #ifdef PROFILING
     double elapsed = 0.0;
@@ -733,10 +941,8 @@ void fullyConnected(unsigned int batchSize,
         = std::chrono::high_resolution_clock::now();
 #endif
 
-    /************************CublasSgemm function used for the Fully Connected
-     * Layers************************************/
-    /********************************************************************************************************************
-      This function performs the matrix-matrix multiplication
+    /********CublasSgemm function used for the Fully Connected Layers**********/
+    /**  This function performs the matrix-matrix multiplication
 
     C = α*op( A )*op*( B ) + β*C
 
@@ -748,95 +954,112 @@ void fullyConnected(unsigned int batchSize,
                  = AT if  transa == CUBLAS_OP_T
                  = AH if  transa == CUBLAS_OP_C
 
-
-
         More informations: http://docs.nvidia.com/cuda/cublas/
-    ***************************************************************************************************************************/
-    DATA_T ONE_T
-        = DATA_T(1); // Alpha must be set to 1 for all fully connected steps
-    DATA_T ZERO_T
-        = DATA_T(0); // Beta must be set to 0 for cublasSgemv processing
+    ***************************************************************************/
+    DATA_T ONE_T = DATA_T(1);    //ONE_T must be set to 1
+    DATA_T ZERO_T = DATA_T(0);    //ZERO_T must be set to 0
+    DATA_T BETA_T = DATA_T(0);
 
     cudnnActivationMode_t cudnnActivation;
 
-    ((func == Tanh || func == TanhLeCun)
-     ? cudnnActivation = CUDNN_ACTIVATION_TANH
-     : ((func == Rectifier)
-        ? cudnnActivation = CUDNN_ACTIVATION_RELU
-        : ((func == FastSigmoid) ? cudnnActivation = CUDNN_ACTIVATION_SIGMOID
-                                 : cudnnActivation = CUDNN_ACTIVATION_RELU)));
+    ((func == Tanh || func == TanhLeCun) ? cudnnActivation
+        = CUDNN_ACTIVATION_TANH :
+    ((func == Rectifier) ? cudnnActivation
+        = CUDNN_ACTIVATION_RELU :
+    ((func == FastSigmoid) ? cudnnActivation
+        = CUDNN_ACTIVATION_SIGMOID :
+    cudnnActivation= CUDNN_ACTIVATION_RELU)));
 
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t activationDesc;
     CHECK_CUDNN_STATUS(cudnnCreateActivationDescriptor(&activationDesc));
 
-    CHECK_CUDNN_STATUS(cudnnSetActivationDescriptor(
-        activationDesc, cudnnActivation, NanPolicy, 0.0));
+    CHECK_CUDNN_STATUS(
+        cudnnSetActivationDescriptor(activationDesc,
+                                     cudnnActivation,
+                                     NanPolicy,
+                                     0.0));
 #else
     cudnnActivationMode_t activationDesc = cudnnActivation;
 #endif
 
-    cublasOperation_t transA = CUBLAS_OP_T; // Operation op(A)
-    cublasOperation_t transB = CUBLAS_OP_N; // Operation op(B)
-    int m = nbOutputs; // Number of rows of matrix op(A) and C
-    int n = batchSize; // Number of columns of matrix op(B) and C
-    int k = nbChannels; // Number of columns of matrix op(A) and rows of matrix
-    // op(B)
+    cublasOperation_t transA = CUBLAS_OP_T;
+    cublasOperation_t transB = CUBLAS_OP_N;
+    int m = nbOutputs;
 
-    int ldA = k; // Leading dimension of two-dimensional array used to store
-    // matrix A.
-    int ldB = k; // Leading dimension of two-dimensional array used to store
-    // matrix B.
-    int ldC = m; // Leading dimension of two-dimensional array used to store
-    // matrix C.
+    int batch;
+    int ch ;
+    int chH ;
+    int chW ;
+    int nStride ;
+    int cStride ;
+    int hStride ;
+    int wStride ;
+    cudnnDataType_t tensorDataType;
 
-    cublasSgemm(context_cublasHandle,
-                transA,
-                transB,
-                m,
-                n,
-                k,
-                &ONE_T,
-                weights_data,
-                ldA,
-                inputs_data,
-                ldB,
-                &ZERO_T,
-                *outputs_data + outputOffset,
-                ldC);
+    for (unsigned int i = 0; i < inputs_data.size(); ++i) {
+        if(i > 0)
+            BETA_T = DATA_T(1);
 
-    /******************************************************************************************************************************/
-    if (!noBias) {
-        /*************************ADD BIAS to FC
-         * Layers*********************************/
-        CHECK_CUBLAS_STATUS(cublasSgemm(context_cublasHandle,
-                                        CUBLAS_OP_N,
-                                        CUBLAS_OP_N,
-                                        m,
-                                        n,
-                                        1,
-                                        &ONE_T,
-                                        bias_data,
-                                        m,
-                                        ones_vec_data,
-                                        1,
-                                        &ONE_T,
-                                        *outputs_data + outputOffset,
-                                        m));
+        CHECK_CUDNN_STATUS(
+            cudnnGetTensor4dDescriptor(inputsTensor[i],
+                                       &tensorDataType,
+                                       &batch,
+                                       &ch,
+                                       &chH,
+                                       &chW,
+                                       &nStride,
+                                       &cStride,
+                                       &hStride,
+                                       &wStride ));
+
+        const unsigned int inputSize = ch * chH * chW;
+
+        cublasSgemm(context_cublasHandle,
+                    transA,
+                    transB,
+                    m,
+                    batch,
+                    inputSize,
+                    &ONE_T,
+                    weights_data[i],
+                    inputSize,
+                    inputs_data[i],
+                    inputSize,
+                    &BETA_T,
+                    *outputs_data,
+                    m);
+    }
+    if(!noBias){
+
+        CHECK_CUBLAS_STATUS(
+            cublasSgemm(context_cublasHandle,
+                        CUBLAS_OP_N,
+                        CUBLAS_OP_N,
+                        m,
+                        batch,
+                        1,
+                        &ONE_T,
+                        bias_data,
+                        m,
+                        ones_vec_data,
+                        1,
+                        &ONE_T,
+                        *outputs_data,
+                        m) );
     }
 
-    if (func != Linear) {
-        /*************************Activation
-         * Function*********************************/
+    if(func != Linear) {
+
         CHECK_CUDNN_STATUS(
             cudnnActivationForward(context_handle,
                                    activationDesc,
                                    &ONE_T,
                                    outputsTensor,
-                                   *outputs_data + outputOffset,
+                                   *outputs_data,
                                    &ZERO_T,
                                    outputsTensor,
-                                   *outputs_data + outputOffset)); // Activation
+                                   *outputs_data) );
     }
 
 #ifdef PROFILING
@@ -847,6 +1070,8 @@ void fullyConnected(unsigned int batchSize,
     oclHandles.events.push_back(elapsed);
 #endif
 }
+
+/**** SoftMax Layer ****/
 
 void setSoftmax(unsigned int batchSize,
                 unsigned int nbChannels,
@@ -873,11 +1098,9 @@ void setSoftmax(unsigned int batchSize,
         outputsTensor, context_tensorFormat, context_dataType, n, c, h, w));
 }
 
-/************************SoftMax
- * Layer*****************************************************************/
 void softmax(cudnnHandle_t& context_handle,
              cudnnTensorDescriptor_t inputsTensor,
-             DATA_T* inputs_data,
+             std::vector<DATA_T*> inputs_data,
              cudnnTensorDescriptor_t outputsTensor,
              DATA_T** outputs_data)
 {
@@ -895,7 +1118,7 @@ void softmax(cudnnHandle_t& context_handle,
                                            CUDNN_SOFTMAX_MODE_CHANNEL,
                                            &alpha,
                                            inputsTensor,
-                                           inputs_data,
+                                           inputs_data[0],
                                            &beta,
                                            outputsTensor,
                                            *outputs_data));
@@ -908,7 +1131,7 @@ void softmax(cudnnHandle_t& context_handle,
     oclHandles.events.push_back(elapsed);
 #endif
 }
-
+/****Targets Layers ****/
 void output_generation(unsigned int batchSize,
                        unsigned int nbOutputs,
                        DATA_T* dataIn,
@@ -1019,6 +1242,7 @@ void spatial_output_generation(unsigned int batchSize,
     delete[] outputsData;
 }
 
+/**** Confusion Matrix ****/
 void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
 {
     std::cout << "\nConfusion matrix:\n";
@@ -1069,26 +1293,27 @@ void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
               << "T: Target    E: Estimated" << std::endl;
 }
 
+/**** Debug Function ****/
 void dumpMem(int size, DATA_T* data, std::string fileName)
 {
 
     std::ofstream file;
     file.open(fileName.c_str());
 
-    DATA_T* watch_eagle(NULL);
-    watch_eagle = new DATA_T[size];
+    DATA_T* eagleEyes(NULL);
+    eagleEyes = new DATA_T[size];
 
     CHECK_CUDA_STATUS(cudaMemcpy(
-        watch_eagle, data, size * sizeof(DATA_T), cudaMemcpyDeviceToHost));
+        eagleEyes, data, size * sizeof(DATA_T), cudaMemcpyDeviceToHost));
 
     for (int i = 0; i < size; i++)
 #if NB_BITS < 0
-        file << "data[" << i << "]= " << watch_eagle[i] << "\n";
+        file << "data[" << i << "]= " << eagleEyes[i] << "\n";
 #else
-        file << "data[" << i << "]= " << (int)watch_eagle[i] << "\n";
+        file << "data[" << i << "]= " << (int)eagleEyes[i] << "\n";
 #endif
     std::cout << "dump mem in file " << fileName.c_str() << "done"
               << "\n";
     file.close();
-    delete[] watch_eagle;
+    delete[] eagleEyes;
 }

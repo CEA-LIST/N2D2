@@ -50,7 +50,7 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateDeepNetHeader(
                                  + fileName);
     C_DeepNetExport::generateHeaderBegin(deepNet, header, fileName);
     generateHeaderIncludes(deepNet, header);
-    CPP_OpenCL_DeepNetExport::generateHeaderConstants(deepNet, header);
+    generateHeaderConstants(deepNet, header);
     generateHeaderInit(deepNet, header);
     generateHeaderFunction(deepNet, name, header);
     generateHeaderFree(deepNet, header);
@@ -62,8 +62,7 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderIncludes(DeepNet& deepNet,
                                                            & header)
 {
     header << "#include \"n2d2_cudnn.hpp\"\n"
-              "#include \"env.h\"\n";
-
+              "#include \"env.hpp\"\n";
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
@@ -76,7 +75,91 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderIncludes(DeepNet& deepNet,
              it != itEnd;
              ++it) {
             const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
-            header << "#include \"" << cell->getName() << ".h\"\n";
+            header << "#include \"" << cell->getName() << ".hpp\"\n";
+        }
+    }
+}
+void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
+                                                             std::ofstream
+                                                             & header)
+{
+
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+
+    for (std::vector<std::vector<std::string> >::const_iterator itLayer
+         = layers.begin() + 2,
+         itLayerEnd = layers.end();
+         itLayer != itLayerEnd;
+         ++itLayer) {
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+                                                      itBegin
+                                                      = (*itLayer).begin(),
+                                                      itEnd = (*itLayer).end();
+             it != itEnd;
+             ++it) {
+
+            if (!isSharedInput(deepNet,
+                               std::distance(layers.begin(), itLayer),
+                               std::distance((*itLayer).begin(), it))) {
+                const std::vector<std::shared_ptr<Cell> > parentCells
+                    = deepNet.getParentCells(*it);
+
+                if (parentCells.size() > 1) {
+
+                    std::stringstream outputOffset;
+                    std::stringstream outputDepth;
+                    std::stringstream outputName;
+                    std::string opPlus = " + ";
+
+                    outputOffset << "(" << Utils::upperCase(
+                                               (*parentCells[0]).getName())
+                                 << "_OUTPUTS_SIZE ";
+                    outputDepth << "("
+                                << Utils::upperCase((*parentCells[0]).getName())
+                                << "_NB_OUTPUTS ";
+                    outputName << Utils::upperCase((*parentCells[0]).getName())
+                               << "_";
+
+                    header << "#define "
+                           << Utils::upperCase((*parentCells[0]).getName())
+                           << "_OUTPUT_OFFSET 0\n";
+
+                    for (unsigned int i = 1; i < parentCells.size(); ++i) {
+
+                        header << "#define "
+                               << Utils::upperCase((*parentCells[i]).getName())
+                               << "_OUTPUT_OFFSET ";
+                        header << i << "\n";
+
+                        outputName << Utils::upperCase(
+                                          (*parentCells[i]).getName()) << "_";
+                        outputOffset << opPlus
+                                     << Utils::upperCase(
+                                            (*parentCells[i]).getName())
+                                     << "_OUTPUTS_SIZE";
+                        outputDepth << opPlus << Utils::upperCase((
+                                                     *parentCells[i]).getName())
+                                    << "_NB_OUTPUTS";
+                        (i == parentCells.size() - 1) ? opPlus = " " : opPlus
+                            = "+ ";
+                    }
+                    header << "#define " << outputName.str() << "NB_OUTPUTS ";
+                    header << outputDepth.str() << ")\n";
+                    header << "#define " << outputName.str() << "OUTPUTS_SIZE ";
+                    header << outputOffset.str() << ")\n";
+                } else {
+                    header << "#define "
+                           << Utils::upperCase((*parentCells[0]).getName())
+                           << "_OUTPUT_OFFSET 0\n";
+                }
+            }
+            if (itLayer == itLayerEnd - 1) {
+                const std::shared_ptr<Cell> cell
+                    = deepNet.getCell((*itLayer).at(0));
+
+                header << "#define " << Utils::upperCase(cell->getName())
+                       << "_OUTPUT_OFFSET 0\n";
+            }
         }
     }
 }
@@ -114,12 +197,29 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateDeepNetProgram(
     if (!prog.good())
         throw std::runtime_error("Could not create C network file: "
                                  + fileName);
-    C_DeepNetExport::generateProgramBegin(deepNet, prog);
+    generateProgramBegin(deepNet, prog);
     generateProgramDesc(deepNet, prog);
     generateProgramGlobalDefinition(deepNet, prog);
     generateProgramInitNetwork(deepNet, prog);
     generateProgramFunction(deepNet, name, prog);
     generateProgramFree(deepNet, prog);
+}
+
+void N2D2::CPP_cuDNN_DeepNetExport::generateProgramBegin(DeepNet& /*deepNet*/,
+                                                 std::ofstream& prog)
+{
+    // Append date & time to the file.
+    const time_t now = std::time(0);
+    tm* localNow = std::localtime(&now);
+
+    // Program
+    prog << "// N2D2 auto-generated file.\n"
+            "// @ " << std::asctime(localNow)
+         << "\n" // std::asctime() already appends end of line
+            "#include \"network.hpp\"\n"
+            "\n"
+            "//#define DATA_DYN_ANALYSIS\n"
+            "\n";
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramDesc(DeepNet& deepNet,
@@ -129,18 +229,17 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramDesc(DeepNet& deepNet,
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
-         itLayerEnd = layers.end();
-         itLayer != itLayerEnd;
-         ++itLayer) {
+        = layers.begin() + 1,
+        itLayerBegin = layers.begin() + 1,
+        itLayerEnd = layers.end(); itLayer != itLayerEnd; ++itLayer)
+    {
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-                                                      itEnd = (*itLayer).end();
-             it != itEnd;
-             ++it) {
+            itEnd = (*itLayer).end(); it != itEnd; ++it) {
+
             Cell& cell = *deepNet.getCell(*it);
-            CPP_cuDNN_CellExport::getInstance(cell)
-                ->generateCellProgramDesc(cell, prog);
+
+            CPP_cuDNN_CellExport::getInstance(cell)->
+                generateCellProgramDesc(cell, prog);
         }
         prog << "\n";
     }
@@ -150,140 +249,173 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramDesc(DeepNet& deepNet,
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
     DeepNet& deepNet, std::ofstream& prog)
 {
-    prog << "DATA_T *in_buffer(NULL);\n"
-            "DATA_T *output_buffer(NULL);\n"
-            "DATA_T *ones_vector_buffer(NULL);\n\n";
+    prog << "std::vector<DATA_T *> in_buffer;\n"
+        "std::vector<DATA_T *> output_buffer;\n"
+        "DATA_T *ones_vector_buffer(NULL);\n\n";
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     /**Weight & Bias memory objects definition**/
-    for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
-         itLayerEnd = layers.end();
-         itLayer != itLayerEnd;
-         ++itLayer) {
+    for (std::vector<std::vector<std::string> >::const_iterator
+        itLayer = layers.begin() + 1,
+        itLayerBegin = layers.begin() + 1,
+        itLayerEnd = layers.end();
+        itLayer != itLayerEnd;
+        ++itLayer)
+    {
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-                                                      itEnd = (*itLayer).end();
+             itEnd = (*itLayer).end();
              it != itEnd;
              ++it) {
             Cell& cell = *deepNet.getCell(*it);
-            CPP_cuDNN_CellExport::getInstance(cell)
-                ->generateCellProgramGlobalDefinition(cell, prog);
+
+            CPP_cuDNN_CellExport::getInstance(cell)->
+                generateCellProgramGlobalDefinition(cell, prog);
         }
     }
     prog << "\n";
 
-    /**Data buffer objects definition**/
-    unsigned int layerNumber = 1;
+    /**Data buffer objects global definition**/
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
+         = layers.begin() + 2,
          itLayerEnd = layers.end();
          itLayer != itLayerEnd;
          ++itLayer) {
-        std::vector<unsigned int> archNet = getMapLayer(deepNet, layerNumber);
+        for (std::vector<std::string>::const_iterator
+             it = (*itLayer).begin(),
+             itBegin = (*itLayer).begin(),
+             itEnd = (*itLayer).end();
+             it != itEnd;
+             ++it) {
 
-        std::stringstream outputName;
-        unsigned int cellNumber = 0;
+            if (!isSharedInput(deepNet,
+                               std::distance(layers.begin(), itLayer),
+                               std::distance((*itLayer).begin(), it))) {
+                const std::vector<std::shared_ptr<Cell> > parentCells
+                    = deepNet.getParentCells(*it);
+                const std::shared_ptr<Cell> cell = deepNet.getCell(
+                    (*itLayer).at(std::distance((*itLayer).begin(), it)));
+                std::stringstream outputName;
+                outputName << (*parentCells[0]).getName() << "_";
 
-        for (unsigned int i = 0; i < archNet.size(); i++) {
-            outputName.str("");
+                for (unsigned int i = 1; i < parentCells.size(); ++i)
+                    outputName << (*parentCells[i]).getName() << "_";
 
-            for (unsigned int j = 0; j < archNet[i]; j++) {
-                const std::shared_ptr<Cell> cell
-                    = deepNet.getCell((*itLayer).at(cellNumber));
-                const std::string prefix = cell->getName();
-
-                outputName << prefix + "_";
-
-                if (j == archNet[i] - 1)
-                    CPP_cuDNN_CellExport::getInstance(*cell)
-                        ->generateCellBuffer(outputName.str() + "buffer", prog);
-
-                ++cellNumber;
+                CPP_cuDNN_CellExport::getInstance(*cell)
+                    ->generateCellBuffer(outputName.str() + "buffer", prog);
             }
         }
-        layerNumber++;
     }
+
+    prog << "\n\n";
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                                                                std::ofstream
                                                                & prog)
 {
-    prog << "void init_network(cudnnHandle_t& context_handle, unsigned int "
-            "batchSize) {\n"
-            " cudnnDataType_t context_dataType        = CUDNN_DATA_FLOAT;\n"
-            " cudnnTensorFormat_t context_tensorFormat    = "
-            "CUDNN_TENSOR_NCHW;\n\n";
+    std::string outputsBuffer = "output_";
+    std::string output_buff;
 
-    prog << " CHECK_CUDA_STATUS( cudaMalloc(&ones_vector_buffer, "
-            "batchSize*sizeof(DATA_T)) );\n"
-            " std::vector<DATA_T> onesVec(batchSize, 1.0);\n"
-            " CHECK_CUDA_STATUS( cudaMemcpy(ones_vector_buffer, &onesVec[0], "
-            "batchSize*sizeof(DATA_T), cudaMemcpyHostToDevice) );\n\n";
+    prog << "void init_network(cudnnHandle_t& context_handle,"
+        "unsigned int batchSize) {\n"
+        << "    cudnnDataType_t context_dataType ="
+        " CUDNN_DATA_FLOAT;\n"
+        << "    cudnnTensorFormat_t context_tensorFormat ="
+        " CUDNN_TENSOR_NCHW;\n\n";
+
+    prog << "    CHECK_CUDA_STATUS( cudaMalloc(&ones_vector_buffer,"
+        " batchSize*sizeof(DATA_T)) );\n"
+        "    std::vector<DATA_T> onesVec(batchSize, 1.0);\n"
+        "    CHECK_CUDA_STATUS( cudaMemcpy(ones_vector_buffer, &onesVec[0],"
+        " batchSize*sizeof(DATA_T), cudaMemcpyHostToDevice) );\n\n";
+
+    prog << "    in_buffer.push_back(new DATA_T());\n"
+        "    CHECK_CUDA_STATUS( cudaMalloc(&in_buffer.back(),"
+        " batchSize*ENV_OUTPUTS_SIZE*sizeof(DATA_T)) );\n";
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
+    /**Data buffer objects resizing**/
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
+         = layers.begin() + 2,
          itLayerEnd = layers.end();
          itLayer != itLayerEnd;
          ++itLayer) {
-        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-                                                      itEnd = (*itLayer).end();
+        for (std::vector<std::string>::const_iterator
+             it = (*itLayer).begin(),
+             itBegin = (*itLayer).begin(),
+             itEnd = (*itLayer).end();
              it != itEnd;
              ++it) {
-            Cell& cell = *deepNet.getCell(*it);
-            CPP_cuDNN_CellExport::getInstance(cell)
-                ->generateCellProgramInitNetwork(cell, prog);
-        }
-    }
 
-    unsigned int layerNumber = 1;
-    for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
-         itLayerEnd = layers.end();
-         itLayer != itLayerEnd;
-         ++itLayer) {
-        std::vector<unsigned int> archNet = getMapLayer(deepNet, layerNumber);
-        std::stringstream outputName;
-        unsigned int cellNumber = 0;
+            if (!isSharedInput(deepNet,
+                               std::distance(layers.begin(), itLayer),
+                               std::distance((*itLayer).begin(), it))) {
+                const std::vector<std::shared_ptr<Cell> > parentCells
+                    = deepNet.getParentCells(*it);
+                const std::shared_ptr<Cell> cell = deepNet.getCell(
+                    (*itLayer).at(std::distance((*itLayer).begin(), it)));
+                std::stringstream outputName;
+                outputName << (*parentCells[0]).getName() << "_";
 
-        if (itLayer == itLayerBegin)
-            prog << " CHECK_CUDA_STATUS(cudaMalloc(&"
-                 << "in_buffer, sizeof(DATA_T)*"
-                 << "ENV_OUTPUTS_SIZE*batchSize));\n";
+                for (unsigned int i = 1; i < parentCells.size(); ++i)
+                    outputName << (*parentCells[i]).getName() << "_";
 
-        for (unsigned int i = 0; i < archNet.size(); i++) {
-            outputName.str("");
+                prog << "    " << outputName.str() << "buffer.resize("
+                    << std::to_string(parentCells.size()) << ");\n";
 
-            for (unsigned int j = 0; j < archNet[i]; j++) {
-                const std::shared_ptr<Cell> cell
-                    = deepNet.getCell((*itLayer).at(cellNumber));
-                const std::string prefix = cell->getName();
-
-                outputName << prefix + "_";
-
-                if (j == archNet[i] - 1)
-                    CPP_cuDNN_CellExport::getInstance(*cell)
-                        ->generateCellProgramInitBuffer(outputName.str(), prog);
-
-                ++cellNumber;
+                if(itLayer == itLayerEnd - 1) {
+                    prog << "    output_buffer.resize("
+                        << std::to_string(parentCells.size()) << ");\n";
+                }
             }
         }
-        if (itLayer + 1 == itLayerEnd)
-            prog << " CHECK_CUDA_STATUS(cudaMalloc(&"
-                 << "output_buffer, sizeof(DATA_T)*"
-                 << Utils::upperCase(outputName.str())
-                 << "OUTPUTS_SIZE*batchSize));\n";
-
-        layerNumber++;
     }
-    prog << "}\n\n";
+
+    prog << "\n\n";
+
+    /**Tensors initialization **/
+    for (std::vector<std::vector<std::string> >::const_iterator
+        itLayer = layers.begin() + 1,
+        itLayerEnd = layers.end();
+        itLayer != itLayerEnd;
+        ++itLayer)
+    {
+
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+             itBegin = (*itLayer).begin(),
+             itEnd = (*itLayer).end();
+             it != itEnd;
+             ++it)
+        {
+            std::vector<std::string> parentsName;
+            const std::shared_ptr<Cell>
+                cell = deepNet.getCell((*itLayer).
+                    at(std::distance((*itLayer).begin(), it)));
+
+            if (itLayer == layers.begin() + 1) {
+                parentsName.push_back("env");
+            }
+            else {
+                const std::vector<std::shared_ptr<Cell> >&
+                    parentCells = deepNet.getParentCells(cell->getName());
+
+                for(unsigned int k = 0; k < parentCells.size(); ++k)
+                    parentsName.push_back(parentCells[k]->getName());
+            }
+            output_buff = (itLayer >= itLayerEnd - 1) ? outputsBuffer :
+                getCellOutputName(deepNet,
+                                  std::distance(layers.begin(),itLayer),
+                                  std::distance((*itLayer).begin(), it));
+
+            CPP_cuDNN_CellExport::getInstance(*cell)->
+                generateCellProgramInitNetwork(*cell, parentsName, prog);
+            CPP_cuDNN_CellExport::getInstance(*cell)->
+                generateCellProgramInitBuffer(*cell, output_buff, prog);
+        }
+    }
+    prog << "}\n";
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
@@ -291,79 +423,81 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
                                                             & name,
                                                             std::ofstream& prog)
 {
-    std::string inputsData = "in_buffer";
-    std::string outputsData = "output_buffer";
+    std::string inputsBuffer = "in_";
+    std::string outputsBuffer = "output_";
+    std::string input_buff;
+    std::string output_buff;
 
     prog << "\n"
-            "void " << name
-         << "(DATA_T* in_data, uint32_t* out_data, cudnnHandle_t& "
-            "context_handle, cublasHandle_t& context_cublasHandle, unsigned "
-            "int batchSize) {\n\n";
+        "void " << name << "(DATA_T* in_data, uint32_t* out_data,"
+            " cudnnHandle_t& context_handle,"
+            " cublasHandle_t& context_cublasHandle,"
+            " unsigned int batchSize) {\n\n";
 
-    prog << "/************************************INPUT DATA TRANSFER TO "
-            "DEVICE***************************************************/\n";
-    prog << " CHECK_CUDA_STATUS( cudaMemcpy(" << inputsData
-         << ", in_data, batchSize*ENV_BUFFER_SIZE*sizeof(DATA_T), "
-            "cudaMemcpyHostToDevice) );\n";
+    prog <<  "/*******INPUT DATA TRANSFER TO DEVICE*********/\n" ;
+    prog << "    CHECK_CUDA_STATUS( cudaMemcpy(" << inputsBuffer << "buffer[0]"
+        << ", in_data, batchSize*ENV_BUFFER_SIZE*sizeof(DATA_T),"
+        << " cudaMemcpyHostToDevice) );\n";
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
-    unsigned int layerNumber = 1;
 
-    for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
-         itLayerEnd = layers.end();
-         itLayer != itLayerEnd;
-         ++itLayer) {
-        std::vector<unsigned int> archNet = getMapLayer(deepNet, layerNumber);
-        std::stringstream outputName;
+    for (std::vector<std::vector<std::string> >::const_iterator
+        itLayer = layers.begin() + 1,
+        itLayerBegin = layers.begin() + 1,
+        itLayerEnd = layers.end();
+        itLayer != itLayerEnd;
+        ++itLayer)
+    {
+        prog << "/** LAYER ("
+            << std::distance(layers.begin(), itLayer) << ") **/\n" ;
 
-        unsigned int cellNumber = 0;
-        prog << "/************************************LAYER "
-             << (layerNumber - 1)
-             << "***************************************************/\n";
-        if (layerNumber < layers.size()) {
-            for (unsigned int i = 0; i < archNet.size(); i++) {
-                outputName.str("");
-                for (unsigned int j = 0; j < archNet[i]; j++) {
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+            itBegin = (*itLayer).begin(),
+            itEnd = (*itLayer).end();
+            it != itEnd; ++it)
+        {
 
-                    const std::shared_ptr<Cell> cell
-                        = deepNet.getCell((*itLayer).at(j + cellNumber));
-                    const std::string prefix = cell->getName();
-                    outputName << prefix + "_";
-                }
+            const std::shared_ptr<Cell>
+                cell = deepNet.getCell((*itLayer).
+                    at(std::distance((*itLayer).begin(), it)));
+            std::stringstream channelInputName;
+            std::string outputOffset
+                 = Utils::upperCase((*cell).getName() + "_output_offset");
 
-                for (unsigned int k = 0; k < archNet[i]; k++) {
-                    const std::shared_ptr<Cell> cell
-                        = deepNet.getCell((*itLayer).at(k + cellNumber));
-                    std::string input_buff
-                        = getCellInputName(deepNet, layerNumber, k);
+            if(itLayer != itLayerBegin) {
+                const std::vector<std::shared_ptr<Cell> >
+                    parentCells = deepNet.getParentCells(*it);
 
-                    CPP_cuDNN_CellExport::getInstance(*cell)
-                        ->generateCellProgramFunction(*cell,
-                                                      input_buff + "buffer",
-                                                      outputName.str()
-                                                      + "buffer",
-                                                      prog,
-                                                      "");
-                }
-                cellNumber += archNet[i];
+                for(unsigned int i = 0; i < parentCells.size(); ++i)
+                    channelInputName << (*parentCells[i]).getName() << "_";
+
             }
-            if (layerNumber == layers.size() - 1) {
-                prog << "/************************************OUTPUT "
-                        "LAYER*************************************************"
-                        "**/\n";
-                const std::shared_ptr<Cell> cell
-                    = deepNet.getCell((*itLayer).at(0));
-                std::string input_buff
-                    = getCellInputName(deepNet, layerNumber, 0);
+            else
+                channelInputName << "env_" ;
+
+            input_buff = (itLayer == itLayerBegin) ? inputsBuffer :
+                getCellInputName(deepNet,
+                                 std::distance(layers.begin(), itLayer),
+                                 std::distance((*itLayer).begin(), it));
+
+            output_buff = (itLayer >= itLayerEnd - 1) ? outputsBuffer :
+                getCellOutputName(deepNet,
+                                  std::distance(layers.begin(), itLayer),
+                                  std::distance((*itLayer).begin(), it));
+
+            CPP_cuDNN_CellExport::getInstance(*cell)
+                ->generateCellProgramFunction(*cell, input_buff + "buffer",
+                output_buff + "buffer", outputOffset, prog, "");
+
+            if(itLayer == itLayerEnd - 1) {
+                const std::shared_ptr<Cell>
+                    cell = deepNet.getCell((*itLayer).at(0));
+
                 CPP_cuDNN_CellExport::getInstance(*cell)
-                    ->generateCellProgramOutputFunction(
-                          *cell, outputName.str() + "buffer", "out_data", prog);
+                    ->generateCellProgramOutputFunction(*cell, output_buff
+                    + "buffer[0]", "out_data", prog);
             }
         }
-
-        layerNumber++;
         prog << "\n";
     }
     prog << "}\n";
@@ -374,23 +508,39 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFree(DeepNet& deepNet,
 {
 
     prog << "\n"
-            "void free_memory(){\n\n";
+        "void free_memory(){\n\n";
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
-    for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerBegin = layers.begin() + 1,
-         itLayerEnd = layers.end();
-         itLayer != itLayerEnd;
-         ++itLayer) {
+    for (std::vector<std::vector<std::string> >::const_iterator
+        itLayer = layers.begin() + 1,
+        itLayerBegin = layers.begin() + 1,
+        itLayerEnd = layers.end();
+        itLayer != itLayerEnd;
+        ++itLayer)
+    {
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-                                                      itEnd = (*itLayer).end();
-             it != itEnd;
-             ++it) {
-            Cell& cell = *deepNet.getCell(*it);
-            CPP_cuDNN_CellExport::getInstance(cell)
-                ->generateCellProgramFree(cell, prog);
+            itEnd = (*itLayer).end();
+            it != itEnd; ++it) {
+
+            std::vector<std::string> parentsName;
+            const std::shared_ptr<Cell>
+                cell = deepNet.getCell((*itLayer).
+                    at(std::distance((*itLayer).begin(), it)));
+
+            if(itLayer == layers.begin() + 1){
+                parentsName.push_back("env");
+            }
+            else {
+                const std::vector<std::shared_ptr<Cell> >&
+                    parentCells = deepNet.getParentCells(cell->getName());
+
+                for(unsigned int k = 0; k < parentCells.size(); ++k)
+                    parentsName.push_back(parentCells[k]->getName());
+            }
+
+            CPP_cuDNN_CellExport::getInstance(*cell)
+                ->generateCellProgramFree(*cell, parentsName, prog);
         }
     }
 
