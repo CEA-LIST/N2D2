@@ -72,6 +72,12 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
         rate = mLearningRate
                * std::pow(1.0 - (mNbIterations / maxIterations), power);
     }
+    else if (mLearningRatePolicy == SGDSolver<float>::InvDecay) {
+        float power = mPower;
+        rate = mLearningRate
+               * std::pow(1.0 + (mLearningRateDecay * mNbIterations), -power);
+    }
+
     mNbIterations += batchSize;
 
     // Normalize in function of the batch size
@@ -186,6 +192,12 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
         rate = mLearningRate
                * std::pow(1.0 - (mNbIterations / maxIterations), power);
     }
+    else if (mLearningRatePolicy == SGDSolver<double>::InvDecay) {
+        double power = mPower;
+        rate = mLearningRate
+               * std::pow(1.0 + (mLearningRateDecay * mNbIterations), -power);
+    }
+
     mNbIterations += batchSize;
 
     // Normalize in function of the batch size

@@ -996,6 +996,7 @@ Program options related to the cuDNN export:
  Option [default value] & Description\\
  \hline\hline
   \lstinline!-batch! [1] & Size of the batch to use \\
+  \lstinline!-dev! [0] & CUDA Device ID selection  \\
   \lstinline!-stimulus! [NULL] & Path to a specific input stimulus to test.
   For example: -stimulus ${/stimulus/env0000.pgm}$ command will test the file
    env0000.pgm  of the stimulus folder.\\
@@ -2982,6 +2983,12 @@ $\alpha = \alpha_{0} / (1 + k t)$, with $\alpha_{0}$ the initial learning rate
  \emph{SolverName}\lstinline!.LearningRate!, $k$ the rate decay
  \emph{SolverName}\lstinline!.LearningRateDecay! and $t$ the step number
  (one step every \emph{SolverName}\lstinline!.LearningRateStepSize! stimuli). \\
+ \item \lstinline!InvDecay!: the learning rate is
+$\alpha = \alpha_{0} * (1 + k t)^{-n}$, with $\alpha_{0}$ the initial
+learning rate \emph{SolverName}\lstinline!.LearningRate!, $k$ the rate decay
+\emph{SolverName}\lstinline!.LearningRateDecay!,
+$t$ the current iteration and $n$ the power parameter
+\emph{SolverName}\lstinline!.Power! \\
 \item \lstinline!PolyDecay!: the learning rate is
 $\alpha = \alpha_{0} * (1 - \frac{k}{t})^n$, with $\alpha_{0}$ the initial
 learning rate \emph{SolverName}\lstinline!.LearningRate!, $k$ the current

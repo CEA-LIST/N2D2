@@ -51,7 +51,8 @@ public:
         StepDecay,
         ExponentialDecay,
         InvTDecay,
-        PolyDecay
+        PolyDecay,
+        InvDecay
     };
 
     SGDSolver();
@@ -92,11 +93,22 @@ namespace {
 template <>
 const char* const EnumStrings
     <N2D2::SGDSolver<float>::LearningRatePolicy>::data[]
-    = {"None", "StepDecay", "ExponentialDecay", "InvTDecay", "PolyDecay"};
+    = {"None",
+       "StepDecay",
+       "ExponentialDecay",
+       "InvTDecay",
+       "PolyDecay",
+       "InvDecay"};
+
 template <>
 const char* const EnumStrings
     <N2D2::SGDSolver<double>::LearningRatePolicy>::data[]
-    = {"None", "StepDecay", "ExponentialDecay", "InvTDecay", "PolyDecay"};
+    = {"None",
+       "StepDecay",
+       "ExponentialDecay",
+       "InvTDecay",
+       "PolyDecay",
+       "InvDecay"};
 }
 
 template <class T>

@@ -100,6 +100,11 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
         rate = mLearningRate
                * std::pow(1.0 - (mNbIterations / maxIterations), power);
     }
+    else if (mLearningRatePolicy == SGDSolver<T>::InvDecay) {
+        const T power = mPower;
+        rate = mLearningRate
+               * std::pow(1.0 + (mLearningRateDecay * mNbIterations), -power);
+    }
 
     mNbIterations += batchSize;
 
