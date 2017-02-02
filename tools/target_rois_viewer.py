@@ -22,7 +22,7 @@
 
 import glob
 import cv2
-import os
+import os, errno
 import re
 
 from python import TargetViewer
@@ -110,7 +110,8 @@ class RoisViewer(TargetViewer.TargetViewer):
                 cv2.line(newImgEstimated, (x, 0), (x, height), (255, 255, 255))
                 cv2.line(newImgEstimated, (0, y), (width, y), (255, 255, 255))
                 cv2.imshow(self.estimatedWindow, newImgEstimated)
-        elif event == cv2.EVENT_LBUTTONDOWN and self.estimatedPath is not None:
+        elif ((event == cv2.EVENT_LBUTTONDOWN or event == cv2.EVENT_RBUTTONDOWN)
+            and self.estimatedPath is not None):
             legendHeight, legendWidth = self.imgLegend.shape[:2]
             nbTargets = legendHeight/self.cellHeight
 
@@ -128,6 +129,38 @@ class RoisViewer(TargetViewer.TargetViewer):
                     (legendWidth, (estimated+1)*self.cellHeight),
                     (255, 255, 255), 5)
                 cv2.imshow("legend", newImgLegend)
+
+            if event == cv2.EVENT_RBUTTONDOWN:
+                try:
+                    os.makedirs("capture")
+                except OSError, exc:
+                    if exc.errno == errno.EEXIST:
+                        pass
+                    else: raise
+
+                newImgEstimated = self.imgEstimated.copy()
+                height, width = newImgEstimated.shape[:2]
+
+                if nbTargets > 2 and self.imgLegend is not None:
+                    labelWidth = min(100, width)
+                    labelHeight = self.cellHeight*labelWidth/legendWidth
+                    imgLabel = self.imgLegend[
+                        estimated*self.cellHeight:(estimated+1)*self.cellHeight,
+                        0:legendWidth]
+                    imgLabel = cv2.resize(imgLabel, (labelWidth, labelHeight),
+                        interpolation=cv2.INTER_AREA)
+
+                    newImgEstimated[height-labelHeight:height,
+                        width-labelWidth:width] = imgLabel
+
+                cv2.line(newImgEstimated,
+                    (x, max(0, y-5)),
+                    (x, min(height, y+5)), (255, 255, 255))
+                cv2.line(newImgEstimated,
+                    (max(0, x-5), y),
+                    (min(width, x+5), y), (255, 255, 255))
+                cv2.imwrite(os.path.join("capture",
+                    self.estimatedWindow + ".png"), newImgEstimated)
 
 viewer = RoisViewer()
 viewer.run()

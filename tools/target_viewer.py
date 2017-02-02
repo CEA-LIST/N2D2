@@ -24,6 +24,7 @@ import glob
 import cv2
 import os, errno
 import re
+import numpy
 
 from python import TargetViewer
 
@@ -90,7 +91,7 @@ class Viewer(TargetViewer.TargetViewer):
             cv2.line(newImgTarget, (x, 0), (x, height), (255, 255, 255))
             cv2.line(newImgTarget, (0, y), (width, y), (255, 255, 255))
             cv2.imshow(self.targetWindow, newImgTarget)
-        elif event == cv2.EVENT_LBUTTONDOWN:
+        elif event == cv2.EVENT_LBUTTONDOWN or event == cv2.EVENT_RBUTTONDOWN:
             legendHeight, legendWidth = self.imgLegend.shape[:2]
             nbTargets = legendHeight/self.cellHeight
 
@@ -125,16 +126,38 @@ class Viewer(TargetViewer.TargetViewer):
                         (0, 0, 255), 5)
 
                 cv2.imshow("legend", newImgLegend)
-        elif event == cv2.EVENT_RBUTTONDOWN:
-            try:
-                os.makedirs("capture")
-            except OSError, exc:
-                if exc.errno == errno.EEXIST:
-                    pass
-                else: raise
 
-            cv2.imwrite(os.path.join("capture", self.estimatedWindow + ".png"),
-                self.imgEstimated)
+            if event == cv2.EVENT_RBUTTONDOWN:
+                try:
+                    os.makedirs("capture")
+                except OSError, exc:
+                    if exc.errno == errno.EEXIST:
+                        pass
+                    else: raise
+
+                newImgEstimated = self.imgEstimated.copy()
+                height, width = newImgEstimated.shape[:2]
+
+                if nbTargets > 2 and self.imgLegend is not None:
+                    labelWidth = min(100, width)
+                    labelHeight = self.cellHeight*labelWidth/legendWidth
+                    imgLabel = self.imgLegend[
+                        estimated*self.cellHeight:(estimated+1)*self.cellHeight,
+                        0:legendWidth]
+                    imgLabel = cv2.resize(imgLabel, (labelWidth, labelHeight),
+                        interpolation=cv2.INTER_AREA)
+
+                    newImgEstimated[height-labelHeight:height,
+                        width-labelWidth:width] = imgLabel
+
+                cv2.line(newImgEstimated,
+                    (x, max(0, y-5)),
+                    (x, min(height, y+5)), (255, 255, 255))
+                cv2.line(newImgEstimated,
+                    (max(0, x-5), y),
+                    (min(width, x+5), y), (255, 255, 255))
+                cv2.imwrite(os.path.join("capture",
+                    self.estimatedWindow + ".png"), newImgEstimated)
 
 viewer = Viewer()
 viewer.run()
