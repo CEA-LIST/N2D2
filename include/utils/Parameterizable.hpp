@@ -313,6 +313,12 @@ public:
     {
         return mValue;
     }
+    T* operator->() {
+        return &mValue;
+    }
+    T const* operator->() const {
+        return &mValue;
+    }
 
 private:
     T mValue;
