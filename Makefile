@@ -161,7 +161,7 @@ define copy-and-run
 	@rsync -av $1/tests $(BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
 	@if [ -f "$(BINDIR)/$1/tests/run_all.sh" ]; then \
-	    $(BINDIR)/$1/tests/run_all.sh; \
+	    $(BINDIR)/$1/tests/run_all.sh || exit 1; \
 	fi
 endef
 
