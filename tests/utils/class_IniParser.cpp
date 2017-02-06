@@ -29,7 +29,8 @@ TEST(IniParser, load)
                              "KernelWidth=4\n"
                              "KernelHeight=4\n"
                              "NbChannels=16\n"
-                             "Stride=2\n";
+                             "Stride=2\n"
+                             "Test=1 2 3 4\n";
 
     UnitTest::FileWriteContent("IniParser.in", data);
 
@@ -42,6 +43,13 @@ TEST(IniParser, load)
     ASSERT_EQUALS(iniConfig.getProperty<int>("NbChannels"), 16);
     ASSERT_EQUALS(iniConfig.getProperty<int>("Stride"), 2);
     ASSERT_EQUALS(iniConfig.getProperty<int>("StrideX", 3), 3);
+
+    std::vector<int> test = iniConfig.getProperty<std::vector<int> >("Test");
+    ASSERT_EQUALS(test.size(), 4);
+    ASSERT_EQUALS(test[0], 1);
+    ASSERT_EQUALS(test[1], 2);
+    ASSERT_EQUALS(test[2], 3);
+    ASSERT_EQUALS(test[3], 4);
 
     ASSERT_THROW(iniConfig.getProperty<int>("NotExist"), std::runtime_error);
     ASSERT_THROW(iniConfig.currentSection(), std::runtime_error);

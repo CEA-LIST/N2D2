@@ -906,9 +906,18 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 template <class T>
 std::istream& operator>>(std::istream& is, std::vector<T>& vec)
 {
+    vec.clear();
     std::copy(std::istream_iterator<T>(is),
               std::istream_iterator<T>(),
               std::back_inserter(vec));
+
+    // Because of the std::copy() behavior, the failbit is always set.
+    // But if eof is also set, it means that the read was successful.
+    // In this case, only set the eofbit and clear the failbit, so that this
+    // operator can be used with higher-level generatic parameter read routines.
+    if (is.eof())
+        is.clear(is.eofbit);
+
     return is;
 }
 }

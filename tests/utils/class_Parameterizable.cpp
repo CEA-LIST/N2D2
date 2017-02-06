@@ -30,7 +30,8 @@ public:
           mParam2(this, "Param2", 3U),
           mParam3(this, "Param3", true),
           mParam4(this, "Param4", 10.0, 1.0),
-          mParam5(this, "Param5", 5.0, Percent(15))
+          mParam5(this, "Param5", 5.0, Percent(15)),
+          mParam6(this, "Param6", std::vector<int>(2, 1))
     {
     }
 
@@ -39,6 +40,7 @@ public:
     Parameter<bool> mParam3;
     ParameterWithSpread<double> mParam4;
     ParameterWithSpread<double> mParam5;
+    Parameter<std::vector<int> > mParam6;
 };
 
 TEST(Parameterizable, isParameter)
@@ -69,17 +71,29 @@ TEST(Parameterizable, getParameter)
     ASSERT_EQUALS(param.getParameter("Param5"), "5.00000; 5.00000; 15.0000%");
     ASSERT_EQUALS(param.getParameter<Spread<double> >("Param5"),
                   Spread<double>(5.0, Percent(15)));
+
+    std::vector<int> param6 = param.getParameter<std::vector<int> >("Param6");
+    ASSERT_EQUALS(param6.size(), 2);
+    ASSERT_EQUALS(param6[0], 1);
+    ASSERT_EQUALS(param6[1], 1);
 }
 
 TEST(Parameterizable, setParameter)
 {
     TestParameterizable param;
 
+    std::vector<int> param6_set;
+    param6_set.push_back(1);
+    param6_set.push_back(2);
+    param6_set.push_back(3);
+    param6_set.push_back(4);
+
     param.setParameter("Param1", 2.3);
     param.setParameter("Param2", 236U);
     param.setParameter("Param3", false);
     param.setParameter("Param4", 6.0, Percent(20));
     param.setParameter("Param5", 11.0, 2.0);
+    param.setParameter("Param6", param6_set);
 
     ASSERT_EQUALS(param.getParameter<double>("Param1"), 2.3);
     ASSERT_EQUALS(param.getParameter<unsigned int>("Param2"), 236U);
@@ -90,6 +104,14 @@ TEST(Parameterizable, setParameter)
                   Spread<double>(11.0, 2.0));
 
     ASSERT_THROW(param.setParameter("Param2", -10), std::runtime_error);
+
+    std::vector<int> param6_get
+        = param.getParameter<std::vector<int> >("Param6");
+    ASSERT_EQUALS(param6_get.size(), param6_set.size());
+    ASSERT_EQUALS(param6_get[0], param6_set[0]);
+    ASSERT_EQUALS(param6_get[1], param6_set[1]);
+    ASSERT_EQUALS(param6_get[2], param6_set[2]);
+    ASSERT_EQUALS(param6_get[3], param6_set[3]);
 }
 
 TEST(Parameterizable, conversion_operator)
@@ -128,7 +150,8 @@ TEST(Parameterizable, saveParameters)
                   "Param2 = 3\n"
                   "Param3 = 1\n"
                   "Param4 = 10.0000; 10.0000; 1.00000\n"
-                  "Param5 = 5.00000; 5.00000; 15.0000%\n");
+                  "Param5 = 5.00000; 5.00000; 15.0000%\n"
+                  "Param6 = 1 1 \n");
 }
 
 TEST_DATASET(Parameterizable,
@@ -139,20 +162,23 @@ TEST_DATASET(Parameterizable,
                  "Param2 = 590000\n"
                  "Param3 = 0\n"
                  "Param4 = 2.0; 3.0; 1.0\n"
-                 "Param5 = 1.0;1.0;5%\n"),
+                 "Param5 = 1.0;1.0;5%\n"
+                 "Param6 = 1 2 3 4 \n"),
              std::make_tuple( // Comment at the end of a line
                  "Param1=3.25000\n"
                  "Param2 = 590000 # comment\n"
                  "Param3 = 0  \n"
                  "Param4 = 2.0; 3.0; 1.0\n"
-                 "Param5 = 1.0; 1.0; 5% \n"),
+                 "Param5 = 1.0; 1.0; 5% \n"
+                 "Param6 = 1 2 3 4 \n"),
              std::make_tuple( // Comment at the beginning & thousands separator
                  "# comment\n"
                  "Param1 = 3.25\n"
                  "Param2 = 590,000\n"
                  "Param3 =     0\n"
                  "Param4 = 2.0; 1.0\n"
-                 "Param5 = 1.0; 5%\n"))
+                 "Param5 = 1.0; 5%\n"
+                 "Param6 = 1 2 3 4 \n"))
 {
     const std::string fileName("Parameterizable_loadParameters.in");
     UnitTest::FileWriteContent(fileName, data);
@@ -167,6 +193,13 @@ TEST_DATASET(Parameterizable,
                   Spread<double>(2.0, 1.0));
     ASSERT_EQUALS(param.getParameter<Spread<double> >("Param5"),
                   Spread<double>(1.0, Percent(5)));
+
+    std::vector<int> param6 = param.getParameter<std::vector<int> >("Param6");
+    ASSERT_EQUALS(param6.size(), 4);
+    ASSERT_EQUALS(param6[0], 1);
+    ASSERT_EQUALS(param6[1], 2);
+    ASSERT_EQUALS(param6[2], 3);
+    ASSERT_EQUALS(param6[3], 4);
 }
 
 TEST(Parameterizable, loadParameters__missing)
