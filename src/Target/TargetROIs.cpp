@@ -173,6 +173,24 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         std::vector<std::shared_ptr<ROI> > labelROIs
             = mStimuliProvider->getLabelsROIs(batchPos);
 
+        if (labelROIs.empty() && labels[batchPos](0) >= 0) {
+            // The whole image has a single label
+
+            // Confusion computation
+            for (std::vector<DetectedBB>::const_iterator itBB
+                 = detectedBB.begin(),
+                 itBBEnd = detectedBB.end();
+                 itBB != itBBEnd;
+                 ++itBB) {
+                const int bbLabel = (*itBB).bb->getLabel();
+                const int target = getLabelTarget(labels[batchPos](0));
+                confusionMatrix(target, bbLabel) += 1;
+            }
+
+            mDetectedBB.push_back(detectedBB);
+            continue;
+        }
+
         // ROI and BB association
         for (std::vector<DetectedBB>::iterator itBB = detectedBB.begin(),
                                                itBBEnd = detectedBB.end();
