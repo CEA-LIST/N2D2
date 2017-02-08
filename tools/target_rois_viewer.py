@@ -35,8 +35,8 @@ class RoisViewer(TargetViewer.TargetViewer):
             path = os.path.join(path,
                 os.path.splitext(os.path.basename(__file__))[0])
 
-        super(RoisViewer, self).__init__(os.path.join(path,
-            "*[!_estimated].[!log]*"))
+        super(RoisViewer, self).__init__(path,
+            r'(?<!_estimated)(?<!_target)\.[^.]*(?<!log)$')
 
         self.roiWindow = ""
         self.estimatedWindow = ""
@@ -72,7 +72,7 @@ class RoisViewer(TargetViewer.TargetViewer):
         cv2.namedWindow(self.roiWindow, cv2.WINDOW_NORMAL)
         cv2.setMouseCallback(self.roiWindow, self._mouseCallback, True)
 
-        self.imgRoi = cv2.imread(roiName);
+        self.imgRoi = cv2.imread(roiName)
         cv2.imshow(self.roiWindow, self.imgRoi)
         cv2.resizeWindow(self.roiWindow, 1024, 512)
         cv2.moveWindow(self.roiWindow, 0, 0)
@@ -81,7 +81,7 @@ class RoisViewer(TargetViewer.TargetViewer):
 
         if self.estimatedPath is not None:
             estimatedName = os.path.join(self.estimatedPath,
-                frameName.replace(".", "_estimated."))
+                self._replace_last_of(frameName, ".", "_estimated."))
             self.estimatedWindow = os.path.basename(estimatedName)
             cv2.namedWindow(self.estimatedWindow, cv2.WINDOW_NORMAL)
             cv2.setMouseCallback(self.estimatedWindow,

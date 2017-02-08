@@ -20,14 +20,15 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-import glob
+import os
 import cv2
 import re
 import numpy
 
 class TargetViewer(object):
-    def __init__(self, path):
-        self.files = glob.glob(path)
+    def __init__(self, path, regexp):
+        self.files = [os.path.join(path, f) for f in os.listdir(path)
+            if re.search(regexp, f)]
         self.files.sort(key=self._naturalKeys)
         self.index = -1
 
@@ -184,3 +185,7 @@ class TargetViewer(object):
         (See Toothy's implementation in the comments)
         '''
         return [ self._atoi(c) for c in re.split('(\d+)', text) ]
+
+    def _replace_last_of(self, text, pattern, new, occurrence=1):
+        chunks = text.rsplit(pattern, occurrence)
+        return new.join(chunks)

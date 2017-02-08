@@ -36,7 +36,8 @@ class Viewer(TargetViewer.TargetViewer):
             path = os.path.join(path,
                 os.path.splitext(os.path.basename(__file__))[0])
 
-        super(Viewer, self).__init__(os.path.join(path, "*_estimated.[!log]*"))
+        super(Viewer, self).__init__(path,
+            r'_estimated\.[^.]*(?<!log)$')
 
         self.estimatedWindow = ""
         self.targetWindow = ""
@@ -55,7 +56,8 @@ class Viewer(TargetViewer.TargetViewer):
     # PRIVATE
     def _run(self):
         estimatedName = self.files[self.index]
-        targetName = estimatedName.replace("_estimated.", "_target.")
+        targetName = self._replace_last_of(estimatedName,
+            "_estimated.", "_target.")
         self.estimatedWindow = os.path.basename(estimatedName)
         self.targetWindow = os.path.basename(targetName)
         cv2.namedWindow(self.estimatedWindow, cv2.WINDOW_NORMAL)
@@ -76,7 +78,8 @@ class Viewer(TargetViewer.TargetViewer):
         cv2.resizeWindow(self.estimatedWindow, 1024, 512)
         cv2.moveWindow(self.estimatedWindow, 0, 512 + 10)
 
-        return os.path.basename(estimatedName.replace("_estimated", ""))
+        return os.path.basename(self._replace_last_of(estimatedName,
+            "_estimated", ""))
 
     def _mouseCallback(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE:
