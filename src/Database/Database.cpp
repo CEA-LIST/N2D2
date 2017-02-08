@@ -749,7 +749,7 @@ void N2D2::Database::partitionStimuliPerLabel(double learnPerLabel,
 
     unsigned int maxStimuliPerLabel = 0;
 
-    if (equiLabel) {
+    if (equiLabel && !labelsStimuliUnpartitionedIndexes.empty()) {
         std::partial_sort(labelsStimuliUnpartitionedIndexes.begin(),
                           labelsStimuliUnpartitionedIndexes.begin() + 1,
                           labelsStimuliUnpartitionedIndexes.end(),
