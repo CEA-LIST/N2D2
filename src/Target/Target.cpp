@@ -164,9 +164,12 @@ int N2D2::Target::getLabelTarget(int label) const
             std::stringstream labelStr;
             labelStr << label;
 
+            const std::string labelName
+                = mStimuliProvider->getDatabase().getLabelName(label);
+
             throw std::runtime_error(
                 "Incomplete class mapping: no output specified for label #"
-                + labelStr.str());
+                + labelStr.str() + " (" + labelName + ")");
         }
     }
 }
