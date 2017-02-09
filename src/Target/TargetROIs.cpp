@@ -184,7 +184,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                  ++itBB) {
                 const int bbLabel = (*itBB).bb->getLabel();
                 const int target = getLabelTarget(labels[batchPos](0));
-                confusionMatrix(target, bbLabel) += 1;
+
+                if (target >= 0)
+                    confusionMatrix(target, bbLabel) += 1;
             }
 
             mDetectedBB.push_back(detectedBB);
