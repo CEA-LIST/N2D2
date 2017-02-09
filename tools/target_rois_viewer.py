@@ -24,6 +24,7 @@ import glob
 import cv2
 import os, errno
 import re
+import numpy
 
 from python import TargetViewer
 
@@ -73,9 +74,14 @@ class RoisViewer(TargetViewer.TargetViewer):
         cv2.setMouseCallback(self.roiWindow, self._mouseCallback, True)
 
         self.imgRoi = cv2.imread(roiName)
+        imgRoiHsv = cv2.cvtColor(self.imgRoi, cv2.COLOR_BGR2HSV)
         cv2.imshow(self.roiWindow, self.imgRoi)
         cv2.resizeWindow(self.roiWindow, 1024, 512)
         cv2.moveWindow(self.roiWindow, 0, 0)
+
+        skippable = False
+        if numpy.all([v == 0 for v in imgRoiHsv[:,:,0]]):
+            skippable = True
 
         frameName = os.path.basename(self.files[self.index])
 
@@ -94,7 +100,7 @@ class RoisViewer(TargetViewer.TargetViewer):
             cv2.resizeWindow(self.estimatedWindow, 1024, 512)
             cv2.moveWindow(self.estimatedWindow, 0, 512 + 50)
 
-        return frameName
+        return frameName, skippable
 
     def _mouseCallback(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE:

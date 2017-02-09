@@ -39,8 +39,12 @@ class TargetViewer(object):
 
     def run(self):
         newIndex = 0
+        skipUp = False
+        skipDown = False
 
         while (True):
+            skippable = False
+
             if newIndex != self.index:
                 self.index = newIndex
                 cv2.destroyAllWindows()
@@ -119,9 +123,22 @@ class TargetViewer(object):
                     cv2.resizeWindow("legend", 256, 1024)
                     cv2.moveWindow("legend", 1024 + 10, 0)
 
-                frameName = self._run()
+                frameName, skippable = self._run()
+
                 print "Frame #%d/%d: %s" % (
                     self.index+1, len(self.files), frameName)
+
+            if skippable:
+                if skipUp and newIndex < len(self.files)-1:
+                    newIndex = newIndex + 1
+                    continue
+
+                if skipDown and newIndex > 0:
+                    newIndex = newIndex - 1
+                    continue
+
+            skipUp = False
+            skipDown = False
 
             newIndex = self.index
             key = cv2.waitKey(0)
@@ -142,16 +159,22 @@ class TargetViewer(object):
                     newIndex+= 1
             elif key == (0x10FF00 | 82):
                 # KEY_UP
-                if newIndex > 10:
-                    newIndex-= 10
-                else:
-                    newIndex = 0
+                if newIndex > 0:
+                    newIndex-= 1
+                    skipDown = True
+                #if newIndex > 10:
+                #    newIndex-= 10
+                #else:
+                #    newIndex = 0
             elif key == (0x10FF00 | 84):
                 # KEY_DOWN
-                if newIndex < (len(self.files)-1)-10:
-                    newIndex+= 10
-                else:
-                    newIndex = len(self.files)-1
+                if newIndex < len(self.files)-1:
+                    newIndex+= 1
+                    skipUp = True
+                #if newIndex < (len(self.files)-1)-10:
+                #    newIndex+= 10
+                #else:
+                #    newIndex = len(self.files)-1
             elif key == (0x10FF00 | 85):
                 # KEY_PAGEUP
                 if newIndex > 100:
@@ -170,6 +193,14 @@ class TargetViewer(object):
                     newIndex+= 1000
                 else:
                     newIndex = len(self.files)-1
+            elif key == (0x100000 | ord('f')):
+                subString = raw_input("Find image: ")
+
+                try:
+                    newIndex = next(idx for idx, string in enumerate(self.files)
+                        if subString in string)
+                except StopIteration:
+                    print "No match found!"
             elif key == (0x100000 | 27):
                 # KEY_ESC
                 break

@@ -71,6 +71,10 @@ class Viewer(TargetViewer.TargetViewer):
         cv2.resizeWindow(self.targetWindow, 1024, 512)
         cv2.moveWindow(self.targetWindow, 0, 0)
 
+        skippable = False
+        if numpy.all([v == 0 for v in self.imgTargetHsv[:,:,0]]):
+            skippable = True
+
         self.imgEstimated = cv2.imread(estimatedName);
         self.imgEstimatedHsv = cv2.cvtColor(self.imgEstimated,
             cv2.COLOR_BGR2HSV)
@@ -78,8 +82,8 @@ class Viewer(TargetViewer.TargetViewer):
         cv2.resizeWindow(self.estimatedWindow, 1024, 512)
         cv2.moveWindow(self.estimatedWindow, 0, 512 + 10)
 
-        return os.path.basename(self._replace_last_of(estimatedName,
-            "_estimated", ""))
+        return (os.path.basename(self._replace_last_of(estimatedName,
+            "_estimated", "")), skippable)
 
     def _mouseCallback(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE:
@@ -103,9 +107,6 @@ class Viewer(TargetViewer.TargetViewer):
             estimated = int(round(((self.imgEstimatedHsv[y,x][0]
                 + 180 - self.labelsHueOffset) % 180)*nbTargets/180.0))
             score = self.imgEstimatedHsv[y,x][2]/255.0
-
-            print "%d" % (self.imgTargetHsv[y,x][0])
-            print "%d" % (self.imgEstimatedHsv[y,x][0])
 
             print "  (%d,%d): target = %d / estimated = %d (score = %.02f)" % (
                 x, y, target, estimated, score)
