@@ -120,9 +120,7 @@ endif
 CPPFLAGS:=$(CPPFLAGS) $(foreach path,$(PARENT),-I$(path)/include/)
 NVFLAGS:=$(NVFLAGS) $(foreach path,$(PARENT),-I$(path)/include/)
 
-MKFILE_PATH:= $(abspath $(lastword $(MAKEFILE_LIST)))
-CURRENT_DIR:= $(patsubst %/,%,$(dir $(MKFILE_PATH)))
-CPPFLAGS:= $(CPPFLAGS) -DN2D2_COMPILE_PATH=\"${CURRENT_DIR}\"
+CPPFLAGS:= $(CPPFLAGS) -DN2D2_COMPILE_PATH=\"${CURDIR}\"
 
 ifndef BINDIR
   BINDIR=bin
