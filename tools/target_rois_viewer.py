@@ -79,8 +79,11 @@ class RoisViewer(TargetViewer.TargetViewer):
         cv2.resizeWindow(self.roiWindow, 1024, 512)
         cv2.moveWindow(self.roiWindow, 0, 0)
 
+        # A target image is skippable if it doesn't contain any annotation
+        # We check that the saturation is below a threshold for every pixels,
+        # as annotations have a 100% saturation (hue is not reliable)
         skippable = False
-        if numpy.all([v == 0 for v in imgRoiHsv[:,:,0]]):
+        if numpy.all([v < 20 for v in imgRoiHsv[:,:,1]]):
             skippable = True
 
         frameName = os.path.basename(self.files[self.index])
