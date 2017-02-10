@@ -21,29 +21,39 @@
 #ifndef N2D2_CPP_FCCELLEXPORT_H
 #define N2D2_CPP_FCCELLEXPORT_H
 
-#include "Export/C/C_FcCellExport.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Export/FcCellExport.hpp"
 
 namespace N2D2 {
 /**
- * Class for methods for the FcCell type for the CPP export
+ * Class for methods of FcCell for all CPP exports type
  * FcCell, CPP EXPORT
-*/
+**/
 class CPP_FcCellExport : public FcCellExport {
 public:
     static void generate(FcCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(FcCell& cell, std::ofstream& header);
+
     static void generateHeaderFreeParameters(FcCell& cell,
                                              std::ofstream& header);
 
     static void generateHeaderBias(FcCell& cell, std::ofstream& header);
     static void generateHeaderBiasVariable(FcCell& cell, std::ofstream& header);
+    static void generateHeaderBiasValues(FcCell& cell,
+                                         std::ofstream& header);
+
     static void generateHeaderWeights(FcCell& cell, std::ofstream& header);
+    static void generateHeaderWeightsSparse(FcCell& cell,
+                                            std::ofstream& header);
     static void generateHeaderWeightsVariable(FcCell& cell,
                                               std::ofstream& header);
-
+    static void generateHeaderWeightsValues(FcCell& cell,
+                                            std::ofstream& header);
 private:
     static Registrar<FcCellExport> mRegistrar;
 };
 }
 
 #endif // N2D2_CPP_FCCELLEXPORT_H
+

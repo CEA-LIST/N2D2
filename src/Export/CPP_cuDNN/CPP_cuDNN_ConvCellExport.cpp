@@ -41,31 +41,11 @@ void N2D2::CPP_cuDNN_ConvCellExport::generate(ConvCell& cell,
 
     if (!header.good())
         throw std::runtime_error("Could not create C header file: " + fileName);
-    C_CellExport::generateHeaderBegin(cell, header);
+    CPP_CellExport::generateHeaderBegin(cell, header);
     CPP_cuDNN_CellExport::generateHeaderIncludes(cell, header);
-    generateHeaderConstants(cell, header);
+    CPP_ConvCellExport::generateHeaderConstants(cell, header);
     generateHeaderFreeParameters(cell, header);
-    C_CellExport::generateHeaderEnd(cell, header);
-}
-
-void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderConstants(ConvCell& cell,
-                                                             std::ofstream
-                                                             & header)
-{
-    C_ConvCellExport::generateHeaderConstants(cell, header);
-
-    const std::string prefix = Utils::upperCase(cell.getName());
-
-    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_OUTPUTS_WIDTH*" << prefix
-           << "_OUTPUTS_HEIGHT)\n"
-              "#define " << prefix << "_CHANNELS_SIZE (" << prefix
-           << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n"
-                                             "#define " << prefix << "_NO_BIAS "
-           << (cell.getParameter<bool>("NoBias") ? "1" : "0") << "\n";
+    CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
 void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderFreeParameters(ConvCell
@@ -81,7 +61,7 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBias(ConvCell& cell,
                                                         std::ofstream& header)
 {
     generateHeaderBiasVariable(cell, header);
-    C_ConvCellExport::generateHeaderBiasValues(cell, header);
+    generateHeaderBiasValues(cell, header);
 }
 
 void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
@@ -90,6 +70,25 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
 {
     header << "static WDATA_T " << cell.getName() << "_biases["
            << Utils::upperCase(cell.getName()) << "_NB_OUTPUTS] = ";
+}
+
+void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
+                                                      std::ofstream& header)
+{
+    header << "{";
+
+    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+        if (output > 0)
+            header << ", ";
+
+        if (cell.getParameter<bool>("NoBias"))
+            header << "0";
+        else
+            CellExport::generateFreeParameter(
+                cell, cell.getBias(output), header);
+    }
+
+    header << "};\n";
 }
 
 void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderWeights(ConvCell& cell,

@@ -21,21 +21,27 @@
 #ifndef N2D2_CPP_POOLCELLEXPORT_H
 #define N2D2_CPP_POOLCELLEXPORT_H
 
-#include "Export/C/C_PoolCellExport.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Export/PoolCellExport.hpp"
 
 namespace N2D2 {
 /**
- * Class for methods for the PoolCell type for the CPP export
+ * Class for methods of PoolCell for all CPP exports type
  * PoolCell, CPP EXPORT
-*/
+**/
 class CPP_PoolCellExport : public PoolCellExport {
 public:
     static void generate(PoolCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(PoolCell& cell,
+                                        std::ofstream& header);
+
     static void generateHeaderConnections(PoolCell& cell,
                                           std::ofstream& header);
     static void generateHeaderConnectionsVariable(PoolCell& cell,
                                                   std::ofstream& header);
+    static void generateHeaderConnectionsValues(PoolCell& cell,
+                                                std::ofstream& header);
 
 private:
     static Registrar<PoolCellExport> mRegistrar;
@@ -43,3 +49,4 @@ private:
 }
 
 #endif // N2D2_CPP_POOLCELLEXPORT_H
+

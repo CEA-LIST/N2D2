@@ -24,7 +24,7 @@
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
 #include "Export/SoftmaxCellExport.hpp"
-
+#include "Export/CPP/CPP_SoftmaxCellExport.hpp"
 namespace N2D2 {
 /**
  * Class for methods for the SoftmaxCell type for the CPP_cuDNN export
@@ -34,8 +34,6 @@ class CPP_cuDNN_SoftmaxCellExport : public SoftmaxCellExport,
                                     public CPP_cuDNN_CellExport {
 public:
     static void generate(SoftmaxCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(SoftmaxCell& cell,
-                                        std::ofstream& header);
 
     static std::unique_ptr<CPP_cuDNN_SoftmaxCellExport> getInstance(Cell& cell);
 

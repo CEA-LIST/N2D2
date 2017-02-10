@@ -21,23 +21,31 @@
 #ifndef N2D2_CPP_CONVCELLEXPORT_H
 #define N2D2_CPP_CONVCELLEXPORT_H
 
-#include "Export/C/C_ConvCellExport.hpp"
 #include "Export/ConvCellExport.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
 
 namespace N2D2 {
 /**
- * Class for methods for the ConvCell type for the CPP export
- * ConvCell, CPP EXPORT
-*/
+ * Class for methods of ConvCell for all CPP exports type
+ * ConvCell, CPP_EXPORT
+**/
+
 class CPP_ConvCellExport : public ConvCellExport {
 public:
     static void generate(ConvCell& cell, const std::string& dirName);
     static void generateHeaderFreeParameters(ConvCell& cell,
                                              std::ofstream& header);
 
+    static void generateHeaderConstants(ConvCell& cell,
+                                        std::ofstream& header);
+
     static void generateHeaderBias(ConvCell& cell, std::ofstream& header);
     static void generateHeaderBiasVariable(ConvCell& cell,
                                            std::ofstream& header);
+    static void generateHeaderBiasValues(ConvCell& cell,
+                                                      std::ofstream& header);
+
     static void generateHeaderWeights(ConvCell& cell, std::ofstream& header);
     static void generateHeaderKernelWeightsVariable(ConvCell& cell,
                                                     std::ofstream& header,
@@ -45,6 +53,12 @@ public:
                                                     unsigned int channel);
     static void generateHeaderWeightsVariable(ConvCell& cell,
                                               std::ofstream& header);
+    static void generateHeaderKernelWeightsValues(ConvCell& cell,
+                                                  std::ofstream& header,
+                                                  unsigned int output,
+                                                  unsigned int channel);
+    static void generateHeaderWeightsValues(ConvCell& cell,
+                                            std::ofstream& header);
 
 private:
     static Registrar<ConvCellExport> mRegistrar;
@@ -52,3 +66,4 @@ private:
 }
 
 #endif // N2D2_CPP_CONVCELLEXPORT_H
+

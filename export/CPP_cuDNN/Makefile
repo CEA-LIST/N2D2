@@ -31,6 +31,14 @@ ifdef PROFILING
   CPPFLAGS:=$(CPPFLAGS) -DPROFILING
 endif
 
+ifdef OUTPUTFILE
+  CPPFLAGS:=$(CPPFLAGS) -DOUTXT
+endif
+
+ifdef NRET
+  CPPFLAGS:=$(CPPFLAGS) -DNRET
+endif
+
 CPPFLAGS:=$(CPPFLAGS) -I./include/ -I$(CUDA_INC_PATH) -IUtilNPP -std=c++11
 LIBS=-lcudart -lnppi -lnppc -lcublas -lcudnn
 LPPFLAGS=-L$(CUDA_LIB_PATH) $(LIBS)

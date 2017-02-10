@@ -23,7 +23,7 @@
 #define N2D2_CPP_CUDNN_FCCELLEXPORT_H
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
-#include "Export/C/C_FcCellExport.hpp"
+#include "Export/CPP/CPP_FcCellExport.hpp"
 #include "Export/FcCellExport.hpp"
 
 namespace N2D2 {
@@ -40,8 +40,13 @@ public:
                                              std::ofstream& header);
 
     static void generateHeaderBias(FcCell& cell, std::ofstream& header);
+    static void generateHeaderBiasValues(FcCell& cell,
+                                                std::ofstream& header);
+
     static void generateHeaderBiasVariable(FcCell& cell, std::ofstream& header);
     static void generateHeaderWeights(FcCell& cell, std::ofstream& header);
+    static void generateHeaderWeightsSparse(FcCell& cell,
+                                            std::ofstream& header);
 
     static std::unique_ptr<CPP_cuDNN_FcCellExport> getInstance(Cell& cell);
 

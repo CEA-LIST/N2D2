@@ -41,20 +41,35 @@ void N2D2::CPP_cuDNN_FcCellExport::generate(FcCell& cell,
     if (!header.good())
         throw std::runtime_error("Could not create C header file: " + fileName);
 
-    C_CellExport::generateHeaderBegin(cell, header);
+    CPP_CellExport::generateHeaderBegin(cell, header);
     CPP_cuDNN_CellExport::generateHeaderIncludes(cell, header);
     generateHeaderConstants(cell, header);
     generateHeaderFreeParameters(cell, header);
-    C_CellExport::generateHeaderEnd(cell, header);
+    CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
 void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
                                                            std::ofstream
                                                            & header)
 {
-    C_FcCellExport::generateHeaderConstants(cell, header);
-
+    // Constants
+    const unsigned int channelsSize = cell.getNbChannels()
+                                      * cell.getChannelsWidth()
+                                      * cell.getChannelsHeight();
     const std::string prefix = Utils::upperCase(cell.getName());
+
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
+           << "\n"
+              "#define " << prefix << "_NB_CHANNELS " << channelsSize << "\n\n";
+
+    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
+
+    if (cellFrame != NULL) {
+        header << "#define " << prefix << "_ACTIVATION "
+               << ((cellFrame->getActivation())
+                       ? cellFrame->getActivation()->getType()
+                       : "Linear") << "\n";
+    }
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
            << "_NB_OUTPUTS)\n"
@@ -71,6 +86,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
            << (cell.getParameter<bool>("NoBias") ? "1" : "0") << "\n";
 }
 
+
 void N2D2::CPP_cuDNN_FcCellExport::generateHeaderFreeParameters(FcCell& cell,
                                                                 std::ofstream
                                                                 & header)
@@ -78,7 +94,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderFreeParameters(FcCell& cell,
     generateHeaderBias(cell, header);
 
     if (mThreshold > 0.0)
-        C_FcCellExport::generateHeaderWeightsSparse(cell, header);
+        generateHeaderWeightsSparse(cell, header);
     else
         generateHeaderWeights(cell, header);
 }
@@ -87,7 +103,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBias(FcCell& cell,
                                                       std::ofstream& header)
 {
     generateHeaderBiasVariable(cell, header);
-    C_FcCellExport::generateHeaderBiasValues(cell, header);
+    generateHeaderBiasValues(cell, header);
 }
 
 void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
@@ -96,6 +112,25 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
 {
     header << "static WDATA_T " << cell.getName() << "_biases["
            << Utils::upperCase(cell.getName()) << "_NB_OUTPUTS] = ";
+}
+
+void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasValues(FcCell& cell,
+                                                    std::ofstream& header)
+{
+    header << "{";
+
+    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+        if (output > 0)
+            header << ", ";
+
+        if (cell.getParameter<bool>("NoBias"))
+            header << "0";
+        else
+            CellExport::generateFreeParameter(
+                cell, cell.getBias(output), header);
+    }
+
+    header << "};\n";
 }
 
 void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
@@ -126,6 +161,65 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
     }
 
     header << "};\n\n";
+}
+
+void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
+                                                       std::ofstream& header)
+{
+    const std::string prefix = Utils::upperCase(cell.getName());
+    const unsigned int channelsSize = cell.getNbChannels()
+                                      * cell.getChannelsWidth()
+                                      * cell.getChannelsHeight();
+
+    std::vector<double> weights;
+    std::vector<unsigned int> offsets;
+    unsigned int offset = 0;
+
+    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            double w = cell.getWeight(output, channel);
+
+            if (std::fabs(w) >= mThreshold) {
+                weights.push_back(w);
+                offsets.push_back(offset);
+                offset = 1;
+            } else
+                ++offset;
+        }
+    }
+
+    const unsigned int nbWeights = weights.size();
+
+    header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
+           << "static WDATA_T " << cell.getName() << "_weights_sparse["
+           << prefix << "_NB_WEIGHTS] = {\n";
+
+    for (unsigned int i = 0; i < nbWeights; ++i) {
+        if (i > 0)
+            header << ", ";
+
+        CellExport::generateFreeParameter(cell, weights[i], header);
+    }
+
+    header << "};\n\n";
+
+    header << "static unsigned short " << cell.getName() << "_weights_offsets["
+           << prefix << "_NB_WEIGHTS] = {\n";
+
+    for (unsigned int i = 0; i < nbWeights; ++i) {
+        if (i > 0)
+            header << ", ";
+
+        header << offsets[i];
+    }
+
+    header << "};\n\n";
+
+    std::cout << Utils::cnotice << "Sparse weights ratio: " << nbWeights << "/"
+              << (cell.getNbOutputs() * channelsSize) << " ("
+              << 100.0
+                 * (nbWeights / (double)(cell.getNbOutputs() * channelsSize))
+              << "%)" << Utils::cdef << std::endl;
 }
 
 std::unique_ptr<N2D2::CPP_cuDNN_FcCellExport>

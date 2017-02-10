@@ -22,14 +22,15 @@
 #ifndef N2D2_CPP_BATCHNORMCELLEXPORT_H
 #define N2D2_CPP_BATCHNORMCELLEXPORT_H
 
+#include "Export/CPP/CPP_CellExport.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Export/BatchNormCellExport.hpp"
-#include "Export/CPP_OpenCL/CPP_OpenCL_CellExport.hpp"
-#include "Export/C/C_CellExport.hpp"
+
 namespace N2D2 {
 /**
- * Class for methods for the BatchNorm type for the CPP_OpenCL export
- * BatchNormCell
-*/
+ * Class for methods of BatchNorm for all CPP exports type
+ * BatchNormCell, CPP_EXPORT
+**/
 class CPP_BatchNormCellExport : public BatchNormCellExport {
 public:
     static void generate(BatchNormCell& cell, const std::string& dirName);
@@ -52,3 +53,4 @@ private:
 }
 
 #endif // N2D2_CPP_BATCHNORMCELLEXPORT_H
+

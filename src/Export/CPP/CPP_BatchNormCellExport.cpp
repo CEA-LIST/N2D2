@@ -39,11 +39,11 @@ void N2D2::CPP_BatchNormCellExport::generate(BatchNormCell& cell,
     if (!header.good())
         throw std::runtime_error("Could not create C header file: " + fileName);
 
-    C_CellExport::generateHeaderBegin(cell, header);
-    CPP_OpenCL_CellExport::generateHeaderIncludes(cell, header);
+    CPP_CellExport::generateHeaderBegin(cell, header);
+    CPP_CellExport::generateHeaderIncludes(cell, header);
     generateHeaderConstants(cell, header);
     generateHeaderFreeParameters(cell, header);
-    C_CellExport::generateHeaderEnd(cell, header);
+    CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
 void N2D2::CPP_BatchNormCellExport::generateHeaderConstants(BatchNormCell& cell,
@@ -173,3 +173,4 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderScale(BatchNormCell& cell,
 
     header << "};\n\n";
 }
+

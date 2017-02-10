@@ -27,7 +27,7 @@ cd ${DIR}
 
 rc=0
 
-for f in $(find . -type f);
+for f in $(find . -maxdepth 2 -type f);
 do
     # Check for ELF file for Windows 10 Ubuntu, as -x check doesn't work
     if [ -x "$f" ] && [ "$f" != "$SELF" ] && file "$f" | grep -q "ELF"; then

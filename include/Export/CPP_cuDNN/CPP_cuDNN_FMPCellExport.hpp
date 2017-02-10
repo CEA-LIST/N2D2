@@ -22,9 +22,9 @@
 #ifndef N2D2_CPP_CUDNN_FMPCELLEXPORT_H
 #define N2D2_CPP_CUDNN_FMPCELLEXPORT_H
 
-#include "Export/CPP_OpenCL/CPP_OpenCL_FMPCellExport.hpp"
-#include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
 #include "Export/FMPCellExport.hpp"
+#include "Export/CPP/CPP_FMPCellExport.hpp"
+#include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
 
 namespace N2D2 {
 /**
@@ -35,6 +35,7 @@ class CPP_cuDNN_FMPCellExport : public FMPCellExport,
                                 public CPP_cuDNN_CellExport {
 public:
     static void generate(FMPCell& cell, const std::string& dirName);
+
     static std::unique_ptr<CPP_cuDNN_FMPCellExport> getInstance(Cell& cell);
 
     void generateCellProgramDesc(Cell& cell, std::ofstream& prog);

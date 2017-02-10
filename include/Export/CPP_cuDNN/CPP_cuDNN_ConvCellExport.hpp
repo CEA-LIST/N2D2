@@ -23,7 +23,7 @@
 #define N2D2_CPP_CUDNN_CONVCELLEXPORT_H
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
-#include "Export/C/C_ConvCellExport.hpp"
+#include "Export/CPP/CPP_ConvCellExport.hpp"
 #include "Export/ConvCellExport.hpp"
 
 namespace N2D2 {
@@ -42,6 +42,10 @@ public:
     static void generateHeaderBias(ConvCell& cell, std::ofstream& header);
     static void generateHeaderBiasVariable(ConvCell& cell,
                                            std::ofstream& header);
+
+    static void generateHeaderBiasValues(ConvCell& cell,
+                                          std::ofstream& header);
+
     static void generateHeaderWeights(ConvCell& cell, std::ofstream& header);
 
     static std::unique_ptr<CPP_cuDNN_ConvCellExport> getInstance(Cell& cell);

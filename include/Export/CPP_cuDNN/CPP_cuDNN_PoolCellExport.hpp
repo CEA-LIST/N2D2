@@ -23,7 +23,7 @@
 #define N2D2_CPP_CUDNN_POOLCELLEXPORT_H
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
-#include "Export/C/C_PoolCellExport.hpp"
+#include "Export/CPP/CPP_PoolCellExport.hpp"
 #include "Export/PoolCellExport.hpp"
 
 namespace N2D2 {

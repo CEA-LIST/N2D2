@@ -32,21 +32,7 @@ N2D2::CPP_cuDNN_BatchNormCellExport::mRegistrarType(
 void N2D2::CPP_cuDNN_BatchNormCellExport::generate(BatchNormCell& cell,
                                                    const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
-
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
-
-    std::ofstream header(fileName.c_str());
-
-    if (!header.good())
-        throw std::runtime_error("Could not create C header file: " + fileName);
-
-    C_CellExport::generateHeaderBegin(cell, header);
-    CPP_cuDNN_CellExport::generateHeaderIncludes(cell, header);
-    CPP_OpenCL_BatchNormCellExport::generateHeaderConstants(cell, header);
-    CPP_OpenCL_BatchNormCellExport::generateHeaderFreeParameters(cell, header);
-    C_CellExport::generateHeaderEnd(cell, header);
+    N2D2::CPP_BatchNormCellExport::generate(cell, dirName);
 }
 
 std::unique_ptr<N2D2::CPP_cuDNN_BatchNormCellExport>

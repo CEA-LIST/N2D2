@@ -22,11 +22,16 @@
 #define N2D2_CPP_CUDNN_DEEPNETEXPORT_H
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
-#include "Export/CPP_OpenCL/CPP_OpenCL_DeepNetExport.hpp"
-#include "Export/C/C_DeepNetExport.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
+#include "Export/CPP/CPP_DeepNetExport.hpp"
 #include "Export/DeepNetExport.hpp"
 
 namespace N2D2 {
+/**
+ * Class for methods of DeepNet for CPP_cuDNN exports types
+ * DeepNetExport, CPP_cuDNN EXPORT
+**/
+
 class CPP_cuDNN_DeepNetExport : public DeepNetExport {
 public:
     static void generate(DeepNet& deepNet, const std::string& dirName);
@@ -37,11 +42,8 @@ public:
     static void generateDeepNetProgram(DeepNet& deepNet,
                                        const std::string& name,
                                        const std::string& fileName);
-
-    static void generateHeaderIncludes(DeepNet& deepNet, std::ofstream& header);
     static void generateHeaderConstants(DeepNet& deepNet,
                                         std::ofstream& header);
-
     static void generateHeaderInit(DeepNet& deepNet, std::ofstream& header);
     static void generateHeaderFunction(DeepNet& deepNet,
                                        const std::string& name,
@@ -50,7 +52,6 @@ public:
 
     static void generateProgramBegin(DeepNet& deepNet,
                                      std::ofstream& prog);
-
     static void generateProgramDesc(DeepNet& deepNet, std::ofstream& prog);
     static void generateProgramGlobalDefinition(DeepNet& deepNet,
                                                 std::ofstream& prog);

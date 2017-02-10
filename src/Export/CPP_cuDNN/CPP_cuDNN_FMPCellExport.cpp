@@ -32,22 +32,7 @@ N2D2::CPP_cuDNN_FMPCellExport::mRegistrarType(
 void N2D2::CPP_cuDNN_FMPCellExport::generate(FMPCell& cell,
                                              const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
-
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
-
-    std::ofstream header(fileName.c_str());
-
-    if (!header.good())
-        throw std::runtime_error("Could not create C header file: " + fileName);
-
-    C_CellExport::generateHeaderBegin(cell, header);
-    CPP_cuDNN_CellExport::generateHeaderIncludes(cell, header);
-    CPP_OpenCL_FMPCellExport::generateHeaderConstants(cell, header);
-    CPP_OpenCL_FMPCellExport::generateHeaderConnections(cell, header);
-    CPP_OpenCL_FMPCellExport::generateHeaderGrid(cell, header);
-    C_CellExport::generateHeaderEnd(cell, header);
+    N2D2::CPP_FMPCellExport::generate(cell, dirName);
 }
 
 std::unique_ptr<N2D2::CPP_cuDNN_FMPCellExport>

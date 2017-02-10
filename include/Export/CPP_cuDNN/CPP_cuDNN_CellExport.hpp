@@ -22,7 +22,7 @@
 #ifndef N2D2_CPP_CUDNN_CELLEXPORT_H
 #define N2D2_CPP_CUDNN_CELLEXPORT_H
 
-#include "Export/C/C_CellExport.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
 #include "Cell/Cell.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "utils/Registrar.hpp"

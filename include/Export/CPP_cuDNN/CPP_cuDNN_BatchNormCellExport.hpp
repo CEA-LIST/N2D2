@@ -23,7 +23,7 @@
 #define N2D2_CPP_CUDNN_BATCHNORMCELLEXPORT_H
 
 #include "Export/BatchNormCellExport.hpp"
-#include "Export/CPP_OpenCL/CPP_OpenCL_BatchNormCellExport.hpp"
+#include "Export/CPP/CPP_BatchNormCellExport.hpp"
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
 
 namespace N2D2 {
@@ -35,6 +35,7 @@ class CPP_cuDNN_BatchNormCellExport : public BatchNormCellExport,
                                       public CPP_cuDNN_CellExport {
 public:
     static void generate(BatchNormCell& cell, const std::string& dirName);
+
     static std::unique_ptr<CPP_cuDNN_BatchNormCellExport> getInstance(Cell
                                                                       & cell);
 

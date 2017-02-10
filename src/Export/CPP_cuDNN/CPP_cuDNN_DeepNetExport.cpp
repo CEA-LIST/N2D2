@@ -27,12 +27,8 @@ N2D2::Registrar<N2D2::DeepNetExport> N2D2::CPP_cuDNN_DeepNetExport::mRegistrar(
 void N2D2::CPP_cuDNN_DeepNetExport::generate(DeepNet& deepNet,
                                              const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
-    Utils::createDirectories(dirName + "/src");
+    CPP_DeepNetExport::generate(deepNet, dirName);
 
-    C_DeepNetExport::generateParamsHeader(dirName + "/include/params.h");
-    C_DeepNetExport::generateEnvironmentHeader(deepNet,
-                                               dirName + "/include/env.hpp");
     generateDeepNetHeader(
         deepNet, "network_cudnn", dirName + "/include/network.hpp");
 
@@ -48,37 +44,15 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateDeepNetHeader(
     if (!header.good())
         throw std::runtime_error("Could not create CPP network file: "
                                  + fileName);
-    C_DeepNetExport::generateHeaderBegin(deepNet, header, fileName);
-    generateHeaderIncludes(deepNet, header);
+    CPP_DeepNetExport::generateHeaderBegin(deepNet, header, fileName);
+    CPP_DeepNetExport::generateHeaderIncludes(deepNet, "_cudnn", header);
     generateHeaderConstants(deepNet, header);
     generateHeaderInit(deepNet, header);
     generateHeaderFunction(deepNet, name, header);
     generateHeaderFree(deepNet, header);
-    C_DeepNetExport::generateHeaderEnd(deepNet, header);
+    CPP_DeepNetExport::generateHeaderEnd(deepNet, header);
 }
 
-void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderIncludes(DeepNet& deepNet,
-                                                           std::ofstream
-                                                           & header)
-{
-    header << "#include \"n2d2_cudnn.hpp\"\n"
-              "#include \"env.hpp\"\n";
-    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
-
-    for (std::vector<std::vector<std::string> >::const_iterator itLayer
-         = layers.begin() + 1,
-         itLayerEnd = layers.end();
-         itLayer != itLayerEnd;
-         ++itLayer) {
-        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-                                                      itEnd = (*itLayer).end();
-             it != itEnd;
-             ++it) {
-            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
-            header << "#include \"" << cell->getName() << ".hpp\"\n";
-        }
-    }
-}
 void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
                                                              std::ofstream
                                                              & header)
