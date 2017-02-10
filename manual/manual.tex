@@ -881,7 +881,7 @@ Other program options related to the exports:
 
 
 \subsubsection{\texorpdfstring{%%
-\lstinline[basicstyle=\ttfamily\bfseries]!C! export}{C export}}
+\lstinline[basicstyle=\ttfamily\bfseries]!C! export\protect\iponly}{C export}}
 
 Test the exported network:
 \begin{lstlisting}
@@ -1046,13 +1046,13 @@ Where <export\_target> is the target system, can be \emph{C}, \emph{C++},
 
 PNeuro export generates code for PNeuro and memory blocks.
 
-The <export\_paramaters> need to be the path to an ini configuration file
+The <export\_paramaters> need to be the path to an INI configuration file
 which describe the global behaviour and memory accesses.
 This export can only be done in 8 bits.
 
-\paragraph{Ini configuration file}
+\paragraph{INI configuration file}
 
-Each sections of the ini file refers to neural network layer by its name.
+Each sections of the INI file refers to neural network layer by its name.
 Only Conv, Pool and Fc layers are supported.
 The order of sections determines the order of execution on the PNeuro.
 
@@ -1278,7 +1278,7 @@ Parameters available after processing for further usage :
   \label{fig:nnPNExport}
 \end{figure}
 
-Assiociated ini configuration file :
+Assiociated INI configuration file :
 \begin{lstlisting}[language=ini]
 neuroBlock=1
 
@@ -2303,6 +2303,12 @@ Image histogram equalization.
 
 
 \paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ExpandLabelTransformation!%%
+\protect\iponly}{ExpandLabelTransformation}}
+Expand single image label (1x1 pixel) to full frame label.
+
+
+\paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!FilterTransformation!}
 {FilterTransformation}}
 Apply a convolution filter to the image.
@@ -2447,6 +2453,39 @@ Image flip transformation.
    horizontally \\
   \lstinline!RandomVerticalFlip! [0] & If true, randomly flip the image
   vertically \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!GradientFilterTransformation!%%
+\protect\iponly}{GradientFilterTransformation}}
+Compute image gradient.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Scale! [1.0] & Scale to apply to the computed gradient \\
+  \lstinline!Delta! [0.0] & Bias to add to the computed gradient \\
+  \lstinline!GradientFilter! [\lstinline!Sobel!] & Filter type to use for
+  computing the gradient. Possible options are: \lstinline!Sobel!,
+  \lstinline!Scharr! and \lstinline!Laplacian! \\
+  \lstinline!KernelSize! [3] & Size of the filter kernel (has no effect when
+  using the \lstinline!Scharr! filter, which kernel size is always 3x3) \\
+  \lstinline!ApplyToLabels! [0] & If true, use the computed gradient to filter
+  the image label and ignore pixel areas where the gradient is below the
+   \lstinline!Threshold!. In this case, only the labels are modified, not the
+    image \\\hline
+  \lstinline!InvThreshold! [0] & If true, ignored label pixels will be the ones
+  with a low gradient (low contrasted areas) \\
+  \lstinline!Threshold! [0.5] & Threshold applied on the image gradient \\
+  \lstinline!Label! [] & List of labels to filter (space-separated) \\
+  \lstinline!GradientScale! [1.0] & Rescale the image by this factor before
+  applying the gradient and the threshold, then scale it back to filter the
+   labels \\
  \hline
 \end{tabular}
 \end{center}
