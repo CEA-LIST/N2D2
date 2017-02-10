@@ -220,18 +220,21 @@ int main(int argc, char* argv[]) try
         sp.readStimulus(Database::Learn, i);
         StimuliProvider::logData(fileName.str(), sp.getData()[0]);
 
-        fileName.str(std::string());
-        fileName << "frames/frame_" << i << "_label.dat";
-
         const Tensor3d<int> labelsData = sp.getLabelsData()[0];
-        Tensor3d<Float_T> displayLabelsData(labelsData.dimX(),
-                                            labelsData.dimY(),
-                                            labelsData.dimZ());
 
-        for (unsigned int index = 0; index < labelsData.size(); ++index)
-            displayLabelsData(index) = labelsData(index);
+        if (labelsData.dimX() > 1 || labelsData.dimY() > 1) {
+            fileName.str(std::string());
+            fileName << "frames/frame_" << i << "_label.dat";
 
-        StimuliProvider::logData(fileName.str(), displayLabelsData);
+            Tensor3d<Float_T> displayLabelsData(labelsData.dimX(),
+                                                labelsData.dimY(),
+                                                labelsData.dimZ());
+
+            for (unsigned int index = 0; index < labelsData.size(); ++index)
+                displayLabelsData(index) = labelsData(index);
+
+            StimuliProvider::logData(fileName.str(), displayLabelsData);
+        }
     }
 
     for (unsigned int i = 0,
