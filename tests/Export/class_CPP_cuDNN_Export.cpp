@@ -161,7 +161,7 @@ TEST(CPP_cuDNN_Export, generate)
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 
     cmd =
-    "cd export_CPP_cuDNN_float32/ && make clean && make OUTPUTFILE=1 NRET=1";
+    "cd export_CPP_cuDNN_float32/ && make OUTPUTFILE=1 NRET=1";
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 
     cmd = "cd export_CPP_cuDNN_float32/ && ./bin/n2d2_cudnn_test -batch 1";

@@ -12,8 +12,6 @@ else
 endif
 
 TARGET=n2d2_cudnn_test
-BIN_DIR=bin
-OBJ_DIR=obj
 
 CPP_FILES=$(wildcard src/*.$(EXT_CPP)) $(wildcard *.$(EXT_CPP))
 CUDA_FILES=$(wildcard src/*.$(EXT_CUDA)) $(wildcard *.$(EXT_CUDA))
@@ -44,28 +42,34 @@ LIBS=-lcudart -lnppi -lnppc -lcublas -lcudnn
 LPPFLAGS=-L$(CUDA_LIB_PATH) $(LIBS)
 NVFLAGS:=$(CPPFLAGS) -lcutil -lcudpp -lcudart -lnppi -lnppc -lm -lstdc++
 
-OBJ_CUDA = $(addprefix $(OBJ_DIR)/,$(CUDA_FILES:.$(EXT_CUDA)=.ocu))
-OBJ_FILES = $(addprefix $(OBJ_DIR)/,$(CPP_FILES:.$(EXT_CPP)=.o))
+ifndef BIN_DIR_EXPORT_CUDNN
+  BIN_DIR_EXPORT_CUDNN=bin
+endif
 
-$(BIN_DIR)/$(TARGET):  $(OBJ_FILES) $(OBJ_CUDA)
+OBJ_DIR_EXPORT_CUDNN=$(BIN_DIR_EXPORT_CUDNN).obj
+
+OBJ_CUDA = $(addprefix $(OBJ_DIR_EXPORT_CUDNN)/,$(CUDA_FILES:.$(EXT_CUDA)=.ocu))
+OBJ_FILES = $(addprefix $(OBJ_DIR_EXPORT_CUDNN)/,$(CPP_FILES:.$(EXT_CPP)=.o))
+
+$(BIN_DIR_EXPORT_CUDNN)/$(TARGET):  $(OBJ_FILES) $(OBJ_CUDA)
 	$(CXX) -o $@ $^ $(LPPFLAGS)
 
-$(OBJ_DIR)/%.ocu : %.$(EXT_CUDA) $(INCLUDES)
+$(OBJ_DIR_EXPORT_CUDNN)/%.ocu : %.$(EXT_CUDA) $(INCLUDES)
 	@mkdir -p $(@D)
 	$(NVXX) -c -o $@ $< $(NVFLAGS)
 
-$(OBJ_DIR)/%.o: %.$(EXT_CPP) $(INCLUDES)
+$(OBJ_DIR_EXPORT_CUDNN)/%.o: %.$(EXT_CPP) $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CPPFLAGS)
 
 all: $(OBJ_CUDA) $(OBJ_FILES)
 
-$(OBJ_CUDA):  | $(OBJ_DIR)
-$(OBJ_FILES): | $(OBJ_DIR)
+$(OBJ_CUDA):  | $(OBJ_DIR_EXPORT_CUDNN)
+$(OBJ_FILES): | $(OBJ_DIR_EXPORT_CUDNN)
 
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-	mkdir -p $(BIN_DIR)
+$(OBJ_DIR_EXPORT_CUDNN):
+	mkdir -p $(OBJ_DIR_EXPORT_CUDNN)
+	mkdir -p $(BIN_DIR_EXPORT_CUDNN)
 
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)
+	rm -rf $(OBJ_DIR_EXPORT_CUDNN) $(BIN_DIR_EXPORT_CUDNN)
