@@ -821,21 +821,33 @@ N2D2::Database::addStimulus(const std::string& name, int label, StimuliSet set)
 
 void N2D2::Database::removeStimulus(StimulusID id)
 {
-    bool found = false;
+    std::vector<StimuliSet> stimuliSets;
+    stimuliSets.push_back(Learn);
+    stimuliSets.push_back(Validation);
+    stimuliSets.push_back(Test);
+    stimuliSets.push_back(Unpartitioned);
 
-    for (int idx = mStimuliSets(Unpartitioned).size() - 1; idx >= 0; --idx) {
-        if (mStimuliSets(Unpartitioned)[idx] == (StimulusID)id) {
-            mStimuliSets(Unpartitioned)
-                .erase(mStimuliSets(Unpartitioned).begin() + idx);
-            found = true;
-        } else if (mStimuliSets(Unpartitioned)[idx] > (StimulusID)id)
-            --mStimuliSets(Unpartitioned)[idx];
+    unsigned int nbFound = 0;
+
+    for (std::vector<Database::StimuliSet>::const_iterator it
+         = stimuliSets.begin(), itEnd = stimuliSets.end();
+         it != itEnd;
+         ++it)
+    {
+        for (int idx = mStimuliSets(*it).size() - 1; idx >= 0; --idx)
+        {
+            if (mStimuliSets(*it)[idx] == (StimulusID)id) {
+                mStimuliSets(*it)
+                    .erase(mStimuliSets(*it).begin() + idx);
+                ++nbFound;
+            } else if (mStimuliSets(*it)[idx] > (StimulusID)id)
+                --mStimuliSets(*it)[idx];
+        }
     }
 
-    if (!found)
-        throw std::runtime_error("Database::removeStimulus(): cannot remove "
-                                 "stimulus from already partitioned stimuli "
-                                 "set!");
+    if (nbFound == 0)
+        throw std::runtime_error("Database::removeStimulus(): could not find "
+                                 "the stimulus in any of the partition!");
 
     mStimuli.erase(mStimuli.begin() + id);
 }
