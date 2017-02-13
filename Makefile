@@ -122,11 +122,11 @@ NVFLAGS:=$(NVFLAGS) $(foreach path,$(PARENT),-I$(path)/include/)
 
 CPPFLAGS:= $(CPPFLAGS) -DN2D2_COMPILE_PATH=\"${CURDIR}\"
 
-ifndef BINDIR
-  BINDIR=bin
+ifndef N2D2_BINDIR
+  N2D2_BINDIR=bin
 endif
 
-OBJDIR=$(BINDIR).obj
+OBJDIR=$(N2D2_BINDIR).obj
 SRC=$(foreach path,$(PARENT),$(wildcard $(path)/src/*.$(EXT)) \
  $(wildcard $(path)/src/*/*.$(EXT)) \
  $(wildcard $(path)/src/*/*/*.$(EXT)))
@@ -154,22 +154,22 @@ define make-depend
 endef
 
 define copy-and-run
-	@rsync -av $1/exec $(BINDIR)/$1/ --exclude *.cpp \
+	@rsync -av $1/exec $(N2D2_BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
-	@rsync -av $1/tests $(BINDIR)/$1/ --exclude *.cpp \
+	@rsync -av $1/tests $(N2D2_BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
-	@if [ -f "$(BINDIR)/$1/tests/run_all.sh" ]; then \
-	    $(BINDIR)/$1/tests/run_all.sh || exit 1; \
+	@if [ -f "$(N2D2_BINDIR)/$1/tests/run_all.sh" ]; then \
+	    $(N2D2_BINDIR)/$1/tests/run_all.sh || exit 1; \
 	fi
 endef
 
-all : $(addprefix $(BINDIR)/, $(BIN))
+all : $(addprefix $(N2D2_BINDIR)/, $(BIN))
 	$(foreach path,$(PARENT),$(call copy-and-run,$(path));)
 
 debug :
 	$(MAKE) all "DEBUG=1"
 
-$(BINDIR)/% : $(OBJ) $(OBJ_CUDA) $(OBJDIR)/%.o
+$(N2D2_BINDIR)/% : $(OBJ) $(OBJ_CUDA) $(OBJDIR)/%.o
 	@mkdir -p $(@D)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 	@if git rev-parse --git-dir > /dev/null 2>&1; then \
@@ -201,5 +201,9 @@ doc : $(SRC) $(SRC_CUDA) $(wildcard include/*.hpp) doxygen.cfg
 .PHONY : clean
 
 clean :
-	@rm -rf $(OBJDIR) $(BINDIR) doc/
+	@rm -rf $(OBJDIR) $(addprefix $(N2D2_BINDIR)/, $(BIN)) doc/
 
+.PHONY : clean-all
+
+clean-all :
+	@rm -rf $(OBJDIR) $(N2D2_BINDIR) doc/
