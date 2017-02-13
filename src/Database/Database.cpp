@@ -567,33 +567,26 @@ void N2D2::Database::extractSlices(unsigned int width,
                         // Copy ROI
                         ROI* roi = (*itROIs)->clonePtr();
 
-                        // Crop ROI
                         if (mStimuli[id].label == -1) {
                             // Composite stimuli
+                            // Crop ROI
                             roi->padCrop(x, y, width, height);
-                        } else {
+
+                            // Check ROI overlaps with current slice
+                            const cv::Rect roiRect = roi->getBoundingRect();
+
+                            if (roiRect.tl().x > (int)width
+                                || roiRect.tl().y > (int)height
+                                || roiRect.br().x < 0 || roiRect.br().y < 0) {
+                                // No overlap with current slice, discard ROI
+                                delete roi;
+                                continue;
+                            }
+                        }
+                        // else
                             // Non-composite stimuli
-                            // The ROI was already extracted by
-                            // getStimulusData() before slicing
-                            // => data (0,0) coordinate corresponds to the ROI
-                            // top-left coordinate
-                            const cv::Rect roiOrg = roi->getBoundingRect();
-                            roi->padCrop(roiOrg.tl().x + x,
-                                         roiOrg.tl().y + y,
-                                         roiOrg.tl().x + width,
-                                         roiOrg.tl().y + height);
-                        }
-
-                        // Check ROI overlaps with current slice
-                        const cv::Rect roiRect = roi->getBoundingRect();
-
-                        if (roiRect.tl().x > (int)width
-                            || roiRect.tl().y > (int)height
-                            || roiRect.br().x < 0 || roiRect.br().y < 0) {
-                            // No overlap with current slice, discard ROI
-                            delete roi;
-                            continue;
-                        }
+                            // The ROI is extracted by getStimulusData()
+                            // *before* slicing => DON'T CHANGE IT!
 
                         stimulus.ROIs.push_back(roi);
                     }
@@ -1112,19 +1105,15 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
         data = dataConverted;
     }
 
+    if (mStimuli[id].label >= 0 && !mStimuli[id].ROIs.empty()) {
+        // Non-composite stimulus with ROI
+        data = mStimuli[id].ROIs[0]->extract(data);
+    }
+
     if (mStimuli[id].slice != NULL)
         data = mStimuli[id].slice->extract(data);
 
-    if (mStimuli[id].label == -1) {
-        // Composite stimulus
-        return data;
-    } else {
-        // Non-composite stimulus
-        if (!mStimuli[id].ROIs.empty())
-            return mStimuli[id].ROIs[0]->extract(data);
-        else
-            return data;
-    }
+    return data;
 }
 
 cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
