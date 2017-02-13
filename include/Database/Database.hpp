@@ -150,6 +150,21 @@ public:
     virtual void extractROIs();
 
     /**
+     * Remove some ROIs label and optionally remove the associated stimuli.
+     *
+     * @param labels            List of ROI labels to filter
+     * @param filterKeep        If true, keep only the labels in the list,
+     *                          else, remove all the labels in the list
+     * @param removeStimuli     If true, remove stimuli without remaining label
+    */
+    virtual void filterROIs(const std::vector<int>& labels,
+                            bool filterKeep = true,
+                            bool removeStimuli = true);
+    inline void filterROIs(const std::vector<std::string>& names,
+                           bool filterKeep = true,
+                           bool removeStimuli = true);
+
+    /**
      * When each stimulus has one and only one ROI, set the stimulus label to
      *the ROI label
      *
@@ -315,6 +330,13 @@ operator()(StimuliSet set) const
     return (set == Learn) ? learn : (set == Validation)
                                         ? validation
                                         : (set == Test) ? test : unpartitioned;
+}
+
+void N2D2::Database::filterROIs(const std::vector<std::string>& names,
+                                bool filterKeep,
+                                bool removeStimuli)
+{
+    filterROIs(getLabelsIDs(names), filterKeep, removeStimuli);
 }
 
 unsigned int N2D2::Database::getNbStimuli() const

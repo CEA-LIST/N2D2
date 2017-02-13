@@ -31,6 +31,18 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
     std::shared_ptr<Database> database = Registrar
         <DatabaseGenerator>::create(type)(iniConfig, section);
 
+    if (iniConfig.isSection(section + ".filterROIs")) {
+        iniConfig.currentSection(section + ".filterROIs");
+
+        const std::vector<std::string> labels
+            = iniConfig.getProperty<std::vector<std::string>>("Labels");
+        const bool filterKeep = iniConfig.getProperty<bool>("FilterKeep", true);
+        const bool removeStimuli = iniConfig.getProperty
+                                   <bool>("RemoveStimuli", true);
+
+        database->filterROIs(labels, filterKeep, removeStimuli);
+    }
+
     if (iniConfig.isSection(section + ".slicing")) {
         iniConfig.currentSection(section + ".slicing");
 

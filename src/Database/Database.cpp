@@ -472,6 +472,41 @@ void N2D2::Database::extractROIs()
     }
 }
 
+void N2D2::Database::filterROIs(const std::vector<int>& labels,
+                                bool filterKeep,
+                                bool removeStimuli)
+{
+    unsigned int nbRoi = 0;
+    unsigned int nbRoiRemoved = 0;
+    const unsigned int nbStimuli = mStimuli.size();
+    unsigned int nbStimuliRemoved = 0;
+
+    for (int id = mStimuli.size() - 1; id >= 0; --id) {
+        for (int roiId = mStimuli[id].ROIs.size() - 1; roiId >= 0; --roiId) {
+            ++nbRoi;
+
+            if ((filterKeep && std::find(labels.begin(), labels.end(),
+                mStimuli[id].ROIs[roiId]->getLabel()) == labels.end())
+                || (!filterKeep && std::find(labels.begin(), labels.end(),
+                    mStimuli[id].ROIs[roiId]->getLabel()) != labels.end()))
+            {
+                ++nbRoiRemoved;
+                mStimuli[id].ROIs.erase(mStimuli[id].ROIs.begin() + roiId);
+            }
+        }
+
+        if (mStimuli[id].ROIs.empty() && removeStimuli) {
+            ++nbStimuliRemoved;
+            removeStimulus(id);
+        }
+    }
+
+    std::cout << "Database::filterROIs():\n"
+        "    Remaining ROIs: " << (nbRoi - nbRoiRemoved) << "/" << nbRoi << "\n"
+        << "    Remaining stimuli: " << (nbStimuli - nbStimuliRemoved) << "/"
+        << nbStimuli << std::endl;
+}
+
 void N2D2::Database::extractLabels(bool removeROIs)
 {
     const int defaultLabel = (!((std::string)mDefaultLabel).empty())
