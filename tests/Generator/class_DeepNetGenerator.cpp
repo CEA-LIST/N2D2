@@ -132,7 +132,7 @@ TEST(DeepNetGenerator, DeepNetGenerator)
     ASSERT_TRUE(conv1->getActivation()->getType() == std::string("Tanh"));
 
     std::shared_ptr<Target> target = deepNet->getTarget<Target>();
-    ASSERT_EQUALS(target->getTargetTopN(), 4);
+    ASSERT_EQUALS(target->getTargetTopN(), 4U);
 
     for (unsigned int i = 0; i < 10; ++i) {
         deepNet->getStimuliProvider()->readBatch(Database::Learn, 0);

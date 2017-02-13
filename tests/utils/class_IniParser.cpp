@@ -45,7 +45,7 @@ TEST(IniParser, load)
     ASSERT_EQUALS(iniConfig.getProperty<int>("StrideX", 3), 3);
 
     std::vector<int> test = iniConfig.getProperty<std::vector<int> >("Test");
-    ASSERT_EQUALS(test.size(), 4);
+    ASSERT_EQUALS(test.size(), 4U);
     ASSERT_EQUALS(test[0], 1);
     ASSERT_EQUALS(test[1], 2);
     ASSERT_EQUALS(test[2], 3);

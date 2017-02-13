@@ -38,8 +38,8 @@ TEST(Target, Target)
     ASSERT_EQUALS(target.getName(), "TEST");
     ASSERT_EQUALS(target.getCell(), fcCell);
     ASSERT_EQUALS(target.getStimuliProvider(), sp);
-    ASSERT_EQUALS(target.getNbTargets(), 10);
-    ASSERT_EQUALS(target.getTargetTopN(), 1);
+    ASSERT_EQUALS(target.getNbTargets(), 10U);
+    ASSERT_EQUALS(target.getTargetTopN(), 1U);
     ASSERT_EQUALS(target.getTargetValue(), 1.0);
     ASSERT_EQUALS(target.getDefaultValue(), 0.0);
 }
@@ -96,16 +96,16 @@ TEST(Target, Target_ter)
     ASSERT_EQUALS(target.getLabelTarget(3), 0);
     ASSERT_THROW_ANY(target.getDefaultTarget()); // no default target
 
-    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(0)[0], 3);
-    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(1)[0], 0);
-    ASSERT_EQUALS(target.getTargetLabels(2).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(2).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(2)[0], 2);
-    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(3)[0], 1);
 
-    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4);
+    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4U);
     ASSERT_EQUALS(target.getTargetLabelsName()[0], "label3");
     ASSERT_EQUALS(target.getTargetLabelsName()[1], "label0");
     ASSERT_EQUALS(target.getTargetLabelsName()[2], "label2");
@@ -138,15 +138,15 @@ TEST(Target, Target_ter2)
     ASSERT_EQUALS(target.getLabelTarget(3), 0);
     ASSERT_EQUALS(target.getDefaultTarget(), 2);
 
-    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(0)[0], 3);
-    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(1)[0], 0);
-    ASSERT_EQUALS(target.getTargetLabels(2).size(), 0);
-    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(2).size(), 0U);
+    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(3)[0], 1);
 
-    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4);
+    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4U);
     ASSERT_EQUALS(target.getTargetLabelsName()[0], "label3");
     ASSERT_EQUALS(target.getTargetLabelsName()[1], "label0");
     ASSERT_EQUALS(target.getTargetLabelsName()[2], "default");
@@ -181,15 +181,15 @@ TEST(Target, Target_ter3)
     ASSERT_EQUALS(target.getLabelTarget(3), 2);
     ASSERT_EQUALS(target.getDefaultTarget(), 2);
 
-    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(0)[0], -1);
-    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(1)[0], 0);
-    ASSERT_EQUALS(target.getTargetLabels(2).size(), 0);
-    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(2).size(), 0U);
+    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(3)[0], 1);
 
-    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4);
+    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4U);
     ASSERT_EQUALS(target.getTargetLabelsName()[0], "*");
     ASSERT_EQUALS(target.getTargetLabelsName()[1], "label0");
     ASSERT_EQUALS(target.getTargetLabelsName()[2], "default");
@@ -221,15 +221,15 @@ TEST(Target, setLabelTarget)
     ASSERT_EQUALS(target.getLabelTarget(3), 2);
     ASSERT_EQUALS(target.getDefaultTarget(), 2);
 
-    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(0).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(0)[0], -1);
-    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(1).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(1)[0], 0);
-    ASSERT_EQUALS(target.getTargetLabels(2).size(), 0);
-    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1);
+    ASSERT_EQUALS(target.getTargetLabels(2).size(), 0U);
+    ASSERT_EQUALS(target.getTargetLabels(3).size(), 1U);
     ASSERT_EQUALS(target.getTargetLabels(3)[0], 1);
 
-    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4);
+    ASSERT_EQUALS(target.getTargetLabelsName().size(), 4U);
     ASSERT_EQUALS(target.getTargetLabelsName()[0], "*");
     ASSERT_EQUALS(target.getTargetLabelsName()[1], "label0");
     ASSERT_EQUALS(target.getTargetLabelsName()[2], "default");

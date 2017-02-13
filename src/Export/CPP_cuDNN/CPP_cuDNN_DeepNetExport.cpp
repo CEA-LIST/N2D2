@@ -337,11 +337,13 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                     outputName << (*parentCells[i]).getName() << "_";
 
                 prog << "    " << outputName.str() << "buffer.resize("
-                    << std::to_string(parentCells.size()) << ");\n";
+                    << std::to_string((unsigned long long int)
+                                      parentCells.size()) << ");\n";
 
                 if(itLayer == itLayerEnd - 1) {
                     prog << "    output_buffer.resize("
-                        << std::to_string(parentCells.size()) << ");\n";
+                        << std::to_string((unsigned long long int)
+                                          parentCells.size()) << ");\n";
                 }
             }
         }

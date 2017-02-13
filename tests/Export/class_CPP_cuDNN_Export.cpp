@@ -184,4 +184,11 @@ TEST(CPP_cuDNN_Export, generate)
 
 RUN_TESTS()
 
+#else
+
+int main()
+{
+    return 0;
+}
+
 #endif

@@ -73,7 +73,7 @@ TEST(Parameterizable, getParameter)
                   Spread<double>(5.0, Percent(15)));
 
     std::vector<int> param6 = param.getParameter<std::vector<int> >("Param6");
-    ASSERT_EQUALS(param6.size(), 2);
+    ASSERT_EQUALS(param6.size(), 2U);
     ASSERT_EQUALS(param6[0], 1);
     ASSERT_EQUALS(param6[1], 1);
 }
@@ -195,7 +195,7 @@ TEST_DATASET(Parameterizable,
                   Spread<double>(1.0, Percent(5)));
 
     std::vector<int> param6 = param.getParameter<std::vector<int> >("Param6");
-    ASSERT_EQUALS(param6.size(), 4);
+    ASSERT_EQUALS(param6.size(), 4U);
     ASSERT_EQUALS(param6[0], 1);
     ASSERT_EQUALS(param6[1], 2);
     ASSERT_EQUALS(param6[2], 3);
