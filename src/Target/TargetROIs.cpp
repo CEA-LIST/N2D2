@@ -212,10 +212,14 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 
                 // Crop labelRect to the slice for correct overlap area
                 // calculation
-                if (labelRect.tl().x < 0)
+                if (labelRect.tl().x < 0) {
+                    labelRect.width+= labelRect.tl().x;
                     labelRect.x = 0;
-                if (labelRect.tl().y < 0)
+                }
+                if (labelRect.tl().y < 0) {
+                    labelRect.height+= labelRect.tl().y;
                     labelRect.y = 0;
+                }
                 if (labelRect.br().x > (int)labels.dimX())
                     labelRect.width = labels.dimX() - labelRect.x;
                 if (labelRect.br().y > (int)labels.dimY())

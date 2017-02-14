@@ -84,6 +84,7 @@ cv::Mat N2D2::ROI::extract(const cv::Mat& stimulus) const
     if (rect.x < 0) {
         std::cout << Utils::cwarning << "ROI::extract(): BB.x0 (" << rect.x
                   << ") < 0" << Utils::cdef << std::endl;
+        rect.width+= rect.x;
         rect.x = 0;
     } else if (rect.x > stimulus.cols) {
         std::cout << Utils::cwarning << "ROI::extract(): BB.x0 (" << rect.x
@@ -94,6 +95,7 @@ cv::Mat N2D2::ROI::extract(const cv::Mat& stimulus) const
     if (rect.y < 0) {
         std::cout << Utils::cwarning << "ROI::extract(): BB.y0 (" << rect.y
                   << ") < 0" << Utils::cdef << std::endl;
+        rect.height+= rect.y;
         rect.y = 0;
     } else if (rect.y > stimulus.rows) {
         std::cout << Utils::cwarning << "ROI::extract(): BB.y0 (" << rect.y
