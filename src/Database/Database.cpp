@@ -953,6 +953,43 @@ std::string N2D2::Database::getStimulusName(StimulusID id) const
         return mStimuli[id].name;
 }
 
+std::vector<std::shared_ptr<N2D2::ROI> >
+N2D2::Database::getStimulusROIs(StimulusID id) const
+{
+    std::vector<std::shared_ptr<ROI> > stimulusROIs;
+    std::transform(mStimuli[id].ROIs.begin(),
+                   mStimuli[id].ROIs.end(),
+                   std::back_inserter(stimulusROIs),
+                   std::bind(&ROI::clone, std::placeholders::_1));
+
+    if (mStimuli[id].label >= 0 && !stimulusROIs.empty()) {
+        if (stimulusROIs.size() != 1) {
+            throw std::runtime_error("Database::getStimulusROIs(): "
+                                     "number of ROIs should be 1 for "
+                                     "non-composite stimuli");
+        }
+
+        // Align ROI to extracted data
+        const cv::Rect roiOrg = stimulusROIs[0]->getBoundingRect();
+        stimulusROIs[0]->padCrop(roiOrg.tl().x,
+                                 roiOrg.tl().y,
+                                 roiOrg.width,
+                                 roiOrg.height);
+
+        if (mStimuli[id].slice != NULL) {
+            // Align ROI to slice
+            const cv::Rect sliceRect = mStimuli[id].slice->getBoundingRect();
+
+            stimulusROIs[0]->padCrop(sliceRect.tl().x,
+                                     sliceRect.tl().y,
+                                     sliceRect.width,
+                                     sliceRect.height);
+        }
+    }
+
+    return stimulusROIs;
+}
+
 unsigned int N2D2::Database::getNbROIs() const
 {
     unsigned int nbROIs = 0;

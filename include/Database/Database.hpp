@@ -240,9 +240,12 @@ public:
                                        unsigned int index) const;
     inline int getStimulusLabel(StimulusID id) const;
     inline int getStimulusLabel(StimuliSet set, unsigned int index) const;
-    inline const std::vector<ROI*>& getStimulusROIs(StimulusID id) const;
-    inline const std::vector<ROI*>& getStimulusROIs(StimuliSet set,
-                                                    unsigned int index) const;
+    //inline const std::vector<ROI*>& getStimulusROIs(StimulusID id) const;
+    //inline const std::vector<ROI*>& getStimulusROIs(StimuliSet set,
+    //                                                unsigned int index) const;
+    std::vector<std::shared_ptr<ROI> > getStimulusROIs(StimulusID id) const;
+    inline std::vector<std::shared_ptr<ROI> > getStimulusROIs(StimuliSet set,
+        unsigned int index) const;
     unsigned int getNbROIs() const;
     unsigned int getNbROIsWithLabel(int label) const;
     inline unsigned int getNbROIsWithLabel(const std::string& labelName) const;
@@ -414,7 +417,7 @@ int N2D2::Database::getStimulusLabel(StimuliSet set, unsigned int index) const
 {
     return getStimulusLabel(getStimulusID(set, index));
 }
-
+/*
 const std::vector<N2D2::ROI*>&
 N2D2::Database::getStimulusROIs(StimulusID id) const
 {
@@ -422,6 +425,12 @@ N2D2::Database::getStimulusROIs(StimulusID id) const
 }
 
 const std::vector<N2D2::ROI*>&
+N2D2::Database::getStimulusROIs(StimuliSet set, unsigned int index) const
+{
+    return getStimulusROIs(getStimulusID(set, index));
+}
+*/
+std::vector<std::shared_ptr<N2D2::ROI> >
 N2D2::Database::getStimulusROIs(StimuliSet set, unsigned int index) const
 {
     return getStimulusROIs(getStimulusID(set, index));

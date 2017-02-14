@@ -311,13 +311,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
 
     std::vector<std::shared_ptr<ROI> >& labelsROI
         = (mFuture) ? mFutureLabelsROI[batchPos] : mLabelsROI[batchPos];
-    labelsROI.clear();
-
-    const std::vector<ROI*>& stimulusROIs = mDatabase.getStimulusROIs(id);
-    std::transform(stimulusROIs.begin(),
-                   stimulusROIs.end(),
-                   std::back_inserter(labelsROI),
-                   std::bind(&ROI::clone, std::placeholders::_1));
+    labelsROI = mDatabase.getStimulusROIs(id);
 
     std::vector<cv::Mat> rawChannelsData;
     std::vector<cv::Mat> rawChannelsLabels;
