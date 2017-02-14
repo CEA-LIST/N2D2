@@ -1057,12 +1057,9 @@ N2D2::Database::getStimuliSets(StimuliSetMask setMask) const
 N2D2::Database::StimuliSetMask
 N2D2::Database::getStimuliSetMask(StimuliSet set) const
 {
-    if (set == Learn)
-        return LearnOnly;
-    else if (set == Validation)
-        return ValidationOnly;
-    else
-        return TestOnly;
+    return  (set == Learn)      ?   LearnOnly :
+            (set == Validation) ?   ValidationOnly :
+                                    TestOnly;
 }
 
 std::map<std::string, N2D2::Database::StimulusID>

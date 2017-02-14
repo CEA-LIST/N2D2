@@ -260,7 +260,8 @@ N2D2::StimuliProvider::getRandomID(Database::StimuliSet set)
 
 void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 {
-    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+    std::vector<Database::StimulusID>& batchRef
+        = (mFuture) ? mFutureBatch : mBatch;
 
     for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
         batchRef[batchPos] = getRandomID(set);
@@ -284,7 +285,8 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
 {
     const unsigned int batchSize
         = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
-    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+    std::vector<Database::StimulusID>& batchRef
+        = (mFuture) ? mFutureBatch : mBatch;
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         batchRef[batchPos]
