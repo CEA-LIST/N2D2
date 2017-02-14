@@ -109,6 +109,9 @@ int main(int argc, char* argv[]) try
         = opts.parse("-test-idx", -1, "test a single specific frame index");
     const bool check
         = opts.parse("-check", "enable gradient computation checking");
+    const bool logOutputs
+        = opts.parse("-log-outputs", "log layers outputs for the first "
+                     "stimulus");
     const bool genConfig
         = opts.parse("-cfg", "save base configuration and exit");
     const std::string genExport
@@ -275,7 +278,7 @@ int main(int argc, char* argv[]) try
             sp.readRandomBatch(Database::Learn);
             learnThread.join();
 
-            if (i == 0) {
+            if (logOutputs && i == 0) {
                 std::cout << "First stimulus ID: " << sp.getBatch()[0]
                           << std::endl;
                 std::cout << "First stimulus label: "
@@ -514,7 +517,7 @@ int main(int argc, char* argv[]) try
                 deepNet->reportOutputsRange(outputsRange);
                 deepNet->logEstimatedLabels("test");
 
-                if (i == 0) {
+                if (logOutputs && i == 0) {
                     std::cout << "First stimulus ID: " << sp.getBatch()[0]
                               << std::endl;
                     std::cout << "First stimulus label: "
@@ -575,8 +578,6 @@ int main(int argc, char* argv[]) try
                 }
             }
 
-            deepNet->logOutputsRange("test_outputs_range.dat", outputsRange);
-
             if (nbTest > 0) {
                 deepNet->log("test", Database::Test);
                 for (std::vector<std::pair<std::string, double> >::iterator it
@@ -608,9 +609,9 @@ int main(int argc, char* argv[]) try
                                   << std::endl;
                     }
                 }
-            } else
-                deepNet->logOutputs("outputs");
+            }
 
+            deepNet->logOutputsRange("test_outputs_range.dat", outputsRange);
             deepNet->normalizeOutputsRange(outputsRange, 0.25);
             deepNet->exportNetworkFreeParameters("weights_normalized");
         }
