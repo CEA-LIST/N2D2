@@ -225,10 +225,12 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                 if (labelRect.br().y > (int)labels.dimY())
                     labelRect.height = labels.dimY() - labelRect.y;
 
-                const int interLeft = std::max(labelRect.tl().x, bbRect.tl().x);
+                const int interLeft = std::max(labelRect.tl().x,
+                                               bbRect.tl().x);
                 const int interRight
                     = std::min(labelRect.br().x, bbRect.br().x);
-                const int interTop = std::max(labelRect.tl().y, bbRect.tl().y);
+                const int interTop = std::max(labelRect.tl().y,
+                                              bbRect.tl().y);
                 const int interBottom
                     = std::min(labelRect.br().y, bbRect.br().y);
                 const cv::Rect interRect
@@ -239,7 +241,8 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                     const int interArea = interRect.area();
                     const int unionArea = labelRect.area() + bbRect.area()
                                           - interArea;
-                    const double overlapArea = interArea / (double)unionArea;
+                    const double overlapFraction = interArea
+                        / (double)unionArea;
 
                     if (overlapArea > mMinOverlap) {
                         (*itBB).roi = (*itLabel);
@@ -254,16 +257,17 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         }
 
         // Confusion computation
-        for (std::vector<DetectedBB>::const_iterator itBB = detectedBB.begin(),
-                                                     itBBEnd = detectedBB.end();
+        for (std::vector<DetectedBB>::iterator
+             itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
              itBB != itBBEnd;
              ++itBB) {
             const int bbLabel = (*itBB).bb->getLabel();
 
             if ((*itBB).roi) {
                 // Match
-                const int target = getLabelTarget((*itBB).roi->getLabel());
-                confusionMatrix(target, bbLabel) += 1;
+                const int targetLabel = getLabelTarget((*itBB).roi
+                                                  ->getLabel());
+                confusionMatrix(targetLabel, bbLabel) += 1;
             } else {
                 // False positive
                 confusionMatrix(0, bbLabel) += 1;
@@ -276,10 +280,10 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
              itLabelEnd = labelROIs.end();
              itLabel != itLabelEnd;
              ++itLabel) {
-            const int target = getLabelTarget((*itLabel)->getLabel());
+            const int targetLabel = getLabelTarget((*itLabel)->getLabel());
 
-            if (target >= 0)
-                confusionMatrix(target, 0) += 1;
+            if (targetLabel >= 0)
+                confusionMatrix(targetLabel, 0) += 1;
         }
 
         mDetectedBB.push_back(detectedBB);
@@ -456,7 +460,7 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
                          << labelsName[(*it).bb->getLabel()] << " "
                          << (*it).score;
 
-                if ((*it).roi != NULL)
+                if ((*it).roi)
                     roisData << " 1";
                 else
                     roisData << " 0";
