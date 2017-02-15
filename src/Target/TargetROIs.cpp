@@ -95,6 +95,7 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         std::vector<DetectedBB> detectedBB;
 
         // Extract estimated BB
+        const Tensor3d<int> target = mTargets[batchPos];
         const Tensor2d<int> estimatedLabels = mEstimatedLabels[batchPos][0];
         const Tensor2d<Float_T> estimatedLabelsValue
             = mEstimatedLabelsValue[batchPos][0];
@@ -173,20 +174,18 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         std::vector<std::shared_ptr<ROI> > labelROIs
             = mStimuliProvider->getLabelsROIs(batchPos);
 
-        if (labelROIs.empty() && labels[batchPos](0) >= 0) {
+        if (labelROIs.empty() && target.size() == 1) {
             // The whole image has a single label
-
-            // Confusion computation
-            for (std::vector<DetectedBB>::const_iterator itBB
-                 = detectedBB.begin(),
-                 itBBEnd = detectedBB.end();
-                 itBB != itBBEnd;
-                 ++itBB) {
-                const int bbLabel = (*itBB).bb->getLabel();
-                const int target = getLabelTarget(labels[batchPos](0));
-
-                if (target >= 0)
-                    confusionMatrix(target, bbLabel) += 1;
+            if (target(0) >= 0) {
+                // Confusion computation
+                for (std::vector<DetectedBB>::const_iterator itBB
+                     = detectedBB.begin(),
+                     itBBEnd = detectedBB.end();
+                     itBB != itBBEnd;
+                     ++itBB) {
+                    const int bbLabel = (*itBB).bb->getLabel();
+                    confusionMatrix(target(0), bbLabel) += 1;
+                }
             }
 
             mDetectedBB.push_back(detectedBB);
