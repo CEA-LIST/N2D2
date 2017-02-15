@@ -354,8 +354,6 @@ template <class T> void N2D2::Tensor4d<T>::clear()
 
 template <class T> void N2D2::Tensor4d<T>::swap(Tensor4d<T>& tensor)
 {
-    assert(mData.unique());
-
     std::swap(mDimX, tensor.mDimX);
     std::swap(mDimY, tensor.mDimY);
     std::swap(mDimZ, tensor.mDimZ);
