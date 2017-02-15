@@ -434,20 +434,9 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
             const std::shared_ptr<Cell>
                 cell = deepNet.getCell((*itLayer).
                     at(std::distance((*itLayer).begin(), it)));
-            std::stringstream channelInputName;
+
             std::string outputOffset
                  = Utils::upperCase((*cell).getName() + "_output_offset");
-
-            if(itLayer != itLayerBegin) {
-                const std::vector<std::shared_ptr<Cell> >
-                    parentCells = deepNet.getParentCells(*it);
-
-                for(unsigned int i = 0; i < parentCells.size(); ++i)
-                    channelInputName << (*parentCells[i]).getName() << "_";
-
-            }
-            else
-                channelInputName << "env_" ;
 
             input_buff = (itLayer == itLayerBegin) ? inputsBuffer :
                 getCellInputName(deepNet,

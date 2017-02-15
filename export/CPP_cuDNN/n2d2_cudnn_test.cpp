@@ -298,7 +298,6 @@ int main(int argc, char* argv[])
     free_memory();
     CHECK_CUDNN_STATUS(cudnnDestroy(context_cudnnHandle));
     cublasDestroy(context_cublasHandle);
-    std::cout << "Clear Memory and Destroy cudnnContext done!\n";
     confusion_print(NB_TARGETS, confusion);
     delete[] env_data;
     delete[] outputEstimated;
