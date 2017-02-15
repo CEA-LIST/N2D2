@@ -91,22 +91,29 @@ void N2D2::ComputerVision::ROI::filterSeparability(std::vector<Roi_T>& roi,
                                                    unsigned int xMaxDist,
                                                    unsigned int yMaxDist)
 {
-    for (int a = roi.size() - 1; a >= 0; --a) {
-        for (int b = a - 1; b >= 0; --b) {
-            if (roi[b].cls != roi[a].cls)
-                continue;
+    unsigned int nbROIs = 0;
 
-            const int xDist = (int)std::max(roi[a].j0, roi[b].j0)
-                              - (int)std::min(roi[a].j1, roi[b].j1);
-            const int yDist = (int)std::max(roi[a].i0, roi[b].i0)
-                              - (int)std::min(roi[a].i1, roi[b].i1);
+    do {
+        nbROIs = roi.size();
 
-            if ((yDist <= 0 && xDist < (int)xMaxDist)
-                || (xDist <= 0 && yDist < (int)yMaxDist)) {
-                roi[b] = ROI::merge(roi[a], roi[b]);
-                roi.erase(roi.begin() + a);
-                break;
+        for (int a = roi.size() - 1; a >= 0; --a) {
+            for (int b = a - 1; b >= 0; --b) {
+                if (roi[b].cls != roi[a].cls)
+                    continue;
+
+                const int xDist = (int)std::max(roi[a].j0, roi[b].j0)
+                                  - (int)std::min(roi[a].j1, roi[b].j1);
+                const int yDist = (int)std::max(roi[a].i0, roi[b].i0)
+                                  - (int)std::min(roi[a].i1, roi[b].i1);
+
+                if ((yDist <= 0 && xDist < (int)xMaxDist)
+                    || (xDist <= 0 && yDist < (int)yMaxDist)) {
+                    roi[b] = ROI::merge(roi[a], roi[b]);
+                    roi.erase(roi.begin() + a);
+                    break;
+                }
             }
         }
     }
+    while (roi.size() != nbROIs);
 }

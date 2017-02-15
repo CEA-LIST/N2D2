@@ -40,8 +40,8 @@ N2D2::TargetROIs::TargetROIs(const std::string& name,
       mFilterMinWidth(this, "FilterMinWidth", 0U),
       mFilterMinAspectRatio(this, "FilterMinAspectRatio", 0.0),
       mFilterMaxAspectRatio(this, "FilterMaxAspectRatio", 0.0),
-      mMergeMaxHDist(this, "MergeMaxHDist", 0U),
-      mMergeMaxVDist(this, "MergeMaxVDist", 0U)
+      mMergeMaxHDist(this, "MergeMaxHDist", 1U),
+      mMergeMaxVDist(this, "MergeMaxVDist", 1U)
 {
     // ctor
 }
@@ -122,11 +122,8 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                                             mFilterMaxAspectRatio);
         }
 
-        ComputerVision::ROI::filterOverlapping(estimatedROIs, 0.0, 0.0, true);
-
-        if (mMergeMaxHDist > 0 || mMergeMaxVDist > 0)
-            ComputerVision::ROI::filterSeparability(
-                estimatedROIs, mMergeMaxHDist, mMergeMaxVDist);
+        ComputerVision::ROI::filterSeparability(
+            estimatedROIs, mMergeMaxHDist, mMergeMaxVDist);
 
         for (std::vector<ComputerVision::ROI::Roi_T>::const_iterator it
              = estimatedROIs.begin(),
