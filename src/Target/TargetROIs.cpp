@@ -267,7 +267,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                 // Match
                 const int targetLabel = getLabelTarget((*itBB).roi
                                                   ->getLabel());
-                confusionMatrix(targetLabel, bbLabel) += 1;
+
+                if (targetLabel >= 0)
+                    confusionMatrix(targetLabel, bbLabel) += 1;
             } else {
                 // False positive
                 confusionMatrix(0, bbLabel) += 1;
