@@ -137,7 +137,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                                cv::Point(Utils::round(xRatio * (*it).j1),
                                          Utils::round(yRatio * (*it).i1))),
                            0.0,
-                           std::shared_ptr<ROI>());
+                           std::shared_ptr<ROI>(),
+                           0.0,
+                           false);
 
             if (mROIsLabelTarget) {
                 int label;
@@ -202,10 +204,6 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                  itLabelEnd = labelROIs.end();
                  itLabel != itLabelEnd;
                  ++itLabel) {
-                if (getLabelTarget((*itLabel)->getLabel())
-                    != (*itBB).bb->getLabel())
-                    continue;
-
                 const cv::Rect bbRect = (*itBB).bb->getBoundingRect();
                 cv::Rect labelRect = (*itLabel)->getBoundingRect();
 
@@ -243,13 +241,13 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                     const double overlapFraction = interArea
                         / (double)unionArea;
 
-                    if (overlapArea > mMinOverlap) {
-                        (*itBB).roi = (*itLabel);
-                        labelROIs.erase(std::remove(labelROIs.begin(),
-                                                    labelROIs.end(),
-                                                    (*itLabel)),
-                                        labelROIs.end());
-                        break;
+                    if (overlapFraction > mMinOverlap) {
+                        if (!(*itBB).roi
+                            || overlapFraction > (*itBB).matching)
+                        {
+                            (*itBB).roi = (*itLabel);
+                            (*itBB).matching = overlapFraction;
+                        }
                     }
                 }
             }
@@ -263,12 +261,26 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
             const int bbLabel = (*itBB).bb->getLabel();
 
             if ((*itBB).roi) {
-                // Match
-                const int targetLabel = getLabelTarget((*itBB).roi
-                                                  ->getLabel());
+                // Found a matching ROI
+                const std::vector<std::shared_ptr<ROI> >::iterator
+                    itLabel = std::find(labelROIs.begin(),
+                                        labelROIs.end(),
+                                        (*itBB).roi);
 
-                if (targetLabel >= 0)
-                    confusionMatrix(targetLabel, bbLabel) += 1;
+                (*itBB).duplicate = (itLabel == labelROIs.end());
+
+                if (!(*itBB).duplicate) {
+                    // If this is the first match, remove this label
+                    // from the list and count it for the confusion
+                    // matrix
+                    labelROIs.erase(itLabel);
+
+                    const int targetLabel = getLabelTarget((*itBB).roi
+                                                      ->getLabel());
+
+                    if (targetLabel >= 0)
+                        confusionMatrix(targetLabel, bbLabel) += 1;
+                }
             } else {
                 // False positive
                 confusionMatrix(0, bbLabel) += 1;
@@ -348,9 +360,28 @@ cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const
     for (std::vector<DetectedBB>::const_iterator it = detectedBB.begin(),
                                                  itEnd = detectedBB.end();
          it != itEnd;
-         ++it) {
-        const cv::Scalar color = ((*it).roi != NULL) ? cv::Scalar(0, 255, 0)
-                                                     : cv::Scalar(0, 0, 255);
+         ++it)
+    {
+        cv::Scalar color = cv::Scalar(0, 0, 255);   // red = miss
+
+        if ((*it).roi) {
+            // Found a matching ROI
+            const bool match = (getLabelTarget((*it).roi->getLabel())
+                                    == (*it).bb->getLabel());
+
+            if (match) {
+                // True hit
+                color = (!(*it).duplicate)
+                           ? cv::Scalar(0, 255, 0)  // green = true hit
+                           : cv::Scalar(0, 127, 0); // dark green = duplicate
+            }
+            else {
+                color = (!(*it).duplicate)
+                           ? cv::Scalar(0, 255, 255)  // yellow = wrong label
+                           : cv::Scalar(0, 127, 127); // dark yellow = duplicate
+            }
+        }
+
         (*it).bb->draw(imgBB, color);
 
         // Draw legend

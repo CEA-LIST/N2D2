@@ -39,14 +39,22 @@ public:
     struct DetectedBB {
         DetectedBB(const std::shared_ptr<ROI>& bb_,
                    double score_,
-                   const std::shared_ptr<ROI>& roi_)
-            : bb(bb_), score(score_), roi(roi_)
+                   const std::shared_ptr<ROI>& roi_,
+                   double matching_,
+                   bool duplicate_)
+            : bb(bb_),
+              score(score_),
+              roi(roi_),
+              matching(matching_),
+              duplicate(duplicate_)
         {
         }
 
         std::shared_ptr<ROI> bb;
         double score;
         std::shared_ptr<ROI> roi;
+        double matching;
+        bool duplicate;
     };
 
     static std::shared_ptr<Target> create(const std::string& name,
