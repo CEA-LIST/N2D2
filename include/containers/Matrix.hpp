@@ -176,6 +176,9 @@ public:
     inline operator std::vector<T>&();
     inline operator const std::vector<T>&() const;
     void log(const std::string& fileName) const;
+    virtual ~Matrix()
+    {
+    }
 
 protected:
     unsigned int mNbRows;

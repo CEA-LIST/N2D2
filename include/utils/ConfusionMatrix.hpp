@@ -30,9 +30,24 @@ namespace N2D2 {
 template <class T>
 class ConfusionMatrix : public Matrix<T> {
 public:
+    ConfusionMatrix() : Matrix<T>()
+    {
+    }
+    ConfusionMatrix(unsigned int nbRows) : Matrix<T>(nbRows)
+    {
+    }
+    ConfusionMatrix(unsigned int nbRows,
+                    unsigned int nbCols,
+                    const T& value = T())
+        : Matrix<T>(nbRows, nbCols, value)
+    {
+    }
     void log(const std::string& fileName,
              const std::vector<std::string>& labels = std::vector
              <std::string>()) const;
+    virtual ~ConfusionMatrix()
+    {
+    }
 };
 
 template <class T>
