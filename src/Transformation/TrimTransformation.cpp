@@ -150,12 +150,9 @@ void N2D2::TrimTransformation::apply(cv::Mat& frame,
     if (labels.rows > 1 || labels.cols > 1)
         labels = labels(frameBorder);
 
-    std::for_each(labelsROI.begin(),
-                  labelsROI.end(),
-                  std::bind(&ROI::padCrop,
-                            std::placeholders::_1,
-                            frameBorder.x,
-                            frameBorder.y,
-                            frameBorder.width,
-                            frameBorder.height));
+    padCropLabelsROI(labelsROI,
+                     frameBorder.x,
+                     frameBorder.y,
+                     frameBorder.width,
+                     frameBorder.height);
 }

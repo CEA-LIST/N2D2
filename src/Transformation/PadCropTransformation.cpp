@@ -110,9 +110,5 @@ N2D2::PadCropTransformation::padCrop(cv::Mat& mat,
         }
     }
 
-    std::for_each(
-        labelsROI.begin(),
-        labelsROI.end(),
-        std::bind(
-            &ROI::padCrop, std::placeholders::_1, -left, -top, width, height));
+    padCropLabelsROI(labelsROI, -left, -top, width, height);
 }

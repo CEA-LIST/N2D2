@@ -74,6 +74,13 @@ public:
     };
     virtual ~Transformation() {};
 
+protected:
+    inline void padCropLabelsROI(std::vector<std::shared_ptr<ROI> >& labelsROI,
+                                 int offsetX,
+                                 int offsetY,
+                                 unsigned int width,
+                                 unsigned int height) const;
+
 private:
     virtual Transformation* doClone() const = 0;
 };
@@ -145,6 +152,35 @@ N2D2::Transformation::apply(Tensor3d<T1>& frame, Tensor3d<T2>& labels, int id)
     apply(mat, labelsMat, id);
     frame = Tensor3d<T1>(mat);
     labels = Tensor3d<T2>(labelsMat);
+}
+
+void
+N2D2::Transformation::padCropLabelsROI(std::vector<std::shared_ptr<ROI> >&
+                                       labelsROI,
+                                       int offsetX,
+                                       int offsetY,
+                                       unsigned int width,
+                                       unsigned int height) const
+{
+    for (std::vector<std::shared_ptr<ROI> >::iterator it = labelsROI.begin();
+         it != labelsROI.end();)
+    {
+        // Crop ROI
+        (*it)->padCrop(offsetX, offsetY, width, height);
+
+        // Check ROI overlaps with current slice
+        const cv::Rect roiRect = (*it)->getBoundingRect();
+
+        if (roiRect.tl().x > (int)width
+            || roiRect.tl().y > (int)height
+            || roiRect.br().x < 0 || roiRect.br().y < 0)
+        {
+            // No overlap with current slice, discard ROI
+            it = labelsROI.erase(it);
+        }
+        else
+            ++it;
+    }
 }
 
 #endif // N2D2_TRANSFORMATION_H
