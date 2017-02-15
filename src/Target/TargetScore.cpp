@@ -332,7 +332,8 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
     mBatchSuccess.clear();
     mBatchTopNSuccess.clear();
 
-    for (unsigned int batchPos = 0; batchPos < mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for ordered if (mTargets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -341,18 +342,19 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
             continue;
         }
 
+        double batchSuccess = 0.0;
+        double batchTopNSuccess = 0.0;
+        ConfusionMatrix<unsigned long long int> confusion(nbTargets,
+                                                          nbTargets,
+                                                          0);
+
         const Tensor3d<int> target = mTargets[batchPos];
-        Tensor3d<int> estimatedLabels = mEstimatedLabels[batchPos];
+        const Tensor3d<int> estimatedLabels = mEstimatedLabels[batchPos];
 
         if (target.size() == 1) {
             if (target(0) >= 0) {
-                confusionMatrix(target(0), estimatedLabels(0)) += 1;
-
-                if (estimatedLabels(0) != target(0))
-                    misclassified.push_back(
-                        std::make_pair(id, estimatedLabels(0)));
-
-                mBatchSuccess.push_back(estimatedLabels(0) == target(0));
+                confusion(target(0), estimatedLabels(0)) += 1;
+                batchSuccess = (estimatedLabels(0) == target(0));
 
                 // Top-N case :
                 if (mTargetTopN > 1) {
@@ -363,7 +365,7 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                             ++topNscore;
                     }
 
-                    mBatchTopNSuccess.push_back(topNscore > 0);
+                    batchTopNSuccess = (topNscore > 0);
                 }
             }
         } else {
@@ -374,7 +376,7 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
             for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
                     if (target(ox, oy, 0) >= 0) {
-                        confusionMatrix(target(ox, oy, 0),
+                        confusion(target(ox, oy, 0),
                                         estimatedLabels(ox, oy, 0)) += 1;
 
                         ++nbLabels[target(ox, oy, 0)];
@@ -412,10 +414,28 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                 }
             }
 
-            mBatchSuccess.push_back(
-                (nbValidTargets > 0) ? success / nbValidTargets : 1.0);
-            mBatchTopNSuccess.push_back(
-                (nbValidTargets > 0) ? successTopN / nbValidTargets : 1.0);
+            batchSuccess = (nbValidTargets > 0) ?
+                (success / nbValidTargets) : 1.0;
+            batchTopNSuccess = (nbValidTargets > 0) ?
+                (successTopN / nbValidTargets) : 1.0;
+        }
+
+#pragma omp ordered
+        if (target.size() != 1 || target(0) >= 0) {
+            std::transform(confusionMatrix.begin(), confusionMatrix.end(),
+                           confusion.begin(),
+                           confusionMatrix.begin(),
+                           std::plus<unsigned long long int>());
+
+            if (target.size() == 1 && target(0) >= 0 && !batchSuccess) {
+                misclassified.push_back(
+                    std::make_pair(id, estimatedLabels(0)));
+            }
+
+            mBatchSuccess.push_back(batchSuccess);
+
+            if (mTargetTopN > 1)
+                mBatchTopNSuccess.push_back(batchTopNSuccess);
         }
     }
 

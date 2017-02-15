@@ -69,6 +69,7 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
     Target::process(set);
 
     mDetectedBB.clear();
+    mDetectedBB.resize(mTargets.dimB());
 
     const unsigned int nbTargets = getNbTargets();
     ConfusionMatrix<unsigned long long int>& confusionMatrix
@@ -83,7 +84,8 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
     const double yRatio = (labels.dimY() - 1)
                           / (double)(mCell->getOutputsHeight() - 1);
 
-    for (unsigned int batchPos = 0; batchPos < mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for if (mTargets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -93,6 +95,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         }
 
         std::vector<DetectedBB> detectedBB;
+        ConfusionMatrix<unsigned long long int> confusion(nbTargets,
+                                                          nbTargets,
+                                                          0);
 
         // Extract estimated BB
         const Tensor3d<int> target = mTargets[batchPos];
@@ -186,120 +191,126 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                      itBB != itBBEnd;
                      ++itBB) {
                     const int bbLabel = (*itBB).bb->getLabel();
-                    confusionMatrix(target(0), bbLabel) += 1;
+                    confusion(target(0), bbLabel) += 1;
+                }
+            }
+        }
+        else {
+            // ROI and BB association
+            for (std::vector<DetectedBB>::iterator itBB = detectedBB.begin(),
+                                                   itBBEnd = detectedBB.end();
+                 itBB != itBBEnd;
+                 ++itBB) {
+                for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
+                     = labelROIs.begin(),
+                     itLabelEnd = labelROIs.end();
+                     itLabel != itLabelEnd;
+                     ++itLabel) {
+                    const cv::Rect bbRect = (*itBB).bb->getBoundingRect();
+                    cv::Rect labelRect = (*itLabel)->getBoundingRect();
+
+                    // Crop labelRect to the slice for correct overlap area
+                    // calculation
+                    if (labelRect.tl().x < 0) {
+                        labelRect.width+= labelRect.tl().x;
+                        labelRect.x = 0;
+                    }
+                    if (labelRect.tl().y < 0) {
+                        labelRect.height+= labelRect.tl().y;
+                        labelRect.y = 0;
+                    }
+                    if (labelRect.br().x > (int)labels.dimX())
+                        labelRect.width = labels.dimX() - labelRect.x;
+                    if (labelRect.br().y > (int)labels.dimY())
+                        labelRect.height = labels.dimY() - labelRect.y;
+
+                    const int interLeft = std::max(labelRect.tl().x,
+                                                   bbRect.tl().x);
+                    const int interRight
+                        = std::min(labelRect.br().x, bbRect.br().x);
+                    const int interTop = std::max(labelRect.tl().y,
+                                                  bbRect.tl().y);
+                    const int interBottom
+                        = std::min(labelRect.br().y, bbRect.br().y);
+                    const cv::Rect interRect
+                        = cv::Rect(cv::Point(interLeft, interTop),
+                                   cv::Point(interRight, interBottom));
+
+                    if (interLeft < interRight && interTop < interBottom) {
+                        const int interArea = interRect.area();
+                        const int unionArea = labelRect.area() + bbRect.area()
+                                              - interArea;
+                        const double overlapFraction = interArea
+                            / (double)unionArea;
+
+                        if (overlapFraction > mMinOverlap) {
+                            if (!(*itBB).roi
+                                || overlapFraction > (*itBB).matching)
+                            {
+                                (*itBB).roi = (*itLabel);
+                                (*itBB).matching = overlapFraction;
+                            }
+                        }
+                    }
                 }
             }
 
-            mDetectedBB.push_back(detectedBB);
-            continue;
-        }
+            // Confusion computation
+            for (std::vector<DetectedBB>::iterator
+                 itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
+                 itBB != itBBEnd;
+                 ++itBB) {
+                const int bbLabel = (*itBB).bb->getLabel();
 
-        // ROI and BB association
-        for (std::vector<DetectedBB>::iterator itBB = detectedBB.begin(),
-                                               itBBEnd = detectedBB.end();
-             itBB != itBBEnd;
-             ++itBB) {
+                if ((*itBB).roi) {
+                    // Found a matching ROI
+                    const std::vector<std::shared_ptr<ROI> >::iterator
+                        itLabel = std::find(labelROIs.begin(),
+                                            labelROIs.end(),
+                                            (*itBB).roi);
+
+                    (*itBB).duplicate = (itLabel == labelROIs.end());
+
+                    if (!(*itBB).duplicate) {
+                        // If this is the first match, remove this label
+                        // from the list and count it for the confusion
+                        // matrix
+                        labelROIs.erase(itLabel);
+
+                        const int targetLabel = getLabelTarget((*itBB).roi
+                                                          ->getLabel());
+
+                        if (targetLabel >= 0)
+                            confusion(targetLabel, bbLabel) += 1;
+                    }
+                } else {
+                    // False positive
+                    confusion(0, bbLabel) += 1;
+                }
+            }
+
+            // False negative (miss) for remaining unmatched label ROIs
             for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
                  = labelROIs.begin(),
                  itLabelEnd = labelROIs.end();
                  itLabel != itLabelEnd;
                  ++itLabel) {
-                const cv::Rect bbRect = (*itBB).bb->getBoundingRect();
-                cv::Rect labelRect = (*itLabel)->getBoundingRect();
+                const int targetLabel = getLabelTarget((*itLabel)->getLabel());
 
-                // Crop labelRect to the slice for correct overlap area
-                // calculation
-                if (labelRect.tl().x < 0) {
-                    labelRect.width+= labelRect.tl().x;
-                    labelRect.x = 0;
-                }
-                if (labelRect.tl().y < 0) {
-                    labelRect.height+= labelRect.tl().y;
-                    labelRect.y = 0;
-                }
-                if (labelRect.br().x > (int)labels.dimX())
-                    labelRect.width = labels.dimX() - labelRect.x;
-                if (labelRect.br().y > (int)labels.dimY())
-                    labelRect.height = labels.dimY() - labelRect.y;
-
-                const int interLeft = std::max(labelRect.tl().x,
-                                               bbRect.tl().x);
-                const int interRight
-                    = std::min(labelRect.br().x, bbRect.br().x);
-                const int interTop = std::max(labelRect.tl().y,
-                                              bbRect.tl().y);
-                const int interBottom
-                    = std::min(labelRect.br().y, bbRect.br().y);
-                const cv::Rect interRect
-                    = cv::Rect(cv::Point(interLeft, interTop),
-                               cv::Point(interRight, interBottom));
-
-                if (interLeft < interRight && interTop < interBottom) {
-                    const int interArea = interRect.area();
-                    const int unionArea = labelRect.area() + bbRect.area()
-                                          - interArea;
-                    const double overlapFraction = interArea
-                        / (double)unionArea;
-
-                    if (overlapFraction > mMinOverlap) {
-                        if (!(*itBB).roi
-                            || overlapFraction > (*itBB).matching)
-                        {
-                            (*itBB).roi = (*itLabel);
-                            (*itBB).matching = overlapFraction;
-                        }
-                    }
-                }
+                if (targetLabel >= 0)
+                    confusion(targetLabel, 0) += 1;
             }
         }
 
-        // Confusion computation
-        for (std::vector<DetectedBB>::iterator
-             itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
-             itBB != itBBEnd;
-             ++itBB) {
-            const int bbLabel = (*itBB).bb->getLabel();
+        mDetectedBB[batchPos].swap(detectedBB);
 
-            if ((*itBB).roi) {
-                // Found a matching ROI
-                const std::vector<std::shared_ptr<ROI> >::iterator
-                    itLabel = std::find(labelROIs.begin(),
-                                        labelROIs.end(),
-                                        (*itBB).roi);
-
-                (*itBB).duplicate = (itLabel == labelROIs.end());
-
-                if (!(*itBB).duplicate) {
-                    // If this is the first match, remove this label
-                    // from the list and count it for the confusion
-                    // matrix
-                    labelROIs.erase(itLabel);
-
-                    const int targetLabel = getLabelTarget((*itBB).roi
-                                                      ->getLabel());
-
-                    if (targetLabel >= 0)
-                        confusionMatrix(targetLabel, bbLabel) += 1;
-                }
-            } else {
-                // False positive
-                confusionMatrix(0, bbLabel) += 1;
-            }
+#pragma omp critical
+        {
+            std::transform(confusionMatrix.begin(), confusionMatrix.end(),
+                           confusion.begin(),
+                           confusionMatrix.begin(),
+                           std::plus<unsigned long long int>());
         }
-
-        // False negative (miss) for remaining unmatched label ROIs
-        for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
-             = labelROIs.begin(),
-             itLabelEnd = labelROIs.end();
-             itLabel != itLabelEnd;
-             ++itLabel) {
-            const int targetLabel = getLabelTarget((*itLabel)->getLabel());
-
-            if (targetLabel >= 0)
-                confusionMatrix(targetLabel, 0) += 1;
-        }
-
-        mDetectedBB.push_back(detectedBB);
     }
 }
 
