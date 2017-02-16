@@ -21,6 +21,8 @@
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 
+OPTION(COVERALLS "Generate coveralls data" OFF)
+
 if (NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "No build type selected, default to Release")
     SET(CMAKE_BUILD_TYPE "Release")
@@ -105,6 +107,13 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     if(${OpenCV_VERSION} EQUAL "2.0.0")
         MESSAGE(WARNING "Compiling with _GLIBCXX_PARALLEL flag")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_PARALLEL")
+    endif()
+
+    if(COVERALLS)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+    else()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -s -DNDEBUG")
     endif()
 endif()
 
