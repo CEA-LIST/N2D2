@@ -44,7 +44,7 @@ endif()
 
 FIND_PACKAGE(Gnuplot REQUIRED)
 
-# Define environment variable OpenCV_DIR to point to for example 
+# Define environment variable OpenCV_DIR to point to for example
 # "C:\OpenCV\opencv\build"
 if (EXISTS "$ENV{OpenCV_DIR}")
     INCLUDE("$ENV{OpenCV_DIR}/OpenCVConfig.cmake")
@@ -82,7 +82,7 @@ endif()
 
 FIND_PACKAGE(MongoDB)
 if (MongoDB_FOUND)
-    FIND_PACKAGE(Boost COMPONENTS thread system filesystem program_options 
+    FIND_PACKAGE(Boost COMPONENTS thread system filesystem program_options
         REQUIRED)
     FIND_PACKAGE(OpenSSL REQUIRED)
 
@@ -100,7 +100,7 @@ if(MSVC)
     ADD_DEFINITIONS(/wd4250 /wd4512)
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3 -s -DNDEBUG")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
     if(${OpenCV_VERSION} EQUAL "2.0.0")
         MESSAGE(WARNING "Compiling with _GLIBCXX_PARALLEL flag")
@@ -168,7 +168,7 @@ MACRO(N2D2_MAKE_LIBRARY name)
 
     if (MongoDB_FOUND)
         TARGET_LINK_LIBRARIES(${name} ${MongoDB_LIBRARIES})
-        TARGET_LINK_LIBRARIES(${name} ${Boost_THREAD_LIBRARY} 
+        TARGET_LINK_LIBRARIES(${name} ${Boost_THREAD_LIBRARY}
             ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}
             ${Boost_SYSTEM_LIBRARY} ${OPENSSL_LIBRARIES})
     endif()
