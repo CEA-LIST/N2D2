@@ -21,4 +21,3 @@
 
 ../n2d2_live_fcnn IMDBWIKI.ini -target 2 -target-cls 1 \
     -target-cls-name "male female" $(echo $@)
-
