@@ -38,167 +38,99 @@ class TargetViewer(object):
         self.labelsHueOffset = 0
 
     def run(self):
-        newIndex = 0
+        self.newIndex = 0
         skipUp = False
         skipDown = False
 
+        cv2.namedWindow("index", cv2.WINDOW_AUTOSIZE)
+        cv2.imshow("index", numpy.array([0]))
+        cv2.createTrackbar("#", "index", 1, # start at 1 to force update to 0
+            max(1, len(self.files)-1), self._onTrackbarChange)
+        cv2.moveWindow("index", 1024 + 256 + 20, 0)
+        cv2.resizeWindow("index", 512, 1)
+
+        if self.imgLegend is not None:
+            cv2.namedWindow("legend", cv2.WINDOW_NORMAL)
+            cv2.imshow("legend", self.imgLegend)
+            cv2.resizeWindow("legend", 256, 1024)
+            cv2.moveWindow("legend", 1024 + 10, 0)
+
         while (True):
-            skippable = False
+            self.skippable = False
 
-            if newIndex != self.index:
-                self.index = newIndex
-                cv2.destroyAllWindows()
+            if self.newIndex != self.index:
+                cv2.setTrackbarPos("#", "index", self.newIndex)
 
-                # Determine slice position --
-                # Note that this code only works if slices are correctly
-                # ordered, using "sort" with "natural_keys"
-                gridX = 1
-                gridY = 1
-                offsetX = 0
-                offsetY = 0
-                i = self.index
-                regexSlice = r'\[([0-9]+),([0-9]+)\]$'
-                stimulusName = re.sub(regexSlice, '', self.files[i])
-
-                # |- Rewind to the first slice index for the current original
-                # image file
-                while i > 0:
-                    if re.sub(regexSlice, '', self.files[i-1]) == stimulusName:
-                        i-= 1
-                    else:
-                        break
-
-                # |- Find grid size and max offsets
-                while i < len(self.files):
-                    if re.sub(regexSlice, '', self.files[i]) != stimulusName:
-                        break
-
-                    m = re.search(regexSlice, self.files[i])
-
-                    if m:
-                        if int(m.group(2)) > offsetX:
-                            offsetX = int(m.group(2))
-                            gridX+= 1
-
-                        if int(m.group(1)) > offsetY:
-                            offsetY = int(m.group(1))
-                            gridY+= 1
-
-                        i+= 1
-                    else:
-                        break
-
-                # |- Find and display current slice position
-                m = re.search(regexSlice, self.files[self.index])
-
-                if m:
-                    sliceX = offsetX/max(gridX-1, 1)
-                    sliceY = offsetY/max(gridY-1, 1)
-                    posX = int(m.group(2))/max(sliceX, 1)
-                    posY = int(m.group(1))/max(sliceY, 1)
-
-                    imgSlicing = numpy.zeros((50*gridY, 50*gridX, 1),
-                        dtype = "uint8")
-                    imgSlicing[50*posY:50*(posY+1), 50*posX:50*(posX+1)] = 255
-
-                    for x in xrange(0,gridX):
-                        for y in xrange(0,gridY):
-                            color = (255)
-                            if x == posX and y == posY:
-                                color = (0)
-                            cv2.putText(imgSlicing,
-                                "%d,%d"% (y*sliceY, x*sliceX),
-                                (50*x + 5, 50*y + 25),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.25, color)
-
-                    cv2.namedWindow("slicing", cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow("slicing", 50*gridX, 50*gridY)
-                    cv2.moveWindow("slicing", 1024 + 256 + 20, 0)
-                    cv2.imshow("slicing", imgSlicing)
-                # -- Determine slice position
-
-                if self.imgLegend is not None:
-                    cv2.namedWindow("legend", cv2.WINDOW_NORMAL)
-                    cv2.imshow("legend", self.imgLegend)
-                    cv2.resizeWindow("legend", 256, 1024)
-                    cv2.moveWindow("legend", 1024 + 10, 0)
-
-                frameName, skippable = self._run()
-
-                print "Frame #%d/%d: %s" % (
-                    self.index+1, len(self.files), frameName)
-
-            if skippable:
-                if skipUp and newIndex < len(self.files)-1:
-                    newIndex = newIndex + 1
+            if self.skippable:
+                if skipUp and self.newIndex < len(self.files)-1:
+                    self.newIndex = self.newIndex + 1
                     continue
 
-                if skipDown and newIndex > 0:
-                    newIndex = newIndex - 1
+                if skipDown and self.newIndex > 0:
+                    self.newIndex = self.newIndex - 1
                     continue
 
             skipUp = False
             skipDown = False
 
-            newIndex = self.index
             key = cv2.waitKey(0)
 
             if key == (0x10FF00 | 80):
                 # KEY_HOME
-                newIndex = 0
+                self.newIndex = 0
             elif key == (0x10FF00 | 87):
                 # KEY_END
-                newIndex = len(self.files)-1
+                self.newIndex = len(self.files)-1
             elif key == (0x10FF00 | 81):
                 # KEY_LEFT
-                if newIndex > 0:
-                    newIndex-= 1
+                if self.newIndex > 0:
+                    self.newIndex-= 1
             elif key == (0x10FF00 | 83):
                 # KEY_RIGHT
-                if newIndex < len(self.files)-1:
-                    newIndex+= 1
+                if self.newIndex < len(self.files)-1:
+                    self.newIndex+= 1
             elif key == (0x10FF00 | 82):
                 # KEY_UP
-                if newIndex > 0:
-                    newIndex-= 1
+                if self.newIndex > 0:
+                    self.newIndex-= 1
                     skipDown = True
-                #if newIndex > 10:
-                #    newIndex-= 10
+                #if self.newIndex > 10:
+                #    self.newIndex-= 10
                 #else:
-                #    newIndex = 0
+                #    self.newIndex = 0
             elif key == (0x10FF00 | 84):
                 # KEY_DOWN
-                if newIndex < len(self.files)-1:
-                    newIndex+= 1
+                if self.newIndex < len(self.files)-1:
+                    self.newIndex+= 1
                     skipUp = True
-                #if newIndex < (len(self.files)-1)-10:
-                #    newIndex+= 10
+                #if self.newIndex < (len(self.files)-1)-10:
+                #    self.newIndex+= 10
                 #else:
-                #    newIndex = len(self.files)-1
+                #    self.newIndex = len(self.files)-1
             elif key == (0x10FF00 | 85):
                 # KEY_PAGEUP
-                if newIndex > 100:
-                    newIndex-= 100
+                if self.newIndex > 100:
+                    self.newIndex-= 100
                 else:
-                    newIndex = 0
+                    self.newIndex = 0
             elif key == (0x10FF00 | 86):
                 # KEY_PAGEDOWN
-                if newIndex < (len(self.files)-1)-100:
-                    newIndex+= 100
+                if self.newIndex < (len(self.files)-1)-100:
+                    self.newIndex+= 100
                 else:
-                    newIndex = len(self.files)-1
+                    self.newIndex = len(self.files)-1
             elif key == (0x100000 | 9):
                 # KEY_TAB
-                if newIndex < (len(self.files)-1)-1000:
-                    newIndex+= 1000
+                if self.newIndex < (len(self.files)-1)-1000:
+                    self.newIndex+= 1000
                 else:
-                    newIndex = len(self.files)-1
+                    self.newIndex = len(self.files)-1
             elif key == (0x100000 | ord('f')):
                 subString = raw_input("Find image: ")
 
                 try:
-                    newIndex = next(idx for idx, string in enumerate(self.files)
-                        if subString in string)
+                    self.newIndex = next(idx for idx, string in
+                        enumerate(self.files) if subString in string)
                 except StopIteration:
                     print "No match found!"
             elif key == (0x100000 | 27):
@@ -206,6 +138,86 @@ class TargetViewer(object):
                 break
 
     # PRIVATE
+    def _onTrackbarChange(self, value):
+        self.newIndex = value
+        self._display()
+
+    def _display(self):
+        self.index = self.newIndex
+
+        # Determine slice position --
+        # Note that this code only works if slices are correctly
+        # ordered, using "sort" with "natural_keys"
+        gridX = 1
+        gridY = 1
+        offsetX = 0
+        offsetY = 0
+        i = self.index
+        regexSlice = r'\[([0-9]+),([0-9]+)\]$'
+        stimulusName = re.sub(regexSlice, '', self.files[i])
+
+        # |- Rewind to the first slice index for the current original
+        # image file
+        while i > 0:
+            if re.sub(regexSlice, '', self.files[i-1]) == stimulusName:
+                i-= 1
+            else:
+                break
+
+        # |- Find grid size and max offsets
+        while i < len(self.files):
+            if re.sub(regexSlice, '', self.files[i]) != stimulusName:
+                break
+
+            m = re.search(regexSlice, self.files[i])
+
+            if m:
+                if int(m.group(2)) > offsetX:
+                    offsetX = int(m.group(2))
+                    gridX+= 1
+
+                if int(m.group(1)) > offsetY:
+                    offsetY = int(m.group(1))
+                    gridY+= 1
+
+                i+= 1
+            else:
+                break
+
+        # |- Find and display current slice position
+        m = re.search(regexSlice, self.files[self.index])
+
+        if m:
+            sliceX = offsetX/max(gridX-1, 1)
+            sliceY = offsetY/max(gridY-1, 1)
+            posX = int(m.group(2))/max(sliceX, 1)
+            posY = int(m.group(1))/max(sliceY, 1)
+
+            imgSlicing = numpy.zeros((50*gridY, 50*gridX, 1),
+                dtype = "uint8")
+            imgSlicing[50*posY:50*(posY+1), 50*posX:50*(posX+1)] = 255
+
+            for x in xrange(0,gridX):
+                for y in xrange(0,gridY):
+                    color = (255)
+                    if x == posX and y == posY:
+                        color = (0)
+                    cv2.putText(imgSlicing,
+                        "%d,%d"% (x*sliceX, y*sliceY),
+                        (50*x + 5, 50*y + 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.25, color)
+
+            cv2.namedWindow("slicing", cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("slicing", 50*gridX, 50*gridY)
+            cv2.moveWindow("slicing", 1024 + 256 + 20, 128)
+            cv2.imshow("slicing", imgSlicing)
+        # -- Determine slice position
+
+        frameName, self.skippable = self._run()
+
+        print "Frame #%d/%d: %s" % (
+            self.index+1, len(self.files), frameName)
+
     def _atoi(self, text):
         return int(text) if text.isdigit() else text
 

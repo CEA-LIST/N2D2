@@ -68,6 +68,8 @@ class RoisViewer(TargetViewer.TargetViewer):
 
     # PRIVATE
     def _run(self):
+        cv2.destroyWindow(self.roiWindow)
+
         roiName = self.files[self.index]
         self.roiWindow = os.path.basename(roiName)
         cv2.namedWindow(self.roiWindow, cv2.WINDOW_NORMAL)
@@ -98,6 +100,8 @@ class RoisViewer(TargetViewer.TargetViewer):
         frameName = os.path.basename(self.files[self.index])
 
         if self.estimatedPath is not None:
+            cv2.destroyWindow(self.estimatedWindow)
+
             estimatedName = os.path.join(self.estimatedPath,
                 self._replace_last_of(frameName, ".", "_estimated."))
             self.estimatedWindow = os.path.basename(estimatedName)

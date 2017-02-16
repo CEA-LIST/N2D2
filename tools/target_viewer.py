@@ -55,6 +55,9 @@ class Viewer(TargetViewer.TargetViewer):
 
     # PRIVATE
     def _run(self):
+        cv2.destroyWindow(self.estimatedWindow)
+        cv2.destroyWindow(self.targetWindow)
+
         estimatedName = self.files[self.index]
         targetName = self._replace_last_of(estimatedName,
             "_estimated.", "_target.")
