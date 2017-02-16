@@ -82,9 +82,18 @@ class RoisViewer(TargetViewer.TargetViewer):
         # A target image is skippable if it doesn't contain any annotation
         # We check that the saturation is below a threshold for every pixels,
         # as annotations have a 100% saturation (hue is not reliable)
-        skippable = False
-        if numpy.all([v < 20 for v in imgRoiHsv[:,:,1]]):
-            skippable = True
+        skippable = True
+
+        rows, cols = imgRoiHsv.shape[:2]
+        for i in xrange(rows):
+            for j in xrange(cols):
+                h = imgRoiHsv.item(i,j,0)
+                v = imgRoiHsv.item(i,j,2)
+
+                if v >= 20 and (h > 105 and h < 135):
+                    # Annotations are blue (hue = 120)
+                    skippable = False
+                    break
 
         frameName = os.path.basename(self.files[self.index])
 
