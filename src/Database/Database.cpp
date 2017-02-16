@@ -375,7 +375,7 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
     sizeGnuplot.set("object rectangle from screen 0.5,0.1 to screen 0.95,0.5 "
                     "behind fillcolor rgb 'white'"
                     "fillstyle solid noborder");
-    sizeGnuplot.setXrange(0, 64);
+    sizeGnuplot.setXrange(minWidth, minWidth + (maxWidth - minWidth)/10);
     sizeGnuplot.unset("xlabel");
     sizeGnuplot.unset("ylabel");
     sizeGnuplot.plot(sizeFileName,
@@ -397,7 +397,7 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
     sizeGnuplot.set("object rectangle from screen 0.5,0.1 to screen 0.95,0.5 "
                     "behind fillcolor rgb 'white'"
                     "fillstyle solid noborder");
-    sizeGnuplot.setXrange(0, 64);
+    sizeGnuplot.setXrange(minHeight, minHeight + (maxHeight - minHeight)/10);
     sizeGnuplot.unset("xlabel");
     sizeGnuplot.unset("ylabel");
     sizeGnuplot.plot(sizeFileName,
