@@ -29,21 +29,25 @@ FOREACH(tests_dir ${tests_dirs})
     FILE(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${tests_bin})
 ENDFOREACH()
 
-FILE(COPY tests_data DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+N2D2_COPY_DIRECTORY(copy-tests_data-n2d2
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests_data
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests_data)
 
 foreach(f ${TESTS})
     GET_FILENAME_COMPONENT(bin ${f} NAME_WE)
     ADD_EXECUTABLE(${bin} ${f})
     TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive ${N2D2_LIB} -Wl,-no-whole-archive)
 
-    ADD_CUSTOM_COMMAND(
-        OUTPUT ${bin}.log
-        COMMAND ${bin}
+    # Workaround for CMake bug (fixed in 3.3.0)
+    # http://stackoverflow.com/questions/41597612/add-custom-command-does-not-re-run-on-failure
+    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${bin}.passed
+        COMMAND ${bin} > ${bin}.log 2>&1
+        COMMAND ${CMAKE_COMMAND} -E touch ${bin}.passed
+        DEPENDS ${bin} copy-tests_data-n2d2
         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
     ADD_CUSTOM_TARGET(
         run_${bin} ALL
-        DEPENDS ${bin}.log
-        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${bin}.passed
     )
 endforeach(f)

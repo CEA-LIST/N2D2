@@ -185,3 +185,19 @@ MACRO(N2D2_MAKE_LIBRARY name)
     TARGET_LINK_LIBRARIES(${name} ${OpenCV_LIBS})
 ENDMACRO()
 
+MACRO(N2D2_COPY_DIRECTORY target src dst)
+    FILE(GLOB_RECURSE allfiles RELATIVE "${src}" FOLLOW_SYMLINKS "${src}/*")
+
+    SET(file_targets "")
+    FOREACH(each_file ${allfiles})
+        if(NOT IS_DIRECTORY "${src}/${each_file}")
+            ADD_CUSTOM_COMMAND(OUTPUT "${dst}/${each_file}" PRE_BUILD
+                COMMAND ${CMAKE_COMMAND}
+                ARGS -E copy "${src}/${each_file}" "${dst}/${each_file}")
+
+            SET(file_targets ${file_targets} "${dst}/${each_file}")
+        endif()
+    ENDFOREACH(each_file)
+
+    ADD_CUSTOM_TARGET(${target} ALL DEPENDS ${file_targets})
+ENDMACRO()
