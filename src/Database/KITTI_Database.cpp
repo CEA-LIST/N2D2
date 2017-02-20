@@ -201,9 +201,11 @@ void N2D2::KITTI_Database::loadKITTIStimuli(const std::string& dirPath,
             width,
             height));
 
-        while (labelFile.peek() != '\n') {
-            if (labelFile.eof())
-                break;
-        }
+        labelFile >> std::ws;  // eat up any leading white spaces
+
+        int c = labelFile.peek();  // peek character
+
+        if ( c == EOF )
+            break;
     }
 }
