@@ -68,8 +68,7 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 {
     Target::process(set);
 
-    mDetectedBB.clear();
-    mDetectedBB.resize(mTargets.dimB());
+    mDetectedBB.assign(mTargets.dimB(), std::vector<DetectedBB>());
 
     const unsigned int nbTargets = getNbTargets();
     ConfusionMatrix<unsigned long long int>& confusionMatrix
@@ -95,9 +94,6 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         }
 
         std::vector<DetectedBB> detectedBB;
-        ConfusionMatrix<unsigned long long int> confusion(nbTargets,
-                                                          nbTargets,
-                                                          0);
 
         // Extract estimated BB
         const Tensor3d<int> target = mTargets[batchPos];
@@ -188,7 +184,8 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                      itBB != itBBEnd;
                      ++itBB) {
                     const int bbLabel = (*itBB).bb->getLabel();
-                    confusion(target(0), bbLabel) += 1;
+#pragma omp atomic
+                    confusionMatrix(target(0), bbLabel) += 1ULL;
                 }
             }
         }
@@ -277,12 +274,15 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                         const int targetLabel = getLabelTarget((*itBB).roi
                                                           ->getLabel());
 
-                        if (targetLabel >= 0)
-                            confusion(targetLabel, bbLabel) += 1;
+                        if (targetLabel >= 0) {
+#pragma omp atomic
+                            confusionMatrix(targetLabel, bbLabel) += 1ULL;
+                        }
                     }
                 } else {
                     // False positive
-                    confusion(0, bbLabel) += 1;
+#pragma omp atomic
+                    confusionMatrix(0, bbLabel) += 1ULL;
                 }
             }
 
@@ -294,20 +294,14 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                  ++itLabel) {
                 const int targetLabel = getLabelTarget((*itLabel)->getLabel());
 
-                if (targetLabel >= 0)
-                    confusion(targetLabel, 0) += 1;
+                if (targetLabel >= 0) {
+#pragma omp atomic
+                    confusionMatrix(targetLabel, 0) += 1ULL;
+                }
             }
         }
 
         mDetectedBB[batchPos].swap(detectedBB);
-
-#pragma omp critical
-        {
-            std::transform(confusionMatrix.begin(), confusionMatrix.end(),
-                           confusion.begin(),
-                           confusionMatrix.begin(),
-                           std::plus<unsigned long long int>());
-        }
     }
 }
 

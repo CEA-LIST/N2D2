@@ -329,10 +329,12 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
     if (confusionMatrix.empty())
         confusionMatrix.resize(nbTargets, nbTargets, 0);
 
-    mBatchSuccess.clear();
-    mBatchTopNSuccess.clear();
+    mBatchSuccess.assign(mTargets.dimB(), -1.0);
 
-#pragma omp parallel for ordered if (mTargets.dimB() > 4)
+    if (mTargetTopN > 1)
+        mBatchTopNSuccess.assign(mTargets.dimB(), -1.0);
+
+#pragma omp parallel for if (mTargets.dimB() > 4 && mTargets[0].size() > 1)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
 
@@ -342,19 +344,21 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
             continue;
         }
 
-        double batchSuccess = 0.0;
-        double batchTopNSuccess = 0.0;
-        ConfusionMatrix<unsigned long long int> confusion(nbTargets,
-                                                          nbTargets,
-                                                          0);
-
         const Tensor3d<int> target = mTargets[batchPos];
         const Tensor3d<int> estimatedLabels = mEstimatedLabels[batchPos];
 
         if (target.size() == 1) {
             if (target(0) >= 0) {
-                confusion(target(0), estimatedLabels(0)) += 1;
-                batchSuccess = (estimatedLabels(0) == target(0));
+#pragma omp atomic
+                confusionMatrix(target(0), estimatedLabels(0)) += 1ULL;
+
+                mBatchSuccess[batchPos] = (estimatedLabels(0) == target(0));
+
+                if (!mBatchSuccess[batchPos]) {
+#pragma omp critical
+                    misclassified.push_back(
+                        std::make_pair(id, estimatedLabels(0)));
+                }
 
                 // Top-N case :
                 if (mTargetTopN > 1) {
@@ -365,10 +369,14 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                             ++topNscore;
                     }
 
-                    batchTopNSuccess = (topNscore > 0);
+                    mBatchTopNSuccess[batchPos] = (topNscore > 0);
                 }
             }
         } else {
+            ConfusionMatrix<unsigned long long int> confusion(nbTargets,
+                                                              nbTargets,
+                                                              0);
+
             std::vector<unsigned int> nbHits(nbTargets, 0);
             std::vector<unsigned int> nbHitsTopN(nbTargets, 0);
             std::vector<unsigned int> nbLabels(nbTargets, 0);
@@ -414,35 +422,34 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                 }
             }
 
-            batchSuccess = (nbValidTargets > 0) ?
+            mBatchSuccess[batchPos] = (nbValidTargets > 0) ?
                 (success / nbValidTargets) : 1.0;
-            batchTopNSuccess = (nbValidTargets > 0) ?
-                (successTopN / nbValidTargets) : 1.0;
-        }
 
-#pragma omp ordered
-        if (target.size() != 1 || target(0) >= 0) {
+            if (mTargetTopN > 1) {
+                mBatchTopNSuccess[batchPos] = (nbValidTargets > 0) ?
+                    (successTopN / nbValidTargets) : 1.0;
+            }
+
+#pragma omp critical
             std::transform(confusionMatrix.begin(), confusionMatrix.end(),
                            confusion.begin(),
                            confusionMatrix.begin(),
                            std::plus<unsigned long long int>());
-
-            if (target.size() == 1 && target(0) >= 0 && !batchSuccess) {
-                misclassified.push_back(
-                    std::make_pair(id, estimatedLabels(0)));
-            }
-
-            mBatchSuccess.push_back(batchSuccess);
-
-            if (mTargetTopN > 1)
-                mBatchTopNSuccess.push_back(batchTopNSuccess);
         }
     }
 
+    // Remove invalid/ignored batch positions before computing the score
+    mBatchSuccess.erase(std::remove(mBatchSuccess.begin(),
+                                    mBatchSuccess.end(), -1.0),
+                        mBatchSuccess.end());
     mScoreSet[set].success.push_back(getBatchAverageSuccess());
 
-    if (mTargetTopN > 1)
+    if (mTargetTopN > 1) {
+        mBatchTopNSuccess.erase(std::remove(mBatchTopNSuccess.begin(),
+                                            mBatchTopNSuccess.end(), -1.0),
+                                mBatchTopNSuccess.end());
         mScoreTopNSet[set].success.push_back(getBatchAverageTopNSuccess());
+    }
 }
 
 void N2D2::TargetScore::log(const std::string& fileName,
