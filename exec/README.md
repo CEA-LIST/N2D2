@@ -5,8 +5,8 @@ Main executables
 
 ### `n2d2`
 
-The main N2D2 binary, which allow to run DNN learning, testing, benchmarking and
-export.
+The main N2D2 binary, which allows to run DNN learning, testing, benchmarking
+and export.
 
 Just run `./n2d2 -h` to get the full list of program options.
 
