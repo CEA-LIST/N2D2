@@ -38,6 +38,9 @@ if installPath == "":
     installPath = N2D2_DATA
 
 data = {
+    "http://kitti.is.tue.mpg.de/kitti/data_road.zip" : "KITTI",
+    "http://kitti.is.tue.mpg.de/kitti/data_tracking_label_2.zip" : "KITTI",
+    "http://kitti.is.tue.mpg.de/kitti/data_tracking_image_2.zip" : "KITTI",
     "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz": "mnist",
     "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz": "mnist",
     "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz": "mnist",
@@ -60,7 +63,7 @@ data = {
 
 def progress(chunksSoFar, chunkSize, totalSize):
     sizeSoFar = min(totalSize, chunksSoFar*chunkSize)
-    print "Downloaded %d of %d bytes (%3.1f%%)\r"
+    print "Downloaded %d of %d bytes (%3.1f%%)\r" \
         % (sizeSoFar, totalSize, 100.0*float(sizeSoFar)/totalSize),
     if sizeSoFar == totalSize:
         sys.stdout.write("\n")
@@ -77,7 +80,7 @@ for url, dirName in data.iteritems():
         urllib.urlretrieve(baseUrl + "/"
             + urllib.quote(fileName), target, progress)
 
-        if fileName.endswith(".tar.gz") or fileName.endswith(".tar.bz2")
+        if fileName.endswith(".tar.gz") or fileName.endswith(".tar.bz2") \
           or fileName.endswith(".tar"):
             raw = tarfile.open(target)
             for m in raw.getmembers():
