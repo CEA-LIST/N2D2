@@ -23,7 +23,7 @@ language: cpp
 
 # Compiler selection
 compiler:
-  - clang
+  #- clang
   - gcc
 
 before_install:
