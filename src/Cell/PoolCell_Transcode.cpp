@@ -27,13 +27,6 @@ N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
         N2D2::PoolCell_Transcode
         <N2D2::PoolCell_Frame, N2D2::PoolCell_Spike>::create);
 
-template <>
-N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
-    <N2D2::PoolCell_Frame, N2D2::PoolCell_Spike_Compt>::mRegistrar(
-        "Transcode_Compt",
-        N2D2::PoolCell_Transcode
-        <N2D2::PoolCell_Frame, N2D2::PoolCell_Spike_Compt>::create);
-
 #ifdef CUDA
 template <>
 N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
@@ -41,11 +34,4 @@ N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
         "Transcode_CUDA",
         N2D2::PoolCell_Transcode
         <N2D2::PoolCell_Frame_CUDA, N2D2::PoolCell_Spike>::create);
-
-template <>
-N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
-    <N2D2::PoolCell_Frame_CUDA, N2D2::PoolCell_Spike_Compt>::mRegistrar(
-        "Transcode_CUDA_Compt",
-        N2D2::PoolCell_Transcode
-        <N2D2::PoolCell_Frame_CUDA, N2D2::PoolCell_Spike_Compt>::create);
 #endif

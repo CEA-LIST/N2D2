@@ -28,7 +28,6 @@
 #endif
 
 #include "PoolCell_Spike.hpp"
-#include "PoolCell_Spike_Compt.hpp"
 
 namespace N2D2 {
 template <class FRAME = PoolCell_Frame, class SPIKE = PoolCell_Spike>
