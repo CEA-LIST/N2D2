@@ -193,7 +193,6 @@ N2D2::DeepNetExport::getCellOutputName(DeepNet& deepNet,
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
          = layers.begin() + layerNumber + 1,
-         itLayerBegin = layers.begin() + layerNumber + 1,
          itLayerEnd = layers.end();
          itLayer != itLayerEnd;
          ++itLayer) {
