@@ -54,10 +54,9 @@ if (EXISTS "$ENV{OpenCV_DIR}")
 endif()
 
 FIND_PACKAGE(OpenCV 2.0.0 REQUIRED)
-INCLUDE_DIRECTORIES(SYSTEM ${OpenCV_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(SYSTEM ${OpenCV_INCLUDE_DIRS})
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
-message(STATUS "    include path: ${OpenCV_INCLUDE_DIR}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")
 
