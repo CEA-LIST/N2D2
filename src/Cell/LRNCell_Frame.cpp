@@ -48,7 +48,11 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
                                  "doesn't match for local response "
                                  "normalization accross channels\n");
 
-#pragma omp parallel for collapse(2)
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (mNbOutputs > 16)
+#else
+#pragma omp parallel for if (mInputs.dimB() > 4 && mNbOutputs > 16)
+#endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
             int minChan = output - mN / 2;
