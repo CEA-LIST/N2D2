@@ -4088,13 +4088,293 @@ Solvers.Clamping=1
 For more details on the configuration parameters for the \lstinline!Solver!, see
 section \ref{sec:WeightSolvers}.
 
-\item \textbf{Add input distortion.\iponly} See for example the
+\item \textbf{Add input distortion.} See for example the
 \lstinline!DistortionTransformation! (section
 \ref{par:DistortionTransformation}).
 \end{myitemize}
 
 The complete INI model file corresponding to this tutorial can be found in the
 \emph{models} directory of N2D2.
+
+In order to use CUDA/GPU accelerated learning, the default layer model should be
+switched to \lstinline!Frame_CUDA!. You can enable this model by adding the
+following line at the top of the INI file (before the first section):
+\begin{lstlisting}[language=ini]
+DefaultModel=Frame_CUDA
+\end{lstlisting}
+
+\subsection{Building a segmentation neural network}
+
+In this tutorial, we will learn how to do image segmentation with N2D2. As an
+example, we will implement a face detection and gender recognition neural
+network, using the IMDB-WIKI dataset.
+
+First, we need to instanciate the IMDB-WIKI dataset built-in N2D2 driver:
+
+\begin{lstlisting}[language=ini]
+[database]
+Type=IMDBWIKI_Database
+WikiSet=1 ; Use the WIKI part of the dataset
+IMDBSet=0 ; Don't use the IMDB part (less accurate annotation)
+Learn=0.90
+Validation=0.05
+DefaultLabel=background ; Label for pixels outside any ROI (default is no label, pixels are ignored)
+\end{lstlisting}
+
+We must specify a default label for the background, because we want to learn to
+differenciate faces from the background (and not simply ignore the background
+for the learning).
+
+The network input is then declared:
+\begin{lstlisting}[language=ini]
+[sp]
+SizeX=480
+SizeY=360
+BatchSize=48
+CompositeStimuli=1
+\end{lstlisting}
+
+In order to work with segmented data, i.e. data with bounding box annotations or
+pixel-wise annotations (as opposed to a single label per data), one must enable
+the \lstinline!CompositeStimuli! option in the \lstinline![sp]! section.
+
+We can then perform various operations on the data before feeding it to the
+network, like for example converting the 3-channels RGB input images to
+single-channel gray images:
+
+\begin{lstlisting}[language=ini]
+[sp.Transformation-1]
+Type=ChannelExtractionTransformation
+CSChannel=Gray
+\end{lstlisting}
+
+We must only rescale the images to match the networks input size. This can be
+done using a \lstinline!RescaleTransformation!, followed by a
+\lstinline!PadCropTransformation! if one want to keep the images aspect ratio.
+
+\begin{lstlisting}[language=ini]
+[sp.Transformation-2]
+Type=RescaleTransformation
+Width=[sp]SizeX
+Height=[sp]SizeY
+KeepAspectRatio=1 ; Keep images aspect ratio
+
+; Required to ensure all the images are the same size
+[sp.Transformation-3]
+Type=PadCropTransformation
+Width=[sp]SizeX
+Height=[sp]SizeY
+\end{lstlisting}
+
+A common additional operation to extend the learning set is to apply random
+horizontal mirror to images. This can be achieved with the following
+\lstinline!FlipTransformation!:
+
+\begin{lstlisting}[language=ini]
+[sp.OnTheFlyTransformation-4]
+Type=FlipTransformation
+RandomHorizontalFlip=1
+ApplyTo=LearnOnly ; Apply this transformation only on the learning set
+\end{lstlisting}
+
+Note that this is an \emph{on-the-fly} transformation, meaning it cannot be
+cached and is re-executed every time even for the same stimuli.
+We also apply this transformation only on the learning set, with the
+\lstinline!ApplyTo! option.
+
+Next, the neural network can be described:
+\begin{lstlisting}[language=ini]
+[conv1.1]
+Input=sp
+Type=Conv
+...
+
+[pool1]
+...
+
+[...]
+...
+
+[fc2]
+Input=drop1
+Type=Conv
+...
+
+[drop2]
+Input=fc2
+Type=Dropout
+NbOutputs=[fc2]NbChannels
+\end{lstlisting}
+
+A full network description can be found in the \emph{IMDBWIKI.ini} file in the
+\emph{models} directory of N2D2. It is a fully-CNN network.
+
+Here we will focus on the output layers required to detect the faces and
+classify their gender. We start from the \lstinline![drop2]! layer, which has
+128 channels of size 60x45.
+
+\subsubsection{Faces detection}
+
+We want to first add an output stage for the faces detection. It is a 1x1
+convolutional layer with a single 60x45 output map. For each output pixel, this
+layer outputs the probability that the pixel belongs to a face.
+
+\begin{lstlisting}[language=ini]
+[fc3.face]
+Input=drop2
+Type=Conv
+KernelWidth=1
+KernelHeight=1
+NbChannels=1
+Stride=1
+ActivationFunction=LogisticWithLoss
+WeightsFiller=XavierFiller
+ConfigSection=common.config ; Same solver options that the other layers
+\end{lstlisting}
+
+In order to do so, the activation function of this layer must be of type
+\lstinline!LogisticWithLoss!.
+
+We must also tell N2D2 to compute the error and the classification score on this
+softmax layer, by attaching a N2D2 \emph{Target} to this layer, with a
+section with the same name suffixed with \lstinline!.Target!:
+
+\begin{lstlisting}[language=ini]
+[fc3.face.Target]
+LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_face.dat
+; Visualization parameters
+NoDisplayLabel=0
+LabelsHueOffset=90
+\end{lstlisting}
+
+In this \emph{Target}, we must specify how the dataset annotations are mapped to
+the layer's output. This can be done in a separate file using the
+\lstinline!LabelsMapping! parameter. Here, since the output layer has a single
+output per pixel, the target value can only be 0 or 1. A target value of -1
+means that this output is ignored (no error back-propagated). Since the only
+annotations in the IMDB-WIKI dataset are faces, the mapping described in the
+\emph{IMDBWIKI\_target\_face.dat} file is easy:
+
+\begin{lstlisting}
+# background
+background 0
+
+# padding (*) is ignored (-1)
+* -1
+
+# not background = face
+default 1
+\end{lstlisting}
+
+\subsubsection{Gender recognition}
+
+We can also add a second output stage for gender recognition. Like before, it
+would be a 1x1 convolutional layer with a single 60x45 output map. But here, for
+each output pixel, this layer would output the probability that the pixel
+represents a female face.
+
+\begin{lstlisting}[language=ini]
+[fc3.gender]
+Input=drop2
+Type=Conv
+KernelWidth=1
+KernelHeight=1
+NbChannels=1
+Stride=1
+ActivationFunction=LogisticWithLoss
+WeightsFiller=XavierFiller
+ConfigSection=common.config
+\end{lstlisting}
+
+The output layer is therefore identical to the face's output layer, but the
+target mapping is different. For the target mapping, the idea is simply to
+ignore all pixels not belonging to a face and affect the target 0 to male pixels
+and the target 1 to female pixels.
+
+\begin{lstlisting}[language=ini]
+[fc3.gender.Target]
+LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_gender.dat
+; Only display gender probability for pixels detected as face pixels
+MaskLabelTarget=fc3.face.Target
+MaskedLabel=1
+\end{lstlisting}
+
+The content of the \emph{IMDBWIKI\_target\_gender.dat} file would therefore look
+like:
+
+\begin{lstlisting}
+# background
+# ?-* (unknown gender)
+# padding
+default -1
+
+# male gender
+M-? 0   # unknown age
+M-0 0
+M-1 0
+M-2 0
+...
+M-98 0
+M-99 0
+
+# female gender
+F-? 1   # unknown age
+F-0 1
+F-1 1
+F-2 1
+...
+F-98 1
+F-99 1
+\end{lstlisting}
+
+\subsubsection{ROIs extraction}
+
+The next step would be to extract detected face ROIs and assign for each ROI the
+most probable gender. To this end, we can first set a detection threshold, in
+terms of probability, to select face pixels. In the following, the threshold is
+fixed to 75\% face probability:
+
+\begin{lstlisting}[language=ini]
+[post.Transformation-thres]
+Input=fc3.face
+Type=Transformation
+NbOutputs=1
+Transformation=ThresholdTransformation
+Operation=ToZero
+Threshold=0.75
+\end{lstlisting}
+
+We can then assign a target of type \lstinline!TargetROIs! to this layer that
+will automatically create the bounding box using a segmentation algorithm.
+
+\begin{lstlisting}[language=ini]
+[post.Transformation-thres.Target-face]
+Type=TargetROIs
+MinOverlap=0.33 ; Min. overlap fraction to match the ROI to an annotation
+FilterMinWidth=5 ; Min. ROI width
+FilterMinHeight=5 ; Min. ROI height
+FilterMinAspectRatio=0.5 ; Min. ROI aspect ratio
+FilterMaxAspectRatio=1.5 ; Max. ROI aspect ratio
+LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_face.dat
+\end{lstlisting}
+
+In order to assign a gender to the extracted ROIs, the above target must be
+modified to:
+
+\begin{lstlisting}[language=ini]
+[post.Transformation-thres.Target-gender]
+Type=TargetROIs
+ROIsLabelTarget=fc3.gender.Target
+MinOverlap=0.33
+FilterMinWidth=5
+FilterMinHeight=5
+FilterMinAspectRatio=0.5
+FilterMaxAspectRatio=1.5
+LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_gender.dat
+\end{lstlisting}
+
+Here, we use the \lstinline!fc3.gender.Target! target to determine the most
+probable gender of the ROI.
 
 
 \clearpage
