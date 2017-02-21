@@ -33,6 +33,14 @@ N2D2::LRNCell_Frame::LRNCell_Frame(const std::string& name,
     // ctor
 }
 
+void N2D2::LRNCell_Frame::initialize()
+{
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for LRNCell " + mName);
+    }
+}
+
 void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
 {
     if (mN > mNbOutputs)

@@ -42,6 +42,11 @@ void N2D2::FMPCell_Frame_CUDA::initialize()
 {
     FMPCell::initialize();
 
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for FMPCell " + mName);
+    }
+
     if (!isUnitMap())
         throw std::domain_error(
             "FMPCell_Frame_CUDA::initialize(): only unit maps are supported.");

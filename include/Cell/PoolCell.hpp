@@ -91,7 +91,6 @@ public:
     {
         return Type;
     };
-    virtual void initialize();
     unsigned long long int getNbConnections() const;
     unsigned int getPoolWidth() const
     {
@@ -145,9 +144,6 @@ protected:
     const unsigned int mPaddingY;
     // Pooling type
     const Pooling mPooling;
-    // mPoolNbChannels[output channel] -> number of input channels connected to
-    // this output channel
-    std::vector<unsigned int> mPoolNbChannels;
 };
 }
 

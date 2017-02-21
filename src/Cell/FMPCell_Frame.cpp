@@ -40,6 +40,11 @@ void N2D2::FMPCell_Frame::initialize()
 {
     FMPCell::initialize();
 
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for FMPCell " + mName);
+    }
+
     // Generate initial regions for checkGradient()
     generateRegions(mGridX, mInputs[0].dimX(), mOutputs.dimX());
     generateRegions(mGridY, mInputs[0].dimY(), mOutputs.dimY());

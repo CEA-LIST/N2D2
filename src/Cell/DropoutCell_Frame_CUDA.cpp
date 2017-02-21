@@ -53,6 +53,11 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
     CHECK_CUDA_STATUS(cudaMalloc(&mStates, mStatesSize));
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0) {
+            throw std::runtime_error("Zero-sized input for DropoutCell "
+                                     + mName);
+        }
+
         mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));

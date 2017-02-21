@@ -43,7 +43,8 @@ N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
                paddingX,
                paddingY,
                pooling),
-      Cell_Spike(net, name, nbOutputs)
+      Cell_Spike(net, name, nbOutputs),
+      mPoolNbChannels(nbOutputs, 0)
 // IMPORTANT: Do not change the value of the parameters here! Use setParameter()
 // or loadParameters().
 {
@@ -62,6 +63,11 @@ void N2D2::PoolCell_Spike::initialize()
                          (mPooling == Max) ? std::numeric_limits<int>::min()
                                            : 0);
     mOutputsActivity.resize(mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0);
+
+    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            mPoolNbChannels[output] += isConnection(channel, output);
+    }
 }
 
 void N2D2::PoolCell_Spike::propagateSpike(NodeIn* origin,

@@ -44,9 +44,25 @@ N2D2::PoolCell_Frame::PoolCell_Frame(const std::string& name,
                paddingX,
                paddingY,
                pooling),
-      Cell_Frame(name, nbOutputs, activation)
+      Cell_Frame(name, nbOutputs, activation),
+      mPoolNbChannels(nbOutputs, 0)
 {
     // ctor
+}
+
+void N2D2::PoolCell_Frame::initialize()
+{
+    Cell_Frame::initialize();
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for PoolCell " + mName);
+    }
+
+    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            mPoolNbChannels[output] += isConnection(channel, output);
+    }
 }
 
 void N2D2::PoolCell_Frame::propagate(bool inference)

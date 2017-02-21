@@ -64,6 +64,9 @@ void N2D2::ConvCell_Frame::initialize()
         mBiasFiller->apply(mBias);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for ConvCell " + mName);
+
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSharedSynapses.push_back(new Tensor4d<Float_T>(
             mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));

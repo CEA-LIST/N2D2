@@ -65,6 +65,7 @@ public:
                                                 activation);
     }
 
+    virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
@@ -72,6 +73,9 @@ public:
     virtual ~PoolCell_Frame() {};
 
 protected:
+    // mPoolNbChannels[output channel] -> number of input channels connected to
+    // this output channel
+    std::vector<unsigned int> mPoolNbChannels;
     // mInputsBackProp (ix, iy, channel, batchPos)
     // list of the output node(s) to backpropagate from] (for Max pooling)
     Tensor4d<std::vector<unsigned int> > mInputsBackProp;

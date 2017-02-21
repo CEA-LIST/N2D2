@@ -80,6 +80,11 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
     size_t workspaceSize = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0) {
+            throw std::runtime_error("Zero-sized input for DeconvCell "
+                                     + mName);
+        }
+
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
         // Weight filler expect dimZ as input and dimB as output

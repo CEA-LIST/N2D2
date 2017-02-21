@@ -34,6 +34,7 @@ public:
         return std::make_shared<LRNCell_Frame>(name, nbOutputs);
     }
 
+    virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();

@@ -88,6 +88,9 @@ protected:
     Tensor4d<int> mPoolActivity;
     // activity of the output node
     Tensor4d<int> mOutputsActivity;
+    // mPoolNbChannels[output channel] -> number of input channels connected to
+    // this output channel
+    std::vector<unsigned int> mPoolNbChannels;
 
 private:
     static Registrar<PoolCell> mRegistrar;

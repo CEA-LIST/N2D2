@@ -49,6 +49,9 @@ void N2D2::FcCell_Frame::initialize()
     }
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for FcCell " + mName);
+
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSynapses.push_back(new Tensor4d<Float_T>(
             1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()));

@@ -38,18 +38,9 @@ N2D2::PoolCell::PoolCell(const std::string& name,
       mStrideY(strideY),
       mPaddingX(paddingX),
       mPaddingY(paddingY),
-      mPooling(pooling),
-      mPoolNbChannels(nbOutputs, 0)
+      mPooling(pooling)
 {
     // ctor
-}
-
-void N2D2::PoolCell::initialize()
-{
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
-            mPoolNbChannels[output] += isConnection(channel, output);
-    }
 }
 
 unsigned long long int N2D2::PoolCell::getNbConnections() const
