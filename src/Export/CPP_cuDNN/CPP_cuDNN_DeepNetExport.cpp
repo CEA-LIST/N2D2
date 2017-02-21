@@ -66,8 +66,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
          itLayer != itLayerEnd;
          ++itLayer) {
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-                                                      itBegin
-                                                      = (*itLayer).begin(),
                                                       itEnd = (*itLayer).end();
              it != itEnd;
              ++it) {
@@ -204,7 +202,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramDesc(DeepNet& deepNet,
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
         = layers.begin() + 1,
-        itLayerBegin = layers.begin() + 1,
         itLayerEnd = layers.end(); itLayer != itLayerEnd; ++itLayer)
     {
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
@@ -232,7 +229,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
     /**Weight & Bias memory objects definition**/
     for (std::vector<std::vector<std::string> >::const_iterator
         itLayer = layers.begin() + 1,
-        itLayerBegin = layers.begin() + 1,
         itLayerEnd = layers.end();
         itLayer != itLayerEnd;
         ++itLayer)
@@ -257,7 +253,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
          ++itLayer) {
         for (std::vector<std::string>::const_iterator
              it = (*itLayer).begin(),
-             itBegin = (*itLayer).begin(),
              itEnd = (*itLayer).end();
              it != itEnd;
              ++it) {
@@ -318,7 +313,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
          ++itLayer) {
         for (std::vector<std::string>::const_iterator
              it = (*itLayer).begin(),
-             itBegin = (*itLayer).begin(),
              itEnd = (*itLayer).end();
              it != itEnd;
              ++it) {
@@ -360,7 +354,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
     {
 
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-             itBegin = (*itLayer).begin(),
              itEnd = (*itLayer).end();
              it != itEnd;
              ++it)
@@ -428,7 +421,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
             << std::distance(layers.begin(), itLayer) << ") **/\n" ;
 
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-            itBegin = (*itLayer).begin(),
             itEnd = (*itLayer).end();
             it != itEnd; ++it)
         {
@@ -479,7 +471,6 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFree(DeepNet& deepNet,
 
     for (std::vector<std::vector<std::string> >::const_iterator
         itLayer = layers.begin() + 1,
-        itLayerBegin = layers.begin() + 1,
         itLayerEnd = layers.end();
         itLayer != itLayerEnd;
         ++itLayer)
