@@ -477,7 +477,7 @@ SizeX=24
 SizeY=24
 BatchSize=12
 
-; First layer: convolutionnal with 3x3 kernels
+; First layer: convolutional with 3x3 kernels
 [conv1]
 Input=env
 Type=Conv
@@ -1089,7 +1089,7 @@ All layers have those parameters :
 \end{tabular}
 \end{center}
 
-\subparagraph{\emph{Convolutionnal} layers}
+\subparagraph{\emph{Convolutional} layers}
 
 \begin{center}
  \begin{tabular}{| p{5cm} | p{10cm} | }
@@ -1339,6 +1339,7 @@ adress and then the size of the subpart.
 The files <loadWeights>-<subpart>-<neuroblock>.data are the content of memories.
  4 LSB first then 4 MSB.
 
+\clearpage
 
 \section{INI file interface}
 
@@ -2252,7 +2253,8 @@ Note that this transformation can add zero-padding if required by the underlying
  FFT implementation.
 
 
-\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!DistortionTransformation!\protect\iponly}
+\paragraph{\label{par:DistortionTransformation}
+\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!DistortionTransformation!\protect\iponly}
 {DistortionTransformation}}
 Apply elastic distortion to the image. This transformation is generally used
 on-the-fly (so that a different distortion is performed for each image), and
@@ -2942,7 +2944,7 @@ Fill with an uniform distribution.
 \end{center}
 
 
-\paragraph{\texorpdfstring{%%
+\paragraph{\label{par:XavierFiller}\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!XavierFiller!}{XavierFiller}}
 Fill with an uniform distribution with normalized variance \citep{Glorot2010}.
 
@@ -2973,7 +2975,7 @@ $Var(W)=\frac{1}{fan\mhyphen{}out}$
 \end{myitemize}
 
 
-\subsubsection{Weight solvers}
+\subsubsection{\label{sec:WeightSolvers}Weight solvers}
 
 \paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!SGDSolver\_Frame!}{SGDSolver\_Frame}}
@@ -3852,6 +3854,248 @@ Transformation=MorphologyTransformation
 Operation=Opening
 Size=3
 \end{lstlisting}
+
+\clearpage
+
+\section{Tutorials}
+
+\subsection{Building a classifier neural network}
+
+For this tutorial, we will use the classical MNIST handwritten digit dataset.
+A driver module already exists for this dataset, named
+\lstinline!MNIST_IDX_Database!.
+
+To instantiate it, just add the following lines in a new INI file:
+
+\begin{lstlisting}[language=ini]
+[database]
+Type=MNIST_IDX_Database
+Validation=0.2 ; Use 20\% of the dataset for validation
+\end{lstlisting}
+
+In order to create a neural network, we first need to define its input, which is
+declared with a \lstinline![sp]! section (\emph{sp} for \emph{StimuliProvider}).
+In this section, we configure the size of the input and the batch size:
+
+\begin{lstlisting}[language=ini]
+[sp]
+SizeX=32
+SizeY=32
+BatchSize=128
+\end{lstlisting}
+
+We can also add pre-processing transformations to the \emph{StimuliProvider},
+knowing that the final data size after transformations must match the size
+declared in the \lstinline![sp]! section. Here, we must rescale the MNIST 28x28
+images to match the 32x32 network input size.
+
+\begin{lstlisting}[language=ini]
+[sp.Transformation_1]
+Type=RescaleTransformation
+Width=[sp]SizeX
+Height=[sp]SizeY
+\end{lstlisting}
+
+Next, we declare the neural network layers. In this example, we reproduced the
+well-known LeNet network. The first layer is a 5x5 convolutional layer, with
+6 channels. Since there is only one input channel, there will be only 6
+convolution kernels in this layer.
+
+\begin{lstlisting}[language=ini]
+[conv1]
+Input=sp
+Type=Conv
+KernelWidth=5
+KernelHeight=5
+NbChannels=6
+\end{lstlisting}
+
+The next layer is a 2x2 MAX pooling layer, with a stride of 2 (non-overlapping
+MAX pooling).
+
+\begin{lstlisting}[language=ini]
+[pool1]
+Input=conv1
+Type=Pool
+PoolWidth=2
+PoolHeight=2
+NbChannels=[conv1]NbChannels
+Stride=2
+Pooling=Max
+Mapping.Size=1 ; One to one connection between input and output channels
+\end{lstlisting}
+
+The next layer is a 5x5 convolutional layer with 16 channels.
+
+\begin{lstlisting}[language=ini]
+[conv2]
+Input=pool1
+Type=Conv
+KernelWidth=5
+KernelHeight=5
+NbChannels=16
+\end{lstlisting}
+
+Note that in LeNet, the \lstinline![conv2]! layer is not fully connected to the
+pooling layer. In N2D2, a custom mapping can be defined for each input
+connection. The connection of $n$-th output map to the inputs is defined by the
+$n$-th column of the matrix below, where the rows correspond to the inputs.
+
+\begin{lstlisting}[language=ini]
+Map(pool1)=\
+1 0 0 0 1 1 1 0 0 1 1 1 1 0 1 1 \
+1 1 0 0 0 1 1 1 0 0 1 1 1 1 0 1 \
+1 1 1 0 0 0 1 1 1 0 0 1 0 1 1 1 \
+0 1 1 1 0 0 1 1 1 1 0 0 1 0 1 1 \
+0 0 1 1 1 0 0 1 1 1 1 0 1 1 0 1 \
+0 0 0 1 1 1 0 0 1 1 1 1 0 1 1 1
+\end{lstlisting}
+
+Another MAX pooling and convolution layer follow:
+
+\begin{lstlisting}[language=ini]
+[pool2]
+Input=conv2
+Type=Pool
+PoolWidth=2
+PoolHeight=2
+NbChannels=[conv2]NbChannels
+Stride=2
+Pooling=Max
+Mapping.Size=1
+
+[conv3]
+Input=pool2
+Type=Conv
+KernelWidth=5
+KernelHeight=5
+NbChannels=120
+\end{lstlisting}
+
+The network is composed of two fully-connected layers of 84 and 10 neurons
+respectively:
+
+\begin{lstlisting}[language=ini]
+[fc1]
+Input=conv3
+Type=Fc
+NbOutputs=84
+
+[fc2]
+Input=fc1
+Type=Fc
+NbOutputs=10
+\end{lstlisting}
+
+Finally, we use a softmax layer to obtain output classification probabilities
+and compute the loss function.
+
+\begin{lstlisting}[language=ini]
+[softmax]
+Input=fc2
+Type=Softmax
+NbOutputs=[fc2]NbOutputs
+WithLoss=1
+\end{lstlisting}
+
+In order to tell N2D2 to compute the error and the classification score on this
+softmax layer, one must attach a N2D2 \emph{Target} to this layer, with a
+section with the same name suffixed with \lstinline!.Target!:
+
+\begin{lstlisting}[language=ini]
+[softmax.Target]
+\end{lstlisting}
+
+By default, the activation function for the convolution and the fully-connected
+layers is the hyperbolic tangent. Because the \lstinline![fc2]! layer is fed
+to a softmax, it should not have any activation function. We can specify it by
+adding the following line in the \lstinline![fc2]! section:
+
+\begin{lstlisting}[language=ini]
+[fc2]
+...
+ActivationFunction=Linear
+\end{lstlisting}
+
+In order to improve further the networks performances, several things can be
+done:
+
+\begin{myitemize}
+\item \textbf{Use ReLU activation functions.}
+In order to do so, just add the following
+in the \lstinline![conv1]!,  \lstinline![conv2]!, \lstinline![conv3]! and
+\lstinline![fc1]! layer sections:
+
+\begin{lstlisting}[language=ini]
+ActivationFunction=Rectifier
+\end{lstlisting}
+
+For the ReLU activation function to be effective, the weights must be
+initialized carefully, in order to avoid dead units that would be stuck in the
+$]-\infty,0]$ output range before the ReLU function. In N2D2, one can use a
+custom \lstinline!WeightsFiller! for the weights initialization. For the ReLU
+activation function, a popular and efficient filler is the so-called
+\lstinline!XavierFiller! (see the \ref{par:XavierFiller} section for more
+information):
+
+\begin{lstlisting}[language=ini]
+WeightsFiller=XavierFiller
+\end{lstlisting}
+
+\item \textbf{Use dropout layers.}
+Dropout is highly effective to improve the network
+generalization capacity. Here is an example of a dropout layer inserted between
+the \lstinline![fc1]! and \lstinline![fc2]! layers:
+
+\begin{lstlisting}[language=ini]
+[fc1]
+...
+
+[fc1.drop]
+Input=fc1
+Type=Dropout
+NbOutputs=[fc1]NbOutputs
+
+[fc2]
+Input=fc1.drop ; Replaces "Input=fc1"
+...
+\end{lstlisting}
+
+\item \textbf{Tune the learning parameters.}
+You may want to tune the learning rate and other learning parameters depending
+on the learning problem at hand. In order to do so, you can add a configuration
+section that can be common (or not) to all the layers. Here is an example of
+configuration section:
+
+\begin{lstlisting}[language=ini]
+[conv1]
+...
+ConfigSection=common.config
+
+[...]
+...
+
+[common.config]
+NoBias=1
+WeightsSolver.LearningRate=0.05
+WeightsSolver.Decay=0.0005
+Solvers.LearningRatePolicy=StepDecay
+Solvers.LearningRateStepSize=[sp]_EpochSize
+Solvers.LearningRateDecay=0.993
+Solvers.Clamping=1
+\end{lstlisting}
+
+For more details on the configuration parameters for the \lstinline!Solver!, see
+section \ref{sec:WeightSolvers}.
+
+\item \textbf{Add input distortion.\iponly} See for example the
+\lstinline!DistortionTransformation! (section
+\ref{par:DistortionTransformation}).
+\end{myitemize}
+
+The complete INI model file corresponding to this tutorial can be found in the
+\emph{models} directory of N2D2.
+
 
 \clearpage
 
