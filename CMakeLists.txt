@@ -19,7 +19,7 @@
 ################################################################################
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(N2D2)
+PROJECT(N2D2-OS)
 
 INCLUDE(N2D2.cmake)
 
