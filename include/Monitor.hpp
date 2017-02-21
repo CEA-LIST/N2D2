@@ -190,7 +190,6 @@ void N2D2::Monitor::logDataRate(const std::deque<T>& data,
     dataFile.precision(4);
 
     for (typename std::deque<T>::const_iterator it = data.begin(),
-                                                itBegin = data.begin(),
                                                 itEnd = data.end();
          it != itEnd;
          ++it) {
