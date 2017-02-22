@@ -876,10 +876,11 @@ std::vector<T>& operator<<(std::vector<T>& vec, const std::string& data)
     dataStr >> vec;
 
 #if defined(__GNUC__)                                                          \
-    && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
+    && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
     // Bug in libstdc++: "complex type operator>> does not set eofbit for input
     // streams"
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59568
+    // Replicated on GCC 4.6.3
     if (!std::is_same<T, std::complex<float> >::value
         && !std::is_same<T, std::complex<double> >::value
         && !std::is_same<T, std::complex<long double> >::value) {
