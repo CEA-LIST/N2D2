@@ -31,22 +31,7 @@
     "/include:?mRegistrar@CPP_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@CPP_Cuda_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_OpenCL_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
     "/include:?mRegistrar@CPP_cuDNN_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@C_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@C_HLS_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@SC_Spike_FcCellExport@N2D2@@0U?$Registrar@VFcCellExport@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {

@@ -31,22 +31,7 @@
     "/include:?mRegistrar@CPP_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@CPP_Cuda_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_OpenCL_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
     "/include:?mRegistrar@CPP_cuDNN_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@C_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@C_HLS_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@SC_Spike_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
