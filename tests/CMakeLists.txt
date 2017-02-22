@@ -41,7 +41,7 @@ foreach(f ${TESTS})
     # Workaround for CMake bug (fixed in 3.3.0)
     # http://stackoverflow.com/questions/41597612/add-custom-command-does-not-re-run-on-failure
     ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${bin}.passed
-        COMMAND ${bin} > ${bin}.log 2>&1
+        COMMAND ${bin} # > ${bin}.log 2>&1
         COMMAND ${CMAKE_COMMAND} -E touch ${bin}.passed
         DEPENDS ${bin} copy-tests_data-n2d2
         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
