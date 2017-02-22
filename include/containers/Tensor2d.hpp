@@ -252,10 +252,10 @@ void N2D2::Tensor2d<T>::convert(const cv::Mat& mat, std::vector<T>& data)
 {
     const CV_T srcRange = (std::numeric_limits<CV_T>::is_integer)
                               ? std::numeric_limits<CV_T>::max()
-                              : 1.0;
+                              : (CV_T)1.0;
     const T dstRange = (std::numeric_limits<T>::is_integer)
                            ? std::numeric_limits<T>::max()
-                           : 1.0;
+                           : (T)1.0;
 
     data.resize(mat.rows * mat.cols);
     // data.reserve(mat.rows*mat.cols);
@@ -455,10 +455,11 @@ std::istream& operator>>(std::istream& is, Tensor2d<T>& tensor)
         }
 
 #if defined(__GNUC__)                                                          \
-    && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
+    && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
         // Bug in libstdc++: "complex type operator>> does not set eofbit for
         // input streams"
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59568
+        // Replicated on GCC 4.6.3
         if (!std::is_same<T, std::complex<float> >::value
             && !std::is_same<T, std::complex<double> >::value
             && !std::is_same<T, std::complex<long double> >::value) {
