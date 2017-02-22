@@ -26,6 +26,20 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/BatchNormCellExport.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrarType@CPP_BatchNormCellExport@N2D2@@0U?$Registrar@VCPP_CellExport@N2D2@@@2@A")
+#endif
+
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CPP_BatchNormCellExport@N2D2@@0U?$Registrar@VBatchNormCellExport@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 /**
  * Class for methods of BatchNorm for all CPP exports type

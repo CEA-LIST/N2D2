@@ -23,6 +23,13 @@
 
 #include "Activation/TanhActivation.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@?$TanhActivation_Frame@M@N2D2@@0U?$Registrar@V?$TanhActivation@M@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 template <class T> class TanhActivation_Frame : public TanhActivation<T> {
 public:

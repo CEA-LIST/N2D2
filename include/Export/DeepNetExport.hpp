@@ -30,28 +30,6 @@
 #include "N2D2.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_Cuda_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_OpenCL_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_cuDNN_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@C_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@C_HLS_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@SC_Spike_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class DeepNetExport {
 public:

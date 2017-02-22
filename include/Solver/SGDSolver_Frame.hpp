@@ -23,6 +23,13 @@
 
 #include "Solver/SGDSolver.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@?$SGDSolver_Frame@M@N2D2@@0U?$Registrar@V?$SGDSolver@M@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 template <class T> class SGDSolver_Frame : public SGDSolver<T> {
 public:

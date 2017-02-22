@@ -26,6 +26,20 @@
 #include "Export/CPP/CPP_FMPCellExport.hpp"
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrarType@CPP_cuDNN_FMPCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
+#endif
+
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CPP_cuDNN_FMPCellExport@N2D2@@0U?$Registrar@VFMPCellExport@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 /**
  * Class for methods for the FMPCell type for the CPP_cuDNN export

@@ -27,6 +27,13 @@
 #include "containers/Tensor2d.hpp"
 #include "utils/Utils.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CsvDataFile@N2D2@@0U?$Registrar@VDataFile@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class CsvDataFile : public DataFile {
 public:

@@ -24,6 +24,13 @@
 #include "Activation/RectifierActivation.hpp"
 #include "ActivationGenerator.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@RectifierActivationGenerator@N2D2@@0U?$Registrar@VActivationGenerator@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class RectifierActivationGenerator : public ActivationGenerator {
 public:

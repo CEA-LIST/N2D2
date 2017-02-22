@@ -24,6 +24,13 @@
 #include "Cell_Frame.hpp"
 #include "LRNCell.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@LRNCell_Frame@N2D2@@0U?$Registrar@VLRNCell@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class LRNCell_Frame : public virtual LRNCell, public Cell_Frame {
 public:

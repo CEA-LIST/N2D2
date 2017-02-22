@@ -29,22 +29,6 @@
 #include "Cell/Cell.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrarType@CPP_ConvCellExport@N2D2@@0U?$Registrar@VCPP_CellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrarType@CPP_FcCellExport@N2D2@@0U?$Registrar@VCPP_CellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrarType@CPP_PoolCellExport@N2D2@@0U?$Registrar@VCPP_CellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrarType@CPP_RbfCellExport@N2D2@@0U?$Registrar@VCPP_CellExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 /**
  * Virtual base class for methods commun to every cell type for the CPP export

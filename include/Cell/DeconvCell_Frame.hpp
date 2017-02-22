@@ -26,6 +26,13 @@
 #include "DeconvCell.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@DeconvCell_Frame@N2D2@@0U?$Registrar@VDeconvCell@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class DeconvCell_Frame : public virtual DeconvCell, public Cell_Frame {
 public:

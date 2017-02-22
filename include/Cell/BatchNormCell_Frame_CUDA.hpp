@@ -33,6 +33,15 @@
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor4d.hpp"
 
+#ifdef WIN32
+// For static library
+#ifdef CUDA
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@BatchNormCell_Frame_CUDA@N2D2@@0U?$Registrar@VBatchNormCell@N2D2@@@2@A")
+#endif
+#endif
+
 namespace N2D2 {
 class BatchNormCell_Frame_CUDA : public virtual BatchNormCell,
                                  public Cell_Frame_CUDA {

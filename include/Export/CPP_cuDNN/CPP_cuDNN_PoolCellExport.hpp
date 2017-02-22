@@ -26,6 +26,20 @@
 #include "Export/CPP/CPP_PoolCellExport.hpp"
 #include "Export/PoolCellExport.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrarType@CPP_cuDNN_PoolCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
+#endif
+
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CPP_cuDNN_PoolCellExport@N2D2@@0U?$Registrar@VPoolCellExport@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 /**
  * Class for methods for the PoolCell type for the CPP_cuDNN export

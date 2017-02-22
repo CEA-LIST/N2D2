@@ -24,6 +24,13 @@
 #include "Cell_Frame.hpp"
 #include "FMPCell.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@FMPCell_Frame@N2D2@@0U?$Registrar@VFMPCell@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class FMPCell_Frame : public virtual FMPCell, public Cell_Frame {
 public:

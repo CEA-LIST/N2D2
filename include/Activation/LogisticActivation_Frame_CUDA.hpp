@@ -27,6 +27,15 @@
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor4d.hpp"
 
+#ifdef WIN32
+// For static library
+#ifdef CUDA
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@?$LogisticActivation_Frame_CUDA@M@N2D2@@0U?$Registrar@V?$LogisticActivation@M@N2D2@@@2@A")
+#endif
+#endif
+
 namespace N2D2 {
 template <class T>
 class LogisticActivation_Frame_CUDA : public LogisticActivation<T> {

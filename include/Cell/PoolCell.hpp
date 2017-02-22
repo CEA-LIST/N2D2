@@ -31,24 +31,6 @@
 
 #include "Cell.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Frame@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Frame_CUDA@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#endif
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Spike@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$PoolCell_Transcode@VPoolCell_Frame@N2D2@@VPoolCell_Spike@2@@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class PoolCell : public virtual Cell {
 public:

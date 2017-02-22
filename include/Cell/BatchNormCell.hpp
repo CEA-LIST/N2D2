@@ -29,18 +29,6 @@
 #include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@BatchNormCell_Frame@N2D2@@0U?$Registrar@VBatchNormCell@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@BatchNormCell_Frame_CUDA@N2D2@@0U?$Registrar@VBatchNormCell@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 class BatchNormCell : public virtual Cell {
 public:

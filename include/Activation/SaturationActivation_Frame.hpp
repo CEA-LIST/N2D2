@@ -23,6 +23,13 @@
 
 #include "Activation/SaturationActivation.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@?$SaturationActivation_Frame@M@N2D2@@0U?$Registrar@V?$SaturationActivation@M@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 template <class T>
 class SaturationActivation_Frame : public SaturationActivation<T> {

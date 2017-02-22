@@ -28,6 +28,13 @@
 #include "NodeIn.hpp"
 #include "NodeOut.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@FcCell_Spike@N2D2@@0U?$Registrar@VFcCell@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class FcCell_Spike : public virtual FcCell, public Cell_Spike {
 public:

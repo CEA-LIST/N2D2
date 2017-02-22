@@ -28,6 +28,13 @@
 #include "Generator/MappingGenerator.hpp"
 #include "utils/IniParser.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@ConvCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#endif
+
 namespace N2D2 {
 class ConvCellGenerator : public CellGenerator {
 public:

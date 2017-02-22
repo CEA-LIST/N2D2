@@ -29,6 +29,15 @@
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor4d.hpp"
 
+#ifdef WIN32
+// For static library
+#ifdef CUDA
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@FcCell_Frame_CUDA@N2D2@@0U?$Registrar@VFcCell@N2D2@@@2@A")
+#endif
+#endif
+
 namespace N2D2 {
 class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA {
 public:
