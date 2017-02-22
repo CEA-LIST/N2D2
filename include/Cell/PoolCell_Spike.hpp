@@ -26,13 +26,6 @@
 #include "NodeOut.hpp"
 #include "PoolCell.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Spike@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class PoolCell_Spike : public virtual PoolCell, public Cell_Spike {
 public:

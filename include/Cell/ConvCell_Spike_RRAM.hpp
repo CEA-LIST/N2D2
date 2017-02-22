@@ -24,13 +24,6 @@
 #include "ConvCell_Spike.hpp"
 #include "Synapse_RRAM.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Spike_RRAM@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class ConvCell_Spike_RRAM : public ConvCell_Spike {
 public:

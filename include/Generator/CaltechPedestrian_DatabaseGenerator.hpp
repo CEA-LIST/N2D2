@@ -25,13 +25,6 @@
 #include "DatabaseGenerator.hpp"
 #include "N2D2.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CaltechPedestrian_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class CaltechPedestrian_DatabaseGenerator : public DatabaseGenerator {
 public:

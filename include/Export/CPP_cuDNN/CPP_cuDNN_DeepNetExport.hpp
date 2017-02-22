@@ -26,13 +26,6 @@
 #include "Export/CPP/CPP_DeepNetExport.hpp"
 #include "Export/DeepNetExport.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_cuDNN_DeepNetExport@N2D2@@0U?$Registrar@VDeepNetExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 /**
  * Class for methods of DeepNet for CPP_cuDNN exports types

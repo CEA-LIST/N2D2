@@ -28,6 +28,18 @@
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@SoftmaxCell_Frame@N2D2@@0U?$Registrar@VSoftmaxCell@N2D2@@@2@A")
+#ifdef CUDA
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@SoftmaxCell_Frame_CUDA@N2D2@@0U?$Registrar@VSoftmaxCell@N2D2@@@2@A")
+#endif
+#endif
+
 namespace N2D2 {
 class TransformationCell : public virtual Cell {
 public:

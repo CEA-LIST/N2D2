@@ -27,15 +27,6 @@
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor4d.hpp"
 
-#ifdef WIN32
-// For static library
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$TanhActivation_Frame_CUDA@M@N2D2@@0U?$Registrar@V?$TanhActivation@M@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 template <class T> class TanhActivation_Frame_CUDA : public TanhActivation<T> {
 public:

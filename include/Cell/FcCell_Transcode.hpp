@@ -28,13 +28,6 @@
 #include "FcCell_Frame_CUDA.hpp"
 #endif
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$FcCell_Transcode@VFcCell_Frame@N2D2@@VFcCell_Spike@2@@N2D2@@0U?$Registrar@VFcCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 template <class FRAME = FcCell_Frame, class SPIKE = FcCell_Spike>
 class FcCell_Transcode : public FRAME, public SPIKE {

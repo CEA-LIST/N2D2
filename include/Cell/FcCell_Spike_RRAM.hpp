@@ -24,13 +24,6 @@
 #include "FcCell_Spike.hpp"
 #include "Synapse_RRAM.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@FcCell_Spike_RRAM@N2D2@@0U?$Registrar@VFcCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class FcCell_Spike_RRAM : public FcCell_Spike {
 public:

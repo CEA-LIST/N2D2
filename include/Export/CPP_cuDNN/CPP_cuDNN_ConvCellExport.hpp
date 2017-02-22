@@ -26,20 +26,6 @@
 #include "Export/CPP/CPP_ConvCellExport.hpp"
 #include "Export/ConvCellExport.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrarType@CPP_cuDNN_ConvCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
-#endif
-
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_cuDNN_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 /**
  * Class for methods for the ConvCell type for the CPP_cuDNN export

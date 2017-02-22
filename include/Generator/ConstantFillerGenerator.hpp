@@ -24,13 +24,6 @@
 #include "Filler/ConstantFiller.hpp"
 #include "FillerGenerator.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConstantFillerGenerator@N2D2@@0U?$Registrar@VFillerGenerator@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class ConstantFillerGenerator : public FillerGenerator {
 public:

@@ -28,7 +28,25 @@
 // For static library
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@ConvCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
+    "/include:?mRegistrar@CPP_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CPP_Cuda_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CPP_OpenCL_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@CPP_cuDNN_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@C_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@C_HLS_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@SC_Spike_ConvCellExport@N2D2@@0U?$Registrar@VConvCellExport@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {

@@ -25,13 +25,6 @@
 #include "FcCell.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@FcCell_Frame@N2D2@@0U?$Registrar@VFcCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class FcCell_Frame : public virtual FcCell, public Cell_Frame {
 public:

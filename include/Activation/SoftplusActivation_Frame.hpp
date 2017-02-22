@@ -23,13 +23,6 @@
 
 #include "Activation/SoftplusActivation.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$SoftplusActivation_Frame@M@N2D2@@0U?$Registrar@V?$SoftplusActivation@M@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 template <class T>
 class SoftplusActivation_Frame : public SoftplusActivation<T> {

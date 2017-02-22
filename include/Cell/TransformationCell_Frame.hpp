@@ -28,13 +28,6 @@
 #include "Cell_Frame.hpp"
 #include "TransformationCell.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@SoftmaxCell_Frame@N2D2@@0U?$Registrar@VSoftmaxCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class TransformationCell_Frame : public virtual TransformationCell,
                                  public Cell_Frame {

@@ -23,6 +23,18 @@
 
 #include "Activation/Activation.hpp"
 
+#ifdef WIN32
+// For static library
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@?$RectifierActivation_Frame@M@N2D2@@0U?$Registrar@V?$RectifierActivation@M@N2D2@@@2@A")
+#ifdef CUDA
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@?$RectifierActivation_Frame_CUDA@M@N2D2@@0U?$Registrar@V?$RectifierActivation@M@N2D2@@@2@A")
+#endif
+#endif
+
 namespace N2D2 {
 template <class T> class RectifierActivation : public Activation<T> {
 public:

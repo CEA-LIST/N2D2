@@ -38,6 +38,12 @@
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrar@Target@N2D2@@0U?$Registrar@VTarget@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@TargetROIs@N2D2@@0U?$Registrar@VTarget@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@TargetScore@N2D2@@0U?$Registrar@VTarget@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
