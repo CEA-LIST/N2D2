@@ -551,7 +551,6 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin() + 1,
-         itBegin = mLayers.begin(),
          itEnd = mLayers.end();
          it != itEnd;
          ++it) {
@@ -705,7 +704,6 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
 
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin() + 1,
-         itBegin = mLayers.begin(),
          itEnd = mLayers.end();
          it != itEnd;
          ++it) {
@@ -1258,7 +1256,6 @@ N2D2::DeepNet::reportOutputsRange(std::map
 {
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin(),
-         itBegin = mLayers.begin(),
          itEnd = mLayers.end();
          it != itEnd;
          ++it) {
@@ -1295,7 +1292,6 @@ N2D2::DeepNet::logOutputsRange(const std::string& fileName,
 
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin(),
-         itBegin = mLayers.begin(),
          itEnd = mLayers.end();
          it != itEnd;
          ++it) {
