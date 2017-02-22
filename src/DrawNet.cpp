@@ -224,7 +224,6 @@ void N2D2::DrawNet::draw(DeepNet& deepNet, const std::string& fileName)
 
                 for (std::vector<std::string>::const_iterator itNext
                      = (*(itLayer + 1)).begin(),
-                     itNextBegin = (*(itLayer + 1)).begin(),
                      itNextEnd = (*(itLayer + 1)).end();
                      itNext != itNextEnd;
                      ++itNext) {
