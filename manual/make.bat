@@ -5,3 +5,4 @@ cd build
 bibtex manual
 cd ..
 pdflatex -output-directory build manual.tex
+copy build\manual.pdf . /Y
