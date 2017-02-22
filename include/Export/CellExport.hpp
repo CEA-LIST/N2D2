@@ -29,7 +29,13 @@
 // For static library
 #pragma comment(                                                               \
     linker,                                                                    \
+    "/include:?mRegistrar@BatchNormCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
     "/include:?mRegistrar@ConvCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@FMPCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrar@FcCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
@@ -38,7 +44,7 @@
     "/include:?mRegistrar@PoolCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@RbfCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
+    "/include:?mRegistrar@SoftmaxCellExport@N2D2@@0U?$Registrar@VCellExport@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {

@@ -32,13 +32,22 @@
 // For static library
 #pragma comment(                                                               \
     linker,                                                                    \
+    "/include:?mRegistrarType@CPP_cuDNN_BatchNormCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
     "/include:?mRegistrarType@CPP_cuDNN_ConvCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrarType@CPP_cuDNN_FMPCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrarType@CPP_cuDNN_FcCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrarType@CPP_cuDNN_PoolCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrarType@CPP_cuDNN_SoftmaxCellExport@N2D2@@0U?$Registrar@VCPP_cuDNN_CellExport@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
