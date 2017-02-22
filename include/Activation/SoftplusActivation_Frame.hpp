@@ -44,9 +44,18 @@ private:
 template <class T>
 void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
+#if !defined(WIN32) && !defined(__APPLE__)
+    const int excepts = fegetexcept();
+    fedisableexcept(FE_OVERFLOW);
+#endif
+
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)data->size(); ++index)
         (*data)(index) = std::log(1.0f + std::exp((*data)(index)));
+
+#if !defined(WIN32) && !defined(__APPLE__)
+    feenableexcept(excepts);
+#endif
 }
 
 template <class T>
