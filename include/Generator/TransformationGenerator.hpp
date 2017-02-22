@@ -46,9 +46,6 @@
     "/include:?mRegistrar@DFTTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@EqualizeTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
     "/include:?mRegistrar@FilterTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \

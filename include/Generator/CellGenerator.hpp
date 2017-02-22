@@ -32,10 +32,19 @@
 // For static library
 #pragma comment(                                                               \
     linker,                                                                    \
+    "/include:?mRegistrar@BatchNormCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
     "/include:?mRegistrar@ConvCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
+    "/include:?mRegistrar@DeconvCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
     "/include:?mRegistrar@DropoutCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@FMPCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrar@FcCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
@@ -47,10 +56,10 @@
     "/include:?mRegistrar@PoolCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@RbfCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+    "/include:?mRegistrar@SoftmaxCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@SoftmaxCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+    "/include:?mRegistrar@TransformationCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
