@@ -16,11 +16,11 @@ If you did like to contribute to N2D2, please make sure to review the
 Usage
 -----
 
-To compile and use N2D2, please refer to the [manual](manual/manual.pdf), which
-contains the following resources:
+To compile and use N2D2, please refer to the
+[manual](raw/master/manual/manual.pdf), which contains the following resources:
 - General presentation of the framework;
 - How to compile N2D2 and perform simulations;
-- How to write neural networks models;
+- How to write neural network models;
 - Tutorials.
 
 
