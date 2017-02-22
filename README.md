@@ -24,6 +24,8 @@ contains the following resources:
 - How to write neural network models;
 - Tutorials.
 
+The N2D2 executables and application examples are located in [exec](exec)
+directory.
 
 License
 -------
