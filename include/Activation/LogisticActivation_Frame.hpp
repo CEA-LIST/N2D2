@@ -54,7 +54,7 @@ void N2D2::LogisticActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)data->size(); ++index)
-        (*data)(index) = 1.0 / (1.0 + std::exp(-(*data)(index)));
+        (*data)(index) = 1.0f / (1.0f + std::exp(-(*data)(index)));
 }
 
 template <class T>
@@ -64,7 +64,7 @@ void N2D2::LogisticActivation_Frame
     if (!this->mWithLoss) {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= (*data)(index) * (1.0 - (*data)(index));
+            (*diffData)(index) *= (*data)(index) * (1.0f - (*data)(index));
     }
 }
 

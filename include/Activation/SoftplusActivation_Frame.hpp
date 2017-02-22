@@ -46,7 +46,7 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)data->size(); ++index)
-        (*data)(index) = std::log(1.0 + std::exp((*data)(index)));
+        (*data)(index) = std::log(1.0f + std::exp((*data)(index)));
 }
 
 template <class T>
@@ -55,7 +55,7 @@ void N2D2::SoftplusActivation_Frame
 {
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)diffData->size(); ++index)
-        (*diffData)(index) *= (1.0 - std::exp(-(*data)(index)));
+        (*diffData)(index) *= (1.0f - std::exp(-(*data)(index)));
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_H

@@ -49,15 +49,18 @@ void N2D2::RectifierActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
     if (mClipping > 0.0) {
 #pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) = ((*data)(index) > 0) ? std::min
-                                 <T>((*data)(index), mClipping)
-                                                  : mLeakSlope * (*data)(index);
+        for (int index = 0; index < (int)data->size(); ++index) {
+            (*data)(index) = ((*data)(index) > 0)
+                ? std::min<T>((*data)(index), (T)mClipping)
+                : (T)mLeakSlope * (*data)(index);
+        }
     } else {
 #pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) = ((*data)(index) > 0) ? (*data)(index)
-                                                  : mLeakSlope * (*data)(index);
+        for (int index = 0; index < (int)data->size(); ++index) {
+            (*data)(index) = ((*data)(index) > 0)
+                ? (*data)(index)
+                : (T)mLeakSlope * (*data)(index);
+        }
     }
 }
 
@@ -67,14 +70,16 @@ void N2D2::RectifierActivation_Frame
 {
     if (mClipping > 0.0) {
 #pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= ((*data)(index) > mClipping)
-                                      ? 0.0
-                                      : ((*data)(index) > 0) ? 1.0 : mLeakSlope;
+        for (int index = 0; index < (int)diffData->size(); ++index) {
+            (*diffData)(index) *= ((*data)(index) > (T)mClipping)
+                                      ? 0.0f
+                                      : ((*data)(index) > 0) ? 1.0f
+                                                             : (T)mLeakSlope;
+        }
     } else {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= ((*data)(index) > 0) ? 1.0 : mLeakSlope;
+            (*diffData)(index) *= ((*data)(index) > 0) ? 1.0f : (T)mLeakSlope;
     }
 }
 

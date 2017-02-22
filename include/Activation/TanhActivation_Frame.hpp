@@ -48,7 +48,7 @@ void N2D2::TanhActivation_Frame<T>::propagate(Tensor4d<T>* data)
     if (mAlpha != 1.0) {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) = std::tanh(mAlpha * (*data)(index));
+            (*data)(index) = std::tanh((T)mAlpha * (*data)(index));
     } else {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)data->size(); ++index)
@@ -63,12 +63,12 @@ void N2D2::TanhActivation_Frame
     if (mAlpha != 1.0) {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= mAlpha
-                                  * (1.0 - (*data)(index) * (*data)(index));
+            (*diffData)(index) *= (T)mAlpha
+                                  * (1.0f - (*data)(index) * (*data)(index));
     } else {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= (1.0 - (*data)(index) * (*data)(index));
+            (*diffData)(index) *= (1.0f - (*data)(index) * (*data)(index));
     }
 }
 
