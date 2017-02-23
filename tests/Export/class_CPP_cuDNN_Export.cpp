@@ -49,12 +49,6 @@ TEST(CPP_cuDNN_Export, generate)
 
     const std::string data = "DefaultModel=Frame\n"
                              "\n"
-                             "[database]\n"
-                             "Type=DIR_Database\n"
-                             "DataPath=${XNET_DATA}/GST\n"
-                             "Learn=0.8\n"
-                             "Validation=0.18\n"
-                             "\n"
                              "[env]\n"
                              "SizeX=48\n"
                              "SizeY=48\n"
