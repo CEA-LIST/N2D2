@@ -63,7 +63,7 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
         throw std::runtime_error("Couldn't open database directory: "
                                  + dirPath);
 
-    // Read all data files in the imdb directory
+    // Read all data files in the kitty/data_road/training directory
     while ((pFile = readdir(pDirData))) {
         const std::string fileName(pFile->d_name);
         const std::string filePath(dirPath + "/" + fileName);
@@ -96,11 +96,13 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
             files.push_back(filePath);
         }
     }
-    // Read all labels files in the imdb directory
+    // Read all gt files in the kitty/data_road/gt_image_2 directory
     while ((pFile = readdir(pDirLabel))) {
         const std::string fileName(pFile->d_name);
         const std::string filePath(labelPath + "/" + fileName);
-
+        const std::string idFile = fileName.substr(0,7); //um_lane
+        if(idFile == "um_lane")
+            continue;
         // Ignore file in case of stat failure
         if (stat(filePath.c_str(), &fileStat) < 0)
             continue;
@@ -134,6 +136,7 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
         throw std::runtime_error("The number of Ground Truth Labels files are "
                                  "different than the stimuli file");
 
+
     // Create default label for no ROI
     if (!((std::string)mDefaultLabel).empty())
         labelID(mDefaultLabel);
@@ -142,8 +145,8 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
     std::sort(labels.begin(), labels.end());
 
     for (unsigned int frame = 0; frame < labels.size(); ++frame) {
-        std::cout << " Loading labels ground truth: " << labels[frame]
-                  << " (datafile: " << files[frame] << ")" << std::endl;
+        std::cout << "Loading labels ground truth: " << labels[frame]
+                  << "\n    (datafile: " << files[frame] << ")" << std::endl;
 
         cv::Mat gtLabels = cv::imread(labels[frame], CV_LOAD_IMAGE_COLOR)
                                .clone(); // Read the ground truth label file
