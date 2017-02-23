@@ -20,7 +20,7 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-from gi.repository import Gtk
+import gtk
 import os
 import sys
 import urllib
@@ -84,24 +84,21 @@ global dataSize
 dataSize=0
 
 def build_interface():
-    main_layout = Gtk.Grid()
-    main_layout.set_column_spacing(6)
-    main_layout.set_row_spacing(6)
-    main_layout.set_row_homogeneous(True)
+    main_layout = gtk.Table(6, 3, True)
     index = 0
-    labelSize = Gtk.Label()
-    loadButton = Gtk.Button(label='Load')
+    labelSize = gtk.Label()
+    loadButton = gtk.Button(label='Load')
 
     for dbName, dbAttribute in data.iteritems():
-        check_1 = Gtk.CheckButton(dbName + '\n~' + str(dbAttribute[1]) + ' MBytes')
+        check_1 = gtk.CheckButton(dbName + '\n~' + str(dbAttribute[1]) + ' MBytes')
         check_1.connect('clicked', checkClick, dbAttribute[1],labelSize)
         loadButton.connect('clicked', chekAllButton, check_1, dbName)
-        main_layout.attach(check_1, index/4, index%4, 1, 1)
+        main_layout.attach(check_1, index/4, index/4+1, index%4, index%4+1)
         index += 1
     loadButton.connect('clicked', load_database)
 
-    main_layout.attach(loadButton, 0, index/2, 1, 1)
-    main_layout.attach(labelSize, index/8, index/2, 1, 1)
+    main_layout.attach(loadButton, 0, 1, index/2, index/2+1)
+    main_layout.attach(labelSize, index/8, index/8+1, index/2, index/2+1)
     return main_layout
 
 def chekAllButton(widget, button, name):
@@ -168,15 +165,15 @@ if __name__ == '__main__':
     if installPath == "":
         installPath = N2D2_DATA
 
-    window = Gtk.Window()
+    window = gtk.Window()
 
     window.set_title('N2D2 Database Selection Menu')
     window.set_border_width(10)
 
-    window.connect('delete-event', Gtk.main_quit)
+    window.connect('delete-event', gtk.main_quit)
 
     main_layout = build_interface()
     window.add(main_layout)
     window.show_all()
-    Gtk.main()
+    gtk.main()
 
