@@ -672,6 +672,13 @@ void N2D2::Database::extractSlices(unsigned int width,
     std::cout << std::endl;
 }
 
+void N2D2::Database::load(const std::string& /*dataPath*/,
+          const std::string& /*labelPath*/,
+          bool /*extractROIs*/)
+{
+
+}
+
 void N2D2::Database::partitionStimuli(unsigned int nbStimuli, StimuliSet set)
 {
     if (set == Unpartitioned)

@@ -27,9 +27,20 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    const std::string type = iniConfig.getProperty<std::string>("Type");
-    std::shared_ptr<Database> database = Registrar
-        <DatabaseGenerator>::create(type)(iniConfig, section);
+    std::shared_ptr<Database> database;
+
+    if (iniConfig.isProperty("Type")) {
+        const std::string type = iniConfig.getProperty<std::string>("Type");
+        database = Registrar<DatabaseGenerator>::create(type)(iniConfig,
+                                                              section);
+    }
+    else {
+        const std::string labelPath = Utils::expandEnvVars(
+            iniConfig.getProperty<std::string>("LabelPath", ""));
+
+        database = std::make_shared<Database>();
+        database->load("", labelPath);
+    }
 
     if (iniConfig.isSection(section + ".filterROIs")) {
         iniConfig.currentSection(section + ".filterROIs");

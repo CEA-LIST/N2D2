@@ -184,8 +184,8 @@ public:
                                StimuliSetMask setMask);
 
     virtual void load(const std::string& /*dataPath*/,
-                      const std::string& /*labelPath*/ = "",
-                      bool /*extractROIs*/ = false) {};
+                      const std::string& labelPath = "",
+                      bool /*extractROIs*/ = false);
     void partitionStimuli(unsigned int nbStimuli, StimuliSet set);
     void partitionStimuli(double learn, double validation, double test);
     void partitionStimuliPerLabel(unsigned int nbStimuliPerLabel,
