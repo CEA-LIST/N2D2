@@ -35,6 +35,8 @@ N2D2::ILSVRC2012_DatabaseGenerator::generate(IniParser& iniConfig,
     const double learn = iniConfig.getProperty<double>("Learn");
     const bool useValidationForTest = iniConfig.getProperty
                                       <bool>("UseValidationForTest", true);
+    const bool useLabelOnly = iniConfig.getProperty
+                                      <bool>("UseLabelOnly", true);
     const std::string dataPath
         = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
             "DataPath", N2D2_DATA("ILSVRC2012")));
@@ -43,7 +45,7 @@ N2D2::ILSVRC2012_DatabaseGenerator::generate(IniParser& iniConfig,
             "LabelPath", N2D2_DATA("ILSVRC2012/synsets.txt")));
 
     std::shared_ptr<ILSVRC2012_Database> database = std::make_shared
-        <ILSVRC2012_Database>(learn, useValidationForTest);
+        <ILSVRC2012_Database>(learn, useValidationForTest, useLabelOnly);
     database->setParameters(iniConfig.getSection(section, true));
     database->load(dataPath, labelPath);
     return database;

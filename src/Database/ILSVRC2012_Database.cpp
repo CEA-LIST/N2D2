@@ -22,8 +22,10 @@
 #include "Database/ILSVRC2012_Database.hpp"
 
 N2D2::ILSVRC2012_Database::ILSVRC2012_Database(double learn,
-                                               bool useValidationForTest)
-    : DIR_Database(), mLearn(learn), mUseValidationForTest(useValidationForTest)
+                                               bool useValidationForTest,
+                                               bool useLabelOnly)
+    : DIR_Database(), mLearn(learn), mUseValidationForTest(useValidationForTest),
+      mUseLabelOnly(useLabelOnly)
 {
     // ctor
 }
@@ -32,18 +34,25 @@ void N2D2::ILSVRC2012_Database::load(const std::string& dataPath,
                                      const std::string& labelPath,
                                      bool /*extractROIs*/)
 {
-    // Learn & Tests Stimuli
-    loadImageNetStimuliPerDir(dataPath + "/train", labelPath);
-    partitionStimuli(mLearn, 0, 1.0 - mLearn);
+    if(!mUseLabelOnly) {
+        // Learn & Tests Stimuli
+        loadImageNetStimuliPerDir(dataPath + "/train", labelPath);
+        partitionStimuli(mLearn, 0, 1.0 - mLearn);
 
-    // Validation stimuli
-    loadImageNetValidationStimuli(dataPath + "/val", dataPath + "/val.txt");
-    partitionStimuli(0.0, 1.0, 0.0);
-
-    if (mUseValidationForTest) {
-        // Test stimuli (using validation database)
+        // Validation stimuli
         loadImageNetValidationStimuli(dataPath + "/val", dataPath + "/val.txt");
-        partitionStimuli(0.0, 0.0, 1.0);
+        partitionStimuli(0.0, 1.0, 0.0);
+
+        if (mUseValidationForTest) {
+            // Test stimuli (using validation database)
+            loadImageNetValidationStimuli(dataPath + "/val", dataPath + "/val.txt");
+            partitionStimuli(0.0, 0.0, 1.0);
+        }
+    } else {
+        std::map<std::string, std::string>::iterator it;
+
+        for (it = ilsvrc2012_labels.begin(); it != ilsvrc2012_labels.end(); it++)
+            labelID(it->second);
     }
 }
 

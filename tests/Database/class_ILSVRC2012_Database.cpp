@@ -25,11 +25,11 @@
 
 using namespace N2D2;
 
-TEST(ILSVRC2012_Database, load)
+TEST(ILSVRC2012_Database, loadAllStimuli)
 {
-    REQUIRED(UnitTest::DirExists(N2D2_DATA("ILSVRC2012")));
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("ILSVRC2012/train")));
 
-    ILSVRC2012_Database db(0.9, false);
+    ILSVRC2012_Database db(0.9, false, false);
     db.load(N2D2_DATA("ILSVRC2012"), N2D2_DATA("ILSVRC2012/synsets.txt"));
 
     const unsigned int nbStimuli = 1281167;
@@ -55,6 +55,22 @@ TEST(ILSVRC2012_Database, load)
     ASSERT_EQUALS(db.getNbStimuliWithLabel(998), 1350U);
     ASSERT_EQUALS(db.getLabelName(999), "n15075141");
     ASSERT_EQUALS(db.getNbStimuliWithLabel(999), 1350U);
+}
+
+TEST(ILSVRC2012_Database, loadOnlyLabels)
+{
+    ILSVRC2012_Database db(1.0, false, true);
+    db.load(N2D2_DATA("ILSVRC2012"));
+
+    const unsigned int nbLabels = 1000;
+
+    ASSERT_EQUALS(db.getNbLabels(), nbLabels);
+    ASSERT_EQUALS(db.getLabelName(0), "tench, Tinca tinca");
+
+    for(unsigned int i = 0; i < nbLabels; ++i)
+        ASSERT_EQUALS(db.getNbStimuliWithLabel(i), 0U);
+
+    ASSERT_EQUALS(db.getLabelName(999), "toilet tissue, toilet paper, bathroom tissue");
 }
 
 RUN_TESTS()
