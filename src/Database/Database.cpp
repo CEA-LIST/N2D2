@@ -673,9 +673,26 @@ void N2D2::Database::extractSlices(unsigned int width,
 }
 
 void N2D2::Database::load(const std::string& /*dataPath*/,
-          const std::string& /*labelPath*/,
+          const std::string& labelPath,
           bool /*extractROIs*/)
 {
+
+    std::ifstream labelFile(labelPath.c_str());
+
+    if (!labelFile.good())
+        throw std::runtime_error("Could not open label file: "
+                                 + labelPath);
+
+    std::string labelName;
+
+    while(std::getline( labelFile, labelName ))
+        labelID(labelName);
+
+    if(getNbLabels() == 0)
+        throw std::runtime_error("No labels specified on the label file");
+
+    std::cout << "Database loaded " << getNbLabels() << " labels from the file "
+            << labelPath << std::endl;
 
 }
 

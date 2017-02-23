@@ -52,18 +52,21 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 template <class T>
 void N2D2::LogisticActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
-#if !defined(WIN32) && !defined(__APPLE__)
-    const int excepts = fegetexcept();
-    fedisableexcept(FE_OVERFLOW);
-#endif
 
 #pragma omp parallel for if (data->size() > 1024)
-    for (int index = 0; index < (int)data->size(); ++index)
+    for (int index = 0; index < (int)data->size(); ++index){
+#if !defined(WIN32) && !defined(__APPLE__)
+        const int excepts = fegetexcept();
+        fedisableexcept(FE_OVERFLOW);
+#endif
+
         (*data)(index) = 1.0f / (1.0f + std::exp(-(*data)(index)));
 
 #if !defined(WIN32) && !defined(__APPLE__)
-    feenableexcept(excepts);
+        feenableexcept(excepts);
 #endif
+    }
+
 }
 
 template <class T>

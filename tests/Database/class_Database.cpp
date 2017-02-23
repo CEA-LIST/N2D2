@@ -102,6 +102,16 @@ TEST(Database, load)
     ASSERT_EQUALS(db.getNbLabels(), 2U);
 }
 
+TEST(Database, load_empty_database)
+{
+    std::shared_ptr<Database> db;
+    db = std::make_shared<Database>();
+    db->load("", "tests_data/ilsvrc2012_labels.dat");
+    ASSERT_EQUALS(db->getNbLabels(), 1000U);
+    ASSERT_EQUALS(db->getLabelName(0), "tench, Tinca tinca");
+
+}
+
 TEST_DATASET(Database,
              partitionStimuli,
              (unsigned int nbStimuli, Database::StimuliSet stimuliSet),
@@ -409,5 +419,6 @@ TEST_DATASET(Database,
                   nbStimuli - std::ceil(nbStimuli / (double)nbLabels));
     ASSERT_EQUALS(db.getNbLabels(), nbLabels - 1);
 }
+
 
 RUN_TESTS()
