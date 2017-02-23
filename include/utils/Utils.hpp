@@ -457,13 +457,6 @@ namespace Utils {
     template <class T>
     inline const T& clamp(const T& x, const T& min, const T& max);
 
-    template <class T>
-    std::vector<T>& operator<<(std::vector<T>& vec, const std::string& data);
-    template <class T>
-    std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec);
-    template <class T>
-    std::istream& operator>>(std::istream& is, std::vector<T>& vec);
-
     template <class charT, class traits>
     std::basic_ostream<charT, traits>& cwarning(std::basic_ostream
                                                 <charT, traits>& stream);
@@ -532,8 +525,26 @@ namespace Utils {
     };
 
     template <class Char, class Traits, class Alloc>
+    struct quotedProxyTypeConst {
+        const std::basic_string<Char, Traits, Alloc>& str;
+        Char delim;
+        Char escape;
+
+        quotedProxyTypeConst(const std::basic_string<Char, Traits, Alloc>& str_,
+                        Char delim_,
+                        Char escape_):
+                            str(str_), delim(delim_), escape(escape_) {};
+    };
+
+    template <class Char, class Traits, class Alloc>
     N2D2::Utils::quotedProxyType<Char, Traits, Alloc>
     quoted(std::basic_string<Char, Traits, Alloc>& str,
+           Char delim = '\"',
+           Char escape = '\\');
+
+    template <class Char, class Traits, class Alloc>
+    N2D2::Utils::quotedProxyTypeConst<Char, Traits, Alloc>
+    quoted(const std::basic_string<Char, Traits, Alloc>& str,
            Char delim = '\"',
            Char escape = '\\');
 
@@ -543,10 +554,29 @@ namespace Utils {
                             const quotedProxyType<Char, Traits, Alloc>& proxy);
 
     template <class Char, class Traits, class Alloc>
+    std::basic_ostream<Char, Traits>&
+    operator<<(std::basic_ostream<Char, Traits>& os,
+        const quotedProxyTypeConst<Char, Traits, Alloc>& proxy);
+
+    template <class Char, class Traits, class Alloc>
     std::basic_istream<Char, Traits>&
     operator>>(std::basic_istream<Char, Traits>& is,
                             const quotedProxyType<Char, Traits, Alloc>& proxy);
 }
+
+template <class T>
+std::vector<T>& operator<<(std::vector<T>& vec, const std::string& data);
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec);
+template <class T>
+std::istream& operator>>(std::istream& is, std::vector<T>& vec);
+
+// I get an undefined reference error on GCC 4.8.4 if I put the definition in
+// the .cpp, but it works on GCC 4.4.7!
+inline std::ostream& operator<<(std::ostream& os,
+                                const std::vector<std::string>& vec);
+inline std::istream& operator>>(std::istream& is,
+                                std::vector<std::string>& vec);
 }
 
 #if CV_MINOR_VERSION < 2
@@ -817,9 +847,38 @@ N2D2::Utils::quoted(std::basic_string<Char, Traits, Alloc>& str,
 }
 
 template <class Char, class Traits, class Alloc>
+N2D2::Utils::quotedProxyTypeConst<Char, Traits, Alloc>
+N2D2::Utils::quoted(const std::basic_string<Char, Traits, Alloc>& str,
+                    Char delim,
+                    Char escape)
+{
+    return quotedProxyTypeConst<Char, Traits, Alloc>(str, delim, escape);
+}
+
+template <class Char, class Traits, class Alloc>
 std::basic_ostream<Char, Traits>&
 N2D2::Utils::operator<<(std::basic_ostream<Char, Traits>& os,
                         const quotedProxyType<Char, Traits, Alloc>& proxy)
+{
+    os << "\"";
+
+    for (typename std::basic_string<Char, Traits, Alloc>::const_iterator it
+         = proxy.str.begin(), itEnd = proxy.str.end(); it != itEnd; ++it)
+    {
+        if ((*it) == proxy.delim || (*it) == proxy.escape)
+            os << "\\";
+
+        os << (*it);
+    }
+
+    os << "\"";
+    return os;
+}
+
+template <class Char, class Traits, class Alloc>
+std::basic_ostream<Char, Traits>&
+N2D2::Utils::operator<<(std::basic_ostream<Char, Traits>& os,
+                        const quotedProxyTypeConst<Char, Traits, Alloc>& proxy)
 {
     os << "\"";
 
@@ -841,8 +900,18 @@ std::basic_istream<Char, Traits>&
 N2D2::Utils::operator>>(std::basic_istream<Char, Traits>& is,
                         const quotedProxyType<Char, Traits, Alloc>& proxy)
 {
+    // Save flags
+    const std::ios::fmtflags savedFlags = is.flags();
+
+    if (savedFlags & is.skipws) {
+        while (std::isspace(is.peek()))
+            is.get(); // discard whitespace
+    }
+
     if (is.peek() == proxy.delim) {
         is.get(); // discard delim
+        // Turn off the skipws flag
+        is.unsetf(std::ios_base::skipws);
         proxy.str.clear();
 
         int c = is.get();
@@ -859,6 +928,9 @@ N2D2::Utils::operator>>(std::basic_istream<Char, Traits>& is,
             if (!is.good())
                 throw std::runtime_error("Error reading quoted string");
         }
+
+        // Restore the skipws flag to its original value
+        is.flags(savedFlags);
     }
     else
         is >> proxy.str;
@@ -913,6 +985,38 @@ std::istream& operator>>(std::istream& is, std::vector<T>& vec)
               std::back_inserter(vec));
 
     // Because of the std::copy() behavior, the failbit is always set.
+    // But if eof is also set, it means that the read was successful.
+    // In this case, only set the eofbit and clear the failbit, so that this
+    // operator can be used with higher-level generatic parameter read routines.
+    if (is.eof())
+        is.clear(is.eofbit);
+
+    return is;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<std::string>& vec)
+{
+    for (std::vector<std::string>::const_iterator it = vec.begin(),
+         itEnd = vec.end();
+         it != itEnd;
+         ++it)
+    {
+        os << Utils::quoted(*it) << " ";
+    }
+
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, std::vector<std::string>& vec)
+{
+    vec.clear();
+
+    std::string word;
+
+    while (is >> std::skipws >> Utils::quoted(word))
+        vec.push_back(word);
+
+    // The failbit is necessarily set when the while loop stops.
     // But if eof is also set, it means that the read was successful.
     // In this case, only set the eofbit and clear the failbit, so that this
     // operator can be used with higher-level generatic parameter read routines.

@@ -46,7 +46,7 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
         iniConfig.currentSection(section + ".filterROIs");
 
         const std::vector<std::string> labels
-            = iniConfig.getProperty<std::vector<std::string>>("Labels");
+            = iniConfig.getProperty<std::vector<std::string> >("Labels");
         const bool filterKeep = iniConfig.getProperty<bool>("FilterKeep", true);
         const bool removeStimuli = iniConfig.getProperty
                                    <bool>("RemoveStimuli", true);
