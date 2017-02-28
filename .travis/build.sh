@@ -24,7 +24,7 @@ if [ -n "$USE_CMAKE" ] ; then
     cd build
     cmake .. && make -j $NUM_THREADS
 else
-    if [ -n "$USE_CMAKE" ] ; then
+    if [ -n "$USE_CUDA" ] ; then
         make -j $NUM_THREADS CUDA=1
     else
         make -j $NUM_THREADS
