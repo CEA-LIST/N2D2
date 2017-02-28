@@ -18,35 +18,34 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-dist: trusty
-sudo: required
+#!/bin/bash
 
-# Enable C++ support
-language: cpp
+if $USE_CUDA ; then
+    # Install the "repo" package for CUDA
+    CUDA_REPO_PKG=cuda-repo-ubuntu1404_7.5-18_amd64.deb
+    wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/$CUDA_REPO_PKG
+    dpkg -i $CUDA_REPO_PKG
+    rm $CUDA_REPO_PKG
 
-# Compiler selection
-compiler:
-  #- clang
-  - gcc
+    # Install the "repo" package for CuDNN
+    ML_REPO_PKG=nvidia-machine-learning-repo-ubuntu1404_4.0-2_amd64.deb
+    wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1404/x86_64/$ML_REPO_PKG
+    dpkg -i $ML_REPO_PKG
 
-env:
-  global:
-    - NUM_THREADS=4
-  matrix:
-    - BUILD_NAME="make"
-    - BUILD_NAME="make-cuda" USE_CUDA=1
-    - BUILD_NAME="cmake" USE_CMAKE=1
-    - BUILD_NAME="cmake-cuda" USE_CMAKE=1 USE_CUDA=1
+    # Update the package lists
+    apt-get -y update
 
-cache:
-  apt: true
+    # Install the CUDA and CuDNN packages
+    CUDA_PKG_VERSION="7-5"
+    CUDA_VERSION="7.5"
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y libopencv-dev libcv-dev libhighgui-dev
-  - sudo apt-get install -y gnuplot
-  - sudo -E ./.travis/install.sh
+    apt-get install -y --no-install-recommends \
+        cuda-core-$CUDA_PKG_VERSION \
+        cuda-cudart-dev-$CUDA_PKG_VERSION \
+        cuda-cublas-dev-$CUDA_PKG_VERSION \
+        cuda-curand-dev-$CUDA_PKG_VERSION \
+        libcudnn5-dev
 
-# Build steps
-script:
-  - ./.travis/build.sh
+    # Manually create CUDA symlink
+    ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda
+fi

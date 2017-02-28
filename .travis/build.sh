@@ -18,35 +18,16 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-dist: trusty
-sudo: required
+#!/bin/bash
 
-# Enable C++ support
-language: cpp
-
-# Compiler selection
-compiler:
-  #- clang
-  - gcc
-
-env:
-  global:
-    - NUM_THREADS=4
-  matrix:
-    - BUILD_NAME="make"
-    - BUILD_NAME="make-cuda" USE_CUDA=1
-    - BUILD_NAME="cmake" USE_CMAKE=1
-    - BUILD_NAME="cmake-cuda" USE_CMAKE=1 USE_CUDA=1
-
-cache:
-  apt: true
-
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y libopencv-dev libcv-dev libhighgui-dev
-  - sudo apt-get install -y gnuplot
-  - sudo -E ./.travis/install.sh
-
-# Build steps
-script:
-  - ./.travis/build.sh
+if $USE_CMAKE ; then
+    mkdir build
+    cd build
+    cmake .. && make -j $NUM_THREADS
+else
+    if $USE_CUDA ; then
+        make -j $NUM_THREADS CUDA=1
+    else
+        make -j $NUM_THREADS
+    fi
+fi
