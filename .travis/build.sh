@@ -1,3 +1,4 @@
+#!/bin/sh
 ################################################################################
 #    (C) Copyright 2016 CEA LIST. All Rights Reserved.
 #    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
@@ -18,14 +19,12 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-#!/bin/bash
-
-if $USE_CMAKE ; then
+if [ -n "$USE_CMAKE" ] ; then
     mkdir build
     cd build
     cmake .. && make -j $NUM_THREADS
 else
-    if $USE_CUDA ; then
+    if [ -n "$USE_CMAKE" ] ; then
         make -j $NUM_THREADS CUDA=1
     else
         make -j $NUM_THREADS

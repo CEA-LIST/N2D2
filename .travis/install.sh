@@ -1,3 +1,4 @@
+#!/bin/sh
 ################################################################################
 #    (C) Copyright 2016 CEA LIST. All Rights Reserved.
 #    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
@@ -18,9 +19,7 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-#!/bin/bash
-
-if $USE_CUDA ; then
+if [ -n "$USE_CUDA" ] ; then
     # Install the "repo" package for CUDA
     CUDA_REPO_PKG=cuda-repo-ubuntu1404_7.5-18_amd64.deb
     wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/$CUDA_REPO_PKG
