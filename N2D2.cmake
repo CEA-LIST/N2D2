@@ -68,6 +68,11 @@ if (CUDA_FOUND)
     INCLUDE_DIRECTORIES(SYSTEM ${CUDA_INCLUDE_DIRS})
     GET_FILENAME_COMPONENT(CUDA_LIB_DIR ${CUDA_CUDART_LIBRARY} PATH)
 
+    message(STATUS "CUDA library status:")
+    message(STATUS "    version: ${CUDA_VERSION_STRING}")
+    message(STATUS "    include path: ${CUDA_INCLUDE_DIRS}")
+    message(STATUS "    libraries: ${CUDA_LIBRARIES}")
+
     FIND_PATH(CUDNN_INCLUDE_DIR cudnn.h
         PATHS ${CUDA_INCLUDE_DIRS} ${CUDA_TOOLKIT_INCLUDE}
         DOC "Path to CuDNN include directory." )
@@ -76,9 +81,35 @@ if (CUDA_FOUND)
         DOC "Path to CuDNN library.")
 
     if (CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR)
+        file(READ ${CUDNN_INCLUDE_DIR}/cudnn.h CUDNN_FILE_CONTENTS)
+
+        string(REGEX MATCH "define CUDNN_MAJOR * +([0-9]+)"
+               CUDNN_VERSION_MAJOR "${CUDNN_FILE_CONTENTS}")
+        string(REGEX REPLACE "define CUDNN_MAJOR * +([0-9]+)" "\\1"
+               CUDNN_VERSION_MAJOR "${CUDNN_VERSION_MAJOR}")
+        string(REGEX MATCH "define CUDNN_MINOR * +([0-9]+)"
+               CUDNN_VERSION_MINOR "${CUDNN_FILE_CONTENTS}")
+        string(REGEX REPLACE "define CUDNN_MINOR * +([0-9]+)" "\\1"
+               CUDNN_VERSION_MINOR "${CUDNN_VERSION_MINOR}")
+        string(REGEX MATCH "define CUDNN_PATCHLEVEL * +([0-9]+)"
+               CUDNN_VERSION_PATCH "${CUDNN_FILE_CONTENTS}")
+        string(REGEX REPLACE "define CUDNN_PATCHLEVEL * +([0-9]+)" "\\1"
+               CUDNN_VERSION_PATCH "${CUDNN_VERSION_PATCH}")
+
+        if(NOT CUDNN_VERSION_MAJOR)
+            set(CUDNN_VERSION "?")
+        else()
+            set(CUDNN_VERSION "${CUDNN_VERSION_MAJOR}.${CUDNN_VERSION_MINOR}.${CUDNN_VERSION_PATCH}")
+        endif()
+
+        message(STATUS "CuDNN library status:")
+        message(STATUS "    version: ${CUDNN_VERSION}")
+        message(STATUS "    include path: ${CUDNN_INCLUDE_DIR}")
+        message(STATUS "    libraries: ${CUDNN_LIB_DIR}")
+
         INCLUDE_DIRECTORIES(SYSTEM ${CUDNN_INCLUDE_DIR})
 
-        SET(CUDA_LIBS "cuda;cudart;cublas;cudadevrt")
+        SET(CUDA_LIBS "cudart;cublas;cudadevrt")
         SET(CUDNN_LIBS "cudnn")
 
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCUDA=1")
