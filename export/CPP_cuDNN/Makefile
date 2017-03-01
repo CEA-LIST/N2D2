@@ -2,14 +2,15 @@ EXT_CPP=cpp
 EXT_CUDA=cu
 
 CUDA_PATH=/usr/local/cuda
-CUDA_INC_PATH = $(CUDA_PATH)/include
+CUDA_INC_PATH=$(CUDA_PATH)/include
 CUDA_BIN_PATH=$(CUDA_PATH)/bin
+CUDA_LIB_PATH:=
 
-ifdef ARCH32
-	CUDA_LIB_PATH = $(CUDA_PATH)/lib
-else
-	CUDA_LIB_PATH = $(CUDA_PATH)/lib64
+ifneq ($(wildcard $(CUDA_PATH)/lib64),)
+CUDA_LIB_PATH:=$(CUDA_LIB_PATH) $(CUDA_PATH)/lib64/
 endif
+
+CUDA_LIB_PATH:=$(CUDA_LIB_PATH) $(CUDA_PATH)/lib/
 
 TARGET=n2d2_cudnn_test
 
@@ -37,10 +38,10 @@ ifdef NRET
   CPPFLAGS:=$(CPPFLAGS) -DNRET
 endif
 
-CPPFLAGS:=$(CPPFLAGS) -I./include/ -I$(CUDA_INC_PATH) -IUtilNPP
-LIBS=-lcudart -lnppi -lnppc -lcublas -lcudnn
-LPPFLAGS=-L$(CUDA_LIB_PATH) $(LIBS)
-NVFLAGS:=$(CPPFLAGS) -lcutil -lcudpp -lcudart -lnppi -lnppc -lm -lstdc++ \
+CPPFLAGS:=$(CPPFLAGS) -I./include/ -isystem $(CUDA_INC_PATH)
+LIBS=-lcudart -lcublas -lcudnn
+LPPFLAGS=$(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) $(LIBS)
+NVFLAGS:=$(CPPFLAGS) -lcutil -lcudpp -lcudart -lm -lstdc++ \
     -std=c++11
 CPPFLAGS:=$(CPPFLAGS) -std=c++0x
 
