@@ -32,6 +32,8 @@ compiler:
 env:
   global:
     - NUM_THREADS=4
+    - LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/cuda/lib:/lib64:/lib:/usr/lib64:/usr/lib:/usr/local/lib"
+
   matrix:
     - BUILD_NAME="make"
     - BUILD_NAME="make-cuda" USE_CUDA=1
