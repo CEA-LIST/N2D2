@@ -100,6 +100,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 10U, 1U, 3U),
              std::make_tuple(3U, 3U, 10U, 1U, 3U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     PoolCell_Frame_CUDA pool1("pool1",
                               poolWidth,
                               poolHeight,
@@ -155,6 +157,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 1;
 
     Network net;
@@ -231,6 +235,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 1;
 
     Network net;
@@ -313,6 +319,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     const unsigned int nbOutputs = 3;
@@ -436,6 +443,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     const unsigned int nbOutputs = 6;

@@ -53,6 +53,8 @@ TEST_DATASET(BatchNormCell_Frame_CUDA,
              std::make_tuple(24U, 32U),
              std::make_tuple(32U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     Network net;
     Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
 
@@ -85,6 +87,8 @@ TEST_DATASET(BatchNormCell_Frame_CUDA,
              std::make_tuple(24U, 32U),
              std::make_tuple(32U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 16;
 
     Network net;

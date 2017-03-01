@@ -285,6 +285,32 @@ bool N2D2::UnitTest::DirExists(const std::string& dirName)
                                                      & S_IFDIR);
 }
 
+bool N2D2::UnitTest::CudaDeviceExists(int minMajor, int minMinor) {
+#ifdef CUDA
+    int deviceCount = 0;
+    cudaError status = cudaGetDeviceCount(&deviceCount);
+
+    if (status == cudaSuccess && deviceCount > 0) {
+        for (int i = 0; i < deviceCount; i++) {
+            cudaDeviceProp prop;
+            cudaGetDeviceProperties(&prop, i);
+
+            if (prop.major > minMajor
+                || (prop.major == minMajor && prop.minor >= minMinor))
+            {
+                return true;
+            }
+        }
+    }
+    else {
+        std::cout << "Cuda failure: " << cudaGetErrorString(status) << " ("
+            << (int)status << ")" << std::endl;
+    }
+#endif
+
+    return false;
+}
+
 std::string N2D2::UnitTest::FileReadContent(const std::string& fileName,
                                             unsigned int firstLine,
                                             unsigned int nbLines)

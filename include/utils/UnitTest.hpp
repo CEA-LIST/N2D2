@@ -47,6 +47,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef CUDA
+#include "CudaUtils.hpp"
+#endif
+
 namespace N2D2 {
 #if !defined(WIN32) && !defined(__APPLE__)
 void UnitTest_exceptionHandler(int sig);
@@ -68,6 +72,7 @@ public:
 
     static bool FileExists(const std::string& fileName);
     static bool DirExists(const std::string& dirName);
+    static bool CudaDeviceExists(int minMajor = 1, int minMinor = 0);
     static std::string FileReadContent(const std::string& fileName,
                                        unsigned int firstLine = 0,
                                        unsigned int nbLines = 0);

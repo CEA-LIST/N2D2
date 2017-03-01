@@ -1,7 +1,7 @@
 # N2D2
 
 
-| **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; GCC 4.8.4</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 12 (2013)</sub>  |   |
+| **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; CUDA 6.5 + CuDNN 1.0</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 12 (2013)</sub>  |   |
 | --------------- | ------------------ | ------------------ | ------ |
 | [![Build Status](https://travis-ci.org/CEA-LIST/N2D2.svg?branch=master)](https://travis-ci.org/CEA-LIST/N2D2) | [![Build Status](https://travis-ci.org/CEA-LIST/N2D2.svg?branch=master)](https://travis-ci.org/CEA-LIST/N2D2) | [![Build Status](https://ci.appveyor.com/api/projects/status/github/CEA-LIST/N2D2?branch=master&svg=true)](https://ci.appveyor.com/project/olivierbichler-cea/n2d2) | [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) |
 

@@ -29,6 +29,8 @@ using namespace N2D2;
 
 TEST(CudaTensor4d, CudaTensor4d)
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor4d<double> A;
 
     ASSERT_EQUALS(A.dimB(), 0U);
@@ -38,6 +40,8 @@ TEST(CudaTensor4d, CudaTensor4d)
 
 TEST(CudaTensor4d, push_back)
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     Tensor3d<int> A;
     CudaTensor4d<int> tensor;
 
@@ -66,6 +70,8 @@ TEST_DATASET(CudaTensor4d,
              std::make_tuple(12U, 34U, 1U, 1U),
              std::make_tuple(34U, 12U, 5U, 21U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     Tensor3d<int> A(dimX, dimY, dimZ);
     CudaTensor4d<int> tensor;
 
@@ -90,6 +96,8 @@ TEST_DATASET(CudaTensor4d,
              std::make_tuple(12U, 34U, 1U, 1U),
              std::make_tuple(34U, 12U, 5U, 21U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor4d<int> tensor(dimX, dimY, dimZ, dimB);
 
     ASSERT_EQUALS(tensor.dimB(), dimB);
@@ -110,6 +118,8 @@ TEST_DATASET(CudaTensor4d,
              std::make_tuple(12U, 34U, 1U, 1U),
              std::make_tuple(34U, 12U, 5U, 21U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor4d<float> tensor;
     tensor.resize(dimX, dimY, dimZ, dimB, 1.0);
 
@@ -141,6 +151,8 @@ TEST_DATASET(CudaTensor4d,
              std::make_tuple(12U, 34U, 1U, 1U),
              std::make_tuple(34U, 12U, 5U, 21U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor4d<float> tensor;
 
     tensor.resize(dimX, dimY, dimZ, dimB, 0.0);

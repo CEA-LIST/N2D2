@@ -54,6 +54,8 @@ TEST_DATASET(FcCell_Frame_CUDA,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     FcCell_Frame_CUDA fc1("fc1", nbOutputs);
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
@@ -75,6 +77,8 @@ TEST_DATASET(FcCell_Frame_CUDA,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     Network net;
     Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
 
@@ -116,6 +120,8 @@ TEST_DATASET(FcCell_Frame_CUDA,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     Network net;
     Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
 
@@ -162,6 +168,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
@@ -234,6 +241,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
@@ -310,6 +318,8 @@ TEST_DATASET(FcCell_Frame_CUDA,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     Network net;
     Environment env(
         net, EmptyDatabase, channelsWidth, channelsHeight, 1, 2, false);

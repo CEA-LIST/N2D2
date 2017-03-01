@@ -158,6 +158,8 @@ TEST(CPP_cuDNN_Export, generate)
     "cd export_CPP_cuDNN_float32/ && make OUTPUTFILE=1 NRET=1";
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     cmd = "cd export_CPP_cuDNN_float32/ && ./bin/n2d2_cudnn_test -batch 1";
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 

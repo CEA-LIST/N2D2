@@ -119,6 +119,8 @@ TEST_DATASET(ConvCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     ConvCell_Frame_CUDA conv1("conv1",
                               kernelWidth,
                               kernelHeight,
@@ -183,6 +185,8 @@ TEST_DATASET(ConvCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 10;
 
     Network net;
@@ -277,6 +281,8 @@ TEST_DATASET(ConvCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 10;
 
     Network net;
@@ -383,6 +389,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     const unsigned int nbOutputs = 5;
@@ -542,6 +549,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     const unsigned int nbOutputs = 5;
@@ -708,6 +716,8 @@ TEST_DATASET(ConvCell_Frame_CUDA,
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 10;
 
     Network net;

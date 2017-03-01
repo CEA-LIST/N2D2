@@ -49,6 +49,8 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     SoftmaxCell_Frame_CUDA softmax1("softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
@@ -108,6 +110,8 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     SoftmaxCell_Frame_CUDA_Test softmax1("softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
