@@ -285,8 +285,8 @@ bool N2D2::UnitTest::DirExists(const std::string& dirName)
                                                      & S_IFDIR);
 }
 
-bool N2D2::UnitTest::CudaDeviceExists(int minMajor, int minMinor) {
 #ifdef CUDA
+bool N2D2::UnitTest::CudaDeviceExists(int minMajor, int minMinor) {
     int deviceCount = 0;
     cudaError status = cudaGetDeviceCount(&deviceCount);
 
@@ -298,6 +298,9 @@ bool N2D2::UnitTest::CudaDeviceExists(int minMajor, int minMinor) {
             if (prop.major > minMajor
                 || (prop.major == minMajor && prop.minor >= minMinor))
             {
+                std::cout << "Found CUDA compute capability "
+                    << prop.major << "." << prop.minor << " for device #"
+                    << i << std::endl;
                 return true;
             }
         }
@@ -306,10 +309,14 @@ bool N2D2::UnitTest::CudaDeviceExists(int minMajor, int minMinor) {
         std::cout << "Cuda failure: " << cudaGetErrorString(status) << " ("
             << (int)status << ")" << std::endl;
     }
-#endif
 
     return false;
 }
+#else
+bool N2D2::UnitTest::CudaDeviceExists(int /*minMajor*/, int /*minMinor*/) {
+    return false;
+}
+#endif
 
 std::string N2D2::UnitTest::FileReadContent(const std::string& fileName,
                                             unsigned int firstLine,
