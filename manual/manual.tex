@@ -95,7 +95,8 @@
 	stringstyle=\color{blue},
 	%lineskip=-1pt,
     stepnumber=1,
-    columns=fullflexible
+    columns=fullflexible,
+    literate={\\\$}{{\textcolor{blue}{\$}}}1 {\\\%}{\%}1
 }
 
 \lstdefinelanguage{ini}{% new language for listings
@@ -103,8 +104,7 @@
     sensitive=true,
     morecomment=[l]{;},      % comment
     moredelim=[s][keywordstyle]{[}{]}, % s is for start and end delimiter
-    morestring=[b]",          % string def
-    literate={\\\$}{{\textcolor{blue}{\$}}}1 {\\\%}{\%}1
+    morestring=[b]"          % string def
 }
 
 \lstdefinestyle{console}{
@@ -3486,7 +3486,8 @@ Size=3
 
 \section{Tutorials}
 
-\subsection{Building a classifier neural network}
+\subsection{\label{sec:BuildingClassifierNN}Building a classifier neural
+network}
 
 For this tutorial, we will use the classical MNIST handwritten digit dataset.
 A driver module already exists for this dataset, named
@@ -3720,8 +3721,8 @@ section \ref{sec:WeightSolvers}.
 \ref{par:DistortionTransformation}).
 \end{myitemize}
 
-The complete INI model file corresponding to this tutorial can be found in the
-\emph{models} directory of N2D2.
+The complete INI model corresponding to this tutorial can be found in
+\emph{models/LeNet.ini}.
 
 In order to use CUDA/GPU accelerated learning, the default layer model should be
 switched to \lstinline!Frame_CUDA!. You can enable this model by adding the
@@ -4002,6 +4003,194 @@ LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_gender.dat
 
 Here, we use the \lstinline!fc3.gender.Target! target to determine the most
 probable gender of the ROI.
+
+\subsubsection{Data visualization}
+
+For each \emph{Target} in the network, a corresponding folder is created in the
+simulation directory, which contains learning, validation and test confusion
+matrixes. The output estimation of the network for each stimulus is also
+generated automatically for the test dataset and can be visualized with the
+\emph{./test.py} helper tool. An example is shown in figure
+\ref{fig:targetvisu}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=1.0\linewidth]{figs/target_visu.pdf}
+  \caption{Example of the target visualization helper tool.}
+  \label{fig:targetvisu}
+\end{figure}
+
+
+\subsection{Transcoding a learned network in spike-coding}
+
+N2D2 embeds an event-based simulator (historically known as 'Xnet') and allows
+to transcode a whole DNN in a spike-coding version and evaluate the resulting
+spiking neural network performances. In this tutorial, we will transcode the
+LeNet network described in section \ref{sec:BuildingClassifierNN}.
+
+\subsubsection{Render the network compatible with spike simulations}
+
+The first step is to specify that we want to use
+a transcode model (allowing both formal and spike simulation of the same
+network), by changing the \lstinline!DefaultModel! to:
+
+\begin{lstlisting}[language=ini]
+DefaultModel=Transcode_CUDA
+\end{lstlisting}
+
+In order to perform spike simulations, the input of the network must be of type
+\emph{Environment}, which is a derived class of
+\emph{StimuliProvider} that adds spike coding support. In the INI model
+file, it is therefore necessary to replace the \lstinline![sp]! section by an
+\lstinline![env]! section and replace all references of \lstinline!sp! to
+\lstinline!env!.
+
+Note that these changes have at this point no impact at all on the formal coding
+simulations. The beginning of the INI file should be:
+
+\begin{lstlisting}[language=ini,escapechar=!]
+DefaultModel=!\color{red}{Transcode\_CUDA}!
+
+; Database
+[database]
+Type=MNIST_IDX_Database
+Validation=0.2 ; Use 20% of the dataset for validation
+
+; Environment
+[!\color{red}{env}!]
+SizeX=32
+SizeY=32
+BatchSize=128
+
+[env.Transformation_1]
+Type=RescaleTransformation
+Width=[!\color{red}{env}!]SizeX
+Height=[!\color{red}{env}!]SizeY
+
+[conv1]
+Input=!\color{red}{env}!
+...
+\end{lstlisting}
+
+The dropout layer has no equivalence in spike-coding inference and must be
+removed:
+
+\begin{lstlisting}[language=ini,escapechar=!]
+...
+!\color{red}{\st{[fc1.drop]}}!
+!\color{red}{\st{Input=fc1}}!
+!\color{red}{\st{Type=Dropout}}!
+!\color{red}{\st{NbOutputs=[fc1]NbOutputs}}!
+
+[fc2]
+Input=fc1!\color{red}{\st{.drop}}!
+...
+\end{lstlisting}
+
+The softmax layer has no equivalence in spike-coding inference and must be
+removed as well. The \emph{Target} must therefore be attached to
+\lstinline![fc2]!:
+
+\begin{lstlisting}[language=ini,escapechar=!]
+...
+!\color{red}{\st{[softmax]}}!
+!\color{red}{\st{Input=fc2}}!
+!\color{red}{\st{Type=Softmax}}!
+!\color{red}{\st{NbOutputs=[fc2]NbOutputs}}!
+!\color{red}{\st{WithLoss=1}}!
+
+!\color{red}{\st{[softmax.Target]}}!
+
+[fc2.Target]
+...
+\end{lstlisting}
+
+The network is now compatible with spike-coding simulations. However, we did not
+specify at this point how to translate the input stimuli data into spikes, nor
+the spiking neuron parameters (threshold value, leak time constant...).
+
+\subsubsection{Configure spike-coding parameters}
+
+The first step is to configure how the input stimuli data must be coded into
+spikes. To this end, we must attach a configuration section to the
+\emph{Environment}. Here, we specify a periodic coding with random initial
+jitter with a minimum period of 10 ns and a maximum period of 100 us:
+
+\begin{lstlisting}[language=ini,escapechar=!]
+[env]
+...
+ConfigSection=env.config
+
+[env.config]
+; Spike-based computing
+StimulusType=JitteredPeriodic
+PeriodMin=1,000,000 ; unit = fs
+PeriodMeanMin=10,000,000 ; unit = fs
+PeriodMeanMax=100,000,000,000 ; unit = fs
+PeriodRelStdDev=0.0
+\end{lstlisting}
+
+The next step is to specify the neurons parameters, that will be common to all
+layers and can therefore be specified in the \lstinline![common.config]!
+section. In N2D2, the base spike-coding layers use a Leaky Integrate-and-Fire
+(LIF) neuron model. By default, the leak time constant is zero, resulting
+to simple Integrate-and-Fire (IF) neurons.
+
+Here we simply specify that the neurons threshold must be the unity, that the
+threshold is only positive and that there is no incoming synaptic delay:
+
+\begin{lstlisting}[language=ini,escapechar=!]
+[common.config]
+...
+; Spike-based computing
+Threshold=1.0
+BipolarThreshold=0
+IncomingDelay=0
+\end{lstlisting}
+
+Finally, we can limit the number of spikes required for the computation of each
+stimulus by adding a decision delta threshold at the output layer:
+
+\begin{lstlisting}[language=ini,escapechar=!]
+[fc2]
+...
+ConfigSection=common.config,fc2.config
+
+[fc2.Target]
+
+[fc2.config]
+; Spike-based computing
+TerminateDelta=4
+BipolarThreshold=1
+\end{lstlisting}
+
+The complete INI model corresponding to this tutorial can be found in
+\emph{models/LeNet\_Spike.ini}.
+
+Here is a summary of the steps required to reproduce the whole experiment:
+
+\begin{lstlisting}
+./n2d2 "\$N2D2_MODELS/LeNet.ini" -learn 6000000 -log 100000
+./n2d2 "\$N2D2_MODELS/LeNet_Spike.ini" -test
+\end{lstlisting}
+
+The final recognition rate reported at the end of the spike inference should be
+almost identical to the formal coding network (around 99\% for the LeNet
+network).
+
+Various statistics are available at the end of the spike-coding simulation in
+the \emph{stats\_spike} folder and the \emph{stats\_spike.log} file. Looking in
+the \emph{stats\_spike.log} file, one can read the following line towards the
+end of the file:
+
+\begin{lstlisting}
+Read events per virtual synapse per pattern (average): 0.654124
+\end{lstlisting}
+
+This line reports the average number of accumulation operations per synapse
+per input stimulus in the network. If this number if below 1.0, it means that
+the spiking version of the network is more efficient than its formal counterpart
+in terms of total number of operations!
 
 
 \clearpage
