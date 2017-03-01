@@ -52,7 +52,7 @@ ifdef CUDA
   NVCC=$(CUDA_BIN_PATH)/nvcc
   CPPFLAGS:=$(CPPFLAGS) -isystem $(CUDA_INC_PATH) -DCUDA
   LDFLAGS:=$(LDFLAGS) $(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) \
-    -lcudart -lcublas -lcudadevrt -lcudnn
+    -lcudart -lcublas -lcudadevrt -lcudnn -Wl,-rpath -Wl,"$(CUDA_LIB_PATH)"
   NVFLAGS:=$(CPPFLAGS) -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
     -lm -lstdc++
 endif
