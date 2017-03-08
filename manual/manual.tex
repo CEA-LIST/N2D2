@@ -290,7 +290,7 @@ particularly useful for DNN design and exploration, allowing simple and fast
 prototyping of DNN with different topologies. It is possible to define and
 learn multiple network topology variations and compare the performances (in
 terms of recognition rate and computationnal cost) automatically.
-Export targets include CPU, DSP and GPU with OpenMP, OpenCL, Cuda and CuDNN
+Export targets include CPU, DSP and GPU with OpenMP, OpenCL, Cuda and cuDNN
 programming models as well as custom hardware IP code generation with High-Level
 Synthesis for FPGA and dedicated configurable DNN accelerator
 IP\footnote{Ongoing work}.
@@ -400,7 +400,7 @@ Parameters of each layer type are modifiable, for example for the convolutional
  the number of kernels per input map and the learning parameters (learning rate,
   initial weights value...).
 For the learning, the data dynamic can be chosen between 16 bits (with
- NVIDIA\textregistered{} CuDNN\footnote{On future GPUs}), 32 bit and 64 bit
+ NVIDIA\textregistered{} cuDNN\footnote{On future GPUs}), 32 bit and 64 bit
   floating point numbers.
 
 The following example, which will serve as the use case for the rest of this
@@ -469,7 +469,7 @@ The resulting DNN is shown in figure \ref{fig:DNNExample}.
   \label{fig:DNNExample}
 \end{figure}
 
-The learning is accelerated in GPU using the NVIDIA\textregistered{} CuDNN
+The learning is accelerated in GPU using the NVIDIA\textregistered{} cuDNN
 framework, integrated into the toolflow. Using GPU acceleration, learning times
  can be reduced typically by two orders of magnitude, enabling the learning of
   large databases within tens of minutes to a few hours instead of several days
@@ -531,7 +531,7 @@ The following targets are currently supported by the toolflow:
      to compute the whole network;
     \subitem FPGA utilization vs number of clock cycle trade-off analysis;
     \item OpenCL code optimized for either CPU/DSP or GPU;
-    \item Cuda kernels and CuDNN code optimized for NVIDIA\textregistered{}
+    \item Cuda kernels and cuDNN code optimized for NVIDIA\textregistered{}
     GPUs.
 \end{myitemize}
 
@@ -597,33 +597,75 @@ cd manual && make
 
 \subsubsection{Prerequisites}
 
-First, make sure you have the following packages installed:
+\subsubsubsection{Red Hat Enterprise Linux (RHEL) 6}
+
+Make sure you have the following packages installed:
 \begin{myitemize}
-    \item gnuplot
-    \item opencv
-    \item opencv-devel (on RHEL 6, requires rhel-x86\_64-workstation-optional-6
-     repository channel)
+    \item \lstinline!gnuplot!
+    \item \lstinline!opencv!
+    \item \lstinline!opencv-devel! (may require the
+    \lstinline!rhel-x86_64-workstation-optional-6! repository channel)
 \end{myitemize}
+
 Plus, to be able to use GPU acceleration:
 \begin{myitemize}
-    \item cuda
-    \subitem To install cuda, add the cuda repository for RHEL 6:
+    \item Install the CUDA repository package:
 \begin{lstlisting}
 rpm -Uhv http://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64/cuda-repo-rhel6-7.5-18.x86_64.rpm
 yum clean expire-cache
 yum install cuda
 \end{lstlisting}
-    Make sure the cuda library path (by default: {\tt{}/usr/local/cuda/lib64})
-     is added to the {\tt{}LD\_LIBRARY\_PATH} environment variable.
-    \item cudnn
-    \subitem Manual installation required: register to
+    \item Install cuDNN from the NVIDIA website: register to
     \href{https://developer.nvidia.com/cudnn}{NVIDIA Developer} and download
-    the latest version of CuDNN.
-    Simply copy the header and library files from the CuDNN archive to the
-    corresponding directories in the cuda installation path (by default:
+    the latest version of cuDNN.
+    Simply copy the header and library files from the cuDNN archive to the
+    corresponding directories in the CUDA installation path (by default:
      {\tt{}/usr/local/cuda/include} and {\tt{}/usr/local/cuda/lib64},
      respectively).
+    \item Make sure the CUDA library path (e.g. {\tt{}/usr/local/cuda/lib64}) is
+     added to the {\tt{}LD\_LIBRARY\_PATH} environment variable.
 \end{myitemize}
+
+\subsubsubsection{Ubuntu}
+
+Make sure you have the following packages installed, if they are available on
+your Ubuntu version:
+\begin{myitemize}
+    \item \lstinline!gnuplot!
+    \item \lstinline!libopencv-dev!
+    \item \lstinline!libcv-dev!
+    \item \lstinline!libhighgui-dev!
+\end{myitemize}
+
+Plus, to be able to use GPU acceleration:
+\begin{myitemize}
+    \item Install the CUDA repository package matching your distribution. For
+    example, for Ubuntu 14.04 64 bits:
+\begin{lstlisting}[escapechar=!]
+wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
+dpkg -i cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
+\end{lstlisting}
+    \item Install the cuDNN repository package matching your distribution. For
+    example, for Ubuntu 14.04 64 bits:
+\begin{lstlisting}[escapechar=!]
+wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+dpkg -i nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+\end{lstlisting}
+    Note cuDNN repository package is provided by NVIDIA for Ubuntu starting
+    from version 14.04.
+    \item Update the package lists: \lstinline!apt-get update!
+    \item Install the CUDA and cuDNN required packages:
+\begin{lstlisting}[escapechar=!]
+apt-get install cuda-core-7-5 cuda-cudart-dev-7-5 cuda-cublas-dev-7-5 cuda-curand-dev-7-5 libcudnn5-dev
+\end{lstlisting}
+    \item Make sure there is a symlink to \lstinline!/usr/local/cuda!:
+\begin{lstlisting}[escapechar=!]
+ln -s /usr/local/cuda-7.5 /usr/local/cuda
+\end{lstlisting}
+    \item Make sure the CUDA library path (e.g. {\tt{}/usr/local/cuda/lib64}) is
+     added to the {\tt{}LD\_LIBRARY\_PATH} environment variable.
+\end{myitemize}
+
 
 \subsubsection{Getting the sources}
 
@@ -798,7 +840,7 @@ Export types:
 \item \lstinline!C_HLS! C export tailored for HLS with Vivado HLS;
 \item \lstinline!CPP_OpenCL! C++ export using OpenCL;
 \item \lstinline!CPP_Cuda! C++ export using Cuda;
-\item \lstinline!CPP_cuDNN! C++ export using CuDNN;
+\item \lstinline!CPP_cuDNN! C++ export using cuDNN;
 \item \lstinline!SC_Spike! SystemC spike export.
 \end{myitemize}
 
