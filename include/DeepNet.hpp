@@ -141,6 +141,10 @@ public:
     };
     template <class T = Cell>
     std::shared_ptr<T> getCell(const std::string& name) const;
+    std::map<std::string, std::shared_ptr<Cell> >& getCells()
+    {
+        return mCells;
+    };
     std::shared_ptr<Monitor> getMonitor(const std::string& name) const;
     const std::vector<std::vector<std::string> >& getLayers() const
     {

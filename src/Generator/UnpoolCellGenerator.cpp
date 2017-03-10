@@ -23,6 +23,9 @@
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::UnpoolCellGenerator::mRegistrar(UnpoolCell::Type,
                                       N2D2::UnpoolCellGenerator::generate);
+N2D2::Registrar<N2D2::CellGenerator, N2D2::CellGenerator::RegistryPostCreate_T>
+N2D2::UnpoolCellGenerator::mRegistrarPost(UnpoolCell::Type + std::string("+"),
+                                      N2D2::UnpoolCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::UnpoolCell>
 N2D2::UnpoolCellGenerator::generate(Network& network,
@@ -149,4 +152,52 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
     cell->writeMap(section + "_map.dat");
 
     return cell;
+}
+
+void N2D2::UnpoolCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
+                                             const std::shared_ptr
+                                             <DeepNet>& deepNet,
+                                             IniParser& iniConfig,
+                                             const std::string& section)
+{
+    if (!iniConfig.currentSection(section))
+        throw std::runtime_error("Missing [" + section + "] section.");
+
+    const std::string argMax = iniConfig.getProperty<std::string>("ArgMax");
+    bool found = false;
+
+    std::shared_ptr<UnpoolCell> unpoolCell
+        = std::dynamic_pointer_cast<UnpoolCell>(cell);
+
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator itCells
+         = deepNet->getCells().begin(),
+         itCellsEnd = deepNet->getCells().end();
+         itCells != itCellsEnd;
+         ++itCells)
+    {
+        if ((*itCells).first == argMax) {
+            std::shared_ptr<PoolCell> poolCell = std::dynamic_pointer_cast
+                <PoolCell>((*itCells).second);
+
+            if (!poolCell) {
+                throw std::runtime_error("Cell name \"" + argMax
+                                         + "\" is not a PoolCell for ArgMax ["
+                                         + section
+                                         + "] in network configuration file: "
+                                         + iniConfig.getFileName());
+            }
+
+            unpoolCell->addArgMax(poolCell->getArgMax());
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        throw std::runtime_error("Cell name \"" + argMax
+                                 + "\" not found for ArgMax ["
+                                 + section
+                                 + "] in network configuration file: "
+                                 + iniConfig.getFileName());
+    }
 }

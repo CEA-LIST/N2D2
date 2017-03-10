@@ -38,6 +38,22 @@ N2D2::CellGenerator::generate(Network& network,
         <CellGenerator>::create(type)(network, sp, parents, iniConfig, section);
 }
 
+void N2D2::CellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
+                                       const std::shared_ptr<DeepNet>& deepNet,
+                                       IniParser& iniConfig,
+                                       const std::string& section)
+{
+    if (Registrar
+        <CellGenerator, RegistryPostCreate_T>::exists(cell->getType()
+                                                      + std::string("+")))
+    {
+        Registrar
+            <CellGenerator, RegistryPostCreate_T>::create(cell->getType()
+                                                          + std::string("+"))
+                (cell, deepNet, iniConfig, section);
+    }
+}
+
 std::map<std::string, std::string>
 N2D2::CellGenerator::getConfig(const std::string& model, IniParser& iniConfig)
 {

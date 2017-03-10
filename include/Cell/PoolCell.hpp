@@ -30,6 +30,7 @@
 #include "utils/Registrar.hpp"
 
 #include "Cell.hpp"
+#include "Cell/PoolCell_Frame_Kernels.hpp"
 
 #ifdef WIN32
 // For static library
@@ -128,6 +129,10 @@ public:
     // parameter to
     // discretize
     void getStats(Stats& stats) const;
+    virtual Interface<PoolCell_Frame_Kernels::ArgMax>* getArgMax()
+    {
+        return NULL;
+    };
     virtual ~PoolCell() {};
 
 protected:

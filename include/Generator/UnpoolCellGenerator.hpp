@@ -23,6 +23,7 @@
 
 #include "Generator/CellGenerator.hpp"
 #include "Generator/MappingGenerator.hpp"
+#include "Cell/PoolCell.hpp"
 #include "Cell/UnpoolCell.hpp"
 #include "utils/IniParser.hpp"
 
@@ -35,9 +36,14 @@ public:
                                               <std::shared_ptr<Cell> >& parents,
                                               IniParser& iniConfig,
                                               const std::string& section);
+    static void postGenerate(const std::shared_ptr<Cell>& cell,
+                             const std::shared_ptr<DeepNet>& deepNet,
+                             IniParser& iniConfig,
+                             const std::string& section);
 
 private:
     static Registrar<CellGenerator> mRegistrar;
+    static Registrar<CellGenerator, RegistryPostCreate_T> mRegistrarPost;
 };
 }
 

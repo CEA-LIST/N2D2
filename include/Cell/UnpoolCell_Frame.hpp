@@ -71,10 +71,11 @@ public:
     virtual void backPropagate();
     virtual void update();
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
-    void addArgMax(Tensor4d<PoolCell_Frame_Kernels::ArgMax>& argMax)
+    void addArgMax(Tensor4d<PoolCell_Frame_Kernels::ArgMax>* argMax)
     {
-        mArgMax.push_back(&argMax);
+        mArgMax.push_back(argMax);
     };
+    void addArgMax(Interface<PoolCell_Frame_Kernels::ArgMax>* argMax);
     virtual ~UnpoolCell_Frame() {};
 
 protected:

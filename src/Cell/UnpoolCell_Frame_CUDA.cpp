@@ -231,6 +231,13 @@ void N2D2::UnpoolCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
     }
 }
 
+void N2D2::UnpoolCell_Frame_CUDA::addArgMax(
+    Interface<PoolCell_Frame_Kernels::ArgMax>* argMax)
+{
+    for (unsigned int k = 0; k < argMax->size(); ++k)
+        mArgMax.push_back(&(*argMax)[k]);
+}
+
 N2D2::UnpoolCell_Frame_CUDA::~UnpoolCell_Frame_CUDA()
 {
     if (mPoolDesc != NULL)

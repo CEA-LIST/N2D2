@@ -173,3 +173,10 @@ void N2D2::UnpoolCell_Frame::checkGradient(double epsilon, double maxError)
                   << std::endl;
     }
 }
+
+void N2D2::UnpoolCell_Frame::addArgMax(
+    Interface<PoolCell_Frame_Kernels::ArgMax>* argMax)
+{
+    for (unsigned int k = 0; k < argMax->size(); ++k)
+        mArgMax.push_back(&(*argMax)[k]);
+}

@@ -27,6 +27,7 @@
 #include "Generator/TanhActivationGenerator.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
+#include "DeepNet.hpp"
 
 #ifdef WIN32
 // For static library
@@ -60,6 +61,9 @@
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrar@TransformationCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@UnpoolCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
@@ -71,6 +75,11 @@ public:
         const std::vector<std::shared_ptr<Cell> >& parents,
         IniParser& iniConfig,
         const std::string& section)> RegistryCreate_T;
+    typedef std::function<void(
+        const std::shared_ptr<Cell>& cell,
+        const std::shared_ptr<DeepNet>& deepNet,
+        IniParser& iniConfig,
+        const std::string& section)> RegistryPostCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -86,6 +95,10 @@ public:
                                           <std::shared_ptr<Cell> >& parents,
                                           IniParser& iniConfig,
                                           const std::string& section);
+    static void postGenerate(const std::shared_ptr<Cell>& cell,
+                             const std::shared_ptr<DeepNet>& deepNet,
+                             IniParser& iniConfig,
+                             const std::string& section);
 
 protected:
     static std::map<std::string, std::string>

@@ -250,6 +250,15 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
         throw std::runtime_error(
             "Missing target cell (no [*.Target] section found)");
 
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator itCells
+         = deepNet->getCells().begin(),
+         itCellsEnd = deepNet->getCells().end();
+         itCells != itCellsEnd;
+         ++itCells) {
+        CellGenerator::postGenerate(
+            (*itCells).second, deepNet, iniConfig, (*itCells).first);
+    }
+
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
          = deepNet->getTargets().begin(),
          itTargetsEnd = deepNet->getTargets().end();

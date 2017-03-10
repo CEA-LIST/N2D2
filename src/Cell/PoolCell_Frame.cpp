@@ -56,11 +56,13 @@ void N2D2::PoolCell_Frame::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for PoolCell " + mName);
 
-        mArgMax.push_back(new Tensor4d<PoolCell_Frame_Kernels::ArgMax>(
-            mOutputs.dimX(),
-            mOutputs.dimY(),
-            mOutputs.dimZ(),
-            mOutputs.dimB()));
+        if (mArgMax.size() == k) {
+            mArgMax.push_back(new Tensor4d<PoolCell_Frame_Kernels::ArgMax>(
+                mOutputs.dimX(),
+                mOutputs.dimY(),
+                mOutputs.dimZ(),
+                mOutputs.dimB()));
+        }
     }
 }
 

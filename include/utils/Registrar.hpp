@@ -39,15 +39,16 @@ public:
 
 typedef std::map<std::string, BaseCommand*> RegistryMap_T;
 
-template <typename C> struct Registrar {
+template <typename C, typename F = typename C::RegistryCreate_T>
+struct Registrar {
     struct Command : public BaseCommand {
-        typename C::RegistryCreate_T mFunc;
-        Command(typename C::RegistryCreate_T func) : mFunc(func)
+        F mFunc;
+        Command(F func) : mFunc(func)
         {
         }
     };
 
-    Registrar(const std::string& key, typename C::RegistryCreate_T func)
+    Registrar(const std::string& key, F func)
     {
         if (C::registry().find(key) != C::registry().end())
             throw std::runtime_error("Registrar \"" + key
@@ -56,7 +57,7 @@ template <typename C> struct Registrar {
         C::registry().insert(std::make_pair(key, new Command(func)));
     }
 
-    Registrar(typename C::RegistryCreate_T func, const char* key, ...)
+    Registrar(F func, const char* key, ...)
     {
         va_list args;
         va_start(args, key);
@@ -79,7 +80,7 @@ template <typename C> struct Registrar {
         return (C::registry().find(key) != C::registry().end());
     }
 
-    static typename C::RegistryCreate_T create(const std::string& key)
+    static F create(const std::string& key)
     {
         const RegistryMap_T::const_iterator it = C::registry().find(key);
 

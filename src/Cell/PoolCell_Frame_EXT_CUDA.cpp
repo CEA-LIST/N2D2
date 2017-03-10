@@ -74,29 +74,34 @@ void N2D2::PoolCell_Frame_EXT_CUDA::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for PoolCell " + mName);
 
-        mInputMap.push_back(NULL);
+        if (mInputMap.size() == k) {
+            mInputMap.push_back(NULL);
 
-        if (!mMaps.empty()) {
-            const Tensor2d<bool> inputMap = mMaps.rows(offset,
-                                                       mInputs[k].dimZ());
+            if (!mMaps.empty()) {
+                const Tensor2d<bool> inputMap = mMaps.rows(offset,
+                                                           mInputs[k].dimZ());
 
-            std::vector<char> inputMapData;
-            std::copy(inputMap.begin(), inputMap.end(),
-                      std::back_inserter(inputMapData));
+                std::vector<char> inputMapData;
+                std::copy(inputMap.begin(), inputMap.end(),
+                          std::back_inserter(inputMapData));
 
-            CHECK_CUDA_STATUS(cudaMalloc(&mInputMap[k],
-                                         inputMapData.size() * sizeof(char)));
-            CHECK_CUDA_STATUS(cudaMemcpy(mInputMap[k],
-                                         &inputMapData[0],
-                                         inputMapData.size() * sizeof(char),
-                                         cudaMemcpyHostToDevice));
+                CHECK_CUDA_STATUS(cudaMalloc(&mInputMap[k],
+                                             inputMapData.size()
+                                                * sizeof(char)));
+                CHECK_CUDA_STATUS(cudaMemcpy(mInputMap[k],
+                                             &inputMapData[0],
+                                             inputMapData.size() * sizeof(char),
+                                             cudaMemcpyHostToDevice));
+            }
         }
 
-        mArgMax.push_back(new CudaTensor4d<PoolCell_Frame_Kernels::ArgMax>(
-            mOutputs.dimX(),
-            mOutputs.dimY(),
-            mOutputs.dimZ(),
-            mOutputs.dimB()));
+        if (mArgMax.size() == k) {
+            mArgMax.push_back(new CudaTensor4d<PoolCell_Frame_Kernels::ArgMax>(
+                mOutputs.dimX(),
+                mOutputs.dimY(),
+                mOutputs.dimZ(),
+                mOutputs.dimB()));
+        }
 
         offset += mInputs[k].dimZ();
     }

@@ -31,6 +31,7 @@
 
 #include "Cell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/PoolCell_Frame_Kernels.hpp"
 
 #ifdef WIN32
 // For static library
@@ -120,6 +121,10 @@ public:
     // parameter to
     // discretize
     void getStats(Stats& stats) const;
+    virtual void addArgMax(Tensor4d<PoolCell_Frame_Kernels::ArgMax>*
+                           /*argMax*/) {}
+    virtual void addArgMax(Interface<PoolCell_Frame_Kernels::ArgMax>*
+                           /*argMax*/) {}
     virtual ~UnpoolCell() {};
 
 protected:
