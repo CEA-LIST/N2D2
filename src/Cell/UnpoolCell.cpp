@@ -18,11 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Cell/PoolCell.hpp"
+#include "Cell/UnpoolCell.hpp"
 
-const char* N2D2::PoolCell::Type = "Pool";
+const char* N2D2::UnpoolCell::Type = "Unpool";
 
-N2D2::PoolCell::PoolCell(const std::string& name,
+N2D2::UnpoolCell::UnpoolCell(const std::string& name,
                          unsigned int poolWidth,
                          unsigned int poolHeight,
                          unsigned int nbOutputs,
@@ -43,22 +43,27 @@ N2D2::PoolCell::PoolCell(const std::string& name,
     // ctor
 }
 
-unsigned long long int N2D2::PoolCell::getNbConnections() const
+unsigned long long int N2D2::UnpoolCell::getNbConnections() const
 {
     unsigned long long int nbConnections = 0;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int oy = 0; oy < mOutputsHeight; ++oy) {
-            for (unsigned int ox = 0; ox < mOutputsWidth; ++ox) {
-                const unsigned int sxMax
-                    = std::min(mChannelsWidth - ox * mStrideX, mPoolWidth);
-                const unsigned int syMax
-                    = std::min(mChannelsHeight - oy * mStrideY, mPoolHeight);
+    for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
+        for (unsigned int iy = 0; iy < mChannelsHeight; ++iy) {
+            for (unsigned int ix = 0; ix < mChannelsWidth; ++ix) {
+                const unsigned int sxMin = (unsigned int)std::max(
+                    (int)mPaddingX - (int)(ix * mStrideX), 0);
+                const unsigned int syMin = (unsigned int)std::max(
+                    (int)mPaddingY - (int)(iy * mStrideY), 0);
+                const unsigned int sxMax = Utils::clamp<int>(
+                    mOutputsWidth + mPaddingX - ix * mStrideX, 0, mPoolWidth);
+                const unsigned int syMax = Utils::clamp
+                    <int>(mOutputsHeight + mPaddingY - iy * mStrideY,
+                          0,
+                          mPoolHeight);
 
-                for (unsigned int channel = 0; channel < getNbChannels();
-                     ++channel) {
+                for (unsigned int output = 0; output < mNbOutputs; ++output) {
                     if (isConnection(channel, output))
-                        nbConnections += sxMax * syMax;
+                        nbConnections += (sxMax - sxMin) * (syMax - syMin);
                 }
             }
         }
@@ -67,7 +72,7 @@ unsigned long long int N2D2::PoolCell::getNbConnections() const
     return nbConnections;
 }
 
-void N2D2::PoolCell::writeMap(const std::string& fileName) const
+void N2D2::UnpoolCell::writeMap(const std::string& fileName) const
 {
     std::ofstream data(fileName.c_str());
 
@@ -159,16 +164,16 @@ void N2D2::PoolCell::writeMap(const std::string& fileName) const
     Gnuplot::setDefaultOutput();
 }
 
-void N2D2::PoolCell::getStats(Stats& stats) const
+void N2D2::UnpoolCell::getStats(Stats& stats) const
 {
     stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
     stats.nbConnections += getNbConnections();
 }
 
-void N2D2::PoolCell::setOutputsSize()
+void N2D2::UnpoolCell::setOutputsSize()
 {
-    mOutputsWidth = (unsigned int)((mChannelsWidth + 2 * mPaddingX
-        - mPoolWidth + mStrideX) / (double)mStrideX);
-    mOutputsHeight = (unsigned int)((mChannelsHeight + 2 * mPaddingY
-        - mPoolHeight + mStrideY) / (double)mStrideY);
+    mOutputsWidth = mChannelsWidth * mStrideX + mPoolWidth - 2 * mPaddingX
+                    - mStrideX;
+    mOutputsHeight = mChannelsHeight * mStrideY + mPoolHeight - 2 * mPaddingY
+                     - mStrideY;
 }

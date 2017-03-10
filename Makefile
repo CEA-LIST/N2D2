@@ -121,6 +121,10 @@ endif
 CPPFLAGS:=$(CPPFLAGS) $(foreach path,$(PARENT),-I$(path)/include/)
 NVFLAGS:=$(NVFLAGS) $(foreach path,$(PARENT),-I$(path)/include/)
 
+ifdef DEBUG
+  NVFLAGS:=$(NVFLAGS) -G -g
+endif
+
 CPPFLAGS:= $(CPPFLAGS) -DN2D2_COMPILE_PATH=\"${CURDIR}\"
 
 ifndef N2D2_BINDIR

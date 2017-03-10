@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_POOLCELL_H
-#define N2D2_POOLCELL_H
+#ifndef N2D2_UNPOOLCELL_H
+#define N2D2_UNPOOLCELL_H
 
 #include <tuple>
 #include <unordered_map>
@@ -30,30 +30,22 @@
 #include "utils/Registrar.hpp"
 
 #include "Cell.hpp"
+#include "Cell/PoolCell.hpp"
 
 #ifdef WIN32
 // For static library
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Frame@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
+    "/include:?mRegistrar@UnpoolCell_Frame@N2D2@@0U?$Registrar@VUnpoolCell@N2D2@@@2@A")
 #ifdef CUDA
 #pragma comment(                                                               \
     linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Frame_CUDA@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Frame_EXT_CUDA@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
+    "/include:?mRegistrar@UnpoolCell_Frame_CUDA@N2D2@@0U?$Registrar@VUnpoolCell@N2D2@@@2@A")
 #endif
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PoolCell_Spike@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$PoolCell_Transcode@VPoolCell_Frame@N2D2@@VPoolCell_Spike@2@@N2D2@@0U?$Registrar@VPoolCell@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
-class PoolCell : public virtual Cell {
+class UnpoolCell : public virtual Cell {
 public:
     enum Pooling {
         Max,
@@ -61,7 +53,7 @@ public:
     };
 
     typedef std::function
-        <std::shared_ptr<PoolCell>(Network&,
+        <std::shared_ptr<UnpoolCell>(Network&,
                                    const std::string&,
                                    unsigned int,
                                    unsigned int,
@@ -81,7 +73,7 @@ public:
     }
     static const char* Type;
 
-    PoolCell(const std::string& name,
+    UnpoolCell(const std::string& name,
              unsigned int poolWidth,
              unsigned int poolHeight,
              unsigned int nbOutputs,
@@ -128,7 +120,7 @@ public:
     // parameter to
     // discretize
     void getStats(Stats& stats) const;
-    virtual ~PoolCell() {};
+    virtual ~UnpoolCell() {};
 
 protected:
     virtual void setOutputsSize();
@@ -152,8 +144,8 @@ protected:
 
 namespace {
 template <>
-const char* const EnumStrings<N2D2::PoolCell::Pooling>::data[]
+const char* const EnumStrings<N2D2::UnpoolCell::Pooling>::data[]
     = {"Max", "Average"};
 }
 
-#endif // N2D2_POOLCELL_H
+#endif // N2D2_UNPOOLCELL_H

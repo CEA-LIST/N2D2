@@ -78,9 +78,6 @@ public:
     virtual ~PoolCell_Frame_CUDA();
 
 protected:
-    inline Float_T
-    gradientInput(unsigned int channel, unsigned int ix, unsigned int iy) const;
-
     std::vector<cudnnTensorDescriptor_t> mOutputDesc;
 
     cudnnPoolingDescriptor_t mPoolingDesc;

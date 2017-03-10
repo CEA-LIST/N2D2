@@ -30,7 +30,8 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
                                      Tensor4d<Float_T>& outputs,
                                      Tensor4d<Float_T>& diffInputs,
                                      PropagateType propagate,
-                                     BackPropagateType backPropagate)
+                                     BackPropagateType backPropagate,
+                                     bool avoidDiscontinuity)
 {
     mOutputs = &outputs;
     mDiffInputs = &diffInputs;
@@ -43,8 +44,35 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
          ++itTensor) {
         Tensor4d<Float_T>* input = (*itTensor);
 
-        for (unsigned int index = 0; index < input->size(); ++index)
-            (*input)(index) = Random::randUniform(-1.0, 1.0);
+        if (avoidDiscontinuity) {
+            // This special case is for MAX pooling.
+            // Each value must be at least one mEpsilon appart, to avoid
+            // changing the MAX during numerical gradient computation.
+            std::set<Float_T> values;
+
+            if (input->size() > (unsigned int)(1.0 / mEpsilon)) {
+                throw std::runtime_error("GradientCheck::initialize():"
+                    " avoidDiscontinuity not possible");
+            }
+
+            for (unsigned int index = 0; index < input->size(); ++index) {
+                Float_T value;
+
+                do {
+                    value = ((int)Random::randUniform(-1.0 / mEpsilon,
+                                                      1.0 / mEpsilon))
+                                                            * mEpsilon;
+                }
+                while (values.find(value) != values.end());
+
+                (*input)(index) = value;
+                values.insert(value);
+            }
+        }
+        else {
+            for (unsigned int index = 0; index < input->size(); ++index)
+                (*input)(index) = Random::randUniform(-1.0, 1.0);
+        }
 
         input->synchronizeHToD();
     }
@@ -62,8 +90,7 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
 
 void N2D2::GradientCheck::check(const std::string& tensorName,
                                 Tensor4d<Float_T>& tensor,
-                                Tensor4d<Float_T>& diffTensor,
-                                Tensor4d<std::vector<unsigned int> >* control)
+                                Tensor4d<Float_T>& diffTensor)
 {
     double cumulativeError = 0.0;
     unsigned int nbGradients = 0;
@@ -78,23 +105,17 @@ void N2D2::GradientCheck::check(const std::string& tensorName,
                     const Float_T value = tensor(x, y, z, b);
 
                     // Compute approx. gradient
-                    tensor(x, y, z, b) = value + mEpsilon;
+                    tensor(x, y, z, b) = value + mEpsilon / 2.0;
                     tensor.synchronizeHToD(x, y, z, b, 1);
                     mPropagate(false);
-
-                    Tensor4d<std::vector<unsigned int> > controlData;
-
-                    if (control != NULL)
-                        controlData.data() = control->data();
 
                     double approxGradient = cost();
 
-                    tensor(x, y, z, b) = value - mEpsilon;
+                    tensor(x, y, z, b) = value - mEpsilon / 2.0;
                     tensor.synchronizeHToD(x, y, z, b, 1);
                     mPropagate(false);
 
-                    approxGradient = (approxGradient - cost())
-                                     / (2.0 * mEpsilon);
+                    approxGradient = (approxGradient - cost()) / mEpsilon;
 
                     // Computed gradient
                     tensor(x, y, z, b) = value;
@@ -102,23 +123,6 @@ void N2D2::GradientCheck::check(const std::string& tensorName,
 
                     const Float_T gradient = -diffTensor(x, y, z, b);
                     const double error = std::fabs(gradient - approxGradient);
-
-                    if (control != NULL && error >= mMaxError
-                        && controlData.data() != control->data()) {
-                        // A discontinuity is possible if the maximum input is >
-                        // "input" but < "input + epsilon"
-                        // If this is the case, the checking for this input is
-                        // discarded (this should occurs very rarely)
-                        // Note: discontinuity check is only needed if error >=
-                        // maxError (optimization)
-                        std::cout << "Gradient: possible discontinuity for "
-                                  << tensorName << " @ (" << x << ", " << y
-                                  << ", " << z << ", " << b << ") -- ignoring"
-                                  << std::endl;
-
-                        // Continue AFTER initial input value is restored
-                        continue;
-                    }
 
                     cumulativeError += error;
                     ++nbGradients;

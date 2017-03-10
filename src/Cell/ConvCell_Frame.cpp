@@ -81,6 +81,8 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
     const Float_T alpha = 1.0;
     Float_T beta = 0.0;
 
+    unsigned int offset = 0;
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
             beta = 1.0;
@@ -91,7 +93,9 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
                                         mConvDesc,
                                         &beta,
                                         mOutputs,
-                                        mMaps);
+                                        mMaps.rows(offset, mInputs[k].dimZ()));
+
+        offset += mInputs[k].dimZ();
     }
 
     if (!mNoBias)
@@ -108,19 +112,27 @@ void N2D2::ConvCell_Frame::backPropagate()
     const Float_T alpha = 1.0;
     const Float_T beta = 0.0;
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k)
+    unsigned int offset = 0;
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         ConvCell_Frame_Kernels::backwardFilter(&alpha,
                                                mInputs[k],
                                                mDiffInputs,
                                                mConvDesc,
                                                &beta,
                                                mDiffSharedSynapses[k],
-                                               mMaps);
+                                               mMaps.rows(offset,
+                                                          mInputs[k].dimZ()));
+
+        offset += mInputs[k].dimZ();
+    }
 
     if (!mNoBias)
         ConvCell_Frame_Kernels::backwardBias(mDiffInputs, mDiffBias);
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
+        offset = 0;
+
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
@@ -130,7 +142,10 @@ void N2D2::ConvCell_Frame::backPropagate()
                                                  mConvDesc,
                                                  &beta,
                                                  mDiffOutputs[k],
-                                                 mMaps);
+                                                 mMaps.rows(offset,
+                                                            mInputs[k].dimZ()));
+
+            offset += mInputs[k].dimZ();
             mDiffOutputs[k].setValid();
         }
     }

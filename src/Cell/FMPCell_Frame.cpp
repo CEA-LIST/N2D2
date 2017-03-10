@@ -204,7 +204,8 @@ void N2D2::FMPCell_Frame::checkGradient(double epsilon, double maxError)
                   mOutputs,
                   mDiffInputs,
                   std::bind(&FMPCell_Frame::propagate, this, false),
-                  std::bind(&FMPCell_Frame::backPropagate, this));
+                  std::bind(&FMPCell_Frame::backPropagate, this),
+                  true);
 
     mLockRandom = true;
 
@@ -213,8 +214,7 @@ void N2D2::FMPCell_Frame::checkGradient(double epsilon, double maxError)
             std::stringstream name;
             name << mName + "_mDiffOutputs[" << in << "]";
 
-            gc.check(
-                name.str(), mInputs[in], mDiffOutputs[in], &mInputsBackProp);
+            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
         }
     } else {
         std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName

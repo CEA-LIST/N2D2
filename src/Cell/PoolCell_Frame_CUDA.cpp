@@ -50,18 +50,16 @@ N2D2::PoolCell_Frame_CUDA::PoolCell_Frame_CUDA(
                pooling),
       Cell_Frame_CUDA(name, nbOutputs, activation)
 {
+    // ctor
     CHECK_CUDNN_STATUS(cudnnCreatePoolingDescriptor(&mPoolingDesc));
 }
 
 void N2D2::PoolCell_Frame_CUDA::initialize()
 {
-
-    Cell_Frame_CUDA::initialize();
-
     if (!isUnitMap()) {
-        std::cout << "Cell Name: " << mName << std::endl;
         throw std::domain_error(
-            "PoolCell_Frame_CUDA::initialize(): only unit maps are supported.");
+            "PoolCell_Frame_CUDA::initialize(): only unit maps are "
+                "supported for cell " + mName + ".");
     }
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
@@ -187,7 +185,8 @@ void N2D2::PoolCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
                   mOutputs,
                   mDiffInputs,
                   std::bind(&PoolCell_Frame_CUDA::propagate, this, false),
-                  std::bind(&PoolCell_Frame_CUDA::backPropagate, this));
+                  std::bind(&PoolCell_Frame_CUDA::backPropagate, this),
+                  (mPooling == Max));
 
     if (!mDiffOutputs.empty()) {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {

@@ -18,28 +18,30 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #include "N2D2.hpp"
 
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
-#include "Cell/PoolCell_Frame.hpp"
+#include "Cell/PoolCell_Frame_EXT_CUDA.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
 
-class PoolCell_Frame_Test : public PoolCell_Frame {
+class PoolCell_Frame_EXT_CUDA_Test : public PoolCell_Frame_EXT_CUDA {
 public:
-    PoolCell_Frame_Test(const std::string& name,
-                        unsigned int poolWidth,
-                        unsigned int poolHeight,
-                        unsigned int nbOutputs,
-                        unsigned int strideX,
-                        unsigned int strideY,
-                        int paddingX,
-                        int paddingY,
-                        Pooling pooling)
+    PoolCell_Frame_EXT_CUDA_Test(const std::string& name,
+                             unsigned int poolWidth,
+                             unsigned int poolHeight,
+                             unsigned int nbOutputs,
+                             unsigned int strideX,
+                             unsigned int strideY,
+                             int paddingX,
+                             int paddingY,
+                             Pooling pooling)
         : Cell(name, nbOutputs),
           PoolCell(name,
                    poolWidth,
@@ -50,24 +52,24 @@ public:
                    paddingX,
                    paddingY,
                    pooling),
-          PoolCell_Frame(name,
-                         poolWidth,
-                         poolHeight,
-                         nbOutputs,
-                         strideX,
-                         strideY,
-                         paddingX,
-                         paddingY,
-                         pooling) {};
+          PoolCell_Frame_EXT_CUDA(name,
+                              poolWidth,
+                              poolHeight,
+                              nbOutputs,
+                              strideX,
+                              strideY,
+                              paddingX,
+                              paddingY,
+                              pooling) {};
 
-    friend class UnitTest_PoolCell_Frame_addInput__env;
-    friend class UnitTest_PoolCell_Frame_addInput;
-    friend class UnitTest_PoolCell_Frame_propagate_input_check;
-    friend class UnitTest_PoolCell_Frame_propagate_2_input_check;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_addInput__env;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_addInput;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_propagate_input_check;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_propagate_2_input_check;
 };
 
-TEST_DATASET(PoolCell_Frame,
-             PoolCell_Frame,
+TEST_DATASET(PoolCell_Frame_EXT_CUDA,
+             PoolCell_Frame_EXT_CUDA,
              (unsigned int poolWidth,
               unsigned int poolHeight,
               unsigned int nbOutputs,
@@ -106,15 +108,17 @@ TEST_DATASET(PoolCell_Frame,
              std::make_tuple(3U, 3U, 10U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 3U, 1U, 3U))
 {
-    PoolCell_Frame pool1("pool1",
-                         poolWidth,
-                         poolHeight,
-                         nbOutputs,
-                         strideX,
-                         strideY,
-                         paddingX,
-                         paddingY,
-                         PoolCell::Max);
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    PoolCell_Frame_EXT_CUDA pool1("pool1",
+                              poolWidth,
+                              poolHeight,
+                              nbOutputs,
+                              strideX,
+                              strideY,
+                              paddingX,
+                              paddingY,
+                              PoolCell::Max);
 
     ASSERT_EQUALS(pool1.getName(), "pool1");
     ASSERT_EQUALS(pool1.getPoolWidth(), poolWidth);
@@ -124,7 +128,7 @@ TEST_DATASET(PoolCell_Frame,
     ASSERT_EQUALS(pool1.getStrideY(), strideY);
 }
 
-TEST_DATASET(PoolCell_Frame,
+TEST_DATASET(PoolCell_Frame_EXT_CUDA,
              addInput__env,
              (unsigned int poolWidth,
               unsigned int poolHeight,
@@ -165,20 +169,22 @@ TEST_DATASET(PoolCell_Frame,
              std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
-    const unsigned int nbOutputs = 10;
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    const unsigned int nbOutputs = 1;
 
     Network net;
     Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
 
-    PoolCell_Frame_Test pool1("pool1",
-                              poolWidth,
-                              poolHeight,
-                              nbOutputs,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
-                              PoolCell::Max);
+    PoolCell_Frame_EXT_CUDA_Test pool1("pool1",
+                                   poolWidth,
+                                   poolHeight,
+                                   nbOutputs,
+                                   strideX,
+                                   strideY,
+                                   paddingX,
+                                   paddingY,
+                                   PoolCell::Max);
     pool1.addInput(env);
     pool1.initialize();
 
@@ -203,7 +209,7 @@ TEST_DATASET(PoolCell_Frame,
     ASSERT_EQUALS(pool1.mDiffOutputs.dataSize(), 0U);
 }
 
-TEST_DATASET(PoolCell_Frame,
+TEST_DATASET(PoolCell_Frame_EXT_CUDA,
              addInput,
              (unsigned int poolWidth,
               unsigned int poolHeight,
@@ -244,21 +250,23 @@ TEST_DATASET(PoolCell_Frame,
              std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
-    const unsigned int nbOutputs = 10;
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    const unsigned int nbOutputs = 1;
 
     Network net;
     Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
 
-    PoolCell_Frame_Test pool1("pool1", 4, 4, 16, 2, 2, 0, 0, PoolCell::Max);
-    PoolCell_Frame_Test pool2("pool2",
-                              poolWidth,
-                              poolHeight,
-                              nbOutputs,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
-                              PoolCell::Max);
+    PoolCell_Frame_EXT_CUDA_Test pool1("pool1", 4, 4, 1, 2, 2, 0, 0, PoolCell::Max);
+    PoolCell_Frame_EXT_CUDA_Test pool2("pool2",
+                                   poolWidth,
+                                   poolHeight,
+                                   nbOutputs,
+                                   strideX,
+                                   strideY,
+                                   paddingX,
+                                   paddingY,
+                                   PoolCell::Max);
 
     pool1.addInput(env);
     pool2.addInput(&pool1);
@@ -270,26 +278,26 @@ TEST_DATASET(PoolCell_Frame,
     const unsigned int outputsHeight = (unsigned int)((pool1.getOutputsHeight()
         + 2 * paddingY - poolHeight + strideY) / (double)strideY);
 
-    ASSERT_EQUALS(pool2.getNbChannels(), 16U);
+    ASSERT_EQUALS(pool2.getNbChannels(), 1U);
     ASSERT_EQUALS(pool2.getChannelsWidth(), pool1.getOutputsWidth());
     ASSERT_EQUALS(pool2.getChannelsHeight(), pool1.getOutputsHeight());
     ASSERT_EQUALS(pool2.getNbOutputs(), nbOutputs);
     ASSERT_EQUALS(pool2.getOutputsWidth(), outputsWidth);
     ASSERT_EQUALS(pool2.getOutputsHeight(), outputsHeight);
-    //ASSERT_NOTHROW_ANY(pool2.checkGradient(1.0e-4, 1.0e-3));
+    // ASSERT_NOTHROW_ANY(pool2.checkGradient(1.0e-4, 1.0e-3));
 
     // Internal state testing
     ASSERT_EQUALS(pool2.mInputs.dataSize(),
-                  16U * pool1.getOutputsWidth() * pool1.getOutputsHeight());
+                  1U * pool1.getOutputsWidth() * pool1.getOutputsHeight());
     ASSERT_EQUALS(pool2.mOutputs.size(),
                   nbOutputs * outputsWidth * outputsHeight);
     ASSERT_EQUALS(pool2.mDiffInputs.size(),
                   nbOutputs * outputsWidth * outputsHeight);
     ASSERT_EQUALS(pool2.mDiffOutputs.dataSize(),
-                  16U * pool1.getOutputsWidth() * pool1.getOutputsHeight());
+                  1U * pool1.getOutputsWidth() * pool1.getOutputsHeight());
 }
 
-TEST_DATASET(PoolCell_Frame,
+TEST_DATASET(PoolCell_Frame_EXT_CUDA,
              propagate_input_check,
              (unsigned int poolWidth,
               unsigned int poolHeight,
@@ -330,21 +338,22 @@ TEST_DATASET(PoolCell_Frame,
              std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     const unsigned int nbOutputs = 3;
 
     Network net;
 
-    PoolCell_Frame_Test pool1("pool1",
-                              poolWidth,
-                              poolHeight,
-                              nbOutputs,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
-                              PoolCell::Max);
+    PoolCell_Frame_EXT_CUDA_Test pool1("pool1",
+                                   poolWidth,
+                                   poolHeight,
+                                   nbOutputs,
+                                   strideX,
+                                   strideY,
+                                   paddingX,
+                                   paddingY,
+                                   PoolCell::Max);
 
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
@@ -431,7 +440,7 @@ TEST_DATASET(PoolCell_Frame,
     }
 }
 
-TEST_DATASET(PoolCell_Frame,
+TEST_DATASET(PoolCell_Frame_EXT_CUDA,
              propagate_2_input_check,
              (unsigned int poolWidth,
               unsigned int poolHeight,
@@ -472,21 +481,22 @@ TEST_DATASET(PoolCell_Frame,
              std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
              std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     const unsigned int nbOutputs = 6;
 
     Network net;
 
-    PoolCell_Frame_Test pool1("pool1",
-                              poolWidth,
-                              poolHeight,
-                              nbOutputs,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
-                              PoolCell::Max);
+    PoolCell_Frame_EXT_CUDA_Test pool1("pool1",
+                                   poolWidth,
+                                   poolHeight,
+                                   nbOutputs,
+                                   strideX,
+                                   strideY,
+                                   paddingX,
+                                   paddingY,
+                                   PoolCell::Max);
 
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
@@ -580,3 +590,12 @@ TEST_DATASET(PoolCell_Frame,
 }
 
 RUN_TESTS()
+
+#else
+
+int main()
+{
+    return 0;
+}
+
+#endif

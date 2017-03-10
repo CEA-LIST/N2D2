@@ -86,12 +86,22 @@ void N2D2::DeconvCell_Frame::propagate(bool /*inference*/)
     const Float_T alpha = 1.0;
     Float_T beta = 0.0;
 
+    unsigned int offset = 0;
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
             beta = 1.0;
 
-        ConvCell_Frame_Kernels::backwardData(
-            &alpha, mSharedSynapses[k], mInputs[k], mConvDesc, &beta, mOutputs);
+        ConvCell_Frame_Kernels::backwardData(&alpha,
+                                             mSharedSynapses[k],
+                                             mInputs[k],
+                                             mConvDesc,
+                                             &beta,
+                                             mOutputs,
+                                             mMaps.rows(offset,
+                                                        mInputs[k].dimZ()));
+
+        offset += mInputs[k].dimZ();
     }
 
     if (!mNoBias)
@@ -108,18 +118,27 @@ void N2D2::DeconvCell_Frame::backPropagate()
     const Float_T alpha = 1.0;
     const Float_T beta = 0.0;
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k)
+    unsigned int offset = 0;
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         ConvCell_Frame_Kernels::backwardFilter(&alpha,
                                                mDiffInputs,
                                                mInputs[k],
                                                mConvDesc,
                                                &beta,
-                                               mDiffSharedSynapses[k]);
+                                               mDiffSharedSynapses[k],
+                                               mMaps.rows(offset,
+                                                          mInputs[k].dimZ()));
+
+        offset += mInputs[k].dimZ();
+    }
 
     if (!mNoBias)
         ConvCell_Frame_Kernels::backwardBias(mDiffInputs, mDiffBias);
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
+        offset = 0;
+
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
@@ -128,7 +147,11 @@ void N2D2::DeconvCell_Frame::backPropagate()
                                             mSharedSynapses[k],
                                             mConvDesc,
                                             &beta,
-                                            mDiffOutputs[k]);
+                                            mDiffOutputs[k],
+                                            mMaps.rows(offset,
+                                                       mInputs[k].dimZ()));
+
+            offset += mInputs[k].dimZ();
             mDiffOutputs[k].setValid();
         }
     }

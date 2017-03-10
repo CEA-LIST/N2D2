@@ -127,6 +127,8 @@ public:
     }
     inline Tensor2d<T> operator[](unsigned int j);
     inline const Tensor2d<T> operator[](unsigned int j) const;
+    inline Tensor2d<T> rows(unsigned int j0, unsigned int nb);
+    inline const Tensor2d<T> rows(unsigned int j0, unsigned int nb) const;
     Tensor2d<T>& operator=(const Tensor2d<T>& tensor);
 
     template <class U>
@@ -383,13 +385,35 @@ operator()(unsigned int index) const
 template <class T>
 N2D2::Tensor2d<T> N2D2::Tensor2d<T>::operator[](unsigned int j)
 {
+    assert(j < mDimY);
+
     return Tensor2d<T>(mDimX, 1, mData, mDataOffset + j * mDimX);
 }
 
 template <class T>
 const N2D2::Tensor2d<T> N2D2::Tensor2d<T>::operator[](unsigned int j) const
 {
+    assert(j < mDimY);
+
     return Tensor2d<T>(mDimX, 1, mData, mDataOffset + j * mDimX);
+}
+
+template <class T>
+N2D2::Tensor2d<T> N2D2::Tensor2d<T>::rows(unsigned int j0,
+                                                unsigned int nb)
+{
+    assert(j0 + nb <= mDimY);
+
+    return Tensor2d<T>(mDimX, nb, mData, mDataOffset + j0 * mDimX);
+}
+
+template <class T>
+const N2D2::Tensor2d<T> N2D2::Tensor2d<T>::rows(unsigned int j0,
+                                                unsigned int nb) const
+{
+    assert(j0 + nb <= mDimY);
+
+    return Tensor2d<T>(mDimX, nb, mData, mDataOffset + j0 * mDimX);
 }
 
 template <class T>

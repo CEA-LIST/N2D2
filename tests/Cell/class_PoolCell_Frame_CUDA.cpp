@@ -39,6 +39,8 @@ public:
                              unsigned int nbOutputs,
                              unsigned int strideX,
                              unsigned int strideY,
+                             int paddingX,
+                             int paddingY,
                              Pooling pooling)
         : Cell(name, nbOutputs),
           PoolCell(name,
@@ -47,6 +49,8 @@ public:
                    nbOutputs,
                    strideX,
                    strideY,
+                   paddingX,
+                   paddingY,
                    pooling),
           PoolCell_Frame_CUDA(name,
                               poolWidth,
@@ -54,6 +58,8 @@ public:
                               nbOutputs,
                               strideX,
                               strideY,
+                              paddingX,
+                              paddingY,
                               pooling) {};
 
     friend class UnitTest_PoolCell_Frame_CUDA_addInput__env;
@@ -68,37 +74,39 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int nbOutputs,
               unsigned int strideX,
-              unsigned int strideY),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U),
+              unsigned int strideY,
+              int paddingX,
+              unsigned int paddingY),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 0U, 0U),
              // 1
-             std::make_tuple(2U, 5U, 2U, 1U, 1U),
-             std::make_tuple(3U, 3U, 3U, 1U, 1U),
-             std::make_tuple(3U, 3U, 4U, 1U, 1U),
-             std::make_tuple(3U, 3U, 5U, 2U, 2U),
-             std::make_tuple(3U, 3U, 6U, 1U, 3U),
-             std::make_tuple(3U, 3U, 7U, 1U, 1U),
-             std::make_tuple(3U, 3U, 8U, 1U, 1U),
+             std::make_tuple(2U, 5U, 2U, 1U, 1U, 0U, 0U),
+             std::make_tuple(3U, 3U, 3U, 1U, 1U, 0U, 0U),
+             std::make_tuple(3U, 3U, 4U, 1U, 1U, 0U, 0U),
+             std::make_tuple(3U, 3U, 5U, 2U, 2U, 0U, 0U),
+             std::make_tuple(3U, 3U, 6U, 1U, 3U, 0U, 0U),
+             std::make_tuple(3U, 3U, 7U, 1U, 1U, 2U, 2U),
+             std::make_tuple(3U, 3U, 8U, 1U, 1U, 1U, 3U),
              // 2
-             std::make_tuple(2U, 5U, 1U, 1U, 1U),
-             std::make_tuple(2U, 5U, 2U, 1U, 1U),
-             std::make_tuple(2U, 5U, 3U, 2U, 2U),
-             std::make_tuple(2U, 5U, 4U, 1U, 3U),
-             std::make_tuple(2U, 5U, 5U, 1U, 1U),
-             std::make_tuple(2U, 5U, 6U, 1U, 1U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 0U, 0U),
+             std::make_tuple(2U, 5U, 2U, 1U, 1U, 0U, 0U),
+             std::make_tuple(2U, 5U, 3U, 2U, 2U, 0U, 0U),
+             std::make_tuple(2U, 5U, 4U, 1U, 3U, 0U, 0U),
+             std::make_tuple(2U, 5U, 5U, 1U, 1U, 2U, 2U),
+             std::make_tuple(2U, 5U, 6U, 1U, 1U, 1U, 3U),
              // 3
-             std::make_tuple(3U, 3U, 10U, 1U, 1U),
-             std::make_tuple(3U, 3U, 10U, 1U, 1U),
-             std::make_tuple(3U, 3U, 10U, 2U, 2U),
-             std::make_tuple(3U, 3U, 10U, 1U, 3U),
-             std::make_tuple(3U, 3U, 10U, 1U, 1U),
-             std::make_tuple(3U, 3U, 10U, 1U, 1U),
+             std::make_tuple(3U, 3U, 10U, 1U, 1U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 1U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 2U, 2U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 3U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 1U, 2U, 2U),
+             std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U),
              // 4
-             std::make_tuple(2U, 5U, 10U, 1U, 3U),
-             std::make_tuple(3U, 3U, 10U, 1U, 3U),
-             std::make_tuple(3U, 3U, 10U, 1U, 3U),
-             std::make_tuple(3U, 3U, 10U, 1U, 3U),
-             std::make_tuple(3U, 3U, 10U, 1U, 3U),
-             std::make_tuple(3U, 3U, 10U, 1U, 3U))
+             std::make_tuple(2U, 5U, 10U, 1U, 3U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 3U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 3U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 3U, 0U, 0U),
+             std::make_tuple(3U, 3U, 10U, 1U, 3U, 2U, 2U),
+             std::make_tuple(3U, 3U, 10U, 1U, 3U, 1U, 3U))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
@@ -108,6 +116,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                               nbOutputs,
                               strideX,
                               strideY,
+                              paddingX,
+                              paddingY,
                               PoolCell::Max);
 
     ASSERT_EQUALS(pool1.getName(), "pool1");
@@ -124,38 +134,40 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
+              int paddingX,
+              int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
              // 1
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 32U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 24U, 24U),
              // 2
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
-             std::make_tuple(2U, 5U, 2U, 2U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 32U),
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(2U, 5U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 32U),
+             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 3
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 4
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
@@ -170,14 +182,16 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                    nbOutputs,
                                    strideX,
                                    strideY,
+                                   paddingX,
+                                   paddingY,
                                    PoolCell::Max);
     pool1.addInput(env);
     pool1.initialize();
 
-    const unsigned int outputsWidth
-        = ((channelsWidth - poolWidth + strideX) / (double)strideX);
-    const unsigned int outputsHeight
-        = ((channelsHeight - poolHeight + strideY) / (double)strideY);
+    const unsigned int outputsWidth = (unsigned int)((channelsWidth
+        + 2 * paddingX - poolWidth + strideX) / (double)strideX);
+    const unsigned int outputsHeight = (unsigned int)((channelsHeight
+        + 2 * paddingY - poolHeight + strideY) / (double)strideY);
 
     ASSERT_EQUALS(pool1.getNbChannels(), 1U);
     ASSERT_EQUALS(pool1.getChannelsWidth(), channelsWidth);
@@ -185,7 +199,6 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(pool1.getNbOutputs(), nbOutputs);
     ASSERT_EQUALS(pool1.getOutputsWidth(), outputsWidth);
     ASSERT_EQUALS(pool1.getOutputsHeight(), outputsHeight);
-    // ASSERT_NOTHROW_ANY(pool1.checkGradient(1.0e-5, 1.0e-5));
 
     // Internal state testing
     ASSERT_EQUALS(pool1.mInputs.dataSize(), channelsWidth * channelsHeight);
@@ -202,38 +215,40 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
+              int paddingX,
+              int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
              // 1
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 32U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 24U, 24U),
              // 2
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
-             std::make_tuple(2U, 5U, 2U, 2U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 32U),
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(2U, 5U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 32U),
+             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 3
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 4
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
@@ -242,13 +257,15 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     Network net;
     Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
 
-    PoolCell_Frame_CUDA_Test pool1("pool1", 4, 4, 1, 2, 2, PoolCell::Max);
+    PoolCell_Frame_CUDA_Test pool1("pool1", 4, 4, 1, 2, 2, 0, 0, PoolCell::Max);
     PoolCell_Frame_CUDA_Test pool2("pool2",
                                    poolWidth,
                                    poolHeight,
                                    nbOutputs,
                                    strideX,
                                    strideY,
+                                   paddingX,
+                                   paddingY,
                                    PoolCell::Max);
 
     pool1.addInput(env);
@@ -256,10 +273,10 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     pool1.initialize();
     pool2.initialize();
 
-    const unsigned int outputsWidth
-        = ((pool1.getOutputsWidth() - poolWidth + strideX) / (double)strideX);
-    const unsigned int outputsHeight
-        = ((pool1.getOutputsHeight() - poolHeight + strideY) / (double)strideY);
+    const unsigned int outputsWidth = (unsigned int)((pool1.getOutputsWidth()
+        + 2 * paddingX - poolWidth + strideX) / (double)strideX);
+    const unsigned int outputsHeight = (unsigned int)((pool1.getOutputsHeight()
+        + 2 * paddingY - poolHeight + strideY) / (double)strideY);
 
     ASSERT_EQUALS(pool2.getNbChannels(), 1U);
     ASSERT_EQUALS(pool2.getChannelsWidth(), pool1.getOutputsWidth());
@@ -286,38 +303,40 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
+              int paddingX,
+              int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
              // 1
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 32U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 24U, 24U),
              // 2
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
-             std::make_tuple(2U, 5U, 2U, 2U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 32U),
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(2U, 5U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 32U),
+             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 3
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 4
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
@@ -332,6 +351,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                    nbOutputs,
                                    strideX,
                                    strideY,
+                                   paddingX,
+                                   paddingY,
                                    PoolCell::Max);
 
     MNIST_IDX_Database database;
@@ -370,14 +391,26 @@ TEST_DATASET(PoolCell_Frame_CUDA,
         for (unsigned int output = 0; output < nbOutputs; ++output) {
             for (unsigned int oy = 0; oy < pool1.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < pool1.getOutputsWidth(); ++ox) {
-                    const unsigned int sxMax = std::min(
-                        pool1.getChannelsWidth() - ox * strideX, poolWidth);
-                    const unsigned int syMax = std::min(
-                        pool1.getChannelsHeight() - oy * strideY, poolHeight);
+                    const unsigned int sxMin = (unsigned int)std::max(
+                        paddingX - (int)(ox * strideX), 0);
+                    const unsigned int syMin = (unsigned int)std::max(
+                        paddingY - (int)(oy * strideY), 0);
+                    const unsigned int sxMax = Utils::clamp
+                        <int>(pool1.getChannelsWidth() + paddingX
+                                - ox * strideX,
+                              0,
+                              poolWidth);
+                    const unsigned int syMax = Utils::clamp
+                        <int>(pool1.getChannelsHeight() + paddingY
+                                - oy * strideY,
+                              0,
+                              poolHeight);
+
+                    const int ix = (int)(ox * strideX) - paddingX;
+                    const int iy = (int)(oy * strideY) - paddingY;
 
                     // For each output, compute the pool value
-                    Float_T poolValue =
-                        -std::numeric_limits<Float_T>::infinity();
+                    Float_T poolValue = std::numeric_limits<Float_T>::lowest();
 
                     for (unsigned int channel = 0;
                          channel < pool1.getNbChannels();
@@ -385,13 +418,16 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                         if (channel != output)
                             continue;
 
-                        for (unsigned int sy = 0; sy < syMax; ++sy) {
-                            for (unsigned int sx = 0; sx < sxMax; ++sx) {
-                                const unsigned int ix = ox * strideX + sx;
-                                const unsigned int iy = oy * strideY + sy;
-
-                                if (in(ix, iy, channel, batch) > poolValue)
-                                    poolValue = in(ix, iy, channel, batch);
+                        for (unsigned int sy = syMin; sy < syMax; ++sy) {
+                            for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
+                                if (in(ix + sx, iy + sy, channel, batch)
+                                    > poolValue)
+                                {
+                                    poolValue = in(ix + sx,
+                                                   iy + sy,
+                                                   channel,
+                                                   batch);
+                                }
                             }
                         }
                     }
@@ -410,38 +446,40 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
+              int paddingX,
+              int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
              // 1
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 32U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 24U, 24U),
              // 2
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
-             std::make_tuple(2U, 5U, 2U, 2U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 32U),
-             std::make_tuple(2U, 5U, 1U, 1U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 32U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(2U, 5U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 32U),
+             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 3
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
-             std::make_tuple(3U, 3U, 2U, 2U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 32U, 24U),
              // 4
-             std::make_tuple(2U, 5U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 3U, 24U, 24U))
+             std::make_tuple(2U, 5U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 2U, 2U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 3U, 1U, 3U, 24U, 24U))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
@@ -456,6 +494,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                    nbOutputs,
                                    strideX,
                                    strideY,
+                                   paddingX,
+                                   paddingY,
                                    PoolCell::Max);
 
     MNIST_IDX_Database database;
@@ -500,14 +540,26 @@ TEST_DATASET(PoolCell_Frame_CUDA,
         for (unsigned int output = 0; output < nbOutputs; ++output) {
             for (unsigned int oy = 0; oy < pool1.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < pool1.getOutputsWidth(); ++ox) {
-                    const unsigned int sxMax = std::min(
-                        pool1.getChannelsWidth() - ox * strideX, poolWidth);
-                    const unsigned int syMax = std::min(
-                        pool1.getChannelsHeight() - oy * strideY, poolHeight);
+                    const unsigned int sxMin = (unsigned int)std::max(
+                        paddingX - (int)(ox * strideX), 0);
+                    const unsigned int syMin = (unsigned int)std::max(
+                        paddingY - (int)(oy * strideY), 0);
+                    const unsigned int sxMax = Utils::clamp
+                        <int>(pool1.getChannelsWidth() + paddingX
+                                - ox * strideX,
+                              0,
+                              poolWidth);
+                    const unsigned int syMax = Utils::clamp
+                        <int>(pool1.getChannelsHeight() + paddingY
+                                - oy * strideY,
+                              0,
+                              poolHeight);
+
+                    const int ix = (int)(ox * strideX) - paddingX;
+                    const int iy = (int)(oy * strideY) - paddingY;
 
                     // For each output, compute the pool value
-                    Float_T poolValue =
-                        -std::numeric_limits<Float_T>::infinity();
+                    Float_T poolValue = std::numeric_limits<Float_T>::lowest();
 
                     for (unsigned int channel = 0;
                          channel < pool1.getNbChannels();
@@ -515,13 +567,16 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                         if (channel != output)
                             continue;
 
-                        for (unsigned int sy = 0; sy < syMax; ++sy) {
-                            for (unsigned int sx = 0; sx < sxMax; ++sx) {
-                                const unsigned int ix = ox * strideX + sx;
-                                const unsigned int iy = oy * strideY + sy;
-
-                                if (in(ix, iy, channel % 3, batch) > poolValue)
-                                    poolValue = in(ix, iy, channel % 3, batch);
+                        for (unsigned int sy = syMin; sy < syMax; ++sy) {
+                            for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
+                                if (in(ix + sx, iy + sy, channel % 3, batch)
+                                    > poolValue)
+                                {
+                                    poolValue = in(ix + sx,
+                                                   iy + sy,
+                                                   channel % 3,
+                                                   batch);
+                                }
                             }
                         }
                     }

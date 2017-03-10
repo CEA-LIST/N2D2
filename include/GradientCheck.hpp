@@ -36,15 +36,12 @@ public:
                     Tensor4d<Float_T>& outputs,
                     Tensor4d<Float_T>& diffInputs,
                     PropagateType propagate,
-                    BackPropagateType backPropagate);
+                    BackPropagateType backPropagate,
+                    bool avoidDiscontinuity = false);
 
-    /**
-     * @param control   Not generic, only used for MAX pooling
-    */
     void check(const std::string& tensorName,
                Tensor4d<Float_T>& inputs,
-               Tensor4d<Float_T>& diffOutputs,
-               Tensor4d<std::vector<unsigned int> >* control = NULL);
+               Tensor4d<Float_T>& diffOutputs);
     virtual ~GradientCheck();
 
 private:

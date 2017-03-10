@@ -18,17 +18,17 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_POOLCELL_FRAME_H
-#define N2D2_POOLCELL_FRAME_H
+#ifndef N2D2_UNPOOLCELL_FRAME_H
+#define N2D2_UNPOOLCELL_FRAME_H
 
 #include "Cell_Frame.hpp"
-#include "PoolCell.hpp"
+#include "UnpoolCell.hpp"
 #include "PoolCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
-class PoolCell_Frame : public virtual PoolCell, public Cell_Frame {
+class UnpoolCell_Frame : public virtual UnpoolCell, public Cell_Frame {
 public:
-    PoolCell_Frame(const std::string& name,
+    UnpoolCell_Frame(const std::string& name,
                    unsigned int poolWidth,
                    unsigned int poolHeight,
                    unsigned int nbOutputs,
@@ -39,7 +39,7 @@ public:
                    Pooling pooling = Max,
                    const std::shared_ptr<Activation<Float_T> >& activation
                    = std::shared_ptr<Activation<Float_T> >());
-    static std::shared_ptr<PoolCell> create(Network& /*net*/,
+    static std::shared_ptr<UnpoolCell> create(Network& /*net*/,
                                             const std::string& name,
                                             unsigned int poolWidth,
                                             unsigned int poolHeight,
@@ -54,7 +54,7 @@ public:
                                             = std::shared_ptr
                                             <Activation<Float_T> >())
     {
-        return std::make_shared<PoolCell_Frame>(name,
+        return std::make_shared<UnpoolCell_Frame>(name,
                                                 poolWidth,
                                                 poolHeight,
                                                 nbOutputs,
@@ -71,19 +71,19 @@ public:
     virtual void backPropagate();
     virtual void update();
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
-    Tensor4d<PoolCell_Frame_Kernels::ArgMax>& getArgMax(unsigned int k)
+    void addArgMax(Tensor4d<PoolCell_Frame_Kernels::ArgMax>& argMax)
     {
-        return mArgMax[k];
+        mArgMax.push_back(&argMax);
     };
-    virtual ~PoolCell_Frame();
+    virtual ~UnpoolCell_Frame() {};
 
 protected:
     PoolCell_Frame_Kernels::Descriptor mPoolDesc;
     Interface<PoolCell_Frame_Kernels::ArgMax> mArgMax;
 
 private:
-    static Registrar<PoolCell> mRegistrar;
+    static Registrar<UnpoolCell> mRegistrar;
 };
 }
 
-#endif // N2D2_POOLCELL_FRAME_H
+#endif // N2D2_UNPOOLCELL_FRAME_H

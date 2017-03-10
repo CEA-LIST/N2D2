@@ -56,9 +56,9 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
             for (unsigned int oy = 0; oy < oySize; ++oy) {
                 for (unsigned int ox = 0; ox < oxSize; ++ox) {
                     const unsigned int sxMin = (unsigned int)std::max(
-                        (int)desc.paddingX - (int)(ox * desc.strideX), 0);
+                        desc.paddingX - (int)(ox * desc.strideX), 0);
                     const unsigned int syMin = (unsigned int)std::max(
-                        (int)desc.paddingY - (int)(oy * desc.strideY), 0);
+                        desc.paddingY - (int)(oy * desc.strideY), 0);
                     const unsigned int sxMax = Utils::clamp
                         <int>(inputs.dimX() + desc.paddingX - ox * desc.strideX,
                               0,
@@ -68,10 +68,8 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
                               0,
                               sharedSynapses.dimY());
 
-                    const int ix = (int)(ox * desc.strideX)
-                                   - (int)desc.paddingX;
-                    const int iy = (int)(oy * desc.strideY)
-                                   - (int)desc.paddingY;
+                    const int ix = (int)(ox * desc.strideX) - desc.paddingX;
+                    const int iy = (int)(oy * desc.strideY) - desc.paddingY;
 
                     // For each output, compute the weighted sum
                     Float_T weightedSum = 0.0;
@@ -273,11 +271,11 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
                 for (unsigned int sx = 0; sx < diffSharedSynapses.dimX();
                      ++sx) {
                     const unsigned int oxMin = (unsigned int)std::max(
-                        (int)std::ceil(((int)desc.paddingX - (int)sx)
+                        (int)std::ceil((desc.paddingX - (int)sx)
                                        / (double)desc.strideX),
                         0);
                     const unsigned int oyMin = (unsigned int)std::max(
-                        (int)std::ceil(((int)desc.paddingY - (int)sy)
+                        (int)std::ceil((desc.paddingY - (int)sy)
                                        / (double)desc.strideY),
                         0);
                     const unsigned int oxMax = std::min(
@@ -297,10 +295,10 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
                             for (unsigned int ox = oxMin; ox < oxMax; ++ox) {
                                 const unsigned int ix
                                     = (int)(ox * desc.strideX + sx)
-                                      - (int)desc.paddingX;
+                                      - desc.paddingX;
                                 const unsigned int iy
                                     = (int)(oy * desc.strideY + sy)
-                                      - (int)desc.paddingY;
+                                      - desc.paddingY;
 
                                 gradient += inputs(ix, iy, channel, batchPos)
                                             * diffInputs(ox / desc.subSampleX,
