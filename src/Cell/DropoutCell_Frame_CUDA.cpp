@@ -147,27 +147,28 @@ void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::DropoutCell_Frame_CUDA::backPropagate()
 {
-    if (!mDiffOutputs.empty()) {
-        unsigned int offset = 0;
+    if (mDiffOutputs.empty())
+        return;
 
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            if (mDiffOutputs[k].isValid())
-                throw std::runtime_error(
-                    "Cannot blend gradient from a Dropout cell");
+    unsigned int offset = 0;
 
-            CHECK_CUDNN_STATUS(
-                cudnnDropoutBackward(CudaContext::cudnnHandle(),
-                                     mDropoutDesc,
-                                     mOutputDesc[k],
-                                     mDiffInputs.getDevicePtr() + offset,
-                                     mDiffOutputs[k].getCudnnTensorDesc(),
-                                     mDiffOutputs[k].getDevicePtr(),
-                                     mReserveSpace[k],
-                                     mReserveSpaceSize[k]));
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].isValid())
+            throw std::runtime_error(
+                "Cannot blend gradient from a Dropout cell");
 
-            offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
-            mDiffOutputs[k].setValid();
-        }
+        CHECK_CUDNN_STATUS(
+            cudnnDropoutBackward(CudaContext::cudnnHandle(),
+                                 mDropoutDesc,
+                                 mOutputDesc[k],
+                                 mDiffInputs.getDevicePtr() + offset,
+                                 mDiffOutputs[k].getCudnnTensorDesc(),
+                                 mDiffOutputs[k].getDevicePtr(),
+                                 mReserveSpace[k],
+                                 mReserveSpaceSize[k]));
+
+        offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+        mDiffOutputs[k].setValid();
     }
 }
 

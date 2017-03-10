@@ -34,6 +34,9 @@
     linker,                                                                    \
     "/include:?mRegistrar@DropoutCell_Frame_CUDA@N2D2@@0U?$Registrar@VDropoutCell@N2D2@@@2@A")
 #endif
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@DropoutCell_Frame@N2D2@@0U?$Registrar@VDropoutCell@N2D2@@@2@A")
 #endif
 
 namespace N2D2 {
