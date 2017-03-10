@@ -161,11 +161,11 @@ void N2D2::UnpoolCell_Frame::checkGradient(double epsilon, double maxError)
                   (mPooling == Max));
 
     if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
+        for (unsigned int k = 0; k < mInputs.size(); ++k) {
             std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
+            name << mName + "_mDiffOutputs[" << k << "]";
 
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
         }
     } else {
         std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName

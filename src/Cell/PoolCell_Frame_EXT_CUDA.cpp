@@ -48,7 +48,8 @@ N2D2::PoolCell_Frame_EXT_CUDA::PoolCell_Frame_EXT_CUDA(
                paddingX,
                paddingY,
                pooling),
-      Cell_Frame_CUDA(name, nbOutputs, activation)
+      Cell_Frame_CUDA(name, nbOutputs, activation),
+      mPoolDesc(NULL)
 {
     // ctor
     const PoolCell_Frame_Kernels::Descriptor poolDesc(poolWidth,
@@ -231,7 +232,8 @@ void N2D2::PoolCell_Frame_EXT_CUDA::checkGradient(double epsilon, double maxErro
 
 N2D2::PoolCell_Frame_EXT_CUDA::~PoolCell_Frame_EXT_CUDA()
 {
-    CHECK_CUDA_STATUS(cudaFree(mPoolDesc));
+    if (mPoolDesc != NULL)
+        CHECK_CUDA_STATUS(cudaFree(mPoolDesc));
 
     for (unsigned int k = 0, size = mArgMax.size(); k < size; ++k)
         delete &mArgMax[k];
