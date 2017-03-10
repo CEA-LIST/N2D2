@@ -144,8 +144,7 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
                 const T alpha = -decay * rate;
 
                 // mMomentumData = mMomentumData - decay*rate*data
-                for (int index = 0; index < (int)mMomentumData.size(); ++index)
-                    mMomentumData(index) += alpha * (*data)(index);
+                mMomentumData(index) += alpha * (*data)(index);
             }
 
             // data = data + mMomentumData
