@@ -33,6 +33,26 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     CellGenerator::mDefaultModel = iniConfig.getProperty
                                    <std::string>("DefaultModel", "Transcode");
 
+#ifndef CUDA
+    const std::string suffix = "_CUDA";
+    const int compareSize = std::max<size_t>(CellGenerator::mDefaultModel.size()
+                                     - suffix.size(), 0);
+
+    if (CellGenerator::mDefaultModel.compare(compareSize, suffix.size(), suffix)
+        == 0)
+    {
+        std::cout << Utils::cwarning << "Warning: to use "
+            << CellGenerator::mDefaultModel << " models, N2D2 must be compiled "
+            "with CUDA enabled.\n";
+
+        CellGenerator::mDefaultModel
+            = CellGenerator::mDefaultModel.substr(0, compareSize);
+
+        std::cout << "*** Using " << CellGenerator::mDefaultModel
+            << " model instead. ***" << Utils::cdef << std::endl;
+    }
+#endif
+
     if (CellGenerator::mDefaultModel == "RRAM") {
         Synapse_RRAM::setProgramMethod(iniConfig.getProperty(
             "ProgramMethod(" + CellGenerator::mDefaultModel + ")",
