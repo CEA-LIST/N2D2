@@ -88,7 +88,9 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
 }
 
 void N2D2::LRNCell_Frame::backPropagate()
-{/*TODO*/
+{
+    throw std::runtime_error(
+        "LRNCell_Frame::backPropagate(): not implemented.");
 }
 
 void N2D2::LRNCell_Frame::update()
