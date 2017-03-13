@@ -3192,6 +3192,85 @@ area \\
  \hline
 \end{longtable}
 \end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Unpool!}{Unpool}}
+Unpooling layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Pooling! & Type of pooling
+  (\lstinline!Max! or \lstinline!Average!)\\
+  \cellcolor{requiredcolor}\lstinline!PoolWidth! & Width of the pooling area \\
+  \cellcolor{requiredcolor}\lstinline!PoolHeight! & Height of the pooling
+area \\
+  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!ArgMax! & Name of the associated pool
+  layer for the argmax (the pool layer input and the unpool layer output
+  dimension must match) \\
+  \lstinline!StrideX! [1] & X-axis stride of the pooling areas \\
+  \lstinline!StrideY! [1] & Y-axis stride of the pooling areas \\
+  \lstinline!Stride! [1] & Stride of the pooling areas \\
+   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \lstinline!PaddingX! [0] & X-axis input padding \\
+  \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!Padding! [0] & Input padding \\
+  \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+  \lstinline!Mapping.SizeX! [1] & Mapping canvas pattern default width \\
+  \lstinline!Mapping.SizeY! [1] & Mapping canvas pattern default height \\
+  \lstinline!Mapping.Size! [1] & Mapping canvas pattern default size \\
+   & (mutually exclusive with \lstinline!Mapping.SizeX!
+   and \lstinline!Mapping.SizeY!) \\
+  \lstinline!Mapping.StrideX! [1] & Mapping canvas default X-axis step \\
+  \lstinline!Mapping.StrideY! [1] & Mapping canvas default Y-axis step \\
+  \lstinline!Mapping.Stride! [1] & Mapping canvas default step \\
+   & (mutually exclusive with \lstinline!Mapping.StrideX!
+   and \lstinline!Mapping.StrideY!) \\
+  \lstinline!Mapping.OffsetX! [0] & Mapping canvas default X-axis offset \\
+  \lstinline!Mapping.OffsetY! [0] & Mapping canvas default Y-axis offset \\
+  \lstinline!Mapping.Offset! [0] & Mapping canvas default offset \\
+   & (mutually exclusive with \lstinline!Mapping.OffsetX!
+   and \lstinline!Mapping.OffsetY!) \\
+  \lstinline!Mapping.NbIterations! [0] & Mapping canvas pattern default number
+   of iterations (0 means no limit) \\
+  \lstinline!Mapping(in).SizeX! [1] & Mapping canvas pattern default width
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).SizeY! [1] & Mapping canvas pattern default height
+   for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Size! [1] & Mapping canvas pattern default size
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).SizeX! and \\
+   & \lstinline!Mapping(in).SizeY!) \\
+  \lstinline!Mapping(in).StrideX! [1] & Mapping canvas default X-axis step
+   for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).StrideY! [1] & Mapping canvas default Y-axis step
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Stride! [1] & Mapping canvas default step
+  for input layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).StrideX! and \\
+   & \lstinline!Mapping(in).StrideY!) \\
+  \lstinline!Mapping(in).OffsetX! [0] & Mapping canvas default X-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).OffsetY! [0] & Mapping canvas default Y-axis offset
+  for input layer \lstinline!in! \\
+  \lstinline!Mapping(in).Offset! [0] & Mapping canvas default offset for input
+   layer \lstinline!in! \\
+   & (mutually exclusive with \lstinline!Mapping(in).OffsetX! and \\
+   & \lstinline!Mapping(in).OffsetY!) \\
+  \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
+  number of iterations for input layer \lstinline!in! (0 means no limit) \\
+ \hline
+\end{longtable}
+\end{center}
+
+
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!FMP!}{FMP}}
 Fractional max pooling layer \citep{Graham2014}.
@@ -3479,7 +3558,7 @@ Dropout layer \citep{Srivastava2014}.
  \hline
  Option [default value] & Model(s) & Description\\
  \hline\hline
-  \lstinline!Dropout! [0.5] & \lstinline!Frame_CUDA! & The probability with
+  \lstinline!Dropout! [0.5] & \lstinline! all Frame ! & The probability with
   which the value from input would be dropped \\
  \hline
 \end{longtable}
