@@ -43,7 +43,7 @@ public:
 
 private:
     static Registrar<CellGenerator> mRegistrar;
-    static Registrar<CellGenerator, RegistryPostCreate_T> mRegistrarPost;
+    static RegistrarCustom<CellGenerator, RegistryPostCreate_T> mRegistrarPost;
 };
 }
 

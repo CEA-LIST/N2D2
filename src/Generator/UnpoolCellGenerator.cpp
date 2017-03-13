@@ -23,7 +23,8 @@
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::UnpoolCellGenerator::mRegistrar(UnpoolCell::Type,
                                       N2D2::UnpoolCellGenerator::generate);
-N2D2::Registrar<N2D2::CellGenerator, N2D2::CellGenerator::RegistryPostCreate_T>
+N2D2::RegistrarCustom<N2D2::CellGenerator,
+N2D2::CellGenerator::RegistryPostCreate_T>
 N2D2::UnpoolCellGenerator::mRegistrarPost(UnpoolCell::Type + std::string("+"),
                                       N2D2::UnpoolCellGenerator::postGenerate);
 

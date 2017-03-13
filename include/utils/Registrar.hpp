@@ -39,16 +39,15 @@ public:
 
 typedef std::map<std::string, BaseCommand*> RegistryMap_T;
 
-template <typename C, typename F = typename C::RegistryCreate_T>
-struct Registrar {
+template <typename C> struct Registrar {
     struct Command : public BaseCommand {
-        F mFunc;
-        Command(F func) : mFunc(func)
+        typename C::RegistryCreate_T mFunc;
+        Command(typename C::RegistryCreate_T func) : mFunc(func)
         {
         }
     };
 
-    Registrar(const std::string& key, F func)
+    Registrar(const std::string& key, typename C::RegistryCreate_T func)
     {
         if (C::registry().find(key) != C::registry().end())
             throw std::runtime_error("Registrar \"" + key
@@ -57,7 +56,67 @@ struct Registrar {
         C::registry().insert(std::make_pair(key, new Command(func)));
     }
 
-    Registrar(F func, const char* key, ...)
+    Registrar(typename C::RegistryCreate_T func, const char* key, ...)
+    {
+        va_list args;
+        va_start(args, key);
+
+        while (key != NULL) {
+            if (C::registry().find(key) != C::registry().end())
+                throw std::runtime_error("Registrar \"" + std::string(key)
+                                         + "\" already exists");
+
+            C::registry().insert(std::make_pair(key, new Command(func)));
+
+            key = va_arg(args, const char*);
+        }
+
+        va_end(args);
+    }
+
+    static bool exists(const std::string& key)
+    {
+        return (C::registry().find(key) != C::registry().end());
+    }
+
+    static typename C::RegistryCreate_T create(const std::string& key)
+    {
+        const RegistryMap_T::const_iterator it = C::registry().find(key);
+
+        if (it == C::registry().end()) {
+            // throw std::runtime_error("Invalid registrar key \"" + key +
+            // "\"");
+            std::cout << "Invalid registrar key \"" << key << "\"" << std::endl;
+#ifdef WIN32
+            return nullptr; // Required by Visual C++
+#else
+            return NULL; // but nullptr is not supported on GCC 4.4
+#endif
+        }
+
+        return static_cast<Command*>(it->second)->mFunc;
+    }
+};
+
+template <typename C, typename F = typename C::RegistryCreate_T>
+struct RegistrarCustom {
+    struct Command : public BaseCommand {
+        F mFunc;
+        Command(F func) : mFunc(func)
+        {
+        }
+    };
+
+    RegistrarCustom(const std::string& key, F func)
+    {
+        if (C::registry().find(key) != C::registry().end())
+            throw std::runtime_error("Registrar \"" + key
+                                     + "\" already exists");
+
+        C::registry().insert(std::make_pair(key, new Command(func)));
+    }
+
+    RegistrarCustom(F func, const char* key, ...)
     {
         va_list args;
         va_start(args, key);

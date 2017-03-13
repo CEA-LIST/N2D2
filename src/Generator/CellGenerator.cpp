@@ -43,11 +43,11 @@ void N2D2::CellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
                                        IniParser& iniConfig,
                                        const std::string& section)
 {
-    if (Registrar
+    if (RegistrarCustom
         <CellGenerator, RegistryPostCreate_T>::exists(cell->getType()
                                                       + std::string("+")))
     {
-        Registrar
+        RegistrarCustom
             <CellGenerator, RegistryPostCreate_T>::create(cell->getType()
                                                           + std::string("+"))
                 (cell, deepNet, iniConfig, section);
