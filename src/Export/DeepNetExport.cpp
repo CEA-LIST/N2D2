@@ -27,6 +27,13 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
                                    const std::string& dirName,
                                    const std::string& type)
 {
+    if (!Registrar<DeepNetExport>::exists(type)) {
+        std::cout << Utils::cwarning << "Error: \"" << type << "\" export"
+                  << " is not available (additional modules may be required)"
+                  << Utils::cdef << std::endl;
+        return;
+    }
+
     Utils::createDirectories(dirName);
 
 // Copy export core sources
