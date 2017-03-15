@@ -28,7 +28,15 @@ void N2D2::CellExport::generate(Cell& cell,
                                 const std::string& type)
 {
     const std::string cellType = cell.getType();
-    Registrar<CellExport>::create(cell.getType())(cell, dirName, type);
+
+    if (Registrar<CellExport>::exists(cellType))
+        Registrar<CellExport>::create(cellType)(cell, dirName, type);
+    else {
+        std::cout << Utils::cwarning << "Error: \"" << cellType << "\" cell"
+            " type is not exportable for \"" << type << "\" export (if not used"
+            " for inference, consider removing it before export)"
+            << Utils::cdef << std::endl;
+    }
 }
 
 int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)

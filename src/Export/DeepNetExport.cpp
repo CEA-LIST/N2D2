@@ -66,12 +66,7 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
                                                       itEnd = (*itLayer).end();
              it != itEnd;
              ++it) {
-            const Cell& cell = *deepNet.getCell(*it);
-            const std::string cellType = cell.getType();
-
-            if (cellType.compare("Dropout") != 0 && cellType.compare("Lrn")
-                                                    != 0)
-                CellExport::generate(*deepNet.getCell(*it), dirName, type);
+            CellExport::generate(*deepNet.getCell(*it), dirName, type);
         }
     }
 
