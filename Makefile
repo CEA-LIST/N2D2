@@ -114,7 +114,7 @@ else
     OPT:=-g -pg -rdynamic
   endif
 
-  CPPFLAGS:=$(CPPFLAGS) -Wall -Wextra -pedantic -std=c++0x $(OPT)
+  CPPFLAGS:=$(CPPFLAGS) -Wall -Wextra -pedantic -fsigned-char -std=c++0x $(OPT)
   LDFLAGS:=$(LDFLAGS) -Wall -Wextra -pedantic -std=c++0x $(OPT)
 endif
 
