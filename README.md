@@ -1,5 +1,4 @@
-# N2D2
-
+# <img src="manual/figs/N2D2_Logo.png" alt="N2D2" height="100"/>
 
 | **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; CUDA 6.5 + CuDNN 1.0</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 12 (2013)</sub>  |   |
 | --------------- | ------------------ | ------------------ | ------ |
