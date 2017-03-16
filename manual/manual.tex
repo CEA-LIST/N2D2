@@ -78,6 +78,8 @@
 \definecolor{drkgreen}{rgb}{0, 0.3, 0}
 \definecolor{drkblue}{rgb}{0, 0, 0.5}
 \definecolor{listletiblue}{rgb}{0, 0.4, 0.63}
+\definecolor{listgreen}{rgb}{0.57, 0.76, 0.04}
+\definecolor{listdarkgreen}{rgb}{0.04, 0.43, 0.16}
 \definecolor{requiredcolor}{rgb}{1.0, 1.0, 0.7}
 \definecolor{expercolor}{rgb}{0.7, 1.0, 1.0}
 
@@ -200,39 +202,41 @@
 \begin{document}
 
   \begin{tikzpicture}[remember picture,overlay,anchor=west]
-      \node[minimum width=\paperwidth] at ([yshift=-2.6cm,xshift=-0.1cm]current
-      page.north west) {\includegraphics[width=\paperwidth]{figs/head.jpg}};
+      \node at ([yshift=-2.6cm,xshift=2.2cm]current
+      page.north west) {\includegraphics[width=3.94cm]
+      {figs/LIST_CEA_Tech_Logo.jpg}};
       \node[minimum width=\paperwidth] at ([yshift=2.5cm]current page.south
-       west) {\textsf{\scriptsize{
+       west) (A) {\textsf{\scriptsize{
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}ll}
-          \includegraphics[height=0.5cm]{figs/list.png}
-           & \includegraphics[height=0.5cm]{figs/leti.png} \\
-          \color{listletiblue}Laboratoire d'Intégration des Systèmes et des
-           Technologies & \color{listletiblue}Laboratoire d'Electronique et
-           de Technologie de l'Information\\
+          \color{gray}Commissariat à l'Energie Atomique et aux Energies
+          Alternatives
+          & \color{gray}Département Architecture Conception et Logiciels
+          Embarqués\\
+          \color{gray}Institut List | CEA Saclay Nano-INNOV | Bât. 861-PC142
            & \\
-          \includegraphics[width=0.85cm]{figs/delim.jpg} & \\
-          Commissariat à l'Energie Atomique et aux Energies Alternatives
-          & \color{drkgreen}Direction de la Recherche Technologique\\
-          Institut Carnot CEA LIST	& \color{drkgreen}{Département Architecture
-           Conception et Logiciels Embarqués}\\
-          Centre de Saclay | Nano-Innov Bât 862 | PC 172 & \\
-          91191 Gif sur Yvette Cedex & \\
-          Tel. : +33 (0)1.69.08.49.67 | Fax : +33(0)1.69.08.83.95 & \\
-          \href{mailto:thierry.collette@cea.fr}{\color{black}
-          \ul{thierry.collette@cea.fr}} & \\
-          \tiny{Établissement Public à caractère Industriel et Commercial
-          RCS Paris B 775 685 019} & \\
+          \color{gray}91191 Gif-sur-Yvette Cedex - FRANCE & \\
+          \color{gray}Tel. : +33 (0)1.69.08.49.67
+          | Fax : +33(0)1.69.08.83.95 & \\
+          \href{http://www-list.cea.fr/}{\color{listgreen}www-list.cea.fr} & \\
+          \color{gray}\tiny{Établissement Public à caractère Industriel et
+          Commercial | RCS Paris B 775 685 019} & \\
         \end{tabular*}
       }}};
-      \node[minimum width=\paperwidth] at ([yshift=1.4cm,xshift=9cm]current
-      page.south west) {\includegraphics[width=1.11cm]{figs/isolabel.jpg}};
+        \draw[left color=listdarkgreen,right color=listgreen,draw=none]
+        ([xshift=2.35cm]A.north west)
+        rectangle ([xshift=2.98cm,yshift=1.5pt]A.north west) ;
+        \draw[left color=listdarkgreen,right color=listgreen,draw=none]
+        ([xshift=2.35cm,yshift=-2.5cm]A.north west)
+        rectangle ([xshift=16.96cm,yshift=-2.45cm]A.north west) ;
+      \node[minimum width=\paperwidth] at ([yshift=2.0cm,xshift=6cm]current
+      page.south west) {\includegraphics[height=0.6cm]
+      {figs/Carnot_LIST_Logo.png}};
+      \node[minimum width=\paperwidth] at ([yshift=2.0cm,xshift=7.7cm]current
+      page.south west) {\includegraphics[height=0.6cm]
+      {figs/Univ_Paris-Saclay_Logo.jpg}};
   \end{tikzpicture}
 
-\vspace{5cm}
-
-
-\vspace{2cm}
+\vspace{7cm}
 
 \noindent\makebox[\textwidth][c]{\begin{minipage}{0.8\textwidth}
 \centering
