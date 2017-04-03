@@ -45,16 +45,16 @@ run it on a video file.
 
 ### `AppObjectRecognition/`
 
-A live object recognition application, based on [ILSVRC2012 (ImageNet)]
-(http://www.image-net.org/challenges/LSVRC/2012/) dataset. You will need
-a webcam supported by OpenCV to run this application live, or you can run it on
-a video file.
+A live object recognition application, based on 
+[ILSVRC2012 (ImageNet)](http://www.image-net.org/challenges/LSVRC/2012/) dataset.
+You will need a webcam supported by OpenCV to run this application live, or you 
+can run it on a video file.
 
 
 ### `AppRoadDetection/`
 
-A road segmentation application, based on the [KITTI Road]
-(http://www.cvlibs.net/datasets/kitti/eval_road.php) dataset.
+A road segmentation application, based on the
+[KITTI Road](http://www.cvlibs.net/datasets/kitti/eval_road.php) dataset.
 
 
 Spike-based simulations
@@ -66,8 +66,8 @@ This simulation implements STDP unsupervised learning on a recorded AER
 sequence of cars running on a highway, using the event-based simulator embedded
 into N2D2.
 
-This binary reproduces some of the results published in [@Bichler2011]
-(#Bichler2011).
+This binary reproduces some of the results published in 
+[@Bichler2011](#Bichler2011).
 
 
 ### `aer_viewer`
