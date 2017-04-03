@@ -159,6 +159,18 @@ void setConvolution(unsigned int batchSize,
     cudnnCreateConvolutionDescriptor(&convDesc);
 
 
+#if CUDNN_VERSION >= 6000
+    CHECK_CUDNN_STATUS(
+        cudnnSetConvolution2dDescriptor(convDesc,
+                                        paddingY,
+                                        paddingX,
+                                        strideY,
+                                        strideX,
+                                        subSampleY,
+                                        subSampleX,
+                                        CUDNN_CROSS_CORRELATION,
+                                        context_dataType) );
+#else
     CHECK_CUDNN_STATUS(
         cudnnSetConvolution2dDescriptor(convDesc,
                                         paddingY,
@@ -168,6 +180,7 @@ void setConvolution(unsigned int batchSize,
                                         subSampleY,
                                         subSampleX,
                                         CUDNN_CROSS_CORRELATION) );
+#endif
 
     cudnnCreateTensorDescriptor(&biasDesc);
     cudnnCreateTensorDescriptor(&outputsTensor);

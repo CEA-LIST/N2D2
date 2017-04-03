@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_DROPOUTMAXCELL_H
-#define N2D2_DROPOUTMAXCELL_H
+#ifndef N2D2_DROPOUTCELL_H
+#define N2D2_DROPOUTCELL_H
 
 #include <string>
 #include <vector>
@@ -70,4 +70,4 @@ protected:
 };
 }
 
-#endif // N2D2_DROPOUTMAXCELL_H
+#endif // N2D2_DROPOUTCELL_H

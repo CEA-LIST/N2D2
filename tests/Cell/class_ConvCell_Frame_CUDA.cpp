@@ -499,7 +499,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
                         }
                     }
 
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-12);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-4);
                 }
             }
         }

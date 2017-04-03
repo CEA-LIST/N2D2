@@ -67,6 +67,18 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
         mBias.synchronizeHToD();
     }
 
+#if CUDNN_VERSION >= 6000
+    CHECK_CUDNN_STATUS(
+        cudnnSetConvolution2dDescriptor(mConvDesc,
+                                        mPaddingY,
+                                        mPaddingX,
+                                        mStrideY,
+                                        mStrideX,
+                                        1,
+                                        1,
+                                        CUDNN_CROSS_CORRELATION,
+                                        CudaContext::data_type));
+#else
     CHECK_CUDNN_STATUS(
         cudnnSetConvolution2dDescriptor(mConvDesc,
                                         mPaddingY,
@@ -76,6 +88,7 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
                                         1,
                                         1,
                                         CUDNN_CROSS_CORRELATION));
+#endif
 
     size_t workspaceSize = 0;
 
