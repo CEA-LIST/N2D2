@@ -932,9 +932,14 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
                  / (double)nbPatterns << std::endl;
 }
 
-void N2D2::DeepNet::learn()
+void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 {
     const unsigned int nbLayers = mLayers.size();
+
+    std::chrono::high_resolution_clock::time_point time1, time2;
+
+    if (timings != NULL)
+        (*timings).clear();
 
     // Signal propagation
     for (unsigned int l = 1; l < nbLayers; ++l) {
@@ -953,7 +958,21 @@ void N2D2::DeepNet::learn()
             if (mSignalsDiscretization > 0)
                 cellFrame->discretizeSignals(mSignalsDiscretization);
 
+            //std::cout << "propagate " << mCells[(*itCell)]->getName()
+            //    << std::endl;
+            time1 = std::chrono::high_resolution_clock::now();
             cellFrame->propagate();
+
+            if (timings != NULL) {
+#ifdef CUDA
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+                time2 = std::chrono::high_resolution_clock::now();
+                (*timings).push_back(std::make_pair(
+                    (*itCell) + "[prop]",
+                    std::chrono::duration_cast
+                    <std::chrono::duration<double> >(time2 - time1).count()));
+            }
         }
     }
 
@@ -962,8 +981,23 @@ void N2D2::DeepNet::learn()
          = mTargets.begin(),
          itTargetsEnd = mTargets.end();
          itTargets != itTargetsEnd;
-         ++itTargets) {
+         ++itTargets)
+    {
+        //std::cout << "process " << (*itTargets)->getName() << std::endl;
+        time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(Database::Learn);
+
+        if (timings != NULL) {
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+            time2 = std::chrono::high_resolution_clock::now();
+            (*timings).push_back(std::make_pair(
+                (*itTargets)->getCell()->getName() + "."
+                + (*itTargets)->getType(),
+                std::chrono::duration_cast
+                <std::chrono::duration<double> >(time2 - time1).count()));
+        }
     }
 
     // Error back-propagation
@@ -972,9 +1006,24 @@ void N2D2::DeepNet::learn()
              = mLayers[l].begin(),
              itCellEnd = mLayers[l].end();
              itCell != itCellEnd;
-             ++itCell) {
+             ++itCell)
+        {
+            //std::cout << "back-propagate " << mCells[(*itCell)]->getName()
+            //    << std::endl;
+            time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->backPropagate();
+
+            if (timings != NULL) {
+#ifdef CUDA
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+                time2 = std::chrono::high_resolution_clock::now();
+                (*timings).push_back(std::make_pair(
+                    (*itCell) + "[back-prop]",
+                    std::chrono::duration_cast
+                    <std::chrono::duration<double> >(time2 - time1).count()));
+            }
         }
     }
 
@@ -984,9 +1033,24 @@ void N2D2::DeepNet::learn()
              = mLayers[l].begin(),
              itCellEnd = mLayers[l].end();
              itCell != itCellEnd;
-             ++itCell) {
+             ++itCell)
+        {
+            //std::cout << "update " << mCells[(*itCell)]->getName()
+            //    << std::endl;
+            time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->update();
+
+            if (timings != NULL) {
+#ifdef CUDA
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+                time2 = std::chrono::high_resolution_clock::now();
+                (*timings).push_back(std::make_pair(
+                    (*itCell) + "[update]",
+                    std::chrono::duration_cast
+                    <std::chrono::duration<double> >(time2 - time1).count()));
+            }
         }
     }
 }
@@ -1220,6 +1284,11 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
 
     timingsData.close();
 
+    std::stringstream outputStr;
+    outputStr << "size " << (timings.size() * 50) << ",600 enhanced large";
+
+    Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
+
     Gnuplot gnuplot;
     gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
                "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
@@ -1248,6 +1317,8 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
                  " '' using ($3):xticlabels(wrap(stringcolumn(1),5)) axes x1y2,"
                  " '' using ($0+0.2):($3):(gprintf(\"%.2f\",$3)) axes x1y2 "
                  "with labels offset char 1,1 textcolor lt 2");
+
+    Gnuplot::setDefaultOutput();
 }
 
 void

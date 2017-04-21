@@ -66,13 +66,15 @@ using namespace N2D2;
 unsigned int cudaDevice = 0;
 #endif
 
-void learnThreadWrapper(const std::shared_ptr<DeepNet>& deepNet)
+void learnThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
+                        std::vector<std::pair<std::string, double> >* timings
+                            = NULL)
 {
 #ifdef CUDA
     CudaContext::setDevice(cudaDevice);
 #endif
 
-    deepNet->learn();
+    deepNet->learn(timings);
 }
 
 void validationThreadWrapper(const std::shared_ptr<DeepNet>& deepNet)
@@ -99,6 +101,7 @@ int main(int argc, char* argv[]) try
     const unsigned int stopValid = opts.parse(
         "-stop-valid", 0U, "max. number of successive lower score validation");
     const bool test = opts.parse("-test", "perform testing");
+    const bool bench = opts.parse("-bench", "learning speed benchmarking");
     const unsigned int learnStdp
         = opts.parse("-learn-stdp", 0U, "number of STDP learning steps");
     const unsigned int avgWindow
@@ -268,11 +271,15 @@ int main(int argc, char* argv[]) try
 
         sp.readRandomBatch(Database::Learn);
 
+        std::vector<std::pair<std::string, double> > timings, cumTimings;
+
         for (unsigned int b = 0; b < nbBatch; ++b) {
             const unsigned int i = b * batchSize;
 
             sp.synchronize();
-            std::thread learnThread(learnThreadWrapper, deepNet);
+            std::thread learnThread(learnThreadWrapper,
+                                    deepNet,
+                                    (bench) ? &timings : NULL);
 
             sp.future();
             sp.readRandomBatch(Database::Learn);
@@ -285,6 +292,20 @@ int main(int argc, char* argv[]) try
                           << sp.getLabelsData()[0](0) << std::endl;
                 deepNet->logOutputs("outputs_init");
                 deepNet->logDiffInputs("diffinputs_init");
+            }
+
+            if (bench) {
+                if (!cumTimings.empty()) {
+                    std::transform(timings.begin(),
+                                   timings.end(),
+                                   cumTimings.begin(),
+                                   cumTimings.begin(),
+                                   Utils::PairOp<std::string,
+                                                 double,
+                                                 Utils::Left<std::string>,
+                                                 std::plus<double> >());
+                } else
+                    cumTimings = timings;
             }
 
             if (i >= nextReport || b == nbBatch - 1) {
@@ -354,6 +375,18 @@ int main(int argc, char* argv[]) try
                         // target->logTopNSuccess("learning", Database::Learn,
                         // avgBatchWindow);
                     }
+                }
+
+                if (bench) {
+                    for (std::vector<std::pair<std::string, double> >::iterator
+                         it = cumTimings.begin(),
+                         itEnd = cumTimings.end();
+                         it != itEnd;
+                         ++it) {
+                        (*it).second /= (i + batchSize);
+                    }
+
+                    deepNet->logTimings("benchmark.dat", cumTimings);
                 }
 
                 deepNet->logEstimatedLabels("learning");

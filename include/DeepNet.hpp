@@ -84,7 +84,7 @@ public:
     void importNetworkSolverParameters(const std::string& dirName);
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void initialize();
-    void learn();
+    void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
     void cTicks(Time_T start, Time_T stop, Time_T timestep);
