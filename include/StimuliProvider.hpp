@@ -218,7 +218,7 @@ public:
     inline CompositeTransformation&
     getChannelOnTheFlyTransformation(unsigned int channel,
                                      Database::StimuliSet set);
-    const std::vector<Database::StimulusID>& getBatch()
+    const std::vector<int>& getBatch()
     {
         return mBatch;
     };
@@ -282,8 +282,8 @@ protected:
     /// Channel transformations
     std::vector<TransformationsSets> mChannelsTransformations;
     /// StimuliID of current batch
-    std::vector<Database::StimulusID> mBatch;
-    std::vector<Database::StimulusID> mFutureBatch;
+    std::vector<int> mBatch;
+    std::vector<int> mFutureBatch;
     /// Tensor (x, y, channel, batch)
     Tensor4d<Float_T> mData;
     Tensor4d<Float_T> mFutureData;
