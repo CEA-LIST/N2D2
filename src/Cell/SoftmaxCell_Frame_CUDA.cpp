@@ -46,12 +46,10 @@ void N2D2::SoftmaxCell_Frame_CUDA::initialize()
 
 void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeHBasedToD();
+
     const float alpha = 1.0f;
     const float beta = 0.0f;
-
-    if (mDiffOutputs.empty()) // Si c'est la première couche
-        mInputs.synchronizeHToD(); // On a besoin de mapper l'input sur la
-    // mémoire du device
 
     CHECK_CUDNN_STATUS(cudnnSoftmaxForward(CudaContext::cudnnHandle(),
                                            CUDNN_SOFTMAX_ACCURATE,
@@ -68,58 +66,61 @@ void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
 {
-    if (!mDiffOutputs.empty()) {
-        const float alpha = 1.0f;
+    if (mDiffOutputs.empty())
+        return;
 
-        if (mWithLoss) {
-            if (mDiffOutputs[0].isValid()) {
-                CHECK_CUBLAS_STATUS(
-                    cublasSaxpy(CudaContext::cublasHandle(),
-                                mDiffOutputs[0].size(), // size of data
-                                &alpha,
-                                mDiffInputs.getDevicePtr(),
-                                1,
-                                mDiffOutputs[0].getDevicePtr(),
-                                1));
-            } else {
-                CHECK_CUDA_STATUS(
-                    cudaMemcpy(mDiffOutputs[0].getDevicePtr(),
-                               mDiffInputs.getDevicePtr(),
-                               mDiffOutputs[0].size() * sizeof(Float_T),
-                               cudaMemcpyDeviceToDevice));
-            }
-            /*
-                        if (mInputs.dimB() > 1) {
-                            float normBatch = 1.0f/mInputs.dimB();
+    mDiffInputs.synchronizeHBasedToD();
 
-                            //Normalized in function of the batch size
-                            CHECK_CUBLAS_STATUS(
-               cublasSscal(CudaContext::cublasHandle(),
-                                mDiffOutputs[0].size(),
-                                &normBatch,
-                                mDiffOutputs[0].getDevicePtr(),
-                                1) );
-                        }
-            */
+    const float alpha = 1.0f;
+
+    if (mWithLoss) {
+        if (mDiffOutputs[0].isValid()) {
+            CHECK_CUBLAS_STATUS(
+                cublasSaxpy(CudaContext::cublasHandle(),
+                            mDiffOutputs[0].size(), // size of data
+                            &alpha,
+                            mDiffInputs.getDevicePtr(),
+                            1,
+                            mDiffOutputs[0].getDevicePtr(),
+                            1));
         } else {
-            const float beta = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
-
-            CHECK_CUDNN_STATUS(
-                cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
-                                     CUDNN_SOFTMAX_ACCURATE,
-                                     CUDNN_SOFTMAX_MODE_CHANNEL,
-                                     &alpha,
-                                     mOutputs.getCudnnTensorDesc(),
-                                     mOutputs.getDevicePtr(),
-                                     mDiffInputs.getCudnnTensorDesc(),
-                                     mDiffInputs.getDevicePtr(),
-                                     &beta,
-                                     mDiffOutputs[0].getCudnnTensorDesc(),
-                                     mDiffOutputs[0].getDevicePtr()));
+            CHECK_CUDA_STATUS(
+                cudaMemcpy(mDiffOutputs[0].getDevicePtr(),
+                           mDiffInputs.getDevicePtr(),
+                           mDiffOutputs[0].size() * sizeof(Float_T),
+                           cudaMemcpyDeviceToDevice));
         }
+        /*
+                    if (mInputs.dimB() > 1) {
+                        float normBatch = 1.0f/mInputs.dimB();
 
-        mDiffOutputs[0].setValid();
+                        //Normalized in function of the batch size
+                        CHECK_CUBLAS_STATUS(
+           cublasSscal(CudaContext::cublasHandle(),
+                            mDiffOutputs[0].size(),
+                            &normBatch,
+                            mDiffOutputs[0].getDevicePtr(),
+                            1) );
+                    }
+        */
+    } else {
+        const float beta = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
+
+        CHECK_CUDNN_STATUS(
+            cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
+                                 CUDNN_SOFTMAX_ACCURATE,
+                                 CUDNN_SOFTMAX_MODE_CHANNEL,
+                                 &alpha,
+                                 mOutputs.getCudnnTensorDesc(),
+                                 mOutputs.getDevicePtr(),
+                                 mDiffInputs.getCudnnTensorDesc(),
+                                 mDiffInputs.getDevicePtr(),
+                                 &beta,
+                                 mDiffOutputs[0].getCudnnTensorDesc(),
+                                 mDiffOutputs[0].getDevicePtr()));
     }
+
+    mDiffOutputs[0].setValid();
 }
 
 void N2D2::SoftmaxCell_Frame_CUDA::update()

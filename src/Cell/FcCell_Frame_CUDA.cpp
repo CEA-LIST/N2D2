@@ -78,12 +78,10 @@ void N2D2::FcCell_Frame_CUDA::initialize()
 
 void N2D2::FcCell_Frame_CUDA::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeHBasedToD();
+
     const float alpha = 1.0f;
     float beta = 0.0f;
-
-    if (mDiffOutputs.empty()) // Si c'est la première couche
-        mInputs.synchronizeHToD(); // On a besoin de mapper l'input sur la
-    // mémoire du device
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const unsigned int inputSize = mInputs[k].dimX() * mInputs[k].dimY()
@@ -133,6 +131,7 @@ void N2D2::FcCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::FcCell_Frame_CUDA::backPropagate()
 {
+    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     //  1   <-->    batch   <-->    mInputs.b()

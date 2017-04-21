@@ -41,6 +41,8 @@ public:
 
     CudaInterface();
 
+    void push_back(Tensor4d<T>* tensor);
+
     /**
     * Add a CudaTensor4d to the interface
     *
@@ -64,6 +66,9 @@ public:
                          unsigned int b,
                          unsigned int length) const;
 
+    /** Synchronize Host-based data To Device */
+    void synchronizeHBasedToD() const;
+
     virtual CudaTensor4d<T>& back();
     virtual const CudaTensor4d<T>& back() const;
     virtual CudaTensor4d<T>& operator[](unsigned int t);
@@ -83,6 +88,17 @@ template <typename T> N2D2::CudaInterface<T>::CudaInterface() : Interface<T>()
 {
     // if (sizeof(T) != sizeof(float))
     //    throw std::runtime_error("Types must match");
+}
+
+template <typename T>
+void N2D2::CudaInterface<T>::push_back(Tensor4d<T>* tensor)
+{
+    CudaTensor4d<T>* cudaTensor = dynamic_cast<CudaTensor4d<T>*>(tensor);
+
+    if (cudaTensor != NULL)
+        Interface<T>::push_back(tensor);
+    else
+        Interface<T>::push_back(new CudaTensor4d<T>(tensor));
 }
 
 template <typename T>
@@ -123,6 +139,17 @@ template <typename T> void N2D2::CudaInterface<T>::synchronizeHToD() const
          it != itEnd;
          ++it)
         static_cast<CudaTensor4d<T>*>(*it)->synchronizeHToD();
+}
+
+template <typename T> void N2D2::CudaInterface<T>::synchronizeHBasedToD() const
+{
+    for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+    {
+        static_cast<CudaTensor4d<T>*>(*it)->synchronizeHBasedToD();
+    }
 }
 
 template <typename T>

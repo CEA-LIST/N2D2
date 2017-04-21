@@ -61,7 +61,16 @@ void N2D2::Cell_Frame::addInput(StimuliProvider& sp,
     // Define input-output sizes
     setInputsSize(width, height);
     mNbChannels += sp.getNbChannels();
+
+    mInputs.push_back(&sp.getData());
     setOutputsSize();
+
+    if (mOutputs.empty()) {
+        mOutputs.resize(
+            mOutputsWidth, mOutputsHeight, mNbOutputs, sp.getBatchSize());
+        mDiffInputs.resize(
+            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+    }
 
     // Define input-output connections
     if (!mapping.empty() && mapping.rows() != sp.getNbChannels())
@@ -79,55 +88,49 @@ void N2D2::Cell_Frame::addInput(StimuliProvider& sp,
                 = (!mapping.empty()) ? mapping(channel, output) : true;
         }
     }
-
-    mInputs.push_back(&sp.getData());
-
-    if (mOutputs.empty()) {
-        mOutputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, sp.getBatchSize());
-        mDiffInputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
-    }
 }
 
 void N2D2::Cell_Frame::addInput(Cell* cell, const Matrix<bool>& mapping)
 {
-    Cell_Frame* cellFrame = dynamic_cast<Cell_Frame*>(cell);
+    // Define input-output sizes
+    setInputsSize(cell->getOutputsWidth(), cell->getOutputsHeight());
+    mNbChannels += cell->getNbOutputs();
 
-    if (cellFrame == NULL)
+    Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(cell);
+
+    if (cellFrame != NULL) {
+        mInputs.push_back(&cellFrame->getOutputs());
+        mDiffOutputs.push_back(&cellFrame->getDiffInputs());
+    }
+    else {
         throw std::runtime_error(
             "Cell_Frame::addInput(): cannot mix Spike and Frame models");
+    }
 
-    // Define input-output sizes
-    setInputsSize(cellFrame->mOutputsWidth, cellFrame->mOutputsHeight);
-    mNbChannels += cellFrame->mNbOutputs;
     setOutputsSize();
 
+    if (mOutputs.empty()) {
+        mOutputs.resize(
+            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+        mDiffInputs.resize(
+            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+    }
+
     // Define input-output connections
-    if (!mapping.empty() && mapping.rows() != cellFrame->mNbOutputs)
+    if (!mapping.empty() && mapping.rows() != cell->getNbOutputs())
         throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
 
     mMaps.resize(mNbOutputs, mNbChannels);
-    const unsigned int channelOffset = mNbChannels - cellFrame->mNbOutputs;
+    const unsigned int channelOffset = mNbChannels - cell->getNbOutputs();
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int channel = 0; channel < cellFrame->mNbOutputs;
+        for (unsigned int channel = 0; channel < cell->getNbOutputs();
              ++channel) {
             mMaps(output, channelOffset + channel)
                 = (!mapping.empty()) ? mapping(channel, output) : true;
         }
-    }
-
-    mInputs.push_back(&cellFrame->mOutputs);
-    mDiffOutputs.push_back(&cellFrame->mDiffInputs);
-
-    if (mOutputs.empty()) {
-        mOutputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
-        mDiffInputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
     }
 }
 
@@ -137,23 +140,17 @@ void N2D2::Cell_Frame::addInput(Cell* cell,
                                 unsigned int width,
                                 unsigned int height)
 {
-    Cell_Frame* cellFrame = dynamic_cast<Cell_Frame*>(cell);
-
-    if (cellFrame == NULL)
-        throw std::runtime_error(
-            "Cell_Frame::addInput(): cannot mix Spike and Frame models");
-
     if (width == 0)
-        width = cellFrame->mOutputsWidth - x0;
+        width = cell->getOutputsWidth() - x0;
     if (height == 0)
-        height = cellFrame->mOutputsHeight - y0;
+        height = cell->getOutputsHeight() - y0;
 
-    if (x0 > 0 || y0 > 0 || width < cellFrame->mOutputsWidth
-        || height < cellFrame->mOutputsHeight)
+    if (x0 > 0 || y0 > 0 || width < cell->getOutputsWidth()
+        || height < cell->getOutputsHeight())
         throw std::runtime_error("Cell_Frame::addInput(): adding a cropped "
                                  "output map as input is not supported");
 
-    Cell_Frame::addInput(cellFrame);
+    Cell_Frame::addInput(cell);
 }
 
 void N2D2::Cell_Frame::addInput(Tensor4d<Float_T>& inputs,
@@ -162,14 +159,13 @@ void N2D2::Cell_Frame::addInput(Tensor4d<Float_T>& inputs,
     // Define input-output sizes
     setInputsSize(inputs.dimX(), inputs.dimY());
     mNbChannels += inputs.dimZ();
-    setOutputsSize();
-
-    mMaps.resize(mNbOutputs, mNbChannels, true);
 
     mInputs.push_back(&inputs);
 
     if (!diffOutputs.empty())
         mDiffOutputs.push_back(&diffOutputs);
+
+    setOutputsSize();
 
     if (mOutputs.empty()) {
         mOutputs.resize(
@@ -177,6 +173,8 @@ void N2D2::Cell_Frame::addInput(Tensor4d<Float_T>& inputs,
         mDiffInputs.resize(
             mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
     }
+
+    mMaps.resize(mNbOutputs, mNbChannels, true);
 }
 
 void N2D2::Cell_Frame::propagate(bool /*inference*/)

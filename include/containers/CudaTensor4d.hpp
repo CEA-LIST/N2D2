@@ -104,6 +104,9 @@ public:
                          unsigned int b,
                          unsigned int length) const;
 
+    /** Synchronize Host-based data To Device */
+    void synchronizeHBasedToD() const;
+
     void setDevicePtr(T* dataDevice)
     {
         mDataDevice = dataDevice;
@@ -135,12 +138,15 @@ protected:
 
     cudnnTensorDescriptor_t mTensor;
     T* mDataDevice;
+    bool mHostBased;
 };
 }
 
 template <typename T>
 N2D2::CudaTensor4d<T>::CudaTensor4d()
-    : Tensor4d<T>(), mDataDevice(NULL)
+    : Tensor4d<T>(),
+      mDataDevice(NULL),
+      mHostBased(false)
 {
     // ctor
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
@@ -148,7 +154,9 @@ N2D2::CudaTensor4d<T>::CudaTensor4d()
 
 template <typename T>
 N2D2::CudaTensor4d<T>::CudaTensor4d(Tensor4d<T>* base)
-    : Tensor4d<T>(*base), mDataDevice(NULL)
+    : Tensor4d<T>(*base),
+      mDataDevice(NULL),
+      mHostBased(true)
 {
     // ctor
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
@@ -176,7 +184,8 @@ N2D2::CudaTensor4d<T>::CudaTensor4d(const CudaTensor4d<T>& tensor)
                   tensor.dimB(),
                   tensor.begin(),
                   tensor.end()),
-      mDataDevice(NULL)
+      mDataDevice(NULL),
+      mHostBased(tensor.mHostBased)
 {
     // copy-ctor
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
@@ -201,7 +210,9 @@ N2D2::CudaTensor4d<T>::CudaTensor4d(unsigned int dimX,
                                     unsigned int dimY,
                                     unsigned int dimZ,
                                     unsigned int dimB)
-    : Tensor4d<T>(dimX, dimY, dimZ, dimB), mDataDevice(NULL)
+    : Tensor4d<T>(dimX, dimY, dimZ, dimB),
+      mDataDevice(NULL),
+      mHostBased(false)
 {
     // ctor
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
@@ -423,6 +434,16 @@ void N2D2::CudaTensor4d<T>::synchronizeHToD(unsigned int ijk,
                                  length * sizeof(T),
                                  cudaMemcpyHostToDevice));
 }
+
+/**
+*   Synchronize data from valid host to device / Par morceau
+*/
+template <typename T> void N2D2::CudaTensor4d<T>::synchronizeHBasedToD() const
+{
+    if (mHostBased)
+        synchronizeHToD();
+}
+
 /*
 template<typename T>
 void N2D2::CudaTensor4d<T>::dump(const std::string& fileName) {

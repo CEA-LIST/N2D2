@@ -65,6 +65,8 @@ void N2D2::FcCell_Frame::initialize()
 
 void N2D2::FcCell_Frame::propagate(bool inference)
 {
+    mInputs.synchronizeDToH();
+
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
                                     * mOutputs.dimZ();
     const unsigned int count = mInputs.dimB() * outputSize;
@@ -125,6 +127,7 @@ void N2D2::FcCell_Frame::propagate(bool inference)
 
 void N2D2::FcCell_Frame::backPropagate()
 {
+    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     if (!mDiffOutputs.empty() && mBackPropagate) {

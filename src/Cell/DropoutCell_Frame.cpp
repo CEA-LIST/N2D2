@@ -56,6 +56,8 @@ void N2D2::DropoutCell_Frame::initialize()
 
 void N2D2::DropoutCell_Frame::propagate(bool inference)
 {
+    mInputs.synchronizeDToH();
+
     unsigned int offset = 0;
 
     if (inference) {
@@ -121,6 +123,8 @@ void N2D2::DropoutCell_Frame::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
+
+    mDiffInputs.synchronizeDToH();
 
     unsigned int offset = 0;
 

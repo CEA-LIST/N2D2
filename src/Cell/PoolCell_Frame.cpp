@@ -68,6 +68,8 @@ void N2D2::PoolCell_Frame::initialize()
 
 void N2D2::PoolCell_Frame::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeDToH();
+
     const float alpha = 1.0f;
     float beta = 0.0f;
 
@@ -108,10 +110,11 @@ void N2D2::PoolCell_Frame::propagate(bool /*inference*/)
 
 void N2D2::PoolCell_Frame::backPropagate()
 {
-    Cell_Frame::backPropagate();
-
     if (mDiffOutputs.empty())
         return;
+
+    mDiffInputs.synchronizeDToH();
+    Cell_Frame::backPropagate();
 
     const Float_T alpha = 1.0;
 

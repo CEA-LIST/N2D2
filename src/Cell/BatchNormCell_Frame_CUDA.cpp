@@ -87,12 +87,10 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
 
 void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
 {
+    mInputs.synchronizeHBasedToD();
+
     const float alpha = 1.0f;
     const float beta = 0.0f;
-
-    if (mDiffOutputs.empty()) // Si c'est la première couche
-        mInputs.synchronizeHToD(); // On a besoin de mapper l'input sur la
-    // mémoire du device
 
     if (inference) {
         CHECK_CUDNN_STATUS(cudnnBatchNormalizationForwardInference(
@@ -143,6 +141,7 @@ void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
 {
+    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     const float alpha = 1.0f;

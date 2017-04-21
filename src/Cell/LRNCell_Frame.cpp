@@ -48,6 +48,8 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
                                  "doesn't match for local response "
                                  "normalization accross channels\n");
 
+    mInputs.synchronizeDToH();
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (mNbOutputs > 16)
 #else

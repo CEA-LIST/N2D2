@@ -115,12 +115,10 @@ void N2D2::PoolCell_Frame_CUDA::initialize()
 
 void N2D2::PoolCell_Frame_CUDA::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeHBasedToD();
+
     const float alpha = 1.0f;
     const float beta = 0.0f;
-
-    if (mDiffOutputs.empty()) // Si c'est la première couche
-        mInputs.synchronizeHToD(); // On a besoin de mapper l'input sur la
-    // mémoire du device
 
     unsigned int offset = 0;
 
@@ -144,33 +142,35 @@ void N2D2::PoolCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::PoolCell_Frame_CUDA::backPropagate()
 {
+    if (mDiffOutputs.empty())
+        return;
+
+    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
-    if (!mDiffOutputs.empty()) {
-        const float alpha = 1.0f;
+    const float alpha = 1.0f;
 
-        unsigned int offset = 0;
+    unsigned int offset = 0;
 
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
-            CHECK_CUDNN_STATUS(
-                cudnnPoolingBackward(CudaContext::cudnnHandle(),
-                                     mPoolingDesc,
-                                     &alpha,
-                                     mOutputDesc[k],
-                                     mOutputs.getDevicePtr() + offset,
-                                     mOutputDesc[k],
-                                     mDiffInputs.getDevicePtr() + offset,
-                                     mInputs[k].getCudnnTensorDesc(),
-                                     mInputs[k].getDevicePtr(),
-                                     &beta,
-                                     mDiffOutputs[k].getCudnnTensorDesc(),
-                                     mDiffOutputs[k].getDevicePtr()));
+        CHECK_CUDNN_STATUS(
+            cudnnPoolingBackward(CudaContext::cudnnHandle(),
+                                 mPoolingDesc,
+                                 &alpha,
+                                 mOutputDesc[k],
+                                 mOutputs.getDevicePtr() + offset,
+                                 mOutputDesc[k],
+                                 mDiffInputs.getDevicePtr() + offset,
+                                 mInputs[k].getCudnnTensorDesc(),
+                                 mInputs[k].getDevicePtr(),
+                                 &beta,
+                                 mDiffOutputs[k].getCudnnTensorDesc(),
+                                 mDiffOutputs[k].getDevicePtr()));
 
-            offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
-            mDiffOutputs[k].setValid();
-        }
+        offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+        mDiffOutputs[k].setValid();
     }
 }
 

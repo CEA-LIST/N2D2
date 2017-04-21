@@ -66,6 +66,7 @@ public:
     virtual void setOutputTargets(const Tensor4d<Float_T>& targets) = 0;
     virtual Tensor4d<Float_T>& getOutputs() = 0;
     virtual const Tensor4d<Float_T>& getOutputs() const = 0;
+    virtual Tensor4d<Float_T>& getDiffInputs() = 0;
     virtual const Tensor4d<Float_T>& getDiffInputs() const = 0;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const = 0;
     std::shared_ptr<Activation<Float_T> > getActivation() const

@@ -83,6 +83,8 @@ void N2D2::DeconvCell_Frame::initialize()
 
 void N2D2::DeconvCell_Frame::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeDToH();
+
     const Float_T alpha = 1.0;
     Float_T beta = 0.0;
 
@@ -113,6 +115,7 @@ void N2D2::DeconvCell_Frame::propagate(bool /*inference*/)
 
 void N2D2::DeconvCell_Frame::backPropagate()
 {
+    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const Float_T alpha = 1.0;

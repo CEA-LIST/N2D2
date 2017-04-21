@@ -54,6 +54,8 @@ void N2D2::FMPCell_Frame::initialize()
 
 void N2D2::FMPCell_Frame::propagate(bool inference)
 {
+    mInputs.synchronizeDToH();
+
     if (!inference)
         mInputsBackProp.assign(mInputs[0].dimX(),
                                mInputs[0].dimY(),
@@ -153,6 +155,7 @@ void N2D2::FMPCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
+    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const unsigned int size = mInputs.dimB() * mNbChannels;

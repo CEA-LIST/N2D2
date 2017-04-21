@@ -54,6 +54,8 @@ void N2D2::FMPCell_Frame_CUDA::initialize()
 
 void N2D2::FMPCell_Frame_CUDA::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeHBasedToD();
+
     generateRegions(mGridX, mInputs[0].dimX(), mOutputs.dimX());
     generateRegions(mGridY, mInputs[0].dimY(), mOutputs.dimY());
     mGridX.synchronizeHToD();

@@ -44,6 +44,8 @@ void N2D2::SoftmaxCell_Frame::initialize()
 
 void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeDToH();
+
 #pragma omp parallel for if (mInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int oy = 0; oy < mOutputsHeight; ++oy) {
@@ -80,6 +82,8 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
+
+    mDiffInputs.synchronizeDToH();
 
     const unsigned int size = mInputs.dimB() * mNbChannels;
 

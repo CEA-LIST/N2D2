@@ -234,6 +234,8 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
 
 void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeHBasedToD();
+
     /**
      * 1.0
      * Corps de la procédure de convolution via CuDNN
@@ -241,10 +243,6 @@ void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
      */
     const float alpha = 1.0f;
     float beta = 0.0f;
-
-    if (mDiffOutputs.empty()) // Si c'est la première couche
-        mInputs.synchronizeHToD(); // On a besoin de mapper l'input sur la
-    // mémoire du device
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
@@ -311,6 +309,7 @@ void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::DeconvCell_Frame_CUDA::backPropagate()
 {
+    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     const float alpha = 1.0f;

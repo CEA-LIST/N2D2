@@ -96,6 +96,23 @@ public:
     virtual Tensor4d<T>& operator[](unsigned int t);
     virtual const Tensor4d<T>& operator[](unsigned int t) const;
     virtual Tensor4d<T>& getTensor4d(unsigned int k);
+
+    /** Synchronize Device To Host */
+    virtual void synchronizeDToH() const {};
+    virtual void synchronizeDToH(unsigned int /*i*/,
+                                 unsigned int /*j*/,
+                                 unsigned int /*k*/,
+                                 unsigned int /*b*/,
+                                 unsigned int /*length*/) const {};
+
+    /** Synchronize Host To Device */
+    virtual void synchronizeHToD() const {};
+    virtual void synchronizeHToD(unsigned int /*i*/,
+                                 unsigned int /*j*/,
+                                 unsigned int /*k*/,
+                                 unsigned int /*b*/,
+                                 unsigned int /*length*/) const {};
+
     inline void setValid();
     inline void clearValid();
     virtual ~Interface() {};

@@ -103,6 +103,10 @@ public:
     {
         return mOutputs;
     }
+    virtual Tensor4d<Float_T>& getDiffInputs()
+    {
+        return mDiffInputs;
+    }
     virtual const Tensor4d<Float_T>& getDiffInputs() const
     {
         return mDiffInputs;

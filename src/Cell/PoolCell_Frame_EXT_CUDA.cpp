@@ -109,8 +109,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA::initialize()
 
 void N2D2::PoolCell_Frame_EXT_CUDA::propagate(bool /*inference*/)
 {
-    if (mDiffOutputs.empty())
-        mInputs.synchronizeHToD();
+    mInputs.synchronizeHBasedToD();
 
     const float alpha = 1.0f;
     float beta = 0.0f;
@@ -160,10 +159,11 @@ void N2D2::PoolCell_Frame_EXT_CUDA::propagate(bool /*inference*/)
 
 void N2D2::PoolCell_Frame_EXT_CUDA::backPropagate()
 {
-    Cell_Frame_CUDA::backPropagate();
-
     if (mDiffOutputs.empty())
         return;
+
+    mDiffInputs.synchronizeHBasedToD();
+    Cell_Frame_CUDA::backPropagate();
 
     const Float_T alpha = 1.0;
 

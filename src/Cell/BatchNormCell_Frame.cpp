@@ -39,6 +39,8 @@ N2D2::BatchNormCell_Frame::BatchNormCell_Frame(
 
 void N2D2::BatchNormCell_Frame::initialize()
 {
+    mInputs.synchronizeDToH();
+
     if (mInputs.dimZ() != mOutputs.dimZ()) {
         throw std::domain_error("BatchNormCell_Frame::initialize():"
                                 " the number of output channels must be equal "
@@ -159,6 +161,7 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 
 void N2D2::BatchNormCell_Frame::backPropagate()
 {
+    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const unsigned int size = mInputs[0].dimX() * mInputs[0].dimY()

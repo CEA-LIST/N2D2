@@ -93,9 +93,10 @@ public:
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0);
     virtual void setOutputTargets(const Tensor4d<Float_T>& targets);
-    virtual Tensor4d<Float_T>& getOutputs();
-    virtual const Tensor4d<Float_T>& getOutputs() const;
-    virtual const Tensor4d<Float_T>& getDiffInputs() const;
+    virtual CudaTensor4d<Float_T>& getOutputs();
+    virtual const CudaTensor4d<Float_T>& getOutputs() const;
+    virtual CudaTensor4d<Float_T>& getDiffInputs();
+    virtual const CudaTensor4d<Float_T>& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void discretizeSignals(unsigned int nbLevels);
     virtual ~Cell_Frame_CUDA();

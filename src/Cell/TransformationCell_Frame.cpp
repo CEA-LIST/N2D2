@@ -37,6 +37,8 @@ N2D2::TransformationCell_Frame::TransformationCell_Frame(
 
 void N2D2::TransformationCell_Frame::propagate(bool /*inference*/)
 {
+    mInputs.synchronizeDToH();
+
     if (mInputs.size() > 1)
         throw std::runtime_error("TransformationCell can only have one input");
 

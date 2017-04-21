@@ -92,9 +92,7 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
 
 void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
 {
-    if (mDiffOutputs.empty()) // Si c'est la première couche
-        mInputs.synchronizeHToD(); // On a besoin de mapper l'input sur la
-    // mémoire du device
+    mInputs.synchronizeHBasedToD();
 
     unsigned int offset = 0;
 
@@ -149,6 +147,8 @@ void N2D2::DropoutCell_Frame_CUDA::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
+
+    mDiffInputs.synchronizeHBasedToD();
 
     unsigned int offset = 0;
 
