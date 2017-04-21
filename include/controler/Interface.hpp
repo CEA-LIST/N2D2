@@ -115,17 +115,25 @@ public:
 
     inline void setValid();
     inline void clearValid();
+    void matchingDimB(bool value)
+    {
+        mMatchingDimB = value;
+    }
     virtual ~Interface() {};
 
 protected:
     unsigned int mDimZ;
     unsigned int mDimB;
+    bool mMatchingDimB;
     std::vector<Tensor4d<T>*> mData;
     std::vector<std::pair<unsigned int, unsigned int> > mDataOffset;
 };
 }
 
-template <class T> N2D2::Interface<T>::Interface() : mDimZ(0), mDimB(0)
+template <class T> N2D2::Interface<T>::Interface()
+    : mDimZ(0),
+      mDimB(0),
+      mMatchingDimB(true)
 {
     // ctor
 }
@@ -157,9 +165,14 @@ template <class T> void N2D2::Interface<T>::push_back(Tensor4d<T>* tensor)
     if (mData.empty())
         mDimB = tensor->dimB();
     else {
-        if (mDimB != tensor->dimB())
-            throw std::runtime_error(
-                "Interface<T>::push_back(): tensor dimB dimension must match");
+        if (mDimB != tensor->dimB()) {
+            if (mMatchingDimB) {
+                throw std::runtime_error("Interface<T>::push_back(): "
+                                         "tensor dimB dimension must match");
+            }
+            else
+                mDimB = 0;
+        }
     }
 
     const unsigned int tensorOffset = mData.size();
@@ -184,7 +197,7 @@ typename N2D2::Interface<T>::reference N2D2::Interface<T>::
 operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int b)
 {
     assert(k < mDimZ);
-    assert(b < mDimB);
+    assert(mDimB == 0 || b < mDimB);
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[k];
     return (*mData[dataOffset.first])(i, j, k - dataOffset.second, b);
@@ -195,7 +208,7 @@ typename N2D2::Interface<T>::const_reference N2D2::Interface<T>::
 operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int b) const
 {
     assert(k < mDimZ);
-    assert(b < mDimB);
+    assert(mDimB == 0 || b < mDimB);
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[k];
     return (*mData[dataOffset.first])(i, j, k - dataOffset.second, b);
@@ -206,7 +219,7 @@ typename N2D2::Interface<T>::reference N2D2::Interface
     <T>::at(unsigned int i, unsigned int j, unsigned int k, unsigned int b)
 {
     assert(k < mDimZ);
-    assert(b < mDimB);
+    assert(mDimB == 0 || b < mDimB);
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
     return mData[dataOffset.first]->at(i, j, k - dataOffset.second, b);
@@ -218,7 +231,7 @@ typename N2D2::Interface<T>::const_reference N2D2::Interface
     const
 {
     assert(k < mDimZ);
-    assert(b < mDimB);
+    assert(mDimB == 0 || b < mDimB);
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
     return mData[dataOffset.first]->at(i, j, k - dataOffset.second, b);
