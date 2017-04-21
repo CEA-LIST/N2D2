@@ -93,6 +93,7 @@ public:
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0);
     virtual void setOutputTargets(const Tensor4d<Float_T>& targets);
+    virtual void setOutputErrors(const Tensor4d<Float_T>& errors);
     virtual CudaTensor4d<Float_T>& getOutputs();
     virtual const CudaTensor4d<Float_T>& getOutputs() const;
     virtual CudaTensor4d<Float_T>& getDiffInputs();

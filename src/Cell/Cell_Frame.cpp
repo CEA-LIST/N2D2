@@ -299,6 +299,21 @@ void N2D2::Cell_Frame::setOutputTargets(const Tensor4d<Float_T>& targets)
         mDiffInputs(index) = targets(index) - mOutputs(index);
 }
 
+void N2D2::Cell_Frame::setOutputErrors(const Tensor4d<Float_T>& errors)
+{
+    if (errors.dimB() != mOutputs.dimB())
+        throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
+                                "and output batch sizes don't match.");
+
+    if (errors.dimX() != mOutputsWidth || errors.dimY() != mOutputsHeight
+        || errors.dimZ() != mNbOutputs)
+        throw std::domain_error(
+            "Cell_Frame_CUDA::setOutputErrors(): wrong target matrix size.");
+
+    for (unsigned int index = 0; index < mOutputs.size(); ++index)
+        mDiffInputs(index) = errors(index);
+}
+
 unsigned int N2D2::Cell_Frame::getMaxOutput(unsigned int batchPos) const
 {
     const Tensor3d<Float_T> output = mOutputs[batchPos];

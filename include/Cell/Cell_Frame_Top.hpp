@@ -64,6 +64,7 @@ public:
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0) = 0;
     virtual void setOutputTargets(const Tensor4d<Float_T>& targets) = 0;
+    virtual void setOutputErrors(const Tensor4d<Float_T>& errors) = 0;
     virtual Tensor4d<Float_T>& getOutputs() = 0;
     virtual const Tensor4d<Float_T>& getOutputs() const = 0;
     virtual Tensor4d<Float_T>& getDiffInputs() = 0;

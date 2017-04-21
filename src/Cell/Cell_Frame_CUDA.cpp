@@ -319,6 +319,23 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor4d<Float_T>& targets)
     mDiffInputs.synchronizeHToD();
 }
 
+void N2D2::Cell_Frame_CUDA::setOutputErrors(const Tensor4d<Float_T>& errors)
+{
+    if (errors.dimB() != mOutputs.dimB())
+        throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
+                                "and output batch sizes don't match.");
+
+    if (errors.dimX() != mOutputsWidth || errors.dimY() != mOutputsHeight
+        || errors.dimZ() != mNbOutputs)
+        throw std::domain_error(
+            "Cell_Frame_CUDA::setOutputErrors(): wrong target matrix size.");
+
+    for (unsigned int index = 0; index < mOutputs.size(); ++index)
+        mDiffInputs(index) = errors(index);
+
+    mDiffInputs.synchronizeHToD();
+}
+
 N2D2::CudaTensor4d<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs()
 {
     mOutputs.synchronizeDToH();
