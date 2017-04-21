@@ -148,6 +148,7 @@ public:
     virtual void log(const std::string& /*fileName*/,
                      Database::StimuliSet /*set*/) {};
     virtual void clear(Database::StimuliSet /*set*/) {};
+    virtual ~Target() {};
 
 protected:
     Parameter<bool> mDataAsTarget;
