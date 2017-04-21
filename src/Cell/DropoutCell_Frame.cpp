@@ -124,8 +124,6 @@ void N2D2::DropoutCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeDToH();
-
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
@@ -159,6 +157,8 @@ void N2D2::DropoutCell_Frame::backPropagate()
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeHToD();
 }
 
 void N2D2::DropoutCell_Frame::update()

@@ -109,7 +109,6 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
 
 void N2D2::ConvCell_Frame::backPropagate()
 {
-    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const Float_T alpha = 1.0;
@@ -151,6 +150,8 @@ void N2D2::ConvCell_Frame::backPropagate()
             offset += mInputs[k].dimZ();
             mDiffOutputs[k].setValid();
         }
+
+        mDiffOutputs.synchronizeHToD();
     }
 }
 

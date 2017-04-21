@@ -289,7 +289,6 @@ void N2D2::ConvCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::ConvCell_Frame_CUDA::backPropagate()
 {
-    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     const float alpha = 1.0f;
@@ -394,6 +393,8 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
 #endif
             mDiffOutputs[k].setValid();
         }
+
+        mDiffOutputs.synchronizeDToHBased();
     }
 }
 

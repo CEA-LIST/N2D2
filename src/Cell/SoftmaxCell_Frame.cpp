@@ -83,8 +83,6 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeDToH();
-
     const unsigned int size = mInputs.dimB() * mNbChannels;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -125,6 +123,7 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     }
 
     mDiffOutputs.setValid();
+    mDiffOutputs.synchronizeHToD();
 }
 
 void N2D2::SoftmaxCell_Frame::update()

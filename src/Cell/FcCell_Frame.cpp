@@ -128,7 +128,6 @@ void N2D2::FcCell_Frame::propagate(bool inference)
 
 void N2D2::FcCell_Frame::backPropagate()
 {
-    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
@@ -221,6 +220,8 @@ void N2D2::FcCell_Frame::backPropagate()
             mDiffBias(output) = sum;
         }
     }
+
+    mDiffOutputs.synchronizeHToD();
 }
 
 void N2D2::FcCell_Frame::update()

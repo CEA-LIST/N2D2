@@ -145,7 +145,6 @@ void N2D2::PoolCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     const float alpha = 1.0f;
@@ -172,6 +171,8 @@ void N2D2::PoolCell_Frame_CUDA::backPropagate()
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 void N2D2::PoolCell_Frame_CUDA::update()

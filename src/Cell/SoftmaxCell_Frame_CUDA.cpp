@@ -69,8 +69,6 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeHBasedToD();
-
     const float alpha = 1.0f;
 
     if (mWithLoss) {
@@ -121,6 +119,7 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
     }
 
     mDiffOutputs[0].setValid();
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 void N2D2::SoftmaxCell_Frame_CUDA::update()

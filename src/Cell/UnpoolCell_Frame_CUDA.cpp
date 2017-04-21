@@ -157,7 +157,6 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     const Float_T alpha = 1.0;
@@ -201,6 +200,8 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
 
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 void N2D2::UnpoolCell_Frame_CUDA::update()

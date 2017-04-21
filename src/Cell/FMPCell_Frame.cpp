@@ -155,7 +155,6 @@ void N2D2::FMPCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const unsigned int size = mInputs.dimB() * mNbChannels;
@@ -194,6 +193,7 @@ void N2D2::FMPCell_Frame::backPropagate()
     }
 
     mDiffOutputs.setValid();
+    mDiffOutputs.synchronizeHToD();
 }
 
 void N2D2::FMPCell_Frame::update()

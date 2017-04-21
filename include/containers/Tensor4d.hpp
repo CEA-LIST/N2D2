@@ -200,15 +200,15 @@ public:
     };
     bool isValid() const
     {
-        return mValid;
+        return (*mValid);
     };
     void setValid()
     {
-        mValid = true;
+        (*mValid) = true;
     };
     void clearValid()
     {
-        mValid = false;
+        (*mValid) = false;
     };
     virtual ~Tensor4d() {};
 
@@ -218,7 +218,7 @@ protected:
     unsigned int mDimZ;
     unsigned int mDimB;
     const std::shared_ptr<std::vector<T> > mData;
-    bool mValid;
+    const std::shared_ptr<bool> mValid;
 };
 }
 
@@ -229,7 +229,7 @@ N2D2::Tensor4d<T>::Tensor4d()
       mDimZ(0),
       mDimB(0),
       mData(new std::vector<T>()),
-      mValid(false)
+      mValid(new bool(false))
 {
     // ctor
 }
@@ -245,7 +245,7 @@ N2D2::Tensor4d<T>::Tensor4d(unsigned int dimX,
       mDimZ(dimZ),
       mDimB(dimB),
       mData(new std::vector<T>(dimX * dimY * dimZ * dimB, value)),
-      mValid(false)
+      mValid(new bool(false))
 {
     // ctor
 }
@@ -263,7 +263,7 @@ N2D2::Tensor4d<T>::Tensor4d(unsigned int dimX,
       mDimZ(dimZ),
       mDimB(dimB),
       mData(new std::vector<T>(first, last)),
-      mValid(false)
+      mValid(new bool(false))
 {
     // ctor
     if (mDimX * mDimY * mDimZ * dimB != (*mData).size())

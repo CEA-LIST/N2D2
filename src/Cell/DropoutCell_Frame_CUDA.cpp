@@ -148,8 +148,6 @@ void N2D2::DropoutCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeHBasedToD();
-
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
@@ -170,6 +168,8 @@ void N2D2::DropoutCell_Frame_CUDA::backPropagate()
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 void N2D2::DropoutCell_Frame_CUDA::update()

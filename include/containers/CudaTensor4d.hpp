@@ -104,6 +104,9 @@ public:
                          unsigned int b,
                          unsigned int length) const;
 
+    /** Synchronize Device To Host-based data  */
+    void synchronizeDToHBased() const;
+
     /** Synchronize Host-based data To Device */
     void synchronizeHBasedToD() const;
 
@@ -438,6 +441,12 @@ void N2D2::CudaTensor4d<T>::synchronizeHToD(unsigned int ijk,
 /**
 *   Synchronize data from valid host to device / Par morceau
 */
+template <typename T> void N2D2::CudaTensor4d<T>::synchronizeDToHBased() const
+{
+    if (mHostBased)
+        synchronizeDToH();
+}
+
 template <typename T> void N2D2::CudaTensor4d<T>::synchronizeHBasedToD() const
 {
     if (mHostBased)

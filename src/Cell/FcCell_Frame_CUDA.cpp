@@ -131,7 +131,6 @@ void N2D2::FcCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::FcCell_Frame_CUDA::backPropagate()
 {
-    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     //  1   <-->    batch   <-->    mInputs.b()
@@ -203,6 +202,8 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
 
             mDiffOutputs[k].setValid();
         }
+
+        mDiffOutputs.synchronizeDToHBased();
     } // Sinon il s'agit de la première couche, inutile de calculer
 }
 

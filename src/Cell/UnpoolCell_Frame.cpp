@@ -112,7 +112,6 @@ void N2D2::UnpoolCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const Float_T alpha = 1.0;
@@ -147,6 +146,8 @@ void N2D2::UnpoolCell_Frame::backPropagate()
         offset += mInputs[k].dimZ();
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeHToD();
 }
 
 void N2D2::UnpoolCell_Frame::update()

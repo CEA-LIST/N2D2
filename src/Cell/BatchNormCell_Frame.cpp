@@ -161,7 +161,6 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 
 void N2D2::BatchNormCell_Frame::backPropagate()
 {
-    mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
     const unsigned int size = mInputs[0].dimX() * mInputs[0].dimY()
@@ -248,6 +247,7 @@ void N2D2::BatchNormCell_Frame::backPropagate()
         }
 
         mDiffOutputs.setValid();
+        mDiffOutputs.synchronizeHToD();
     }
 }
 

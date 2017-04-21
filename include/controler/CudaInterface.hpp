@@ -50,21 +50,8 @@ public:
     */
     void push_back(CudaTensor4d<T>* tensor);
 
-    /** Synchronize Device To Host */
-    void synchronizeDToH() const;
-    void synchronizeDToH(unsigned int i,
-                         unsigned int j,
-                         unsigned int k,
-                         unsigned int b,
-                         unsigned int length) const;
-
-    /** Synchronize Host To Device */
-    void synchronizeHToD() const;
-    void synchronizeHToD(unsigned int i,
-                         unsigned int j,
-                         unsigned int k,
-                         unsigned int b,
-                         unsigned int length) const;
+    /** Synchronize Device To Host-based data  */
+    void synchronizeDToHBased() const;
 
     /** Synchronize Host-based data To Device */
     void synchronizeHBasedToD() const;
@@ -107,38 +94,15 @@ void N2D2::CudaInterface<T>::push_back(CudaTensor4d<T>* tensor)
     Interface<T>::push_back(tensor);
 }
 
-template <typename T> void N2D2::CudaInterface<T>::synchronizeDToH() const
+template <typename T> void N2D2::CudaInterface<T>::synchronizeDToHBased() const
 {
     for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
                                                             itEnd = mData.end();
          it != itEnd;
          ++it)
-        static_cast<CudaTensor4d<T>*>(*it)->synchronizeDToH();
-}
-
-template <typename T>
-void N2D2::CudaInterface<T>::synchronizeDToH(unsigned int i,
-                                             unsigned int j,
-                                             unsigned int k,
-                                             unsigned int b,
-                                             unsigned int length) const
-{
-    assert(k < mDimZ);
-    assert(b < mDimB);
-
-    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[k];
-    CudaTensor4d<T>* tensor = static_cast
-        <CudaTensor4d<T>*>(mData[dataOffset.first]);
-    tensor->synchronizeDToH(i, j, k - dataOffset.second, b, length);
-}
-
-template <typename T> void N2D2::CudaInterface<T>::synchronizeHToD() const
-{
-    for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
-                                                            itEnd = mData.end();
-         it != itEnd;
-         ++it)
-        static_cast<CudaTensor4d<T>*>(*it)->synchronizeHToD();
+    {
+        static_cast<CudaTensor4d<T>*>(*it)->synchronizeDToHBased();
+    }
 }
 
 template <typename T> void N2D2::CudaInterface<T>::synchronizeHBasedToD() const
@@ -150,22 +114,6 @@ template <typename T> void N2D2::CudaInterface<T>::synchronizeHBasedToD() const
     {
         static_cast<CudaTensor4d<T>*>(*it)->synchronizeHBasedToD();
     }
-}
-
-template <typename T>
-void N2D2::CudaInterface<T>::synchronizeHToD(unsigned int i,
-                                             unsigned int j,
-                                             unsigned int k,
-                                             unsigned int b,
-                                             unsigned int length) const
-{
-    assert(k < mDimZ);
-    assert(b < mDimB);
-
-    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[k];
-    CudaTensor4d<T>* tensor = static_cast
-        <CudaTensor4d<T>*>(mData[dataOffset.first]);
-    tensor->synchronizeHToD(i, j, k - dataOffset.second, b, length);
 }
 
 template <class T> N2D2::CudaTensor4d<T>& N2D2::CudaInterface<T>::back()

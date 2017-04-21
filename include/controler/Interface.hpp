@@ -98,20 +98,20 @@ public:
     virtual Tensor4d<T>& getTensor4d(unsigned int k);
 
     /** Synchronize Device To Host */
-    virtual void synchronizeDToH() const {};
-    virtual void synchronizeDToH(unsigned int /*i*/,
-                                 unsigned int /*j*/,
-                                 unsigned int /*k*/,
-                                 unsigned int /*b*/,
-                                 unsigned int /*length*/) const {};
+    virtual void synchronizeDToH() const;
+    virtual void synchronizeDToH(unsigned int i,
+                                 unsigned int j,
+                                 unsigned int k,
+                                 unsigned int b,
+                                 unsigned int length) const;
 
     /** Synchronize Host To Device */
-    virtual void synchronizeHToD() const {};
-    virtual void synchronizeHToD(unsigned int /*i*/,
-                                 unsigned int /*j*/,
-                                 unsigned int /*k*/,
-                                 unsigned int /*b*/,
-                                 unsigned int /*length*/) const {};
+    virtual void synchronizeHToD() const;
+    virtual void synchronizeHToD(unsigned int i,
+                                 unsigned int j,
+                                 unsigned int k,
+                                 unsigned int b,
+                                 unsigned int length) const;
 
     inline void setValid();
     inline void clearValid();
@@ -266,6 +266,54 @@ N2D2::Tensor4d<T>& N2D2::Interface<T>::getTensor4d(unsigned int k)
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
     return *(mData[dataOffset.first]);
+}
+
+template <typename T> void N2D2::Interface<T>::synchronizeDToH() const
+{
+    for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+        (*it)->synchronizeDToH();
+}
+
+template <typename T>
+void N2D2::Interface<T>::synchronizeDToH(unsigned int i,
+                                        unsigned int j,
+                                        unsigned int k,
+                                        unsigned int b,
+                                        unsigned int length) const
+{
+    assert(k < mDimZ);
+    assert(b < mDimB);
+
+    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[k];
+    mData[dataOffset.first]->synchronizeDToH(i, j, k - dataOffset.second, b,
+                                             length);
+}
+
+template <typename T> void N2D2::Interface<T>::synchronizeHToD() const
+{
+    for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+        (*it)->synchronizeHToD();
+}
+
+template <typename T>
+void N2D2::Interface<T>::synchronizeHToD(unsigned int i,
+                                        unsigned int j,
+                                        unsigned int k,
+                                        unsigned int b,
+                                        unsigned int length) const
+{
+    assert(k < mDimZ);
+    assert(b < mDimB);
+
+    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[k];
+    mData[dataOffset.first]->synchronizeHToD(i, j, k - dataOffset.second, b,
+                                             length);
 }
 
 template <class T> void N2D2::Interface<T>::setValid()

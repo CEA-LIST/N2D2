@@ -101,8 +101,6 @@ void N2D2::LRNCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    mDiffInputs.synchronizeHBasedToD();
-
     const float alpha = 1.0f;
 
     unsigned int offset = 0;
@@ -128,6 +126,8 @@ void N2D2::LRNCell_Frame_CUDA::backPropagate()
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 void N2D2::LRNCell_Frame_CUDA::update()

@@ -141,7 +141,6 @@ void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
 {
-    mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA::backPropagate();
 
     const float alpha = 1.0f;
@@ -171,6 +170,7 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
                                         mSavedVariance.getDevicePtr()));
 
     mDiffOutputs[0].setValid();
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::update()
