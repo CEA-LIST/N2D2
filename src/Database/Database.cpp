@@ -509,9 +509,7 @@ void N2D2::Database::filterROIs(const std::vector<int>& labels,
 
 void N2D2::Database::extractLabels(bool removeROIs)
 {
-    const int defaultLabel = (!((std::string)mDefaultLabel).empty())
-                                 ? getLabelID(mDefaultLabel)
-                                 : -1;
+    const int defaultLabel = getDefaultLabelID();
 
     for (int id = mStimuli.size() - 1; id >= 0; --id) {
         if (mStimuli[id].ROIs.size() > 0) {
@@ -1066,6 +1064,12 @@ int N2D2::Database::getLabelID(const std::string& labelName) const
     return (it - mLabelsName.begin());
 }
 
+int N2D2::Database::getDefaultLabelID() const {
+    return (!((std::string)mDefaultLabel).empty())
+        ? getLabelID(mDefaultLabel)
+        : -1;
+}
+
 cv::Mat N2D2::Database::getStimulusData(StimulusID id)
 {
     if (mLoadDataInMemory) {
@@ -1234,9 +1238,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
                 "Database::loadStimulusLabelsData(): unable to read image: "
                 + mStimuli[id].name);
 
-        const int defaultLabel = (!((std::string)mDefaultLabel).empty())
-                                     ? getLabelID(mDefaultLabel)
-                                     : -1;
+        const int defaultLabel = getDefaultLabelID();
         cv::Mat labels(
             stimulus.rows, stimulus.cols, CV_32SC1, cv::Scalar(defaultLabel));
 

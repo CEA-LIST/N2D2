@@ -251,6 +251,7 @@ public:
     inline unsigned int getNbROIsWithLabel(const std::string& labelName) const;
     bool isLabel(const std::string& labelName) const;
     int getLabelID(const std::string& labelName) const;
+    int getDefaultLabelID() const;
     inline std::vector<int> getLabelsIDs(const std::vector
                                          <std::string>& names) const;
     inline const std::string& getLabelName(int label) const;
