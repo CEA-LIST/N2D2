@@ -85,6 +85,8 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                     = Random::randBernoulli(mDropConnect);
         }
 
+        const Tensor4d<Float_T>& synapses = mSynapses[k];
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count > 16)
 #else
@@ -93,7 +95,6 @@ void N2D2::FcCell_Frame::propagate(bool inference)
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
             for (unsigned int output = 0; output < outputSize; ++output) {
                 const Tensor3d<Float_T> inputs = mInputs[k][batchPos];
-                const Tensor4d<Float_T>& synapses = mSynapses[k];
                 const int inputSize = inputs.size();
 
                 // Compute the weighted sum
@@ -130,46 +131,67 @@ void N2D2::FcCell_Frame::backPropagate()
     mDiffInputs.synchronizeDToH();
     Cell_Frame::backPropagate();
 
-    if (!mDiffOutputs.empty() && mBackPropagate) {
-        const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
-                                        * mOutputs.dimZ();
+    const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
+                                    * mOutputs.dimZ();
 
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        const Tensor4d<Float_T>& input = mInputs[k];
+        const unsigned int nbChannels = input.size() / input.dimB();
 
-#pragma omp parallel for if (mInputs.dimB() > 4)
+        if (!mDiffOutputs.empty() && mBackPropagate) {
+            Tensor4d<Float_T>& diffOutputs = mDiffOutputs[k];
+            const Float_T beta = (diffOutputs.isValid()) ? 1.0 : 0.0;
+
+            const Tensor4d<Float_T>& synapses = mSynapses[k];
+            const unsigned int count = mInputs.dimB() * nbChannels;
+
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (count > 16)
+#else
+#pragma omp parallel for if (mInputs.dimB() > 4 && count > 16)
+#endif
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-                Tensor3d<Float_T> diffOutputs = mDiffOutputs[k][batchPos];
-                const Tensor4d<Float_T>& synapses = mSynapses[k];
-                const unsigned int inputSize = diffOutputs.size();
+                for (unsigned int channel = 0; channel < nbChannels; ++channel)
+                {
+                    const Tensor3d<Float_T> diffInputs = mDiffInputs[batchPos];
 
-                for (unsigned int channel = 0; channel < inputSize; ++channel) {
                     Float_T gradient = 0.0;
 
-                    for (unsigned int output = 0; output < outputSize;
-                         ++output) {
-                        if (!(mDropConnect < 1.0)
-                            || mDropConnectMask[k](channel, output))
+                    if (mDropConnect < 1.0) {
+                        for (unsigned int output = 0; output < outputSize;
+                             ++output)
+                        {
+                            if (mDropConnectMask[k](channel, output))
+                                gradient += synapses(channel, output)
+                                            * diffInputs(output);
+                        }
+                    }
+                    else {
+                        for (unsigned int output = 0; output < outputSize;
+                             ++output)
+                        {
                             gradient += synapses(channel, output)
-                                        * mDiffInputs(output, batchPos);
+                                        * diffInputs(output);
+                        }
                     }
 
-                    diffOutputs(channel) = gradient + beta
-                                                      * diffOutputs(channel);
+                    diffOutputs(channel, batchPos) = gradient
+                        + beta * diffOutputs(channel, batchPos);
                 }
             }
 
-            mDiffOutputs[k].setValid();
+            diffOutputs.setValid();
         }
-    }
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-#pragma omp parallel for if (mNbOutputs > 4)
+        Tensor4d<Float_T>& diffSynapses = mDiffSynapses[k];
+        const unsigned int count2 = nbChannels * mNbOutputs;
+
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (count2 > 16)
+#else
+#pragma omp parallel for if (mNbOutputs.dimB() > 4 && count2 > 16)
+#endif
         for (int output = 0; output < (int)mNbOutputs; ++output) {
-            const Tensor4d<Float_T>& input = mInputs[k];
-            Tensor4d<Float_T>& diffSynapses = mDiffSynapses[k];
-            const unsigned int nbChannels = input.size() / input.dimB();
-
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 if (!(mDropConnect < 1.0)
                     || mDropConnectMask[k](channel, output)) {
