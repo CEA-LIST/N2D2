@@ -97,7 +97,7 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
 
     // Construct network tree
     // std::cout << "Construct network tree..." << std::endl;
-    std::multimap<std::string, std::string> parentLayers;
+    std::map<std::string, std::vector<std::string> > parentLayers;
 
     const std::vector<std::string> sections = iniConfig.getSections();
 
@@ -111,14 +111,20 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
             std::vector<std::string> inputs = Utils::split(
                 iniConfig.getProperty<std::string>("Input"), ",");
 
+            std::map<std::string, std::vector<std::string> >::iterator
+                itParent;
+            std::tie(itParent, std::ignore) = parentLayers.insert(
+                std::make_pair((*itSection), std::vector<std::string>()));
+
             for (std::vector<std::string>::iterator it = inputs.begin(),
                                                     itEnd = inputs.end();
                  it != itEnd;
-                 ++it) {
+                 ++it)
+            {
                 if ((*it) == "sp" || (*it) == "cenv")
                     (*it) = "env";
 
-                parentLayers.insert(std::make_pair((*itSection), (*it)));
+                (*itParent).second.push_back((*it));
                 // std::cout << "  " << (*it) << " => " << (*itSection) <<
                 // std::endl;
             }
@@ -136,27 +142,23 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     while (nbOrderedLayers < nbOrderedLayersNext) {
         nbOrderedLayers = nbOrderedLayersNext;
 
-        for (std::multimap<std::string, std::string>::const_iterator it
+        for (std::map<std::string, std::vector<std::string> >::const_iterator it
              = parentLayers.begin(),
              itEnd = parentLayers.end();
              it != itEnd;
-             it = parentLayers.upper_bound((*it).first)) {
-            const std::pair
-                <std::multimap<std::string, std::string>::const_iterator,
-                 std::multimap<std::string, std::string>::const_iterator>
-            parents = parentLayers.equal_range((*it).first);
-
+             ++it)
+        {
             unsigned int order = 0;
             bool knownOrder = true;
 
-            for (std::multimap
-                 <std::string, std::string>::const_iterator itParent
-                 = parents.first;
-                 itParent != parents.second;
-                 ++itParent) {
+            for (std::vector<std::string>::const_iterator itParent
+                 = (*it).second.begin();
+                 itParent != (*it).second.end();
+                 ++itParent)
+            {
                 const std::map
                     <std::string, unsigned int>::const_iterator itLayer
-                    = layersOrder.find((*itParent).second);
+                    = layersOrder.find((*itParent));
 
                 if (itLayer != layersOrder.end())
                     order = std::max(order, (*itLayer).second);
@@ -193,22 +195,19 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
                                                       itEnd = (*itLayer).end();
              it != itEnd;
-             ++it) {
+             ++it)
+        {
             std::vector<std::shared_ptr<Cell> > parentCells;
-            const std::pair
-                <std::multimap<std::string, std::string>::const_iterator,
-                 std::multimap<std::string, std::string>::const_iterator>
-            parents = parentLayers.equal_range(*it);
 
-            for (std::multimap
-                 <std::string, std::string>::const_iterator itParent
-                 = parents.first;
-                 itParent != parents.second;
-                 ++itParent) {
-                if ((*itParent).second == "env")
+            for (std::vector<std::string>::const_iterator itParent
+                 = parentLayers[(*it)].begin();
+                 itParent != parentLayers[(*it)].end();
+                 ++itParent)
+            {
+                if ((*itParent) == "env")
                     parentCells.push_back(std::shared_ptr<Cell>());
                 else
-                    parentCells.push_back(deepNet->getCell((*itParent).second));
+                    parentCells.push_back(deepNet->getCell((*itParent)));
             }
 
             // Set up the layer
