@@ -284,7 +284,8 @@ void N2D2::DeepNet::exportNetworkSolverParameters(const std::string
     }
 }
 
-void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName)
+void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
+                                                bool ignoreNotExists)
 {
     for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
          = mCells.begin(),
@@ -292,7 +293,7 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName)
          it != itEnd;
          ++it)
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
-                                           + ".syntxt");
+                                           + ".syntxt", ignoreNotExists);
 }
 
 std::shared_ptr<N2D2::Monitor> N2D2::DeepNet::getMonitor(const std::string

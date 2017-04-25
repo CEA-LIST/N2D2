@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) try
     deepNet->logLabelsLegend("labels_legend.png");
 
     if (!weights.empty())
-        deepNet->importNetworkFreeParameters(weights);
+        deepNet->importNetworkFreeParameters(weights, true);
 
     if (check) {
         std::cout << "Checking gradient computation..." << std::endl;

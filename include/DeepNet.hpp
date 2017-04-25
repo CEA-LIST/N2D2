@@ -80,7 +80,8 @@ public:
     void loadNetworkParameters();
     void exportNetworkFreeParameters(const std::string& dirName) const;
     void exportNetworkSolverParameters(const std::string& dirName) const;
-    void importNetworkFreeParameters(const std::string& dirName);
+    void importNetworkFreeParameters(const std::string& dirName,
+                                     bool ignoreNotExists = false);
     void importNetworkSolverParameters(const std::string& dirName);
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void initialize();
