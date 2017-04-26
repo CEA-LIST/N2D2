@@ -188,7 +188,7 @@ void N2D2::FcCell_Frame::backPropagate()
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count2 > 16)
 #else
-#pragma omp parallel for if (mNbOutputs.dimB() > 4 && count2 > 16)
+#pragma omp parallel for if (mNbOutputs > 4 && count2 > 16)
 #endif
         for (int output = 0; output < (int)mNbOutputs; ++output) {
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
