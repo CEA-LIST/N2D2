@@ -18,28 +18,36 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_TARGETGENERATOR_H
-#define N2D2_TARGETGENERATOR_H
+#include "Cell/RPCell.hpp"
 
-#include "DeepNet.hpp"
-#include "Target/Target.hpp"
-#include "Target/TargetROIs.hpp"
-#include "Target/TargetRP.hpp"
-#include "utils/IniParser.hpp"
+const char* N2D2::RPCell::Type = "RP";
 
-namespace N2D2 {
-class TargetGenerator {
-public:
-    static std::shared_ptr<Target> generate(const std::shared_ptr<Cell>& cell,
-                                            const std::shared_ptr
-                                            <DeepNet>& deepNet,
-                                            IniParser& iniConfig,
-                                            const std::string& section);
-    static void postGenerate(const std::shared_ptr<Target>& target,
-                             const std::shared_ptr<DeepNet>& deepNet,
-                             IniParser& iniConfig,
-                             const std::string& section);
-};
+N2D2::RPCell::RPCell(const std::string& name,
+                     unsigned int nbAnchors,
+                     unsigned int nbProposals,
+                     unsigned int scoreIndex,
+                     unsigned int IoUIndex)
+    : Cell(name, 4),
+      mNMS_IoU_Threshold(this, "NMS_IoU_Threshold", 0.7),
+      mForegroundRate(this, "ForegroundRate", 0.25),
+      mForegroundMinIoU(this, "ForegroundMinIoU", 0.5),
+      mBackgroundMaxIoU(this, "BackgroundMaxIoU", 0.5),
+      mBackgroundMinIoU(this, "BackgroundMinIoU", 0.1),
+      mNbAnchors(nbAnchors),
+      mNbProposals(nbProposals),
+      mScoreIndex(scoreIndex),
+      mIoUIndex(IoUIndex)
+{
+    // ctor
 }
 
-#endif // N2D2_TARGETGENERATOR_H
+void N2D2::RPCell::getStats(Stats& /*stats*/) const
+{
+
+}
+
+void N2D2::RPCell::setOutputsSize()
+{
+    mOutputsWidth = 1;
+    mOutputsHeight = 1;
+}

@@ -29,7 +29,7 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    const std::string targetType = iniConfig.getProperty
+    const std::string type = iniConfig.getProperty
                                    <std::string>("Type", "TargetScore");
     const double targetValue = iniConfig.getProperty
                                <double>("TargetValue", 1.0);
@@ -50,13 +50,62 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
               << " / top-n value: " << targetTopN << ")" << std::endl;
 
     std::shared_ptr<Target> target = Registrar
-        <Target>::create(targetType)(section,
+        <Target>::create(type)(section,
                                      cell,
                                      deepNet->getStimuliProvider(),
                                      targetValue,
                                      defaultValue,
                                      targetTopN,
                                      labelsMapping);
+
+    if (type == "TargetRP") {
+        const TargetRP::TargetType targetType = iniConfig.getProperty
+                                       <TargetRP::TargetType>("TargetType");
+        const std::string RPCellName = iniConfig.getProperty
+                                        <std::string>("RP");
+        const std::string anchorCellName = iniConfig.getProperty
+                                        <std::string>("Anchor");
+
+        std::shared_ptr<RPCell> RPCellPtr;
+        std::shared_ptr<AnchorCell> anchorCellPtr;
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+             itCells = deepNet->getCells().begin(),
+             itCellsEnd = deepNet->getCells().end();
+             itCells != itCellsEnd;
+             ++itCells)
+        {
+            if ((*itCells).first == RPCellName) {
+                RPCellPtr
+                    = std::dynamic_pointer_cast<RPCell>((*itCells).second);
+            }
+            else if ((*itCells).first == anchorCellName) {
+                anchorCellPtr
+                    = std::dynamic_pointer_cast<AnchorCell>((*itCells).second);
+            }
+        }
+
+        if (!RPCellPtr) {
+            throw std::runtime_error("RPCell name \"" + RPCellName
+                                     + "\" not found for TargetRP ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+
+        if (!anchorCellPtr) {
+            throw std::runtime_error("AnchorCell name \"" + anchorCellName
+                                     + "\" not found for TargetRP ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+
+        std::static_pointer_cast<TargetRP>(target)->initialize(targetType,
+                                                               RPCellPtr,
+                                                               anchorCellPtr);
+    }
+
     target->setParameters(iniConfig.getSection(section, true));
     return target;
 }

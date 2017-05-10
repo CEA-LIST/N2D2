@@ -33,6 +33,9 @@
 // For static library
 #pragma comment(                                                               \
     linker,                                                                    \
+    "/include:?mRegistrar@AnchorCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
     "/include:?mRegistrar@BatchNormCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
@@ -55,6 +58,12 @@
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrar@PoolCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@ROIPoolingCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
+#pragma comment(                                                               \
+    linker,                                                                    \
+    "/include:?mRegistrar@RPCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")
 #pragma comment(                                                               \
     linker,                                                                    \
     "/include:?mRegistrar@SoftmaxCellGenerator@N2D2@@0U?$Registrar@VCellGenerator@N2D2@@@2@A")

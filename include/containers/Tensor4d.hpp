@@ -46,6 +46,19 @@ namespace N2D2 {
 */
 template <class T> class Tensor4d {
 public:
+    struct Index {
+        unsigned int i;
+        unsigned int j;
+        unsigned int k;
+        unsigned int b;
+
+        Index(unsigned int i_ = 0,
+               unsigned int j_ = 0,
+               unsigned int k_ = 0,
+               unsigned int b_ = 0)
+            : i(i_), j(j_), k(k_), b(b_) {}
+    };
+
     typedef typename std::vector<T>::iterator iterator;
     typedef typename std::vector<T>::const_iterator const_iterator;
     typedef typename std::vector<T>::reference reference;
@@ -130,6 +143,8 @@ public:
                                       unsigned int j,
                                       unsigned int k,
                                       unsigned int b) const;
+    inline reference operator()(const Index& index);
+    inline const_reference operator()(const Index& index) const;
     inline reference operator()(unsigned int ijk, unsigned int b);
     inline const_reference operator()(unsigned int ijk, unsigned int b) const;
     inline reference operator()(unsigned int index);
@@ -389,6 +404,36 @@ operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int b) const
 
     return (
         *mData)[i + j * mDimX + k * mDimX * mDimY + b * mDimX * mDimY * mDimZ];
+}
+
+template <class T>
+typename N2D2::Tensor4d<T>::reference N2D2::Tensor4d<T>::
+operator()(const Index& index)
+{
+    assert(index.i < mDimX);
+    assert(index.j < mDimY);
+    assert(index.k < mDimZ);
+    assert(index.b < mDimB);
+
+    return (*mData)[index.i
+                    + index.j * mDimX
+                    + index.k * mDimX * mDimY
+                    + index.b * mDimX * mDimY * mDimZ];
+}
+
+template <class T>
+typename N2D2::Tensor4d<T>::const_reference N2D2::Tensor4d<T>::
+operator()(const Index& index) const
+{
+    assert(index.i < mDimX);
+    assert(index.j < mDimY);
+    assert(index.k < mDimZ);
+    assert(index.b < mDimB);
+
+    return (*mData)[index.i
+                    + index.j * mDimX
+                    + index.k * mDimX * mDimY
+                    + index.b * mDimX * mDimY * mDimZ];
 }
 
 template <class T>

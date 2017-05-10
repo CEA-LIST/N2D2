@@ -41,8 +41,15 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
     for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = inputs.begin(),
                                                    itTensorEnd = inputs.end();
          itTensor != itTensorEnd;
-         ++itTensor) {
+         ++itTensor)
+    {
         Tensor4d<Float_T>* input = (*itTensor);
+
+        if (input->isValid()) {
+            std::cout << "GradientCheck::initialize(): do not initialize valid"
+                " input #" << (itTensor - inputs.begin()) << std::endl;
+            continue;
+        }
 
         if (avoidDiscontinuity) {
             // This special case is for MAX pooling.

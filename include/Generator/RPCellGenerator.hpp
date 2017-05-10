@@ -18,28 +18,26 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_TARGETGENERATOR_H
-#define N2D2_TARGETGENERATOR_H
+#ifndef N2D2_RPCELLGENERATOR_H
+#define N2D2_RPCELLGENERATOR_H
 
-#include "DeepNet.hpp"
-#include "Target/Target.hpp"
-#include "Target/TargetROIs.hpp"
-#include "Target/TargetRP.hpp"
+#include "Generator/CellGenerator.hpp"
+#include "Cell/RPCell.hpp"
 #include "utils/IniParser.hpp"
 
 namespace N2D2 {
-class TargetGenerator {
+class RPCellGenerator : public CellGenerator {
 public:
-    static std::shared_ptr<Target> generate(const std::shared_ptr<Cell>& cell,
-                                            const std::shared_ptr
-                                            <DeepNet>& deepNet,
-                                            IniParser& iniConfig,
-                                            const std::string& section);
-    static void postGenerate(const std::shared_ptr<Target>& target,
-                             const std::shared_ptr<DeepNet>& deepNet,
-                             IniParser& iniConfig,
-                             const std::string& section);
+    static std::shared_ptr<RPCell>
+    generate(Network& network,
+             StimuliProvider& sp,
+             const std::vector<std::shared_ptr<Cell> >& parents,
+             IniParser& iniConfig,
+             const std::string& section);
+
+private:
+    static Registrar<CellGenerator> mRegistrar;
 };
 }
 
-#endif // N2D2_TARGETGENERATOR_H
+#endif // N2D2_RPCELLGENERATOR_H

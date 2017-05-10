@@ -18,28 +18,32 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_TARGETGENERATOR_H
-#define N2D2_TARGETGENERATOR_H
+#include "Cell/AnchorCell.hpp"
 
-#include "DeepNet.hpp"
-#include "Target/Target.hpp"
-#include "Target/TargetROIs.hpp"
-#include "Target/TargetRP.hpp"
-#include "utils/IniParser.hpp"
+const char* N2D2::AnchorCell::Type = "Anchor";
 
-namespace N2D2 {
-class TargetGenerator {
-public:
-    static std::shared_ptr<Target> generate(const std::shared_ptr<Cell>& cell,
-                                            const std::shared_ptr
-                                            <DeepNet>& deepNet,
-                                            IniParser& iniConfig,
-                                            const std::string& section);
-    static void postGenerate(const std::shared_ptr<Target>& target,
-                             const std::shared_ptr<DeepNet>& deepNet,
-                             IniParser& iniConfig,
-                             const std::string& section);
-};
+N2D2::AnchorCell::AnchorCell(const std::string& name,
+                             StimuliProvider& sp,
+                             const std::vector<Anchor>& anchors)
+    : Cell(name, 6*anchors.size()),
+      mPositiveIoU(this, "PositiveIoU", 0.7),
+      mNegativeIoU(this, "NegativeIoU", 0.3),
+      mLossLambda(this, "LossLambda", 10.0),
+      mLossPositiveSample(this, "LossPositiveSample", 128U),
+      mLossNegativeSample(this, "LossNegativeSample", 128U),
+      mStimuliProvider(sp),
+      mAnchors(anchors)
+{
+    // ctor
 }
 
-#endif // N2D2_TARGETGENERATOR_H
+void N2D2::AnchorCell::getStats(Stats& /*stats*/) const
+{
+
+}
+
+void N2D2::AnchorCell::setOutputsSize()
+{
+    mOutputsWidth = mChannelsWidth;
+    mOutputsHeight = mChannelsHeight;
+}
