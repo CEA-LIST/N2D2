@@ -91,7 +91,7 @@ std::string N2D2::DeepNetExport::getLayerName(DeepNet& deepNet,
         layerNameStr << cell->getName();
     }
 
-    return layerNameStr.str();
+    return Utils::CIdentifier(layerNameStr.str());
 }
 
 bool N2D2::DeepNetExport::isSharedOutput(DeepNet& deepNet,
@@ -173,7 +173,7 @@ N2D2::DeepNetExport::getCellInputName(DeepNet& deepNet,
     }
     buffer_name = tmp.str();
 
-    return buffer_name;
+    return Utils::CIdentifier(buffer_name);
 }
 
 std::string
@@ -221,7 +221,7 @@ N2D2::DeepNetExport::getCellOutputName(DeepNet& deepNet,
     }
     buffer_name = tmp.str();
 
-    return buffer_name;
+    return Utils::CIdentifier(buffer_name);
 }
 
 std::vector<unsigned int>

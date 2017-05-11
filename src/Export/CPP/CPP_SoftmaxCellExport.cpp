@@ -31,8 +31,8 @@ void N2D2::CPP_SoftmaxCellExport::generate(SoftmaxCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -49,7 +49,8 @@ void N2D2::CPP_SoftmaxCellExport::generateHeaderConstants(SoftmaxCell& cell,
                                                           std::ofstream& header)
 {
 
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                            cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"

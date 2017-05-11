@@ -54,25 +54,30 @@ void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramDesc(Cell& cell,
 void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramTensorDesc(
     Cell& cell, std::ofstream& prog)
 {
-    prog << "cudnnTensorDescriptor_t " << cell.getName()
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    prog << "cudnnTensorDescriptor_t " << identifier
          << "_tensorDescIn;\n"
-            "cudnnTensorDescriptor_t " << cell.getName() << "_tensorDescOut;\n";
+            "cudnnTensorDescriptor_t " << identifier << "_tensorDescOut;\n";
 }
 
 void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramBatchNormDesc(
     Cell& cell, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "cudnnTensorDescriptor_t " << cell.getName() << "_scaleDesc;\n";
+    prog << "cudnnTensorDescriptor_t " << identifier << "_scaleDesc;\n";
 }
 
 void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramGlobalDefinition(
     Cell& cell, std::ofstream& prog)
 {
-    prog << "DATA_T* " << cell.getName() << "_scale_cudnn(NULL);\n"
-            "DATA_T* " << cell.getName() << "_bias_cudnn(NULL);\n"
-            "DATA_T* " << cell.getName() << "_mean_cudnn(NULL);\n"
-            "DATA_T* " << cell.getName() << "_variance_cudnn(NULL);\n"
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    prog << "DATA_T* " << identifier << "_scale_cudnn(NULL);\n"
+            "DATA_T* " << identifier << "_bias_cudnn(NULL);\n"
+            "DATA_T* " << identifier << "_mean_cudnn(NULL);\n"
+            "DATA_T* " << identifier << "_variance_cudnn(NULL);\n"
             "\n";
 
 }
@@ -88,75 +93,77 @@ void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellBuffer(const std::string
 void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramInitNetwork(
     Cell& cell, std::vector<std::string>& /*parentsName*/, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
-    prog << "    cudnnCreateTensorDescriptor(&" << cell.getName()
+    prog << "    cudnnCreateTensorDescriptor(&" << identifier
         << "_tensorDescIn);\n"
-        << "    cudnnCreateTensorDescriptor(&" << cell.getName()
+        << "    cudnnCreateTensorDescriptor(&" << identifier
         << "_tensorDescOut);\n"
-        << "    cudnnCreateTensorDescriptor(&" << cell.getName()
+        << "    cudnnCreateTensorDescriptor(&" << identifier
         << "_scaleDesc);\n";
 
     prog << "    setBatchnorm(batchSize,\n"
         << "                " << prefix << "_NB_CHANNELS,\n"
         << "                " << prefix << "_CHANNELS_HEIGHT,\n"
         << "                " << prefix << "_CHANNELS_WIDTH,\n"
-        << "                " << cell.getName() << "_scaleDesc,\n"
+        << "                " << identifier << "_scaleDesc,\n"
         << "                " << "context_tensorFormat,\n"
         << "                " << "context_dataType,\n"
-        << "                " << cell.getName() << "_tensorDescIn,\n"
-        << "                " << cell.getName() << "_tensorDescOut);\n\n";
+        << "                " << identifier << "_tensorDescIn,\n"
+        << "                " << identifier << "_tensorDescOut);\n\n";
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
-        << cell.getName() << "_scale_cudnn, sizeof(DATA_T)*"
+        << identifier << "_scale_cudnn, sizeof(DATA_T)*"
         << prefix
         << "_NB_OUTPUTS));\n";
 
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy("
-        << cell.getName() << "_scale_cudnn, "
-        << cell.getName() << "_scales, "
+        << identifier << "_scale_cudnn, "
+        << identifier << "_scales, "
         << prefix << "_NB_OUTPUTS*sizeof(DATA_T), cudaMemcpyHostToDevice) );\n";
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
-        << cell.getName() << "_bias_cudnn, sizeof(DATA_T)*"
+        << identifier << "_bias_cudnn, sizeof(DATA_T)*"
         << prefix
         << "_NB_OUTPUTS));\n";
 
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy("
-        << cell.getName() << "_bias_cudnn, "
-        << cell.getName() << "_biases, "
+        << identifier << "_bias_cudnn, "
+        << identifier << "_biases, "
         << prefix << "_NB_OUTPUTS*sizeof(DATA_T), cudaMemcpyHostToDevice) );\n";
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
-        << cell.getName() << "_variance_cudnn, sizeof(DATA_T)*"
+        << identifier << "_variance_cudnn, sizeof(DATA_T)*"
         << prefix
         << "_NB_OUTPUTS));\n";
 
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy("
-        << cell.getName() << "_variance_cudnn, "
-        << cell.getName() << "_variances, "
+        << identifier << "_variance_cudnn, "
+        << identifier << "_variances, "
         << prefix << "_NB_OUTPUTS*sizeof(DATA_T), cudaMemcpyHostToDevice) );\n";
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
-        << cell.getName() << "_mean_cudnn, sizeof(DATA_T)*"
+        << identifier << "_mean_cudnn, sizeof(DATA_T)*"
         << prefix
         << "_NB_OUTPUTS));\n";
 
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy("
-        << cell.getName() << "_mean_cudnn, "
-        << cell.getName() << "_means, "
+        << identifier << "_mean_cudnn, "
+        << identifier << "_means, "
         << prefix << "_NB_OUTPUTS*sizeof(DATA_T), cudaMemcpyHostToDevice) );\n";
 }
 
 void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramInitBuffer(
     Cell& cell, const std::string& bufferName, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
         << bufferName << "buffer[" << prefix
         << "_OUTPUT_OFFSET], sizeof(DATA_T)*"
-        << Utils::upperCase(cell.getName())
+        << prefix
         << "_OUTPUTS_SIZE*batchSize));\n\n\n";
 }
 
@@ -168,7 +175,8 @@ void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramFunction(
     std::ofstream& prog,
     const std::string& funcProto)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     const std::string proto =
         (funcProto.empty()) ? "    batchnormcell"
         : funcProto;
@@ -180,15 +188,15 @@ void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramFunction(
         << "                " << prefix + "_NB_CHANNELS,\n"
         << "                " << prefix + "_CHANNELS_HEIGHT,\n"
         << "                " << prefix + "_CHANNELS_WIDTH,\n"
-        << "                " << cell.getName() + "_tensorDescIn,\n"
+        << "                " << identifier + "_tensorDescIn,\n"
         << "                " << inputName + ",\n"
-        << "                " << cell.getName() + "_scale_cudnn,\n"
-        << "                " << cell.getName() + "_scaleDesc,\n"
-        << "                " << cell.getName() + "_bias_cudnn,\n"
-        << "                " << cell.getName() + "_mean_cudnn,\n"
-        << "                " << cell.getName() + "_variance_cudnn,\n"
+        << "                " << identifier + "_scale_cudnn,\n"
+        << "                " << identifier + "_scaleDesc,\n"
+        << "                " << identifier + "_bias_cudnn,\n"
+        << "                " << identifier + "_mean_cudnn,\n"
+        << "                " << identifier + "_variance_cudnn,\n"
         << "                " << prefix + "_EPSILON,\n"
-        << "                " << cell.getName() + "_tensorDescOut,\n"
+        << "                " << identifier + "_tensorDescOut,\n"
         << "                " << "(DATA_T**)&" + outputName + "["
                               << output_pos + "],\n"
         << "                " << prefix + "_ACTIVATION); \n";
@@ -200,7 +208,8 @@ void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramOutputFunction(
     const std::string& outputName,
     std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                            cell.getName()));
 
     if( (cell.getOutputsWidth() == 1) && (cell.getOutputsHeight() == 1) ){
         prog << "    output_generation(batchSize, "
@@ -221,19 +230,21 @@ void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramOutputFunction(
 void N2D2::CPP_cuDNN_BatchNormCellExport::generateCellProgramFree(
     Cell& cell, std::vector<std::string>& /*parentsName*/, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
     prog << "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-            << cell.getName() << "_scaleDesc) );\n"
+            << identifier << "_scaleDesc) );\n"
             "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-            << cell.getName() << "_tensorDescIn) );\n"
+            << identifier << "_tensorDescIn) );\n"
             "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-            << cell.getName() << "_tensorDescOut) );\n"
+            << identifier << "_tensorDescOut) );\n"
             "    CHECK_CUDA_STATUS( cudaFree("
-            << cell.getName() << "_bias_cudnn) );\n"
+            << identifier << "_bias_cudnn) );\n"
             "    CHECK_CUDA_STATUS( cudaFree("
-            << cell.getName() << "_scale_cudnn) );\n"
+            << identifier << "_scale_cudnn) );\n"
             "    CHECK_CUDA_STATUS( cudaFree("
-            << cell.getName() << "_variance_cudnn) );\n"
+            << identifier << "_variance_cudnn) );\n"
             "    CHECK_CUDA_STATUS( cudaFree("
-            << cell.getName() << "_mean_cudnn) );\n"
+            << identifier << "_mean_cudnn) );\n"
             "\n";
 }

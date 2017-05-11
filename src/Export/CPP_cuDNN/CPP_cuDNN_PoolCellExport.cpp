@@ -34,8 +34,8 @@ void N2D2::CPP_cuDNN_PoolCellExport::generate(PoolCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -54,7 +54,8 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConstants(PoolCell& cell,
                                                              & header)
 {
     // Constants
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -107,11 +108,12 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConnections(PoolCell& cell,
                                                                std::ofstream
                                                                & header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "#define " << prefix << "_MAPPING_SIZE (" << prefix
            << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n"
-           << "static char " << cell.getName() << "_mapping_flatten[" << prefix
+           << "static char " << identifier << "_mapping_flatten[" << prefix
            << "_MAPPING_SIZE] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
@@ -150,9 +152,11 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramTensorDesc(Cell& cell,
                                                                    std::ofstream
                                                                    & prog)
 {
-    prog << "std::vector<cudnnTensorDescriptor_t> " << cell.getName()
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    prog << "std::vector<cudnnTensorDescriptor_t> " << identifier
         << "_tensorDescIn;\n"
-        "std::vector<cudnnTensorDescriptor_t> " << cell.getName()
+        "std::vector<cudnnTensorDescriptor_t> " << identifier
         << "_tensorDescOut;\n";
 }
 
@@ -160,15 +164,17 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramPoolDesc(Cell& cell,
                                                                  std::ofstream
                                                                  & prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "cudnnPoolingDescriptor_t " << cell.getName() << "_poolingDesc;\n";
+    prog << "cudnnPoolingDescriptor_t " << identifier << "_poolingDesc;\n";
 }
 
 void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramGlobalDefinition(
     Cell& cell, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "cudnnPoolingMode_t " << cell.getName() << "_pooling_cudnn;\n";
+    prog << "cudnnPoolingMode_t " << identifier << "_pooling_cudnn;\n";
 }
 
 void N2D2::CPP_cuDNN_PoolCellExport::generateCellBuffer(const std::string
@@ -181,32 +187,33 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellBuffer(const std::string
 void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramInitNetwork(
     Cell& cell, std::vector<std::string>& parentsName, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     unsigned int parentSize = parentsName.size();
-    prog << "    std::vector<int> " << cell.getName()
+    prog << "    std::vector<int> " << identifier
         << "_nbChanPerLayer;\n";
-    prog << "    std::vector<int> " << cell.getName()
+    prog << "    std::vector<int> " << identifier
         << "_chanHeightPerLayer;\n";
-    prog << "    std::vector<int> " << cell.getName()
+    prog << "    std::vector<int> " << identifier
         << "_chanWidthPerLayer;\n";
 
     for(unsigned int k = 0; k < parentSize; ++k) {
         const std::string prefixParent = Utils::upperCase(parentsName[k]);
 
-        prog << "    " << cell.getName() << "_nbChanPerLayer.push_back("
+        prog << "    " << identifier << "_nbChanPerLayer.push_back("
             << prefixParent << "_NB_OUTPUTS);\n";
-        prog << "    " << cell.getName() << "_chanHeightPerLayer.push_back("
+        prog << "    " << identifier << "_chanHeightPerLayer.push_back("
             << prefixParent << "_OUTPUTS_HEIGHT);\n";
-        prog << "    " << cell.getName() << "_chanWidthPerLayer.push_back("
+        prog << "    " << identifier << "_chanWidthPerLayer.push_back("
             << prefixParent << "_OUTPUTS_WIDTH);\n";
 
     }
 
     prog << "    setPooling(batchSize,\n"
-        << "                " << cell.getName() << "_nbChanPerLayer,\n"
-        << "                " << cell.getName() << "_chanHeightPerLayer,\n"
-        << "                " << cell.getName() << "_chanWidthPerLayer,\n"
+        << "                " << identifier << "_nbChanPerLayer,\n"
+        << "                " << identifier << "_chanHeightPerLayer,\n"
+        << "                " << identifier << "_chanWidthPerLayer,\n"
         << "                " << prefix << "_PADDING_Y,\n"
         << "                " << prefix << "_PADDING_X,\n"
         << "                " << prefix << "_STRIDE_Y,\n"
@@ -215,26 +222,27 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramInitNetwork(
         << "                " << prefix << "_OUTPUTS_WIDTH,\n"
         << "                " << "context_tensorFormat,\n"
         << "                " << "context_dataType,\n"
-        << "                " << cell.getName() << "_tensorDescIn,\n"
-        << "                " << cell.getName() << "_tensorDescOut,\n"
+        << "                " << identifier << "_tensorDescIn,\n"
+        << "                " << identifier << "_tensorDescOut,\n"
         << "                " << prefix << "_POOLING,\n"
-        << "                " << cell.getName() << "_pooling_cudnn,\n"
+        << "                " << identifier << "_pooling_cudnn,\n"
         << "                " << prefix << "_NB_OUTPUTS,\n"
         << "                " << prefix << "_POOL_HEIGHT,\n"
         << "                " << prefix << "_POOL_WIDTH,\n"
-        << "                " << cell.getName() <<  "_poolingDesc\n"
+        << "                " << identifier <<  "_poolingDesc\n"
         << "    " <<");\n\n\n";
 }
 
 void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramInitBuffer(
     Cell& cell, const std::string& bufferName, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
         << bufferName << "buffer[" << prefix
         << "_OUTPUT_OFFSET], sizeof(DATA_T)*"
-        << Utils::upperCase(cell.getName())
+        << prefix
         << "_OUTPUTS_SIZE*batchSize));\n\n\n";
 }
 
@@ -246,18 +254,19 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramFunction(
     std::ofstream& prog,
     const std::string& funcProto)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     const std::string proto = (funcProto.empty()) ? "    poolcell" : funcProto;
 
     prog << proto
         << "(\n"
         << "                " << "context_handle,\n"
-        << "                " << cell.getName() + "_tensorDescIn,\n"
+        << "                " << identifier + "_tensorDescIn,\n"
         << "                " << inputName + ",\n"
-        << "                " << cell.getName() + "_tensorDescOut,\n"
+        << "                " << identifier + "_tensorDescOut,\n"
         << "                " << "(DATA_T**)&" + outputName + "["
                               << output_pos + "],\n"
-        << "                " << cell.getName() + "_poolingDesc\n"
+        << "                " << identifier + "_poolingDesc\n"
         << "    " <<");\n";
 }
 
@@ -267,7 +276,8 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramOutputFunction(
     const std::string& outputName,
     std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     if( (cell.getOutputsWidth() == 1) && (cell.getOutputsHeight() == 1) ){
         prog << "    output_generation(batchSize, "
@@ -288,19 +298,21 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramOutputFunction(
 void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramFree(Cell& cell,
     std::vector<std::string>& parentsName, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
     for(int k = parentsName.size() - 1; k >= 0; --k) {
 
         prog << "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-            << cell.getName()
+            << identifier
             << "_tensorDescIn[" << k << "]) );\n";
 
         prog << "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-            << cell.getName()
+            << identifier
             << "_tensorDescOut[" << k << "]) );\n";
 
     }
 
     prog << "    CHECK_CUDNN_STATUS( cudnnDestroyPoolingDescriptor("
-        << cell.getName() << "_poolingDesc) );\n"
+        << identifier << "_poolingDesc) );\n"
             "\n";
 }

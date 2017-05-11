@@ -311,6 +311,8 @@ namespace Utils {
     std::string baseName(const std::string& filePath);
     std::string fileBaseName(const std::string& filePath);
     std::string fileExtension(const std::string& filePath);
+    bool isNotValidIdentifier(int c);
+    std::string CIdentifier(const std::string& str);
 
     template <typename T> std::string TtoString(const T& data);
 

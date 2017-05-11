@@ -499,6 +499,21 @@ std::string N2D2::Utils::fileExtension(const std::string& filePath)
                : filePath.substr(dotPos + 1);
 }
 
+bool N2D2::Utils::isNotValidIdentifier(int c) {
+    return (!isalnum(c) && c != '_');
+}
+
+std::string N2D2::Utils::CIdentifier(const std::string& str) {
+    std::string identifier(str);
+    std::replace_if(identifier.begin(), identifier.end(),
+                    Utils::isNotValidIdentifier, '_');
+
+    if (!identifier.empty() && !isalpha(identifier[0]))
+        identifier = "_" + identifier;
+
+    return identifier;
+}
+
 double N2D2::Utils::normalInverse(double p)
 {
     if (p < 0.0 || p > 1.0)

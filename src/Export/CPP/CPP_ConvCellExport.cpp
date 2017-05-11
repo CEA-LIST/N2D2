@@ -28,8 +28,8 @@ void N2D2::CPP_ConvCellExport::generate(ConvCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -56,7 +56,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(ConvCell& cell,
         = (unsigned int)((cell.getChannelsHeight() + 2 * cell.getPaddingY()
                           - cell.getKernelHeight() + cell.getStrideY())
                          / (double)cell.getStrideY());
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                        cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -131,7 +132,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderBias(ConvCell& cell,
 void N2D2::CPP_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
                                                           std::ofstream& header)
 {
-    header << "const std::vector<WDATA_T> " << cell.getName() << "_biases = ";
+    header << "const std::vector<WDATA_T> "
+        << Utils::CIdentifier(cell.getName()) << "_biases = ";
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
@@ -178,10 +180,12 @@ void N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsVariable(
     unsigned int output,
     unsigned int channel)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
-    header << "const std::vector<std::vector<WDATA_T> > " << cell.getName()
-           << "_weights_" << output << "_" << channel << " = ";
+    header << "const std::vector<std::vector<WDATA_T> > "
+        << identifier
+        << "_weights_" << output << "_" << channel << " = ";
 }
 
 
@@ -191,7 +195,8 @@ N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
                                                           unsigned int output,
                                                           unsigned int channel)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                        cell.getName()));
 
     header << "{\n";
 
@@ -219,18 +224,20 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsVariable(ConvCell& cell,
                                                              std::ofstream
                                                              & header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "typedef const std::vector<std::vector<WDATA_T> > " << prefix
            << "_KERNEL_T;\n";
     header << "const std::vector<std::vector<" << prefix << "_KERNEL_T*> > "
-           << cell.getName() << "_weights = ";
+           << identifier << "_weights = ";
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderWeightsValues(ConvCell& cell,
                                                          std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "{\n";
 
@@ -248,8 +255,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsValues(ConvCell& cell,
             if (!cell.isConnection(channel, output))
                 header << "NULL";
             else
-                header << "&" << cell.getName() << "_weights_" << output << "_"
-                       << channel;
+                header << "&" << identifier
+                    << "_weights_" << output << "_" << channel;
         }
 
         header << "}";

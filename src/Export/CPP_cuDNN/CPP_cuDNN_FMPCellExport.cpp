@@ -58,10 +58,11 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramTensorDesc(
 void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramGlobalDefinition(
     Cell& cell, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "unsigned int *" << cell.getName() << "_gridx_cudnn(NULL);\n"
+    prog << "unsigned int *" << identifier << "_gridx_cudnn(NULL);\n"
                                                   "unsigned int *"
-         << cell.getName() << "_gridy_cudnn(NULL);\n"
+         << identifier << "_gridy_cudnn(NULL);\n"
                               "\n";
 }
 
@@ -81,12 +82,13 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramInitNetwork(Cell& /*cell*
 void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramInitBuffer(Cell& cell,
     const std::string& bufferName, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
         << bufferName << "buffer[" << prefix
         << "_OUTPUT_OFFSET], sizeof(DATA_T)*"
-        << Utils::upperCase(cell.getName())
+        << prefix
         << "_OUTPUTS_SIZE*batchSize));\n\n\n";
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
@@ -120,7 +122,8 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramFunction(
     std::ofstream& prog,
     const std::string& funcProto)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     const std::string proto = (funcProto.empty()) ? "    fmpcell" : funcProto;
 
     prog << proto
@@ -130,8 +133,8 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramFunction(
         << "                " << prefix + "_NB_CHANNELS,\n"
         << "                " << prefix + "_CHANNELS_HEIGHT,\n"
         << "                " << prefix + "_CHANNELS_WIDTH,\n"
-        << "                " << cell.getName() + "_gridx_cudnn,\n"
-        << "                " << cell.getName() + "_gridy_cudnn,\n"
+        << "                " << identifier + "_gridx_cudnn,\n"
+        << "                " << identifier + "_gridy_cudnn,\n"
         << "                " << prefix + "_OVERLAPPING,\n"
         << "                " << inputName + ",\n"
         << "                " << prefix + "_OUTPUTS_SIZE,\n"
@@ -149,7 +152,8 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramOutputFunction(
     const std::string& outputName,
     std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     if( (cell.getOutputsWidth() == 1) && (cell.getOutputsHeight() == 1) ){
         prog << "    output_generation(batchSize, "
@@ -170,9 +174,11 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramOutputFunction(
 void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramFree(Cell& cell,
     std::vector<std::string>& /*parentsName*/, std::ofstream& prog)
 {
-    prog << "    CHECK_CUDA_STATUS( cudaFree(" << cell.getName()
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    prog << "    CHECK_CUDA_STATUS( cudaFree(" << identifier
             << "_gridy_cudnn) );\n"
-        << "    CHECK_CUDA_STATUS( cudaFree(" << cell.getName()
+        << "    CHECK_CUDA_STATUS( cudaFree(" << identifier
             << "_gridx_cudnn) );\n"
         << "\n";
 }

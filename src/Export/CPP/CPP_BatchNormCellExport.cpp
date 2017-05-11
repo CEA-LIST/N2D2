@@ -31,8 +31,8 @@ void N2D2::CPP_BatchNormCellExport::generate(BatchNormCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -50,7 +50,8 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderConstants(BatchNormCell& cell,
                                                             std::ofstream
                                                             & header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                    cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -98,7 +99,8 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderFreeParameters(BatchNormCell
 void N2D2::CPP_BatchNormCellExport::generateHeaderEpsilon(BatchNormCell& cell,
                                                           std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                        cell.getName()));
     header << "static double " << prefix
            << "_EPSILON = " << cell.getParameter<double>("Epsilon") << ";\n";
 }
@@ -106,9 +108,11 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderEpsilon(BatchNormCell& cell,
 void N2D2::CPP_BatchNormCellExport::generateHeaderBias(BatchNormCell& cell,
                                                        std::ofstream& header)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    header << "static WDATA_T " << cell.getName() << "_biases["
-           << Utils::upperCase(cell.getName()) << "_NB_OUTPUTS] = ";
+    header << "static WDATA_T " << identifier
+        << "_biases[" << Utils::upperCase(identifier)
+        << "_NB_OUTPUTS] = ";
 
     header << "{";
 
@@ -125,10 +129,11 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
                                                            std::ofstream
                                                            & header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
-    header << "static WDATA_T " << cell.getName() << "_variances[" << prefix
-           << "_NB_OUTPUTS] = {\n";
+    header << "static WDATA_T " << identifier
+        << "_variances[" << prefix << "_NB_OUTPUTS] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
@@ -142,10 +147,11 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
 void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
                                                        std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
-    header << "static WDATA_T " << cell.getName() << "_means[" << prefix
-           << "_NB_OUTPUTS] = {\n";
+    header << "static WDATA_T " << identifier
+        << "_means[" << prefix << "_NB_OUTPUTS] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
@@ -159,10 +165,11 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
 void N2D2::CPP_BatchNormCellExport::generateHeaderScale(BatchNormCell& cell,
                                                         std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
-    header << "static WDATA_T " << cell.getName() << "_scales[" << prefix
-           << "_NB_OUTPUTS] = {\n";
+    header << "static WDATA_T " << identifier
+        << "_scales[" << prefix << "_NB_OUTPUTS] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)

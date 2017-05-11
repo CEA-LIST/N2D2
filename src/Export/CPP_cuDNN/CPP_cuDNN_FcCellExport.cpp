@@ -33,8 +33,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generate(FcCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -56,7 +56,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
     const unsigned int channelsSize = cell.getNbChannels()
                                       * cell.getChannelsWidth()
                                       * cell.getChannelsHeight();
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -110,8 +111,10 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
                                                               std::ofstream
                                                               & header)
 {
-    header << "static WDATA_T " << cell.getName() << "_biases["
-           << Utils::upperCase(cell.getName()) << "_NB_OUTPUTS] = ";
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    header << "static WDATA_T " << identifier << "_biases["
+           << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
 }
 
 void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasValues(FcCell& cell,
@@ -139,7 +142,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
     const unsigned int channelsSize = cell.getNbChannels()
                                       * cell.getChannelsWidth()
                                       * cell.getChannelsHeight();
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "#define " << prefix << "_NB_WEIGHTS (" << prefix
            << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n\n";
@@ -147,7 +151,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
     // Weights flatten
     header << "#define " << prefix << "_WEIGHTS_SIZE (" << prefix
            << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n"
-           << "static WDATA_T " << cell.getName() << "_weights_flatten["
+           << "static WDATA_T " << identifier << "_weights_flatten["
            << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
@@ -166,7 +170,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
 void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
                                                        std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     const unsigned int channelsSize = cell.getNbChannels()
                                       * cell.getChannelsWidth()
                                       * cell.getChannelsHeight();
@@ -191,7 +196,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
     const unsigned int nbWeights = weights.size();
 
     header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
-           << "static WDATA_T " << cell.getName() << "_weights_sparse["
+           << "static WDATA_T " << identifier << "_weights_sparse["
            << prefix << "_NB_WEIGHTS] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
@@ -203,7 +208,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
 
     header << "};\n\n";
 
-    header << "static unsigned short " << cell.getName() << "_weights_offsets["
+    header << "static unsigned short " << identifier << "_weights_offsets["
            << prefix << "_NB_WEIGHTS] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
@@ -240,26 +245,31 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramTensorDesc(Cell& cell,
                                                                  std::ofstream
                                                                  & prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
     prog << "std::vector<cudnnTensorDescriptor_t> "
-        << cell.getName() << "_tensorDescIn;\n"
-        "cudnnTensorDescriptor_t " << cell.getName()
+        << identifier << "_tensorDescIn;\n"
+        "cudnnTensorDescriptor_t " << identifier
         << "_tensorDescOut;\n"
-        "cudnnTensorDescriptor_t " << cell.getName() << "_biasesDesc;\n";
+        "cudnnTensorDescriptor_t " << identifier << "_biasesDesc;\n";
 }
 
 void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramActivationDesc(
     Cell& cell, std::ofstream& prog)
 {
-    prog << "cudnnActivationDescriptor_t " << cell.getName()
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    prog << "cudnnActivationDescriptor_t " << identifier
          << "_activationDesc;\n";
 }
 
 void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramGlobalDefinition(
     Cell& cell, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "std::vector<DATA_T *>" << cell.getName() << "_weights_cudnn;\n"
-            "DATA_T *" << cell.getName() << "_bias_cudnn;\n"
+    prog << "std::vector<DATA_T *>" << identifier << "_weights_cudnn;\n"
+            "DATA_T *" << identifier << "_bias_cudnn;\n"
             "\n";
 }
 
@@ -273,39 +283,40 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellBuffer(const std::string
 void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramInitNetwork(
 Cell& cell, std::vector<std::string>& parentsName, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     unsigned int parentSize = parentsName.size();
-    prog << "    std::vector<int> " << cell.getName()
+    prog << "    std::vector<int> " << identifier
         << "_nbChanPerLayer;\n";
-    prog << "    std::vector<int> " << cell.getName()
+    prog << "    std::vector<int> " << identifier
         << "_chanHeightPerLayer;\n";
-    prog << "    std::vector<int> " << cell.getName()
+    prog << "    std::vector<int> " << identifier
         << "_chanWidthPerLayer;\n";
 
     for(unsigned int k = 0; k < parentSize; ++k) {
         const std::string prefixParent = Utils::upperCase(parentsName[k]);
 
-        prog << "    " << cell.getName() << "_nbChanPerLayer.push_back("
+        prog << "    " << identifier << "_nbChanPerLayer.push_back("
             << prefixParent << "_NB_OUTPUTS);\n";
-        prog << "    " << cell.getName() << "_chanHeightPerLayer.push_back("
+        prog << "    " << identifier << "_chanHeightPerLayer.push_back("
             << prefixParent << "_OUTPUTS_HEIGHT);\n";
-        prog << "    " << cell.getName() << "_chanWidthPerLayer.push_back("
+        prog << "    " << identifier << "_chanWidthPerLayer.push_back("
             << prefixParent << "_OUTPUTS_WIDTH);\n";
 
     }
 
     prog << "    setFc(batchSize,\n"
-        << "                " << cell.getName() << "_nbChanPerLayer,\n"
-        << "                " << cell.getName() << "_chanHeightPerLayer,\n"
-        << "                " << cell.getName() << "_chanWidthPerLayer,\n"
-        << "                " << cell.getName() << "_tensorDescIn,\n"
-        << "                " << cell.getName() << "_weights_flatten,\n"
-        << "                " << cell.getName() << "_weights_cudnn,\n"
-        << "                " << cell.getName() << "_biases,\n"
-        << "                " << cell.getName() << "_bias_cudnn,\n"
+        << "                " << identifier << "_nbChanPerLayer,\n"
+        << "                " << identifier << "_chanHeightPerLayer,\n"
+        << "                " << identifier << "_chanWidthPerLayer,\n"
+        << "                " << identifier << "_tensorDescIn,\n"
+        << "                " << identifier << "_weights_flatten,\n"
+        << "                " << identifier << "_weights_cudnn,\n"
+        << "                " << identifier << "_biases,\n"
+        << "                " << identifier << "_bias_cudnn,\n"
         << "                " << "context_tensorFormat,\n"
         << "                " << "context_dataType,\n"
-        << "                " << cell.getName() << "_tensorDescOut,\n"
+        << "                " << identifier << "_tensorDescOut,\n"
         << "                " << prefix << "_ACTIVATION,\n"
         << "                " << prefix << "_NB_OUTPUTS);\n\n\n";
 }
@@ -313,12 +324,13 @@ Cell& cell, std::vector<std::string>& parentsName, std::ofstream& prog)
 void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramInitBuffer(Cell& cell,
     const std::string& bufferName, std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     prog << "    CHECK_CUDA_STATUS(cudaMalloc(&"
         << bufferName << "buffer[" << prefix
         << "_OUTPUT_OFFSET], sizeof(DATA_T)*"
-        << Utils::upperCase(cell.getName())
+        << prefix
         << "_OUTPUTS_SIZE*batchSize));\n\n\n";
 }
 
@@ -330,7 +342,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramFunction(
     std::ofstream& prog,
     const std::string& funcProto)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     const std::string proto = (funcProto.empty()) ?
         "    fullyConnected" : funcProto;
 
@@ -340,16 +353,16 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramFunction(
         << "                " << "context_handle,\n"
         << "                " << "context_cublasHandle,\n"
         << "                " << prefix + "_ACTIVATION,\n"
-        << "                " << cell.getName() + "_tensorDescIn,\n"
+        << "                " << identifier + "_tensorDescIn,\n"
         << "                " << inputName + ",\n"
-        << "                " << cell.getName() + "_tensorDescOut,\n"
+        << "                " << identifier + "_tensorDescOut,\n"
         << "                " << prefix + "_NB_OUTPUTS,\n"
         << "                " << prefix + "_NO_BIAS,\n"
         << "                " << "(DATA_T**)&" + outputName + "["
                               << output_pos + "],\n"
-        << "                " << cell.getName() + "_bias_cudnn,\n"
+        << "                " << identifier + "_bias_cudnn,\n"
         << "                " << "ones_vector_buffer,\n"
-        << "                " << cell.getName() + "_weights_cudnn\n"
+        << "                " << identifier + "_weights_cudnn\n"
         << "    " <<");\n";
 }
 
@@ -359,7 +372,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramOutputFunction(
     const std::string& outputName,
     std::ofstream& prog)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     prog << "    output_generation(batchSize, "
             << prefix << "_NB_OUTPUTS, "
@@ -369,19 +383,21 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramOutputFunction(
 void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramFree(
     Cell& cell, std::vector<std::string>& parentsName, std::ofstream& prog)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
    for(int k = parentsName.size() - 1; k >= 0; --k) {
 
-        prog << "    CHECK_CUDA_STATUS( cudaFree(" << cell.getName()
+        prog << "    CHECK_CUDA_STATUS( cudaFree(" << identifier
             << "_weights_cudnn[" << k << "]) );\n";
 
         prog << "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-            << cell.getName() << "_tensorDescIn[" << k << "]) );\n";
+            << identifier << "_tensorDescIn[" << k << "]) );\n";
     }
-    prog << "    CHECK_CUDA_STATUS( cudaFree(" << cell.getName()
+    prog << "    CHECK_CUDA_STATUS( cudaFree(" << identifier
         << "_bias_cudnn) );\n";
 
     prog << "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
-        << cell.getName() << "_tensorDescOut) );\n"
-            //"#if CUDNN_VERSION >= 5000\n  CHECK_CUDNN_STATUS( cudnnDestroyActivationDescriptor("<< cell.getName() << "_activationDesc) );\n#endif\n"
+        << identifier << "_tensorDescOut) );\n"
+            //"#if CUDNN_VERSION >= 5000\n  CHECK_CUDNN_STATUS( cudnnDestroyActivationDescriptor("<< identifier << "_activationDesc) );\n#endif\n"
             << "\n";
 }

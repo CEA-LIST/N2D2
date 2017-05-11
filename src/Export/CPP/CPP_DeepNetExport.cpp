@@ -148,7 +148,8 @@ void N2D2::CPP_DeepNetExport::generateHeaderIncludes(DeepNet& deepNet,
              it != itEnd;
              ++it) {
             const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
-            header << "#include \"" << cell->getName() << ".hpp\"\n";
+            header << "#include \"" << Utils::CIdentifier(cell->getName())
+                << ".hpp\"\n";
         }
     }
 }

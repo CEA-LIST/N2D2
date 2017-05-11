@@ -28,8 +28,8 @@ void N2D2::CPP_PoolCellExport::generate(PoolCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -48,7 +48,8 @@ void N2D2::CPP_PoolCellExport::generateHeaderConstants(PoolCell& cell,
                                                             & header)
 {
     // Constants
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                            cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -108,8 +109,8 @@ void N2D2::CPP_PoolCellExport::generateHeaderConnectionsVariable(PoolCell& cell,
                                                                  std::ofstream
                                                                  & header)
 {
-    header << "const std::vector<std::vector<char> > " << cell.getName()
-           << "_mapping = ";
+    header << "const std::vector<std::vector<char> > "
+        << Utils::CIdentifier(cell.getName()) << "_mapping = ";
 }
 
 void N2D2::CPP_PoolCellExport::generateHeaderConnectionsValues(PoolCell& cell,

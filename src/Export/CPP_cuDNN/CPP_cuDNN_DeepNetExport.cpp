@@ -76,42 +76,36 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
                 const std::vector<std::shared_ptr<Cell> > parentCells
                     = deepNet.getParentCells(*it);
 
-                if (parentCells.size() > 1) {
+                const std::string prefix
+                    = Utils::upperCase(Utils::CIdentifier(
+                                            (*parentCells[0]).getName()));
 
+                if (parentCells.size() > 1) {
                     std::stringstream outputOffset;
                     std::stringstream outputDepth;
                     std::stringstream outputName;
                     std::string opPlus = " + ";
 
-                    outputOffset << "(" << Utils::upperCase(
-                                               (*parentCells[0]).getName())
-                                 << "_OUTPUTS_SIZE ";
-                    outputDepth << "("
-                                << Utils::upperCase((*parentCells[0]).getName())
-                                << "_NB_OUTPUTS ";
-                    outputName << Utils::upperCase((*parentCells[0]).getName())
-                               << "_";
+
+                    outputOffset << "(" << prefix << "_OUTPUTS_SIZE ";
+                    outputDepth << "(" << prefix << "_NB_OUTPUTS ";
+                    outputName << prefix << "_";
 
                     header << "#define "
-                           << Utils::upperCase((*parentCells[0]).getName())
+                           << prefix
                            << "_OUTPUT_OFFSET 0\n";
 
                     for (unsigned int i = 1; i < parentCells.size(); ++i) {
+                        const std::string prefix_i
+                            = Utils::upperCase(Utils::CIdentifier(
+                                                (*parentCells[i]).getName()));
 
-                        header << "#define "
-                               << Utils::upperCase((*parentCells[i]).getName())
-                               << "_OUTPUT_OFFSET ";
+                        header << "#define " << prefix_i << "_OUTPUT_OFFSET ";
                         header << i << "\n";
 
-                        outputName << Utils::upperCase(
-                                          (*parentCells[i]).getName()) << "_";
-                        outputOffset << opPlus
-                                     << Utils::upperCase(
-                                            (*parentCells[i]).getName())
-                                     << "_OUTPUTS_SIZE";
-                        outputDepth << opPlus << Utils::upperCase((
-                                                     *parentCells[i]).getName())
-                                    << "_NB_OUTPUTS";
+                        outputName << prefix_i << "_";
+                        outputOffset << opPlus << prefix_i << "_OUTPUTS_SIZE";
+                        outputDepth << opPlus << prefix_i << "_NB_OUTPUTS";
                         (i == parentCells.size() - 1) ? opPlus = " " : opPlus
                             = "+ ";
                     }
@@ -120,17 +114,16 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
                     header << "#define " << outputName.str() << "OUTPUTS_SIZE ";
                     header << outputOffset.str() << ")\n";
                 } else {
-                    header << "#define "
-                           << Utils::upperCase((*parentCells[0]).getName())
-                           << "_OUTPUT_OFFSET 0\n";
+                    header << "#define " << prefix << "_OUTPUT_OFFSET 0\n";
                 }
             }
             if (itLayer == itLayerEnd - 1) {
                 const std::shared_ptr<Cell> cell
                     = deepNet.getCell((*itLayer).at(0));
 
-                header << "#define " << Utils::upperCase(cell->getName())
-                       << "_OUTPUT_OFFSET 0\n";
+                header << "#define "
+                    << Utils::upperCase(Utils::CIdentifier(cell->getName()))
+                    << "_OUTPUT_OFFSET 0\n";
             }
         }
     }
@@ -265,10 +258,14 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
                 const std::shared_ptr<Cell> cell = deepNet.getCell(
                     (*itLayer).at(std::distance((*itLayer).begin(), it)));
                 std::stringstream outputName;
-                outputName << (*parentCells[0]).getName() << "_";
+                outputName << Utils::CIdentifier((*parentCells[0]).getName())
+                    << "_";
 
-                for (unsigned int i = 1; i < parentCells.size(); ++i)
-                    outputName << (*parentCells[i]).getName() << "_";
+                for (unsigned int i = 1; i < parentCells.size(); ++i) {
+                    outputName << Utils::CIdentifier(
+                                                (*parentCells[i]).getName())
+                               << "_";
+                }
 
                 CPP_cuDNN_CellExport::getInstance(*cell)
                     ->generateCellBuffer(outputName.str() + "buffer", prog);
@@ -325,10 +322,14 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                 const std::shared_ptr<Cell> cell = deepNet.getCell(
                     (*itLayer).at(std::distance((*itLayer).begin(), it)));
                 std::stringstream outputName;
-                outputName << (*parentCells[0]).getName() << "_";
+                outputName << Utils::CIdentifier((*parentCells[0]).getName())
+                    << "_";
 
-                for (unsigned int i = 1; i < parentCells.size(); ++i)
-                    outputName << (*parentCells[i]).getName() << "_";
+                for (unsigned int i = 1; i < parentCells.size(); ++i) {
+                    outputName << Utils::CIdentifier(
+                                            (*parentCells[i]).getName())
+                               << "_";
+                }
 
                 prog << "    " << outputName.str() << "buffer.resize("
                     << std::to_string((unsigned long long int)
@@ -370,8 +371,10 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                 const std::vector<std::shared_ptr<Cell> >&
                     parentCells = deepNet.getParentCells(cell->getName());
 
-                for(unsigned int k = 0; k < parentCells.size(); ++k)
-                    parentsName.push_back(parentCells[k]->getName());
+                for(unsigned int k = 0; k < parentCells.size(); ++k) {
+                    parentsName.push_back(Utils::CIdentifier(
+                                                parentCells[k]->getName()));
+                }
             }
             output_buff = (itLayer >= itLayerEnd - 1) ? outputsBuffer :
                 getCellOutputName(deepNet,
@@ -430,7 +433,8 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
                     at(std::distance((*itLayer).begin(), it)));
 
             std::string outputOffset
-                 = Utils::upperCase((*cell).getName() + "_output_offset");
+                 = Utils::upperCase(Utils::CIdentifier((*cell).getName())
+                                    + "_output_offset");
 
             input_buff = (itLayer == itLayerBegin) ? inputsBuffer :
                 getCellInputName(deepNet,
@@ -491,8 +495,10 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFree(DeepNet& deepNet,
                 const std::vector<std::shared_ptr<Cell> >&
                     parentCells = deepNet.getParentCells(cell->getName());
 
-                for(unsigned int k = 0; k < parentCells.size(); ++k)
-                    parentsName.push_back(parentCells[k]->getName());
+                for(unsigned int k = 0; k < parentCells.size(); ++k) {
+                    parentsName.push_back(Utils::CIdentifier(
+                                                parentCells[k]->getName()));
+                }
             }
 
             CPP_cuDNN_CellExport::getInstance(*cell)

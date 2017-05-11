@@ -30,7 +30,8 @@ void N2D2::CPP_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header
               "// @ " << std::asctime(localNow)
            << "\n"; // std::asctime() already appends end of line
 
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                            cell.getName()));
 
     header << "#ifndef N2D2_EXPORTC_" << prefix << "_LAYER_H\n"
                                                    "#define N2D2_EXPORTC_"
@@ -46,8 +47,9 @@ void N2D2::CPP_CellExport::generateHeaderIncludes(Cell& /*cell*/,
 
 void N2D2::CPP_CellExport::generateHeaderEnd(Cell& cell, std::ofstream& header)
 {
-    header << "#endif // N2D2_EXPORTC_" << Utils::upperCase(cell.getName())
-           << "_LAYER_H" << std::endl;
+    header << "#endif // N2D2_EXPORTC_"
+        << Utils::upperCase(Utils::CIdentifier(cell.getName()))
+        << "_LAYER_H" << std::endl;
     header.close();
 }
 

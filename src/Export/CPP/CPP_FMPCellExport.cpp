@@ -31,8 +31,8 @@ void N2D2::CPP_FMPCellExport::generate(FMPCell& cell,
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -51,7 +51,8 @@ void N2D2::CPP_FMPCellExport::generateHeaderConstants(FMPCell& cell,
                                                              std::ofstream
                                                              & header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                            cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -95,16 +96,17 @@ void N2D2::CPP_FMPCellExport::generateHeaderConnections(FMPCell& cell,
                                                                std::ofstream
                                                                & header)
 {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
     const Cell_Frame_Top* cellFrameTop = dynamic_cast<Cell_Frame_Top*>(&cell);
 
     if (/*cellFrame != NULL && */ !cellFrameTop->isUnitMap()) {
 
-        const std::string prefix = Utils::upperCase(cell.getName());
+        const std::string prefix = Utils::upperCase(identifier);
 
         header << "#define " << prefix << "_MAPPING_SIZE (" << prefix
                << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n"
-               << "static char " << cell.getName() << "_mapping_flatten["
-               << prefix << "_MAPPING_SIZE] = {\n";
+               << "static char " << identifier
+               << "_mapping_flatten[" << prefix << "_MAPPING_SIZE] = {\n";
 
         for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
             for (unsigned int channel = 0; channel < cell.getNbChannels();
@@ -126,8 +128,8 @@ void N2D2::CPP_FMPCellExport::generateHeaderConnections(FMPCell& cell,
 void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
                                                         std::ofstream& header)
 {
-
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     const unsigned int sizeOutX = cell.getOutputsWidth();
     const unsigned int sizeInX = cell.getChannelsWidth();
@@ -145,8 +147,8 @@ void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
 
         header << "#define " << prefix << "_GRIDX_SIZE (" << prefix
                << "_OUTPUTS_WIDTH)\n"
-               << "static unsigned int " << cell.getName() << "_gridx_flatten["
-               << prefix << "_OUTPUTS_WIDTH] = {\n";
+               << "static unsigned int " << identifier
+               << "_gridx_flatten[" << prefix << "_OUTPUTS_WIDTH] = {\n";
 
         for (unsigned int i = 0; i < sizeOutX; ++i) {
             if (i > 0)
@@ -158,8 +160,8 @@ void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
 
         header << "#define " << prefix << "_GRIDY_SIZE (" << prefix
                << "_OUTPUTS_HEIGHT)\n"
-               << "static unsigned int " << cell.getName() << "_gridy_flatten["
-               << prefix << "_OUTPUTS_HEIGHT] = {\n";
+               << "static unsigned int " << identifier
+               << "_gridy_flatten[" << prefix << "_OUTPUTS_HEIGHT] = {\n";
 
         for (unsigned int i = 0; i < sizeOutY; ++i) {
             if (i > 0)

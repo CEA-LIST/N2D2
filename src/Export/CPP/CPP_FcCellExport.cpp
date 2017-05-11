@@ -27,8 +27,8 @@ void N2D2::CPP_FcCellExport::generate(FcCell& cell, const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/include");
 
-    const std::string fileName = dirName + "/include/" + cell.getName()
-                                 + ".hpp";
+    const std::string fileName = dirName + "/include/"
+        + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
 
@@ -49,7 +49,8 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(FcCell& cell,
     const unsigned int channelsSize = cell.getNbChannels()
                                       * cell.getChannelsWidth()
                                       * cell.getChannelsHeight();
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
+                                                        cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
@@ -100,7 +101,8 @@ void N2D2::CPP_FcCellExport::generateHeaderBias(FcCell& cell,
 void N2D2::CPP_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
                                                         std::ofstream& header)
 {
-    header << "const std::vector<WDATA_T> " << cell.getName() << "_biases = ";
+    header << "const std::vector<WDATA_T> "
+        << Utils::CIdentifier(cell.getName()) << "_biases = ";
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderBiasValues(FcCell& cell,
@@ -125,7 +127,8 @@ void N2D2::CPP_FcCellExport::generateHeaderBiasValues(FcCell& cell,
 void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
                                                        std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
     const unsigned int channelsSize = cell.getNbChannels()
                                       * cell.getChannelsWidth()
                                       * cell.getChannelsHeight();
@@ -150,8 +153,8 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
     const unsigned int nbWeights = weights.size();
 
     header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
-           << "static WDATA_T " << cell.getName() << "_weights_sparse["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << "static WDATA_T " << identifier
+           << "_weights_sparse[" << prefix << "_NB_WEIGHTS] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -162,8 +165,8 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
 
     header << "};\n\n";
 
-    header << "static unsigned short " << cell.getName() << "_weights_offsets["
-           << prefix << "_NB_WEIGHTS] = {\n";
+    header << "static unsigned short " << identifier
+        << "_weights_offsets[" << prefix << "_NB_WEIGHTS] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -192,14 +195,15 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsVariable(FcCell& cell,
                                                            std::ofstream
                                                            & header)
 {
-    const std::string prefix = Utils::upperCase(cell.getName());
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
 
     header << "#define " << prefix << "_NB_WEIGHTS (" << prefix
            << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n\n";
 
     // Weights
-    header << "const std::vector<std::vector<WDATA_T> > " << cell.getName()
-           << "_weights = \n";
+    header << "const std::vector<std::vector<WDATA_T> > "
+        << identifier << "_weights = \n";
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderWeightsValues(FcCell& cell,
