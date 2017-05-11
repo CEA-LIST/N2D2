@@ -36,7 +36,7 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     const unsigned int envSizeY = sp.getSizeY();
     const unsigned int nbChannels = sp.getNbChannels();
     const unsigned int size = sp.getDatabase().getNbStimuli(set);
-    const unsigned int zeroPad = std::ceil(std::log10(size));
+    const unsigned int zeroPad = (size > 0) ? std::ceil(std::log10(size)) : 0;
     /*
         if (CellExport::mPrecision > 0) {
             StimuliData stimuliData(dirName + "_stats", sp);
