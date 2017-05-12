@@ -150,7 +150,8 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
               << cell->getOutputsHeight() << std::endl;
     std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
 
-    cell->writeMap(section + "_map.dat");
+    Utils::createDirectories("map");
+    cell->writeMap("map/" + section + "_map.dat");
 
     return cell;
 }
