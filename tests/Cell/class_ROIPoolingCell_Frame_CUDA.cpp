@@ -99,6 +99,8 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
              std::make_tuple(10U, 7U, 1U, 24U, 32U),
              std::make_tuple(7U, 10U, 2U, 24U, 32U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbProposals = 2;
 
     Network net;
@@ -152,6 +154,8 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
              std::make_tuple(10U, 7U, 1U, 64U, 96U),
              std::make_tuple(7U, 10U, 2U, 64U, 96U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbProposals = 2;
 
     Network net;
@@ -235,6 +239,8 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
              std::make_tuple(10U, 7U, 1U, 64U, 96U),
              std::make_tuple(7U, 10U, 2U, 64U, 96U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbProposals = 2;
 
     Network net;
