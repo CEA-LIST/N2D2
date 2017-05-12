@@ -18,6 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #include "Cell/ROIPoolingCell_Frame_CUDA.hpp"
 
 N2D2::Registrar<N2D2::ROIPoolingCell>
@@ -221,3 +223,5 @@ N2D2::ROIPoolingCell_Frame_CUDA::~ROIPoolingCell_Frame_CUDA()
     for (unsigned int k = 0, size = mArgMax.size(); k < size; ++k)
         delete &mArgMax[k];
 }
+
+#endif

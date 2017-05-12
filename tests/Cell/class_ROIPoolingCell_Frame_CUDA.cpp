@@ -18,6 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #include "N2D2.hpp"
 
 #include "Database/MNIST_IDX_Database.hpp"
@@ -305,3 +307,12 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
 }
 
 RUN_TESTS()
+
+#else
+
+int main()
+{
+    return 0;
+}
+
+#endif

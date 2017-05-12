@@ -186,7 +186,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
-#pragma omp parallel for if (inputs.dimB() > 4 && size > 16)
+#pragma omp parallel for if (mOutputs.dimB() > 4 && size > 16)
 #endif
             for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
             {
