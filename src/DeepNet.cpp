@@ -570,7 +570,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
         double scalingFactor = 0.0;
 
         if (useMean) {
-            unsigned int nbElements = 0;
+            double nbElements = 0.0;
 
             for (std::vector<std::string>::const_iterator itCell
                  = (nextIsPool) ? (*(it + 1)).begin() : (*it).begin(),
