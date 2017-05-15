@@ -256,6 +256,8 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
 
 void N2D2::Target::process(Database::StimuliSet set)
 {
+    const unsigned int nbTargets = getNbTargets();
+
     if (mDataAsTarget) {
         if (set == Database::Learn) {
             std::shared_ptr<Cell_Frame_Top> targetCell
@@ -367,6 +369,19 @@ void N2D2::Target::process(Database::StimuliSet set)
 
             if (target.size() == 1) {
                 if (target(0) >= 0) {
+                    if (target(0) >= (int)nbTargets) {
+#pragma omp critical
+                        {
+                            std::cout << Utils::cwarning << "Stimulus #"
+                                << id << " has target " << target(0) << " but "
+                                "number of output target is " << nbTargets
+                                << Utils::cdef << std::endl;
+
+                            throw std::runtime_error("Target::process(): target"
+                                                     " out of range.");
+                        }
+                    }
+
                     if (value.size() > 1) {
                         std::vector
                             <std::pair<Float_T, size_t> > sortedLabelsValues;
@@ -417,6 +432,21 @@ void N2D2::Target::process(Database::StimuliSet set)
 
                 for (unsigned int oy = 0; oy < value.dimY(); ++oy) {
                     for (unsigned int ox = 0; ox < value.dimX(); ++ox) {
+                        if (target(ox, oy, 0) >= (int)nbTargets) {
+#pragma omp critical
+                            {
+                                std::cout << Utils::cwarning << "Stimulus #"
+                                    << id << " has target " << target(ox, oy, 0)
+                                    << " @ (" << ox << "," << oy << ") but "
+                                    "number of output target is " << nbTargets
+                                    << Utils::cdef << std::endl;
+
+                                throw std::runtime_error("Target::process(): "
+                                                         "target out of "
+                                                         "range.");
+                            }
+                        }
+
                         if (nbOutputs > 1) {
                             std::vector<std::pair<Float_T, size_t> >
                             sortedLabelsValues;
