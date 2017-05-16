@@ -22,58 +22,10 @@
 #define N2D2_POOLCELL_FRAME_KERNELS_H
 
 #include "Cell_Frame.hpp"
+#include "PoolCell_Frame_Kernels_struct.hpp"
 
 namespace N2D2 {
 namespace PoolCell_Frame_Kernels {
-    struct Descriptor {
-        unsigned int poolWidth;
-        unsigned int poolHeight;
-        unsigned int strideX;
-        unsigned int strideY;
-        int paddingX;
-        int paddingY;
-
-        Descriptor(unsigned int poolWidth_,
-                   unsigned int poolHeight_,
-                   unsigned int strideX_,
-                   unsigned int strideY_,
-                   int paddingX_,
-                   int paddingY_)
-            : poolWidth(poolWidth_),
-              poolHeight(poolHeight_),
-              strideX(strideX_),
-              strideY(strideY_),
-              paddingX(paddingX_),
-              paddingY(paddingY_)
-        {
-        }
-    };
-
-    struct ArgMax {
-        unsigned int ix;
-        unsigned int iy;
-        unsigned int channel;
-        bool valid;
-
-        ArgMax(unsigned int ix_ = 0,
-               unsigned int iy_ = 0,
-               unsigned int channel_ = 0,
-               bool valid_ = false)
-            : ix(ix_),
-              iy(iy_),
-              channel(channel_),
-              valid(valid_)
-        {
-        }
-    };
-
-    inline bool operator==(const ArgMax& lhs, const ArgMax& rhs) {
-        return (lhs.ix == rhs.ix
-                && lhs.iy == rhs.iy
-                && lhs.channel == rhs.channel
-                && lhs.valid == rhs.valid);
-    }
-
     // Forward
     void forwardAverage(const Float_T* alpha,
                         const Tensor4d<Float_T>& inputs,

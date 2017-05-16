@@ -44,8 +44,8 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
 
-    const double xRatio = inputSizeX / (double)channelsWidth;
-    const double yRatio = inputSizeY / (double)channelsHeight;
+    const float xRatio = inputSizeX / (float)channelsWidth;
+    const float yRatio = inputSizeY / (float)channelsHeight;
 
     float x = proposals[0 + batchProposalsOffset] / xRatio;
     float y = proposals[1 + batchProposalsOffset] / yRatio;
@@ -138,8 +138,8 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
 
-    const double xRatio = inputSizeX / (double)channelsWidth;
-    const double yRatio = inputSizeY / (double)channelsHeight;
+    const float xRatio = inputSizeX / (float)channelsWidth;
+    const float yRatio = inputSizeY / (float)channelsHeight;
 
     float x = proposals[0 + batchProposalsOffset] / xRatio;
     float y = proposals[1 + batchProposalsOffset] / yRatio;
@@ -271,8 +271,8 @@ void cudaSROIPoolingBackwardMax_kernel(const float alpha,
     //const float betaBatch = (blockIdx.z % nbProposals == 0)
     //                            ? beta : 1.0;
 
-    const double xRatio = inputSizeX / (double)channelsWidth;
-    const double yRatio = inputSizeY / (double)channelsHeight;
+    const float xRatio = inputSizeX / (float)channelsWidth;
+    const float yRatio = inputSizeY / (float)channelsHeight;
 
     float x = proposals[0 + batchProposalsOffset] / xRatio;
     float y = proposals[1 + batchProposalsOffset] / yRatio;
