@@ -28,8 +28,9 @@
 #include <string>
 #include <vector>
 
-#include "cv.h"
-#include "highgui.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
 #ifndef CV_WINDOW_NORMAL
 #define CV_WINDOW_NORMAL 0

@@ -188,7 +188,7 @@ void N2D2::Utils::colorReduce(cv::Mat& img, unsigned int nbColors)
     const int flags = cv::KMEANS_PP_CENTERS;
     cv::Mat centers;
 
-#if CV_MINOR_VERSION < 3
+#if CV_MAJOR_VERSION < 2 || (CV_MAJOR_VERSION == 2 && CV_MINOR_VERSION < 3)
     cv::kmeans(
         imgVec, nbColors, bestLabels, criteria, attempts, flags, &centers);
 #else

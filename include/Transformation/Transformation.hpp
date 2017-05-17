@@ -30,8 +30,9 @@
 #ifndef N2D2_TRANSFORMATION_H
 #define N2D2_TRANSFORMATION_H
 
-#include "cv.h"
-#include "highgui.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
 #include "ROI/ROI.hpp"
 #include "containers/Tensor2d.hpp"

@@ -21,7 +21,8 @@
 #ifndef N2D2_GEOMETRIC_CIRCLE_H
 #define N2D2_GEOMETRIC_CIRCLE_H
 
-#include "cv.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 namespace N2D2 {
 namespace Geometric {

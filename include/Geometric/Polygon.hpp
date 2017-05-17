@@ -23,7 +23,8 @@
 
 #include <vector>
 
-#include "cv.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 namespace N2D2 {
 namespace Geometric {
