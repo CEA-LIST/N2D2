@@ -72,9 +72,11 @@ TEST_DATASET(
     cv::Mat img2 = img.clone();
 
     cv::Mat mat1(
-        cv::Size(img.cols, img.rows), CV_64FC3, cv::Scalar(firstValue));
+        cv::Size(img.cols, img.rows), CV_64FC3,
+        cv::Scalar(firstValue, firstValue, firstValue));
     cv::Mat mat2(
-        cv::Size(img.cols, img.rows), CV_64FC3, cv::Scalar(secondValue));
+        cv::Size(img.cols, img.rows), CV_64FC3,
+        cv::Scalar(secondValue, secondValue, secondValue));
     AffineTransformation trans(firstOperator, mat1, secondOperator, mat2);
 
     trans.apply(img2);
