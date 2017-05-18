@@ -173,6 +173,7 @@ protected:
     Tensor4d<Float_T> mEstimatedLabelsValue;
     Tensor4d<Float_T> mEstimatedValues;
     std::shared_ptr<Target> mMaskLabelTarget;
+    bool mPopulateTargets;
 
 private:
     static Registrar<Target> mRegistrar;

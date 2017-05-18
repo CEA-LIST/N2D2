@@ -42,7 +42,8 @@ N2D2::Target::Target(const std::string& name,
       mTargetValue(targetValue),
       mDefaultValue(defaultValue),
       mTargetTopN(targetTopN),
-      mDefaultTarget(-2)
+      mDefaultTarget(-2),
+      mPopulateTargets(true)
 {
     // ctor
     Utils::createDirectories(name);
@@ -287,34 +288,40 @@ void N2D2::Target::process(Database::StimuliSet set)
                                          labels.dimB());
         }
 
-        // Generate targets
-        if (mCell->getOutputsWidth() > 1 || mCell->getOutputsHeight() > 1) {
-            const double xRatio = labels.dimX()
-                                  / (double)mCell->getOutputsWidth();
-            const double yRatio = labels.dimY()
-                                  / (double)mCell->getOutputsHeight();
+        if (mPopulateTargets) {
+            // Generate targets
+            if (mCell->getOutputsWidth() > 1 || mCell->getOutputsHeight() > 1) {
+                const double xRatio = labels.dimX()
+                                      / (double)mCell->getOutputsWidth();
+                const double yRatio = labels.dimY()
+                                      / (double)mCell->getOutputsHeight();
 
 #pragma omp parallel for if (labels.dimB() > 16)
-            for (int batchPos = 0; batchPos < (int)labels.dimB(); ++batchPos) {
-                const Tensor2d<int> label = labels[batchPos][0];
-                Tensor2d<int> target = mTargets[batchPos][0];
+                for (int batchPos = 0; batchPos < (int)labels.dimB();
+                    ++batchPos)
+                {
+                    const Tensor2d<int> label = labels[batchPos][0];
+                    Tensor2d<int> target = mTargets[batchPos][0];
 
-                for (unsigned int x = 0; x < mTargets.dimX(); ++x) {
-                    for (unsigned int y = 0; y < mTargets.dimY(); ++y) {
-                        target(x, y) = getLabelTarget(
-                            label((int)std::floor((x + 0.5) * xRatio),
-                                  (int)std::floor((y + 0.5) * yRatio)));
+                    for (unsigned int x = 0; x < mTargets.dimX(); ++x) {
+                        for (unsigned int y = 0; y < mTargets.dimY(); ++y) {
+                            target(x, y) = getLabelTarget(
+                                label((int)std::floor((x + 0.5) * xRatio),
+                                      (int)std::floor((y + 0.5) * yRatio)));
+                        }
                     }
                 }
-            }
-        } else {
-            for (int batchPos = 0; batchPos < (int)labels.dimB(); ++batchPos) {
-                const Tensor3d<int> label = labels[batchPos];
-                Tensor3d<int> target = mTargets[batchPos];
+            } else {
+                for (int batchPos = 0; batchPos < (int)labels.dimB();
+                    ++batchPos)
+                {
+                    const Tensor3d<int> label = labels[batchPos];
+                    Tensor3d<int> target = mTargets[batchPos];
 
-                // target only has 1 channel, whereas label has as many channels
-                // as environment channels
-                target(0) = getLabelTarget(label(0));
+                    // target only has 1 channel, whereas label has as many
+                    // channels as environment channels
+                    target(0) = getLabelTarget(label(0));
+                }
             }
         }
 
