@@ -214,11 +214,14 @@ std::vector<std::string> N2D2::Target::getTargetLabelsName() const
             labelName << "default";
         else {
             const std::vector<int> cls = getTargetLabels(target);
+            const Database& db = mStimuliProvider->getDatabase();
 
             if (!cls.empty()) {
-                labelName << ((cls[0] >= 0) ? mStimuliProvider->getDatabase()
-                                                  .getLabelName(cls[0])
-                                            : "*");
+                labelName << ((cls[0] >= 0 && cls[0] < (int)db.getNbLabels())
+                                ? db.getLabelName(cls[0]) :
+                              (cls[0] >= 0)
+                                ? "" :
+                                  "*");
 
                 if (cls.size() > 1)
                     labelName << "...";
