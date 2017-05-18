@@ -39,7 +39,7 @@ N2D2::TransformationCell_Frame_CUDA::TransformationCell_Frame_CUDA(
 
 void N2D2::TransformationCell_Frame_CUDA::propagate(bool /*inference*/)
 {
-    mInputs.synchronizeHBasedToD();
+    mInputs.synchronizeDToH();
 
     if (mInputs.size() > 1)
         throw std::runtime_error("TransformationCell can only have one input");
