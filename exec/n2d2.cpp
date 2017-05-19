@@ -177,7 +177,9 @@ int main(int argc, char* argv[]) try
     StimuliProvider& sp = *deepNet->getStimuliProvider();
 
     if (!genExport.empty()) {
-        if (database.getNbStimuli(Database::Validation) > 0)
+        if (!weights.empty())
+            deepNet->importNetworkFreeParameters(weights);
+        else if (database.getNbStimuli(Database::Validation) > 0)
             deepNet->importNetworkFreeParameters("weights_validation");
         else
             deepNet->importNetworkFreeParameters("weights");
