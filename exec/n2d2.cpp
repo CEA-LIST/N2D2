@@ -387,8 +387,9 @@ int main(int argc, char* argv[]) try
                          ++it) {
                         (*it).second /= (i + batchSize);
                     }
+                    Utils::createDirectories("timings");
 
-                    deepNet->logTimings("benchmark.dat", cumTimings);
+                    deepNet->logTimings("timings/learning_timings.dat", cumTimings);
                 }
 
                 deepNet->logEstimatedLabels("learning");
@@ -623,7 +624,9 @@ int main(int argc, char* argv[]) try
                     (*it).second /= nbTest;
                 }
 
-                deepNet->logTimings("timings.dat", cumTimings);
+                Utils::createDirectories("timings");
+
+                deepNet->logTimings("timings/inference_timings.dat", cumTimings);
 
                 for (std::vector<std::shared_ptr<Target> >::const_iterator
                          itTargets = deepNet->getTargets().begin(),

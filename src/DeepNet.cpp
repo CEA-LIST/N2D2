@@ -691,15 +691,36 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
     const std::string statsFileName = dirName + "/stats.dat";
+    const std::string relStatsFileName = dirName + "/stats_relative.dat";
+
+    const std::string logStatsDataFileName = dirName
+                                        + "/stats_data_logarithmic.dat";
+    const std::string relStatsDataFileName = dirName
+                                        + "/stats_data_relative.dat";
+    const std::string logStatsParamFileName = dirName
+                                        + "/stats_parameters_logarithmic.dat";
+    const std::string relStatsParamFileName = dirName
+                                        + "/stats_parameters_relative.dat";
+    const std::string logStatsComputingFileName = dirName
+                                        + "/stats_computing_logarithmic.dat";
+    const std::string relStatsComputingFileName = dirName
+                                        + "/stats_computing_relative.dat";
+
     const std::string logFileName = dirName + "/stats.log";
+    std::string paramTitle = "Param Memory";
+    std::string dataTitle = "Data Memory";
+    std::string computingTitle = "Computing";
 
+
+
+    unsigned int maxStringSizeCellName = 1;
     // Cells stats
-    std::ofstream statsData(statsFileName.c_str());
+    std::ofstream stats(statsFileName.c_str());
 
-    if (!statsData.good())
+    if (!stats.good())
         throw std::runtime_error("Could not open stats file: " + statsFileName);
 
-    statsData << "Cell Memory Computing\n";
+    stats << "Cell ParamMemory Computing DataMemory\n";
 
     Cell::Stats globalStats;
 
@@ -718,43 +739,188 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
             cell->getStats(cellStats);
             cell->getStats(globalStats);
 
-            statsData << (*itCell) << " " << cellStats.nbSynapses << " "
-                      << cellStats.nbConnections << "\n";
+            maxStringSizeCellName = (maxStringSizeCellName >
+                                        cell->getName().size()) ?
+                                        maxStringSizeCellName :
+                                            cell->getName().size() ;
+
+            stats << (*itCell) << " "
+                       << cellStats.nbSynapses << " "
+                       << cellStats.nbConnections << " "
+                       << cellStats.nbNodes << "\n";
         }
     }
 
-    statsData.close();
+    stats.close();
 
-    Gnuplot gnuplot;
-    gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
-               "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
-    gnuplot.set("style histogram cluster gap 1");
-    gnuplot.set("style data histograms");
-    gnuplot.set("style fill pattern 1.00 border");
-    gnuplot.set("ytics nomirror");
-    gnuplot.set("logscale y");
-    gnuplot.set("y2range [0:*]");
-    gnuplot.set("y2tics");
-    gnuplot.setYlabel("Memory [int-8 bits] (bytes)");
-    gnuplot.setY2label("Computing (MACs)");
-    gnuplot.set("grid");
-    gnuplot.set("ytics textcolor lt 1");
-    gnuplot.set("ylabel textcolor lt 1");
-    gnuplot.set("y2tics textcolor lt 2");
-    gnuplot.set("y2label textcolor lt 2");
-    gnuplot.set("format y \"%.0s%c\"");
-    gnuplot.set("format y2 \"%.0s%c\"");
-    gnuplot.unset("key");
-    gnuplot.set("bmargin 4");
-    gnuplot.saveToFile(statsFileName);
-    gnuplot.plot(
-        statsFileName,
-        "using ($2):xticlabels(wrap(stringcolumn(1),5)) ti col,"
-        " '' using 0:($2):(gprintf(\"%.2s%c\",$2)) ti col with labels offset "
-        "char -3,1 textcolor lt 1,"
-        " '' using ($3):xticlabels(wrap(stringcolumn(1),5)) ti col axes x1y2,"
-        " '' using ($0+0.2):($3):(gprintf(\"%.2s%c\",$3)) ti col axes x1y2 "
-        "with labels offset char 1,1 textcolor lt 2");
+    std::ofstream relStats(relStatsFileName.c_str());
+    if (!relStats.good())
+        throw std::runtime_error("Could not open stats file: "
+                                 + relStatsFileName);
+
+    relStats << "Cell ParamMemory(%) Computing(%) DataMemory(%)\n";
+
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin() + 1,
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it) {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell) {
+            const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+
+            Cell::Stats cellStats;
+            cell->getStats(cellStats);
+
+            relStats << (*itCell) << " " << std::fixed << std::setprecision(2)
+                    << std::setfill('0')
+                    << ((float) cellStats.nbSynapses /
+                                (float) globalStats.nbSynapses)*100.0
+                    << " "
+                    << ((float) cellStats.nbConnections /
+                                (float) globalStats.nbConnections)*100.0
+                    << " "
+                    << ((float) cellStats.nbNodes /
+                                (float) globalStats.nbNodes)*100.0
+                    << "\n";
+        }
+    }
+
+    relStats.close();
+    std::stringstream termStr;
+    termStr << "set term png size "
+            << (mLayers.size() * 50)
+            << ",600 enhanced large";
+
+    Gnuplot paramPlot;
+    paramPlot.saveToFile(logStatsParamFileName);
+    paramPlot << termStr.str();
+    drawHistogram(paramTitle + "[int-8 bits] (bytes)",
+                  statsFileName,
+                  2U,
+                  maxStringSizeCellName,
+                  true,
+                  paramPlot);
+
+    Gnuplot relParamPlot;
+    relParamPlot.saveToFile(relStatsParamFileName);
+    relParamPlot << termStr.str();
+    drawHistogram(paramTitle + "[int-8 bits] (%)",
+                  relStatsFileName,
+                  2U,
+                  maxStringSizeCellName,
+                  false,
+                  relParamPlot);
+
+
+    Gnuplot computingPlot;
+    computingPlot.saveToFile(logStatsComputingFileName);
+    computingPlot << termStr.str();
+    drawHistogram(computingTitle + "(MACs)",
+                  statsFileName,
+                  3U,
+                  maxStringSizeCellName,
+                  true,
+                  computingPlot);
+
+    Gnuplot relComputingPlot;
+    relComputingPlot.saveToFile(relStatsComputingFileName);
+    relComputingPlot << termStr.str();
+    drawHistogram(computingTitle + " (%)",
+                  relStatsFileName,
+                  3U,
+                  maxStringSizeCellName,
+                  false,
+                  relComputingPlot);
+
+    Gnuplot dataPlot;
+    dataPlot.saveToFile(logStatsDataFileName);
+    dataPlot << termStr.str();
+    drawHistogram(dataTitle + "[int-8 bits] (bytes)",
+                  statsFileName,
+                  4U,
+                  maxStringSizeCellName,
+                  true,
+                  dataPlot);
+    Gnuplot relDataPlot;
+    relDataPlot.saveToFile(relStatsDataFileName);
+    relDataPlot << termStr.str();
+    drawHistogram(dataTitle + "[int-8 bits] (%)",
+                  relStatsFileName,
+                  4U,
+                  maxStringSizeCellName,
+                  false,
+                  relDataPlot);
+
+    std::stringstream multiTermStr;
+    multiTermStr << "set term png size "
+            << (mLayers.size() * 50)*2
+            << ",1800 enhanced large";
+
+    //termStr << "set term png size 1600,1800 enhanced";
+
+    Gnuplot multiplot;
+    multiplot.saveToFile(statsFileName);
+    multiplot << multiTermStr.str();
+    multiplot.setMultiplot(3, 2);
+    multiplot.set("origin 0,0.66");
+    multiplot.set("grid");
+    drawHistogram(paramTitle + "[int-8 bits] (bytes)",
+                  statsFileName,
+                  2U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
+
+    multiplot.set("origin 0.5,0.66");
+    multiplot.set("grid");
+    drawHistogram(paramTitle + " (%)",
+                  relStatsFileName,
+                  2U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
+
+
+    multiplot.set("origin 0.0,0.33");
+    multiplot.set("grid");
+    drawHistogram(dataTitle + "[int-8 bits] (bytes)",
+                  statsFileName,
+                  4U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
+
+    multiplot.set("origin 0.5,0.33");
+    multiplot.set("grid");
+    drawHistogram(dataTitle + " (%)",
+                  relStatsFileName,
+                  4U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
+
+    multiplot.set("origin 0.0,0.0");
+    multiplot.set("grid");
+    drawHistogram(computingTitle + "(MACs)",
+                  statsFileName,
+                  3U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
+
+    multiplot.set("origin 0.5,0.0");
+    multiplot.set("grid");
+    drawHistogram(computingTitle + " (%)",
+                  relStatsFileName,
+                  3U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
+
+    multiplot.unsetMultiplot();
 
     // Global stats
     std::ofstream logData(logFileName.c_str());
@@ -780,6 +946,7 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
                                    * mStimuliProvider->getSizeY()
                                    * mStimuliProvider->getNbChannels();
     const unsigned int freeParameters = globalStats.nbSynapses;
+    const unsigned int hiddenData = globalStats.nbNodes;
 
     logData << "[Memory]\n"
                "Input data (int-8 bits): " << inputData / 1024.0
@@ -794,11 +961,87 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
                                                       / 1024.0
             << " kBytes\n"
                "Free parameters (float-32 bits): " << 4.0 * freeParameters
-                                                      / 1024.0 << " kBytes\n\n";
+                                                      / 1024.0
+            << " kBytes\n"
+               "Layers data (int-8 bits): " << hiddenData / 1024.0
+            << " kBytes\n"
+               "Layers data (float-16 bits): " << 2.0 * hiddenData / 1024.0
+            << " kBytes\n"
+               "Layers data (float-32 bits): " << 4.0 * hiddenData / 1024.0
+                                               << " kBytes\n\n";
 
     logData << "[Computing]\n"
                "MACS / input data: " << globalStats.nbConnections / 1.0e6
             << "M\n";
+}
+
+void N2D2::DeepNet::drawHistogram(std::string title,
+                                  const std::string& dataFileName,
+                                  unsigned int fileRow,
+                                  unsigned int& maxLabelSize,
+                                  bool isLog, Gnuplot& p) const
+{
+
+    p << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
+               "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
+    p << "unset colorbox";
+    p.set("style histogram cluster gap 1");
+    p.set("style data histograms");
+    p.set("style fill pattern 1.00 border");
+    p.set("ytics nomirror");
+    if(isLog) p.set("logscale y");
+    p.setYlabel(title);
+    p.set("grid");
+    p.set("ytics textcolor lt 2");
+    p.set("ylabel textcolor lt 2");
+    p.set("format y \"%.0s%c\"");
+    p.unset("key");
+    p.set("tmargin 4");
+    p.set("bmargin " + std::to_string((maxLabelSize/2)+2) );
+    p.set("xtics rotate");
+    p.set("palette model RGB defined (1 \"blue\", 2 \"red\")");
+    p.set("boxwidth 0.5");
+    if(isLog)
+    {
+        p.plot(
+            dataFileName,
+            "using ($"
+            + std::to_string(fileRow)
+            + "):xticlabels(wrap(stringcolumn(1),"
+            + std::to_string(maxLabelSize)
+            + ")) ti col,"
+            " '' using 0:($"
+            + std::to_string(fileRow)
+            + "):(gprintf(\"%.2s%c\",$"
+            + std::to_string(fileRow)
+            + ")) ti col with labels rotate"
+            " offset char 0,2 textcolor lt 2,"
+            + " '' using 0:($"
+            + std::to_string(fileRow) + "):" + std::to_string(fileRow)
+            + "ti col with boxes lc palette"
+            );
+            p << "unset logscale y";
+    }
+    else
+    {
+        p.plot(
+            dataFileName,
+            "using ($"
+            + std::to_string(fileRow)
+            + "):xticlabels(wrap(stringcolumn(1),"
+            + std::to_string(maxLabelSize)
+            + ")) ti col,"
+            " '' using 0:($"
+            + std::to_string(fileRow) + "):($"
+            + std::to_string(fileRow)
+            + ") ti col with labels rotate"
+            " offset char 0,2 textcolor lt 2,"
+            + " '' using 0:($"
+            + std::to_string(fileRow) + "):" + std::to_string(fileRow)
+            + "ti col with boxes lc palette"
+            );
+    }
+
 }
 
 void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
@@ -1270,9 +1513,12 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
                                  .second;
 
     std::ofstream timingsData(fileName.c_str());
+    unsigned int maxStringSizeCellName = 1;
 
     if (!timingsData.good())
         throw std::runtime_error("Could not open timings file: " + fileName);
+
+    timingsData << "Cell Timing(s) Timing(%)\n";
 
     for (std::vector<std::pair<std::string, double> >::const_iterator it
          = timings.begin(),
@@ -1281,45 +1527,42 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
          ++it) {
         timingsData << (*it).first << " " << (*it).second << " "
                     << (100.0 * (*it).second / totalTime) << "\n";
+
+        maxStringSizeCellName = (maxStringSizeCellName > ((*it).first).size()) ?
+                                    maxStringSizeCellName : ((*it).first).size() ;
+
     }
 
     timingsData.close();
 
     std::stringstream outputStr;
-    outputStr << "size " << (timings.size() * 50) << ",600 enhanced large";
+    outputStr << "set term png size "
+            << (timings.size() * 50)*2
+            << ",800 enhanced large";
 
-    Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
+    Gnuplot multiplot;
+    multiplot.saveToFile(fileName);
+    multiplot << outputStr.str();
+    multiplot.setMultiplot(1, 2);
+    multiplot.set("origin 0.0,0.0");
+    multiplot.set("grid");
+    drawHistogram("Timing (s)",
+                  fileName,
+                  2U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
 
-    Gnuplot gnuplot;
-    gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
-               "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
-    gnuplot.set("style histogram cluster gap 1");
-    gnuplot.set("style data histograms");
-    gnuplot.set("style fill pattern 1.00 border");
-    gnuplot.set("ytics nomirror");
-    gnuplot.set("logscale y");
-    gnuplot.set("y2range [0:*]");
-    gnuplot.set("y2tics");
-    gnuplot.setYlabel("Timing (s)");
-    gnuplot.setY2label("Relative timing (%)");
-    gnuplot.set("grid");
-    gnuplot.set("ytics textcolor lt 3");
-    gnuplot.set("ylabel textcolor lt 3");
-    gnuplot.set("y2tics textcolor lt 2");
-    gnuplot.set("y2label textcolor lt 2");
-    gnuplot.set("format y \"%.0s%c\"");
-    gnuplot.set("bmargin 4");
-    gnuplot.unset("key");
-    gnuplot.saveToFile(fileName);
-    gnuplot.plot(fileName,
-                 "using ($2):xticlabels(wrap(stringcolumn(1),5)) lt 3,"
-                 " '' using 0:($2):(gprintf(\"%.2s%c\",$2)) with labels offset "
-                 "char -3,1 textcolor lt 3,"
-                 " '' using ($3):xticlabels(wrap(stringcolumn(1),5)) axes x1y2,"
-                 " '' using ($0+0.2):($3):(gprintf(\"%.2f\",$3)) axes x1y2 "
-                 "with labels offset char 1,1 textcolor lt 2");
+    multiplot.set("origin 0.5,0.0");
+    multiplot.set("grid");
+    drawHistogram("Relative Timing (%)",
+                  fileName,
+                  3U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
 
-    Gnuplot::setDefaultOutput();
+    multiplot.unsetMultiplot();
 }
 
 void
