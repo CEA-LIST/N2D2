@@ -25,11 +25,11 @@ environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
   matrix:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-    BUILD_TARGET: Visual Studio 12 2013
+    BUILD_TARGET: 'Visual Studio 12 2013'
     OPENCV_BIN: C:\tools\opencv\build\x86\vc12\bin
     OpenCV_DIR: C:\tools\opencv\build
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    BUILD_TARGET: Visual Studio 14 2015
+    BUILD_TARGET: 'Visual Studio 14 2015'
     OPENCV_BIN: C:\tools_vc14\opencv\build\x86\vc14\bin
     OpenCV_DIR: C:\tools_vc14\opencv\build
 
