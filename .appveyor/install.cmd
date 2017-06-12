@@ -38,11 +38,11 @@ appveyor DownloadFile ^
   -FileName cudnn-8.0-windows7-x64-v5.1.zip
 7z x cudnn-8.0-windows7-x64-v5.1.zip
 
-copy cuda\include\cudnn.h ^
+copy cuda\include\*.* ^
   "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\"
-copy cuda\lib\x64\cudnn.lib ^
+copy cuda\lib\x64\*.* ^
   "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\"
-copy cuda\bin\cudnn64_5.dll ^
+copy cuda\bin\*.* ^
   "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\"
 
 nvcc -V || exit /b
