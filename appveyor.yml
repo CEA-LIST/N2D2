@@ -45,8 +45,7 @@ environment:
     USE_CUDA: 1
 
 install:
-  - cmd: >-
-    call .appveyor\install.cmd
+  - cmd: .appveyor\install.cmd
 
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
