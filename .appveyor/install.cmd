@@ -1,4 +1,3 @@
-@echo off
 echo Installing dirent
 git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
 
@@ -13,10 +12,8 @@ appveyor DownloadFile https://github.com/opencv/opencv/releases/download/2.4.13.
 opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
 if DEFINED USE_CUDA (
-    echo Downloading CUDA toolkit 8.0
-    appveyor DownloadFile https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe -FileName cuda_8.0.44_windows.exe
-
     echo Installing CUDA toolkit 8.0
+    appveyor DownloadFile https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe -FileName cuda_8.0.44_windows.exe
     cuda_8.0.44_windows.exe -s compiler_8.0 ^
                                cublas_8.0 ^
                                cublas_dev_8.0 ^
@@ -24,7 +21,7 @@ if DEFINED USE_CUDA (
                                curand_8.0 ^
                                curand_dev_8.0
 
-    echo Downloading cuDNN 8.0
+    echo Installing cuDNN 8.0
     appveyor DownloadFile https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v5.1/prod/8.0/cudnn-8.0-windows7-x64-v5.1-zip -FileName cudnn-8.0-windows7-x64-v5.1.zip
     7z x cudnn-8.0-windows7-x64-v5.1.zip -ocudnn
 
