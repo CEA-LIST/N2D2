@@ -73,10 +73,16 @@ if (CUDA_FOUND)
     message(STATUS "    include path: ${CUDA_INCLUDE_DIRS}")
     message(STATUS "    libraries: ${CUDA_LIBRARIES}")
 
+    if(MSVC)
+        set(CUDNN_LIB_NAME "libcudnn.lib")
+    else()
+        set(CUDNN_LIB_NAME "libcudnn.so")
+    endif()
+
     FIND_PATH(CUDNN_INCLUDE_DIR cudnn.h
         PATHS ${CUDA_INCLUDE_DIRS} ${CUDA_TOOLKIT_INCLUDE}
         DOC "Path to CuDNN include directory." )
-    FIND_LIBRARY(CUDNN_LIB_DIR NAMES libcudnn.so
+    FIND_LIBRARY(CUDNN_LIB_DIR NAMES ${CUDNN_LIB_NAME}
         PATHS ${CUDNN_INCLUDE_DIR} ${CUDA_CUDART_LIBRARY}
         DOC "Path to CuDNN library.")
 
