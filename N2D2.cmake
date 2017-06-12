@@ -74,7 +74,7 @@ if (CUDA_FOUND)
     message(STATUS "    libraries: ${CUDA_LIBRARIES}")
 
     if(MSVC)
-        set(CUDNN_LIB_NAME "libcudnn.lib")
+        set(CUDNN_LIB_NAME "cudnn.lib")
     else()
         set(CUDNN_LIB_NAME "libcudnn.so")
     endif()
