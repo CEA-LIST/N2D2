@@ -34,7 +34,7 @@ set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles
 
 echo Installing cuDNN 8.0
 appveyor DownloadFile ^
-  https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v5.1/prod/8.0/cudnn-8.0-windows7-x64-v5.1-zip ^
+  http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip ^
   -FileName cudnn-8.0-windows7-x64-v5.1.zip
 7z x cudnn-8.0-windows7-x64-v5.1.zip
 
