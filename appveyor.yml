@@ -18,31 +18,50 @@
 #    knowledge of the CeCILL-C license and that you accept its terms.
 ################################################################################
 
-os: Visual Studio 2013
+os: Visual Studio 2015
 configuration: Release
 
+environment:
+  DIRENT_INCLUDE_DIR: C:\projects\dirent\include
+  matrix:
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    BUILD_TARGET: Visual Studio 12 2013
+    OPENCV_BIN: C:\tools\opencv\build\x86\vc12\bin
+    OpenCV_DIR: C:\tools\opencv\build
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    BUILD_TARGET: Visual Studio 14 2015
+    OPENCV_BIN: C:\tools_vc14\opencv\build\x86\vc14\bin
+    OpenCV_DIR: C:\tools_vc14\opencv\build
+
 install:
+  - cmd: echo Installing dirent
   - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
+  - cmd: echo Installing gnuplot
   - cmd: choco install gnuplot
+  - cmd: echo Installing OpenCV 2.4.13
   - cmd: choco install opencv -version 2.4.13
+  - cmd: echo Installing OpenCV 2.4.13.2-vc14
+  - cmd: powershell -command "& { wget  https://github.com/opencv/opencv/releases/download/2.4.13.2/opencv-2.4.13.2-vc14.exe -OutFile C:\projects\opencv-2.4.13.2-vc14.exe }"
+  - cmd: C:\projects\opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
+  - cmd: rm C:\projects\opencv-2.4.13.2-vc14.exe
 
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
   - C:\Program Files\gnuplot -> appveyor.yml
   - C:\tools\opencv -> appveyor.yml
-
-environment:
-  DIRENT_INCLUDE_DIR: C:\projects\dirent\include
-  OpenCV_DIR: C:\tools\opencv\build
+  - C:\tools_vc14\opencv -> appveyor.yml
 
 before_build:
   - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
   - mkdir build
   - cd build
-  - cmake .. -G"Visual Studio 12 2013"
-  - cmd: SET PATH=C:\Tools\opencv\build\x86\vc12\bin;%PATH%
+  - cmake .. -G%BUILD_TARGET%
+  - cmd: SET PATH=%OPENCV_BIN%;%PATH%
 
 matrix:
   fast_finish: true
 
+build:
+  parallel: true
+  verbosity: minimal
