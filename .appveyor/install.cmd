@@ -15,32 +15,36 @@ appveyor DownloadFile ^
   -FileName opencv-2.4.13.2-vc14.exe
 opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
-if DEFINED USE_CUDA (
-    echo Installing CUDA toolkit 8.0
-    appveyor DownloadFile ^
-      https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe ^
-      -FileName cuda_8.0.44_windows.exe
-    cuda_8.0.44_windows.exe -s compiler_8.0 ^
-                               cublas_8.0 ^
-                               cublas_dev_8.0 ^
-                               cudart_8.0 ^
-                               curand_8.0 ^
-                               curand_dev_8.0
+if DEFINED USE_CUDA goto :use_cuda
+goto :endif
 
-    set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
+:use_cuda
+echo Installing CUDA toolkit 8.0
+appveyor DownloadFile ^
+  https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe ^
+  -FileName cuda_8.0.44_windows.exe
+cuda_8.0.44_windows.exe -s compiler_8.0 ^
+                           cublas_8.0 ^
+                           cublas_dev_8.0 ^
+                           cudart_8.0 ^
+                           curand_8.0 ^
+                           curand_dev_8.0
 
-    echo Installing cuDNN 8.0
-    appveyor DownloadFile ^
-      https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v5.1/prod/8.0/cudnn-8.0-windows7-x64-v5.1-zip ^
-      -FileName cudnn-8.0-windows7-x64-v5.1.zip
-    7z x cudnn-8.0-windows7-x64-v5.1.zip
+set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
 
-    copy cuda\include\cudnn.h ^
-      "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\"
-    copy cuda\lib\x64\cudnn.lib ^
-      "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\"
-    copy cuda\bin\cudnn64_5.dll ^
-      "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\"
+echo Installing cuDNN 8.0
+appveyor DownloadFile ^
+  https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v5.1/prod/8.0/cudnn-8.0-windows7-x64-v5.1-zip ^
+  -FileName cudnn-8.0-windows7-x64-v5.1.zip
+7z x cudnn-8.0-windows7-x64-v5.1.zip
 
-    nvcc -V || exit /b
-)
+copy cuda\include\cudnn.h ^
+  "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\"
+copy cuda\lib\x64\cudnn.lib ^
+  "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\"
+copy cuda\bin\cudnn64_5.dll ^
+  "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\"
+
+nvcc -V || exit /b
+
+:endif
