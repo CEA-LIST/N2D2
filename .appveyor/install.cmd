@@ -8,8 +8,8 @@ echo Installing OpenCV 2.4.13
 choco install opencv -version 2.4.13
 
 echo Installing OpenCV 2.4.13.2-vc14
-appveyor DownloadFile https://github.com/opencv/opencv/releases/download/2.4.13.2/opencv-2.4.13.2-vc14.exe -FileName opencv-2.4.13.2-vc14.exe
-opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
+appveyor DownloadFile https://github.com/opencv/opencv/releases/download/2.4.13.2/opencv-2.4.13.2-vc14.exe -FileName C:\projects\opencv-2.4.13.2-vc14.exe
+C:\projects\opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
 if DEFINED USE_CUDA (
     echo Installing CUDA toolkit 8.0
@@ -21,16 +21,18 @@ if DEFINED USE_CUDA (
                                curand_8.0 ^
                                curand_dev_8.0
 
-    echo Installing cuDNN 8.0
-    appveyor DownloadFile https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v5.1/prod/8.0/cudnn-8.0-windows7-x64-v5.1-zip -FileName cudnn-8.0-windows7-x64-v5.1.zip
-    7z x cudnn-8.0-windows7-x64-v5.1.zip -ocudnn
-
-    if NOT EXIST "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart64_80.dll" (
-        echo Failed to install CUDA
-        exit /B 1
-    )
-
     set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
 
-    nvcc -V
+    echo Installing cuDNN 8.0
+    appveyor DownloadFile https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v5.1/prod/8.0/cudnn-8.0-windows7-x64-v5.1-zip -FileName cudnn-8.0-windows7-x64-v5.1.zip
+    7z x cudnn-8.0-windows7-x64-v5.1.zip
+
+    copy cuda\include\cudnn.h ^
+      "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\"
+    copy cuda\lib\x64\cudnn.lib ^
+      "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\"
+    copy cuda\bin\cudnn64_5.dll ^
+      "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\"
+
+    nvcc -V || exit /b
 )
