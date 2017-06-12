@@ -29,22 +29,23 @@ environment:
     BUILD_TARGET: Visual Studio 12 2013 Win64
     OPENCV_BIN: C:\tools\opencv\build\x64\vc12\bin
     OpenCV_DIR: C:\tools\opencv\build
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    BUILD_TARGET: Visual Studio 12 2013 Win64
+    OPENCV_BIN: C:\tools\opencv\build\x64\vc12\bin
+    OpenCV_DIR: C:\tools\opencv\build
+    USE_CUDA: 1
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     BUILD_TARGET: Visual Studio 14 2015 Win64
     OPENCV_BIN: C:\tools_vc14\opencv\build\x64\vc14\bin
     OpenCV_DIR: C:\tools_vc14\opencv\build
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    BUILD_TARGET: Visual Studio 14 2015 Win64
+    OPENCV_BIN: C:\tools_vc14\opencv\build\x64\vc14\bin
+    OpenCV_DIR: C:\tools_vc14\opencv\build
+    USE_CUDA: 1
 
 install:
-  - cmd: echo Installing dirent
-  - git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
-  - cmd: echo Installing gnuplot
-  - cmd: choco install gnuplot
-  - cmd: echo Installing OpenCV 2.4.13
-  - cmd: choco install opencv -version 2.4.13
-  - cmd: echo Installing OpenCV 2.4.13.2-vc14
-  - cmd: powershell -command "& { wget  https://github.com/opencv/opencv/releases/download/2.4.13.2/opencv-2.4.13.2-vc14.exe -OutFile C:\projects\opencv-2.4.13.2-vc14.exe }"
-  - cmd: C:\projects\opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
-  - cmd: rm C:\projects\opencv-2.4.13.2-vc14.exe
+  - cmd: call .appveyor/install.cmd
 
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
