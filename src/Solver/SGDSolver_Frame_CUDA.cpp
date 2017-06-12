@@ -56,7 +56,7 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
     const unsigned int itFactor = mNbIterations / mLearningRateStepSize;
 
     if (mLearningRatePolicy == SGDSolver<float>::StepDecay) {
-        rate *= std::pow(mLearningRateDecay, itFactor);
+        rate *= std::pow(mLearningRateDecay, (double)itFactor);
 
         if (mNbIterations > 0 && (mNbIterations - batchSize)
                                  / mLearningRateStepSize != itFactor)
@@ -176,7 +176,7 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
     const unsigned int itFactor = mNbIterations / mLearningRateStepSize;
 
     if (mLearningRatePolicy == SGDSolver<double>::StepDecay) {
-        rate *= std::pow(mLearningRateDecay, itFactor);
+        rate *= std::pow(mLearningRateDecay, (double)itFactor);
 
         if (mNbIterations > 0 && (mNbIterations - batchSize)
                                  / mLearningRateStepSize != itFactor)
