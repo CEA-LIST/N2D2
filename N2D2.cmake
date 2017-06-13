@@ -123,7 +123,7 @@ if (CUDA_FOUND)
         SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
         if (MSVC)
-            SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -MT")
+            SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -MD")
         else()
             SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -fPIC")
         endif()
