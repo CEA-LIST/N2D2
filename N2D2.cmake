@@ -86,13 +86,6 @@ if (CUDA_FOUND)
         PATHS ${CUDNN_INCLUDE_DIR} ${CUDA_LIB_DIR}
         DOC "Path to CuDNN library.")
 
-    message(STATUS "CUDA_INCLUDE_DIRS: ${CUDA_INCLUDE_DIRS}")
-    message(STATUS "CUDA_TOOLKIT_INCLUDE: ${CUDA_TOOLKIT_INCLUDE}")
-    message(STATUS "CUDNN_LIB_NAME: ${CUDNN_LIB_NAME}")
-    message(STATUS "CUDA_LIB_DIR: ${CUDA_LIB_DIR}")
-    message(STATUS "CUDNN_INCLUDE_DIR: ${CUDNN_INCLUDE_DIR}")
-    message(STATUS "CUDNN_LIB_DIR: ${CUDNN_LIB_DIR}")
-
     if (CUDNN_INCLUDE_DIR AND CUDNN_LIB_DIR)
         file(READ ${CUDNN_INCLUDE_DIR}/cudnn.h CUDNN_FILE_CONTENTS)
 
@@ -127,7 +120,8 @@ if (CUDA_FOUND)
 
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCUDA=1")
         SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
-        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+        SET(CUDA_USE_STATIC_CUDA_RUNTIME ON)
+        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 --compiler-options -fPIC,-O3")
     else()
         MESSAGE(WARNING "CUDA found but CuDNN seems to be missing - you can"
             " download it and install it from http://www.nvidia.com")
