@@ -1,8 +1,8 @@
 # <img src="manual/figs/N2D2_Logo.png" alt="N2D2" height="100"/>
 
-| **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; CUDA 6.5 + CuDNN 1.0</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 12 (2013)</sub>  |   |
-| --------------- | ------------------ | ------------------ | ------ |
-| [![Build Status](https://travis-ci.org/CEA-LIST/N2D2.svg?branch=master)](https://travis-ci.org/CEA-LIST/N2D2) | [![Build Status](https://travis-ci.org/CEA-LIST/N2D2.svg?branch=master)](https://travis-ci.org/CEA-LIST/N2D2) | [![Build Status](https://ci.appveyor.com/api/projects/status/github/CEA-LIST/N2D2?branch=master&svg=true)](https://ci.appveyor.com/project/olivierbichler-cea/n2d2) | [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) |
+| **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; CUDA 6.5 + CuDNN 1.0</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 12 (2013)</sub> | **`Windows GPU`**<br/><sub>&ge; CUDA 8.0 + CuDNN 5.1</sub>  |   |
+| --------------- | ------------------ | ------------------ | ------------------ | ------ |
+| [![Build Status](https://travis-ci.org/CEA-LIST/N2D2.svg?branch=master)](https://travis-ci.org/CEA-LIST/N2D2) | [![Build Status](https://travis-ci.org/CEA-LIST/N2D2.svg?branch=master)](https://travis-ci.org/CEA-LIST/N2D2) | [![Build Status](https://ci.appveyor.com/api/projects/status/github/CEA-LIST/N2D2?branch=master&svg=true)](https://ci.appveyor.com/project/olivierbichler-cea/n2d2) | [![Build Status](https://ci.appveyor.com/api/projects/status/github/CEA-LIST/N2D2?branch=master&svg=true)](https://ci.appveyor.com/project/olivierbichler-cea/n2d2) | [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) |
 
 N2D2 (for 'Neural Network Design & Deployment') is a open source CAD framework for
 Deep Neural Network (DNN) simulation and full DNN-based applications building.
