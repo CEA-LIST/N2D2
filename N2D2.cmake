@@ -120,8 +120,13 @@ if (CUDA_FOUND)
 
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCUDA=1")
         SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
-        SET(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
-        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 --compiler-options -fPIC,-O3")
+        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+
+        if (MSVC)
+            SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -MT")
+        else()
+            SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -fPIC")
+        endif()
     else()
         MESSAGE(WARNING "CUDA found but CuDNN seems to be missing - you can"
             " download it and install it from http://www.nvidia.com")
