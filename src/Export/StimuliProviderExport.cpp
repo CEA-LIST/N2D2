@@ -22,6 +22,27 @@
 
 void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,
+                                           const std::string& type,
+                                           Database::StimuliSet set,
+                                           DeepNet* deepNet)
+{
+    if (Registrar<StimuliProviderExport>::exists(type)) {
+        Registrar<StimuliProviderExport>::create(type)(sp,
+                                                       dirName,
+                                                       set,
+                                                       deepNet);
+    }
+    else {
+        // Default generator
+        StimuliProviderExport::generate(sp,
+                                        dirName,
+                                        set,
+                                        deepNet);
+    }
+}
+
+void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
+                                           const std::string& dirName,
                                            Database::StimuliSet set,
                                            DeepNet* deepNet)
 {

@@ -109,8 +109,25 @@ public:
     template <class T>
     void addParameter(const std::string& name, const T& value);
     template <class T>
-    void setParameter(const std::string& name, const T& value);
+    void appendToParameter(const std::string& name,
+                           const T& value,
+                           const std::string& separator = "");
+    template <class T>
+    void addBlockParameter(const std::string& blockName,
+                           const std::string& name,
+                           const T& value);
+    template <class T>
+    void setBlockParameter(const std::string& blockName,
+                           unsigned int num,
+                           const std::string& name,
+                           const T& value);
+    template <class T>
+    void setParameter(const std::string& name,
+                      const T& value,
+                      bool ignoreNotExists = false);
     void render(std::ostream& output, const std::string& source);
+    std::string renderFile(const std::string& fileName);
+    void renderFile(std::ostream& output, const std::string& fileName);
 
 private:
     size_t processSection(const std::string& source,
@@ -138,19 +155,97 @@ void N2D2::TemplateParser::addParameter(const std::string& name, const T& value)
 }
 
 template <class T>
-void N2D2::TemplateParser::setParameter(const std::string& name, const T& value)
+void N2D2::TemplateParser::appendToParameter(const std::string& name,
+                                             const T& value,
+                                             const std::string& separator)
+{
+    std::ostringstream valueStr;
+    valueStr << value;
+
+    std::map<std::string, std::string>::iterator it;
+
+    bool newInsert;
+    std::tie(it, newInsert)
+        = mParameters.insert(std::make_pair(name, valueStr.str()));
+
+    if (!newInsert)
+        (*it).second+= separator + valueStr.str();
+}
+
+template <class T>
+void N2D2::TemplateParser::addBlockParameter(const std::string& blockName,
+                                             const std::string& name,
+                                             const T& value)
+{
+    std::ostringstream nameStr, valueStr;
+    valueStr << value;
+
+    // Find next num
+    unsigned int num = 0;
+
+    while (true) {
+        nameStr.str(std::string());
+        nameStr << blockName << "[" << num << "]" << "." << name;
+
+        std::map<std::string, std::string>::iterator it
+            = mParameters.find(nameStr.str());
+
+        if (it == mParameters.end())
+            break;
+
+        ++num;
+    }
+
+    bool newInsert;
+    std::tie(std::ignore, newInsert)
+        = mParameters.insert(std::make_pair(nameStr.str(), valueStr.str()));
+
+    setParameter(blockName, num + 1, true);
+
+    assert(newInsert);
+}
+
+template <class T>
+void N2D2::TemplateParser::setBlockParameter(const std::string& blockName,
+                                             unsigned int num,
+                                             const std::string& name,
+                                             const T& value)
+{
+    std::ostringstream nameStr, valueStr;
+    nameStr << blockName << "[" << num << "]." << name;
+    valueStr << value;
+
+    bool newInsert;
+    std::tie(std::ignore, newInsert)
+        = mParameters.insert(std::make_pair(nameStr.str(), valueStr.str()));
+
+    if (!newInsert)
+        throw std::runtime_error(
+            "TemplateParser::addParameter(): Parameter already exists: "
+            + nameStr.str());
+}
+
+template <class T>
+void N2D2::TemplateParser::setParameter(const std::string& name,
+                                        const T& value,
+                                        bool ignoreNotExists)
 {
     std::ostringstream valueStr;
     valueStr << value;
 
     std::map<std::string, std::string>::iterator it = mParameters.find(name);
 
-    if (it == mParameters.end())
-        throw std::runtime_error(
-            "TemplateParser::setParameter(): Parameter does not exist: "
-            + name);
-
-    (*it).second = valueStr.str();
+    if (it == mParameters.end()) {
+        if (ignoreNotExists)
+            mParameters.insert(std::make_pair(name, valueStr.str()));
+        else {
+            throw std::runtime_error(
+                "TemplateParser::setParameter(): Parameter does not exist: "
+                + name);
+        }
+    }
+    else
+        (*it).second = valueStr.str();
 }
 
 #endif // N2D2_TEMPLATEPARSER_H

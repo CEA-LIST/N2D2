@@ -100,9 +100,8 @@ public:
     static void
     generate(Cell& cell, const std::string& dirName, const std::string& type);
 
-protected:
     static bool
-    generateFreeParameter(Cell& cell, double value, std::ofstream& stream);
+    generateFreeParameter(Cell& cell, double value, std::ostream& stream);
     static int getIntFreeParameter(Cell& cell, double value);
 };
 }

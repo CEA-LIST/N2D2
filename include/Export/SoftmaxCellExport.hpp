@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_POOLCELLEXPORT_H
-#define N2D2_POOLCELLEXPORT_H
+#ifndef N2D2_SOFTMAXCELLEXPORT_H
+#define N2D2_SOFTMAXCELLEXPORT_H
 
 #include "CellExport.hpp"
 #include "Cell/SoftmaxCell.hpp"
@@ -58,4 +58,4 @@ private:
 };
 }
 
-#endif // N2D2_SoftmaxCELLEXPORT_H
+#endif // N2D2_SOFTMAXCELLEXPORT_H

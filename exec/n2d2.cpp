@@ -193,11 +193,14 @@ int main(int argc, char* argv[]) try
 
         DeepNetExport::generate(*deepNet, exportDir.str(), genExport);
 
-        if (!noDB)
+        if (!noDB) {
             StimuliProviderExport::generate(*deepNet->getStimuliProvider(),
                                             exportDir.str() + "/stimuli",
+                                            genExport,
                                             Database::Test,
                                             deepNet.get());
+        }
+
         std::exit(0);
     }
 

@@ -212,6 +212,26 @@ void N2D2::TemplateParser::render(std::ostream& output,
     rootSection.render(output, mParameters);
 }
 
+std::string N2D2::TemplateParser::renderFile(const std::string& fileName)
+{
+    std::stringstream output;
+    renderFile(output, fileName);
+    return output.str();
+}
+
+void N2D2::TemplateParser::renderFile(std::ostream& output,
+                                      const std::string& fileName)
+{
+    std::ifstream data(fileName.c_str());
+
+    if (!data.good())
+        throw std::runtime_error("Could not open TPL file: " + fileName);
+
+    std::stringstream buffer;
+    buffer << data.rdbuf();
+    render(output, buffer.str());
+}
+
 size_t N2D2::TemplateParser::processSection(const std::string& source,
                                             size_t startPos,
                                             Section* section)

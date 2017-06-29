@@ -71,7 +71,7 @@ int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
 
 bool N2D2::CellExport::generateFreeParameter(Cell& cell,
                                              double value,
-                                             std::ofstream& stream)
+                                             std::ostream& stream)
 {
     if (mPrecision > 0) {
         const double scaling = (double)(std::pow(2, mPrecision - 1) - 1);

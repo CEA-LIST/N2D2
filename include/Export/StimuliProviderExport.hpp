@@ -29,6 +29,23 @@
 namespace N2D2 {
 class StimuliProviderExport {
 public:
+    typedef std::function
+        <void(StimuliProvider& sp,
+              const std::string& dirName,
+              Database::StimuliSet set,
+              DeepNet* deepNet)> RegistryCreate_T;
+
+    static RegistryMap_T& registry()
+    {
+        static RegistryMap_T rMap;
+        return rMap;
+    }
+
+    static void generate(StimuliProvider& sp,
+                         const std::string& dirName,
+                         const std::string& type,
+                         Database::StimuliSet set,
+                         DeepNet* deepNet = NULL);
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
                          Database::StimuliSet set,
