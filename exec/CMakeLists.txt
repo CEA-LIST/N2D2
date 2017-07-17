@@ -31,4 +31,8 @@ foreach(f ${EXEC})
     GET_FILENAME_COMPONENT(bin ${f} NAME_WE)
     ADD_EXECUTABLE(${bin} ${f})
     TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive ${N2D2_LIB} -Wl,-no-whole-archive)
+
+    INSTALL(TARGETS ${bin}
+        RUNTIME DESTINATION bin
+    )
 endforeach(f)

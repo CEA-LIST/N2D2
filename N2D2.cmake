@@ -195,6 +195,7 @@ ENDMACRO()
 MACRO(N2D2_INCLUDE inc_path)
     GET_DIRECTORIES(headers_dirs ${inc_path}/*.hpp)
     INCLUDE_DIRECTORIES(${headers_dirs} ${inc_path})
+    INSTALL(DIRECTORY ${inc_path} DESTINATION include)
 ENDMACRO()
 
 SET(SRC "")
@@ -245,6 +246,10 @@ MACRO(N2D2_MAKE_LIBRARY name)
     endif()
 
     TARGET_LINK_LIBRARIES(${name} ${OpenCV_LIBS})
+
+    INSTALL(TARGETS ${name}
+       ARCHIVE DESTINATION lib
+    )
 ENDMACRO()
 
 MACRO(N2D2_COPY_DIRECTORY target src dst)
