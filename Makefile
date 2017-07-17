@@ -82,6 +82,13 @@ ifeq ($(shell pkg-config opencv --modversion),2.0.0)
   CPPFLAGS:=$(CPPFLAGS) -D_GLIBCXX_PARALLEL
 endif
 
+OPENCV_USE_OLD_HEADERS:= $(shell expr \
+    `pkg-config opencv --modversion | sed 's/[.]//g'` \< 220)
+
+ifeq ($(OPENCV_USE_OLD_HEADERS),1)
+  CPPFLAGS:=$(CPPFLAGS) -DOPENCV_USE_OLD_HEADERS
+endif
+
 ifeq ($(CXX),icpc)
   ifndef DEBUG
     OPT:=-O3 -ipo -no-prec-div -DNDEBUG

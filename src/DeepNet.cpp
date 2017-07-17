@@ -981,7 +981,6 @@ void N2D2::DeepNet::drawHistogram(std::string title,
                                   unsigned int& maxLabelSize,
                                   bool isLog, Gnuplot& p) const
 {
-
     p << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
                "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
     p << "unset colorbox";
@@ -996,28 +995,34 @@ void N2D2::DeepNet::drawHistogram(std::string title,
     p.set("ylabel textcolor lt 2");
     p.set("format y \"%.0s%c\"");
     p.unset("key");
-    p.set("tmargin 4");
-    p.set("bmargin " + std::to_string((maxLabelSize/2)+2) );
+    p.set("tmargin", 4);
+    p.set("bmargin", (maxLabelSize/2)+2);
     p.set("xtics rotate");
     p.set("palette model RGB defined (1 \"blue\", 2 \"red\")");
     p.set("boxwidth 0.5");
+
+    std::stringstream fileRowStr;
+    fileRowStr << fileRow;
+    std::stringstream maxLabelSizeStr;
+    maxLabelSizeStr << maxLabelSize;
+
     if(isLog)
     {
         p.plot(
             dataFileName,
             "using ($"
-            + std::to_string(fileRow)
+            + fileRowStr.str()
             + "):xticlabels(wrap(stringcolumn(1),"
-            + std::to_string(maxLabelSize)
+            + maxLabelSizeStr.str()
             + ")) ti col,"
             " '' using 0:($"
-            + std::to_string(fileRow)
+            + fileRowStr.str()
             + "):(gprintf(\"%.2s%c\",$"
-            + std::to_string(fileRow)
+            + fileRowStr.str()
             + ")) ti col with labels rotate"
             " offset char 0,2 textcolor lt 2,"
             + " '' using 0:($"
-            + std::to_string(fileRow) + "):" + std::to_string(fileRow)
+            + fileRowStr.str() + "):" + fileRowStr.str()
             + "ti col with boxes lc palette"
             );
             p << "unset logscale y";
@@ -1027,17 +1032,17 @@ void N2D2::DeepNet::drawHistogram(std::string title,
         p.plot(
             dataFileName,
             "using ($"
-            + std::to_string(fileRow)
+            + fileRowStr.str()
             + "):xticlabels(wrap(stringcolumn(1),"
-            + std::to_string(maxLabelSize)
+            + maxLabelSizeStr.str()
             + ")) ti col,"
             " '' using 0:($"
-            + std::to_string(fileRow) + "):($"
-            + std::to_string(fileRow)
+            + fileRowStr.str() + "):($"
+            + fileRowStr.str()
             + ") ti col with labels rotate"
             " offset char 0,2 textcolor lt 2,"
             + " '' using 0:($"
-            + std::to_string(fileRow) + "):" + std::to_string(fileRow)
+            + fileRowStr.str() + "):" + fileRowStr.str()
             + "ti col with boxes lc palette"
             );
     }

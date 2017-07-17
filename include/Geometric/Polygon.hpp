@@ -23,8 +23,18 @@
 
 #include <vector>
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+#ifdef OPENCV_USE_OLD_HEADERS       //  before OpenCV 2.2.0
+    #include "cv.h"
+#else
+    #include "opencv2/core/version.hpp"
+    #if CV_MAJOR_VERSION == 2
+        #include "opencv2/core/core.hpp"
+        #include "opencv2/imgproc/imgproc.hpp"
+    #elif CV_MAJOR_VERSION == 3
+        #include "opencv2/core.hpp"
+        #include "opencv2/imgproc.hpp"
+    #endif
+#endif
 
 namespace N2D2 {
 namespace Geometric {

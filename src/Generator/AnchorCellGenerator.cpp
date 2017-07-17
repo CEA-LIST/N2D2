@@ -44,11 +44,12 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
     std::vector<AnchorCell::Anchor> anchors;
 
     unsigned int nextAnchor = 0;
-    std::string nextProperty = "Anchor[" + std::to_string(nextAnchor) + "]";
+    std::stringstream nextProperty;
+    nextProperty << "Anchor[" << nextAnchor << "]";
 
-    while (iniConfig.isProperty(nextProperty)) {
+    while (iniConfig.isProperty(nextProperty.str())) {
         std::stringstream anchorValues(
-            iniConfig.getProperty<std::string>(nextProperty));
+            iniConfig.getProperty<std::string>(nextProperty.str()));
 
         unsigned int rootArea;
         double aspectRatio;
@@ -63,7 +64,8 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
         anchors.push_back(AnchorCell::Anchor(rootArea*rootArea, aspectRatio));
 
         ++nextAnchor;
-        nextProperty = "Anchor[" + std::to_string(nextAnchor) + "]";
+        nextProperty.str(std::string());
+        nextProperty << "Anchor[" << nextAnchor << "]";
     }
 
     // Cell construction
