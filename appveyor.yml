@@ -51,8 +51,6 @@ cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml, .appveyor\install.cmd
   - C:\ProgramData\chocolatey\lib -> appveyor.yml, .appveyor\install.cmd
   - C:\Program Files\gnuplot -> appveyor.yml, .appveyor\install.cmd
-  - C:\tools\opencv -> appveyor.yml, .appveyor\install.cmd
-  - C:\tools_vc14\opencv -> appveyor.yml, .appveyor\install.cmd
 
 before_build:
   - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
