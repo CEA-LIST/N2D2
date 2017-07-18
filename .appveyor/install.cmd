@@ -7,7 +7,7 @@ echo Installing gnuplot
 choco install gnuplot
 
 echo Installing OpenCV 2.4.13
-choco install opencv -version 2.4.13
+choco install opencv -version 2.4.13 --force
 
 echo Installing OpenCV 2.4.13.2-vc14
 appveyor DownloadFile ^
