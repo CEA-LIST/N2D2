@@ -593,6 +593,37 @@ the following command:
 cd manual && make
 \end{lstlisting}
 
+In order to compile the manual, you must have \lstinline!pdflatex! and \lstinline!bibtex! installed, as well as some common LaTeX packages.
+
+\begin{myitemize}
+    \item On Ubuntu, this can be done by installing the \lstinline!texlive! and \lstinline!texlive-latex-extra! software packages.
+    \item On Windows, you can install the \lstinline!MiKTeX! software, which includes everything needed and will install the required LaTeX packages on the fly.
+\end{myitemize}
+
+
+\subsection{Minimum system requirements}
+
+\begin{myitemize}
+    \item Supported processors:
+        \subitem ARM Cortex A15 (tested on Tegra K1)
+        \subitem ARM Cortex A53/A57 (tested on Tegra X1)
+        \subitem Pentium-compatible PC (Pentium III, Athlon or more-recent system recommended)
+    \item Supported operating systems:
+        \subitem Windows $\geq$ 7 or Windows Server $\geq$ 2012, 64 bits with Visual Studio $\geq$ 12 (2013)
+        \subitem GNU/Linux with GCC $\geq$ 4.4 (tested on RHEL $\geq$ 6, Debian $\geq$ 6, Ubuntu $\geq$ 14.04)
+    \item At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing
+    \item At least 150 MB available hard disk space + 350 MB for MNIST dataset processing
+\end{myitemize}
+
+For CUDA acceleration:
+
+\begin{myitemize}
+    \item CUDA $\geq$ 6.5 and CuDNN $\geq$ 1.0
+    \item NVIDIA GPU with CUDA compute capability $\geq$ 3 (starting from \emph{Kepler} micro-architecture)
+    \item At least 512 MB GPU RAM for MNIST dataset processing
+\end{myitemize}
+
+
 \subsection{Obtaining N2D2}
 
 \subsubsection{Prerequisites}
@@ -601,6 +632,7 @@ cd manual && make
 
 Make sure you have the following packages installed:
 \begin{myitemize}
+    \item \lstinline!cmake!
     \item \lstinline!gnuplot!
     \item \lstinline!opencv!
     \item \lstinline!opencv-devel! (may require the
@@ -631,6 +663,7 @@ yum install cuda
 Make sure you have the following packages installed, if they are available on
 your Ubuntu version:
 \begin{myitemize}
+    \item \lstinline!cmake!
     \item \lstinline!gnuplot!
     \item \lstinline!libopencv-dev!
     \item \lstinline!libcv-dev!
@@ -651,7 +684,7 @@ dpkg -i cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
 wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
 dpkg -i nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
 \end{lstlisting}
-    Note cuDNN repository package is provided by NVIDIA for Ubuntu starting
+    Note that the cuDNN repository package is provided by NVIDIA for Ubuntu starting
     from version 14.04.
     \item Update the package lists: \lstinline!apt-get update!
     \item Install the CUDA and cuDNN required packages:
@@ -668,29 +701,49 @@ ln -s /usr/local/cuda-7.5 /usr/local/cuda
 
 \paragraph{Windows}
 
-On Windows, Visual Studio 12 (2013) is required.
+On Windows 64 bits, Visual Studio $\geq$ 12 (2013) is required.
 
 Make sure you have the following software installed:
 \begin{myitemize}
-    \item CMake (\url{http://www.cmake.org/}): download the Win32 Installer.
-    \item \lstinline!dirent.h! C++ header (
-    \url{https://github.com/tronkko/dirent}): to be put in the Visual Studio
+    \item CMake (\url{http://www.cmake.org/}): download and run the Windows installer.
+    \item \lstinline!dirent.h! C++ header (\url{https://github.com/tronkko/dirent}): to be put in the Visual Studio
     include path.
     \item Gnuplot (\url{http://www.gnuplot.info/}): the bin sub-directory in
     the install path needs to be added to the Windows \lstinline!PATH!
      environment variable.
     \item OpenCV (\url{http://opencv.org/}): download the latest 2.x version
-    for Windows and extract is to, for example,
+    for Windows and extract it to, for example,
     \lstinline!C:\OpenCV\!.
   Make sure to define the environment variable \lstinline!OpenCV_DIR! to point
   to \lstinline!C:\OpenCV\opencv\build!.
   Make sure to add the bin sub-directory (%%
-\lstinline!C:\OpenCV\opencv\build\x86\vc12\bin!) to the Windows
+\lstinline!C:\OpenCV\opencv\build\x64\vc12\bin!) to the Windows
   \lstinline!PATH! environment variable.
 \end{myitemize}
 
-To be able to use GPU acceleration, the installation of CUDA and cuDNN is also
-required.
+Plus, to be able to use GPU acceleration:
+\begin{myitemize}
+    \item Download and install CUDA toolkit 8.0 located at \url{https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe}:
+\begin{lstlisting}[escapechar=!]
+rename cuda_8.0.44_windows-exe cuda_8.0.44_windows.exe
+cuda_8.0.44_windows.exe -s compiler_8.0 cublas_8.0 cublas_dev_8.0 cudart_8.0 curand_8.0 curand_dev_8.0
+\end{lstlisting}
+    \item Update the \lstinline!PATH! environment variable:
+\begin{lstlisting}[escapechar=!]
+set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
+\end{lstlisting}
+    \item Download and install cuDNN 8.0 located at \url{http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip} (the following command assumes that you have 7-Zip installed):
+\begin{lstlisting}[escapechar=!]
+7z x cudnn-8.0-windows7-x64-v5.1.zip
+copy cuda\include\*.* ^
+  "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\"
+copy cuda\lib\x64\*.* ^
+  "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\"
+copy cuda\bin\*.* ^
+  "%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\"
+\end{lstlisting}
+\end{myitemize}
+
 
 \subsubsection{Getting the sources}
 
@@ -720,11 +773,11 @@ select "Build".
 
 \subsection{Downloading training datasets}
 
-A python script located in the repository root directory allows you to
- automatically download some well-known datasets,
-like MNIST and GTSRB:
+A python script located in the repository root directory allows you to select and
+ automatically download some well-known datasets, like MNIST and GTSRB
+ (the script requires Python 2.x with bindings for GTK 2 package):
 \begin{lstlisting}
-./tools/install_stimuli.py
+./tools/install_stimuli_gui.py
 \end{lstlisting}
 
 By default, the datasets are downloaded in the path specified in the
@@ -734,6 +787,9 @@ By default, the datasets are downloaded in the path specified in the
   (or {\tt{}/local/n2d2\_data/} if the \lstinline!USER! environment variable
    is not set) on Linux and {\tt{}C:\textbackslash{}n2d2\_data\textbackslash{}}
     on Windows.
+
+Please make sure you have write access to the \lstinline!N2D2_DATA! path, or if
+not set, in the default {\tt{}/local/\$USER/n2d2\_data/} path.
 
 
 \subsection{Run the learning}
