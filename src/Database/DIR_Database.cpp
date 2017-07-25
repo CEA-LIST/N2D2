@@ -26,6 +26,15 @@ N2D2::DIR_Database::DIR_Database(bool loadDataInMemory)
     // ctor
 }
 
+void N2D2::DIR_Database::setValidExtensions(
+    const std::vector<std::string>& validExtensions)
+{
+    if (!validExtensions.empty())
+        std::cout << "Valid extensions are: " << validExtensions << std::endl;
+
+    mValidExtensions = validExtensions;
+}
+
 void N2D2::DIR_Database::load(const std::string& dataPath,
                               const std::string& /*labelPath*/,
                               bool /*extractROIs*/)
@@ -123,6 +132,8 @@ void N2D2::DIR_Database::loadDir(const std::string& dirPath,
                 loadDir(*it, depth - 1, labelName, labelDepth);
         }
     }
+
+    std::cout << "Found " << mStimuli.size() << " stimuli" << std::endl;
 }
 
 void N2D2::DIR_Database::loadFile(const std::string& fileName)

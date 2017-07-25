@@ -95,16 +95,23 @@ void N2D2::Database::loadROIs(const std::string& fileName,
             }
         }
 
-        unsigned int x1, y1, x2, y2;
+        double x1, y1, x2, y2;
         std::string label;
 
-        if (!(Utils::signChecked<unsigned int>(values) >> x1)
-            || !(Utils::signChecked<unsigned int>(values) >> y1)
-            || !(Utils::signChecked<unsigned int>(values) >> x2)
-            || !(Utils::signChecked<unsigned int>(values) >> y2)
+        if (!(values >> x1)
+            || !(values >> y1)
+            || !(values >> x2)
+            || !(values >> y2)
             || !(values >> label)) {
             throw std::runtime_error("Unreadable value in data file: "
                                      + fileName);
+        }
+
+        if (x1 < 0 || x2 < 0 || y1 < 0 || y2 < 0) {
+            std::cout << Utils::cwarning
+                      << "Warning: negative coordinates on line \""
+                      << line << "\" in data file: " << fileName
+                      << Utils::cdef << std::endl;
         }
 
         if (!values.eof())

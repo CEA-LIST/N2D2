@@ -43,13 +43,17 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
         iniConfig.getProperty<std::string>("ROIFile", ""));
     const double learn = iniConfig.getProperty<double>("Learn");
     const double validation = iniConfig.getProperty<double>("Validation", 0.0);
-    const double test = iniConfig.getProperty
-                        <double>("Test", 1.0 - learn - validation);
     const bool perLabel = iniConfig.getProperty
                           <bool>("PerLabelPartitioning", true);
+    const double test = (perLabel)
+        ? iniConfig.getProperty<double>("Test", 1.0 - learn - validation)
+        : iniConfig.getProperty<double>("Test", 0.0);
 
     std::shared_ptr<DIR_Database> database = std::make_shared
         <DIR_Database>(loadInMemory);
+    database->setValidExtensions(
+        iniConfig.getProperty<std::vector<std::string> >("ValidExtensions",
+                                                std::vector<std::string>()));
     database->setParameters(iniConfig.getSection(section, true));
     database->loadDir(dataPath, depth, labelName, labelDepth);
 

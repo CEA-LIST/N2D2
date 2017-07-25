@@ -27,6 +27,7 @@ namespace N2D2 {
 class DIR_Database : public Database {
 public:
     DIR_Database(bool loadDataInMemory = false);
+    void setValidExtensions(const std::vector<std::string>& validExtensions);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool extractROIs = false);
