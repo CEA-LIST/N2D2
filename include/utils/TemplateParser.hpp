@@ -125,6 +125,9 @@ public:
     void setParameter(const std::string& name,
                       const T& value,
                       bool ignoreNotExists = false);
+    bool isParameter(const std::string& name) const;
+    std::string getParameter(const std::string& name,
+                             bool ignoreNotExists = false) const;
     void render(std::ostream& output, const std::string& source);
     std::string renderFile(const std::string& fileName);
     void renderFile(std::ostream& output, const std::string& fileName);

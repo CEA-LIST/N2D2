@@ -978,8 +978,8 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
 void N2D2::DeepNet::drawHistogram(std::string title,
                                   const std::string& dataFileName,
                                   unsigned int fileRow,
-                                  unsigned int& maxLabelSize,
-                                  bool isLog, Gnuplot& p) const
+                                  unsigned int maxLabelSize,
+                                  bool isLog, Gnuplot& p)
 {
     p << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
                "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";

@@ -206,10 +206,11 @@ public:
 
     virtual ~DeepNet() {};
 
+    static void drawHistogram(std::string title, const std::string& dataFileName,
+                   unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
+                   Gnuplot& p);
+
 private:
-    void drawHistogram(std::string title, const std::string& dataFileName,
-                   unsigned int fileRow, unsigned int& maxLabelSize, bool isLog,
-                   Gnuplot& p) const;
     Network& mNet;
     std::shared_ptr<Database> mDatabase;
     std::shared_ptr<StimuliProvider> mStimuliProvider;

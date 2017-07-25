@@ -82,19 +82,25 @@ void N2D2::TemplateParser::IfSection::render(std::ostream& output,
     std::map<std::string, std::string>::const_iterator it
         = params.find(mVarName);
 
-    if (it == params.end())
-        throw std::runtime_error("Undefined variable name: " + mVarName
-                                 + " in if statement");
-
     bool predicate;
 
-    if (mOp == "==")
-        predicate = ((*it).second == mValue);
-    else if (mOp == "!=")
-        predicate = ((*it).second != mValue);
-    else
-        throw std::runtime_error("Unknown operator: " + mOp
-                                 + " in if statement");
+    if (mOp == "exists")
+        predicate = (it != params.end());
+    else if (mOp == "not_exists")
+        predicate = (it == params.end());
+    else {
+        if (it == params.end())
+            throw std::runtime_error("Undefined variable name: " + mVarName
+                                     + " in if statement");
+
+        if (mOp == "==")
+            predicate = ((*it).second == mValue);
+        else if (mOp == "!=")
+            predicate = ((*it).second != mValue);
+        else
+            throw std::runtime_error("Unknown operator: " + mOp
+                                     + " in if statement");
+    }
 
     if (predicate) {
         for (std::vector<Section*>::iterator it = mSections.begin(),
@@ -232,6 +238,29 @@ void N2D2::TemplateParser::renderFile(std::ostream& output,
     render(output, buffer.str());
 }
 
+bool N2D2::TemplateParser::isParameter(const std::string& name) const {
+    return (mParameters.find(name) != mParameters.end());
+}
+
+std::string N2D2::TemplateParser::getParameter(const std::string& name,
+                                               bool ignoreNotExists) const
+{
+    const std::map<std::string, std::string>::const_iterator it
+        = mParameters.find(name);
+
+    if (it == mParameters.end()) {
+        if (!ignoreNotExists) {
+            throw std::runtime_error(
+                "TemplateParser::getParameter(): Parameter does not exist: "
+                + name);
+        }
+
+        return "";
+    }
+    else
+        return (*it).second;
+}
+
 size_t N2D2::TemplateParser::processSection(const std::string& source,
                                             size_t startPos,
                                             Section* section)
@@ -347,12 +376,12 @@ size_t N2D2::TemplateParser::processSection(const std::string& source,
 
                 return controlEndPos + 2;
             } else if (controlArgs[0] == "if") {
-                if (controlArgs.size() != 4)
+                if (controlArgs.size() != 3 && controlArgs.size() != 4)
                     throw std::runtime_error("Bad if syntax control section");
 
                 ifVarName = controlArgs[1];
                 ifOp = controlArgs[2];
-                ifValue = controlArgs[3];
+                ifValue = (controlArgs.size() == 4) ? controlArgs[3] : "";
 
                 IfSection* ifSection = new IfSection(ifVarName, ifOp, ifValue);
                 section->push_back(ifSection);
@@ -367,7 +396,11 @@ size_t N2D2::TemplateParser::processSection(const std::string& source,
                         throw std::runtime_error(
                             "Found else control statement without if");
 
-                    ifOp = (ifOp == "==") ? "!=" : "==";
+                    ifOp = (ifOp == "==") ? "!=" :
+                           (ifOp == "!=") ? "==" :
+                           (ifOp == "exists") ? "not_exists" :
+                           (ifOp == "not_exists") ? "exists" :
+                           "";
 
                     IfSection* ifSection
                         = new IfSection(ifVarName, ifOp, ifValue);
