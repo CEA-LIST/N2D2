@@ -53,7 +53,7 @@ if (EXISTS "$ENV{OpenCV_DIR}")
     INCLUDE("$ENV{OpenCV_DIR}/OpenCVConfig.cmake")
 endif()
 
-FIND_PACKAGE(OpenCV 2.0.0 REQUIRED)
+FIND_PACKAGE(OpenCV REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${OpenCV_INCLUDE_DIRS})
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
