@@ -53,7 +53,11 @@ protected:
     using SGDSolver<T>::mClamping;
     using SGDSolver<T>::mNbIterations;
 
+    /// Quantization levels (0 = no quantization)
+    Parameter<unsigned int> mQuantizationLevels;
+
     Tensor4d<T> mMomentumData;
+    Tensor4d<T> mContinuousData;
 
 private:
     virtual SGDSolver_Frame<T>* doClone() const
@@ -67,7 +71,8 @@ private:
 
 template <class T>
 N2D2::SGDSolver_Frame<T>::SGDSolver_Frame()
-    : SGDSolver<T>::SGDSolver()
+    : SGDSolver<T>::SGDSolver(),
+      mQuantizationLevels(this, "QuantizationLevels", 0U)
 {
     // ctor
 }
@@ -79,6 +84,15 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
 {
     if (mLearningRate == 0.0)
         return;
+
+    if (mQuantizationLevels > 0 && mContinuousData.empty()) {
+        mContinuousData.resize(
+            data->dimX(), data->dimY(), data->dimZ(), data->dimB());
+        std::copy((*data).begin(), (*data).end(), mContinuousData.begin());
+    }
+
+    Tensor4d<T>* continuousData
+        = (mQuantizationLevels > 0) ? &mContinuousData : data;
 
     T rate = mLearningRate;
     const unsigned int itFactor = mNbIterations / mLearningRateStepSize;
@@ -117,19 +131,20 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
         // if outside the loop for better performance
         if (mClamping) {
             //#pragma omp parallel for
-            for (int index = 0; index < (int)data->size(); ++index)
-                (*data)(index) = Utils::clamp<T>(
-                    (*data)(index) + rateDiff * (*diffData)(index), -1.0, 1.0);
+            for (int index = 0; index < (int)data->size(); ++index) {
+                (*continuousData)(index) = Utils::clamp<T>(
+                    (*continuousData)(index)
+                        + rateDiff * (*diffData)(index), -1.0, 1.0);
+            }
         } else {
             //#pragma omp parallel for
             for (int index = 0; index < (int)data->size(); ++index)
-                (*data)(index) += rateDiff * (*diffData)(index);
+                (*continuousData)(index) += rateDiff * (*diffData)(index);
         }
     } else {
         if (mMomentumData.empty()) {
             mMomentumData.resize(
-                data->dimX(), data->dimY(), data->dimZ(), data->dimB());
-            mMomentumData.fill(0.0);
+                data->dimX(), data->dimY(), data->dimZ(), data->dimB(), 0.0);
         }
 
 #pragma omp parallel for if (mMomentumData.size() > 1024)
@@ -144,15 +159,26 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
                 const T alpha = -decay * rate;
 
                 // mMomentumData = mMomentumData - decay*rate*data
-                mMomentumData(index) += alpha * (*data)(index);
+                mMomentumData(index) += alpha * (*continuousData)(index);
             }
 
             // data = data + mMomentumData
             if (mClamping)
-                (*data)(index) = Utils::clamp
-                    <T>((*data)(index) + mMomentumData(index), -1.0, 1.0);
+                (*continuousData)(index) = Utils::clamp
+                    <T>((*continuousData)(index) + mMomentumData(index),
+                        -1.0, 1.0);
             else
-                (*data)(index) += mMomentumData(index);
+                (*continuousData)(index) += mMomentumData(index);
+        }
+    }
+
+    if (mQuantizationLevels > 0) {
+        //#pragma omp parallel for
+        for (int index = 0; index < (int)data->size(); ++index) {
+            (*data)(index) = (mQuantizationLevels > 1)
+               ? (int)Utils::round((mQuantizationLevels - 1)
+                 * (*continuousData)(index)) / (float)(mQuantizationLevels - 1)
+               : (((*continuousData)(index) >= 0) ? 1 : -1);
         }
     }
 }
