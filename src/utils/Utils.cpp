@@ -461,6 +461,17 @@ bool N2D2::Utils::createDirectories(const std::string& dirName)
     return (status == 0);
 }
 
+bool N2D2::Utils::isAbsolutePath(const std::string& path) {
+    if (path.find_first_of("/\\") == 0)
+        return true;
+
+    // Windows
+    if (path.find(":\\") == 1 || path.find(":/") == 1)
+        return true;
+
+    return false;
+}
+
 std::string N2D2::Utils::dirName(const std::string& filePath)
 {
     const size_t slashPos = filePath.find_last_of("/\\");

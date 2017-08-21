@@ -32,9 +32,16 @@ void N2D2::IniParser::load(const std::string& fileName)
     if (!data.good())
         throw std::runtime_error("Could not open INI file: " + fileName);
 
+    mFileName = fileName;
+    load(data);
+}
+
+void N2D2::IniParser::load(std::istream& data)
+{
     std::string line;
     std::string preLine;
     currentSection("", false); // Make sure the global (default) section exists
+    std::string tplIni;
 
     while (std::getline(data, line)) {
         // Support for escaped new line
@@ -58,7 +65,7 @@ void N2D2::IniParser::load(const std::string& fileName)
                 if (delim == std::string::npos) {
                     throw std::runtime_error("Malformed property in section ["
                                              + mIniSections[mCurrentSection]
-                                             + "] in INI file " + fileName);
+                                             + "] in INI file " + mFileName);
                 }
 
                 ++delim;
@@ -83,7 +90,28 @@ void N2D2::IniParser::load(const std::string& fileName)
             continue;
 
         if (*(line.begin()) == '[' && *(line.rbegin()) == ']') {
-            const std::string section = line.substr(1, line.size() - 2);
+            if (!tplIni.empty()) {
+                // Process templated sub INI
+                loadTplIni(tplIni);
+                tplIni.clear();
+            }
+
+            std::string section = line.substr(1, line.size() - 2);
+
+            // Check for templated sub INI
+            const std::vector<std::string> sectionSplit
+                = Utils::split(section, "@");
+
+            if (sectionSplit.size() == 2) {
+                section = sectionSplit[0];
+
+                const std::string fileName
+                    = Utils::expandEnvVars(sectionSplit[1]);
+
+                tplIni = (Utils::isAbsolutePath(fileName))
+                    ? fileName
+                    : Utils::dirName(mFileName) + "/" + fileName;
+            }
 
             std::vector<std::string>::const_iterator itSection
                 = std::find(mIniSections.begin(), mIniSections.end(), section);
@@ -91,12 +119,13 @@ void N2D2::IniParser::load(const std::string& fileName)
             if (itSection != mIniSections.end())
                 throw std::runtime_error("Section [" + section
                                          + "] already exists in INI file "
-                                         + fileName);
+                                         + mFileName);
 
             mCurrentSection = mIniSections.size();
             mIniSections.push_back(section);
             mIniData.push_back(std::map
                                <std::string, std::pair<std::string, bool> >());
+
             continue;
         }
 
@@ -114,13 +143,13 @@ void N2D2::IniParser::load(const std::string& fileName)
 
         if (posEq == std::string::npos)
             throw std::runtime_error("Missing value for property: " + property
-                                     + " in INI file " + fileName);
+                                     + " in INI file " + mFileName);
 
         if (mIniData[mCurrentSection].find(property)
             != mIniData[mCurrentSection].end()) {
             throw std::runtime_error(
                 "Property " + property + " already exists in section ["
-                + mIniSections[mCurrentSection] + "] in INI file " + fileName);
+                + mIniSections[mCurrentSection] + "] in INI file " + mFileName);
         }
 
         std::string value = line.substr(posEq + 1);
@@ -145,9 +174,14 @@ void N2D2::IniParser::load(const std::string& fileName)
         // that's why an exception is thrown if posEq = string::npos
     }
 
+    if (!tplIni.empty()) {
+        // Process templated sub INI
+        loadTplIni(tplIni);
+        tplIni.clear();
+    }
+
     // Make sure the global (default) section is selected
     mCurrentSection = 0;
-    mFileName = fileName;
 }
 
 bool N2D2::IniParser::isSection(const std::string& name)
@@ -518,6 +552,31 @@ std::string N2D2::IniParser::getPropertyValue(const std::string& value) const
     }
 
     return value;
+}
+
+void N2D2::IniParser::loadTplIni(const std::string& tplIni) {
+    // Process templated sub INI
+    TemplateParser parser;
+    parser.addParameter("SECTION_NAME",
+                        mIniSections[mCurrentSection]);
+    parser.addParameter("SECTION_FILE_NAME", tplIni);
+
+    for (std::map
+         <std::string, std::pair<std::string, bool> >
+         ::const_iterator it = mIniData[mCurrentSection].begin(),
+         itEnd = mIniData[mCurrentSection].end();
+         it != itEnd;
+         ++it)
+    {
+        parser.addParameter((*it).first, (*it).second.first);
+    }
+
+    mCurrentSection = 0;
+
+    const std::string parentFileName = mFileName;
+    std::istringstream str(parser.renderFile(tplIni));
+    load(str);
+    mFileName = parentFileName;
 }
 
 N2D2::IniParser::~IniParser()

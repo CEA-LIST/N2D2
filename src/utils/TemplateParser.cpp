@@ -181,7 +181,11 @@ void N2D2::TemplateParser::BlockSection::render(
         std::stringstream itemStr;
         itemStr << mVarName << "[" << i << "]";
 
+        std::stringstream numStr;
+        numStr << i;
+
         std::map<std::string, std::string> blockParams(params);
+        blockParams["#"] = numStr.str();
 
         for (std::map<std::string, std::string>::const_iterator itVar
              = params.lower_bound(itemStr.str()),

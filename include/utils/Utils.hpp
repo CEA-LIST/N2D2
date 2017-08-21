@@ -320,6 +320,7 @@ namespace Utils {
     bool match(const std::string& first, const std::string& second);
     std::string expandEnvVars(std::string str);
     bool createDirectories(const std::string& dirName);
+    bool isAbsolutePath(const std::string& path);
     std::string dirName(const std::string& filePath);
     std::string baseName(const std::string& filePath);
     std::string fileBaseName(const std::string& filePath);

@@ -31,6 +31,7 @@
 #include <string>
 
 #include "utils/Utils.hpp"
+#include "utils/TemplateParser.hpp"
 
 namespace N2D2 {
 class IniParser {
@@ -46,6 +47,13 @@ public:
      * @param fileName          Name of the INI file
     */
     void load(const std::string& fileName);
+
+    /**
+     * Load from an input stream.
+     *
+     * @param data              Input stream
+    */
+    void load(std::istream& data);
 
     /**
      * Check if a section exists.
@@ -207,6 +215,7 @@ public:
 
 private:
     std::string getPropertyValue(const std::string& value) const;
+    void loadTplIni(const std::string& tplIni);
 
     std::string mFileName;
     unsigned int mCurrentSection;
