@@ -212,7 +212,7 @@ public:
     virtual ~Layer();
 
 private:
-    Network& mNet; ///< Reference to the Network attached to this object.
+    //Network& mNet; ///< Reference to the Network attached to this object.
     /// Vector of pointers to all the Xcells contained in this layer
     std::vector<Xcell*> mCells;
     unsigned int mInputOffset;

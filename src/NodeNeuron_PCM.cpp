@@ -246,13 +246,14 @@ void N2D2::NodeNeuron_PCM::emitSpike(Time_T timestamp, EventType_T type)
                   mLateralBranches.end(),
                   std::bind(&NodeNeuron::lateralInhibition,
                             std::placeholders::_1,
-                            timestamp));
+                            timestamp, 0));
 
     Node::emitSpike(timestamp, type);
     mEvent = NULL;
 }
 
-void N2D2::NodeNeuron_PCM::lateralInhibition(Time_T timestamp)
+void N2D2::NodeNeuron_PCM::lateralInhibition(Time_T timestamp,
+                                             EventType_T /*type*/)
 {
     bool discardEvent = false;
 

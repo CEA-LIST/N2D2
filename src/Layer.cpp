@@ -21,7 +21,7 @@
 
 #include "Layer.hpp"
 
-N2D2::Layer::Layer(Network& net, unsigned int nbCells) : mNet(net)
+N2D2::Layer::Layer(Network& net, unsigned int nbCells) //: mNet(net)
 {
     // ctor
     mCells.reserve(nbCells);

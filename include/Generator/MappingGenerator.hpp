@@ -45,14 +45,14 @@ public:
     static Mapping getMapping(IniParser& iniConfig,
                               const std::string& section,
                               const std::string& name,
-                              const Mapping& defaultMapping = defaultMapping);
+                              const Mapping& defaultMapping_ = defaultMapping);
 
     static Matrix<bool> generate(StimuliProvider& sp,
                                  std::shared_ptr<Cell> parent,
                                  unsigned int nbChannels,
                                  IniParser& iniConfig,
                                  const std::string& section,
-                                 const Mapping& defaultMapping
+                                 const Mapping& defaultMapping_
                                  = defaultMapping);
 };
 }

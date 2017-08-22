@@ -54,7 +54,7 @@ public:
     void propagateSpike(Node* origin, Time_T timestamp, EventType_T type = 0);
     void incomingSpike(Node* link, Time_T timestamp, EventType_T type = 0);
     void emitSpike(Time_T timestamp, EventType_T type = 0);
-    void lateralInhibition(Time_T timestamp);
+    void lateralInhibition(Time_T timestamp, EventType_T /*type*/ = 0);
     void reset(Time_T timestamp = 0);
     double getRelativeLtpStrength() const
     {

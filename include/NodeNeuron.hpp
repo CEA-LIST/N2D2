@@ -98,7 +98,8 @@ public:
      * lateral inhibition.
      * This method is not intended to be called directly.
     */
-    virtual void lateralInhibition(Time_T /*timestamp*/) {};
+    virtual void lateralInhibition(Time_T /*timestamp*/,
+                                   EventType_T /*type*/ = 0) {};
 
     /**
      * Reset the state of the node.

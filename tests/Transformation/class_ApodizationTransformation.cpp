@@ -34,7 +34,7 @@ TEST(ApodizationTransformation, apply)
     CsvDataFile dataFile;
     cv::Mat mat = dataFile.read("ApodizationTransformation_read.csv");
 
-    const Hann<double> windowFunction;
+    const Hann<double> windowFunction = Hann<double>();
     ApodizationTransformation trans(windowFunction, 10);
 
     trans.apply(mat);
