@@ -1453,6 +1453,11 @@ example above, the partitioning will be the following:
   \lstinline!Test! [1.0-\lstinline!Learn!-\lstinline!Validation!] & If
   \lstinline!PerLabelPartitioning! is true, fraction of images used for the
   test; else, number of images used for the test, regardless of their labels \\
+  \lstinline!ValidExtensions! [] & List of space-separated valid stimulus file
+  extensions (if left empty, any file extension is considered a valid stimulus)
+  \\
+  \lstinline!LoadMore! [] & Name of an other section with the same options to
+  load a different \lstinline!DataPath! \\
  \hline
   \lstinline!ROIFile! [] & File containing the stimuli ROIs. If a ROI file is
    specified, \lstinline!LabelDepth! should be set to -1 \\
@@ -1463,6 +1468,29 @@ example above, the partitioning will be the following:
  \hline
 \end{longtable}
 \end{center}
+
+To load and partition more than one \lstinline!DataPath!, one can use the
+\lstinline!LoadMore! option:
+
+\begin{lstlisting}[language=ini]
+[database]
+Type=DIR_Database
+DataPath=\${N2D2_DATA}/GST
+Learn=0.6
+Validation=0.4
+LoadMore=database.test
+
+; Load stimuli from the "GST_Test" path in the test dataset
+[database.test]
+DataPath=\${N2D2_DATA}/GST_Test
+Learn=0.0
+Test=1.0
+; The LoadMore option is recursive:
+; LoadMore=database.more
+
+; [database.more]
+; Load even more data here
+\end{lstlisting}
 
 
 \subsubsection{Other built-in databases}

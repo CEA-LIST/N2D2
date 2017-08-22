@@ -28,46 +28,68 @@ std::shared_ptr<N2D2::DIR_Database>
 N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
                                       const std::string& section)
 {
-    if (!iniConfig.currentSection(section))
+    std::string currentSection = section;
+
+    if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
     const bool loadInMemory = iniConfig.getProperty
                               <bool>("LoadInMemory", false);
-    const std::string dataPath
-        = Utils::expandEnvVars(iniConfig.getProperty<std::string>("DataPath"));
-    const int depth = iniConfig.getProperty<int>("Depth", 1);
-    const std::string labelName = iniConfig.getProperty
-                                  <std::string>("LabelName", "");
-    const int labelDepth = iniConfig.getProperty<int>("LabelDepth", 1);
-    const std::string roiFile = Utils::expandEnvVars(
-        iniConfig.getProperty<std::string>("ROIFile", ""));
-    const double learn = iniConfig.getProperty<double>("Learn");
-    const double validation = iniConfig.getProperty<double>("Validation", 0.0);
-    const bool perLabel = iniConfig.getProperty
-                          <bool>("PerLabelPartitioning", true);
-    const double test = (perLabel)
-        ? iniConfig.getProperty<double>("Test", 1.0 - learn - validation)
-        : iniConfig.getProperty<double>("Test", 0.0);
 
     std::shared_ptr<DIR_Database> database = std::make_shared
         <DIR_Database>(loadInMemory);
-    database->setValidExtensions(
-        iniConfig.getProperty<std::vector<std::string> >("ValidExtensions",
-                                                std::vector<std::string>()));
-    database->setParameters(iniConfig.getSection(section, true));
-    database->loadDir(dataPath, depth, labelName, labelDepth);
 
-    if (!roiFile.empty())
-        database->loadROIs(roiFile, "", true);
+    do {
+        if (!iniConfig.currentSection(currentSection)) {
+            throw std::runtime_error("Missing ["
+                                     + currentSection + "] section.");
+        }
 
-    if (perLabel) {
-        database->partitionStimuliPerLabel(learn, validation, test, true);
-        database->partitionStimuli(0.0, 0.0, 1.0);
-    } else {
-        database->partitionStimuli(learn, Database::Learn);
-        database->partitionStimuli(validation, Database::Validation);
-        database->partitionStimuli(test, Database::Test);
+        const std::string dataPath
+            = Utils::expandEnvVars(iniConfig.getProperty<std::string>
+                                   ("DataPath"));
+        const int depth = iniConfig.getProperty<int>("Depth", 1);
+        const std::string labelName = iniConfig.getProperty
+                                      <std::string>("LabelName", "");
+        const int labelDepth = iniConfig.getProperty<int>("LabelDepth", 1);
+        const std::string roiFile = Utils::expandEnvVars(
+            iniConfig.getProperty<std::string>("ROIFile", ""));
+        const bool perLabel = iniConfig.getProperty
+                              <bool>("PerLabelPartitioning", true);
+        const double learn = iniConfig.getProperty<double>("Learn");
+        const double validation = iniConfig.getProperty<double>("Validation",
+                                                                0.0);
+        const double test = (perLabel)
+            ? iniConfig.getProperty<double>("Test", 1.0 - learn - validation)
+            : iniConfig.getProperty<double>("Test", 0.0);
+
+        if (iniConfig.isProperty("ValidExtensions")) {
+            database->setValidExtensions(
+                iniConfig.getProperty<std::vector<std::string> >
+                    ("ValidExtensions", std::vector<std::string>()));
+        }
+
+        const std::string loadMore
+            = iniConfig.getProperty<std::string>("LoadMore", "");
+
+        database->setParameters(iniConfig.getSection(currentSection, true));
+        database->loadDir(dataPath, depth, labelName, labelDepth);
+
+        if (!roiFile.empty())
+            database->loadROIs(roiFile, "", true);
+
+        if (perLabel) {
+            database->partitionStimuliPerLabel(learn, validation, test, true);
+            database->partitionStimuli(0.0, 0.0, 1.0);
+        } else {
+            database->partitionStimuli(learn, Database::Learn);
+            database->partitionStimuli(validation, Database::Validation);
+            database->partitionStimuli(test, Database::Test);
+        }
+
+        currentSection = loadMore;
     }
+    while (!currentSection.empty());
 
     return database;
 }
