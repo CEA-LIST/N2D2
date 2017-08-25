@@ -43,6 +43,10 @@ public:
                                        const std::string typeStr,
                                        std::ofstream& header);
     static void generateHeaderEnd(DeepNet& deepNet, std::ofstream& header);
+
+    static void generateHeaderUtils(std::ofstream& header);
+    static void generateProgramUtils(std::ofstream& prog);
+
 private:
     static Registrar<DeepNetExport> mRegistrar;
 };

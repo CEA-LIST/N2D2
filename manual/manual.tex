@@ -291,9 +291,9 @@ particularly useful for DNN design and exploration, allowing simple and fast
 prototyping of DNN with different topologies. It is possible to define and
 learn multiple network topology variations and compare the performances (in
 terms of recognition rate and computationnal cost) automatically.
-Export targets include CPU, DSP and GPU with OpenMP, OpenCL, Cuda and cuDNN
-programming models as well as custom hardware IP code generation with High-Level
-Synthesis for FPGA and dedicated configurable DNN accelerator
+Export targets include CPU, DSP and GPU with OpenMP, OpenCL, Cuda, cuDNN and
+TensorRT programming models as well as custom hardware IP code generation with
+High-Level Synthesis for FPGA and dedicated configurable DNN accelerator
 IP\footnote{Ongoing work}.
 
 In the following, the first section describes the database handling capabilities
@@ -532,7 +532,7 @@ The following targets are currently supported by the toolflow:
      to compute the whole network;
     \subitem FPGA utilization vs number of clock cycle trade-off analysis;
     \item OpenCL code optimized for either CPU/DSP or GPU;
-    \item Cuda kernels and cuDNN code optimized for NVIDIA\textregistered{}
+    \item Cuda kernels, cuDNN and TensorRT code optimized for NVIDIA\textregistered{}
     GPUs.
 \end{myitemize}
 
@@ -946,6 +946,7 @@ Export types:
 \item \lstinline!CPP_OpenCL! C++ export using OpenCL;
 \item \lstinline!CPP_Cuda! C++ export using Cuda;
 \item \lstinline!CPP_cuDNN! C++ export using cuDNN;
+\item \lstinline!CPP_TensorRT! C++ export using tensorRT 2.1 API;
 \item \lstinline!SC_Spike! SystemC spike export.
 \end{myitemize}
 
@@ -1053,6 +1054,55 @@ Test the exported network:
 cd export_CPP_OpenCL_float32
 make
 ./bin/n2d2_opencl_test -gpu
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!CPP_TensorRT! export}{CPP\_TensorRT export}}
+The tensorRT 2.1 API export can run the generated program in NVIDIA GPU architecture.
+It use CUDA and tensorRT 2.1 API library.
+The currently supported layers by the tensorRT 2.1 export are : Convolutional, Pooling, Concatenation,
+Fully-Connected, Softmax and all activations type.
+Custom layers implementation through the plugin factory and
+ generic 8-bits calibrations inference features are under development.
+
+Program options related to the tensorRT 2.1 API export:
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!-batch! [1] & Size of the batch to use \\
+  \lstinline!-dev! [0] & CUDA Device ID selection  \\
+  \lstinline!-stimulus! [NULL] & Path to a specific input stimulus to test.
+  For example: -stimulus ${/stimulus/env0000.pgm}$ command will test the file
+   env0000.pgm  of the stimulus folder.\\
+  \lstinline!-prof! & Activates the layer wise profiling mechanism. This option
+  can decrease execution time performance.\\
+  \lstinline!-iter-build! [1] & Sets the number of minimization build iterations
+  done by the tensorRT builder to find the best layer tactics.\\
+ \hline
+\end{tabular}
+\end{center}
+
+Test the exported network with layer wise profiling:
+\begin{lstlisting}
+cd export_CPP_TensorRT_float32
+make
+./bin/n2d2_tensorRT_test -prof
+\end{lstlisting}
+
+The results of the layer wise profiling should look like:
+\begin{lstlisting}[style=console]
+(19%)  **************************************** CONV1 + CONV1_ACTIVATION: 0.0219467 ms
+(05%)  ************ POOL1: 0.00675573 ms
+(13%)  **************************** CONV2 + CONV2_ACTIVATION: 0.0159089 ms
+(05%)  ************ POOL2: 0.00616047 ms
+(14%)  ****************************** CONV3 + CONV3_ACTIVATION: 0.0159713 ms
+(19%)  **************************************** FC1 + FC1_ACTIVATION: 0.0222242 ms
+(13%)  **************************** FC2: 0.0149013 ms
+(08%)  ****************** SOFTMAX: 0.0100633 ms
+Average profiled tensorRT process time per stimulus = 0.113932 ms
+
 \end{lstlisting}
 
 \subsubsection{\texorpdfstring{%%

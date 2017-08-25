@@ -82,4 +82,38 @@
         }                                                                      \
     }
 
+class CudaContext {
+public:
+    static void setDevice(int device)
+    {
+        CHECK_CUDA_STATUS(cudaSetDevice(device));
+    }
+
+    // Declare cublas handle
+    static cublasHandle_t& cublasHandle()
+    {
+        static cublasHandle_t cublas_h = NULL;
+
+        if (!cublas_h) {
+            CHECK_CUBLAS_STATUS(cublasCreate(&cublas_h));
+            std::cout << "CUBLAS initialized" << std::endl;
+        }
+
+        return cublas_h;
+    }
+
+    // Declare cudnn handle
+    static cudnnHandle_t& cudnnHandle()
+    {
+        static cudnnHandle_t cudnn_h = NULL;
+
+        if (!cudnn_h) {
+            CHECK_CUDNN_STATUS(cudnnCreate(&cudnn_h));
+            std::cout << "CUDNN initialized" << std::endl;
+        }
+
+        return cudnn_h;
+    }
+
+};
 #endif // COMMON_CUDA_H

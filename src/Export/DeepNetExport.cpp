@@ -191,6 +191,18 @@ N2D2::DeepNetExport::getCellOutputName(DeepNet& deepNet,
 
     const std::string cellName = inputCell->getName();
 
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+
+    const unsigned int nbTarget = outputTargets.size();
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+
+        if(cell->getName() == cellName)
+            return "";
+    }
+
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer

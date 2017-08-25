@@ -32,9 +32,9 @@ N2D2::CPP_cuDNN_PoolCellExport::mRegistrarType(
 void N2D2::CPP_cuDNN_PoolCellExport::generate(PoolCell& cell,
                                               const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
+    Utils::createDirectories(dirName + "/dnn/include");
 
-    const std::string fileName = dirName + "/include/"
+    const std::string fileName = dirName + "/dnn/include/"
         + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
@@ -260,7 +260,7 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateCellProgramFunction(
 
     prog << proto
         << "(\n"
-        << "                " << "context_handle,\n"
+        << "                " << "CudaContext::cudnnHandle(),\n"
         << "                " << identifier + "_tensorDescIn,\n"
         << "                " << inputName + ",\n"
         << "                " << identifier + "_tensorDescOut,\n"

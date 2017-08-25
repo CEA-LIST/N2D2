@@ -28,7 +28,6 @@
 #include <sstream>
 #include <stdlib.h>
 
-#include <common_cuda.hpp>
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cudnn.h>
@@ -45,20 +44,16 @@
 #include <iomanip>
 #include <stdexcept>
 
+#include "../../include/typedefs.h"
+#include "../../include/utils.h"
+
+#include "common_cuda.hpp"
 #include "Random.hpp"
 #include "n2d2_cudnn_kernels.hpp"
-#include "typedefs.h"
-#include "utils.h"
 
-void getFilesList(const std::string dir, std::vector<std::string>& files);
+void set_profiling();
 
-void envRead(const std::string& fileName,
-             unsigned int size,
-             unsigned int channelsHeight,
-             unsigned int channelsWidth,
-             DATA_T* data,
-             unsigned int outputsSize,
-             int32_t* outputTargets);
+void report_per_layer_profiling(unsigned int nbIter);
 
 struct oclProfiling {
     std::string name;
@@ -66,6 +61,7 @@ struct oclProfiling {
 };
 
 struct oclHandleStruct {
+    bool isActivated = false;
     std::vector<double> events;
     std::vector<oclProfiling> profiling;
 };
@@ -253,6 +249,8 @@ void output_generation(unsigned int batchSize,
                        DATA_T* dataIn,
                        uint32_t* outputEstimated);
 
+void set_output(unsigned int nbTarget);
+
 void spatial_output_generation(unsigned int batchSize,
                                unsigned int nbOutputs,
                                unsigned int outputsHeight,
@@ -261,7 +259,7 @@ void spatial_output_generation(unsigned int batchSize,
                                uint32_t* outputEstimated);
 
 /**** Confusion Matrix ****/
-void confusion_print(unsigned int nbOutputs, unsigned int* confusion);
+//void confusion_print(unsigned int nbOutputs, unsigned int* confusion);
 
 void dumpMem(int size, DATA_T* data, std::string fileName);
 

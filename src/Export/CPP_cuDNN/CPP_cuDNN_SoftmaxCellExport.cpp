@@ -120,8 +120,8 @@ void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramFunction(
     const std::string proto = (funcProto.empty()) ? "    softmax" : funcProto;
 
     prog << proto
-        << "( "
-        << "                " << "context_handle,\n"
+        << "(\n"
+        << "                " << "CudaContext::cudnnHandle(),\n"
         << "                " << identifier + "_tensorDescIn,\n"
         << "                " << inputName + ",\n"
         << "                " << identifier + "_tensorDescOut,\n"
@@ -159,10 +159,10 @@ void N2D2::CPP_cuDNN_SoftmaxCellExport::generateCellProgramFree(Cell& cell,
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << " CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
+    prog << "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
          << identifier
          << "_tensorDescIn) );\n"
-            " CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
+            "    CHECK_CUDNN_STATUS( cudnnDestroyTensorDescriptor("
          << identifier << "_tensorDescOut) );\n"
                               "\n";
 }

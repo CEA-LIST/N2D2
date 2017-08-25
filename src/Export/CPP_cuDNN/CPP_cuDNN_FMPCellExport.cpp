@@ -128,7 +128,7 @@ void N2D2::CPP_cuDNN_FMPCellExport::generateCellProgramFunction(
 
     prog << proto
         << "(\n"
-        << "                " << "context_handle,\n"
+        << "                " << "CudaContext::cudnnHandle(),\n"
         << "                " << "batchSize,\n"
         << "                " << prefix + "_NB_CHANNELS,\n"
         << "                " << prefix + "_CHANNELS_HEIGHT,\n"

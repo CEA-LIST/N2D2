@@ -30,10 +30,10 @@ void N2D2::CPP_cuDNN_DeepNetExport::generate(DeepNet& deepNet,
     CPP_DeepNetExport::generate(deepNet, dirName);
 
     generateDeepNetHeader(
-        deepNet, "network_cudnn", dirName + "/include/network.hpp");
+        deepNet, "network_cudnn", dirName + "/dnn/include/network.hpp");
 
     generateDeepNetProgram(
-        deepNet, "network_cudnn", dirName + "/src/network.cpp");
+        deepNet, "network_cudnn", dirName + "/dnn/src/network.cpp");
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateDeepNetHeader(
@@ -45,11 +45,10 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateDeepNetHeader(
         throw std::runtime_error("Could not create CPP network file: "
                                  + fileName);
     CPP_DeepNetExport::generateHeaderBegin(deepNet, header, fileName);
-    CPP_DeepNetExport::generateHeaderIncludes(deepNet, "_cudnn", header);
-    generateHeaderConstants(deepNet, header);
-    generateHeaderInit(deepNet, header);
+    CPP_DeepNetExport::generateHeaderUtils(header);
+    generateHeaderInit(deepNet, name, header);
     generateHeaderFunction(deepNet, name, header);
-    generateHeaderFree(deepNet, header);
+    generateHeaderFree(deepNet, name, header);
     CPP_DeepNetExport::generateHeaderEnd(deepNet, header);
 }
 
@@ -130,24 +129,29 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderInit(DeepNet& /*deepNet*/,
+                                                       const std::string& name,
                                                        std::ofstream& header)
 {
     header << "\n"
-              "void init_network(cudnnHandle_t& context_handle, unsigned int "
-              "batchSize);\n";
+              "void " << name << "_init(unsigned int batchSize, "
+                              << "unsigned int devID);\n";
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderFunction(
     DeepNet& /*deepNet*/, const std::string& name, std::ofstream& header)
 {
-    header << "\n"
-              "void " << name
-           << "(DATA_T* in_data, uint32_t* out_data, cudnnHandle_t& "
-              "context_handle, cublasHandle_t& context_cublasHandle, unsigned "
-              "int batchSize);\n";
+    header << "void " << name << "_syncExe"
+           << "(DATA_T* in_data,  unsigned int batchSize);";
+    header <<"\n";
+    header << "void " << name << "_output"
+           << "(uint32_t* out_data, unsigned int batchSize, "
+           << "unsigned int target);";
+    header <<"\n";
+
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateHeaderFree(DeepNet& /*deepNet*/,
+                                                       const std::string& /*name*/,
                                                        std::ofstream& header)
 {
     header << "\n"
@@ -160,17 +164,19 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateDeepNetProgram(
     std::ofstream prog(fileName.c_str());
 
     if (!prog.good())
-        throw std::runtime_error("Could not create C network file: "
+        throw std::runtime_error("Could not create cuDNN network file: "
                                  + fileName);
     generateProgramBegin(deepNet, prog);
     generateProgramDesc(deepNet, prog);
     generateProgramGlobalDefinition(deepNet, prog);
-    generateProgramInitNetwork(deepNet, prog);
+    CPP_DeepNetExport::generateProgramUtils(prog);
+    generateProgramInitNetwork(deepNet, name, prog);
     generateProgramFunction(deepNet, name, prog);
+    generateOutputFunction(name, prog);
     generateProgramFree(deepNet, prog);
 }
 
-void N2D2::CPP_cuDNN_DeepNetExport::generateProgramBegin(DeepNet& /*deepNet*/,
+void N2D2::CPP_cuDNN_DeepNetExport::generateProgramBegin(DeepNet& deepNet,
                                                  std::ofstream& prog)
 {
     // Append date & time to the file.
@@ -185,6 +191,8 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramBegin(DeepNet& /*deepNet*/,
             "\n"
             "//#define DATA_DYN_ANALYSIS\n"
             "\n";
+    CPP_DeepNetExport::generateHeaderIncludes(deepNet, "_cudnn", prog);
+    generateHeaderConstants(deepNet, prog);
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramDesc(DeepNet& deepNet,
@@ -213,6 +221,7 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramDesc(DeepNet& deepNet,
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
     DeepNet& deepNet, std::ofstream& prog)
 {
+
     prog << "std::vector<DATA_T *> in_buffer;\n"
         "std::vector<DATA_T *> output_buffer;\n"
         "DATA_T *ones_vector_buffer(NULL);\n\n";
@@ -277,14 +286,15 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
 }
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
-                                                               std::ofstream
-                                                               & prog)
+                                                               const std::string& name,
+                                                               std::ofstream& prog)
 {
     std::string outputsBuffer = "output_";
     std::string output_buff;
 
-    prog << "void init_network(cudnnHandle_t& context_handle,"
-        "unsigned int batchSize) {\n"
+    prog << "void " << name << "_init"
+        << "(unsigned int batchSize, unsigned int devID) {\n"
+        << "    CudaContext::setDevice(devID);\n"
         << "    cudnnDataType_t context_dataType ="
         " CUDNN_DATA_FLOAT;\n"
         << "    cudnnTensorFormat_t context_tensorFormat ="
@@ -334,15 +344,11 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                 prog << "    " << outputName.str() << "buffer.resize("
                     << std::to_string((unsigned long long int)
                                       parentCells.size()) << ");\n";
-
-                if(itLayer == itLayerEnd - 1) {
-                    prog << "    output_buffer.resize("
-                        << std::to_string((unsigned long long int)
-                                          parentCells.size()) << ");\n";
-                }
             }
         }
     }
+
+    prog << "    output_buffer.resize(NETWORK_TARGETS);";
 
     prog << "\n\n";
 
@@ -376,17 +382,43 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                                                 parentCells[k]->getName()));
                 }
             }
-            output_buff = (itLayer >= itLayerEnd - 1) ? outputsBuffer :
-                getCellOutputName(deepNet,
-                                  std::distance(layers.begin(),itLayer),
-                                  std::distance((*itLayer).begin(), it));
+            output_buff = getCellOutputName(deepNet,
+                                        std::distance(layers.begin(),itLayer),
+                                        std::distance((*itLayer).begin(), it));
 
             CPP_cuDNN_CellExport::getInstance(*cell)->
                 generateCellProgramInitNetwork(*cell, parentsName, prog);
-            CPP_cuDNN_CellExport::getInstance(*cell)->
-                generateCellProgramInitBuffer(*cell, output_buff, prog);
+
+            if(!output_buff.empty())
+                CPP_cuDNN_CellExport::getInstance(*cell)->
+                    generateCellProgramInitBuffer(*cell, output_buff, prog);
         }
     }
+
+    prog << "\n\n";
+    prog << "   " << "set_output( NETWORK_TARGETS );\n";
+
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+
+    const unsigned int nbTarget = outputTargets.size();
+    prog << "//Initialization of the " << nbTarget << " network targets:\n";
+
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+
+        prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&output_buffer["
+                      << targetIdx << "], " // Added 1 for stride the input buffer
+                      << "sizeof(DATA_T)*batchSize"
+                      << "*NB_OUTPUTS[" << targetIdx << "]"
+                      << "*OUTPUTS_HEIGHT[" << targetIdx << "]"
+                      << "*OUTPUTS_WIDTH[" << targetIdx << "]"
+                      << "));\n";
+    }
+    prog << "\n\n";
+
+
     prog << "}\n";
 }
 
@@ -400,16 +432,20 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
     std::string input_buff;
     std::string output_buff;
 
+
     prog << "\n"
-        "void " << name << "(DATA_T* in_data, uint32_t* out_data,"
-            " cudnnHandle_t& context_handle,"
-            " cublasHandle_t& context_cublasHandle,"
-            " unsigned int batchSize) {\n\n";
+        "void " << name << "_syncExe"
+            "(DATA_T* in_data, "
+            "unsigned int batchSize) {\n\n";
 
     prog <<  "/*******INPUT DATA TRANSFER TO DEVICE*********/\n" ;
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy(" << inputsBuffer << "buffer[0]"
         << ", in_data, batchSize*ENV_BUFFER_SIZE*sizeof(DATA_T),"
         << " cudaMemcpyHostToDevice) );\n";
+
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+    unsigned int targetIdx = 0;
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
@@ -441,28 +477,50 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
                                  std::distance(layers.begin(), itLayer),
                                  std::distance((*itLayer).begin(), it));
 
-            output_buff = (itLayer >= itLayerEnd - 1) ? outputsBuffer :
-                getCellOutputName(deepNet,
-                                  std::distance(layers.begin(), itLayer),
-                                  std::distance((*itLayer).begin(), it));
+            output_buff = getCellOutputName(deepNet,
+                                        std::distance(layers.begin(), itLayer),
+                                        std::distance((*itLayer).begin(), it));
 
-            CPP_cuDNN_CellExport::getInstance(*cell)
-                ->generateCellProgramFunction(*cell, input_buff + "buffer",
-                output_buff + "buffer", outputOffset, prog, "");
-
-            if(itLayer == itLayerEnd - 1) {
-                const std::shared_ptr<Cell>
-                    cell = deepNet.getCell((*itLayer).at(0));
+            if(output_buff.empty())
+            {
+                if(targetIdx >= outputTargets.size())
+                    throw std::runtime_error("CPP_cuDNN_DeepNetExport::generateProgramFunction(): "
+                                             "targetIdx cannot be superior to the number of outputs network targets");
+                std::stringstream targetIdxStr;
+                targetIdxStr << targetIdx;
 
                 CPP_cuDNN_CellExport::getInstance(*cell)
-                    ->generateCellProgramOutputFunction(*cell, output_buff
-                    + "buffer[0]", "out_data", prog);
+                    ->generateCellProgramFunction(*cell, input_buff + "buffer",
+                    "output_buffer", targetIdxStr.str(), prog, "");
+                ++targetIdx;
             }
+            else
+                CPP_cuDNN_CellExport::getInstance(*cell)
+                ->generateCellProgramFunction(*cell, input_buff + "buffer",
+                output_buff + "buffer", outputOffset, prog, "");
         }
         prog << "\n";
     }
     prog << "}\n";
 }
+
+void N2D2::CPP_cuDNN_DeepNetExport
+    ::generateOutputFunction(const std::string& name,
+                            std::ofstream& prog)
+{
+    prog << "void " << name << "_output(uint32_t* out_data, unsigned int batchSize, unsigned int target) {\n";
+    prog << "\n";
+	prog << "   " << "spatial_output_generation(batchSize,\n"
+         << "       " << "NB_OUTPUTS[target],\n"
+         << "       " << "OUTPUTS_HEIGHT[target],\n"
+         << "       " << "OUTPUTS_WIDTH[target],\n"
+         << "       " << "output_buffer[target],\n"
+         << "       " << "out_data);\n";
+    prog << "}";
+    prog <<"\n";
+
+}
+
 
 void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFree(DeepNet& deepNet,
                                                         std::ofstream& prog)
@@ -506,5 +564,14 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFree(DeepNet& deepNet,
         }
     }
 
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+
+    const unsigned int nbTarget = outputTargets.size();
+    prog << "//Destruction of the " << nbTarget << " network targets:\n";
+
+    for(int targetIdx = nbTarget - 1; targetIdx >= 0; --targetIdx)
+        prog << "    CHECK_CUDA_STATUS( cudaFree(output_buffer["
+             << targetIdx << "]) );\n";
     prog << "}\n";
 }

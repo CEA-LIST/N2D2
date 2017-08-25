@@ -26,9 +26,10 @@ N2D2::CPP_PoolCellExport::mRegistrar("CPP", N2D2::CPP_PoolCellExport::generate);
 void N2D2::CPP_PoolCellExport::generate(PoolCell& cell,
                                         const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
+    Utils::createDirectories(dirName + "/dnn");
+    Utils::createDirectories(dirName + "/dnn/include");
 
-    const std::string fileName = dirName + "/include/"
+    const std::string fileName = dirName + "/dnn/include"
         + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());

@@ -136,18 +136,22 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         }
 
         const Tensor2d<int> label = sp.getLabelsData(0);
+        const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet->getTargets();
+        const unsigned int netNbTarget = outputTargets.size();
 
-        for (unsigned int y = 0; y < label.dimY(); ++y) {
-            for (unsigned int x = 0; x < label.dimX(); ++x) {
-                const uint32_t outputTarget
-                    = (deepNet != NULL)
-                          ? deepNet->getTarget()->getLabelTarget(label(x, y))
-                          : label(x, y);
-                envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
-                                 sizeof(outputTarget));
+        for(unsigned int t = 0; t < netNbTarget; ++t) {
+            for (unsigned int y = 0; y < label.dimY(); ++y) {
+                for (unsigned int x = 0; x < label.dimX(); ++x) {
+                    const uint32_t outputTarget
+                        = (deepNet != NULL)
+                              ? deepNet->getTarget(t)->getLabelTarget(label(x, y))
+                              : label(x, y);
+                    envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
+                                     sizeof(outputTarget));
+                }
             }
         }
-
         if (!envStimuli.good())
             throw std::runtime_error("Error writing stimuli binary file: "
                                      + stimuliName.str());

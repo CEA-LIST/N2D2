@@ -26,88 +26,38 @@
 cudnnNanPropagation_t NanPolicy = CUDNN_PROPAGATE_NAN;
 #endif
 
+
 oclHandleStruct oclHandles;
 
-void getFilesList(const std::string dir, std::vector<std::string>& files)
+void set_profiling()
 {
-    struct dirent* pFile;
-    DIR* pDir = opendir(dir.c_str());
-    if (pDir == NULL)
-        throw std::runtime_error(
-            "Couldn't open the directory for input patterns: " + dir);
-
-    while ((pFile = readdir(pDir)) != NULL) {
-        if (pFile->d_name[0] != '.')
-            files.push_back(std::string(dir + "/" + pFile->d_name));
-    }
-    closedir(pDir);
-    std::sort(files.begin(), files.end());
+    oclHandles.isActivated = true;
 }
 
-void envRead(const std::string& fileName,
-             unsigned int size,
-             unsigned int channelsHeight,
-             unsigned int channelsWidth,
-             DATA_T* data,
-             unsigned int outputsSize,
-             int32_t* outputTargets)
+void report_per_layer_profiling(unsigned int nbIter)
 {
-    std::ifstream stimuli(fileName.c_str(), std::fstream::binary);
+    double totalProcessTime = 0.0;
+    for (std::vector<oclProfiling>::iterator it
+         = oclHandles.profiling.begin(),
+         itEnd = oclHandles.profiling.end();
+         it != itEnd;
+         ++it) {
+        totalProcessTime += (*it).processTime / (nbIter);
+    }
 
-    if (!stimuli.good())
-        throw std::runtime_error("Could not open file: " + fileName);
-
-    char header[2];
-    stimuli.read(reinterpret_cast<char*>(&header[0]), sizeof(header));
-
-    if (header[0] != 'P' || header[1] != '5')
-        throw std::runtime_error("Unknown PGM file format for file: "
-                                 + fileName);
-
-    int pixelWidth;
-    int pixelHeight;
-    int maxValue;
-
-    if (!(stimuli >> pixelWidth) || !(stimuli >> pixelHeight)
-        || !(stimuli >> maxValue))
-        throw std::runtime_error("Error reading PGM image file: " + fileName);
-
-    stimuli.get();
-
-    if (pixelWidth != (int)channelsWidth || pixelHeight != (int)channelsHeight)
-        throw std::runtime_error(
-            "PGM image size does not match array size for file: " + fileName);
-
-#if NB_BITS > 0 && NB_BITS != 8 && NB_BITS != 16 && NB_BITS != 32 && NB_BITS   \
-                                                                     != 64
-#if NB_BITS > 0 && NB_BITS < 8
-    char inputsFixed[size];
-#elif NB_BITS > 8 && NB_BITS < 16
-    short inputsFixed[size];
-#elif NB_BITS > 16 && NB_BITS < 32
-    int inputsFixed[size];
-#elif NB_BITS > 32 && NB_BITS < 64
-    long long int inputsFixed[size];
-#endif
-    stimuli.read(reinterpret_cast<char*>(&inputsFixed[0]),
-                 size * sizeof(inputsFixed[0]));
-
-    for (unsigned int i = 0; i < size; ++i)
-        data[i] = (DATA_T)inputsFixed[i];
-#else
-    stimuli.read(reinterpret_cast<char*>(&data[0]), size * sizeof(data[0]));
-#endif
-    stimuli.read(reinterpret_cast<char*>(&outputTargets[0]),
-                 outputsSize * sizeof(outputTargets[0]));
-
-    if (stimuli.eof())
-        throw std::runtime_error(
-            "End-of-file reached prematurely in data file: " + fileName);
-    else if (!stimuli.good())
-        throw std::runtime_error("Error while reading data file: " + fileName);
-    else if (stimuli.get() != std::fstream::traits_type::eof())
-        throw std::runtime_error("Data file size larger than expected: "
-                                 + fileName);
+    for (std::vector<oclProfiling>::iterator it
+         = oclHandles.profiling.begin(),
+         itEnd = oclHandles.profiling.end();
+         it != itEnd;
+         ++it) {
+        const double processTimeUs = (*it).processTime / (nbIter);
+        const double workLoad = (processTimeUs / totalProcessTime) * 100.0;
+        std::string barrelLoad(((unsigned int)workLoad + 1) * 2, '*');
+        std::cout << "(" << std::setfill('0') << std::setw(2)
+                  << (unsigned int)workLoad << "%)  " << barrelLoad
+                  << "    " << (*it).name << ": " << processTimeUs << " us"
+                  << std::endl;
+     }
 }
 
 /**** Convolution Layer ****/
@@ -153,9 +103,9 @@ void setConvolution(unsigned int batchSize,
     std::vector<int> hCh = channelsHeightPerInputLayer;
     std::vector<int> wCh = channelsWidthPerInputLayer;
 
-#ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({"Convolution", 0.0}));
-#endif
+    if(oclHandles.isActivated)
+        oclHandles.profiling.push_back(oclProfiling({"Convolution", 0.0}));
+
     cudnnCreateConvolutionDescriptor(&convDesc);
 
 
@@ -334,11 +284,11 @@ void convcell(cudnnHandle_t& context_handle,
               cudnnConvolutionDescriptor_t convDesc,
               std::vector<DATA_T*> weights_data)
 {
-#ifdef PROFILING
     double elapsed = 0.0;
-    const std::chrono::high_resolution_clock::time_point start
-        = std::chrono::high_resolution_clock::now();
-#endif
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
 
     DATA_T ONE_T = DATA_T(1);   // Alpha must be set to 1 for all steps
     DATA_T BETA_T = DATA_T(0);
@@ -424,13 +374,12 @@ void convcell(cudnnHandle_t& context_handle,
                                    *outputs_data));
     }
 
-#ifdef PROFILING
-    CHECK_CUDA_STATUS( cudaDeviceSynchronize() );
-    elapsed= 1.0e6*std::chrono::duration_cast<std::chrono::duration<double> >
-        (std::chrono::high_resolution_clock::now() - start).count();
-    oclHandles.events.push_back(elapsed);
-#endif
-
+    if(oclHandles.isActivated) {
+        CHECK_CUDA_STATUS( cudaDeviceSynchronize() );
+        elapsed= 1.0e6*std::chrono::duration_cast<std::chrono::duration<double> >
+            (std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
+    }
 
 }
 /**** BatchNorm Layer ****/
@@ -445,9 +394,9 @@ void setBatchnorm(unsigned int batchSize,
                   cudnnTensorDescriptor_t outputsTensor)
 {
 
-#ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({"Batchnorm", 0.0}));
-#endif
+    if(oclHandles.isActivated)
+        oclHandles.profiling.push_back(oclProfiling({"Batchnorm", 0.0}));
+
 #if CUDNN_VERSION >= 4000
 
     cudnnBatchNormMode_t mMode = CUDNN_BATCHNORM_SPATIAL;
@@ -521,11 +470,11 @@ void batchnormcell(cudnnHandle_t& context_handle,
                    DATA_T** outputs_data,
                    ActivationFunction_T func)
 {
-#ifdef PROFILING
     double elapsed = 0.0;
-    const std::chrono::high_resolution_clock::time_point start
-        = std::chrono::high_resolution_clock::now();
-#endif
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
 #if CUDNN_VERSION >= 4000
 
     cudnnActivationMode_t cudnnActivation;
@@ -596,13 +545,13 @@ void batchnormcell(cudnnHandle_t& context_handle,
                                    *outputs_data)); // Activation
     }
 
-#ifdef PROFILING
-    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-    elapsed = 1.0e6
-              * std::chrono::duration_cast<std::chrono::duration<double> >(
-                    std::chrono::high_resolution_clock::now() - start).count();
-    oclHandles.events.push_back(elapsed);
-#endif
+    if(oclHandles.isActivated){
+        CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+        elapsed = 1.0e6
+                  * std::chrono::duration_cast<std::chrono::duration<double> >(
+                        std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
+    }
 }
 
 /**** Pooling Layer ****/
@@ -632,9 +581,8 @@ void setPooling(unsigned int batchSize,
     std::vector<int> h = channelsHeightPerInputLayer;
     std::vector<int> w = channelsWidthPerInputLayer;
 
-#ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({ "Pooling", 0.0}));
-#endif
+    if(oclHandles.isActivated)
+        oclHandles.profiling.push_back(oclProfiling({ "Pooling", 0.0}));
 
     ((func == Average) ? cudnnPooling
         = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING :
@@ -703,11 +651,11 @@ void poolcell(cudnnHandle_t& context_handle,
               DATA_T** outputs_data,
               cudnnPoolingDescriptor_t mapping)
 {
-#ifdef PROFILING
     double elapsed = 0.0;
-    const std::chrono::high_resolution_clock::time_point start
-        = std::chrono::high_resolution_clock::now();
-#endif
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
 
     DATA_T ONE_T = DATA_T(1);   // Alpha must be set to 1 for all steps
     DATA_T ZERO_T = DATA_T(0);   // Beta must be set to 0 for POOLING FORWARD
@@ -753,20 +701,19 @@ void poolcell(cudnnHandle_t& context_handle,
 
     }
 
-#ifdef PROFILING
-    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-    elapsed = 1.0e6
-              * std::chrono::duration_cast<std::chrono::duration<double> >(
-                    std::chrono::high_resolution_clock::now() - start).count();
-    oclHandles.events.push_back(elapsed);
-#endif
+    if(oclHandles.isActivated) {
+        CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+        elapsed = 1.0e6
+                  * std::chrono::duration_cast<std::chrono::duration<double> >(
+                        std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
+    }
 }
 /**** FractionnalMaxPooling Layer ****/
 void setFmp()
 {
-#ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({"FMP", 0.0}));
-#endif
+    if(oclHandles.isActivated)
+        oclHandles.profiling.push_back(oclProfiling({"FMP", 0.0}));
 }
 
 void fmpcell(cudnnHandle_t& context_handle,
@@ -785,11 +732,12 @@ void fmpcell(cudnnHandle_t& context_handle,
              unsigned int outputOffset,
              DATA_T* outputs_data)
 {
-#ifdef PROFILING
     double elapsed = 0.0;
-    const std::chrono::high_resolution_clock::time_point start
-        = std::chrono::high_resolution_clock::now();
-#endif
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
+
     unsigned int* gridXRand
         = new unsigned int[outputsWidth]; // use array new.  Note that length
     // does not need to be constant!
@@ -827,13 +775,13 @@ void fmpcell(cudnnHandle_t& context_handle,
                       outputsWidth,
                       batchSize,
                       overlapping);
-#ifdef PROFILING
-    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-    elapsed = 1.0e6
-              * std::chrono::duration_cast<std::chrono::duration<double> >(
-                    std::chrono::high_resolution_clock::now() - start).count();
-    oclHandles.events.push_back(elapsed);
-#endif
+    if(oclHandles.isActivated){
+        CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+        elapsed = 1.0e6
+                  * std::chrono::duration_cast<std::chrono::duration<double> >(
+                        std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
+    }
 }
 
 void fmpcell_propagate_generateRegions(unsigned int* grid,
@@ -872,9 +820,8 @@ void setFc(unsigned int batchSize,
     std::vector<int> h = channelsHeightPerInputLayer;
     std::vector<int> w = channelsWidthPerInputLayer;
 
-#ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({"FullyConnected", 0.0}));
-#endif
+    if(oclHandles.isActivated)
+        oclHandles.profiling.push_back(oclProfiling({"FullyConnected", 0.0}));
 
     for (unsigned int k = 0; k < channelsPerInputLayer.size(); ++k) {
         const unsigned int nbParams = c[k]*h[k]*w[k]*nbOutputs;
@@ -948,11 +895,11 @@ void fullyConnected(unsigned int nbChannels,
                     DATA_T *ones_vec_data,
                     std::vector<DATA_T*> weights_data)
 {
-#ifdef PROFILING
     double elapsed = 0.0;
-    const std::chrono::high_resolution_clock::time_point start
-        = std::chrono::high_resolution_clock::now();
-#endif
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
 
     /********CublasSgemm function used for the Fully Connected Layers**********/
     /**  This function performs the matrix-matrix multiplication
@@ -1075,13 +1022,13 @@ void fullyConnected(unsigned int nbChannels,
                                    *outputs_data) );
     }
 
-#ifdef PROFILING
-    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-    elapsed = 1.0e6
-              * std::chrono::duration_cast<std::chrono::duration<double> >(
-                    std::chrono::high_resolution_clock::now() - start).count();
-    oclHandles.events.push_back(elapsed);
-#endif
+    if(oclHandles.isActivated) {
+        CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+        elapsed = 1.0e6
+                  * std::chrono::duration_cast<std::chrono::duration<double> >(
+                        std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
+    }
 }
 
 /**** SoftMax Layer ****/
@@ -1100,9 +1047,8 @@ void setSoftmax(unsigned int batchSize,
     int h = channelsHeight;
     int w = channelsWidth;
 
-#ifdef PROFILING
-    oclHandles.profiling.push_back(oclProfiling({"SoftMax", 0.0}));
-#endif
+    if(oclHandles.isActivated)
+        oclHandles.profiling.push_back(oclProfiling({"SoftMax", 0.0}));
 
     CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(
         inputsTensor, context_tensorFormat, context_dataType, n, c, h, w));
@@ -1117,11 +1063,11 @@ void softmax(cudnnHandle_t& context_handle,
              cudnnTensorDescriptor_t outputsTensor,
              DATA_T** outputs_data)
 {
-#ifdef PROFILING
     double elapsed = 0.0;
-    const std::chrono::high_resolution_clock::time_point start
-        = std::chrono::high_resolution_clock::now();
-#endif
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
 
     DATA_T alpha = DATA_T(1);
     DATA_T beta = DATA_T(0);
@@ -1136,13 +1082,13 @@ void softmax(cudnnHandle_t& context_handle,
                                            outputsTensor,
                                            *outputs_data));
 
-#ifdef PROFILING
-    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-    elapsed = 1.0e6
-              * std::chrono::duration_cast<std::chrono::duration<double> >(
-                    std::chrono::high_resolution_clock::now() - start).count();
-    oclHandles.events.push_back(elapsed);
-#endif
+    if(oclHandles.isActivated) {
+        CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+        elapsed = 1.0e6
+                  * std::chrono::duration_cast<std::chrono::duration<double> >(
+                        std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
+    }
 }
 /****Targets Layers ****/
 void output_generation(unsigned int batchSize,
@@ -1165,17 +1111,17 @@ void output_generation(unsigned int batchSize,
                                  batchSize * nbOutputs * sizeof(DATA_T),
                                  cudaMemcpyDeviceToHost));
 
-#ifdef PROFILING
-    for (std::vector<double>::iterator it = oclHandles.events.begin(),
-                                       itBegin = oclHandles.events.begin(),
-                                       itEnd = oclHandles.events.end();
-         it != itEnd;
-         ++it) {
-        oclHandles.profiling[it - itBegin].processTime += (*it);
-    }
+    if(oclHandles.isActivated) {
+        for (std::vector<double>::iterator it = oclHandles.events.begin(),
+                                           itBegin = oclHandles.events.begin(),
+                                           itEnd = oclHandles.events.end();
+             it != itEnd;
+             ++it) {
+            oclHandles.profiling[it - itBegin].processTime += (*it);
+        }
 
-    oclHandles.events.clear();
-#endif
+        oclHandles.events.clear();
+    }
 
     for (unsigned int i = 0; i < batchSize; i++) {
 
@@ -1195,6 +1141,12 @@ void output_generation(unsigned int batchSize,
     }
     delete[] outputsData;
 }
+void set_output(unsigned int nbTarget)
+{
+    if(oclHandles.isActivated)
+      for(unsigned int i = 0; i < nbTarget; ++i)
+          oclHandles.profiling.push_back(oclProfiling({"memcpy_DevToHost", 0.0}));
+}
 
 void spatial_output_generation(unsigned int batchSize,
                                unsigned int nbOutputs,
@@ -1203,6 +1155,12 @@ void spatial_output_generation(unsigned int batchSize,
                                DATA_T* dataIn,
                                uint32_t* outputEstimated)
 {
+    double elapsed = 0.0;
+    std::chrono::high_resolution_clock::time_point start;
+
+    if(oclHandles.isActivated)
+        start = std::chrono::high_resolution_clock::now();
+
     const unsigned int size = nbOutputs * outputsHeight * outputsWidth;
     DATA_T* outputsData(NULL);
     if (outputsData == NULL) {
@@ -1217,17 +1175,7 @@ void spatial_output_generation(unsigned int batchSize,
                                  dataIn,
                                  batchSize * size * sizeof(DATA_T),
                                  cudaMemcpyDeviceToHost));
-#ifdef PROFILING
-    for (std::vector<double>::iterator it = oclHandles.events.begin(),
-                                       itBegin = oclHandles.events.begin(),
-                                       itEnd = oclHandles.events.end();
-         it != itEnd;
-         ++it) {
-        oclHandles.profiling[it - itBegin].processTime += (*it);
-    }
 
-    oclHandles.events.clear();
-#endif
     for (unsigned int i = 0; i < batchSize; i++) {
         for (unsigned int oy = 0; oy < outputsHeight; ++oy) {
             for (unsigned int ox = 0; ox < outputsWidth; ++ox) {
@@ -1236,14 +1184,22 @@ void spatial_output_generation(unsigned int batchSize,
                       + i * (outputsHeight * outputsWidth * nbOutputs);
                 DATA_T maxVal = outputsData[inputsIdx];
                 unsigned int outputMax = 0;
-                for (unsigned int output = 1; output < nbOutputs; ++output) {
-                    const unsigned int outputsIdx
-                        = ox + (oy + output * outputsHeight) * outputsWidth
-                          + i * (outputsHeight * outputsWidth * nbOutputs);
-                    if (outputsData[outputsIdx] > maxVal) {
-                        outputMax = output;
-                        maxVal = outputsData[outputsIdx];
+                if(nbOutputs > 1)
+                {
+                    for (unsigned int output = 1; output < nbOutputs; ++output) {
+                        const unsigned int outputsIdx
+                            = ox + (oy + output * outputsHeight) * outputsWidth
+                              + i * (outputsHeight * outputsWidth * nbOutputs);
+                        if (outputsData[outputsIdx] > maxVal) {
+                            outputMax = output;
+                            maxVal = outputsData[outputsIdx];
+                        }
                     }
+                }
+                else
+                {
+                    if(maxVal > 0.0)
+                      outputMax = 1;
                 }
                 outputEstimated[ox + oy * outputsWidth
                                 + i * (outputsHeight * outputsWidth)]
@@ -1252,58 +1208,27 @@ void spatial_output_generation(unsigned int batchSize,
         }
     }
 
-    delete[] outputsData;
-}
-
-/**** Confusion Matrix ****/
-void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
-{
-    std::cout << "\nConfusion matrix:\n";
-    std::cout << std::string(9 + 10 * nbOutputs, '-') << "\n";
-    std::cout << "| T \\ E |";
-
-    for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated)
-        std::cout << " " << std::setfill(' ') << std::setw(7) << estimated
-                  << " |";
-
-    std::cout << "\n" << std::string(9 + 10 * nbOutputs, '-') << "\n";
-
-    unsigned int total = 0;
-    unsigned int totalCorrect = 0;
-
-    for (unsigned int target = 0; target < nbOutputs; ++target) {
-        unsigned int targetCount = 0;
-
-        for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated)
-            targetCount += confusion[estimated + target * nbOutputs];
-
-        total += targetCount;
-        totalCorrect += confusion[target + target * nbOutputs];
-
-        std::cout << "| " << std::setfill(' ') << std::setw(5) << target
-                  << " |";
-
-        for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated)
-            std::cout << " " << std::setfill(' ') << std::setw(7)
-                      << confusion[estimated + target * nbOutputs] << " |";
-
-        std::cout << "\n";
-        std::cout << "|       |";
-
-        for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated) {
-            std::cout << " " << ESC_BG_LIGHT_YELLOW << std::setfill(' ')
-                      << std::setw(6) << std::fixed << std::setprecision(2)
-                      << 100.0
-                         * ((targetCount > 0)
-                                ? (confusion[estimated + target * nbOutputs]
-                                   / (double)targetCount)
-                                : 0.0) << "%" << ESC_ALL_OFF << " |";
-        }
-        std::cout << "\n";
+    if(oclHandles.isActivated) {
+        CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+        elapsed = 1.0e6
+                  * std::chrono::duration_cast<std::chrono::duration<double> >(
+                        std::chrono::high_resolution_clock::now() - start).count();
+        oclHandles.events.push_back(elapsed);
     }
 
-    std::cout << std::string(9 + 10 * nbOutputs, '-') << "\n"
-              << "T: Target    E: Estimated" << std::endl;
+    if(oclHandles.isActivated) {
+        for (std::vector<double>::iterator it = oclHandles.events.begin(),
+                                           itBegin = oclHandles.events.begin(),
+                                           itEnd = oclHandles.events.end();
+             it != itEnd;
+             ++it) {
+            oclHandles.profiling[it - itBegin].processTime += (*it);
+        }
+
+        oclHandles.events.clear();
+    }
+
+    delete[] outputsData;
 }
 
 /**** Debug Function ****/

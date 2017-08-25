@@ -32,9 +32,9 @@ N2D2::CPP_cuDNN_ConvCellExport::mRegistrarType(
 void N2D2::CPP_cuDNN_ConvCellExport::generate(ConvCell& cell,
                                               const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
+    Utils::createDirectories(dirName + "/dnn/include");
 
-    const std::string fileName = dirName + "/include/"
+    const std::string fileName = dirName + "/dnn/include/"
         + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
@@ -255,7 +255,7 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateCellProgramInitNetwork(
         << "                " << identifier << "_weights_cudnn,\n"
         << "                " << identifier << "_biases,\n"
         << "                " << identifier << "_bias_cudnn,\n"
-        << "                " << "context_handle,\n"
+        << "                " << "CudaContext::cudnnHandle(),\n"
         << "                " << "context_tensorFormat,\n"
         << "                " << "context_dataType,\n"
         << "                " << identifier << "_tensorDescIn,\n"
@@ -301,7 +301,7 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateCellProgramFunction(
 
     prog << proto
         << "(\n"
-        << "                " << "context_handle,\n"
+        << "                " << "CudaContext::cudnnHandle(),\n"
         << "                " << prefix + "_ACTIVATION,\n"
         << "                " << identifier + "_algo,\n"
         << "                " << identifier + "_Workspace,\n"

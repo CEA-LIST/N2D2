@@ -31,9 +31,9 @@ N2D2::CPP_cuDNN_FcCellExport::mRegistrarType(
 void N2D2::CPP_cuDNN_FcCellExport::generate(FcCell& cell,
                                             const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/include");
+    Utils::createDirectories(dirName + "/dnn/include");
 
-    const std::string fileName = dirName + "/include/"
+    const std::string fileName = dirName + "/dnn/include/"
         + Utils::CIdentifier(cell.getName()) + ".hpp";
 
     std::ofstream header(fileName.c_str());
@@ -350,8 +350,8 @@ void N2D2::CPP_cuDNN_FcCellExport::generateCellProgramFunction(
     prog << proto
         << "(\n"
         << "                " << prefix + "_NB_CHANNELS,\n"
-        << "                " << "context_handle,\n"
-        << "                " << "context_cublasHandle,\n"
+        << "                " << "CudaContext::cudnnHandle(),\n"
+        << "                " << "CudaContext::cublasHandle(),\n"
         << "                " << prefix + "_ACTIVATION,\n"
         << "                " << identifier + "_tensorDescIn,\n"
         << "                " << inputName + ",\n"

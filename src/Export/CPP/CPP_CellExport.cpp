@@ -41,8 +41,8 @@ void N2D2::CPP_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header
 void N2D2::CPP_CellExport::generateHeaderIncludes(Cell& /*cell*/,
                                                 std::ofstream& header)
 {
-    header << "#include \"typedefs.h\"\n";
-    header << "#include \"utils.h\"\n";
+    header << "#include \"../../include/typedefs.h\"\n";
+    header << "#include \"../../include/utils.h\"\n";
 }
 
 void N2D2::CPP_CellExport::generateHeaderEnd(Cell& cell, std::ofstream& header)

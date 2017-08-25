@@ -155,8 +155,7 @@ TEST(CPP_cuDNN_Export, generate)
     cmd = "cp -r tests_data/stimuli_32f/* export_CPP_cuDNN_float32/stimuli/";
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 
-    cmd =
-    "cd export_CPP_cuDNN_float32/ && make OUTPUTFILE=1 NRET=1";
+    cmd = "cd export_CPP_cuDNN_float32/ && make OUTPUTFILE=1 NRET=1";
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 
     REQUIRED(UnitTest::CudaDeviceExists(3));

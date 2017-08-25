@@ -44,11 +44,15 @@ public:
                                        const std::string& fileName);
     static void generateHeaderConstants(DeepNet& deepNet,
                                         std::ofstream& header);
-    static void generateHeaderInit(DeepNet& deepNet, std::ofstream& header);
+    static void generateHeaderInit(DeepNet& deepNet,
+                                   const std::string& name,
+                                   std::ofstream& header);
     static void generateHeaderFunction(DeepNet& deepNet,
                                        const std::string& name,
                                        std::ofstream& header);
-    static void generateHeaderFree(DeepNet& deepNet, std::ofstream& header);
+    static void generateHeaderFree(DeepNet& deepNet,
+                                    const std::string& name,
+                                    std::ofstream& header);
 
     static void generateProgramBegin(DeepNet& deepNet,
                                      std::ofstream& prog);
@@ -56,10 +60,14 @@ public:
     static void generateProgramGlobalDefinition(DeepNet& deepNet,
                                                 std::ofstream& prog);
     static void generateProgramInitNetwork(DeepNet& deepNet,
+                                           const std::string& name,
                                            std::ofstream& prog);
     static void generateProgramFunction(DeepNet& deepNet,
                                         const std::string& name,
                                         std::ofstream& prog);
+    static void generateOutputFunction(const std::string& name,
+                                        std::ofstream& prog);
+
     static void generateProgramFree(DeepNet& deepNet, std::ofstream& prog);
 
 private:

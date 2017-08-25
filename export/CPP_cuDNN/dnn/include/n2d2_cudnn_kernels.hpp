@@ -22,7 +22,7 @@
 #ifndef DEEPNET_CUDNN_KERNELS_H
 #define DEEPNET_CUDNN_KERNELS_H
 
-#include "typedefs.h"
+#include "../../include/typedefs.h"
 #include <cfloat>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
