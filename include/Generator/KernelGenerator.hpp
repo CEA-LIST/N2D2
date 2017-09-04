@@ -50,7 +50,7 @@ N2D2::Kernel<T> N2D2::KernelGenerator::generate(IniParser& iniConfig,
                                                 const std::string& section,
                                                 const std::string& name)
 {
-    if (!iniConfig.currentSection(section))
+    if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
     const std::string kernelName = iniConfig.getProperty
