@@ -42,11 +42,13 @@ public:
         return std::make_shared<AnchorCell_Frame>(name, sp, anchors);
     }
 
+    virtual const std::vector<BBox_T>& getGT(unsigned int batchPos) const;
     virtual std::shared_ptr<ROI> getAnchorROI(const Tensor4d<int>::Index& index)
         const;
     virtual BBox_T getAnchorBBox(const Tensor4d<int>::Index& index) const;
     virtual BBox_T getAnchorGT(const Tensor4d<int>::Index& index) const;
     virtual Float_T getAnchorIoU(const Tensor4d<int>::Index& index) const;
+    virtual int getAnchorArgMaxIoU(const Tensor4d<int>::Index& index) const;
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();

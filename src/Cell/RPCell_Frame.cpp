@@ -48,20 +48,20 @@ void N2D2::RPCell_Frame::propagate(bool inference)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         // Collect all ROIs in the "ROIs" vector
         std::vector<std::pair<Tensor4d<int>::Index, Float_T> > ROIs;
+        ROIs.reserve(mNbAnchors * mInputs[0].dimY() * mInputs[0].dimX());
 
         for (unsigned int k = 0; k < mNbAnchors; ++k) {
             for (unsigned int y = 0; y < mInputs[0].dimY(); ++y) {
                 for (unsigned int x = 0; x < mInputs[0].dimX(); ++x) {
                     const Float_T value = mInputs(x,
                                                   y,
-                                                  k + ((inference)
-                                                       ? mScoreIndex
-                                                       : mIoUIndex)
-                                                    * mNbAnchors,
+                                                  k + mScoreIndex * mNbAnchors,
                                                   batchPos);
 
-                    ROIs.push_back(std::make_pair(
-                        Tensor4d<int>::Index(x, y, k, batchPos), value));
+                    if (value >= 0.0) {
+                        ROIs.push_back(std::make_pair(
+                            Tensor4d<int>::Index(x, y, k, batchPos), value));
+                    }
                 }
             }
         }
@@ -69,14 +69,13 @@ void N2D2::RPCell_Frame::propagate(bool inference)
         // Sort ROIs by value
         std::sort(ROIs.begin(),
                   ROIs.end(),
-                  Utils::PairSecondPred<Tensor4d<int>::Index, Float_T>());
+                  Utils::PairSecondPred<Tensor4d<int>::Index, Float_T,
+                    std::greater<Float_T> >());
 
         if (inference) {
             // Non-Maximum Suppression (NMS)
-            std::vector<std::pair<Tensor4d<int>::Index, Float_T> > NMS_ROIs;
-
-            while (!ROIs.empty()) {
-                const Tensor4d<int>::Index& ROIMax = ROIs.back().first;
+            for (unsigned int i = 0; i < ROIs.size() - 1; ++i) {
+                const Tensor4d<int>::Index& ROIMax = ROIs[i].first;
 
                 const Float_T x0 = mInputs(ROIMax.i,
                                            ROIMax.j,
@@ -95,11 +94,8 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                                            ROIMax.k + 4 * mNbAnchors,
                                            ROIMax.b);
 
-                NMS_ROIs.push_back(ROIs.back());
-                ROIs.pop_back();
-
-                for (unsigned int i = 0; i < ROIs.size(); ) {
-                    const Tensor4d<int>::Index& ROI = ROIs[i].first;
+                for (unsigned int j = i + 1; j < ROIs.size(); ) {
+                    const Tensor4d<int>::Index& ROI = ROIs[j].first;
 
                     const Float_T x = mInputs(ROI.i,
                                               ROI.j,
@@ -131,52 +127,52 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
                         if (IoU > mNMS_IoU_Threshold) {
                             // Suppress ROI
-                            ROIs.erase(ROIs.begin() + i);
+                            ROIs.erase(ROIs.begin() + j);
                             continue;
                         }
                     }
 
-                    ++i;
+                    ++j;
                 }
             }
 /*
             // DEBUG
-            std::cout << "RPCell NMS: " << NMS_ROIs.size() << " ROIs out of "
+            std::cout << "RPCell NMS: " << ROIs.size() << " ROIs out of "
                 << (mNbAnchors * mInputs[0].dimX() * mInputs[0].dimY())
                 << " remaining" << std::endl;
 
             for (unsigned int i = 0,
-                size = std::min(5, (int)NMS_ROIs.size() - 1);
+                size = std::min(5, (int)ROIs.size() - 1);
                 i < size; ++i)
             {
-                std::cout << "  " << NMS_ROIs[i].first.i
-                    << "x" << NMS_ROIs[i].first.j << ": " << NMS_ROIs[i].second
+                std::cout << "  " << ROIs[i].first.i
+                    << "x" << ROIs[i].first.j << ": " << ROIs[i].second
                     << std::endl;
             }
 */
             // Keep the top-N ROIs
             for (unsigned int n = 0; n < mNbProposals; ++n) {
                 mOutputs(0, n + batchPos * mNbProposals)
-                    = mInputs(NMS_ROIs[n].first.i,
-                              NMS_ROIs[n].first.j,
-                              NMS_ROIs[n].first.k + 1 * mNbAnchors,
-                              NMS_ROIs[n].first.b);
+                    = mInputs(ROIs[n].first.i,
+                              ROIs[n].first.j,
+                              ROIs[n].first.k + 1 * mNbAnchors,
+                              ROIs[n].first.b);
                 mOutputs(1, n + batchPos * mNbProposals)
-                    = mInputs(NMS_ROIs[n].first.i,
-                              NMS_ROIs[n].first.j,
-                              NMS_ROIs[n].first.k + 2 * mNbAnchors,
-                              NMS_ROIs[n].first.b);
+                    = mInputs(ROIs[n].first.i,
+                              ROIs[n].first.j,
+                              ROIs[n].first.k + 2 * mNbAnchors,
+                              ROIs[n].first.b);
                 mOutputs(2, n + batchPos * mNbProposals)
-                    = mInputs(NMS_ROIs[n].first.i,
-                              NMS_ROIs[n].first.j,
-                              NMS_ROIs[n].first.k + 3 * mNbAnchors,
-                              NMS_ROIs[n].first.b);
+                    = mInputs(ROIs[n].first.i,
+                              ROIs[n].first.j,
+                              ROIs[n].first.k + 3 * mNbAnchors,
+                              ROIs[n].first.b);
                 mOutputs(3, n + batchPos * mNbProposals)
-                    = mInputs(NMS_ROIs[n].first.i,
-                              NMS_ROIs[n].first.j,
-                              NMS_ROIs[n].first.k + 4 * mNbAnchors,
-                              NMS_ROIs[n].first.b);
-                mAnchors[n + batchPos * mNbProposals] = NMS_ROIs[n].first;
+                    = mInputs(ROIs[n].first.i,
+                              ROIs[n].first.j,
+                              ROIs[n].first.k + 4 * mNbAnchors,
+                              ROIs[n].first.b);
+                mAnchors[n + batchPos * mNbProposals] = ROIs[n].first;
             }
         }
         else {
@@ -184,10 +180,12 @@ void N2D2::RPCell_Frame::propagate(bool inference)
             // DEBUG
             std::cout << "Top-5 IoU ROIs:" << std::endl;
 
-            for (int i = ROIs.size() - 1; i >= 0 && i >= (int)ROIs.size() - 5;
+            for (int i = ROIs.size() - 1; i >= 0
+                && i >= (int)ROIs.size() - 5;
                 --i)
             {
-                std::cout << "  " << ROIs[i].first.i << "x" << ROIs[i].first.j
+                std::cout << "  " << ROIs[i].first.i << "x"
+                    << ROIs[i].first.j
                     << ": " << ROIs[i].second << std::endl;
             }
 */
@@ -202,25 +200,17 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
             for (unsigned int i = 0, size = ROIs.size(); i < size; ++i) {
                 const Tensor4d<int>::Index& ROI = ROIs[i].first;
-                const Float_T IoU = ROIs[i].second;
+                const Float_T IoU = mInputs(ROI.i,
+                                            ROI.j,
+                                            ROI.k + mIoUIndex * mNbAnchors,
+                                            ROI.b);
 
                 if (IoU >= mForegroundMinIoU)
                     foregroundIoU.push_back(ROI);
                 else if (IoU > mBackgroundMinIoU && IoU < mBackgroundMaxIoU)
                     backgroundIoU.push_back(ROI);
-                else {
-                    if (mInputs(ROI.i,
-                              ROI.j,
-                              ROI.k + 1 * mNbAnchors,
-                              batchPos) >= 0
-                        && mInputs(ROI.i,
-                              ROI.j,
-                              ROI.k + 2 * mNbAnchors,
-                              batchPos) >= 0)
-                    {
-                        remainingIoU.push_back(ROI);
-                    }
-                }
+                else
+                    remainingIoU.push_back(ROI);
             }
 /*
             // DEBUG
