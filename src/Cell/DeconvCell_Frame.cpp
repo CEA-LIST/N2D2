@@ -67,15 +67,46 @@ void N2D2::DeconvCell_Frame::initialize()
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
-        // Weight filler expect dimZ as input and dimB as output
-        Tensor4d<Float_T>* sharedSynapses = new Tensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs);
-        mWeightsFiller->apply(*sharedSynapses);
-        // Inverse dimZ and dimB for Deconv
-        sharedSynapses->resize(
-            mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ());
+        std::map<unsigned int,
+            std::pair<Interface<Float_T>*, unsigned int> >::const_iterator
+                it = mExtSharedSynapses.find(k);
 
-        mSharedSynapses.push_back(sharedSynapses);
+        if (it != mExtSharedSynapses.end()) {
+            Tensor4d<Float_T>* extWeights
+                = &(*((*it).second.first))[(*it).second.second];
+
+            if (extWeights->dimX() != mKernelWidth
+                || extWeights->dimY() != mKernelHeight
+                || extWeights->dimZ() != mNbOutputs
+                || extWeights->dimB() != mInputs[k].dimZ())
+            {
+                std::stringstream errorStr;
+                errorStr << "DeconvCell_Frame::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dimX() << "x"
+                    << extWeights->dimY() << "x"
+                    << extWeights->dimZ() << "x"
+                    << extWeights->dimB() << ") and expected dim. ("
+                    << mKernelWidth << "x" << mKernelHeight << "x"
+                    << mNbOutputs << "x" << mInputs[k].dimZ() << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            // Weight filler expect dimZ as input and dimB as output
+            Tensor4d<Float_T>* sharedSynapses = new Tensor4d<Float_T>(
+                mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs);
+            mWeightsFiller->apply(*sharedSynapses);
+            // Inverse dimZ and dimB for Deconv
+            sharedSynapses->resize(
+                mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ());
+
+            mSharedSynapses.push_back(sharedSynapses);
+        }
+
         mDiffSharedSynapses.push_back(new Tensor4d<Float_T>(
             mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()));
     }
@@ -169,6 +200,13 @@ void N2D2::DeconvCell_Frame::update()
 
     if (!mNoBias)
         mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+}
+
+void N2D2::DeconvCell_Frame::setWeights(unsigned int k,
+                                        Interface<Float_T>* weights,
+                                        unsigned int offset)
+{
+    mExtSharedSynapses[k] = std::make_pair(weights, offset);
 }
 
 void N2D2::DeconvCell_Frame::checkGradient(double epsilon, double maxError)

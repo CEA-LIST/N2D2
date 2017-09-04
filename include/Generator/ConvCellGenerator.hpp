@@ -37,9 +37,14 @@ public:
                                               <std::shared_ptr<Cell> >& parents,
                                               IniParser& iniConfig,
                                               const std::string& section);
+    static void postGenerate(const std::shared_ptr<Cell>& cell,
+                             const std::shared_ptr<DeepNet>& deepNet,
+                             IniParser& iniConfig,
+                             const std::string& section);
 
 private:
     static Registrar<CellGenerator> mRegistrar;
+    static RegistrarCustom<CellGenerator, RegistryPostCreate_T> mRegistrarPost;
 };
 }
 

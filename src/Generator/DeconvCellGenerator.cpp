@@ -23,6 +23,10 @@
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::DeconvCellGenerator::mRegistrar(DeconvCell::Type,
                                       N2D2::DeconvCellGenerator::generate);
+N2D2::RegistrarCustom<N2D2::CellGenerator,
+N2D2::CellGenerator::RegistryPostCreate_T>
+N2D2::DeconvCellGenerator::mRegistrarPost(DeconvCell::Type + std::string("+"),
+                                      N2D2::DeconvCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::DeconvCell>
 N2D2::DeconvCellGenerator::generate(Network& network,
@@ -210,4 +214,63 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     cell->writeMap("map/" + section + "_map.dat");
 
     return cell;
+}
+
+void N2D2::DeconvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
+                                             const std::shared_ptr
+                                             <DeepNet>& deepNet,
+                                             IniParser& iniConfig,
+                                             const std::string& section)
+{
+    if (!iniConfig.currentSection(section))
+        throw std::runtime_error("Missing [" + section + "] section.");
+
+    if (!iniConfig.isProperty("WeightsSharing"))
+        return;
+
+    const std::vector<std::string> weightsSharing
+        = Utils::split(iniConfig.getProperty<std::string>("WeightsSharing"),
+                       ",");
+
+    std::shared_ptr<DeconvCell> deconvCell
+        = std::dynamic_pointer_cast<DeconvCell>(cell);
+
+    for (unsigned int k = 0, size = weightsSharing.size(); k < size; ++k) {
+        if (weightsSharing[k].empty())
+            continue;
+
+        bool found = false;
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+            itCells = deepNet->getCells().begin(),
+             itCellsEnd = deepNet->getCells().end();
+             itCells != itCellsEnd;
+             ++itCells)
+        {
+            if ((*itCells).first == weightsSharing[k]) {
+                std::shared_ptr<DeconvCell> cellRef = std::dynamic_pointer_cast
+                    <DeconvCell>((*itCells).second);
+
+                if (!cellRef) {
+                    throw std::runtime_error("Cell name \"" + weightsSharing[k]
+                                             + "\" is not a DeconvCell for"
+                                             " WeightsSharing [" + section
+                                             + "] in network configuration file: "
+                                             + iniConfig.getFileName());
+                }
+
+                deconvCell->setWeights(k, cellRef->getWeights(), k);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Cell name \"" + weightsSharing[k]
+                                     + "\" not found for WeightsSharing ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
 }

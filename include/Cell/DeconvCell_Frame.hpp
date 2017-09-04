@@ -78,6 +78,13 @@ public:
     {
         return mBias(output);
     };
+    inline Interface<Float_T>* getWeights()
+    {
+        return &mSharedSynapses;
+    };
+    void setWeights(unsigned int k,
+                    Interface<Float_T>* weights,
+                    unsigned int offset);
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,
@@ -102,6 +109,8 @@ protected:
     // Internal
     std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
     Interface<Float_T> mSharedSynapses;
+    std::map<unsigned int,
+        std::pair<Interface<Float_T>*, unsigned int> > mExtSharedSynapses;
     Tensor4d<Float_T> mBias;
     Interface<Float_T> mDiffSharedSynapses;
     Tensor4d<Float_T> mDiffBias;

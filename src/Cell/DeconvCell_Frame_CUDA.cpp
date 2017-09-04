@@ -100,31 +100,62 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
-        // Weight filler expect dimZ as input and dimB as output
-        CudaTensor4d<Float_T>* sharedSynapses = new CudaTensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs);
-        mWeightsFiller->apply(*sharedSynapses);
-        // Inverse dimZ and dimB for Deconv
-        sharedSynapses->resize(
-            mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ());
+        std::map<unsigned int,
+            std::pair<CudaInterface<Float_T>*, unsigned int> >::const_iterator
+                it = mExtSharedSynapses.find(k);
 
-        mSharedSynapses.push_back(sharedSynapses);
-        mDiffSharedSynapses.push_back(new CudaTensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()));
+        if (it != mExtSharedSynapses.end()) {
+            CudaTensor4d<Float_T>* extWeights
+                = &(*((*it).second.first))[(*it).second.second];
 
-        if (!isFullMap()) {
-            // Set the non-connected kernels coefficients to 0
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
-                     ++channel) {
-                    if (!isConnection(channel, output))
-                        mSharedSynapses.back()[channel][output] = Tensor2d
-                            <Float_T>(mKernelWidth, mKernelHeight, 0.0);
+            if (extWeights->dimX() != mKernelWidth
+                || extWeights->dimY() != mKernelHeight
+                || extWeights->dimZ() != mNbOutputs
+                || extWeights->dimB() != mInputs[k].dimZ())
+            {
+                std::stringstream errorStr;
+                errorStr << "DeconvCell_Frame_CUDA::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dimX() << "x"
+                    << extWeights->dimY() << "x"
+                    << extWeights->dimZ() << "x"
+                    << extWeights->dimB() << ") and expected dim. ("
+                    << mKernelWidth << "x" << mKernelHeight << "x"
+                    << mNbOutputs << "x" << mInputs[k].dimZ() << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            // Weight filler expect dimZ as input and dimB as output
+            CudaTensor4d<Float_T>* sharedSynapses = new CudaTensor4d<Float_T>(
+                mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs);
+            mWeightsFiller->apply(*sharedSynapses);
+            // Inverse dimZ and dimB for Deconv
+            sharedSynapses->resize(
+                mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ());
+
+            mSharedSynapses.push_back(sharedSynapses);
+
+            if (!isFullMap()) {
+                // Set the non-connected kernels coefficients to 0
+                for (unsigned int output = 0; output < mNbOutputs; ++output) {
+                    for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                         ++channel) {
+                        if (!isConnection(channel, output))
+                            mSharedSynapses.back()[channel][output] = Tensor2d
+                                <Float_T>(mKernelWidth, mKernelHeight, 0.0);
+                    }
                 }
             }
+
+            mSharedSynapses.back().synchronizeHToD();
         }
 
-        mSharedSynapses.back().synchronizeHToD();
+        mDiffSharedSynapses.push_back(new CudaTensor4d<Float_T>(
+            mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()));
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
@@ -413,6 +444,21 @@ void N2D2::DeconvCell_Frame_CUDA::update()
 
     if (!mNoBias)
         mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+}
+
+void N2D2::DeconvCell_Frame_CUDA::setWeights(unsigned int k,
+                                             Interface<Float_T>* weights,
+                                             unsigned int offset)
+{
+    CudaInterface<Float_T>* cudaWeights
+        = dynamic_cast<CudaInterface<Float_T>*>(weights);
+
+    if (cudaWeights == NULL) {
+        throw std::runtime_error("DeconvCell_Frame_CUDA::setWeights(): weights"
+                                 " must be a CudaInterface");
+    }
+
+    mExtSharedSynapses[k] = std::make_pair(cudaWeights, offset);
 }
 
 void N2D2::DeconvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)

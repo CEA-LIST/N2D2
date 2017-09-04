@@ -68,11 +68,43 @@ void N2D2::ConvCell_Frame::initialize()
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
-        mSharedSynapses.push_back(new Tensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
+
+        std::map<unsigned int,
+            std::pair<Interface<Float_T>*, unsigned int> >::const_iterator
+                it = mExtSharedSynapses.find(k);
+
+        if (it != mExtSharedSynapses.end()) {
+            Tensor4d<Float_T>* extWeights
+                = &(*((*it).second.first))[(*it).second.second];
+
+            if (extWeights->dimX() != mKernelWidth
+                || extWeights->dimY() != mKernelHeight
+                || extWeights->dimZ() != mInputs[k].dimZ()
+                || extWeights->dimB() != mNbOutputs)
+            {
+                std::stringstream errorStr;
+                errorStr << "ConvCell_Frame::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dimX() << "x"
+                    << extWeights->dimY() << "x"
+                    << extWeights->dimZ() << "x"
+                    << extWeights->dimB() << ") and expected dim. ("
+                    << mKernelWidth << "x" << mKernelHeight << "x"
+                    << mInputs[k].dimZ() << "x" << mNbOutputs << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            mSharedSynapses.push_back(new Tensor4d<Float_T>(
+                mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
+            mWeightsFiller->apply(mSharedSynapses.back());
+        }
+
         mDiffSharedSynapses.push_back(new Tensor4d<Float_T>(
             mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
-        mWeightsFiller->apply(mSharedSynapses.back());
     }
 }
 
@@ -163,6 +195,13 @@ void N2D2::ConvCell_Frame::update()
 
     if (!mNoBias)
         mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+}
+
+void N2D2::ConvCell_Frame::setWeights(unsigned int k,
+                                      Interface<Float_T>* weights,
+                                      unsigned int offset)
+{
+    mExtSharedSynapses[k] = std::make_pair(weights, offset);
 }
 
 void N2D2::ConvCell_Frame::checkGradient(double epsilon, double maxError)

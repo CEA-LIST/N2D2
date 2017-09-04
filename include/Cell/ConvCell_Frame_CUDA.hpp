@@ -82,6 +82,13 @@ public:
                              unsigned int sx,
                              unsigned int sy) const;
     inline Float_T getBias(unsigned int output) const;
+    inline Interface<Float_T>* getWeights()
+    {
+        return &mSharedSynapses;
+    };
+    void setWeights(unsigned int k,
+                    Interface<Float_T>* weights,
+                    unsigned int offset);
     void checkGradient(double /*epsilon*/ = 1.0e-4,
                        double /*maxError*/ = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
@@ -111,6 +118,8 @@ protected:
     // Internal
     std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
     CudaInterface<Float_T> mSharedSynapses;
+    std::map<unsigned int,
+        std::pair<CudaInterface<Float_T>*, unsigned int> > mExtSharedSynapses;
     CudaTensor4d<Float_T> mBias;
     CudaInterface<Float_T> mDiffSharedSynapses;
     CudaTensor4d<Float_T> mDiffBias;

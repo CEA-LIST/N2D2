@@ -32,6 +32,7 @@
 #include "Filler/NormalFiller.hpp"
 #include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
+#include "controler/Interface.hpp"
 
 #ifdef WIN32
 // For static library
@@ -171,6 +172,10 @@ public:
                    unsigned int channel,
                    const Matrix<double>& value,
                    bool normalize);
+    virtual Interface<Float_T>* getWeights() { return NULL; };
+    virtual void setWeights(unsigned int /*k*/,
+                    Interface<Float_T>* /*weights*/,
+                    unsigned int /*offset*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
