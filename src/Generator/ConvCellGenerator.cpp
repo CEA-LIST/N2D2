@@ -140,6 +140,9 @@ N2D2::ConvCellGenerator::generate(Network& network,
                                                         "WeightsSolver.");
     }
 
+    // Will be processed in postGenerate
+    iniConfig.ignoreProperty("WeightsSharing");
+
     cell->setParameters(params);
 
     // Load configuration file (if exists)
