@@ -22,11 +22,22 @@
 if [ -n "$USE_CMAKE" ] ; then
     mkdir build
     cd build
-    cmake .. && make -j $NUM_THREADS
-else
-    if [ -n "$USE_CUDA" ] ; then
-        make -j $NUM_THREADS CUDA=1
+    if [ -n "$CHECK_COVERAGE" ] ; then
+        cmake .. -DCHECK_COVERAGE=ON && make -j $NUM_THREADS
     else
-        make -j $NUM_THREADS
+        cmake .. && make -j $NUM_THREADS
     fi
+else
+    ARGS=""
+
+    if [ -n "$USE_CUDA" ] ; then
+        ARGS="$ARGS CUDA=1"
+    fi
+
+    if [ -n "$CHECK_COVERAGE" ] ; then
+        ARGS="$ARGS CHECK_COVERAGE=1"
+    fi
+
+    make -j $NUM_THREADS $ARGS
 fi
+

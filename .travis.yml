@@ -24,21 +24,48 @@ sudo: required
 # Enable C++ support
 language: cpp
 
-# Compiler selection
-compiler:
-  #- clang
-  - gcc
-
 env:
   global:
     - NUM_THREADS=4
     - LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/cuda/lib:/lib64:/lib:/usr/lib64:/usr/lib:/usr/local/lib"
 
-  matrix:
-    - BUILD_NAME="make"
-    - BUILD_NAME="make-cuda" USE_CUDA=1
-    - BUILD_NAME="cmake" USE_CMAKE=1
-    - BUILD_NAME="cmake-cuda" USE_CMAKE=1 USE_CUDA=1
+matrix:
+  include:
+  - os: linux
+    compiler: gcc
+    env:
+      - BUILD_NAME="make"
+  - os: linux
+    compiler: gcc
+    env:
+      - BUILD_NAME="make-cuda"
+      - USE_CUDA=1
+  - os: linux
+    compiler: gcc
+    env:
+      - BUILD_NAME="cmake"
+      - USE_CMAKE=1
+  - os: linux
+    compiler: gcc
+    env:
+      - BUILD_NAME="cmake-cuda"
+      - USE_CMAKE=1
+      - USE_CUDA=1
+  - os: linux
+    compiler: gcc
+    apt:
+      packages:
+      - lcov
+    before_script:
+      - gem install coveralls-lcov
+    after_success:
+      - lcov -b . -d . -c -o ./coverage.info --no-external
+      - lcov -r coverage.info "tests/*" -o coverage.info
+      - overalls-lcov coverage.info
+    env:
+      - BUILD_NAME="make-cuda-coverage"
+      - USE_CUDA=1
+      - CHECK_COVERAGE=1
 
 cache:
   apt: true

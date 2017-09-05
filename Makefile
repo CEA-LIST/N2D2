@@ -108,7 +108,13 @@ ifeq ($(CXX),icpc)
   LDFLAGS:=$(LDFLAGS) -w2 -Wall -Wcheck $(OPT)
 else
   ifndef DEBUG
-    OPT:=-O3 -s -DNDEBUG -Werror
+    OPT:=-Werror
+
+    ifdef CHECK_COVERAGE
+      OPT:=$(OPT) -O0 -g
+    else
+      OPT:=$(OPT) -O3 -s -DNDEBUG
+    endif
 
     ifndef NOPARALLEL
       OPT:=$(OPT) -fopenmp
@@ -123,6 +129,11 @@ else
 
   CPPFLAGS:=$(CPPFLAGS) -Wall -Wextra -pedantic -fsigned-char -std=c++0x -fPIC $(OPT)
   LDFLAGS:=$(LDFLAGS) -Wall -Wextra -pedantic -std=c++0x -fPIC $(OPT)
+
+  ifdef CHECK_COVERAGE
+    CPPFLAGS:=$(CPPFLAGS) -fprofile-arcs -ftest-coverage
+    NVFLAGS:=$(NVFLAGS) -lgcov
+  endif
 endif
 
 CPPFLAGS:=$(CPPFLAGS) $(foreach path,$(PARENT),-I$(path)/include/)

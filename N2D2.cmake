@@ -21,7 +21,7 @@
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 
-OPTION(COVERALLS "Generate coveralls data" OFF)
+OPTION(CHECK_COVERAGE "Generate coveralls data" OFF)
 
 if (NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "No build type selected, default to Release")
@@ -170,9 +170,10 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENCV_USE_OLD_HEADERS")
     endif()
 
-    if(COVERALLS)
+    if(CHECK_COVERAGE)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcov")
     else()
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -s -DNDEBUG")
     endif()
