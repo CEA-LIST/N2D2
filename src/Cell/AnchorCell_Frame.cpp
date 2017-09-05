@@ -83,7 +83,7 @@ N2D2::AnchorCell_Frame::getAnchorGT(const Tensor4d<int>::Index& index) const
 
     const int argMaxIoU = mArgMaxIoU(index);
 
-    assert(argMaxIoU < 0 || argMaxIoU < mGT[index.b].size());
+    assert(argMaxIoU < 0 || argMaxIoU < (int)mGT[index.b].size());
 
     return ((argMaxIoU >= 0)
         ? mGT[index.b][argMaxIoU]
