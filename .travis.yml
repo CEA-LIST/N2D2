@@ -53,15 +53,13 @@ matrix:
       - USE_CUDA=1
   - os: linux
     compiler: gcc
-    apt:
-      packages:
-      - lcov
     before_script:
+      - sudo apt-get install -y lcov
       - gem install coveralls-lcov
     after_success:
       - lcov -b . -d . -c -o ./coverage.info --no-external
       - lcov -r coverage.info "tests/*" -o coverage.info
-      - overalls-lcov coverage.info
+      - coveralls-lcov coverage.info
     env:
       - BUILD_NAME="make-cuda-coverage"
       - USE_CUDA=1
