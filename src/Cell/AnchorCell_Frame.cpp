@@ -49,7 +49,7 @@ N2D2::AnchorCell_Frame::getAnchorROI(const Tensor4d<int>::Index& index) const
     if (argMaxIoU >= 0) {
         std::vector<std::shared_ptr<ROI> > labelROIs
             = mStimuliProvider.getLabelsROIs(index.b);
-        assert(argMaxIoU < labelROIs.size());
+        assert(argMaxIoU < (int)labelROIs.size());
         return labelROIs[argMaxIoU];
     }
     else
