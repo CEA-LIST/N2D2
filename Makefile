@@ -132,7 +132,7 @@ else
 
   ifdef CHECK_COVERAGE
     CPPFLAGS:=$(CPPFLAGS) -fprofile-arcs -ftest-coverage
-    NVFLAGS:=$(NVFLAGS) -lgcov
+    LDFLAGS:=$(LDFLAGS) -lgcov
   endif
 endif
 
