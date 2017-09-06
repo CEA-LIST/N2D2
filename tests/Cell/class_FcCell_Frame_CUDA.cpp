@@ -222,7 +222,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
                           0.0f); // Warning: 0.0 leads to wrong results!
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
-        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-12);
+        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
     }
 }
 
