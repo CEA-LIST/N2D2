@@ -32,18 +32,48 @@ N2D2::BatchNormCell::BatchNormCell(const std::string& name,
 void N2D2::BatchNormCell::exportFreeParameters(const std::string
                                                & fileName) const
 {
-    std::ofstream syn(fileName.c_str());
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
 
-    if (!syn.good())
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const std::string scalesFile = fileBase + "_scales" + fileExt;
+    const std::string biasesFile = fileBase + "_biases" + fileExt;
+    const std::string meansFile = fileBase + "_means" + fileExt;
+    const std::string variancesFile = fileBase + "_variances" + fileExt;
+
+    std::ofstream scales(scalesFile.c_str());
+
+    if (!scales.good())
         throw std::runtime_error("Could not create parameter file: "
-                                 + fileName);
+                                 + scalesFile);
+
+    std::ofstream biases(biasesFile.c_str());
+
+    if (!biases.good())
+        throw std::runtime_error("Could not create parameter file: "
+                                 + biasesFile);
+
+    std::ofstream means(meansFile.c_str());
+
+    if (!means.good())
+        throw std::runtime_error("Could not create parameter file: "
+                                 + meansFile);
+
+    std::ofstream variances(variancesFile.c_str());
+
+    if (!variances.good())
+        throw std::runtime_error("Could not create parameter file: "
+                                 + variancesFile);
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         for (unsigned int oy = 0; oy < 1; ++oy) {
             for (unsigned int ox = 0; ox < 1; ++ox) {
-                syn << getScale(output, ox, oy) << " "
-                    << getBias(output, ox, oy) << " " << getMean(output, ox, oy)
-                    << " " << getVariance(output, ox, oy) << "\n";
+                scales << getScale(output, ox, oy) << "\n";
+                biases << getBias(output, ox, oy) << "\n";
+                means << getMean(output, ox, oy) << "\n";
+                variances << getVariance(output, ox, oy) << "\n";
             }
         }
     }
@@ -52,46 +82,97 @@ void N2D2::BatchNormCell::exportFreeParameters(const std::string
 void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
                                                bool ignoreNotExists)
 {
-    std::ifstream syn(fileName.c_str());
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
 
-    if (!syn.good()) {
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const bool singleFile = (std::ifstream(fileName.c_str()).good());
+    const std::string scalesFile = (singleFile) ? fileName
+        : fileBase + "_scales" + fileExt;
+    const std::string biasesFile = (singleFile) ? fileName
+        : fileBase + "_biases" + fileExt;
+    const std::string meansFile = (singleFile) ? fileName
+        : fileBase + "_means" + fileExt;
+    const std::string variancesFile = (singleFile) ? fileName
+        : fileBase + "_variances" + fileExt;
+
+    std::ifstream biases(biasesFile.c_str());
+
+    if (!biases.good()) {
         if (ignoreNotExists) {
             std::cout << Utils::cnotice
-                      << "Notice: Could not open parameter file: " << fileName
+                      << "Notice: Could not open synaptic file: " << biasesFile
                       << Utils::cdef << std::endl;
             return;
         } else
-            throw std::runtime_error("Could not open parameter file: "
-                                     + fileName);
+            throw std::runtime_error("Could not open synaptic file: "
+                                     + biasesFile);
     }
+
+    std::ifstream scales_;
+    std::ifstream means_;
+    std::ifstream variances_;
+
+    if (!singleFile) {
+        scales_.open(scalesFile.c_str());
+
+        if (!scales_.good()) {
+            // Scales is optional: using default value of 1 if not found
+            if (ignoreNotExists) {
+                std::cout << Utils::cnotice
+                          << "Notice: Could not open synaptic file: "
+                          << scalesFile << Utils::cdef << std::endl;
+            } else
+                throw std::runtime_error("Could not open synaptic file: "
+                                         + scalesFile);
+        }
+
+        means_.open(meansFile.c_str());
+
+        if (!means_.good())
+            throw std::runtime_error("Could not open synaptic file: "
+                                     + meansFile);
+
+        variances_.open(meansFile.c_str());
+
+        if (!variances_.good())
+            throw std::runtime_error("Could not open synaptic file: "
+                                     + meansFile);
+    }
+
+    std::ifstream& scales = (!singleFile) ? scales_ : biases;
+    std::ifstream& means = (!singleFile) ? means_ : biases;
+    std::ifstream& variances = (!singleFile) ? variances_ : biases;
 
     double w;
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         for (unsigned int oy = 0; oy < 1; ++oy) {
             for (unsigned int ox = 0; ox < 1; ++ox) {
-                if (!(syn >> w))
+                if (!(scales >> w))
                     throw std::runtime_error(
                         "Error while reading scale in parameter file: "
                         + fileName);
 
                 setScale(output, ox, oy, w);
 
-                if (!(syn >> w))
+                if (!(biases >> w))
                     throw std::runtime_error(
                         "Error while reading bias in parameter file: "
                         + fileName);
 
                 setBias(output, ox, oy, w);
 
-                if (!(syn >> w))
+                if (!(means >> w))
                     throw std::runtime_error(
                         "Error while reading mean in parameter file: "
                         + fileName);
 
                 setMean(output, ox, oy, w);
 
-                if (!(syn >> w))
+                if (!(variances >> w))
                     throw std::runtime_error(
                         "Error while reading variance in parameter file: "
                         + fileName);
@@ -106,12 +187,38 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
     }
 
     // Discard trailing whitespaces
-    while (std::isspace(syn.peek()))
-        syn.ignore();
+    while (std::isspace(biases.peek()))
+        biases.ignore();
 
-    if (syn.get() != std::fstream::traits_type::eof())
+    if (biases.get() != std::fstream::traits_type::eof())
         throw std::runtime_error("Parameter file size larger than expected: "
-                                 + fileName);
+                                 + biasesFile);
+
+    if (!singleFile) {
+        // Discard trailing whitespaces
+        while (std::isspace(scales.peek()))
+            scales.ignore();
+
+        if (scales.get() != std::fstream::traits_type::eof())
+            throw std::runtime_error("Synaptic file size larger than expected: "
+                                     + scalessFile);
+
+        // Discard trailing whitespaces
+        while (std::isspace(means.peek()))
+            means.ignore();
+
+        if (means.get() != std::fstream::traits_type::eof())
+            throw std::runtime_error("Synaptic file size larger than expected: "
+                                     + meansFile);
+
+        // Discard trailing whitespaces
+        while (std::isspace(variances.peek()))
+            variances.ignore();
+
+        if (variances.get() != std::fstream::traits_type::eof())
+            throw std::runtime_error("Synaptic file size larger than expected: "
+                                     + variancesFile);
+    }
 }
 
 void N2D2::BatchNormCell::getStats(Stats& stats) const

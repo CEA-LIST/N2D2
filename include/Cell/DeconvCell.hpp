@@ -68,6 +68,15 @@ public:
     }
     static const char* Type;
 
+    // N = output feature map
+    // C = input feature map (channel)
+    // H = kernel row
+    // W = kernel col
+    enum WeightsExportFormat {
+        NCHW,
+        HWNC
+    };
+
     DeconvCell(const std::string& name,
                unsigned int kernelWidth,
                unsigned int kernelHeight,
@@ -172,6 +181,7 @@ protected:
     Parameter<bool> mNoBias;
     /// If true, enable backpropogation
     Parameter<bool> mBackPropagate;
+    Parameter<WeightsExportFormat> mWeightsExportFormat;
 
     // Kernel width
     const unsigned int mKernelWidth;
@@ -191,6 +201,12 @@ protected:
     std::shared_ptr<Solver<Float_T> > mWeightsSolver;
     std::shared_ptr<Solver<Float_T> > mBiasSolver;
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::DeconvCell::WeightsExportFormat>::data[]
+    = {"NCHW", "HWNC"};
 }
 
 #endif // N2D2_DECONVCELL_H

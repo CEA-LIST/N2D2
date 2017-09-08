@@ -71,40 +71,82 @@ unsigned long long int N2D2::FcCell::getNbSynapses() const
 
 void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
 {
-    std::ofstream syn(fileName.c_str());
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
 
-    if (!syn.good())
-        throw std::runtime_error("Could not create synaptic file: " + fileName);
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const std::string weightsFile = fileBase + "_weights" + fileExt;
+    const std::string biasesFile = fileBase + "_biases" + fileExt;
+
+    std::ofstream weights(weightsFile.c_str());
+
+    if (!weights.good())
+        throw std::runtime_error("Could not create synaptic file: "
+                                 + weightsFile);
 
     const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
                                       * getChannelsHeight();
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel)
-            syn << getWeight(output, channel) << " ";
+            weights << getWeight(output, channel) << " ";
 
-        if (!mNoBias)
-            syn << getBias(output) << " ";
+        weights << "\n";
+    }
 
-        syn << "\n";
+    if (!mNoBias) {
+        std::ofstream biases(biasesFile.c_str());
+
+        if (!biases.good())
+            throw std::runtime_error("Could not create synaptic file: "
+                                      + biasesFile);
+
+        for (unsigned int output = 0; output < mNbOutputs; ++output)
+            biases << getBias(output) << "\n";
     }
 }
 
 void N2D2::FcCell::importFreeParameters(const std::string& fileName,
                                         bool ignoreNotExists)
 {
-    std::ifstream syn(fileName.c_str());
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
 
-    if (!syn.good()) {
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const bool singleFile = (std::ifstream(fileName.c_str()).good());
+    const std::string weightsFile = (singleFile) ? fileName
+        : fileBase + "_weights" + fileExt;
+    const std::string biasesFile = (singleFile) ? fileName
+        : fileBase + "_biases" + fileExt;
+
+    std::ifstream weights(weightsFile.c_str());
+
+    if (!weights.good()) {
         if (ignoreNotExists) {
             std::cout << Utils::cnotice
-                      << "Notice: Could not open synaptic file: " << fileName
+                      << "Notice: Could not open synaptic file: " << weightsFile
                       << Utils::cdef << std::endl;
             return;
         } else
             throw std::runtime_error("Could not open synaptic file: "
-                                     + fileName);
+                                     + weightsFile);
     }
+
+    std::ifstream biases_;
+
+    if (!singleFile && !mNoBias) {
+        biases_.open(biasesFile.c_str());
+
+        if (!biases_.good())
+            throw std::runtime_error("Could not open synaptic file: "
+                                     + biasesFile);
+    }
+
+    std::ifstream& biases = (!singleFile && !mNoBias) ? biases_ : weights;
 
     double weight;
 
@@ -113,7 +155,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            if (!(syn >> weight))
+            if (!(weights >> weight))
                 throw std::runtime_error("Error while reading synaptic file: "
                                          + fileName);
 
@@ -121,7 +163,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
         }
 
         if (!mNoBias) {
-            if (!(syn >> weight))
+            if (!(biases >> weight))
                 throw std::runtime_error("Error while reading synaptic file: "
                                          + fileName);
 
@@ -129,13 +171,23 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
         }
     }
 
-    // Discard trailing whitespaces (if not binary)
-    while (std::isspace(syn.peek()))
-        syn.ignore();
+    // Discard trailing whitespaces
+    while (std::isspace(weights.peek()))
+        weights.ignore();
 
-    if (syn.get() != std::fstream::traits_type::eof())
+    if (weights.get() != std::fstream::traits_type::eof())
         throw std::runtime_error("Synaptic file size larger than expected: "
-                                 + fileName);
+                                 + weightsFile);
+
+    if (!singleFile && !mNoBias) {
+        // Discard trailing whitespaces
+        while (std::isspace(biases.peek()))
+            biases.ignore();
+
+        if (biases.get() != std::fstream::traits_type::eof())
+            throw std::runtime_error("Synaptic file size larger than expected: "
+                                     + biasesFile);
+    }
 }
 
 void N2D2::FcCell::logFreeParametersDistrib(const std::string& fileName) const
