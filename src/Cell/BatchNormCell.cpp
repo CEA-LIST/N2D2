@@ -201,7 +201,7 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
 
         if (scales.get() != std::fstream::traits_type::eof())
             throw std::runtime_error("Synaptic file size larger than expected: "
-                                     + scalessFile);
+                                     + scalesFile);
 
         // Discard trailing whitespaces
         while (std::isspace(means.peek()))
