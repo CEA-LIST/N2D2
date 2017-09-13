@@ -33,7 +33,8 @@ N2D2::DeconvCell::DeconvCell(const std::string& name,
     : Cell(name, nbOutputs),
       mNoBias(this, "NoBias", true),
       mBackPropagate(this, "BackPropagate", true),
-      mWeightsExportFormat(this, "WeightsExportFormat", NCHW),
+      mWeightsExportFormat(this, "WeightsExportFormat", OCHW),
+      mWeightsExportTranspose(this, "WeightsExportTranspose", false),
       mKernelWidth(kernelWidth),
       mKernelHeight(kernelHeight),
       mStrideX(strideX),
@@ -228,7 +229,6 @@ void N2D2::DeconvCell::setKernel(unsigned int output,
     }
 }
 
-
 void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
 {
     const std::string fileBase = Utils::fileBaseName(fileName);
@@ -246,7 +246,7 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
         throw std::runtime_error("Could not create synaptic file: "
                                  + weightsFile);
 
-    if (mWeightsExportFormat == NCHW) {
+    if (mWeightsExportFormat == OCHW) {
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
             for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             {
@@ -254,25 +254,39 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
                     continue;
 
                 for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                    for (unsigned int sx = 0; sx < mKernelWidth; ++sx)
-                        weights << getWeight(output, channel, sx, sy) << " ";
+                    for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
+                        const Float_T weight = (mWeightsExportTranspose)
+                            ? getWeight(output, channel,
+                                        mKernelWidth - sx - 1,
+                                        mKernelHeight - sy - 1)
+                            : getWeight(output, channel, sx, sy);
+
+                        weights << weight << " ";
+                    }
                 }
             }
 
             weights << "\n";
         }
     }
-    else if (mWeightsExportFormat == HWNC) {
+    else if (mWeightsExportFormat == HWCO) {
         for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
             for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                    for (unsigned int channel = 0; channel < getNbChannels();
-                        ++channel)
+                for (unsigned int channel = 0; channel < getNbChannels();
+                    ++channel)
+                {
+                    for (unsigned int output = 0; output < mNbOutputs; ++output)
                     {
                         if (!isConnection(channel, output))
                             continue;
 
-                        weights << getWeight(output, channel, sx, sy) << " ";
+                        const Float_T weight = (mWeightsExportTranspose)
+                            ? getWeight(output, channel,
+                                        mKernelWidth - sx - 1,
+                                        mKernelHeight - sy - 1)
+                            : getWeight(output, channel, sx, sy);
+
+                        weights << weight << " ";
                     }
                 }
 
@@ -296,7 +310,7 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
 }
 
 void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
-                                          bool ignoreNotExists)
+                                            bool ignoreNotExists)
 {
     const std::string fileBase = Utils::fileBaseName(fileName);
     std::string fileExt = Utils::fileExtension(fileName);
@@ -337,7 +351,7 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
 
     double weight;
 
-    if (mWeightsExportFormat == NCHW) {
+    if (mWeightsExportFormat == OCHW) {
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
             for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             {
@@ -351,7 +365,13 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                                 "Error while reading synaptic file: "
                                 + weightsFile);
 
-                        setWeight(output, channel, sx, sy, weight);
+                        if (mWeightsExportTranspose) {
+                            setWeight(output, channel,
+                                      mKernelWidth - sx - 1,
+                                      mKernelHeight - sy - 1, weight);
+                        }
+                        else
+                            setWeight(output, channel, sx, sy, weight);
                     }
                 }
             }
@@ -365,12 +385,13 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
             }
         }
     }
-    else if (mWeightsExportFormat == HWNC) {
+    else if (mWeightsExportFormat == HWCO) {
         for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
             for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                    for (unsigned int channel = 0; channel < getNbChannels();
-                        ++channel)
+                for (unsigned int channel = 0; channel < getNbChannels();
+                    ++channel)
+                {
+                    for (unsigned int output = 0; output < mNbOutputs; ++output)
                     {
                         if (!isConnection(channel, output))
                             continue;
@@ -380,7 +401,13 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                                 "Error while reading synaptic file: "
                                 + weightsFile);
 
-                        setWeight(output, channel, sx, sy, weight);
+                        if (mWeightsExportTranspose) {
+                            setWeight(output, channel,
+                                      mKernelWidth - sx - 1,
+                                      mKernelHeight - sy - 1, weight);
+                        }
+                        else
+                            setWeight(output, channel, sx, sy, weight);
                     }
                 }
             }

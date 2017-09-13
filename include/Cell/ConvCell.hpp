@@ -85,13 +85,18 @@ public:
     }
     static const char* Type;
 
-    // N = output feature map
+    // O = output feature map
     // C = input feature map (channel)
     // H = kernel row
     // W = kernel col
     enum WeightsExportFormat {
-        NCHW,
-        HWNC
+        // N2D2 default format
+        OCHW,
+        // TensorFlow format:
+        // "filter: A Tensor. Must have the same type as input. A 4-D tensor of
+        // shape [filter_height, filter_width, in_channels, out_channels]"
+        // https://www.tensorflow.org/api_docs/python/tf/nn/conv2d
+        HWCO
     };
 
     ConvCell(const std::string& name,
@@ -211,6 +216,7 @@ protected:
     /// If true, enable backpropogation
     Parameter<bool> mBackPropagate;
     Parameter<WeightsExportFormat> mWeightsExportFormat;
+    Parameter<bool> mWeightsExportTranspose;
 
     // Kernel width
     const unsigned int mKernelWidth;
@@ -239,7 +245,7 @@ protected:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::ConvCell::WeightsExportFormat>::data[]
-    = {"NCHW", "HWNC"};
+    = {"OCHW", "HWCO"};
 }
 
 #endif // N2D2_CONVCELL_H

@@ -3248,10 +3248,17 @@ Convolutional layer.
   take precedence over the \lstinline!Solvers.!* parameters \\
   \lstinline!BiasSolver.!* & \emph{all Frame} & Bias solver parameters,
   take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!WeightsExportFormat! [\lstinline!OCHW!] & \emph{all Frame} &
+  Weights import/export format. Can be \lstinline!OCHW! or \lstinline!OCHW!,
+  with \lstinline!O! the output feature map, \lstinline!C! the input feature map
+   (channel), \lstinline!H! the kernel row and \lstinline!W! the kernel column,
+   in the order of the outermost dimension (in the leftmost position) to the
+   innermost dimension (in the rightmost position) \\
+  \lstinline!WeightsExportTranspose! [0] & \emph{all Frame} & If true,
+  import/export transposed kernels \\
  \hline
 \end{longtable}
 \end{center}
-
 
 \paragraph{Configuration parameters (\emph{Spike} models)}
 
@@ -3414,6 +3421,14 @@ Deconvolutionlayer.
   take precedence over the \lstinline!Solvers.!* parameters \\
   \lstinline!BiasSolver.!* & \emph{all Frame} & Bias solver parameters,
   take precedence over the \lstinline!Solvers.!* parameters \\
+  \lstinline!WeightsExportFormat! [\lstinline!OCHW!] & \emph{all Frame} &
+  Weights import/export format. Can be \lstinline!OCHW! or \lstinline!OCHW!,
+  with \lstinline!O! the output feature map, \lstinline!C! the input feature map
+   (channel), \lstinline!H! the kernel row and \lstinline!W! the kernel column,
+   in the order of the outermost dimension (in the leftmost position) to the
+   innermost dimension (in the rightmost position) \\
+  \lstinline!WeightsExportTranspose! [0] & \emph{all Frame} & If true,
+  import/export transposed kernels \\
  \hline
 \end{longtable}
 \end{center}
