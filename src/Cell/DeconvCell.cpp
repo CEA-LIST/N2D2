@@ -35,6 +35,7 @@ N2D2::DeconvCell::DeconvCell(const std::string& name,
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OCHW),
       mWeightsExportTranspose(this, "WeightsExportTranspose", false),
+      mOutputsRemap(this, "OutputsRemap", ""),
       mKernelWidth(kernelWidth),
       mKernelHeight(kernelHeight),
       mStrideX(strideX),
@@ -246,20 +247,25 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
         throw std::runtime_error("Could not create synaptic file: "
                                  + weightsFile);
 
+    const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
+
     if (mWeightsExportFormat == OCHW) {
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            const unsigned int outputRemap = (!outputsMap.empty())
+                ? outputsMap.find(output)->second : output;
+
             for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             {
-                if (!isConnection(channel, output))
+                if (!isConnection(channel, outputRemap))
                     continue;
 
                 for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
                     for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
                         const Float_T weight = (mWeightsExportTranspose)
-                            ? getWeight(output, channel,
+                            ? getWeight(outputRemap, channel,
                                         mKernelWidth - sx - 1,
                                         mKernelHeight - sy - 1)
-                            : getWeight(output, channel, sx, sy);
+                            : getWeight(outputRemap, channel, sx, sy);
 
                         weights << weight << " ";
                     }
@@ -277,14 +283,17 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
                 {
                     for (unsigned int output = 0; output < mNbOutputs; ++output)
                     {
-                        if (!isConnection(channel, output))
+                        const unsigned int outputRemap = (!outputsMap.empty())
+                            ? outputsMap.find(output)->second : output;
+
+                        if (!isConnection(channel, outputRemap))
                             continue;
 
                         const Float_T weight = (mWeightsExportTranspose)
-                            ? getWeight(output, channel,
+                            ? getWeight(outputRemap, channel,
                                         mKernelWidth - sx - 1,
                                         mKernelHeight - sy - 1)
-                            : getWeight(output, channel, sx, sy);
+                            : getWeight(outputRemap, channel, sx, sy);
 
                         weights << weight << " ";
                     }
@@ -304,13 +313,17 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
             throw std::runtime_error("Could not create synaptic file: "
                                       + biasesFile);
 
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
-            biases << getBias(output) << "\n";
+        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            const unsigned int outputRemap = (!outputsMap.empty())
+                ? outputsMap.find(output)->second : output;
+
+            biases << getBias(outputRemap) << "\n";
+        }
     }
 }
 
 void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
-                                            bool ignoreNotExists)
+                                          bool ignoreNotExists)
 {
     const std::string fileBase = Utils::fileBaseName(fileName);
     std::string fileExt = Utils::fileExtension(fileName);
@@ -351,11 +364,16 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
 
     double weight;
 
+    const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
+
     if (mWeightsExportFormat == OCHW) {
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            const unsigned int outputRemap = (!outputsMap.empty())
+                ? outputsMap.find(output)->second : output;
+
             for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             {
-                if (!isConnection(channel, output))
+                if (!isConnection(channel, outputRemap))
                     continue;
 
                 for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
@@ -366,12 +384,12 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                                 + weightsFile);
 
                         if (mWeightsExportTranspose) {
-                            setWeight(output, channel,
+                            setWeight(outputRemap, channel,
                                       mKernelWidth - sx - 1,
                                       mKernelHeight - sy - 1, weight);
                         }
                         else
-                            setWeight(output, channel, sx, sy, weight);
+                            setWeight(outputRemap, channel, sx, sy, weight);
                     }
                 }
             }
@@ -381,7 +399,7 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                     throw std::runtime_error("Error while reading synaptic "
                                              "file: " + biasesFile);
 
-                setBias(output, weight);
+                setBias(outputRemap, weight);
             }
         }
     }
@@ -393,7 +411,10 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                 {
                     for (unsigned int output = 0; output < mNbOutputs; ++output)
                     {
-                        if (!isConnection(channel, output))
+                        const unsigned int outputRemap = (!outputsMap.empty())
+                            ? outputsMap.find(output)->second : output;
+
+                        if (!isConnection(channel, outputRemap))
                             continue;
 
                         if (!(weights >> weight))
@@ -402,12 +423,12 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                                 + weightsFile);
 
                         if (mWeightsExportTranspose) {
-                            setWeight(output, channel,
+                            setWeight(outputRemap, channel,
                                       mKernelWidth - sx - 1,
                                       mKernelHeight - sy - 1, weight);
                         }
                         else
-                            setWeight(output, channel, sx, sy, weight);
+                            setWeight(outputRemap, channel, sx, sy, weight);
                     }
                 }
             }
@@ -415,11 +436,14 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
 
         if (!mNoBias) {
             for (unsigned int output = 0; output < mNbOutputs; ++output) {
+                const unsigned int outputRemap = (!outputsMap.empty())
+                    ? outputsMap.find(output)->second : output;
+
                 if (!(biases >> weight))
                     throw std::runtime_error("Error while reading "
                                              "synaptic file: " + biasesFile);
 
-                setBias(output, weight);
+                setBias(outputRemap, weight);
             }
         }
     }
@@ -674,4 +698,49 @@ void N2D2::DeconvCell::setOutputsSize()
                     - mStrideX;
     mOutputsHeight = mChannelsHeight * mStrideY + mKernelHeight - 2 * mPaddingY
                      - mStrideY;
+}
+
+std::map<unsigned int, unsigned int> N2D2::DeconvCell::outputsRemap() const
+{
+    const std::vector<std::string> mapping = Utils::split(mOutputsRemap,
+                                                          ",", true);
+
+    unsigned int index = 0;
+    std::map<unsigned int, unsigned int> outputRemap;
+
+    for (std::vector<std::string>::const_iterator it = mapping.begin(),
+        itEnd = mapping.end(); it != itEnd; ++it)
+    {
+        unsigned int offset;
+        int step;
+
+        std::stringstream offsetStepStr(*it);
+        offsetStepStr.imbue(std::locale(std::locale(),
+                            new N2D2::Utils::streamIgnore(": \t")));
+
+        if (!(Utils::signChecked<unsigned int>(offsetStepStr) >> offset)
+            || !(offsetStepStr >> step)
+            || !offsetStepStr.eof())
+        {
+            throw std::runtime_error(
+                "DeconvCell::outputsRemap(): unable to read mapping: "
+                + (std::string)mOutputsRemap);
+        }
+
+        for (int k = offset; k >= 0 && k < (int)mNbOutputs; k+= step) {
+            outputRemap[k] = index;
+            ++index;
+        }
+    }
+
+    // DEBUG
+    std::cout << "DeconvCell::outputsRemap(): " << mName << std::endl;
+
+    for (std::map<unsigned int, unsigned int>::const_iterator
+        it = outputRemap.begin(), itEnd = outputRemap.end(); it != itEnd; ++it)
+    {
+        std::cout << "  " << (*it).first << " -> " << (*it).second << std::endl;
+    }
+
+    return outputRemap;
 }

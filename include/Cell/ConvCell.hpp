@@ -210,6 +210,7 @@ protected:
                            unsigned int sy,
                            Float_T value) = 0;
     virtual void setBias(unsigned int output, Float_T value) = 0;
+    std::map<unsigned int, unsigned int> outputsRemap() const;
 
     /// If true, the output neurons don't have bias
     Parameter<bool> mNoBias;
@@ -217,6 +218,7 @@ protected:
     Parameter<bool> mBackPropagate;
     Parameter<WeightsExportFormat> mWeightsExportFormat;
     Parameter<bool> mWeightsExportTranspose;
+    Parameter<std::string> mOutputsRemap;
 
     // Kernel width
     const unsigned int mKernelWidth;
