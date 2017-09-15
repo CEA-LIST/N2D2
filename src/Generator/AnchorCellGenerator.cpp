@@ -68,9 +68,12 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
         nextProperty << "Anchor[" << nextAnchor << "]";
     }
 
+    const unsigned int scoresCls = iniConfig.getProperty
+                                     <unsigned int>("ScoresCls", 1);
+
     // Cell construction
     std::shared_ptr<AnchorCell> cell = Registrar
-        <AnchorCell>::create(model)(section, sp, anchors);
+        <AnchorCell>::create(model)(section, sp, anchors, scoresCls);
 
     if (!cell) {
         throw std::runtime_error(

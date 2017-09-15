@@ -33,13 +33,15 @@ class AnchorCell_Frame : public virtual AnchorCell, public Cell_Frame {
 public:
     AnchorCell_Frame(const std::string& name,
                      StimuliProvider& sp,
-                     const std::vector<Anchor>& anchors);
+                     const std::vector<Anchor>& anchors,
+                     unsigned int scoresCls = 1);
     static std::shared_ptr<AnchorCell> create(const std::string& name,
                                               StimuliProvider& sp,
                                               const std::vector<Anchor>&
-                                                anchors)
+                                                anchors,
+                                              unsigned int scoresCls)
     {
-        return std::make_shared<AnchorCell_Frame>(name, sp, anchors);
+        return std::make_shared<AnchorCell_Frame>(name, sp, anchors, scoresCls);
     }
 
     virtual const std::vector<BBox_T>& getGT(unsigned int batchPos) const;

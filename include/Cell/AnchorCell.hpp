@@ -66,7 +66,8 @@ public:
     typedef std::function
         <std::shared_ptr<AnchorCell>(const std::string&,
                                      StimuliProvider&,
-                                     const std::vector<Anchor>&)>
+                                     const std::vector<Anchor>&,
+                                     unsigned int)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -78,7 +79,8 @@ public:
 
     AnchorCell(const std::string& name,
                StimuliProvider& sp,
-               const std::vector<Anchor>& anchors);
+               const std::vector<Anchor>& anchors,
+               unsigned int scoresCls = 1);
     const char* getType() const
     {
         return Type;
@@ -104,6 +106,7 @@ protected:
 
     StimuliProvider& mStimuliProvider;
     std::vector<Anchor> mAnchors;
+    unsigned int mScoresCls;
 };
 }
 

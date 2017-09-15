@@ -24,7 +24,8 @@ const char* N2D2::AnchorCell::Type = "Anchor";
 
 N2D2::AnchorCell::AnchorCell(const std::string& name,
                              StimuliProvider& sp,
-                             const std::vector<Anchor>& anchors)
+                             const std::vector<Anchor>& anchors,
+                             unsigned int scoresCls)
     : Cell(name, 6*anchors.size()),
       mPositiveIoU(this, "PositiveIoU", 0.7),
       mNegativeIoU(this, "NegativeIoU", 0.3),
@@ -32,7 +33,8 @@ N2D2::AnchorCell::AnchorCell(const std::string& name,
       mLossPositiveSample(this, "LossPositiveSample", 128U),
       mLossNegativeSample(this, "LossNegativeSample", 128U),
       mStimuliProvider(sp),
-      mAnchors(anchors)
+      mAnchors(anchors),
+      mScoresCls(scoresCls)
 {
     // ctor
 }

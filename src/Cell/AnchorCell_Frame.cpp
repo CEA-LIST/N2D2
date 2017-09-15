@@ -25,9 +25,10 @@ N2D2::AnchorCell_Frame::mRegistrar("Frame", N2D2::AnchorCell_Frame::create);
 
 N2D2::AnchorCell_Frame::AnchorCell_Frame(const std::string& name,
                                          StimuliProvider& sp,
-                                         const std::vector<Anchor>& anchors)
+                                         const std::vector<Anchor>& anchors,
+                                         unsigned int scoresCls)
     : Cell(name, 6*anchors.size()),
-      AnchorCell(name, sp, anchors),
+      AnchorCell(name, sp, anchors, scoresCls),
       Cell_Frame(name, 6*anchors.size())
 {
     // ctor
@@ -112,16 +113,18 @@ void N2D2::AnchorCell_Frame::initialize()
 {
     const unsigned int nbAnchors = mAnchors.size();
 
-    if (mInputs.dimZ() != 5 * nbAnchors) {
+    if (mInputs.dimZ() != (mScoresCls + 4) * nbAnchors) {
         throw std::domain_error("AnchorCell_Frame::initialize():"
                                 " the number of input channels must be equal to"
-                                " 5 times the number of anchors.");
+                                " (scoresCls + 4) times the number of"
+                                " anchors.");
     }
 
-    if (mInputs.size() > 1 && mInputs[0].dimZ() != nbAnchors) {
+    if (mInputs.size() > 1 && mInputs[0].dimZ() != mScoresCls * nbAnchors) {
         throw std::domain_error("AnchorCell_Frame::initialize():"
-                                " the first input number of channels must match"
-                                " the number of anchors.");
+                                " the first input number of channels must be"
+                                " equal to scoresCls times the number of"
+                                " anchors.");
     }
 
     mGT.resize(mOutputs.dimB());
@@ -230,13 +233,13 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 
                         // Parameterized coordinates
                         const Float_T txbb = mInputs(xa, ya,
-                                                   k + 1 * nbAnchors, batchPos);
+                            k + mScoresCls * nbAnchors, batchPos);
                         const Float_T tybb = mInputs(xa, ya,
-                                                   k + 2 * nbAnchors, batchPos);
+                            k + (mScoresCls + 1) * nbAnchors, batchPos);
                         const Float_T twbb = mInputs(xa, ya,
-                                                   k + 3 * nbAnchors, batchPos);
+                            k + (mScoresCls + 2) * nbAnchors, batchPos);
                         const Float_T thbb = mInputs(xa, ya,
-                                                   k + 4 * nbAnchors, batchPos);
+                            k + (mScoresCls + 3) * nbAnchors, batchPos);
 
                         // Predicted box coordinates
                         Float_T xbb = txbb * wa + xac;
@@ -499,10 +502,18 @@ void N2D2::AnchorCell_Frame::backPropagate()
                     }
 
                     mDiffOutputs(xa, ya, k, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya, k + 1 * nbAnchors, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya, k + 2 * nbAnchors, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya, k + 3 * nbAnchors, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya, k + 4 * nbAnchors, batchPos) = 0.0;
+
+                    if (mScoresCls > 1)
+                        mDiffOutputs(xa, ya, k + nbAnchors, batchPos) = 0.0;
+
+                    mDiffOutputs(xa, ya,
+                        k + mScoresCls * nbAnchors, batchPos) = 0.0;
+                    mDiffOutputs(xa, ya,
+                        k + (mScoresCls + 1) * nbAnchors, batchPos) = 0.0;
+                    mDiffOutputs(xa, ya,
+                        k + (mScoresCls + 2) * nbAnchors, batchPos) = 0.0;
+                    mDiffOutputs(xa, ya,
+                        k + (mScoresCls + 3) * nbAnchors, batchPos) = 0.0;
                 }
             }
         }
@@ -533,10 +544,16 @@ void N2D2::AnchorCell_Frame::backPropagate()
             const unsigned int ya = anchorIndex[idx].j;
             const unsigned int k = anchorIndex[idx].k;
 
-            if (isPositive) {
-                mDiffOutputs(xa, ya, k, batchPos)
-                    = (1.0 - mInputs(xa, ya, k, batchPos)) / miniBatchSize;
+            mDiffOutputs(xa, ya, k, batchPos)
+                = (isPositive - mInputs(xa, ya, k, batchPos)) / miniBatchSize;
 
+            if (mScoresCls > 1) {
+                mDiffOutputs(xa, ya, k + nbAnchors, batchPos)
+                    = ((!isPositive) - mInputs(xa, ya, k + nbAnchors, batchPos))
+                        / miniBatchSize;
+            }
+
+            if (isPositive) {
                 const int argMaxIoU = mArgMaxIoU(anchorIndex[idx]);
 
                 // Ground Truth box coordinates
@@ -554,24 +571,24 @@ void N2D2::AnchorCell_Frame::backPropagate()
                 const Float_T thgt = std::log(hgt / ha);
 
                 // Parameterized coordinates
-                const Float_T tx = mInputs(xa, ya, k + 1 * nbAnchors, batchPos);
-                const Float_T ty = mInputs(xa, ya, k + 2 * nbAnchors, batchPos);
-                const Float_T tw = mInputs(xa, ya, k + 3 * nbAnchors, batchPos);
-                const Float_T th = mInputs(xa, ya, k + 4 * nbAnchors, batchPos);
+                const Float_T tx = mInputs(xa, ya,
+                    k + mScoresCls * nbAnchors, batchPos);
+                const Float_T ty = mInputs(xa, ya,
+                    k + (mScoresCls + 1) * nbAnchors, batchPos);
+                const Float_T tw = mInputs(xa, ya,
+                    k + (mScoresCls + 2) * nbAnchors, batchPos);
+                const Float_T th = mInputs(xa, ya,
+                    k + (mScoresCls + 3) * nbAnchors, batchPos);
 
                 // Smooth L1 loss
-                mDiffOutputs(xa, ya, k + 1 * nbAnchors, batchPos)
+                mDiffOutputs(xa, ya, k + mScoresCls * nbAnchors, batchPos)
                    = mLossLambda * smoothL1(txgt, tx) / nbLocations;
-                mDiffOutputs(xa, ya, k + 2 * nbAnchors, batchPos)
+                mDiffOutputs(xa, ya, k + (mScoresCls + 1) * nbAnchors, batchPos)
                    = mLossLambda * smoothL1(tygt, ty) / nbLocations;
-                mDiffOutputs(xa, ya, k + 3 * nbAnchors, batchPos)
+                mDiffOutputs(xa, ya, k + (mScoresCls + 2) * nbAnchors, batchPos)
                    = mLossLambda * smoothL1(twgt, tw) / nbLocations;
-                mDiffOutputs(xa, ya, k + 4 * nbAnchors, batchPos)
+                mDiffOutputs(xa, ya, k + (mScoresCls + 3) * nbAnchors, batchPos)
                    = mLossLambda * smoothL1(thgt, th) / nbLocations;
-            }
-            else {
-                mDiffOutputs(xa, ya, k, batchPos)
-                    = (0.0 - mInputs(xa, ya, k, batchPos)) / miniBatchSize;
             }
 
             anchorIndex.erase(anchorIndex.begin() + idx);
