@@ -43,7 +43,8 @@ void cudaSROIPoolingForwardAverage(const float alpha,
                                    float* outputs,
                                    unsigned int nbOutputs,
                                    unsigned int outputsHeight,
-                                   unsigned int outputsWidth);
+                                   unsigned int outputsWidth,
+                                   unsigned int outputOffset);
 
 void cudaSROIPoolingForwardMax(const float alpha,
                                float* proposals,
@@ -60,6 +61,7 @@ void cudaSROIPoolingForwardMax(const float alpha,
                                unsigned int nbOutputs,
                                unsigned int outputsHeight,
                                unsigned int outputsWidth,
+                               unsigned int outputOffset,
                                PoolCell_Frame_Kernels::ArgMax* argMax);
 
 // Backward
@@ -73,6 +75,7 @@ void cudaSROIPoolingBackwardAverage(const float alpha,
                                     unsigned int outputsHeight,
                                     unsigned int outputsWidth,
                                     unsigned int batchSize,
+                                    unsigned int outputOffset,
                                     const float beta,
                                     float* diffOutputs,
                                     unsigned int nbChannels,
@@ -89,6 +92,7 @@ void cudaSROIPoolingBackwardMax(const float alpha,
                                 unsigned int outputsHeight,
                                 unsigned int outputsWidth,
                                 unsigned int batchSize,
+                                unsigned int outputOffset,
                                 const float beta,
                                 float* diffOutputs,
                                 unsigned int nbChannels,

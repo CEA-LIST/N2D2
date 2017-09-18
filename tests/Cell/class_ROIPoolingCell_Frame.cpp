@@ -84,18 +84,17 @@ TEST_DATASET(ROIPoolingCell_Frame,
              addInput__env,
              (unsigned int outputsWidth,
               unsigned int outputsHeight,
-              unsigned int nbOutputs,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
-             std::make_tuple(7U, 7U, 10U, 24U, 24U),
-             std::make_tuple(10U, 7U, 1U, 24U, 24U),
-             std::make_tuple(7U, 10U, 2U, 24U, 24U),
-             std::make_tuple(7U, 7U, 10U, 32U, 24U),
-             std::make_tuple(10U, 7U, 1U, 32U, 24U),
-             std::make_tuple(7U, 10U, 2U, 32U, 24U),
-             std::make_tuple(7U, 7U, 10U, 24U, 32U),
-             std::make_tuple(10U, 7U, 1U, 24U, 32U),
-             std::make_tuple(7U, 10U, 2U, 24U, 32U))
+             std::make_tuple(7U, 7U, 24U, 24U),
+             std::make_tuple(10U, 7U, 24U, 24U),
+             std::make_tuple(7U, 10U, 24U, 24U),
+             std::make_tuple(7U, 7U, 32U, 24U),
+             std::make_tuple(10U, 7U, 32U, 24U),
+             std::make_tuple(7U, 10U, 32U, 24U),
+             std::make_tuple(7U, 7U, 24U, 32U),
+             std::make_tuple(10U, 7U, 24U, 32U),
+             std::make_tuple(7U, 10U, 24U, 32U))
 {
     const unsigned int nbProposals = 2;
 
@@ -106,7 +105,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
                                     env,
                                     outputsWidth,
                                     outputsHeight,
-                                    nbOutputs,
+                                    1,
                                     ROIPoolingCell::Max);
     Tensor4d<Float_T> proposals(1, 1, 4, nbProposals);
     Tensor4d<Float_T> proposalsDiff;
@@ -118,7 +117,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     ASSERT_EQUALS(pool1.getNbChannels(), 4U + 1U);
     ASSERT_EQUALS(pool1.getChannelsWidth(), channelsWidth);
     ASSERT_EQUALS(pool1.getChannelsHeight(), channelsHeight);
-    ASSERT_EQUALS(pool1.getNbOutputs(), nbOutputs);
+    ASSERT_EQUALS(pool1.getNbOutputs(), 1);
     ASSERT_EQUALS(pool1.getOutputsWidth(), outputsWidth);
     ASSERT_EQUALS(pool1.getOutputsHeight(), outputsHeight);
 
@@ -127,9 +126,9 @@ TEST_DATASET(ROIPoolingCell_Frame,
     ASSERT_EQUALS(pool1.mInputs[0].size(), 8U);
     ASSERT_EQUALS(pool1.mInputs[1].size(), channelsWidth * channelsHeight);
     ASSERT_EQUALS(pool1.mOutputs.size(),
-                  nbProposals * nbOutputs * outputsWidth * outputsHeight);
+                  nbProposals * 1 * outputsWidth * outputsHeight);
     ASSERT_EQUALS(pool1.mDiffInputs.size(),
-                  nbProposals * nbOutputs * outputsWidth * outputsHeight);
+                  nbProposals * 1 * outputsWidth * outputsHeight);
     ASSERT_EQUALS(pool1.mDiffOutputs.dataSize(), 0U);
 }
 

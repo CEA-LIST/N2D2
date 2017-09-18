@@ -52,6 +52,7 @@ void N2D2::ROIPoolingCell_Frame::initialize()
     }
 
     const unsigned int inputBatch = mInputs[1].dimB();
+    unsigned int nbChannels = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0) {
@@ -71,6 +72,13 @@ void N2D2::ROIPoolingCell_Frame::initialize()
                 mOutputs.dimZ(),
                 mOutputs.dimB()));
         }
+
+        nbChannels += mInputs[k].dimZ();
+    }
+
+    if (nbChannels != mOutputs.dimZ()) {
+        throw std::runtime_error("The number of output channels must match the "
+            "total number of input channels for ROIPoolingCell" + mName);
     }
 }
 
@@ -82,6 +90,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
     float beta = 0.0f;
 
     const Tensor4d<Float_T>& proposals = mInputs[0];
+    unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         if (k > 1)
@@ -95,8 +104,8 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 #endif
             for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
             {
-                for (unsigned int output = 0; output < mOutputs.dimZ();
-                    ++output)
+                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                    ++channel)
                 {
                     const unsigned int inputBatch = batchPos / proposals.dimB();
                     const double xRatio = mStimuliProvider.getSizeX()
@@ -143,7 +152,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             const unsigned int syMax = (unsigned int)(y
                                                     + (oy + 1) * poolHeight);
 
-                            // For each output, compute the pool value
+                            // For each channel, compute the pool value
                             Float_T poolValue = 0.0;
 
                             unsigned int ixMax = 0;
@@ -155,7 +164,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                                 {
                                     const Float_T value = mInputs[k](sx,
                                                             sy,
-                                                            output,
+                                                            channel,
                                                             inputBatch);
 
                                     if (!valid || value > poolValue) {
@@ -168,15 +177,16 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                                 }
                             }
 
-                            mArgMax[k-1](ox, oy, output, batchPos)
+                            mArgMax[k-1](ox, oy, channel, batchPos)
                                 = PoolCell_Frame_Kernels::ArgMax(ixMax,
                                                                  iyMax,
-                                                                 output,
+                                                                 channel,
                                                                  valid);
 
-                            mOutputs(ox, oy, output, batchPos)
+                            mOutputs(ox, oy, outputOffset + channel, batchPos)
                                 = alpha * poolValue
-                                  + beta * mOutputs(ox, oy, output, batchPos);
+                                  + beta * mOutputs(ox, oy, outputOffset
+                                                        + channel, batchPos);
                         }
                     }
                 }
@@ -190,8 +200,8 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 #endif
             for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
             {
-                for (unsigned int output = 0; output < mOutputs.dimZ();
-                    ++output)
+                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                    ++channel)
                 {
                     const unsigned int inputBatch = batchPos / proposals.dimB();
                     const double xRatio = mStimuliProvider.getSizeX()
@@ -232,7 +242,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             const unsigned int syMax = (unsigned int)(y
                                                     + (oy + 1) * poolHeight);
 
-                            // For each output, compute the pool value
+                            // For each channel, compute the pool value
                             Float_T poolValue = 0.0;
                             unsigned int poolCount = 0;
 
@@ -241,22 +251,25 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                                 {
                                     poolValue += mInputs[k](sx,
                                                             sy,
-                                                            output,
+                                                            channel,
                                                             inputBatch);
                                 }
                             }
 
                             poolCount += (sxMax - sxMin)*(syMax - syMin);
 
-                            mOutputs(ox, oy, output, batchPos)
+                            mOutputs(ox, oy, outputOffset + channel, batchPos)
                                 = alpha * ((poolCount > 0) ?
                                               (poolValue / poolCount) : 0.0)
-                                  + beta * mOutputs(ox, oy, output, batchPos);
+                                  + beta * mOutputs(ox, oy, outputOffset
+                                                        + channel, batchPos);
                         }
                     }
                 }
             }
         }
+
+        outputOffset += mInputs[k].dimZ();
     }
 
     Cell_Frame::propagate();
@@ -273,6 +286,7 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
     const Float_T alpha = 1.0;
 
     const Tensor4d<Float_T>& proposals = mInputs[0];
+    unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         //const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
@@ -360,10 +374,8 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
                                 {
                                     #pragma omp atomic
                                     mDiffOutputs[k](ix, iy, channel, inputBatch)
-                                        += alpha * mDiffInputs(ox,
-                                                               oy,
-                                                               channel,
-                                                               batchPos);
+                                        += alpha * mDiffInputs(ox, oy,
+                                            outputOffset + channel, batchPos);
                                 }
                             }
 
@@ -383,6 +395,8 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
         }
 
         //mDiffOutputs[k].setValid();
+
+        outputOffset += mDiffOutputs[k].dimZ();
     }
 
     mDiffOutputs.synchronizeHToD();

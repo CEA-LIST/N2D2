@@ -54,6 +54,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::initialize()
     }
 
     const unsigned int inputBatch = mInputs[1].dimB();
+    unsigned int nbChannels = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0) {
@@ -73,6 +74,13 @@ void N2D2::ROIPoolingCell_Frame_CUDA::initialize()
                 mOutputs.dimZ(),
                 mOutputs.dimB()));
         }
+
+        nbChannels += mInputs[k].dimZ();
+    }
+
+    if (nbChannels != mOutputs.dimZ()) {
+        throw std::runtime_error("The number of output channels must match the "
+            "total number of input channels for ROIPoolingCell" + mName);
     }
 }
 
@@ -82,6 +90,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
 
     const float alpha = 1.0f;
     float beta = 0.0f;
+
+    unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         if (k > 1)
@@ -103,6 +113,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
                                       mOutputs.dimZ(),
                                       mOutputs.dimY(),
                                       mOutputs.dimX(),
+                                      outputOffset,
                                       mArgMax[k-1].getDevicePtr());
         }
         else {
@@ -120,8 +131,11 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
                                           mOutputs.getDevicePtr(),
                                           mOutputs.dimZ(),
                                           mOutputs.dimY(),
-                                          mOutputs.dimX());
+                                          mOutputs.dimX(),
+                                          outputOffset);
         }
+
+        outputOffset += mInputs[k].dimZ();
     }
 
     Cell_Frame_CUDA::propagate();
@@ -137,6 +151,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
 
     const Float_T alpha = 1.0;
     const Float_T beta = 1.0;
+
+    unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         if (!mDiffOutputs[k].isValid()) {
@@ -156,6 +172,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                        mDiffInputs.dimY(),
                                        mDiffInputs.dimX(),
                                        mOutputs.dimB(),
+                                       outputOffset,
                                        beta,
                                        mDiffOutputs[k].getDevicePtr(),
                                        mDiffOutputs[k].dimZ(),
@@ -174,12 +191,15 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                            mDiffInputs.dimY(),
                                            mDiffInputs.dimX(),
                                            mOutputs.dimB(),
+                                           outputOffset,
                                            beta,
                                            mDiffOutputs[k].getDevicePtr(),
                                            mDiffOutputs[k].dimZ(),
                                            mDiffOutputs[k].dimY(),
                                            mDiffOutputs[k].dimX());
         }
+
+        outputOffset += mInputs[k].dimZ();
     }
 
     mDiffOutputs.synchronizeDToHBased();

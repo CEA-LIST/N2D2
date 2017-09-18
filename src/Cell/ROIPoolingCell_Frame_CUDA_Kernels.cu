@@ -36,7 +36,8 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
                                           float* outputs,
                                           unsigned int nbOutputs,
                                           unsigned int outputsHeight,
-                                          unsigned int outputsWidth)
+                                          unsigned int outputsWidth,
+                                          unsigned int outputOffset)
 {
     const unsigned int batchProposalsOffset = blockIdx.z * 4;
     const unsigned int batchInputOffset = (blockIdx.z / nbProposals)
@@ -69,8 +70,8 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
     const float poolWidth = w / outputsWidth;
     const float poolHeight = h / outputsHeight;
 
-    for (unsigned int output = blockIdx.x; output < nbOutputs;
-         output += gridDim.x) {
+    for (unsigned int channel = blockIdx.x; channel < nbChannels;
+         channel += gridDim.x) {
         for (unsigned int oy = threadIdx.y; oy < outputsHeight;
              oy += blockDim.y) {
             for (unsigned int ox = threadIdx.x; ox < outputsWidth;
@@ -85,7 +86,7 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
                 const unsigned int syMax = (unsigned int)(y
                                         + (oy + 1) * poolHeight);
 
-                // For each output, compute the pool value
+                // For each channel, compute the pool value
                 float poolValue = 0.0;
                 unsigned int poolCount = 0;
 
@@ -93,7 +94,7 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
                     for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
                         const unsigned int inputsIdx
                             = sx
-                                + (sy + output * channelsHeight)
+                                + (sy + channel * channelsHeight)
                                     * channelsWidth;
 
                         poolValue += inputs[inputsIdx + batchInputOffset];
@@ -103,11 +104,12 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
                 poolCount += (sxMax - sxMin)*(syMax - syMin);
 
                 const unsigned int outputsIdx
-                    = ox + (oy + output * outputsHeight) * outputsWidth;
-                outputs[outputsIdx + batchOutputOffset]
+                    = ox + (oy + (channel + outputOffset) * outputsHeight)
+                        * outputsWidth + batchOutputOffset;
+                outputs[outputsIdx]
                     = alpha * ((poolCount > 0) ?
                                   (poolValue / poolCount) : 0.0)
-                      + beta * outputs[outputsIdx + batchOutputOffset];
+                      + beta * outputs[outputsIdx];
             }
         }
     }
@@ -129,6 +131,7 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
                                       unsigned int nbOutputs,
                                       unsigned int outputsHeight,
                                       unsigned int outputsWidth,
+                                      unsigned int outputOffset,
                                       N2D2::PoolCell_Frame_Kernels::ArgMax*
                                         argMax)
 {
@@ -163,8 +166,8 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
     const float poolWidth = w / outputsWidth;
     const float poolHeight = h / outputsHeight;
 
-    for (unsigned int output = blockIdx.x; output < nbOutputs;
-         output += gridDim.x) {
+    for (unsigned int channel = blockIdx.x; channel < nbChannels;
+         channel += gridDim.x) {
         for (unsigned int oy = threadIdx.y; oy < outputsHeight;
              oy += blockDim.y) {
             for (unsigned int ox = threadIdx.x; ox < outputsWidth;
@@ -179,12 +182,14 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
                 const unsigned int syMax = (unsigned int)(y
                                         + (oy + 1) * poolHeight);
 
-                // For each output, compute the pool value
+                // For each channel, compute the pool value
                 float poolValue = 0.0;
 
-                const unsigned int outputsIdx
-                    = ox + (oy + output * outputsHeight) * outputsWidth
-                        + batchOutputOffset;
+                const unsigned int argMaxIdx
+                    = ox + (oy + channel * outputsHeight)
+                        * outputsWidth + batchOutputOffset;
+                const unsigned int outputsIdx = argMaxIdx
+                    + outputOffset * (outputsHeight * outputsWidth);
 
                 unsigned int ixMax = 0;
                 unsigned int iyMax = 0;
@@ -194,7 +199,7 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
                     for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
                         const unsigned int inputsIdx
                             = sx
-                                + (sy + output * channelsHeight)
+                                + (sy + channel * channelsHeight)
                                     * channelsWidth;
 
                         const float value = inputs[inputsIdx
@@ -210,10 +215,10 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
                     }
                 }
 
-                argMax[outputsIdx].ix = ixMax;
-                argMax[outputsIdx].iy = iyMax;
-                argMax[outputsIdx].channel = output;
-                argMax[outputsIdx].valid = valid;
+                argMax[argMaxIdx].ix = ixMax;
+                argMax[argMaxIdx].iy = iyMax;
+                argMax[argMaxIdx].channel = channel;
+                argMax[argMaxIdx].valid = valid;
 
                 outputs[outputsIdx]
                     = alpha * poolValue
@@ -235,6 +240,7 @@ void cudaSROIPoolingBackwardAverage_kernel(const float alpha,
                                           unsigned int outputsHeight,
                                           unsigned int outputsWidth,
                                           unsigned int batchSize,
+                                          unsigned int outputOffset,
                                           const float beta,
                                           float* diffOutputs,
                                           unsigned int nbChannels,
@@ -255,6 +261,7 @@ void cudaSROIPoolingBackwardMax_kernel(const float alpha,
                                       unsigned int outputsHeight,
                                       unsigned int outputsWidth,
                                       unsigned int batchSize,
+                                      unsigned int outputOffset,
                                       const float /*beta*/,
                                       float* diffOutputs,
                                       unsigned int nbChannels,
@@ -318,11 +325,13 @@ void cudaSROIPoolingBackwardMax_kernel(const float alpha,
                     const unsigned int oy
                         = (unsigned int)((iy - iyMin + 0.5) / poolHeight);
 
-                    const unsigned int outputsIdx
+                    const unsigned int argMaxIdx
                         = ox + (oy + channel * outputsHeight)
                             * outputsWidth + batchOutputOffset;
+                    const unsigned int outputsIdx = argMaxIdx
+                        + outputOffset * (outputsHeight * outputsWidth);
                     const N2D2::PoolCell_Frame_Kernels::ArgMax inputMax
-                        = argMax[outputsIdx];
+                        = argMax[argMaxIdx];
 
                     if (ix == inputMax.ix
                         && iy == inputMax.iy
@@ -368,7 +377,8 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
                                          float* outputs,
                                          unsigned int nbOutputs,
                                          unsigned int outputsHeight,
-                                         unsigned int outputsWidth)
+                                         unsigned int outputsWidth,
+                                         unsigned int outputOffset)
 {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
@@ -382,7 +392,7 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
     const unsigned int groupWidth
         = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
 
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
     cudaSROIPoolingForwardAverage_kernel << <blocksPerGrid, threadsPerBlocks>>
@@ -400,7 +410,8 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
            outputs,
            nbOutputs,
            outputsHeight,
-           outputsWidth);
+           outputsWidth,
+           outputOffset);
 }
 
 void N2D2::cudaSROIPoolingForwardMax(const float alpha,
@@ -418,6 +429,7 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
                                      unsigned int nbOutputs,
                                      unsigned int outputsHeight,
                                      unsigned int outputsWidth,
+                                     unsigned int outputOffset,
                                      N2D2::PoolCell_Frame_Kernels::ArgMax*
                                         argMax)
 {
@@ -433,7 +445,7 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
     const unsigned int groupWidth
         = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
 
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
     cudaSROIPoolingForwardMax_kernel << <blocksPerGrid, threadsPerBlocks>>
@@ -452,6 +464,7 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
            nbOutputs,
            outputsHeight,
            outputsWidth,
+           outputOffset,
            argMax);
 }
 
@@ -465,6 +478,7 @@ void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
                                           unsigned int outputsHeight,
                                           unsigned int outputsWidth,
                                           unsigned int batchSize,
+                                          unsigned int outputOffset,
                                           const float beta,
                                           float* diffOutputs,
                                           unsigned int nbChannels,
@@ -497,6 +511,7 @@ void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
            outputsHeight,
            outputsWidth,
            batchSize,
+           outputOffset,
            beta,
            diffOutputs,
            nbChannels,
@@ -514,6 +529,7 @@ void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
                                       unsigned int outputsHeight,
                                       unsigned int outputsWidth,
                                       unsigned int batchSize,
+                                      unsigned int outputOffset,
                                       const float beta,
                                       float* diffOutputs,
                                       unsigned int nbChannels,
@@ -548,6 +564,7 @@ void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
            outputsHeight,
            outputsWidth,
            batchSize,
+           outputOffset,
            beta,
            diffOutputs,
            nbChannels,
