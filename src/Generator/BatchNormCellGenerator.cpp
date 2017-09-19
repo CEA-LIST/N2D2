@@ -22,6 +22,10 @@
 
 N2D2::Registrar<N2D2::CellGenerator> N2D2::BatchNormCellGenerator::mRegistrar(
     BatchNormCell::Type, N2D2::BatchNormCellGenerator::generate);
+N2D2::RegistrarCustom<N2D2::CellGenerator,
+N2D2::CellGenerator::RegistryPostCreate_T>
+N2D2::BatchNormCellGenerator::mRegistrarPost(BatchNormCell::Type
+    + std::string("+"), N2D2::BatchNormCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::BatchNormCell>
 N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
@@ -94,6 +98,12 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
         cell->getBiasSolver()->setPrefixedParameters(params, "BiasSolver.");
     }
 
+    // Will be processed in postGenerate
+    iniConfig.ignoreProperty("ScalesSharing");
+    iniConfig.ignoreProperty("BiasesSharing");
+    iniConfig.ignoreProperty("MeansSharing");
+    iniConfig.ignoreProperty("VariancesSharing");
+
     cell->setParameters(params);
 
     // Load configuration file (if exists)
@@ -122,4 +132,201 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
     std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
 
     return cell;
+}
+
+void N2D2::BatchNormCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
+                                             const std::shared_ptr
+                                             <DeepNet>& deepNet,
+                                             IniParser& iniConfig,
+                                             const std::string& section)
+{
+    if (!iniConfig.currentSection(section))
+        throw std::runtime_error("Missing [" + section + "] section.");
+
+    std::shared_ptr<BatchNormCell> batchNormCell
+        = std::dynamic_pointer_cast<BatchNormCell>(cell);
+
+    if (iniConfig.isProperty("ScalesSharing")) {
+        const std::string scalesSharing
+            = iniConfig.getProperty<std::string>("ScalesSharing");
+
+        bool found = false;
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+            itCells = deepNet->getCells().begin(),
+             itCellsEnd = deepNet->getCells().end();
+             itCells != itCellsEnd;
+             ++itCells)
+        {
+            if ((*itCells).first == scalesSharing) {
+                std::shared_ptr<BatchNormCell> cellRef
+                    = std::dynamic_pointer_cast<BatchNormCell>(
+                                                    (*itCells).second);
+
+                if (!cellRef) {
+                    throw std::runtime_error("Cell name \"" + scalesSharing
+                                             + "\" is not a BatchNormCell for"
+                                             " ScalesSharing [" + section
+                                             + "] in network configuration "
+                                             + "file: "
+                                             + iniConfig.getFileName());
+                }
+
+                batchNormCell->setScales(cellRef->getScales());
+
+                std::cout << Utils::cnotice << "Sharing scales from cell "
+                    << scalesSharing << " for cell " << section << Utils::cdef
+                    << std::endl;
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Cell name \"" + scalesSharing
+                                     + "\" not found for ScalesSharing ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
+
+    if (iniConfig.isProperty("BiasesSharing")) {
+        const std::string biasesSharing
+            = iniConfig.getProperty<std::string>("BiasesSharing");
+
+        bool found = false;
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+            itCells = deepNet->getCells().begin(),
+             itCellsEnd = deepNet->getCells().end();
+             itCells != itCellsEnd;
+             ++itCells)
+        {
+            if ((*itCells).first == biasesSharing) {
+                std::shared_ptr<BatchNormCell> cellRef
+                    = std::dynamic_pointer_cast<BatchNormCell>(
+                                                    (*itCells).second);
+
+                if (!cellRef) {
+                    throw std::runtime_error("Cell name \"" + biasesSharing
+                                             + "\" is not a BatchNormCell for"
+                                             " BiasesSharing [" + section
+                                             + "] in network configuration "
+                                             + "file: "
+                                             + iniConfig.getFileName());
+                }
+
+                batchNormCell->setBiases(cellRef->getBiases());
+
+                std::cout << Utils::cnotice << "Sharing biases from cell "
+                    << biasesSharing << " for cell " << section << Utils::cdef
+                    << std::endl;
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Cell name \"" + biasesSharing
+                                     + "\" not found for BiasesSharing ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
+
+    if (iniConfig.isProperty("MeansSharing")) {
+        const std::string meansSharing
+            = iniConfig.getProperty<std::string>("MeansSharing");
+
+        bool found = false;
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+            itCells = deepNet->getCells().begin(),
+             itCellsEnd = deepNet->getCells().end();
+             itCells != itCellsEnd;
+             ++itCells)
+        {
+            if ((*itCells).first == meansSharing) {
+                std::shared_ptr<BatchNormCell> cellRef
+                    = std::dynamic_pointer_cast<BatchNormCell>(
+                                                    (*itCells).second);
+
+                if (!cellRef) {
+                    throw std::runtime_error("Cell name \"" + meansSharing
+                                             + "\" is not a BatchNormCell for"
+                                             " MeansSharing [" + section
+                                             + "] in network configuration "
+                                             + "file: "
+                                             + iniConfig.getFileName());
+                }
+
+                batchNormCell->setMeans(cellRef->getMeans());
+
+                std::cout << Utils::cnotice << "Sharing means from cell "
+                    << meansSharing << " for cell " << section << Utils::cdef
+                    << std::endl;
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Cell name \"" + meansSharing
+                                     + "\" not found for MeansSharing ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
+
+    if (iniConfig.isProperty("VariancesSharing")) {
+        const std::string variancesSharing
+            = iniConfig.getProperty<std::string>("VariancesSharing");
+
+        bool found = false;
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+            itCells = deepNet->getCells().begin(),
+             itCellsEnd = deepNet->getCells().end();
+             itCells != itCellsEnd;
+             ++itCells)
+        {
+            if ((*itCells).first == variancesSharing) {
+                std::shared_ptr<BatchNormCell> cellRef
+                    = std::dynamic_pointer_cast<BatchNormCell>(
+                                                    (*itCells).second);
+
+                if (!cellRef) {
+                    throw std::runtime_error("Cell name \"" + variancesSharing
+                                             + "\" is not a BatchNormCell for"
+                                             " VariancesSharing [" + section
+                                             + "] in network configuration "
+                                             + "file: "
+                                             + iniConfig.getFileName());
+                }
+
+                batchNormCell->setVariances(cellRef->getVariances());
+
+                std::cout << Utils::cnotice << "Sharing variances from cell "
+                    << variancesSharing << " for cell " << section
+                    << Utils::cdef << std::endl;
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("Cell name \"" + variancesSharing
+                                     + "\" not found for VariancesSharing ["
+                                     + section
+                                     + "] in network configuration file: "
+                                     + iniConfig.getFileName());
+        }
+    }
 }

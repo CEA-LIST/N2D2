@@ -65,6 +65,26 @@ public:
     getMean(unsigned int channel, unsigned int sx, unsigned int sy) const;
     inline Float_T
     getVariance(unsigned int channel, unsigned int sx, unsigned int sy) const;
+    inline Tensor4d<Float_T>* getScales()
+    {
+        return &mScale;
+    };
+    void setScales(Tensor4d<Float_T>* scales);
+    inline Tensor4d<Float_T>* getBiases()
+    {
+        return &mBias;
+    };
+    void setBiases(Tensor4d<Float_T>* biases);
+    inline Tensor4d<Float_T>* getMeans()
+    {
+        return &mMean;
+    };
+    void setMeans(Tensor4d<Float_T>* means);
+    inline Tensor4d<Float_T>* getVariances()
+    {
+        return &mVariance;
+    };
+    void setVariances(Tensor4d<Float_T>* variances);
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,

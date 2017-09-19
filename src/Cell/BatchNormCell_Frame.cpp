@@ -53,10 +53,51 @@ void N2D2::BatchNormCell_Frame::initialize()
         mEpsilon = 1.0e-5; // Same as CUDNN_BN_MIN_EPSILON
 
     Tensor4d<Float_T>* input = *mInputs.begin();
-    mScale.resize(1, 1, input->dimZ(), 1, 1.0);
-    mBias.resize(1, 1, input->dimZ(), 1, 0.0);
-    mMean.resize(1, 1, input->dimZ(), 1, 0.0);
-    mVariance.resize(1, 1, input->dimZ(), 1, 0.0);
+
+    if (mScale.empty())
+        mScale.resize(1, 1, input->dimZ(), 1, 1.0);
+    else {
+        if (mScale.dimX() != 1 || mScale.dimY() != 1
+            || mScale.dimZ() != input->dimZ() || mScale.dimB() != 1)
+        {
+            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
+                "cell " + mName + ", wrong size for shared scale");
+        }
+    }
+
+    if (mBias.empty())
+        mBias.resize(1, 1, input->dimZ(), 1, 0.0);
+    else {
+        if (mBias.dimX() != 1 || mBias.dimY() != 1
+            || mBias.dimZ() != input->dimZ() || mBias.dimB() != 1)
+        {
+            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
+                "cell " + mName + ", wrong size for shared bias");
+        }
+    }
+
+    if (mMean.empty())
+        mMean.resize(1, 1, input->dimZ(), 1, 0.0);
+    else {
+        if (mMean.dimX() != 1 || mMean.dimY() != 1
+            || mMean.dimZ() != input->dimZ() || mMean.dimB() != 1)
+        {
+            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
+                "cell " + mName + ", wrong size for shared mean");
+        }
+    }
+
+    if (mVariance.empty())
+        mVariance.resize(1, 1, input->dimZ(), 1, 0.0);
+    else {
+        if (mVariance.dimX() != 1 || mVariance.dimY() != 1
+            || mVariance.dimZ() != input->dimZ() || mVariance.dimB() != 1)
+        {
+            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
+                "cell " + mName + ", wrong size for shared variance");
+        }
+    }
+
     mSavedMean.resize(1, 1, input->dimZ(), 1);
     mSavedVariance.resize(1, 1, input->dimZ(), 1);
 

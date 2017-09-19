@@ -3231,6 +3231,7 @@ Convolutional layer.
   \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
   number of iterations for input layer \lstinline!in! (0 means no limit) \\
   \lstinline!WeightsSharing! [] & Share the weights with an other layer \\
+  \lstinline!BiasesSharing! [] & Share the biases with an other layer \\
  \hline
 \end{longtable}
 \end{center}
@@ -3402,6 +3403,7 @@ Deconvolutionlayer.
   \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
    number of iterations for input layer \lstinline!in! (0 means no limit) \\
   \lstinline!WeightsSharing! [] & Share the weights with an other layer \\
+  \lstinline!BiasesSharing! [] & Share the biases with an other layer \\
  \hline
 \end{longtable}
 \end{center}
@@ -3906,6 +3908,10 @@ Batch Normalization layer \citep{Ioffe2015}.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
   \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
+  \lstinline!ScalesSharing! [] & Share the scales with an other layer \\
+  \lstinline!BiasesSharing! [] & Share the biases with an other layer \\
+  \lstinline!MeansSharing! [] & Share the means with an other layer \\
+  \lstinline!VariancesSharing! [] & Share the variances with an other layer \\
   \hline
 \end{longtable}
 \end{center}

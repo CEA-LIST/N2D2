@@ -70,6 +70,38 @@ public:
     {
         return mVariance(sx, sy, channel, 0);
     }
+    inline Tensor4d<Float_T>* getScales()
+    {
+        return &mScale;
+    };
+    inline void setScales(Tensor4d<Float_T>* scales)
+    {
+        mScale = (*scales);
+    }
+    inline Tensor4d<Float_T>* getBiases()
+    {
+        return &mBias;
+    };
+    inline void setBiases(Tensor4d<Float_T>* biases)
+    {
+        mBias = (*biases);
+    }
+    inline Tensor4d<Float_T>* getMeans()
+    {
+        return &mMean;
+    };
+    inline void setMeans(Tensor4d<Float_T>* means)
+    {
+        mMean = (*means);
+    }
+    inline Tensor4d<Float_T>* getVariances()
+    {
+        return &mVariance;
+    };
+    inline void setVariances(Tensor4d<Float_T>* variances)
+    {
+        mVariance = (*variances);
+    }
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,

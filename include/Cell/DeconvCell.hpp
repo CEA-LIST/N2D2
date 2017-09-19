@@ -163,6 +163,8 @@ public:
     virtual void setWeights(unsigned int /*k*/,
                     Interface<Float_T>* /*weights*/,
                     unsigned int /*offset*/) {};
+    virtual Tensor4d<Float_T>* getBiases() { return NULL; };
+    virtual void setBiases(Tensor4d<Float_T>* /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);

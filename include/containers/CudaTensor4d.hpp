@@ -110,17 +110,13 @@ public:
     /** Synchronize Host-based data To Device */
     void synchronizeHBasedToD() const;
 
-    void setDevicePtr(T* dataDevice)
-    {
-        mDataDevice = dataDevice;
-    }
     T* getDevicePtr()
     {
-        return mDataDevice;
+        return (*mDataDevice);
     }
     cudnnTensorDescriptor_t& getCudnnTensorDesc()
     {
-        return mTensor;
+        return (*mTensor);
     }
 
     /** DEBUG */
@@ -139,8 +135,8 @@ protected:
     using Tensor4d<T>::mDimB;
     using Tensor4d<T>::mData;
 
-    cudnnTensorDescriptor_t mTensor;
-    T* mDataDevice;
+    std::shared_ptr<cudnnTensorDescriptor_t> mTensor;
+    std::shared_ptr<T*> mDataDevice;
     bool mHostBased;
 };
 }
@@ -148,28 +144,30 @@ protected:
 template <typename T>
 N2D2::CudaTensor4d<T>::CudaTensor4d()
     : Tensor4d<T>(),
-      mDataDevice(NULL),
+      mTensor(new cudnnTensorDescriptor_t),
+      mDataDevice(new T*(NULL)),
       mHostBased(false)
 {
     // ctor
-    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&(*mTensor)));
 }
 
 template <typename T>
 N2D2::CudaTensor4d<T>::CudaTensor4d(Tensor4d<T>* base)
     : Tensor4d<T>(*base),
-      mDataDevice(NULL),
+      mTensor(new cudnnTensorDescriptor_t),
+      mDataDevice(new T*(NULL)),
       mHostBased(true)
 {
     // ctor
-    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&(*mTensor)));
 
     const unsigned int size = base->dimX() * base->dimY() * base->dimZ()
                               * base->dimB();
 
     if (size > 0) {
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size * sizeof(T)));
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(mTensor,
+        CHECK_CUDA_STATUS(cudaMalloc(&(*mDataDevice), size * sizeof(T)));
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor((*mTensor),
                                                       CUDNN_TENSOR_NCHW,
                                                       CUDNN_DATA_FLOAT,
                                                       base->dimB(),
@@ -187,18 +185,19 @@ N2D2::CudaTensor4d<T>::CudaTensor4d(const CudaTensor4d<T>& tensor)
                   tensor.dimB(),
                   tensor.begin(),
                   tensor.end()),
-      mDataDevice(NULL),
+      mTensor(new cudnnTensorDescriptor_t),
+      mDataDevice(new T*(NULL)),
       mHostBased(tensor.mHostBased)
 {
     // copy-ctor
-    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&(*mTensor)));
 
     const unsigned int size = tensor.dimX() * tensor.dimY() * tensor.dimZ()
                               * tensor.dimB();
 
     if (size > 0) {
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size * sizeof(T)));
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(mTensor,
+        CHECK_CUDA_STATUS(cudaMalloc(&(*mDataDevice), size * sizeof(T)));
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor((*mTensor),
                                                       CUDNN_TENSOR_NCHW,
                                                       CUDNN_DATA_FLOAT,
                                                       tensor.dimB(),
@@ -214,16 +213,17 @@ N2D2::CudaTensor4d<T>::CudaTensor4d(unsigned int dimX,
                                     unsigned int dimZ,
                                     unsigned int dimB)
     : Tensor4d<T>(dimX, dimY, dimZ, dimB),
-      mDataDevice(NULL),
+      mTensor(new cudnnTensorDescriptor_t),
+      mDataDevice(new T*(NULL)),
       mHostBased(false)
 {
     // ctor
-    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&(*mTensor)));
 
     const unsigned int size = dimX * dimY * dimZ * dimB;
 
     if (size > 0) {
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(mTensor,
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor((*mTensor),
                                                       CUDNN_TENSOR_NCHW,
                                                       CUDNN_DATA_FLOAT,
                                                       dimB,
@@ -231,7 +231,7 @@ N2D2::CudaTensor4d<T>::CudaTensor4d(unsigned int dimX,
                                                       dimY,
                                                       dimX));
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size * sizeof(T)));
+        CHECK_CUDA_STATUS(cudaMalloc(&(*mDataDevice), size * sizeof(T)));
     }
 }
 
@@ -243,15 +243,15 @@ void N2D2::CudaTensor4d<T>::reserve(unsigned int dimX,
 {
     Tensor4d<T>::reserve(dimX, dimY, dimZ, dimB);
 
-    if (mDataDevice != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mDataDevice));
-        mDataDevice = NULL;
+    if ((*mDataDevice) != NULL) {
+        CHECK_CUDA_STATUS(cudaFree(*mDataDevice));
+        (*mDataDevice) = NULL;
     }
 
     const unsigned int size = dimX * dimY * dimZ * dimB;
 
     if (size > 0) {
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(mTensor,
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor((*mTensor),
                                                       CUDNN_TENSOR_NCHW,
                                                       CUDNN_DATA_FLOAT,
                                                       dimB,
@@ -259,7 +259,7 @@ void N2D2::CudaTensor4d<T>::reserve(unsigned int dimX,
                                                       dimY,
                                                       dimX));
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size * sizeof(T)));
+        CHECK_CUDA_STATUS(cudaMalloc(&(*mDataDevice), size * sizeof(T)));
     }
 }
 
@@ -272,15 +272,15 @@ void N2D2::CudaTensor4d<T>::resize(unsigned int dimX,
 {
     Tensor4d<T>::resize(dimX, dimY, dimZ, dimB, value);
 
-    if (mDataDevice != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mDataDevice));
-        mDataDevice = NULL;
+    if ((*mDataDevice) != NULL) {
+        CHECK_CUDA_STATUS(cudaFree(*mDataDevice));
+        (*mDataDevice) = NULL;
     }
 
     const unsigned int size = dimX * dimY * dimZ * dimB;
 
     if (size > 0) {
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(mTensor,
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor((*mTensor),
                                                       CUDNN_TENSOR_NCHW,
                                                       CUDNN_DATA_FLOAT,
                                                       dimB,
@@ -288,7 +288,7 @@ void N2D2::CudaTensor4d<T>::resize(unsigned int dimX,
                                                       dimY,
                                                       dimX));
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size * sizeof(T)));
+        CHECK_CUDA_STATUS(cudaMalloc(&(*mDataDevice), size * sizeof(T)));
         synchronizeHToD();
     }
 }
@@ -302,15 +302,15 @@ void N2D2::CudaTensor4d<T>::assign(unsigned int dimX,
 {
     Tensor4d<T>::assign(dimX, dimY, dimZ, dimB, value);
 
-    if (mDataDevice != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mDataDevice));
-        mDataDevice = NULL;
+    if ((*mDataDevice) != NULL) {
+        CHECK_CUDA_STATUS(cudaFree(*mDataDevice));
+        (*mDataDevice) = NULL;
     }
 
     const unsigned int size = dimX * dimY * dimZ * dimB;
 
     if (size > 0) {
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor(mTensor,
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptor((*mTensor),
                                                       CUDNN_TENSOR_NCHW,
                                                       CUDNN_DATA_FLOAT,
                                                       dimB,
@@ -318,7 +318,7 @@ void N2D2::CudaTensor4d<T>::assign(unsigned int dimX,
                                                       dimY,
                                                       dimX));
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size * sizeof(T)));
+        CHECK_CUDA_STATUS(cudaMalloc(&(*mDataDevice), size * sizeof(T)));
         synchronizeHToD();
     }
 }
@@ -336,9 +336,9 @@ template <typename T> void N2D2::CudaTensor4d<T>::clear()
 {
     Tensor4d<T>::clear();
 
-    if (mDataDevice != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mDataDevice));
-        mDataDevice = NULL;
+    if ((*mDataDevice) != NULL) {
+        CHECK_CUDA_STATUS(cudaFree(*mDataDevice));
+        (*mDataDevice) = NULL;
     }
 }
 
@@ -348,7 +348,7 @@ template <typename T> void N2D2::CudaTensor4d<T>::clear()
 template <typename T> void N2D2::CudaTensor4d<T>::synchronizeDToH() const
 {
     CHECK_CUDA_STATUS(cudaMemcpy(&(*mData)[0],
-                                 mDataDevice,
+                                 (*mDataDevice),
                                  mDimX * mDimY * mDimZ * mDimB * sizeof(T),
                                  cudaMemcpyDeviceToHost));
 }
@@ -358,7 +358,7 @@ void N2D2::CudaTensor4d
     <T>::synchronizeDToH(unsigned int index, unsigned int length) const
 {
     CHECK_CUDA_STATUS(cudaMemcpy(&(*mData)[0] + index,
-                                 mDataDevice + index,
+                                 (*mDataDevice) + index,
                                  length * sizeof(T),
                                  cudaMemcpyDeviceToHost));
 }
@@ -373,7 +373,7 @@ void N2D2::CudaTensor4d<T>::synchronizeDToH(unsigned int i,
     const unsigned int index = i + j * mDimX + k * mDimX * mDimY
                                + b * mDimX * mDimY * mDimZ;
     CHECK_CUDA_STATUS(cudaMemcpy(&(*mData)[0] + index,
-                                 mDataDevice + index,
+                                 (*mDataDevice) + index,
                                  length * sizeof(T),
                                  cudaMemcpyDeviceToHost));
 }
@@ -385,7 +385,7 @@ void N2D2::CudaTensor4d<T>::synchronizeDToH(unsigned int ijk,
 {
     const unsigned int index = ijk + b * mDimX * mDimY * mDimZ;
     CHECK_CUDA_STATUS(cudaMemcpy(&(*mData)[0] + index,
-                                 mDataDevice + index,
+                                 (*mDataDevice) + index,
                                  length * sizeof(T),
                                  cudaMemcpyDeviceToHost));
 }
@@ -395,7 +395,7 @@ void N2D2::CudaTensor4d<T>::synchronizeDToH(unsigned int ijk,
 */
 template <typename T> void N2D2::CudaTensor4d<T>::synchronizeHToD() const
 {
-    CHECK_CUDA_STATUS(cudaMemcpy(mDataDevice,
+    CHECK_CUDA_STATUS(cudaMemcpy((*mDataDevice),
                                  &(*mData)[0],
                                  mDimX * mDimY * mDimZ * mDimB * sizeof(T),
                                  cudaMemcpyHostToDevice));
@@ -405,7 +405,7 @@ template <typename T>
 void N2D2::CudaTensor4d
     <T>::synchronizeHToD(unsigned int index, unsigned int length) const
 {
-    CHECK_CUDA_STATUS(cudaMemcpy(mDataDevice + index,
+    CHECK_CUDA_STATUS(cudaMemcpy((*mDataDevice) + index,
                                  &(*mData)[0] + index,
                                  length * sizeof(T),
                                  cudaMemcpyHostToDevice));
@@ -420,7 +420,7 @@ void N2D2::CudaTensor4d<T>::synchronizeHToD(unsigned int i,
 {
     const unsigned int index = i + j * mDimX + k * mDimX * mDimY
                                + b * mDimX * mDimY * mDimZ;
-    CHECK_CUDA_STATUS(cudaMemcpy(mDataDevice + index,
+    CHECK_CUDA_STATUS(cudaMemcpy((*mDataDevice) + index,
                                  &(*mData)[0] + index,
                                  length * sizeof(T),
                                  cudaMemcpyHostToDevice));
@@ -432,7 +432,7 @@ void N2D2::CudaTensor4d<T>::synchronizeHToD(unsigned int ijk,
                                             unsigned int length) const
 {
     const unsigned int index = ijk + b * mDimX * mDimY * mDimZ;
-    CHECK_CUDA_STATUS(cudaMemcpy(mDataDevice + index,
+    CHECK_CUDA_STATUS(cudaMemcpy((*mDataDevice) + index,
                                  &(*mData)[0] + index,
                                  length * sizeof(T),
                                  cudaMemcpyHostToDevice));
@@ -520,7 +520,7 @@ void N2D2::CudaTensor4d<T>::dumpWeight() {
 template <typename T> N2D2::CudaTensor4d<T>::~CudaTensor4d()
 {
     clear();
-    CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mTensor));
+    CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor((*mTensor)));
 }
 
 #endif // N2D2_CUDATENSOR4D_H

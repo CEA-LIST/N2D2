@@ -92,6 +92,14 @@ public:
     void setWeights(unsigned int k,
                     Interface<Float_T>* weights,
                     unsigned int offset);
+    inline Tensor4d<Float_T>* getBiases()
+    {
+        return &mBias;
+    };
+    inline void setBiases(Tensor4d<Float_T>* biases)
+    {
+        mBias = (*biases);
+    }
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,

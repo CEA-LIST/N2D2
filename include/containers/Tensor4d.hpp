@@ -232,8 +232,8 @@ protected:
     unsigned int mDimY;
     unsigned int mDimZ;
     unsigned int mDimB;
-    const std::shared_ptr<std::vector<T> > mData;
-    const std::shared_ptr<bool> mValid;
+    std::shared_ptr<std::vector<T> > mData;
+    std::shared_ptr<bool> mValid;
 };
 }
 

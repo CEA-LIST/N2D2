@@ -142,6 +142,7 @@ N2D2::ConvCellGenerator::generate(Network& network,
 
     // Will be processed in postGenerate
     iniConfig.ignoreProperty("WeightsSharing");
+    iniConfig.ignoreProperty("BiasesSharing");
 
     cell->setParameters(params);
 
@@ -245,35 +246,81 @@ void N2D2::ConvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    if (!iniConfig.isProperty("WeightsSharing"))
-        return;
-
-    const std::vector<std::string> weightsSharing
-        = Utils::split(iniConfig.getProperty<std::string>("WeightsSharing"),
-                       ",");
-
-    const std::locale offsetLocale(std::locale(),
-        new Utils::streamIgnore("[]"));
-
     std::shared_ptr<ConvCell> convCell
         = std::dynamic_pointer_cast<ConvCell>(cell);
 
-    for (unsigned int k = 0, size = weightsSharing.size(); k < size; ++k) {
-        if (weightsSharing[k].empty())
-            continue;
+    if (iniConfig.isProperty("WeightsSharing")) {
+        const std::vector<std::string> weightsSharing
+            = Utils::split(iniConfig.getProperty<std::string>("WeightsSharing"),
+                           ",");
 
-        std::stringstream str(weightsSharing[k]);
-        str.imbue(offsetLocale);
+        const std::locale offsetLocale(std::locale(),
+            new Utils::streamIgnore("[]"));
 
-        std::string cellName;
-        unsigned int offset = k;
+        for (unsigned int k = 0, size = weightsSharing.size(); k < size; ++k) {
+            if (weightsSharing[k].empty())
+                continue;
 
-        if (!(str >> cellName) || (!str.eof() && !(str >> offset))) {
-            throw std::runtime_error("Unreadable value for"
-                                     " WeightsSharing [" + section
-                                     + "] in network configuration file: "
-                                     + iniConfig.getFileName());
+            std::stringstream str(weightsSharing[k]);
+            str.imbue(offsetLocale);
+
+            std::string cellName;
+            unsigned int offset = k;
+
+            if (!(str >> cellName) || (!str.eof() && !(str >> offset))) {
+                throw std::runtime_error("Unreadable value for"
+                                         " WeightsSharing [" + section
+                                         + "] in network configuration file: "
+                                         + iniConfig.getFileName());
+            }
+
+            bool found = false;
+
+            for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+                itCells = deepNet->getCells().begin(),
+                 itCellsEnd = deepNet->getCells().end();
+                 itCells != itCellsEnd;
+                 ++itCells)
+            {
+                if ((*itCells).first == cellName) {
+                    std::shared_ptr<ConvCell> cellRef
+                        = std::dynamic_pointer_cast<ConvCell>(
+                                                        (*itCells).second);
+
+                    if (!cellRef) {
+                        throw std::runtime_error("Cell name \"" + cellName
+                                                 + "\" is not a ConvCell for"
+                                                 " WeightsSharing [" + section
+                                                 + "] in network configuration "
+                                                 + "file: "
+                                                 + iniConfig.getFileName());
+                    }
+
+                    convCell->setWeights(k, cellRef->getWeights(), offset);
+
+                    std::cout << Utils::cnotice << "Sharing weights group #"
+                        << offset << " from cell " << cellName << " for cell "
+                        << section << " weights group #" << k << Utils::cdef
+                        << std::endl;
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                throw std::runtime_error("Cell name \"" + cellName
+                                         + "\" not found for WeightsSharing ["
+                                         + section
+                                         + "] in network configuration file: "
+                                         + iniConfig.getFileName());
+            }
         }
+    }
+
+    if (iniConfig.isProperty("BiasesSharing")) {
+        const std::string biasesSharing
+            = iniConfig.getProperty<std::string>("BiasesSharing");
 
         bool found = false;
 
@@ -283,23 +330,24 @@ void N2D2::ConvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
              itCells != itCellsEnd;
              ++itCells)
         {
-            if ((*itCells).first == cellName) {
-                std::shared_ptr<ConvCell> cellRef = std::dynamic_pointer_cast
-                    <ConvCell>((*itCells).second);
+            if ((*itCells).first == biasesSharing) {
+                std::shared_ptr<ConvCell> cellRef
+                    = std::dynamic_pointer_cast<ConvCell>(
+                                                    (*itCells).second);
 
                 if (!cellRef) {
-                    throw std::runtime_error("Cell name \"" + cellName
+                    throw std::runtime_error("Cell name \"" + biasesSharing
                                              + "\" is not a ConvCell for"
-                                             " WeightsSharing [" + section
-                                             + "] in network configuration file: "
+                                             " BiasesSharing [" + section
+                                             + "] in network configuration "
+                                             + "file: "
                                              + iniConfig.getFileName());
                 }
 
-                convCell->setWeights(k, cellRef->getWeights(), offset);
+                convCell->setBiases(cellRef->getBiases());
 
-                std::cout << Utils::cnotice << "Sharing weights group #"
-                    << offset << " from cell " << cellName << " for cell "
-                    << section << " weights group #" << k << Utils::cdef
+                std::cout << Utils::cnotice << "Sharing biases from cell "
+                    << biasesSharing << " for cell " << section << Utils::cdef
                     << std::endl;
 
                 found = true;
@@ -308,8 +356,8 @@ void N2D2::ConvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
         }
 
         if (!found) {
-            throw std::runtime_error("Cell name \"" + cellName
-                                     + "\" not found for WeightsSharing ["
+            throw std::runtime_error("Cell name \"" + biasesSharing
+                                     + "\" not found for BiasesSharing ["
                                      + section
                                      + "] in network configuration file: "
                                      + iniConfig.getFileName());

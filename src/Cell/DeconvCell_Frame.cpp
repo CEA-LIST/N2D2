@@ -45,7 +45,6 @@ N2D2::DeconvCell_Frame::DeconvCell_Frame(const std::string& name,
       Cell_Frame(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(1, 1, mNbOutputs, 1),
       mDiffBias(1, 1, mNbOutputs, 1),
       mConvDesc(1, 1, strideX, strideY, paddingX, paddingY)
 {
@@ -56,8 +55,20 @@ N2D2::DeconvCell_Frame::DeconvCell_Frame(const std::string& name,
 
 void N2D2::DeconvCell_Frame::initialize()
 {
-    if (!mNoBias)
-        mBiasFiller->apply(mBias);
+    if (!mNoBias) {
+        if (mBias.empty()) {
+            mBias.resize(1, 1, mNbOutputs, 1);
+            mBiasFiller->apply(mBias);
+        }
+        else {
+            if (mBias.dimX() != 1 || mBias.dimY() != 1
+                || mBias.dimZ() != mNbOutputs || mBias.dimB() != 1)
+            {
+                throw std::runtime_error("DeconvCell_Frame::initialize(): in "
+                    "cell " + mName + ", wrong size for shared bias");
+            }
+        }
+    }
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0) {

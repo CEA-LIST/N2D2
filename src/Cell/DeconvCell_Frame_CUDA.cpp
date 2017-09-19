@@ -48,7 +48,6 @@ N2D2::DeconvCell_Frame_CUDA::DeconvCell_Frame_CUDA(
       Cell_Frame_CUDA(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(1, 1, mNbOutputs, 1),
       mDiffBias(1, 1, mNbOutputs, 1),
       mWorkspaceSize(0),
       mWorkspace(NULL),
@@ -63,8 +62,19 @@ N2D2::DeconvCell_Frame_CUDA::DeconvCell_Frame_CUDA(
 void N2D2::DeconvCell_Frame_CUDA::initialize()
 {
     if (!mNoBias) {
-        mBiasFiller->apply(mBias);
-        mBias.synchronizeHToD();
+        if (mBias.empty()) {
+            mBias.resize(1, 1, mNbOutputs, 1);
+            mBiasFiller->apply(mBias);
+            mBias.synchronizeHToD();
+        }
+        else {
+            if (mBias.dimX() != 1 || mBias.dimY() != 1
+                || mBias.dimZ() != mNbOutputs || mBias.dimB() != 1)
+            {
+                throw std::runtime_error("DeconvCell_Frame_CUDA::initialize():"
+                    " in cell " + mName + ", wrong size for shared bias");
+            }
+        }
     }
 
 #if CUDNN_VERSION >= 6000
@@ -459,6 +469,19 @@ void N2D2::DeconvCell_Frame_CUDA::setWeights(unsigned int k,
     }
 
     mExtSharedSynapses[k] = std::make_pair(cudaWeights, offset);
+}
+
+void N2D2::DeconvCell_Frame_CUDA::setBiases(Tensor4d<Float_T>* biases)
+{
+    CudaTensor4d<Float_T>* cudaBiases
+        = dynamic_cast<CudaTensor4d<Float_T>*>(biases);
+
+    if (cudaBiases == NULL) {
+        throw std::runtime_error("DeconvCell_Frame_CUDA::setBiases(): biases"
+                                 " must be a CudaTensor4d");
+    }
+
+    mBias = (*cudaBiases);
 }
 
 void N2D2::DeconvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)

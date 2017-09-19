@@ -85,6 +85,14 @@ public:
     virtual Float_T getVariance(unsigned int channel,
                                 unsigned int sx,
                                 unsigned int sy) const = 0;
+    virtual Tensor4d<Float_T>* getScales() { return NULL; };
+    virtual void setScales(Tensor4d<Float_T>* /*scales*/) {};
+    virtual Tensor4d<Float_T>* getBiases() { return NULL; };
+    virtual void setBiases(Tensor4d<Float_T>* /*biases*/) {};
+    virtual Tensor4d<Float_T>* getMeans() { return NULL; };
+    virtual void setMeans(Tensor4d<Float_T>* /*means*/) {};
+    virtual Tensor4d<Float_T>* getVariances() { return NULL; };
+    virtual void setVariances(Tensor4d<Float_T>* /*variances*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
