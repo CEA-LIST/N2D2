@@ -315,6 +315,7 @@ namespace Utils {
                                    bool trimEmpty = false);
     std::string upperCase(const std::string& str);
     std::string lowerCase(const std::string& str);
+    unsigned int countSubstring(const std::string& str, const std::string& sub);
     std::string ltrim(std::string s);
 
     bool match(const std::string& first, const std::string& second);

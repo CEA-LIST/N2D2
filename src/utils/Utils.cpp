@@ -364,6 +364,20 @@ std::string N2D2::Utils::lowerCase(const std::string& str)
     return lowerStr;
 }
 
+unsigned int N2D2::Utils::countSubstring(const std::string& str,
+                                         const std::string& sub)
+{
+    unsigned int occurrences = 0;
+    std::string::size_type pos = 0;
+
+    while ((pos = str.find(sub, pos)) != std::string::npos) {
+        ++occurrences;
+        pos += sub.length();
+    }
+
+    return occurrences;
+}
+
 std::string N2D2::Utils::ltrim(std::string s)
 {
     s.erase(s.begin(),
