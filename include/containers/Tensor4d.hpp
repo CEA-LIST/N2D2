@@ -151,14 +151,12 @@ public:
     inline const_reference operator()(unsigned int index) const;
     reference at(unsigned int i, unsigned int j, unsigned int k, unsigned int b)
     {
-        return (*mData)
-            .at(i + j * mDimX + k * mDimX * mDimY + b * mDimX * mDimY * mDimZ);
+        return (*mData).at(i + mDimX * (j + mDimY * (k + mDimZ * b)));
     }
     const_reference
     at(unsigned int i, unsigned int j, unsigned int k, unsigned int b) const
     {
-        return (*mData)
-            .at(i + j * mDimX + k * mDimX * mDimY + b * mDimX * mDimY * mDimZ);
+        return (*mData).at(i + mDimX * (j + mDimY * (k + mDimZ * b)));
     }
     reference at(unsigned int index)
     {
@@ -232,8 +230,8 @@ protected:
     unsigned int mDimY;
     unsigned int mDimZ;
     unsigned int mDimB;
-    std::shared_ptr<std::vector<T> > mData;
-    std::shared_ptr<bool> mValid;
+    const std::shared_ptr<std::vector<T> > mData;
+    const std::shared_ptr<bool> mValid;
 };
 }
 
@@ -243,8 +241,8 @@ N2D2::Tensor4d<T>::Tensor4d()
       mDimY(0),
       mDimZ(0),
       mDimB(0),
-      mData(new std::vector<T>()),
-      mValid(new bool(false))
+      mData(std::make_shared<std::vector<T> >()),
+      mValid(std::make_shared<bool>(false))
 {
     // ctor
 }
@@ -259,8 +257,9 @@ N2D2::Tensor4d<T>::Tensor4d(unsigned int dimX,
       mDimY(dimY),
       mDimZ(dimZ),
       mDimB(dimB),
-      mData(new std::vector<T>(dimX * dimY * dimZ * dimB, value)),
-      mValid(new bool(false))
+      mData(std::make_shared<std::vector<T> >(dimX * dimY * dimZ * dimB,
+                                              value)),
+      mValid(std::make_shared<bool>(false))
 {
     // ctor
 }
@@ -277,8 +276,8 @@ N2D2::Tensor4d<T>::Tensor4d(unsigned int dimX,
       mDimY(dimY),
       mDimZ(dimZ),
       mDimB(dimB),
-      mData(new std::vector<T>(first, last)),
-      mValid(new bool(false))
+      mData(std::make_shared<std::vector<T> >(first, last)),
+      mValid(std::make_shared<bool>(false))
 {
     // ctor
     if (mDimX * mDimY * mDimZ * dimB != (*mData).size())
@@ -389,8 +388,7 @@ operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int b)
     assert(k < mDimZ);
     assert(b < mDimB);
 
-    return (
-        *mData)[i + j * mDimX + k * mDimX * mDimY + b * mDimX * mDimY * mDimZ];
+    return (*mData)[i + mDimX * (j + mDimY * (k + mDimZ * b))];
 }
 
 template <class T>
@@ -402,8 +400,7 @@ operator()(unsigned int i, unsigned int j, unsigned int k, unsigned int b) const
     assert(k < mDimZ);
     assert(b < mDimB);
 
-    return (
-        *mData)[i + j * mDimX + k * mDimX * mDimY + b * mDimX * mDimY * mDimZ];
+    return (*mData)[i + mDimX * (j + mDimY * (k + mDimZ * b))];
 }
 
 template <class T>
@@ -415,10 +412,8 @@ operator()(const Index& index)
     assert(index.k < mDimZ);
     assert(index.b < mDimB);
 
-    return (*mData)[index.i
-                    + index.j * mDimX
-                    + index.k * mDimX * mDimY
-                    + index.b * mDimX * mDimY * mDimZ];
+    return (*mData)[index.i + mDimX * (index.j + mDimY * (index.k
+            + mDimZ * index.b))];
 }
 
 template <class T>
@@ -430,10 +425,8 @@ operator()(const Index& index) const
     assert(index.k < mDimZ);
     assert(index.b < mDimB);
 
-    return (*mData)[index.i
-                    + index.j * mDimX
-                    + index.k * mDimX * mDimY
-                    + index.b * mDimX * mDimY * mDimZ];
+    return (*mData)[index.i + mDimX * (index.j + mDimY * (index.k
+            + mDimZ * index.b))];
 }
 
 template <class T>

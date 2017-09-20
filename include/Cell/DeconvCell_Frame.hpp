@@ -76,7 +76,7 @@ public:
     };
     inline Float_T getBias(unsigned int output) const
     {
-        return mBias(output);
+        return (*mBias)(output);
     };
     inline Interface<Float_T>* getWeights()
     {
@@ -85,13 +85,13 @@ public:
     void setWeights(unsigned int k,
                     Interface<Float_T>* weights,
                     unsigned int offset);
-    inline Tensor4d<Float_T>* getBiases()
+    inline std::shared_ptr<Tensor4d<Float_T> > getBiases()
     {
-        return &mBias;
+        return mBias;
     };
-    inline void setBiases(Tensor4d<Float_T>* biases)
+    inline void setBiases(const std::shared_ptr<Tensor4d<Float_T> >& biases)
     {
-        mBias = (*biases);
+        mBias = biases;
     }
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
@@ -111,7 +111,7 @@ protected:
     }
     inline void setBias(unsigned int output, Float_T value)
     {
-        mBias(output) = value;
+        (*mBias)(output) = value;
     };
 
     // Internal
@@ -119,7 +119,7 @@ protected:
     Interface<Float_T> mSharedSynapses;
     std::map<unsigned int,
         std::pair<Interface<Float_T>*, unsigned int> > mExtSharedSynapses;
-    Tensor4d<Float_T> mBias;
+    std::shared_ptr<Tensor4d<Float_T> > mBias;
     Interface<Float_T> mDiffSharedSynapses;
     Tensor4d<Float_T> mDiffBias;
     ConvCell_Frame_Kernels::Descriptor mConvDesc;

@@ -89,11 +89,11 @@ public:
     void setWeights(unsigned int k,
                     Interface<Float_T>* weights,
                     unsigned int offset);
-    inline Tensor4d<Float_T>* getBiases()
+    inline std::shared_ptr<Tensor4d<Float_T> > getBiases()
     {
-        return &mBias;
+        return mBias;
     };
-    void setBiases(Tensor4d<Float_T>* biases);
+    void setBiases(const std::shared_ptr<Tensor4d<Float_T> >& biases);
     void checkGradient(double /*epsilon*/ = 1.0e-4,
                        double /*maxError*/ = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
@@ -125,7 +125,7 @@ protected:
     CudaInterface<Float_T> mSharedSynapses;
     std::map<unsigned int,
         std::pair<CudaInterface<Float_T>*, unsigned int> > mExtSharedSynapses;
-    CudaTensor4d<Float_T> mBias;
+    std::shared_ptr<CudaTensor4d<Float_T> > mBias;
     CudaInterface<Float_T> mDiffSharedSynapses;
     CudaTensor4d<Float_T> mDiffBias;
 

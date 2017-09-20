@@ -53,54 +53,55 @@ public:
     inline Float_T
     getScale(unsigned int channel, unsigned int sx, unsigned int sy) const
     {
-        return mScale(sx, sy, channel, 0);
+        return (*mScale)(sx, sy, channel, 0);
     }
     inline Float_T
     getBias(unsigned int channel, unsigned int sx, unsigned int sy) const
     {
-        return mBias(sx, sy, channel, 0);
+        return (*mBias)(sx, sy, channel, 0);
     }
     inline Float_T
     getMean(unsigned int channel, unsigned int sx, unsigned int sy) const
     {
-        return mMean(sx, sy, channel, 0);
+        return (*mMean)(sx, sy, channel, 0);
     }
     inline Float_T
     getVariance(unsigned int channel, unsigned int sx, unsigned int sy) const
     {
-        return mVariance(sx, sy, channel, 0);
+        return (*mVariance)(sx, sy, channel, 0);
     }
-    inline Tensor4d<Float_T>* getScales()
+    inline std::shared_ptr<Tensor4d<Float_T> > getScales()
     {
-        return &mScale;
+        return mScale;
     };
-    inline void setScales(Tensor4d<Float_T>* scales)
+    inline void setScales(const std::shared_ptr<Tensor4d<Float_T> >& scales)
     {
-        mScale = (*scales);
+        mScale = scales;
     }
-    inline Tensor4d<Float_T>* getBiases()
+    inline std::shared_ptr<Tensor4d<Float_T> > getBiases()
     {
-        return &mBias;
+        return mBias;
     };
-    inline void setBiases(Tensor4d<Float_T>* biases)
+    inline void setBiases(const std::shared_ptr<Tensor4d<Float_T> >& biases)
     {
-        mBias = (*biases);
+        mBias = biases;
     }
-    inline Tensor4d<Float_T>* getMeans()
+    inline std::shared_ptr<Tensor4d<Float_T> > getMeans()
     {
-        return &mMean;
+        return mMean;
     };
-    inline void setMeans(Tensor4d<Float_T>* means)
+    inline void setMeans(const std::shared_ptr<Tensor4d<Float_T> >& means)
     {
-        mMean = (*means);
+        mMean = means;
     }
-    inline Tensor4d<Float_T>* getVariances()
+    inline std::shared_ptr<Tensor4d<Float_T> > getVariances()
     {
-        return &mVariance;
+        return mVariance;
     };
-    inline void setVariances(Tensor4d<Float_T>* variances)
+    inline void setVariances(const std::shared_ptr<Tensor4d<Float_T> >&
+                             variances)
     {
-        mVariance = (*variances);
+        mVariance = variances;
     }
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
@@ -117,35 +118,35 @@ protected:
                          unsigned int sy,
                          Float_T value)
     {
-        mScale(sx, sy, channel, 0) = value;
+        (*mScale)(sx, sy, channel, 0) = value;
     }
     inline void setBias(unsigned int channel,
                         unsigned int sx,
                         unsigned int sy,
                         Float_T value)
     {
-        mBias(sx, sy, channel, 0) = value;
+        (*mBias)(sx, sy, channel, 0) = value;
     }
     inline void setMean(unsigned int channel,
                         unsigned int sx,
                         unsigned int sy,
                         Float_T value)
     {
-        mMean(sx, sy, channel, 0) = value;
+        (*mMean)(sx, sy, channel, 0) = value;
     }
     inline void setVariance(unsigned int channel,
                             unsigned int sx,
                             unsigned int sy,
                             Float_T value)
     {
-        mVariance(sx, sy, channel, 0) = value;
+        (*mVariance)(sx, sy, channel, 0) = value;
     }
 
     unsigned int mNbPropagate;
-    Tensor4d<Float_T> mScale;
-    Tensor4d<Float_T> mBias;
-    Tensor4d<Float_T> mMean;
-    Tensor4d<Float_T> mVariance;
+    std::shared_ptr<Tensor4d<Float_T> > mScale;
+    std::shared_ptr<Tensor4d<Float_T> > mBias;
+    std::shared_ptr<Tensor4d<Float_T> > mMean;
+    std::shared_ptr<Tensor4d<Float_T> > mVariance;
     Tensor4d<Float_T> mDiffScale;
     Tensor4d<Float_T> mDiffBias;
     Tensor4d<Float_T> mDiffSavedMean;

@@ -49,6 +49,7 @@ N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
       Cell_Frame(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
+      mBias(std::make_shared<Tensor4d<Float_T> >()),
       mDiffBias(1, 1, mNbOutputs, 1),
       mConvDesc(subSampleX, subSampleY, strideX, strideY, paddingX, paddingY)
 {
@@ -60,13 +61,13 @@ N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
 void N2D2::ConvCell_Frame::initialize()
 {
     if (!mNoBias) {
-        if (mBias.empty()) {
-            mBias.resize(1, 1, mNbOutputs, 1);
-            mBiasFiller->apply(mBias);
+        if (mBias->empty()) {
+            mBias->resize(1, 1, mNbOutputs, 1);
+            mBiasFiller->apply((*mBias));
         }
         else {
-            if (mBias.dimX() != 1 || mBias.dimY() != 1
-                || mBias.dimZ() != mNbOutputs || mBias.dimB() != 1)
+            if (mBias->dimX() != 1 || mBias->dimY() != 1
+                || mBias->dimZ() != mNbOutputs || mBias->dimB() != 1)
             {
                 throw std::runtime_error("ConvCell_Frame::initialize(): in "
                     "cell " + mName + ", wrong size for shared bias");
@@ -144,7 +145,7 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
     }
 
     if (!mNoBias)
-        ConvCell_Frame_Kernels::forwardBias(mBias, mOutputs);
+        ConvCell_Frame_Kernels::forwardBias((*mBias), mOutputs);
 
     Cell_Frame::propagate();
     mDiffInputs.clearValid();
@@ -205,7 +206,7 @@ void N2D2::ConvCell_Frame::update()
             &mSharedSynapses[k], &mDiffSharedSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
 }
 
 void N2D2::ConvCell_Frame::setWeights(unsigned int k,
@@ -232,7 +233,7 @@ void N2D2::ConvCell_Frame::checkGradient(double epsilon, double maxError)
     }
 
     if (!mNoBias)
-        gc.check(mName + "_mDiffBias", mBias, mDiffBias);
+        gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
     if (!mDiffOutputs.empty()) {
         for (unsigned int k = 0; k < mInputs.size(); ++k) {
@@ -265,8 +266,8 @@ void N2D2::ConvCell_Frame::saveFreeParameters(const std::string& fileName) const
     }
 
     if (!mNoBias) {
-        for (std::vector<Float_T>::const_iterator it = mBias.begin();
-             it != mBias.end();
+        for (std::vector<Float_T>::const_iterator it = mBias->begin();
+             it != mBias->end();
              ++it)
             syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
     }
@@ -299,8 +300,8 @@ void N2D2::ConvCell_Frame::loadFreeParameters(const std::string& fileName,
     }
 
     if (!mNoBias) {
-        for (std::vector<Float_T>::iterator it = mBias.begin();
-             it != mBias.end();
+        for (std::vector<Float_T>::iterator it = mBias->begin();
+             it != mBias->end();
              ++it)
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
     }

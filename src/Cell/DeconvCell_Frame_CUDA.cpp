@@ -48,6 +48,7 @@ N2D2::DeconvCell_Frame_CUDA::DeconvCell_Frame_CUDA(
       Cell_Frame_CUDA(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
+      mBias(std::make_shared<CudaTensor4d<Float_T> >()),
       mDiffBias(1, 1, mNbOutputs, 1),
       mWorkspaceSize(0),
       mWorkspace(NULL),
@@ -62,14 +63,14 @@ N2D2::DeconvCell_Frame_CUDA::DeconvCell_Frame_CUDA(
 void N2D2::DeconvCell_Frame_CUDA::initialize()
 {
     if (!mNoBias) {
-        if (mBias.empty()) {
-            mBias.resize(1, 1, mNbOutputs, 1);
-            mBiasFiller->apply(mBias);
-            mBias.synchronizeHToD();
+        if (mBias->empty()) {
+            mBias->resize(1, 1, mNbOutputs, 1);
+            mBiasFiller->apply((*mBias));
+            mBias->synchronizeHToD();
         }
         else {
-            if (mBias.dimX() != 1 || mBias.dimY() != 1
-                || mBias.dimZ() != mNbOutputs || mBias.dimB() != 1)
+            if (mBias->dimX() != 1 || mBias->dimY() != 1
+                || mBias->dimZ() != mNbOutputs || mBias->dimB() != 1)
             {
                 throw std::runtime_error("DeconvCell_Frame_CUDA::initialize():"
                     " in cell " + mName + ", wrong size for shared bias");
@@ -327,8 +328,8 @@ void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(cudnnAddTensor(CudaContext::cudnnHandle(),
                                           &alpha,
-                                          mBias.getCudnnTensorDesc(),
-                                          mBias.getDevicePtr(),
+                                          mBias->getCudnnTensorDesc(),
+                                          mBias->getDevicePtr(),
                                           &alpha,
                                           mOutputs.getCudnnTensorDesc(),
                                           mOutputs.getDevicePtr()));
@@ -336,8 +337,8 @@ void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
         CHECK_CUDNN_STATUS(cudnnAddTensor(CudaContext::cudnnHandle(),
                                           CUDNN_ADD_SAME_C,
                                           &alpha,
-                                          mBias.getCudnnTensorDesc(),
-                                          mBias.getDevicePtr(),
+                                          mBias->getCudnnTensorDesc(),
+                                          mBias->getDevicePtr(),
                                           &alpha,
                                           mOutputs.getCudnnTensorDesc(),
                                           mOutputs.getDevicePtr()));
@@ -453,7 +454,7 @@ void N2D2::DeconvCell_Frame_CUDA::update()
             &mSharedSynapses[k], &mDiffSharedSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
 }
 
 void N2D2::DeconvCell_Frame_CUDA::setWeights(unsigned int k,
@@ -471,17 +472,18 @@ void N2D2::DeconvCell_Frame_CUDA::setWeights(unsigned int k,
     mExtSharedSynapses[k] = std::make_pair(cudaWeights, offset);
 }
 
-void N2D2::DeconvCell_Frame_CUDA::setBiases(Tensor4d<Float_T>* biases)
+void N2D2::DeconvCell_Frame_CUDA::setBiases(
+    std::shared_ptr<Tensor4d<Float_T> >& biases)
 {
-    CudaTensor4d<Float_T>* cudaBiases
-        = dynamic_cast<CudaTensor4d<Float_T>*>(biases);
+    std::shared_ptr<CudaTensor4d<Float_T> > cudaBiases
+        = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(biases);
 
-    if (cudaBiases == NULL) {
+    if (!cudaBiases) {
         throw std::runtime_error("DeconvCell_Frame_CUDA::setBiases(): biases"
                                  " must be a CudaTensor4d");
     }
 
-    mBias = (*cudaBiases);
+    mBias = cudaBiases;
 }
 
 void N2D2::DeconvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
@@ -501,7 +503,7 @@ void N2D2::DeconvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
     }
 
     if (!mNoBias)
-        gc.check(mName + "_mDiffBias", mBias, mDiffBias);
+        gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
     if (!mDiffOutputs.empty()) {
         for (unsigned int k = 0; k < mInputs.size(); ++k) {
@@ -522,7 +524,7 @@ void N2D2::DeconvCell_Frame_CUDA::logFreeParameters(const std::string& fileName,
                                                     unsigned int channel) const
 {
     mSharedSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    mBias->synchronizeDToH();
 
     mSynchronized = true;
     DeconvCell::logFreeParameters(fileName, output, channel);
@@ -533,7 +535,7 @@ void N2D2::DeconvCell_Frame_CUDA::logFreeParameters(const std::string& fileName,
                                                     unsigned int output) const
 {
     mSharedSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    mBias->synchronizeDToH();
 
     mSynchronized = true;
     DeconvCell::logFreeParameters(fileName, output);
@@ -544,7 +546,7 @@ void N2D2::DeconvCell_Frame_CUDA::logFreeParameters(const std::string
                                                     & dirName) const
 {
     mSharedSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    mBias->synchronizeDToH();
 
     mSynchronized = true;
     DeconvCell::logFreeParameters(dirName);
@@ -571,10 +573,10 @@ void N2D2::DeconvCell_Frame_CUDA::saveFreeParameters(const std::string
     }
 
     if (!mNoBias) {
-        mBias.synchronizeDToH();
+        mBias->synchronizeDToH();
 
-        for (std::vector<Float_T>::const_iterator it = mBias.begin();
-             it != mBias.end();
+        for (std::vector<Float_T>::const_iterator it = mBias->begin();
+             it != mBias->end();
              ++it)
             syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
     }
@@ -610,13 +612,13 @@ void N2D2::DeconvCell_Frame_CUDA::loadFreeParameters(const std::string
     mSharedSynapses.synchronizeHToD();
 
     if (!mNoBias) {
-        for (std::vector<Float_T>::iterator it = mBias.begin();
-             it != mBias.end();
+        for (std::vector<Float_T>::iterator it = mBias->begin();
+             it != mBias->end();
              ++it)
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
     }
 
-    mBias.synchronizeHToD();
+    mBias->synchronizeHToD();
 
     if (syn.eof())
         throw std::runtime_error(
@@ -634,7 +636,7 @@ void N2D2::DeconvCell_Frame_CUDA::exportFreeParameters(const std::string
                                                        & fileName) const
 {
     mSharedSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    mBias->synchronizeDToH();
 
     mSynchronized = true;
     DeconvCell::exportFreeParameters(fileName);
@@ -650,14 +652,14 @@ void N2D2::DeconvCell_Frame_CUDA::importFreeParameters(const std::string
     mSynchronized = false;
 
     mSharedSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
+    mBias->synchronizeHToD();
 }
 
 void N2D2::DeconvCell_Frame_CUDA::logFreeParametersDistrib(const std::string
                                                            & fileName) const
 {
     mSharedSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    mBias->synchronizeDToH();
 
     mSynchronized = true;
     DeconvCell::logFreeParametersDistrib(fileName);

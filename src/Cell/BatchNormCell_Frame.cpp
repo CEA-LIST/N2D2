@@ -30,7 +30,11 @@ N2D2::BatchNormCell_Frame::BatchNormCell_Frame(
     const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
-      Cell_Frame(name, nbOutputs, activation)
+      Cell_Frame(name, nbOutputs, activation),
+      mScale(std::make_shared<Tensor4d<Float_T> >()),
+      mBias(std::make_shared<Tensor4d<Float_T> >()),
+      mMean(std::make_shared<Tensor4d<Float_T> >()),
+      mVariance(std::make_shared<Tensor4d<Float_T> >())
 {
     // ctor
     mScaleSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
@@ -54,44 +58,44 @@ void N2D2::BatchNormCell_Frame::initialize()
 
     Tensor4d<Float_T>* input = *mInputs.begin();
 
-    if (mScale.empty())
-        mScale.resize(1, 1, input->dimZ(), 1, 1.0);
+    if (mScale->empty())
+        mScale->resize(1, 1, input->dimZ(), 1, 1.0);
     else {
-        if (mScale.dimX() != 1 || mScale.dimY() != 1
-            || mScale.dimZ() != input->dimZ() || mScale.dimB() != 1)
+        if (mScale->dimX() != 1 || mScale->dimY() != 1
+            || mScale->dimZ() != input->dimZ() || mScale->dimB() != 1)
         {
             throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
                 "cell " + mName + ", wrong size for shared scale");
         }
     }
 
-    if (mBias.empty())
-        mBias.resize(1, 1, input->dimZ(), 1, 0.0);
+    if (mBias->empty())
+        mBias->resize(1, 1, input->dimZ(), 1, 0.0);
     else {
-        if (mBias.dimX() != 1 || mBias.dimY() != 1
-            || mBias.dimZ() != input->dimZ() || mBias.dimB() != 1)
+        if (mBias->dimX() != 1 || mBias->dimY() != 1
+            || mBias->dimZ() != input->dimZ() || mBias->dimB() != 1)
         {
             throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
                 "cell " + mName + ", wrong size for shared bias");
         }
     }
 
-    if (mMean.empty())
-        mMean.resize(1, 1, input->dimZ(), 1, 0.0);
+    if (mMean->empty())
+        mMean->resize(1, 1, input->dimZ(), 1, 0.0);
     else {
-        if (mMean.dimX() != 1 || mMean.dimY() != 1
-            || mMean.dimZ() != input->dimZ() || mMean.dimB() != 1)
+        if (mMean->dimX() != 1 || mMean->dimY() != 1
+            || mMean->dimZ() != input->dimZ() || mMean->dimB() != 1)
         {
             throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
                 "cell " + mName + ", wrong size for shared mean");
         }
     }
 
-    if (mVariance.empty())
-        mVariance.resize(1, 1, input->dimZ(), 1, 0.0);
+    if (mVariance->empty())
+        mVariance->resize(1, 1, input->dimZ(), 1, 0.0);
     else {
-        if (mVariance.dimX() != 1 || mVariance.dimY() != 1
-            || mVariance.dimZ() != input->dimZ() || mVariance.dimB() != 1)
+        if (mVariance->dimX() != 1 || mVariance->dimY() != 1
+            || mVariance->dimZ() != input->dimZ() || mVariance->dimB() != 1)
         {
             throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
                 "cell " + mName + ", wrong size for shared variance");
@@ -119,15 +123,15 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 #endif
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
             for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                const Float_T var = std::sqrt(mVariance(output) + mEpsilon);
+                const Float_T var = std::sqrt((*mVariance)(output) + mEpsilon);
 
                 for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
                     for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
                         const Float_T normalized
                             = (mInputs(ox, oy, output, batchPos)
-                               - mMean(output)) / var;
+                               - (*mMean)(output)) / var;
                         mOutputs(ox, oy, output, batchPos)
-                            = mScale(output) * normalized + mBias(output);
+                            = (*mScale)(output) * normalized + (*mBias)(output);
                     }
                 }
             }
@@ -165,10 +169,10 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 
             mSavedVariance(output) = sum / (Float_T)size;
 
-            mMean(output) = mSavedMean(output) * expAverageFactor
-                            + mMean(output) * (1.0 - expAverageFactor);
-            mVariance(output) = mSavedVariance(output) * expAverageFactor
-                                + mVariance(output) * (1.0 - expAverageFactor);
+            (*mMean)(output) = mSavedMean(output) * expAverageFactor
+                            + (*mMean)(output) * (1.0 - expAverageFactor);
+            (*mVariance)(output) = mSavedVariance(output) * expAverageFactor
+                                + (*mVariance)(output) * (1.0 - expAverageFactor);
         }
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -187,7 +191,7 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
                             = (mInputs(ox, oy, output, batchPos)
                                - mSavedMean(output)) / var;
                         mOutputs(ox, oy, output, batchPos)
-                            = mScale(output) * normalized + mBias(output);
+                            = (*mScale)(output) * normalized + (*mBias)(output);
                     }
                 }
             }
@@ -225,7 +229,7 @@ void N2D2::BatchNormCell_Frame::backPropagate()
                            - mSavedMean(output)) / var;
                     const Float_T diffNormalized
                         = mDiffInputs(ox, oy, output, batchPos)
-                          * mScale(output);
+                          * (*mScale)(output);
 
                     sumScale += mDiffInputs(ox, oy, output, batchPos)
                                 * normalized;
@@ -270,7 +274,7 @@ void N2D2::BatchNormCell_Frame::backPropagate()
                     for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
                         const Float_T diffNormalized
                             = mDiffInputs(ox, oy, output, batchPos)
-                              * mScale(output);
+                              * (*mScale)(output);
                         const Float_T gradient
                             = diffNormalized / var
                               + mDiffSavedVariance(output) * 2.0
@@ -294,12 +298,12 @@ void N2D2::BatchNormCell_Frame::backPropagate()
 
 void N2D2::BatchNormCell_Frame::update()
 {
-    assert(mScale.size() == mDiffScale.size());
-    assert(mBias.size() == mDiffBias.size());
-    assert(mScale.size() == mBias.size());
+    assert(mScale->size() == mDiffScale.size());
+    assert(mBias->size() == mDiffBias.size());
+    assert(mScale->size() == mBias->size());
 
-    mScaleSolver->update(&mScale, &mDiffScale, mInputs.dimB());
-    mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+    mScaleSolver->update(&(*mScale), &mDiffScale, mInputs.dimB());
+    mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
 }
 
 void N2D2::BatchNormCell_Frame::checkGradient(double epsilon, double maxError)
@@ -312,8 +316,8 @@ void N2D2::BatchNormCell_Frame::checkGradient(double epsilon, double maxError)
                   std::bind(&BatchNormCell_Frame::backPropagate, this));
     gc.check(mName + "_mDiffSavedMean", mSavedMean, mDiffSavedMean);
     gc.check(mName + "_mDiffSavedVariance", mSavedVariance, mDiffSavedVariance);
-    gc.check(mName + "_mDiffScale", mScale, mDiffScale);
-    gc.check(mName + "_mDiffBias", mBias, mDiffBias);
+    gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
+    gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
     if (!mDiffOutputs.empty()) {
         for (unsigned int in = 0; in < mInputs.size(); ++in) {
@@ -338,23 +342,23 @@ void N2D2::BatchNormCell_Frame::saveFreeParameters(const std::string
         throw std::runtime_error("Could not create parameter file (.SYN): "
                                  + fileName);
 
-    for (std::vector<Float_T>::const_iterator it = mScale.begin();
-         it != mScale.end();
+    for (std::vector<Float_T>::const_iterator it = mScale->begin();
+         it != mScale->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::const_iterator it = mBias.begin();
-         it != mBias.end();
+    for (std::vector<Float_T>::const_iterator it = mBias->begin();
+         it != mBias->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::const_iterator it = mMean.begin();
-         it != mMean.end();
+    for (std::vector<Float_T>::const_iterator it = mMean->begin();
+         it != mMean->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::const_iterator it = mVariance.begin();
-         it != mVariance.end();
+    for (std::vector<Float_T>::const_iterator it = mVariance->begin();
+         it != mVariance->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
@@ -378,20 +382,20 @@ void N2D2::BatchNormCell_Frame::loadFreeParameters(const std::string& fileName,
                                      + fileName);
     }
 
-    for (std::vector<Float_T>::iterator it = mScale.begin(); it != mScale.end();
+    for (std::vector<Float_T>::iterator it = mScale->begin(); it != mScale->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::iterator it = mBias.begin(); it != mBias.end();
+    for (std::vector<Float_T>::iterator it = mBias->begin(); it != mBias->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::iterator it = mMean.begin(); it != mMean.end();
+    for (std::vector<Float_T>::iterator it = mMean->begin(); it != mMean->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::iterator it = mVariance.begin();
-         it != mVariance.end();
+    for (std::vector<Float_T>::iterator it = mVariance->begin();
+         it != mVariance->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 

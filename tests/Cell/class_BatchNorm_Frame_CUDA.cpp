@@ -42,9 +42,36 @@ public:
           BatchNormCell(name, nbOutputs),
           BatchNormCell_Frame_CUDA(name, nbOutputs, activation) {};
 
+    friend class UnitTest_BatchNormCell_Frame_CUDA_setScales;
     friend class UnitTest_BatchNormCell_Frame_CUDA_addInput__env;
     friend class UnitTest_BatchNormCell_Frame_CUDA_addInput;
 };
+
+TEST(BatchNormCell_Frame_CUDA, setScales)
+{
+    Network net;
+    Environment env(net, EmptyDatabase, 10, 10);
+
+    BatchNormCell_Frame_CUDA_Test bn1(
+        "bn1", 1, std::shared_ptr<Activation<Float_T> >());
+    BatchNormCell_Frame_CUDA_Test bn2(
+        "bn2", 1, std::shared_ptr<Activation<Float_T> >());
+
+    bn1.addInput(env);
+    bn2.addInput(env);
+
+    bn2.setScales(bn1.getScales());
+    bn1.initialize();
+    bn2.initialize();
+
+    ASSERT_EQUALS(bn1.getScale(0, 0, 0), 1.0);
+    ASSERT_EQUALS(bn2.getScale(0, 0, 0), 1.0);
+
+    bn1.setScale(0, 0, 0, 2.0);
+
+    ASSERT_EQUALS(bn1.getScale(0, 0, 0), 2.0);
+    ASSERT_EQUALS(bn2.getScale(0, 0, 0), 2.0);
+}
 
 TEST_DATASET(BatchNormCell_Frame_CUDA,
              addInput__env,
