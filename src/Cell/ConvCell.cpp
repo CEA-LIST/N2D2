@@ -775,13 +775,16 @@ std::map<unsigned int, unsigned int> N2D2::ConvCell::outputsRemap() const
         }
     }
 
-    // DEBUG
-    std::cout << "ConvCell::outputsRemap(): " << mName << std::endl;
+    if (!outputRemap.empty()) {
+        std::cout << "ConvCell::outputsRemap(): " << mName << std::endl;
 
-    for (std::map<unsigned int, unsigned int>::const_iterator
-        it = outputRemap.begin(), itEnd = outputRemap.end(); it != itEnd; ++it)
-    {
-        std::cout << "  " << (*it).first << " -> " << (*it).second << std::endl;
+        for (std::map<unsigned int, unsigned int>::const_iterator
+            it = outputRemap.begin(), itEnd = outputRemap.end(); it != itEnd;
+            ++it)
+        {
+            std::cout << "  " << (*it).first << " -> " << (*it).second
+            << std::endl;
+        }
     }
 
     return outputRemap;
