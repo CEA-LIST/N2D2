@@ -473,7 +473,7 @@ void N2D2::DeconvCell_Frame_CUDA::setWeights(unsigned int k,
 }
 
 void N2D2::DeconvCell_Frame_CUDA::setBiases(
-    std::shared_ptr<Tensor4d<Float_T> >& biases)
+    const std::shared_ptr<Tensor4d<Float_T> >& biases)
 {
     std::shared_ptr<CudaTensor4d<Float_T> > cudaBiases
         = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(biases);

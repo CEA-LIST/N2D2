@@ -166,18 +166,18 @@ N2D2::Float_T N2D2::DeconvCell_Frame_CUDA::getWeight(unsigned int output,
 
 void N2D2::DeconvCell_Frame_CUDA::setBias(unsigned int output, Float_T value)
 {
-    mBias(output) = value;
+    (*mBias)(output) = value;
 
     if (!mSynchronized)
-        mBias.synchronizeHToD(output, 1);
+        mBias->synchronizeHToD(output, 1);
 }
 
 N2D2::Float_T N2D2::DeconvCell_Frame_CUDA::getBias(unsigned int output) const
 {
     if (!mSynchronized)
-        mBias.synchronizeDToH(output, 1);
+        mBias->synchronizeDToH(output, 1);
 
-    return mBias(output);
+    return (*mBias)(output);
 }
 
 #endif // N2D2_DECONVCELL_FRAME_CUDA_H

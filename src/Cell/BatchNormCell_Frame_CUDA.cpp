@@ -33,7 +33,7 @@ N2D2::BatchNormCell_Frame_CUDA::BatchNormCell_Frame_CUDA(
     const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
-      Cell_Frame_CUDA(name, nbOutputs, activation)
+      Cell_Frame_CUDA(name, nbOutputs, activation),
       mScale(std::make_shared<CudaTensor4d<Float_T> >()),
       mBias(std::make_shared<CudaTensor4d<Float_T> >()),
       mMean(std::make_shared<CudaTensor4d<Float_T> >()),
@@ -224,7 +224,7 @@ void N2D2::BatchNormCell_Frame_CUDA::update()
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setScales(
-    std::shared_ptr<Tensor4d<Float_T> >& scales)
+    const std::shared_ptr<Tensor4d<Float_T> >& scales)
 {
     std::shared_ptr<CudaTensor4d<Float_T> > cudaScales
         = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(scales);
@@ -238,7 +238,7 @@ void N2D2::BatchNormCell_Frame_CUDA::setScales(
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setBiases(
-    std::shared_ptr<Tensor4d<Float_T> >& biases)
+    const std::shared_ptr<Tensor4d<Float_T> >& biases)
 {
     std::shared_ptr<CudaTensor4d<Float_T> > cudaBiases
         = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(biases);
@@ -252,7 +252,7 @@ void N2D2::BatchNormCell_Frame_CUDA::setBiases(
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setMeans(
-    std::shared_ptr<Tensor4d<Float_T> >& means)
+    const std::shared_ptr<Tensor4d<Float_T> >& means)
 {
     std::shared_ptr<CudaTensor4d<Float_T> > cudaMeans
         = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(means);
@@ -266,7 +266,7 @@ void N2D2::BatchNormCell_Frame_CUDA::setMeans(
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setVariances(
-    std::shared_ptr<Tensor4d<Float_T> >& variances)
+    const std::shared_ptr<Tensor4d<Float_T> >& variances)
 {
     std::shared_ptr<CudaTensor4d<Float_T> > cudaVariances
         = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(variances);
