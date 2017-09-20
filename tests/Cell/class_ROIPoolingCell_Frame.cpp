@@ -117,7 +117,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     ASSERT_EQUALS(pool1.getNbChannels(), 4U + 1U);
     ASSERT_EQUALS(pool1.getChannelsWidth(), channelsWidth);
     ASSERT_EQUALS(pool1.getChannelsHeight(), channelsHeight);
-    ASSERT_EQUALS(pool1.getNbOutputs(), 1);
+    ASSERT_EQUALS(pool1.getNbOutputs(), 1U);
     ASSERT_EQUALS(pool1.getOutputsWidth(), outputsWidth);
     ASSERT_EQUALS(pool1.getOutputsHeight(), outputsHeight);
 
