@@ -49,6 +49,8 @@ public:
 
 TEST(BatchNormCell_Frame_CUDA, setScales)
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     Network net;
     Environment env(net, EmptyDatabase, 10, 10);
 
