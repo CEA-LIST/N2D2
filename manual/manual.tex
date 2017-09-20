@@ -3152,6 +3152,163 @@ Tanh activation function with an $\alpha$ parameter of
 $1.7159 \times (2.0/3.0)$.
 
 
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Anchor!}{Anchor}}
+Anchor layer for Faster R-CNN.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!Input! & This layer takes one or two
+  inputs. The total number of input channels must be \lstinline!ScoresCls! + 4,
+  with \lstinline!ScoresCls! being equal to 1 or 2. \\
+  \cellcolor{requiredcolor}\lstinline!Anchor[*]! & Anchors definition. For each
+  anchor, there must be two space-separated values: the root area and the aspect
+   ratio. \\
+  \lstinline!ScoresCls! & Number of classes per anchor. Must be 1 (if the scores
+  input uses logistic regression) or 2 (if the scores input is a two-class
+  softmax layer) \\
+ \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!PositiveIoU! [0.7] & \emph{all Frame} &  Assign a positive label
+  for anchors whose IoU overlap is higher than \lstinline!PositiveIoU! with any
+   ground-truth box \\
+  \lstinline!NegativeIoU! [0.3] & \emph{all Frame} & Assign a negative label
+  for non-positive anchors whose IoU overlap is lower than
+  \lstinline!NegativeIoU! for all ground-truth boxes \\
+  \lstinline!LossLambda! [10.0] & \emph{all Frame} & Balancing parameter $\lambda$ \\
+  \lstinline!LossPositiveSample! [128] & \emph{all Frame} & Number of random
+  positive samples for the loss computation \\
+  \lstinline!LossNegativeSample! [128] & \emph{all Frame} & Number of random
+  negative samples for the loss computation \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+Usage example:
+\begin{lstlisting}[language=ini]
+; RPN network: cls layer
+[scores]
+Input=...
+Type=Conv
+KernelWidth=1
+KernelHeight=1
+; 18 channels for 9 anchors
+NbChannels=18
+...
+
+[scores.softmax]
+Input=scores
+Type=Softmax
+NbOutputs=[scores]NbChannels
+WithLoss=1
+
+; RPN network: coordinates layer
+[coordinates]
+Input=...
+Type=Conv
+KernelWidth=1
+KernelHeight=1
+; 36 channels for 4 coordinates x 9 anchors
+NbChannels=36
+...
+
+; RPN network: anchors
+[anchors]
+Input=scores.softmax,coordinates
+Type=Anchor
+ScoresCls=2 ; using a two-class softmax for the scores
+Anchor[0]=32 1.0
+Anchor[1]=48 1.0
+Anchor[2]=64 1.0
+Anchor[3]=80 1.0
+Anchor[4]=96 1.0
+Anchor[5]=112 1.0
+Anchor[6]=128 1.0
+Anchor[7]=144 1.0
+Anchor[8]=160 1.0
+ConfigSection=anchors.config
+
+[anchors.config]
+PositiveIoU=0.7
+NegativeIoU=0.3
+LossLambda=1.0
+\end{lstlisting}
+
+
+\paragraph{Outputs remapping}
+
+Outputs remapping allows to convert \emph{scores} and \emph{coordinates} output
+feature maps layout from another ordering that the one used in the N2D2
+\lstinline{Anchor} layer, during weights import/export.
+
+For example, lets consider that the imported weights corresponds to the
+following output feature maps ordering:
+\begin{lstlisting}
+0 anchor[0].y
+1 anchor[0].x
+2 anchor[0].h
+3 anchor[0].w
+4 anchor[1].y
+5 anchor[1].x
+6 anchor[1].h
+7 anchor[1].w
+8 anchor[2].y
+9 anchor[2].x
+10 anchor[2].h
+11 anchor[2].w
+\end{lstlisting}
+
+The output feature maps ordering required by the \lstinline{Anchor} layer is:
+\begin{lstlisting}
+0 anchor[0].x
+1 anchor[1].x
+2 anchor[2].x
+3 anchor[0].y
+4 anchor[1].y
+5 anchor[2].y
+6 anchor[0].w
+7 anchor[1].w
+8 anchor[2].w
+9 anchor[0].h
+10 anchor[1].h
+11 anchor[2].h
+\end{lstlisting}
+
+The feature maps ordering can be changed during weights import/export:
+
+\begin{lstlisting}[language=ini]
+; RPN network: coordinates layer
+[coordinates]
+Input=...
+Type=Conv
+KernelWidth=1
+KernelHeight=1
+; 36 channels for 4 coordinates x 9 anchors
+NbChannels=36
+...
+ConfigSection=coordinates.config
+
+[coordinates.config]
+WeightsExportFormat=HWCO ; Weights format used by TensorFlow
+OutputsRemap=1:4,0:4,3:4,2:4
+\end{lstlisting}
+
+
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!Conv!}{Conv}}
 Convolutional layer.
