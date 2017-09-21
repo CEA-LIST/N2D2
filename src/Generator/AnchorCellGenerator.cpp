@@ -43,6 +43,11 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
 
     std::vector<AnchorCell::Anchor> anchors;
 
+    const AnchorCell::Anchor::Anchoring anchoring
+        = iniConfig.getProperty<AnchorCell::Anchor::Anchoring>("Anchoring",
+            AnchorCell::Anchor::Anchoring::TopLeft);
+
+    // First method: specify anchor by anchor with (root area, ratio) pairs
     unsigned int nextAnchor = 0;
     std::stringstream nextProperty;
     nextProperty << "Anchor[" << nextAnchor << "]";
@@ -52,20 +57,44 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
             iniConfig.getProperty<std::string>(nextProperty.str()));
 
         unsigned int rootArea;
-        double aspectRatio;
+        double ratio;
 
-        if (!(anchorValues >> rootArea) || !(anchorValues >> aspectRatio)) {
+        if (!(anchorValues >> rootArea) || !(anchorValues >> ratio)) {
             throw std::runtime_error(
                 "Unreadable anchor in section [" + section
                 + "] in network configuration file: "
                 + iniConfig.getFileName());
         }
 
-        anchors.push_back(AnchorCell::Anchor(rootArea*rootArea, aspectRatio));
+        anchors.push_back(AnchorCell::Anchor(rootArea*rootArea,
+                                             ratio,
+                                             1.0,
+                                             anchoring));
 
         ++nextAnchor;
         nextProperty.str(std::string());
         nextProperty << "Anchor[" << nextAnchor << "]";
+    }
+
+    // Second method: specify a base root area and a list of ratios and scales
+    // Both methods can be used simultaneously
+    const double rootArea = iniConfig.getProperty<double>("RootArea", 16);
+    const std::vector<double> ratios = iniConfig.getProperty
+        <std::vector<double> >("Ratios", std::vector<double>());
+    const std::vector<double> scales = iniConfig.getProperty
+        <std::vector<double> >("Scales", std::vector<double>(1, 1.0));
+
+    for (std::vector<double>::const_iterator itRatios = ratios.begin(),
+        itRatiosEnd = ratios.end(); itRatios != itRatiosEnd; ++itRatios)
+    {
+        for (std::vector<double>::const_iterator itScales = scales.begin(),
+            itScalesEnd = scales.end(); itScales != itScalesEnd; ++itScales)
+        {
+            anchors.push_back(AnchorCell::Anchor(rootArea*rootArea,
+                                                 (*itRatios),
+                                                 (*itScales),
+                                                 anchoring));
+        }
     }
 
     const unsigned int scoresCls = iniConfig.getProperty
@@ -109,6 +138,8 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
     }
 
     std::cout << "  # Anchors: " << anchors.size() << std::endl;
+    std::cout << "  # Outputs size: " << cell->getOutputsWidth() << "x"
+              << cell->getOutputsHeight() << std::endl;
     std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
 
     return cell;

@@ -45,21 +45,40 @@ namespace N2D2 {
 class AnchorCell : public virtual Cell {
 public:
     struct Anchor {
-        Anchor(unsigned int area_,
-               double aspectRatio_)
-            : width(Utils::round(std::sqrt(area_) * aspectRatio_)),
-              height(Utils::round(std::sqrt(area_) / aspectRatio_))
+        enum Anchoring {
+            TopLeft,
+            Centered,
+            Original
+        };
+
+        Anchor(Float_T x0_,
+               Float_T y0_,
+               Float_T width_,
+               Float_T height_)
+            : x0(x0_),
+              y0(y0_),
+              x1(width_ + x0_ - 1),
+              y1(height_ + y0_ - 1)
         {
         }
-        Anchor(unsigned int width_,
-               unsigned int height_)
-            : width(width_),
-              height(height_)
+        Anchor(Float_T width, Float_T height, Anchoring anchoring = TopLeft);
+        Anchor(unsigned int area,
+               double ratio,
+               double scale = 1.0,
+               Anchoring anchoring = TopLeft);
+        inline Float_T getWidth() const
         {
+            return (x1 - x0 + 1.0);
+        }
+        inline Float_T getHeight() const
+        {
+            return (y1 - y0 + 1.0);
         }
 
-        unsigned int width;
-        unsigned int height;
+        Float_T x0;
+        Float_T y0;
+        Float_T x1;
+        Float_T y1;
     };
     typedef std::tuple<Float_T, Float_T, Float_T, Float_T> BBox_T;
 
@@ -108,6 +127,12 @@ protected:
     std::vector<Anchor> mAnchors;
     unsigned int mScoresCls;
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell::Anchor::Anchoring>::data[]
+    = {"TopLeft", "Centered", "Original"};
 }
 
 #endif // N2D2_ANCHORCELL_H

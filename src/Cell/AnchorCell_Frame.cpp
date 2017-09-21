@@ -139,8 +139,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
     mInputs.synchronizeDToH();
 
     const unsigned int nbAnchors = mAnchors.size();
-    const double xRatio = mStimuliProvider.getSizeX() / (double)mOutputs.dimX();
-    const double yRatio = mStimuliProvider.getSizeY() / (double)mOutputs.dimY();
+    const double xRatio = std::ceil(mStimuliProvider.getSizeX()
+                                    / (double)mOutputs.dimX());
+    const double yRatio = std::ceil(mStimuliProvider.getSizeY()
+                                    / (double)mOutputs.dimY());
 
 #pragma omp parallel for if (mOutputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
@@ -189,8 +191,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             const std::vector<BBox_T>& GT = mGT[batchPos];
             const Anchor& anchor = mAnchors[k];
-            const Float_T wa = anchor.width;
-            const Float_T ha = anchor.height;
+            const Float_T x0a = anchor.x0;
+            const Float_T y0a = anchor.y0;
+            const Float_T wa = anchor.getWidth();
+            const Float_T ha = anchor.getHeight();
 /*
             // DEBUG
             std::cout << "Number of GT boxes: " << GT.size() << std::endl;
@@ -212,8 +216,8 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 */
             for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
                 for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
-                    const Float_T xac = xa * xRatio - wa / 2.0;
-                    const Float_T yac = ya * yRatio - ha / 2.0;
+                    const Float_T xac = x0a + xa * xRatio;
+                    const Float_T yac = y0a + ya * yRatio;
 
                     /**
                      * 1st condition: "During  training,  we  ignore all
@@ -459,8 +463,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 void N2D2::AnchorCell_Frame::backPropagate()
 {
     const unsigned int nbAnchors = mAnchors.size();
-    const double xRatio = mStimuliProvider.getSizeX() / (double)mOutputs.dimX();
-    const double yRatio = mStimuliProvider.getSizeY() / (double)mOutputs.dimY();
+    const double xRatio = std::ceil(mStimuliProvider.getSizeX()
+                                    / (double)mOutputs.dimX());
+    const double yRatio = std::ceil(mStimuliProvider.getSizeY()
+                                    / (double)mOutputs.dimY());
     const unsigned int nbLocations = mOutputsHeight * mOutputsWidth;
     const unsigned int miniBatchSize = mLossPositiveSample
                                         + mLossNegativeSample;
@@ -472,13 +478,15 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             const Anchor& anchor = mAnchors[k];
-            const Float_T wa = anchor.width;
-            const Float_T ha = anchor.height;
+            const Float_T x0a = anchor.x0;
+            const Float_T y0a = anchor.y0;
+            const Float_T wa = anchor.getWidth();
+            const Float_T ha = anchor.getHeight();
 
             for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
                 for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
-                    const Float_T xac = xa * xRatio - wa / 2.0;
-                    const Float_T yac = ya * yRatio - ha / 2.0;
+                    const Float_T xac = x0a + xa * xRatio;
+                    const Float_T yac = y0a + ya * yRatio;
 
                     if (xac >= 0.0
                         && yac >= 0.0
@@ -562,11 +570,13 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
                 // Parameterized Ground Truth coordinates
                 const Anchor& anchor = mAnchors[k];
-                const Float_T wa = anchor.width;
-                const Float_T ha = anchor.height;
+                const Float_T x0a = anchor.x0;
+                const Float_T y0a = anchor.y0;
+                const Float_T wa = anchor.getWidth();
+                const Float_T ha = anchor.getHeight();
 
-                const Float_T txgt = (xgt - xa * xRatio + wa / 2.0) / wa;
-                const Float_T tygt = (ygt - ya * yRatio + ha / 2.0) / ha;
+                const Float_T txgt = (xgt - x0a - xa * xRatio) / wa;
+                const Float_T tygt = (ygt - y0a - ya * yRatio) / ha;
                 const Float_T twgt = std::log(wgt / wa);
                 const Float_T thgt = std::log(hgt / ha);
 
