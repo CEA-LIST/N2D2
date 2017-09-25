@@ -46,7 +46,8 @@ class ROIPoolingCell : public virtual Cell {
 public:
     enum ROIPooling {
         Max,
-        Average
+        Average,
+        Bilinear
     };
 
     typedef std::function
@@ -95,7 +96,7 @@ protected:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::ROIPoolingCell::ROIPooling>::data[]
-    = {"Max", "Average"};
+    = {"Max", "Average", "Bilinear"};
 }
 
 #endif // N2D2_ROIPOOLINGCELL_H

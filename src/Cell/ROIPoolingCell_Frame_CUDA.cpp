@@ -116,7 +116,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
                                       outputOffset,
                                       mArgMax[k-1].getDevicePtr());
         }
-        else {
+        else if (mPooling == Average) {
             cudaSROIPoolingForwardAverage(alpha,
                                           mInputs[0].getDevicePtr(),
                                           mInputs[0].dimB(),
@@ -133,6 +133,11 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
                                           mOutputs.dimY(),
                                           mOutputs.dimX(),
                                           outputOffset);
+        }
+        else {
+            throw std::runtime_error("ROIPoolingCell_Frame_CUDA::propagate():"
+                                     " only Max and Average pooling "
+                                     "propagation are implemented");
         }
 
         outputOffset += mInputs[k].dimZ();
@@ -180,7 +185,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                        mDiffOutputs[k].dimX(),
                                        mArgMax[k-1].getDevicePtr());
         }
-        else {
+        else if (mPooling == Average) {
             cudaSROIPoolingBackwardAverage(alpha,
                                            mInputs[0].getDevicePtr(),
                                            mInputs[0].dimB(),
@@ -200,6 +205,11 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
         }
 
         outputOffset += mInputs[k].dimZ();
+    }
+    else {
+        throw std::runtime_error("ROIPoolingCell_Frame_CUDA::backPropagate():"
+                                 " only Max and Average pooling back-"
+                                 "propagation are implemented");
     }
 
     mDiffOutputs.synchronizeDToHBased();

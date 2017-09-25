@@ -192,7 +192,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                 }
             }
         }
-        else {
+        else if (mPooling == Average) {
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
@@ -261,6 +261,96 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             mOutputs(ox, oy, outputOffset + channel, batchPos)
                                 = alpha * ((poolCount > 0) ?
                                               (poolValue / poolCount) : 0.0)
+                                  + beta * mOutputs(ox, oy, outputOffset
+                                                        + channel, batchPos);
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            // Bilinear
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (size > 16)
+#else
+#pragma omp parallel for if (mOutputs.dimB() > 4 && size > 16)
+#endif
+            for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
+            {
+                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                    ++channel)
+                {
+                    const unsigned int inputBatch = batchPos / proposals.dimB();
+                    const double xRatio = mStimuliProvider.getSizeX()
+                        / (double)mInputs[k].dimX();
+                    const double yRatio = mStimuliProvider.getSizeY()
+                        / (double)mInputs[k].dimY();
+
+                    Float_T x = proposals(0, batchPos) / xRatio;
+                    Float_T y = proposals(1, batchPos) / yRatio;
+                    Float_T w = proposals(2, batchPos) / xRatio;
+                    Float_T h = proposals(3, batchPos) / yRatio;
+
+                    // Crop ROI to image boundaries
+                    if (x < 0) {
+                        w+= x;
+                        x = 0;
+                    }
+                    if (y < 0) {
+                        h+= y;
+                        y = 0;
+                    }
+                    if (x + w > (int)mInputs[k].dimX())
+                        w = mInputs[k].dimX() - x;
+                    if (y + h > (int)mInputs[k].dimY())
+                        h = mInputs[k].dimY() - y;
+
+                    const Float_T xPoolRatio = w / mOutputs.dimX();
+                    const Float_T yPoolRatio = h / mOutputs.dimY();
+
+                    for (unsigned int oy = 0; oy < mOutputs.dimY(); ++oy) {
+                        for (unsigned int ox = 0; ox < mOutputs.dimX(); ++ox) {
+                            // -0.5 + (ox + 0.5) and not ox because the
+                            // interpolation is done relative to the CENTER of
+                            // the pixels
+                            const Float_T sx = x + Utils::clamp<Float_T>(
+                                -0.5 + (ox + 0.5) * xPoolRatio, 0, w - 1);
+                            const Float_T sy = y + Utils::clamp<Float_T>(
+                                -0.5 + (oy + 0.5) * yPoolRatio, 0, h - 1);
+                            const unsigned int sx0 = (int)(sx);
+                            const unsigned int sy0 = (int)(sy);
+                            const Float_T dx = sx - sx0;
+                            const Float_T dy = sy - sy0;
+
+                            const Float_T i00 = mInputs[k](sx0,
+                                                           sy0,
+                                                           channel,
+                                                           inputBatch);
+                            const Float_T i10 = (sx0 + 1 < mInputs[k].dimX()) ?
+                                                 mInputs[k](sx0 + 1,
+                                                           sy0,
+                                                           channel,
+                                                           inputBatch) : 0.0;
+                            const Float_T i01 = (sy0 + 1 < mInputs[k].dimY()) ?
+                                                 mInputs[k](sx0,
+                                                           sy0 + 1,
+                                                           channel,
+                                                           inputBatch) : 0.0;
+                            const Float_T i11 = (sx0 + 1 < mInputs[k].dimX()
+                                                 && sy0 + 1 < mInputs[k].dimY())
+                                                 ? mInputs[k](sx0 + 1,
+                                                           sy0 + 1,
+                                                           channel,
+                                                           inputBatch) : 0.0;
+
+                            const Float_T value
+                                = i00 * (1 - dx) * (1 - dy)
+                                + i10 * dx * (1 - dy)
+                                + i01 * (1 - dx) * dy
+                                + i11 * (dx * dy);
+
+                            mOutputs(ox, oy, outputOffset + channel, batchPos)
+                                = alpha * value
                                   + beta * mOutputs(ox, oy, outputOffset
                                                         + channel, batchPos);
                         }
@@ -389,9 +479,9 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
             }
         }
         else {
-            throw std::runtime_error("ROIPoolingCell_Frame::backPropagate(): "
-                                     "Average pooling back-propagation not "
-                                     "implemented");
+            throw std::runtime_error("ROIPoolingCell_Frame::backPropagate():"
+                                     " only Max pooling back-"
+                                     "propagation is implemented");
         }
 
         //mDiffOutputs[k].setValid();
