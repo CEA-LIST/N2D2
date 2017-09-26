@@ -203,13 +203,14 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                            mDiffOutputs[k].dimY(),
                                            mDiffOutputs[k].dimX());
         }
+        else {
+            throw std::runtime_error("ROIPoolingCell_Frame_CUDA::"
+                                     "backPropagate(): only Max and Average "
+                                     "pooling back-propagation are "
+                                     "implemented");
+        }
 
         outputOffset += mInputs[k].dimZ();
-    }
-    else {
-        throw std::runtime_error("ROIPoolingCell_Frame_CUDA::backPropagate():"
-                                 " only Max and Average pooling back-"
-                                 "propagation are implemented");
     }
 
     mDiffOutputs.synchronizeDToHBased();
