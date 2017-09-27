@@ -86,7 +86,9 @@ public:
 protected:
     virtual void setOutputsSize();
 
+    Parameter<double> mMinSize;
     Parameter<double> mNMS_IoU_Threshold;
+    Parameter<unsigned int> mPre_NMS_TopN;
     Parameter<double> mForegroundRate;
     Parameter<double> mForegroundMinIoU;
     Parameter<double> mBackgroundMaxIoU;

@@ -57,8 +57,16 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                                                   y,
                                                   k + mScoreIndex * mNbAnchors,
                                                   batchPos);
+                    const Float_T w = mInputs(x,
+                                              y,
+                                              k + 3 * mNbAnchors,
+                                              batchPos);
+                    const Float_T h = mInputs(x,
+                                              y,
+                                              k + 4 * mNbAnchors,
+                                              batchPos);
 
-                    if (value >= 0.0) {
+                    if (value >= 0.0 && w >= mMinSize && h >= mMinSize) {
                         ROIs.push_back(std::make_pair(
                             Tensor4d<int>::Index(x, y, k, batchPos), value));
                     }
@@ -67,10 +75,22 @@ void N2D2::RPCell_Frame::propagate(bool inference)
         }
 
         // Sort ROIs by value
-        std::sort(ROIs.begin(),
-                  ROIs.end(),
-                  Utils::PairSecondPred<Tensor4d<int>::Index, Float_T,
-                    std::greater<Float_T> >());
+        if (mPre_NMS_TopN > 0) {
+            std::partial_sort(ROIs.begin(),
+                              ROIs.begin() + mPre_NMS_TopN,
+                              ROIs.end(),
+                              Utils::PairSecondPred<Tensor4d<int>::Index,
+                                Float_T, std::greater<Float_T> >());
+
+            // Drop the lowest score (unsorted) ROIs
+            ROIs.resize(mPre_NMS_TopN);
+        }
+        else {
+            std::sort(ROIs.begin(),
+                      ROIs.end(),
+                      Utils::PairSecondPred<Tensor4d<int>::Index, Float_T,
+                        std::greater<Float_T> >());
+        }
 
         if (inference) {
             // Non-Maximum Suppression (NMS)
