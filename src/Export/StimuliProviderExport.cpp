@@ -78,10 +78,21 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
             wMax/= normValue;
         }
     */
+
+    std::ofstream stimuliList((dirName + ".list").c_str());
+
+    if (!stimuliList.good()) {
+        throw std::runtime_error("Could not create stimuli list file: "
+                                 + dirName + ".list");
+    }
+
     for (unsigned int i = 0; i < size; ++i) {
         std::stringstream stimuliName;
         stimuliName << dirName << "/env" << std::setfill('0')
                     << std::setw(zeroPad) << i << ".pgm";
+        stimuliList << Utils::baseName(dirName) << "/"
+                    << Utils::baseName(stimuliName.str()) << "\n";
+
         std::ofstream envStimuli(stimuliName.str().c_str(),
                                  std::fstream::binary);
 
