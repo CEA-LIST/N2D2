@@ -66,7 +66,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                                               k + 4 * mNbAnchors,
                                               batchPos);
 
-                    if (value >= 0.0 && w >= mMinSize && h >= mMinSize) {
+                    if (value >= 0.0 && w >= mMinWidth && h >= mMinHeight) {
                         ROIs.push_back(std::make_pair(
                             Tensor4d<int>::Index(x, y, k, batchPos), value));
                     }
@@ -75,7 +75,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
         }
 
         // Sort ROIs by value
-        if (mPre_NMS_TopN > 0) {
+        if (mPre_NMS_TopN > 0 && mPre_NMS_TopN < ROIs.size()) {
             std::partial_sort(ROIs.begin(),
                               ROIs.begin() + mPre_NMS_TopN,
                               ROIs.end(),
@@ -94,7 +94,9 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
         if (inference) {
             // Non-Maximum Suppression (NMS)
-            for (unsigned int i = 0; i < ROIs.size() - 1; ++i) {
+            for (unsigned int i = 0; i < ROIs.size() - 1 && i < mNbProposals;
+                ++i)
+            {
                 const Tensor4d<int>::Index& ROIMax = ROIs[i].first;
 
                 const Float_T x0 = mInputs(ROIMax.i,
@@ -155,6 +157,9 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                     ++j;
                 }
             }
+
+            ROIs.resize(mNbProposals);
+
 /*
             // DEBUG
             std::cout << "RPCell NMS: " << ROIs.size() << " ROIs out of "

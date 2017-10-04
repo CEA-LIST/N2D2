@@ -47,7 +47,8 @@ public:
     enum ROIPooling {
         Max,
         Average,
-        Bilinear
+        Bilinear,   // Compatible with OpenCV resize() [INTER_LINEAR] function
+        BilinearTF  // Compatible with TensorFlow crop_and_resize() function
     };
 
     typedef std::function
@@ -87,6 +88,8 @@ protected:
     virtual void setInputsSize(unsigned int width, unsigned int height);
     virtual void setOutputsSize();
 
+    Parameter<bool> mFlip;
+
     StimuliProvider& mStimuliProvider;
     // Pooling type
     const ROIPooling mPooling;
@@ -96,7 +99,7 @@ protected:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::ROIPoolingCell::ROIPooling>::data[]
-    = {"Max", "Average", "Bilinear"};
+    = {"Max", "Average", "Bilinear", "BilinearTF"};
 }
 
 #endif // N2D2_ROIPOOLINGCELL_H

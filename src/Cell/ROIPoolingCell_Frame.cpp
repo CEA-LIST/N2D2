@@ -96,6 +96,11 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
         if (k > 1)
             beta = 1.0;
 
+        const double xRatio = std::ceil(mStimuliProvider.getSizeX()
+                                        / (double)mInputs[k].dimX());
+        const double yRatio = std::ceil(mStimuliProvider.getSizeY()
+                                        / (double)mInputs[k].dimY());
+
         if (mPooling == Max) {
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -108,10 +113,6 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                     ++channel)
                 {
                     const unsigned int inputBatch = batchPos / proposals.dimB();
-                    const double xRatio = mStimuliProvider.getSizeX()
-                        / (double)mInputs[k].dimX();
-                    const double yRatio = mStimuliProvider.getSizeY()
-                        / (double)mInputs[k].dimY();
 
                     Float_T x = proposals(0, batchPos) / xRatio;
                     Float_T y = proposals(1, batchPos) / yRatio;
@@ -204,10 +205,6 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                     ++channel)
                 {
                     const unsigned int inputBatch = batchPos / proposals.dimB();
-                    const double xRatio = mStimuliProvider.getSizeX()
-                        / (double)mInputs[k].dimX();
-                    const double yRatio = mStimuliProvider.getSizeY()
-                        / (double)mInputs[k].dimY();
 
                     Float_T x = proposals(0, batchPos) / xRatio;
                     Float_T y = proposals(1, batchPos) / yRatio;
@@ -270,6 +267,16 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
         }
         else {
             // Bilinear
+            Float_T xOffset = 0.0;
+            Float_T yOffset = 0.0;
+
+            if (mFlip) {
+                xOffset = (mStimuliProvider.getSizeX() - 1) / xRatio
+                            - (mInputs[k].dimX() - 1);
+                yOffset = (mStimuliProvider.getSizeY() - 1) / yRatio
+                            - (mInputs[k].dimY() - 1);
+            }
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
@@ -281,13 +288,9 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                     ++channel)
                 {
                     const unsigned int inputBatch = batchPos / proposals.dimB();
-                    const double xRatio = mStimuliProvider.getSizeX()
-                        / (double)mInputs[k].dimX();
-                    const double yRatio = mStimuliProvider.getSizeY()
-                        / (double)mInputs[k].dimY();
 
-                    Float_T x = proposals(0, batchPos) / xRatio;
-                    Float_T y = proposals(1, batchPos) / yRatio;
+                    Float_T x = proposals(0, batchPos) / xRatio - xOffset;
+                    Float_T y = proposals(1, batchPos) / yRatio - yOffset;
                     Float_T w = proposals(2, batchPos) / xRatio;
                     Float_T h = proposals(3, batchPos) / yRatio;
 
@@ -305,18 +308,37 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                     if (y + h > (int)mInputs[k].dimY())
                         h = mInputs[k].dimY() - y;
 
-                    const Float_T xPoolRatio = w / mOutputs.dimX();
-                    const Float_T yPoolRatio = h / mOutputs.dimY();
+                    Float_T xPoolRatio, yPoolRatio;
+
+                    if (mPooling == BilinearTF) {
+                        xPoolRatio = w / (mOutputs.dimX() - 1);
+                        yPoolRatio = h / (mOutputs.dimY() - 1);
+                    }
+                    else {
+                        xPoolRatio = w / mOutputs.dimX();
+                        yPoolRatio = h / mOutputs.dimY();
+                    }
 
                     for (unsigned int oy = 0; oy < mOutputs.dimY(); ++oy) {
                         for (unsigned int ox = 0; ox < mOutputs.dimX(); ++ox) {
-                            // -0.5 + (ox + 0.5) and not ox because the
-                            // interpolation is done relative to the CENTER of
-                            // the pixels
-                            const Float_T sx = x + Utils::clamp<Float_T>(
-                                -0.5 + (ox + 0.5) * xPoolRatio, 0, w - 1);
-                            const Float_T sy = y + Utils::clamp<Float_T>(
-                                -0.5 + (oy + 0.5) * yPoolRatio, 0, h - 1);
+                            Float_T sx, sy;
+
+                            if (mPooling == BilinearTF) {
+                                sx = std::min<Float_T>(x + ox * xPoolRatio,
+                                    mInputs[k].dimX() - 1);
+                                sy = std::min<Float_T>(y + oy * yPoolRatio,
+                                    mInputs[k].dimY() - 1);
+                            }
+                            else {
+                                // -0.5 + (ox + 0.5) and not ox because the
+                                // interpolation is done relative to the CENTER
+                                // of the pixels
+                                sx = x + Utils::clamp<Float_T>(
+                                    -0.5 + (ox + 0.5) * xPoolRatio, 0, w - 1);
+                                sy = y + Utils::clamp<Float_T>(
+                                    -0.5 + (oy + 0.5) * yPoolRatio, 0, h - 1);
+                            }
+
                             const unsigned int sx0 = (int)(sx);
                             const unsigned int sy0 = (int)(sy);
                             const Float_T dx = sx - sx0;
@@ -386,6 +408,11 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
             mDiffOutputs[k].setValid();
         }
 
+        const double xRatio = std::ceil(mStimuliProvider.getSizeX()
+                                        / (double)mInputs[k].dimX());
+        const double yRatio = std::ceil(mStimuliProvider.getSizeY()
+                                        / (double)mInputs[k].dimY());
+
         if (mPooling == Max) {
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -401,11 +428,6 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
                     const unsigned int inputBatch = batchPos / proposals.dimB();
                     //const Float_T betaBatch = (batchPos % proposals.dimB() == 0)
                     //                            ? beta : 1.0;
-
-                    const double xRatio = mStimuliProvider.getSizeX()
-                        / (double)mInputs[k].dimX();
-                    const double yRatio = mStimuliProvider.getSizeY()
-                        / (double)mInputs[k].dimY();
 
                     Float_T x = proposals(0, batchPos) / xRatio;
                     Float_T y = proposals(1, batchPos) / yRatio;

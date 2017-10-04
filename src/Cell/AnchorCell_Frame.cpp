@@ -127,6 +127,26 @@ void N2D2::AnchorCell_Frame::initialize()
                                 " anchors.");
     }
 
+    if (mFlip) {
+        const double xRatio = std::ceil(mStimuliProvider.getSizeX()
+                                        / (double)mOutputs.dimX());
+        const double yRatio = std::ceil(mStimuliProvider.getSizeY()
+                                        / (double)mOutputs.dimY());
+
+        const double xOffset = mStimuliProvider.getSizeX() - 1
+                                - (mOutputsWidth - 1) * xRatio;
+        const double yOffset = mStimuliProvider.getSizeY() - 1
+                                - (mOutputsHeight - 1) * yRatio;
+
+        for (unsigned int k = 0; k < nbAnchors; ++k) {
+            Anchor& anchor = mAnchors[k];
+            anchor.x0 += xOffset;
+            anchor.y0 += yOffset;
+            anchor.x1 += xOffset;
+            anchor.y1 += yOffset;
+        }
+    }
+
     mGT.resize(mOutputs.dimB());
     mArgMaxIoU.resize(mOutputsWidth,
                       mOutputsHeight,
@@ -191,10 +211,6 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             const std::vector<BBox_T>& GT = mGT[batchPos];
             const Anchor& anchor = mAnchors[k];
-            const Float_T x0a = anchor.x0;
-            const Float_T y0a = anchor.y0;
-            const Float_T wa = anchor.getWidth();
-            const Float_T ha = anchor.getHeight();
 /*
             // DEBUG
             std::cout << "Number of GT boxes: " << GT.size() << std::endl;
@@ -216,8 +232,19 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 */
             for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
                 for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
-                    const Float_T xac = x0a + xa * xRatio;
-                    const Float_T yac = y0a + ya * yRatio;
+                    // Shifted anchors coordinates at (xa, ya)
+                    const int xa0 = (int)(anchor.x0 + xa * xRatio);
+                    const int ya0 = (int)(anchor.y0 + ya * yRatio);
+                    const int xa1 = (int)(anchor.x1 + xa * xRatio);
+                    const int ya1 = (int)(anchor.y1 + ya * yRatio);
+
+                    // Anchors width and height
+                    const int wa = xa1 - xa0;
+                    const int ha = ya1 - ya0;
+
+                    // Anchor center coordinates (xac, yac)
+                    const Float_T xac = xa0 + wa / 2.0;
+                    const Float_T yac = ya0 + ha / 2.0;
 
                     /**
                      * 1st condition: "During  training,  we  ignore all
@@ -226,10 +253,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                      * 2nd condition: "During testing, however, we still apply
                      * the fully convolutional RPN  to  the  entire  image."
                     */
-                    if ((xac >= 0.0
-                        && yac >= 0.0
-                        && xac + wa < mStimuliProvider.getSizeX()
-                        && yac + ha < mStimuliProvider.getSizeY())
+                    if ((xa0 >= 0
+                        && ya0 >= 0
+                        && xa1 < (int)mStimuliProvider.getSizeX()
+                        && ya1 < (int)mStimuliProvider.getSizeY())
                         || inference)
                     {
                         // Score
@@ -245,11 +272,17 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                         const Float_T thbb = mInputs(xa, ya,
                             k + (mScoresCls + 3) * nbAnchors, batchPos);
 
-                        // Predicted box coordinates
-                        Float_T xbb = txbb * wa + xac;
-                        Float_T ybb = tybb * ha + yac;
+                        // Predicted box center coordinates
+                        const Float_T xbbc = ((mFlip) ? -txbb : txbb) * wa
+                                                + xac;
+                        const Float_T ybbc = ((mFlip) ? -tybb : tybb) * ha
+                                                + yac;
                         Float_T wbb = wa * std::exp(twbb);
                         Float_T hbb = ha * std::exp(thbb);
+
+                        // Predicted box top-left coordinates
+                        Float_T xbb = xbbc - wbb / 2.0;
+                        Float_T ybb = ybbc - hbb / 2.0;
 
                         if (inference) {
                             /// During testing: "This  may  generate
@@ -264,10 +297,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                                 hbb+= ybb;
                                 ybb = 0.0;
                             }
-                            if (xbb + wbb > mStimuliProvider.getSizeX())
-                                wbb = mStimuliProvider.getSizeX() - xbb;
-                            if (ybb + hbb > mStimuliProvider.getSizeY())
-                                hbb = mStimuliProvider.getSizeY() - ybb;
+                            if (xbb + wbb > mStimuliProvider.getSizeX() - 1)
+                                wbb = mStimuliProvider.getSizeX() - 1 - xbb;
+                            if (ybb + hbb > mStimuliProvider.getSizeY() - 1)
+                                hbb = mStimuliProvider.getSizeY() - 1 - ybb;
                         }
 
                         // For inference, compute IoU on predicted boxes
@@ -278,7 +311,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                         Float_T x, y, w, h;
                         std::tie(x, y, w, h)
                             = (inference) ? BBox_T(xbb, ybb, wbb, hbb)
-                                          : BBox_T(xac, yac, wa, ha);
+                                          : BBox_T(xa0, ya0, wa, ha);
 
                         Float_T maxIoU = 0.0;
                         int argMaxIoU = -1;
@@ -478,20 +511,19 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             const Anchor& anchor = mAnchors[k];
-            const Float_T x0a = anchor.x0;
-            const Float_T y0a = anchor.y0;
-            const Float_T wa = anchor.getWidth();
-            const Float_T ha = anchor.getHeight();
 
             for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
                 for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
-                    const Float_T xac = x0a + xa * xRatio;
-                    const Float_T yac = y0a + ya * yRatio;
+                    // Shifted anchors coordinates at (xa, ya)
+                    const int xa0 = (int)(anchor.x0 + xa * xRatio);
+                    const int ya0 = (int)(anchor.y0 + ya * yRatio);
+                    const int xa1 = (int)(anchor.x1 + xa * xRatio);
+                    const int ya1 = (int)(anchor.y1 + ya * yRatio);
 
-                    if (xac >= 0.0
-                        && yac >= 0.0
-                        && xac + wa < mStimuliProvider.getSizeX()
-                        && yac + ha < mStimuliProvider.getSizeY())
+                    if (xa0 >= 0
+                        && ya0 >= 0
+                        && xa1 < (int)mStimuliProvider.getSizeX()
+                        && ya1 < (int)mStimuliProvider.getSizeY())
                     {
                         const Float_T IoU = mOutputs(xa, ya,
                                                 k + 5 * nbAnchors, batchPos);
@@ -568,15 +600,31 @@ void N2D2::AnchorCell_Frame::backPropagate()
                 int xgt, ygt, wgt, hgt;
                 std::tie(xgt, ygt, wgt, hgt) = mGT[batchPos][argMaxIoU];
 
-                // Parameterized Ground Truth coordinates
                 const Anchor& anchor = mAnchors[k];
-                const Float_T x0a = anchor.x0;
-                const Float_T y0a = anchor.y0;
-                const Float_T wa = anchor.getWidth();
-                const Float_T ha = anchor.getHeight();
 
-                const Float_T txgt = (xgt - x0a - xa * xRatio) / wa;
-                const Float_T tygt = (ygt - y0a - ya * yRatio) / ha;
+                // Shifted anchors coordinates at (xa, ya)
+                const int xa0 = (int)(anchor.x0 + xa * xRatio);
+                const int ya0 = (int)(anchor.y0 + ya * yRatio);
+                const int xa1 = (int)(anchor.x1 + xa * xRatio);
+                const int ya1 = (int)(anchor.y1 + ya * yRatio);
+
+                // Anchors width and height
+                const int wa = xa1 - xa0;
+                const int ha = ya1 - ya0;
+
+                // Anchor center coordinates (xac, yac)
+                const Float_T xac = xa0 + wa / 2.0;
+                const Float_T yac = ya0 + ha / 2.0;
+
+                // Ground Truth center coordinates (xgtc, ygtc)
+                const Float_T xgtc = xgt + wgt / 2.0;
+                const Float_T ygtc = ygt + hgt / 2.0;
+
+                // Parameterized Ground Truth center coordinates
+                const Float_T txgt = ((mFlip) ? -(xgtc - xac) : (xgtc - xac))
+                                        / wa;
+                const Float_T tygt = ((mFlip) ? -(ygtc - yac) : (ygtc - yac))
+                                        / ha;
                 const Float_T twgt = std::log(wgt / wa);
                 const Float_T thgt = std::log(hgt / ha);
 

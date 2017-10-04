@@ -48,7 +48,8 @@ public:
         enum Anchoring {
             TopLeft,
             Centered,
-            Original
+            Original,
+            OriginalFlipped
         };
 
         Anchor(Float_T x0_,
@@ -66,14 +67,6 @@ public:
                double ratio,
                double scale = 1.0,
                Anchoring anchoring = TopLeft);
-        inline Float_T getWidth() const
-        {
-            return (x1 - x0 + 1.0);
-        }
-        inline Float_T getHeight() const
-        {
-            return (y1 - y0 + 1.0);
-        }
 
         Float_T x0;
         Float_T y0;
@@ -122,6 +115,7 @@ protected:
     Parameter<double> mLossLambda;
     Parameter<unsigned int> mLossPositiveSample;
     Parameter<unsigned int> mLossNegativeSample;
+    Parameter<bool> mFlip;
 
     StimuliProvider& mStimuliProvider;
     std::vector<Anchor> mAnchors;
@@ -132,7 +126,7 @@ protected:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::AnchorCell::Anchor::Anchoring>::data[]
-    = {"TopLeft", "Centered", "Original"};
+    = {"TopLeft", "Centered", "Original", "OriginalFlipped"};
 }
 
 #endif // N2D2_ANCHORCELL_H

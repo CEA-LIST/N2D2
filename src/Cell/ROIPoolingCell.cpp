@@ -29,6 +29,7 @@ N2D2::ROIPoolingCell::ROIPoolingCell(const std::string& name,
                                      unsigned int nbOutputs,
                                      ROIPooling pooling)
     : Cell(name, nbOutputs),
+      mFlip(this, "Flip", false),
       mStimuliProvider(sp),
       mPooling(pooling)
 {

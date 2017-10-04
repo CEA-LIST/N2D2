@@ -60,7 +60,10 @@ N2D2::AnchorCell::Anchor::Anchor(unsigned int area,
     }
     else {
         const double size = std::sqrt(area);
-        const double center = (size - 1.0) / 2.0;
+        double center = (size - 1.0) / 2.0;
+
+        if (anchoring == OriginalFlipped)
+            center = -center;
 
         x0 = center - (ws - 1) / 2.0;
         y0 = center - (hs - 1) / 2.0;
@@ -80,6 +83,7 @@ N2D2::AnchorCell::AnchorCell(const std::string& name,
       mLossLambda(this, "LossLambda", 10.0),
       mLossPositiveSample(this, "LossPositiveSample", 128U),
       mLossNegativeSample(this, "LossNegativeSample", 128U),
+      mFlip(this, "Flip", false),
       mStimuliProvider(sp),
       mAnchors(anchors),
       mScoresCls(scoresCls)
