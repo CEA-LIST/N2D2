@@ -94,9 +94,17 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
         if (inference) {
             // Non-Maximum Suppression (NMS)
-            for (unsigned int i = 0; i < ROIs.size() - 1 && i < mNbProposals;
-                ++i)
-            {
+
+            // This implementation is inspired by D. Oro, C. Fern, X. Martorell
+            // and J. Hernando, "WORK-EFFICIENT PARALLEL NON-MAXIMUM SUPPRESSION
+            // FOR EMBEDDED GPU ARCHITECTURES"
+            // http://rapid-project.eu/_docs/icassp2016.pdf
+
+            Tensor2d<char> invalid(ROIs.size(), ROIs.size(), 0);
+
+            // Flag
+#pragma omp parallel for if (ROIs.size() > 16)
+            for (unsigned int i = 0; i < ROIs.size(); ++i) {
                 const Tensor4d<int>::Index& ROIMax = ROIs[i].first;
 
                 const Float_T x0 = mInputs(ROIMax.i,
@@ -116,7 +124,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                                            ROIMax.k + 4 * mNbAnchors,
                                            ROIMax.b);
 
-                for (unsigned int j = i + 1; j < ROIs.size(); ) {
+                for (unsigned int j = i + 1; j < ROIs.size(); ++j) {
                     const Tensor4d<int>::Index& ROI = ROIs[j].first;
 
                     const Float_T x = mInputs(ROI.i,
@@ -148,17 +156,70 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                         const Float_T IoU = interArea / unionArea;
 
                         if (IoU > mNMS_IoU_Threshold) {
-                            // Suppress ROI
-                            ROIs.erase(ROIs.begin() + j);
-                            continue;
+                            // Row j is invalid at column i
+                            // = ROI j is invalid because it overlaps with ROI i
+                            // Thread-safe because i is != for every thread
+                            invalid(j, i) = 1;
                         }
                     }
-
-                    ++j;
                 }
             }
 
-            ROIs.resize(mNbProposals);
+            // Reduction
+            for (unsigned int i = 0, n = 0; i < ROIs.size() && n < mNbProposals;
+                ++i)
+            {
+                // Check if any preceding ROI invalidates this ROI
+                // => the row i from column 0 to i (excluded) must be valid
+#if __cplusplus >= 201703L
+                const int isInvalid
+                    = std::reduce(std::execution::par_unseq,
+                                  invalid[i].begin(),
+                                  invalid[i].begin() + i,
+                                  0);
+#else
+                const int isInvalid
+                    = std::accumulate(invalid[i].begin(),
+                                      invalid[i].begin() + i,
+                                      0);
+#endif
+
+                if (isInvalid) {
+                    // Main difference with D. Oro et al. reference:
+                    // our implementation is NOT greedy
+
+                    // ROI i is invalid:
+                    // => ROI i cannot invalidate another ROI anymore
+                    // => clear all following rows at column i
+                    for (unsigned int j = i + 1; j < ROIs.size(); ++j)
+                        invalid(j, i) = 0;
+                }
+                else {
+                    mOutputs(0, n + batchPos * mNbProposals)
+                        = mInputs(ROIs[n].first.i,
+                                  ROIs[n].first.j,
+                                  ROIs[n].first.k + 1 * mNbAnchors,
+                                  ROIs[n].first.b);
+                    mOutputs(1, n + batchPos * mNbProposals)
+                        = mInputs(ROIs[n].first.i,
+                                  ROIs[n].first.j,
+                                  ROIs[n].first.k + 2 * mNbAnchors,
+                                  ROIs[n].first.b);
+                    mOutputs(2, n + batchPos * mNbProposals)
+                        = mInputs(ROIs[n].first.i,
+                                  ROIs[n].first.j,
+                                  ROIs[n].first.k + 3 * mNbAnchors,
+                                  ROIs[n].first.b);
+                    mOutputs(3, n + batchPos * mNbProposals)
+                        = mInputs(ROIs[n].first.i,
+                                  ROIs[n].first.j,
+                                  ROIs[n].first.k + 4 * mNbAnchors,
+                                  ROIs[n].first.b);
+                    mAnchors[n + batchPos * mNbProposals] = ROIs[n].first;
+
+                    ++n;
+                }
+            }
 
 /*
             // DEBUG
@@ -175,30 +236,6 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                     << std::endl;
             }
 */
-            // Keep the top-N ROIs
-            for (unsigned int n = 0; n < mNbProposals; ++n) {
-                mOutputs(0, n + batchPos * mNbProposals)
-                    = mInputs(ROIs[n].first.i,
-                              ROIs[n].first.j,
-                              ROIs[n].first.k + 1 * mNbAnchors,
-                              ROIs[n].first.b);
-                mOutputs(1, n + batchPos * mNbProposals)
-                    = mInputs(ROIs[n].first.i,
-                              ROIs[n].first.j,
-                              ROIs[n].first.k + 2 * mNbAnchors,
-                              ROIs[n].first.b);
-                mOutputs(2, n + batchPos * mNbProposals)
-                    = mInputs(ROIs[n].first.i,
-                              ROIs[n].first.j,
-                              ROIs[n].first.k + 3 * mNbAnchors,
-                              ROIs[n].first.b);
-                mOutputs(3, n + batchPos * mNbProposals)
-                    = mInputs(ROIs[n].first.i,
-                              ROIs[n].first.j,
-                              ROIs[n].first.k + 4 * mNbAnchors,
-                              ROIs[n].first.b);
-                mAnchors[n + batchPos * mNbProposals] = ROIs[n].first;
-            }
         }
         else {
 /*

@@ -41,45 +41,16 @@
     "/include:?mRegistrar@AnchorCell_Frame@N2D2@@0U?$Registrar@VAnchorCell@N2D2@@@2@A")
 #endif
 
+#include "AnchorCell_Frame_Kernels_struct.hpp"
+
 namespace N2D2 {
 class AnchorCell : public virtual Cell {
 public:
-    struct Anchor {
-        enum Anchoring {
-            TopLeft,
-            Centered,
-            Original,
-            OriginalFlipped
-        };
-
-        Anchor(Float_T x0_,
-               Float_T y0_,
-               Float_T width_,
-               Float_T height_)
-            : x0(x0_),
-              y0(y0_),
-              x1(width_ + x0_ - 1),
-              y1(height_ + y0_ - 1)
-        {
-        }
-        Anchor(Float_T width, Float_T height, Anchoring anchoring = TopLeft);
-        Anchor(unsigned int area,
-               double ratio,
-               double scale = 1.0,
-               Anchoring anchoring = TopLeft);
-
-        Float_T x0;
-        Float_T y0;
-        Float_T x1;
-        Float_T y1;
-    };
-    typedef std::tuple<Float_T, Float_T, Float_T, Float_T> BBox_T;
-
-    typedef std::function
-        <std::shared_ptr<AnchorCell>(const std::string&,
-                                     StimuliProvider&,
-                                     const std::vector<Anchor>&,
-                                     unsigned int)>
+    typedef std::function<std::shared_ptr<AnchorCell>(
+        const std::string&,
+        StimuliProvider&,
+        const std::vector<AnchorCell_Frame_Kernels::Anchor>&,
+        unsigned int)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -91,17 +62,20 @@ public:
 
     AnchorCell(const std::string& name,
                StimuliProvider& sp,
-               const std::vector<Anchor>& anchors,
+               const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                unsigned int scoresCls = 1);
     const char* getType() const
     {
         return Type;
     };
-    virtual const std::vector<BBox_T>& getGT(unsigned int batchPos) const = 0;
-    virtual std::shared_ptr<ROI> getAnchorROI(const Tensor4d<int>::Index&
-                                                index) const = 0;
-    virtual BBox_T getAnchorBBox(const Tensor4d<int>::Index& index) const = 0;
-    virtual BBox_T getAnchorGT(const Tensor4d<int>::Index& index) const = 0;
+    virtual const std::vector<AnchorCell_Frame_Kernels::BBox_T>&
+        getGT(unsigned int batchPos) const = 0;
+    virtual std::shared_ptr<ROI> getAnchorROI(
+        const Tensor4d<int>::Index& index) const = 0;
+    virtual AnchorCell_Frame_Kernels::BBox_T getAnchorBBox(
+        const Tensor4d<int>::Index& index) const = 0;
+    virtual AnchorCell_Frame_Kernels::BBox_T getAnchorGT(
+        const Tensor4d<int>::Index& index) const = 0;
     virtual Float_T getAnchorIoU(const Tensor4d<int>::Index& index) const = 0;
     virtual int getAnchorArgMaxIoU(const Tensor4d<int>::Index& index) const = 0;
     void getStats(Stats& stats) const;
@@ -118,14 +92,14 @@ protected:
     Parameter<bool> mFlip;
 
     StimuliProvider& mStimuliProvider;
-    std::vector<Anchor> mAnchors;
     unsigned int mScoresCls;
 };
 }
 
 namespace {
 template <>
-const char* const EnumStrings<N2D2::AnchorCell::Anchor::Anchoring>::data[]
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Anchor::Anchoring>
+::data[]
     = {"TopLeft", "Centered", "Original", "OriginalFlipped"};
 }
 

@@ -41,11 +41,11 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
     std::cout << "Layer: " << section << " [Anchor(" << model << ")]"
               << std::endl;
 
-    std::vector<AnchorCell::Anchor> anchors;
+    std::vector<AnchorCell_Frame_Kernels::Anchor> anchors;
 
-    const AnchorCell::Anchor::Anchoring anchoring
-        = iniConfig.getProperty<AnchorCell::Anchor::Anchoring>("Anchoring",
-            AnchorCell::Anchor::Anchoring::TopLeft);
+    const AnchorCell_Frame_Kernels::Anchor::Anchoring anchoring
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::Anchor::Anchoring>
+            ("Anchoring", AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft);
 
     // First method: specify anchor by anchor with (root area, ratio) pairs
     unsigned int nextAnchor = 0;
@@ -66,10 +66,10 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
                 + iniConfig.getFileName());
         }
 
-        anchors.push_back(AnchorCell::Anchor(rootArea*rootArea,
-                                             ratio,
-                                             1.0,
-                                             anchoring));
+        anchors.push_back(AnchorCell_Frame_Kernels::Anchor(rootArea*rootArea,
+                                                           ratio,
+                                                           1.0,
+                                                           anchoring));
 
         ++nextAnchor;
         nextProperty.str(std::string());
@@ -90,10 +90,11 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
         for (std::vector<double>::const_iterator itScales = scales.begin(),
             itScalesEnd = scales.end(); itScales != itScalesEnd; ++itScales)
         {
-            anchors.push_back(AnchorCell::Anchor(rootArea*rootArea,
-                                                 (*itRatios),
-                                                 (*itScales),
-                                                 anchoring));
+            anchors.push_back(AnchorCell_Frame_Kernels::Anchor(
+                rootArea*rootArea,
+                (*itRatios),
+                (*itScales),
+                anchoring));
         }
     }
 

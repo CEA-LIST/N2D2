@@ -23,18 +23,20 @@
 N2D2::Registrar<N2D2::AnchorCell>
 N2D2::AnchorCell_Frame::mRegistrar("Frame", N2D2::AnchorCell_Frame::create);
 
-N2D2::AnchorCell_Frame::AnchorCell_Frame(const std::string& name,
-                                         StimuliProvider& sp,
-                                         const std::vector<Anchor>& anchors,
-                                         unsigned int scoresCls)
+N2D2::AnchorCell_Frame::AnchorCell_Frame(
+    const std::string& name,
+    StimuliProvider& sp,
+    const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
+    unsigned int scoresCls)
     : Cell(name, 6*anchors.size()),
       AnchorCell(name, sp, anchors, scoresCls),
-      Cell_Frame(name, 6*anchors.size())
+      Cell_Frame(name, 6*anchors.size()),
+      mAnchors(anchors)
 {
     // ctor
 }
 
-const std::vector<N2D2::AnchorCell::BBox_T>&
+const std::vector<N2D2::AnchorCell_Frame_Kernels::BBox_T>&
 N2D2::AnchorCell_Frame::getGT(unsigned int batchPos) const
 {
     assert(batchPos < mGT.size());
@@ -57,7 +59,7 @@ N2D2::AnchorCell_Frame::getAnchorROI(const Tensor4d<int>::Index& index) const
         return std::shared_ptr<ROI>();
 }
 
-N2D2::AnchorCell::BBox_T
+N2D2::AnchorCell_Frame_Kernels::BBox_T
 N2D2::AnchorCell_Frame::getAnchorBBox(const Tensor4d<int>::Index& index) const
 {
     assert(index.i < mArgMaxIoU.dimX());
@@ -74,10 +76,10 @@ N2D2::AnchorCell_Frame::getAnchorBBox(const Tensor4d<int>::Index& index) const
                                 index.k + 3 * nbAnchors, index.b);
     const Float_T ha = mOutputs(index.i, index.j,
                                 index.k + 4 * nbAnchors, index.b);
-    return BBox_T(xa, ya, wa, ha);
+    return AnchorCell_Frame_Kernels::BBox_T(xa, ya, wa, ha);
 }
 
-N2D2::AnchorCell::BBox_T
+N2D2::AnchorCell_Frame_Kernels::BBox_T
 N2D2::AnchorCell_Frame::getAnchorGT(const Tensor4d<int>::Index& index) const
 {
     assert(index.b < mGT.size());
@@ -88,7 +90,7 @@ N2D2::AnchorCell_Frame::getAnchorGT(const Tensor4d<int>::Index& index) const
 
     return ((argMaxIoU >= 0)
         ? mGT[index.b][argMaxIoU]
-        : BBox_T(0.0, 0.0, 0.0, 0.0));
+        : AnchorCell_Frame_Kernels::BBox_T(0.0, 0.0, 0.0, 0.0));
 }
 
 N2D2::Float_T
@@ -139,7 +141,7 @@ void N2D2::AnchorCell_Frame::initialize()
                                 - (mOutputsHeight - 1) * yRatio;
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
-            Anchor& anchor = mAnchors[k];
+            AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
             anchor.x0 += xOffset;
             anchor.y0 += yOffset;
             anchor.x1 += xOffset;
@@ -166,7 +168,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 
 #pragma omp parallel for if (mOutputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
-        std::vector<BBox_T>& GT = mGT[batchPos];
+        std::vector<AnchorCell_Frame_Kernels::BBox_T>& GT = mGT[batchPos];
 
         // Extract ground true ROIs
         std::vector<std::shared_ptr<ROI> > labelROIs
@@ -191,10 +193,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
             if (labelRect.br().y > (int)mStimuliProvider.getSizeY())
                 labelRect.height = mStimuliProvider.getSizeY() - labelRect.y;
 
-            GT[l] = std::make_tuple(labelRect.tl().x,
-                                    labelRect.tl().y,
-                                    labelRect.width,
-                                    labelRect.height);
+            GT[l] = AnchorCell_Frame_Kernels::BBox_T(labelRect.tl().x,
+                                                     labelRect.tl().y,
+                                                     labelRect.width,
+                                                     labelRect.height);
         }
     }
 
@@ -209,8 +211,9 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 #endif
     for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
         for (unsigned int k = 0; k < nbAnchors; ++k) {
-            const std::vector<BBox_T>& GT = mGT[batchPos];
-            const Anchor& anchor = mAnchors[k];
+            const std::vector<AnchorCell_Frame_Kernels::BBox_T>& GT
+                = mGT[batchPos];
+            const AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
 /*
             // DEBUG
             std::cout << "Number of GT boxes: " << GT.size() << std::endl;
@@ -308,10 +311,11 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                         // => if IoU is computed on predicted boxes during
                         // learning, predicted boxes may arbitrarily drift from
                         // anchors and learning does not converge
-                        Float_T x, y, w, h;
-                        std::tie(x, y, w, h)
-                            = (inference) ? BBox_T(xbb, ybb, wbb, hbb)
-                                          : BBox_T(xa0, ya0, wa, ha);
+                        const AnchorCell_Frame_Kernels::BBox_T bb = (inference)
+                            ? AnchorCell_Frame_Kernels::BBox_T
+                                (xbb, ybb, wbb, hbb)
+                            : AnchorCell_Frame_Kernels::BBox_T
+                                (xa0, ya0, wa, ha);
 
                         Float_T maxIoU = 0.0;
                         int argMaxIoU = -1;
@@ -320,15 +324,14 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                             l < nbLabels; ++l)
                         {
                             // Ground Truth box coordinates
-                            Float_T xgt, ygt, wgt, hgt;
-                            std::tie(xgt, ygt, wgt, hgt) = GT[l];
+                            const AnchorCell_Frame_Kernels::BBox_T& gt = GT[l];
 
-                            const Float_T interLeft = std::max(xgt, x);
-                            const Float_T interRight = std::min(xgt + wgt,
-                                                                x + w);
-                            const Float_T interTop = std::max(ygt, y);
-                            const Float_T interBottom = std::min(ygt + hgt,
-                                                                 y + h);
+                            const Float_T interLeft = std::max(gt.x, bb.x);
+                            const Float_T interRight = std::min(gt.x + gt.w,
+                                                                bb.x + bb.w);
+                            const Float_T interTop = std::max(gt.y, bb.y);
+                            const Float_T interBottom = std::min(gt.y + gt.h,
+                                                                 bb.y + bb.h);
 
                             if (interLeft < interRight
                                 && interTop < interBottom)
@@ -336,8 +339,8 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                                 const Float_T interArea
                                     = (interRight - interLeft)
                                         * (interBottom - interTop);
-                                const Float_T unionArea = wgt * hgt + w * h
-                                                        - interArea;
+                                const Float_T unionArea = gt.w * gt.h
+                                    + bb.w * bb.h - interArea;
                                 const Float_T IoU = interArea / unionArea;
 
                                 if (IoU > maxIoU) {
@@ -510,7 +513,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
         std::vector<Tensor4d<int>::Index> negative;
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
-            const Anchor& anchor = mAnchors[k];
+            const AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
 
             for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
                 for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
@@ -597,10 +600,10 @@ void N2D2::AnchorCell_Frame::backPropagate()
                 const int argMaxIoU = mArgMaxIoU(anchorIndex[idx]);
 
                 // Ground Truth box coordinates
-                int xgt, ygt, wgt, hgt;
-                std::tie(xgt, ygt, wgt, hgt) = mGT[batchPos][argMaxIoU];
+                const AnchorCell_Frame_Kernels::BBox_T& gt
+                    = mGT[batchPos][argMaxIoU];
 
-                const Anchor& anchor = mAnchors[k];
+                const AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
 
                 // Shifted anchors coordinates at (xa, ya)
                 const int xa0 = (int)(anchor.x0 + xa * xRatio);
@@ -617,16 +620,16 @@ void N2D2::AnchorCell_Frame::backPropagate()
                 const Float_T yac = ya0 + ha / 2.0;
 
                 // Ground Truth center coordinates (xgtc, ygtc)
-                const Float_T xgtc = xgt + wgt / 2.0;
-                const Float_T ygtc = ygt + hgt / 2.0;
+                const Float_T xgtc = gt.x + gt.w / 2.0;
+                const Float_T ygtc = gt.y + gt.h / 2.0;
 
                 // Parameterized Ground Truth center coordinates
                 const Float_T txgt = ((mFlip) ? -(xgtc - xac) : (xgtc - xac))
                                         / wa;
                 const Float_T tygt = ((mFlip) ? -(ygtc - yac) : (ygtc - yac))
                                         / ha;
-                const Float_T twgt = std::log(wgt / wa);
-                const Float_T thgt = std::log(hgt / ha);
+                const Float_T twgt = std::log(gt.w / wa);
+                const Float_T thgt = std::log(gt.h / ha);
 
                 // Parameterized coordinates
                 const Float_T tx = mInputs(xa, ya,

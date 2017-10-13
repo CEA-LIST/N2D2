@@ -199,27 +199,25 @@ void N2D2::TargetRP::processBBox(Database::StimuliSet set)
 
 #pragma omp parallel for if (mTargets.dimB() > 16)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
-        Float_T xgt, ygt, wgt, hgt;
-        std::tie(xgt, ygt, wgt, hgt)
+        const AnchorCell_Frame_Kernels::BBox_T& gt
             = mAnchorCell->getAnchorGT(anchors[batchPos]);
 /*
-        mTargets(0, batchPos) = xgt;
-        mTargets(1, batchPos) = ygt;
-        mTargets(2, batchPos) = wgt;
-        mTargets(3, batchPos) = hgt;
+        mTargets(0, batchPos) = gt.x;
+        mTargets(1, batchPos) = gt.y;
+        mTargets(2, batchPos) = gt.w;
+        mTargets(3, batchPos) = gt.h;
 */
         const double IoU = mAnchorCell->getAnchorIoU(anchors[batchPos]);
 
         if (IoU >= mMinOverlap && set == Database::Learn) {
-            Float_T xa, ya, wa, ha;
-            std::tie(xa, ya, wa, ha)
+            const AnchorCell_Frame_Kernels::BBox_T& bb
                 = mAnchorCell->getAnchorBBox(anchors[batchPos]);
 
             // Parameterized Ground Truth coordinates
-            const Float_T txgt = (xgt - xa) / wa;
-            const Float_T tygt = (ygt - ya) / ha;
-            const Float_T twgt = std::log(wgt / wa);
-            const Float_T thgt = std::log(hgt / ha);
+            const Float_T txgt = (gt.x - bb.x) / bb.w;
+            const Float_T tygt = (gt.y - bb.y) / bb.h;
+            const Float_T twgt = std::log(gt.w / bb.w);
+            const Float_T thgt = std::log(gt.h / bb.h);
 
             smoothTargets(0, batchPos) = mLossLambda
                 * smoothL1(txgt, values(0, batchPos));
@@ -316,8 +314,7 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
         const unsigned int outputBatchPos = n + batchPos * nbProposals;
         const int cls = mEstimatedLabels(0, outputBatchPos);
 
-        Float_T xa, ya, wa, ha;
-        std::tie(xa, ya, wa, ha)
+        const AnchorCell_Frame_Kernels::BBox_T& bb
             = mAnchorCell->getAnchorBBox(anchors[outputBatchPos]);
 
         // Parameterized coordinates
@@ -327,10 +324,10 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
         const Float_T th = valuesBBox(3, outputBatchPos);
 
         // Predicted box coordinates
-        const Float_T x = tx * wa + xa;
-        const Float_T y = ty * ha + ya;
-        const Float_T w = wa * std::exp(tw);
-        const Float_T h = ha * std::exp(th);
+        const Float_T x = tx * bb.w + bb.x;
+        const Float_T y = ty * bb.h + bb.y;
+        const Float_T w = bb.w * std::exp(tw);
+        const Float_T h = bb.h * std::exp(th);
 
         const double IoU = mAnchorCell->getAnchorIoU(anchors[outputBatchPos]);
 

@@ -18,20 +18,21 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_ANCHORCELL_FRAME_H
-#define N2D2_ANCHORCELL_FRAME_H
+#ifndef N2D2_ANCHORCELL_FRAME_CUDA_H
+#define N2D2_ANCHORCELL_FRAME_CUDA_H
 
 #include <tuple>
 #include <unordered_map>
 #include <vector>
 
-#include "Cell_Frame.hpp"
+#include "Cell_Frame_CUDA.hpp"
 #include "AnchorCell.hpp"
+#include "AnchorCell_Frame_CUDA_Kernels.hpp"
 
 namespace N2D2 {
-class AnchorCell_Frame : public virtual AnchorCell, public Cell_Frame {
+class AnchorCell_Frame_CUDA : public virtual AnchorCell, public Cell_Frame_CUDA {
 public:
-    AnchorCell_Frame(const std::string& name,
+    AnchorCell_Frame_CUDA(const std::string& name,
                  StimuliProvider& sp,
                  const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                  unsigned int scoresCls = 1);
@@ -40,7 +41,10 @@ public:
                   const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                   unsigned int scoresCls)
     {
-        return std::make_shared<AnchorCell_Frame>(name, sp, anchors, scoresCls);
+        return std::make_shared<AnchorCell_Frame_CUDA>(name,
+                                                       sp,
+                                                       anchors,
+                                                       scoresCls);
     }
 
     virtual const std::vector<AnchorCell_Frame_Kernels::BBox_T>&
@@ -62,25 +66,20 @@ public:
     void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
     // parameter to
     // discretize
-    virtual ~AnchorCell_Frame() {};
+    virtual ~AnchorCell_Frame_CUDA();
 
 protected:
-    std::vector<AnchorCell_Frame_Kernels::Anchor> mAnchors;
+    CudaTensor4d<AnchorCell_Frame_Kernels::Anchor> mAnchors;
     std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> > mGT;
-    Tensor4d<int> mArgMaxIoU;
-    std::vector<Float_T> mMaxIoU;
+    AnchorCell_Frame_Kernels::BBox_T** mCudaGT;
+    unsigned int mNbLabelsMax;
+    CudaTensor4d<unsigned int> mNbLabels;
+    CudaTensor4d<int> mArgMaxIoU;
+    CudaTensor4d<Float_T> mMaxIoU;
 
 private:
     static Registrar<AnchorCell> mRegistrar;
-
-    inline Float_T smoothL1(Float_T tx, Float_T x) const;
 };
 }
 
-N2D2::Float_T N2D2::AnchorCell_Frame::smoothL1(Float_T tx, Float_T x) const {
-    const Float_T error = tx - x;
-    const Float_T sign = (error >= 0.0) ? 1.0 : -1.0;
-    return (std::fabs(error) < 1.0) ? error : sign;
-}
-
-#endif // N2D2_ANCHORCELL_FRAME_H
+#endif // N2D2_ANCHORCELL_FRAME_CUDA_H
