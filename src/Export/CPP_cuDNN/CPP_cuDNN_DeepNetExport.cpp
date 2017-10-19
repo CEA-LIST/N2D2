@@ -264,8 +264,8 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramGlobalDefinition(
                                std::distance((*itLayer).begin(), it))) {
                 const std::vector<std::shared_ptr<Cell> > parentCells
                     = deepNet.getParentCells(*it);
-                const std::shared_ptr<Cell> cell = deepNet.getCell(
-                    (*itLayer).at(std::distance((*itLayer).begin(), it)));
+                const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+
                 std::stringstream outputName;
                 outputName << Utils::CIdentifier((*parentCells[0]).getName())
                     << "_";
@@ -329,8 +329,8 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramInitNetwork(DeepNet& deepNet,
                                std::distance((*itLayer).begin(), it))) {
                 const std::vector<std::shared_ptr<Cell> > parentCells
                     = deepNet.getParentCells(*it);
-                const std::shared_ptr<Cell> cell = deepNet.getCell(
-                    (*itLayer).at(std::distance((*itLayer).begin(), it)));
+                const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+
                 std::stringstream outputName;
                 outputName << Utils::CIdentifier((*parentCells[0]).getName())
                     << "_";
