@@ -133,6 +133,13 @@
 #define MAX_31(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30) MAX(MAX_7(x0, x1, x2, x3, x4, x5, x6), MAX_24(x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30))
 #define MAX_32(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31) MAX(MAX_16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15), MAX_16(x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31))
 
+// round up to the nearest multiple of a number
+// multiple must be a power of 2
+inline unsigned int roundUp(unsigned int numToRound, unsigned int multiple) {
+    assert(multiple && ((multiple & (multiple - 1)) == 0));
+    return (numToRound + multiple - 1) & -multiple;
+}
+
 // min() and max()
 static inline char char_max(char a, char b)
 {
