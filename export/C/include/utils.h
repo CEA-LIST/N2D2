@@ -30,6 +30,14 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
+#if defined(__cplusplus)
+#define UNUSED(x)       // = nothing
+#elif defined(__GNUC__)
+#define UNUSED(x)       x##_UNUSED __attribute__((unused))
+#else
+#define UNUSED(x)       x##_UNUSED
+#endif
+
 #ifndef WIN32
 // Text attributes
 #define ESC_ALL_OFF "\033[0m"
@@ -98,6 +106,159 @@
 #define ESC_BG_WHITE ""
 #endif
 
+#define STR_NX(x) #x
+#define STR(x) STR_NX(x)
+
+#define CAT(a, ...) PRIMITIVE_CAT(a, __VA_ARGS__)
+#define PRIMITIVE_CAT(a, ...) a ## __VA_ARGS__
+
+#define COMPL(b) PRIMITIVE_CAT(COMPL_, b)
+#define COMPL_0 1
+#define COMPL_1 0
+
+#define BITAND(x) PRIMITIVE_CAT(BITAND_, x)
+#define BITAND_0(y) 0
+#define BITAND_1(y) y
+
+#define INC(x) PRIMITIVE_CAT(INC_, x)
+#define INC_0 1
+#define INC_1 2
+#define INC_2 3
+#define INC_3 4
+#define INC_4 5
+#define INC_5 6
+#define INC_6 7
+#define INC_7 8
+#define INC_8 9
+#define INC_9 10
+#define INC_10 11
+#define INC_11 12
+#define INC_12 13
+#define INC_13 14
+#define INC_14 15
+#define INC_15 16
+#define INC_16 16
+
+#define DEC(x) PRIMITIVE_CAT(DEC_, x)
+#define DEC_0 0
+#define DEC_1 0
+#define DEC_2 1
+#define DEC_3 2
+#define DEC_4 3
+#define DEC_5 4
+#define DEC_6 5
+#define DEC_7 6
+#define DEC_8 7
+#define DEC_9 8
+#define DEC_10 9
+#define DEC_11 10
+#define DEC_12 11
+#define DEC_13 12
+#define DEC_14 13
+#define DEC_15 14
+#define DEC_16 15
+
+#define ADD(x, y) PRIMITIVE_CAT(ADD_, x)(y)
+#define ADD_0(x) x
+#define ADD_1(x) INC(x)
+#define ADD_2(x) ADD_1(INC(x))
+#define ADD_3(x) ADD_2(INC(x))
+#define ADD_4(x) ADD_3(INC(x))
+#define ADD_5(x) ADD_4(INC(x))
+#define ADD_6(x) ADD_5(INC(x))
+#define ADD_7(x) ADD_6(INC(x))
+#define ADD_8(x) ADD_7(INC(x))
+#define ADD_9(x) ADD_8(INC(x))
+#define ADD_10(x) ADD_9(INC(x))
+#define ADD_11(x) ADD_10(INC(x))
+#define ADD_12(x) ADD_11(INC(x))
+#define ADD_13(x) ADD_12(INC(x))
+#define ADD_14(x) ADD_13(INC(x))
+#define ADD_15(x) ADD_14(INC(x))
+#define ADD_16(x) ADD_15(INC(x))
+
+#define CHECK_N(x, n, ...) n
+#define CHECK(...) CHECK_N(__VA_ARGS__, 0,)
+#define PROBE(x) x, 1,
+
+#define IS_PAREN(x) CHECK(IS_PAREN_PROBE x)
+#define IS_PAREN_PROBE(...) PROBE(~)
+
+#define NOT(x) CHECK(PRIMITIVE_CAT(NOT_, x))
+#define NOT_0 PROBE(~)
+
+#define COMPL(b) PRIMITIVE_CAT(COMPL_, b)
+#define COMPL_0 1
+#define COMPL_1 0
+
+#define BOOL(x) COMPL(NOT(x))
+
+#define IIF(c) PRIMITIVE_CAT(IIF_, c)
+#define IIF_0(t, ...) __VA_ARGS__
+#define IIF_1(t, ...) t
+
+#define IF(c) IIF(BOOL(c))
+
+#define EAT(...)
+#define EXPAND(...) __VA_ARGS__
+#define WHEN(c) IF(c)(EXPAND, EAT)
+
+#define EMPTY()
+#define DEFER(id) id EMPTY()
+#define OBSTRUCT(id) id DEFER(EMPTY)()
+
+#define EVAL(...)  EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#define EVAL1(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#define EVAL2(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#define EVAL3(...) EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+#define EVAL4(...) EVAL5(EVAL5(EVAL5(__VA_ARGS__)))
+#define EVAL5(...) __VA_ARGS__
+
+#define REPEAT(count, macro, ...) \
+    WHEN(count) \
+    ( \
+        OBSTRUCT(REPEAT_INDIRECT) () \
+        ( \
+            DEC(count), macro, __VA_ARGS__ \
+        ) \
+        OBSTRUCT(macro) \
+        ( \
+            DEC(count), __VA_ARGS__ \
+        ) \
+    )
+#define REPEAT_INDIRECT() REPEAT
+
+#define WHILE(pred, op, ...) \
+    IF(pred(__VA_ARGS__)) \
+    ( \
+        OBSTRUCT(WHILE_INDIRECT) () \
+        ( \
+            pred, op, op(__VA_ARGS__) \
+        ), \
+        __VA_ARGS__ \
+    )
+#define WHILE_INDIRECT() WHILE
+
+#define PRIMITIVE_COMPARE(x, y) IS_PAREN \
+( \
+    COMPARE_ ## x ( COMPARE_ ## y) (())  \
+)
+
+#define IS_COMPARABLE(x) IS_PAREN( CAT(COMPARE_, x) (()) )
+
+#define NOT_EQUAL(x, y) \
+IIF(BITAND(IS_COMPARABLE(x))(IS_COMPARABLE(y)) ) \
+( \
+   PRIMITIVE_COMPARE, \
+   1 EAT \
+)(x, y)
+
+#define EQUAL(x, y) COMPL(NOT_EQUAL(x, y))
+
+#define COMMA() ,
+
+#define COMMA_IF(n) IF(n)(COMMA, EAT)()
+
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
@@ -135,7 +296,9 @@
 
 // round up to the nearest multiple of a number
 // multiple must be a power of 2
-inline unsigned int roundUp(unsigned int numToRound, unsigned int multiple) {
+static inline unsigned int roundUp(unsigned int numToRound,
+                                   unsigned int multiple)
+{
     assert(multiple && ((multiple & (multiple - 1)) == 0));
     return (numToRound + multiple - 1) & -multiple;
 }
