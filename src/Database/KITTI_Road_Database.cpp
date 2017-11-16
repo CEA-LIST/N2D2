@@ -63,7 +63,7 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
         throw std::runtime_error("Couldn't open database directory: "
                                  + dirPath);
 
-    // Read all data files in the kitty/data_road/training directory
+    // Read all data files in the kitti/data_road/training directory
     while ((pFile = readdir(pDirData))) {
         const std::string fileName(pFile->d_name);
         const std::string filePath(dirPath + "/" + fileName);
@@ -96,7 +96,7 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
             files.push_back(filePath);
         }
     }
-    // Read all gt files in the kitty/data_road/gt_image_2 directory
+    // Read all gt files in the kitti/data_road/gt_image_2 directory
     while ((pFile = readdir(pDirLabel))) {
         const std::string fileName(pFile->d_name);
         const std::string filePath(labelPath + "/" + fileName);
