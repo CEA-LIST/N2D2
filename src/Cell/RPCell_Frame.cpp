@@ -104,7 +104,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
             // Flag
 #pragma omp parallel for if (ROIs.size() > 16)
-            for (unsigned int i = 0; i < ROIs.size(); ++i) {
+            for (int i = 0; i < (int)ROIs.size(); ++i) {
                 const Tensor4d<int>::Index& ROIMax = ROIs[i].first;
 
                 const Float_T x0 = mInputs(ROIMax.i,
