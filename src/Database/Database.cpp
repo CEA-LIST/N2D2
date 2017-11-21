@@ -27,6 +27,7 @@ N2D2::Database::csvLocale(std::locale(),
 N2D2::Database::Database(bool loadDataInMemory)
     : mDefaultLabel(this, "DefaultLabel", ""),
       mROIsMargin(this, "ROIsMargin", 0U),
+      mRandomPartitioning(this, "RandomPartitioning", true),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1)
 {
@@ -714,7 +715,8 @@ void N2D2::Database::partitionStimuli(unsigned int nbStimuli, StimuliSet set)
                                  "stimuli.");
 
     for (unsigned int i = 0; i < nbStimuli; ++i) {
-        const unsigned int idx = Random::randUniform(0, maxStimuli - 1);
+        const unsigned int idx = (mRandomPartitioning)
+            ? Random::randUniform(0, maxStimuli - 1) : 0;
         mStimuliSets(set).push_back(mStimuliSets(Unpartitioned)[idx]);
         mStimuliSets(Unpartitioned)
             .erase(mStimuliSets(Unpartitioned).begin() + idx);
@@ -1330,7 +1332,8 @@ void N2D2::Database::partitionIndexes(std::vector
                                  "stimuli.");
 
     for (unsigned int i = 0; i < nbStimuli; ++i) {
-        const unsigned int idx = Random::randUniform(0, maxStimuli - 1);
+        const unsigned int idx = (mRandomPartitioning)
+            ? Random::randUniform(0, maxStimuli - 1) : 0;
         const unsigned int unpartitionedIdx = unpartitionedIndexes[idx];
         const StimulusID id = mStimuliSets(Unpartitioned)[unpartitionedIdx];
 

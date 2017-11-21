@@ -301,6 +301,7 @@ protected:
     Parameter<std::string> mDefaultLabel;
     /// Margin around the ROIs, in pixels, with no label (label ID = -1)
     Parameter<unsigned int> mROIsMargin;
+    Parameter<bool> mRandomPartitioning;
 
     /**
      * TABLES
