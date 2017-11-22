@@ -42,8 +42,8 @@ TEST(CsvDataFile, read)
     ASSERT_EQUALS(mat.cols, 2);
 
     for (unsigned int i = 0; i < 5; ++i) {
-        ASSERT_EQUALS(mat.at<double>(i, 0), i + 1.0);
-        ASSERT_EQUALS(mat.at<double>(i, 1), 0.5 + i * 0.1);
+        ASSERT_EQUALS_DELTA(mat.at<double>(i, 0), i + 1.0, 1.0e-15);
+        ASSERT_EQUALS_DELTA(mat.at<double>(i, 1), 0.5 + i * 0.1, 1.0e-15);
     }
 }
 
@@ -66,8 +66,8 @@ TEST(CsvDataFile, write)
     ASSERT_EQUALS(mat.cols, 2);
 
     for (unsigned int i = 0; i < 5; ++i) {
-        ASSERT_EQUALS(mat.at<double>(i, 0), i + 1.0);
-        ASSERT_EQUALS(mat.at<double>(i, 1), 0.5 + i * 0.1);
+        ASSERT_EQUALS_DELTA(mat.at<double>(i, 0), i + 1.0, 1.0e-15);
+        ASSERT_EQUALS_DELTA(mat.at<double>(i, 1), 0.5 + i * 0.1, 1.0e-15);
     }
 }
 

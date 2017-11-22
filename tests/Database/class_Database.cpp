@@ -292,12 +292,14 @@ TEST_DATASET(Database,
 
     ASSERT_EQUALS(db.getNbStimuli(), 100U);
     ASSERT_EQUALS(db.getNbStimuli(Database::Learn),
-                  (unsigned int)(learn * 100));
+                  (unsigned int)Utils::round(learn * 100));
     ASSERT_EQUALS(db.getNbStimuli(Database::Validation),
-                  (unsigned int)(validation * 100));
-    ASSERT_EQUALS(db.getNbStimuli(Database::Test), (unsigned int)(test * 100));
+                  (unsigned int)Utils::round(validation * 100));
+    ASSERT_EQUALS(db.getNbStimuli(Database::Test),
+                  (unsigned int)Utils::round(test * 100));
     ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned),
-                  (unsigned int)((1.0 - learn - validation - test) * 100));
+                  (unsigned int)Utils::round((1.0 - learn - validation - test)
+                                             * 100));
 }
 
 TEST_DATASET(Database,
@@ -327,12 +329,14 @@ TEST_DATASET(Database,
 
     ASSERT_EQUALS(db.getNbStimuli(), 100U);
     ASSERT_EQUALS(db.getNbStimuli(Database::Learn),
-                  (unsigned int)(learn * 100));
+                  (unsigned int)Utils::round(learn * 100));
     ASSERT_EQUALS(db.getNbStimuli(Database::Validation),
-                  (unsigned int)(validation * 100));
-    ASSERT_EQUALS(db.getNbStimuli(Database::Test), (unsigned int)(test * 100));
+                  (unsigned int)Utils::round(validation * 100));
+    ASSERT_EQUALS(db.getNbStimuli(Database::Test),
+                  (unsigned int)Utils::round(test * 100));
     ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned),
-                  (unsigned int)((1.0 - learn - validation - test) * 100));
+                  (unsigned int)Utils::round((1.0 - learn - validation - test)
+                                             * 100));
 }
 
 TEST_DATASET(Database,

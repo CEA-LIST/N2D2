@@ -623,7 +623,7 @@ In order to compile the manual, you must have \lstinline!pdflatex! and \lstinlin
         \subitem ARM Cortex A53/A57 (tested on Tegra X1)
         \subitem Pentium-compatible PC (Pentium III, Athlon or more-recent system recommended)
     \item Supported operating systems:
-        \subitem Windows $\geq$ 7 or Windows Server $\geq$ 2012, 64 bits with Visual Studio $\geq$ 12 (2013)
+        \subitem Windows $\geq$ 7 or Windows Server $\geq$ 2012, 64 bits with Visual Studio $\geq$ 2013.3 (2013 Update 3)
         \subitem GNU/Linux with GCC $\geq$ 4.4 (tested on RHEL $\geq$ 6, Debian $\geq$ 6, Ubuntu $\geq$ 14.04)
     \item At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing
     \item At least 150 MB available hard disk space + 350 MB for MNIST dataset processing
@@ -715,7 +715,7 @@ ln -s /usr/local/cuda-7.5 /usr/local/cuda
 
 \paragraph{Windows}
 
-On Windows 64 bits, Visual Studio $\geq$ 12 (2013) is required.
+On Windows 64 bits, Visual Studio $\geq$ 2013.3 (2013 Update 3) is required.
 
 Make sure you have the following software installed:
 \begin{myitemize}
@@ -780,7 +780,7 @@ On Windows, you may have to specify the generator, for example:
 cmake .. -G"Visual Studio 12"
 \end{lstlisting}
 
-Then open the newly created N2D2 project in Visual Studio 12 (2013). Select
+Then open the newly created N2D2 project in Visual Studio 2013. Select
 "Release" for the build target. Right click on \lstinline!ALL_BUILD! item and
 select "Build".
 
