@@ -1,9 +1,10 @@
 FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
         build-essential \
         cmake \
         git \
+        wget \
         gnuplot \
         libopencv-dev \
         libcv-dev \
