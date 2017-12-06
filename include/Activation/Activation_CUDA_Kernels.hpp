@@ -21,6 +21,8 @@
 #ifndef N2D2_ACTIVATION_CUDA_KERNELS_H
 #define N2D2_ACTIVATION_CUDA_KERNELS_H
 
+#include "CudaUtils.hpp"
+
 namespace N2D2 {
 // Rectifier
 void cudaSRectifier_propagate(float* x,

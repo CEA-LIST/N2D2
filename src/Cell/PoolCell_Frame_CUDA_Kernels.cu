@@ -454,8 +454,8 @@ void N2D2::cudaSPoolForwardAverage(const float alpha,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSPoolForwardAverage_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSPoolForwardAverage_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            inputs,
            nbChannels,
            channelsHeight,
@@ -469,6 +469,7 @@ void N2D2::cudaSPoolForwardAverage(const float alpha,
            outputsWidth,
            countIncludePadding,
            maps);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSPoolForwardMax(const float alpha,
@@ -503,8 +504,8 @@ void N2D2::cudaSPoolForwardMax(const float alpha,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSPoolForwardMax_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSPoolForwardMax_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            inputs,
            nbChannels,
            channelsHeight,
@@ -519,6 +520,7 @@ void N2D2::cudaSPoolForwardMax(const float alpha,
            argMax,
            useArgMax,
            maps);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSPoolBackwardAverage(const float alpha,
@@ -557,8 +559,8 @@ void N2D2::cudaSPoolBackwardAverage(const float alpha,
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSPoolBackwardAverage_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSPoolBackwardAverage_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            diffInputs,
            nbOutputs,
            outputsHeight,
@@ -572,6 +574,7 @@ void N2D2::cudaSPoolBackwardAverage(const float alpha,
            channelsWidth,
            countIncludePadding,
            maps);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSPoolBackwardMax(const float alpha,
@@ -605,8 +608,8 @@ void N2D2::cudaSPoolBackwardMax(const float alpha,
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSPoolBackwardMax_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSPoolBackwardMax_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            diffInputs,
            nbOutputs,
            outputsHeight,
@@ -620,4 +623,5 @@ void N2D2::cudaSPoolBackwardMax(const float alpha,
            channelsWidth,
            argMax,
            maps);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

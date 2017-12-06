@@ -25,6 +25,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
+#include "CudaUtils.hpp"
 #include "PoolCell_Frame_Kernels_struct.hpp"
 
 namespace N2D2 {

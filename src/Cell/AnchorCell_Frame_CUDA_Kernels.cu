@@ -258,8 +258,8 @@ void N2D2::cudaSAnchorPropagate(
     const dim3 blocksPerGrid = {nbAnchors, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSAnchorPropagate_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (stimuliSizeX,
+    cudaSAnchorPropagate_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (stimuliSizeX,
            stimuliSizeY,
            flip,
            inference,
@@ -276,4 +276,5 @@ void N2D2::cudaSAnchorPropagate(
            outputsHeight,
            outputsWidth,
            batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

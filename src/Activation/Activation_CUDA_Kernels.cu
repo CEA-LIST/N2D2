@@ -26,9 +26,11 @@ __global__ void cudaSRectifier_propagate_kernel(float* x,
                                                 float leakSlope,
                                                 float clipping)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
+
         if (clipping > 0.0)
             x[index] = (x[index] > 0.0f) ? min(x[index], clipping) : leakSlope
                                                                      * x[index];
@@ -42,9 +44,11 @@ __global__ void cudaDRectifier_propagate_kernel(double* x,
                                                 double leakSlope,
                                                 double clipping)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
+
         if (clipping > 0.0)
             x[index] = (x[index] > 0.0) ? min(x[index], clipping) : leakSlope
                                                                     * x[index];
@@ -56,14 +60,17 @@ __global__ void cudaDRectifier_propagate_kernel(double* x,
 __global__ void cudaSRectifier_backPropagate_kernel(
     float* x, float* dx, unsigned int size, float leakSlope, float clipping)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
+
         if (clipping > 0.0) {
             dx[index] *= (x[index] > clipping) ? 0.0f : (x[index] > 0.0f)
                                                             ? 1.0f
                                                             : leakSlope;
-        } else
+        }
+        else
             dx[index] *= (x[index] > 0.0f) ? 1.0f : leakSlope;
     }
 }
@@ -71,14 +78,17 @@ __global__ void cudaSRectifier_backPropagate_kernel(
 __global__ void cudaDRectifier_backPropagate_kernel(
     double* x, double* dx, unsigned int size, double leakSlope, double clipping)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
+
         if (clipping > 0.0) {
             dx[index] *= (x[index] > clipping) ? 0.0 : (x[index] > 0.0)
                                                            ? 1.0
                                                            : leakSlope;
-        } else
+        }
+        else
             dx[index] *= (x[index] > 0.0) ? 1.0 : leakSlope;
     }
 }
@@ -86,9 +96,10 @@ __global__ void cudaDRectifier_backPropagate_kernel(
 // Saturation
 __global__ void cudaSSaturation_propagate_kernel(float* x, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
         x[index] = (x[index] < -1.0f) ? -1.0f : (x[index] > 1.0f) ? 1.0f
                                                                   : x[index];
     }
@@ -96,9 +107,10 @@ __global__ void cudaSSaturation_propagate_kernel(float* x, unsigned int size)
 
 __global__ void cudaDSaturation_propagate_kernel(double* x, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
         x[index] = (x[index] < -1.0) ? -1.0 : (x[index] > 1.0) ? 1.0 : x[index];
     }
 }
@@ -106,54 +118,66 @@ __global__ void cudaDSaturation_propagate_kernel(double* x, unsigned int size)
 __global__ void
 cudaSSaturation_backPropagate_kernel(float* x, float* dx, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size)
+    for (unsigned int i = index; i < size; i += stride) {
         dx[index] *= (x[index] > -1.0f && x[index] < 1.0f) ? 1.0f : 0.0f;
+    }
 }
 
 __global__ void
 cudaDSaturation_backPropagate_kernel(double* x, double* dx, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size)
+    for (unsigned int i = index; i < size; i += stride) {
         dx[index] *= (x[index] > -1.0 && x[index] < 1.0) ? 1.0 : 0.0;
+    }
 }
 
 // Softplus
 __global__ void cudaSSoftplus_propagate_kernel(float* x, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size)
+    for (unsigned int i = index; i < size; i += stride) {
         x[index] = log(1.0f + exp(x[index]));
+    }
 }
 
 __global__ void cudaDSoftplus_propagate_kernel(double* x, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size)
+    for (unsigned int i = index; i < size; i += stride) {
         x[index] = log(1.0 + exp(x[index]));
+    }
 }
 
 __global__ void
 cudaSSoftplus_backPropagate_kernel(float* x, float* dx, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size)
+    for (unsigned int i = index; i < size; i += stride) {
         dx[index] *= (1.0f - exp(-x[index]));
+    }
 }
 
 __global__ void
 cudaDSoftplus_backPropagate_kernel(double* x, double* dx, unsigned int size)
 {
-    const unsigned index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size)
+    for (unsigned int i = index; i < size; i += stride) {
         dx[index] *= (1.0 - exp(-x[index]));
+    }
 }
 
 // Rectifier
@@ -164,6 +188,7 @@ void N2D2::cudaSRectifier_propagate(float* x,
 {
     cudaSRectifier_propagate_kernel << <(size + 255) / 256, 256>>
         > (x, size, leakSlope, clipping);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDRectifier_propagate(double* x,
@@ -173,6 +198,7 @@ void N2D2::cudaDRectifier_propagate(double* x,
 {
     cudaDRectifier_propagate_kernel << <(size + 255) / 256, 256>>
         > (x, size, leakSlope, clipping);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSRectifier_backPropagate(
@@ -180,6 +206,7 @@ void N2D2::cudaSRectifier_backPropagate(
 {
     cudaSRectifier_backPropagate_kernel << <(size + 255) / 256, 256>>
         > (x, dx, size, leakSlope, clipping);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDRectifier_backPropagate(
@@ -187,51 +214,60 @@ void N2D2::cudaDRectifier_backPropagate(
 {
     cudaDRectifier_backPropagate_kernel << <(size + 255) / 256, 256>>
         > (x, dx, size, leakSlope, clipping);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 // Saturation
 void N2D2::cudaSSaturation_propagate(float* x, unsigned int size)
 {
-    cudaSSaturation_propagate_kernel << <(size + 255) / 256, 256>>> (x, size);
+    cudaSSaturation_propagate_kernel<<<(size + 255) / 256, 256>>>(x, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDSaturation_propagate(double* x, unsigned int size)
 {
-    cudaDSaturation_propagate_kernel << <(size + 255) / 256, 256>>> (x, size);
+    cudaDSaturation_propagate_kernel<<<(size + 255) / 256, 256>>>(x, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSSaturation_backPropagate(float* x, float* dx, unsigned int size)
 {
-    cudaSSaturation_backPropagate_kernel << <(size + 255) / 256, 256>>
-        > (x, dx, size);
+    cudaSSaturation_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void
 N2D2::cudaDSaturation_backPropagate(double* x, double* dx, unsigned int size)
 {
-    cudaDSaturation_backPropagate_kernel << <(size + 255) / 256, 256>>
-        > (x, dx, size);
+    cudaDSaturation_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 // Softplus
 void N2D2::cudaSSoftplus_propagate(float* x, unsigned int size)
 {
-    cudaSSoftplus_propagate_kernel << <(size + 255) / 256, 256>>> (x, size);
+    cudaSSoftplus_propagate_kernel<<<(size + 255) / 256, 256>>>(x, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDSoftplus_propagate(double* x, unsigned int size)
 {
-    cudaDSoftplus_propagate_kernel << <(size + 255) / 256, 256>>> (x, size);
+    cudaDSoftplus_propagate_kernel<<<(size + 255) / 256, 256>>>(x, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSSoftplus_backPropagate(float* x, float* dx, unsigned int size)
 {
-    cudaSSoftplus_backPropagate_kernel << <(size + 255) / 256, 256>>
-        > (x, dx, size);
+    cudaSSoftplus_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDSoftplus_backPropagate(double* x, double* dx, unsigned int size)
 {
-    cudaDSoftplus_backPropagate_kernel << <(size + 255) / 256, 256>>
-        > (x, dx, size);
+    cudaDSoftplus_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

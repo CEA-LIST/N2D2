@@ -25,6 +25,8 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
+#include "CudaUtils.hpp"
+
 namespace N2D2 {
 void cudaSFMPPropagate(float* inputs,
                        unsigned int* gridX,

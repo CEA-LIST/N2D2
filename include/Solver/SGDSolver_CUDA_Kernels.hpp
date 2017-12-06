@@ -21,6 +21,8 @@
 #ifndef N2D2_SGDSOLVER_CUDA_KERNELS_H
 #define N2D2_SGDSOLVER_CUDA_KERNELS_H
 
+#include "CudaUtils.hpp"
+
 namespace N2D2 {
 void cudaSclamp(float* x, unsigned int size, float minVal, float maxVal);
 void cudaDclamp(double* x, unsigned int size, double minVal, double maxVal);

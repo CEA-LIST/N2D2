@@ -24,8 +24,9 @@ __global__ void
 cudaSclamp_kernel(float* x, unsigned int size, float minVal, float maxVal)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
         x[index] = (x[index] < minVal) ? minVal : (x[index] > maxVal)
                                                       ? maxVal
                                                       : x[index];
@@ -38,8 +39,9 @@ __global__ void cudaSquantize_kernel(float* y,
                                      unsigned int quantizationLevels)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
         y[index] = (quantizationLevels > 1)
                        ? (int)round((quantizationLevels - 1) * x[index])
                          / (float)(quantizationLevels - 1)
@@ -51,8 +53,9 @@ __global__ void
 cudaDclamp_kernel(double* x, unsigned int size, double minVal, double maxVal)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
         x[index] = (x[index] < minVal) ? minVal : (x[index] > maxVal)
                                                       ? maxVal
                                                       : x[index];
@@ -65,8 +68,9 @@ __global__ void cudaDquantize_kernel(double* y,
                                      unsigned int quantizationLevels)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
 
-    if (index < size) {
+    for (unsigned int i = index; i < size; i += stride) {
         y[index] = (quantizationLevels > 1)
                        ? (int)round((quantizationLevels - 1) * x[index])
                          / (double)(quantizationLevels - 1)
@@ -76,7 +80,8 @@ __global__ void cudaDquantize_kernel(double* y,
 
 void N2D2::cudaSclamp(float* x, unsigned int size, float minVal, float maxVal)
 {
-    cudaSclamp_kernel << <(size + 255) / 256, 256>>> (x, size, minVal, maxVal);
+    cudaSclamp_kernel<<<(size + 255) / 256, 256>>>(x, size, minVal, maxVal);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSquantize(float* y,
@@ -84,14 +89,17 @@ void N2D2::cudaSquantize(float* y,
                          unsigned int size,
                          unsigned int quantizationLevels)
 {
-    cudaSquantize_kernel << <(size + 255) / 256, 256>>
-        > (y, x, size, quantizationLevels);
+    cudaSquantize_kernel<<<(size + 255) / 256, 256>>>
+        (y, x, size, quantizationLevels);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void
 N2D2::cudaDclamp(double* x, unsigned int size, double minVal, double maxVal)
 {
-    cudaDclamp_kernel << <(size + 255) / 256, 256>>> (x, size, minVal, maxVal);
+    cudaDclamp_kernel<<<(size + 255) / 256, 256>>>
+        (x, size, minVal, maxVal);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDquantize(double* y,
@@ -99,6 +107,7 @@ void N2D2::cudaDquantize(double* y,
                          unsigned int size,
                          unsigned int quantizationLevels)
 {
-    cudaDquantize_kernel << <(size + 255) / 256, 256>>
-        > (y, x, size, quantizationLevels);
+    cudaDquantize_kernel<<<(size + 255) / 256, 256>>>
+        (y, x, size, quantizationLevels);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

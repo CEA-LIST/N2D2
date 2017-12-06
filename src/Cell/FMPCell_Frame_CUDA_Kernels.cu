@@ -129,8 +129,8 @@ void N2D2::cudaSFMPPropagate(float* inputs,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSFMPPropagate_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (inputs,
+    cudaSFMPPropagate_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (inputs,
            gridX,
            gridY,
            outputs,
@@ -142,4 +142,5 @@ void N2D2::cudaSFMPPropagate(float* inputs,
            outputsWidth,
            batchSize,
            overlapping);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

@@ -395,8 +395,8 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSROIPoolingForwardAverage_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSROIPoolingForwardAverage_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            proposals,
            nbProposals,
            inputSizeY,
@@ -412,6 +412,7 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
            outputsHeight,
            outputsWidth,
            outputOffset);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSROIPoolingForwardMax(const float alpha,
@@ -448,8 +449,8 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSROIPoolingForwardMax_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSROIPoolingForwardMax_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            proposals,
            nbProposals,
            inputSizeY,
@@ -466,6 +467,7 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
            outputsWidth,
            outputOffset,
            argMax);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
@@ -500,8 +502,8 @@ void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSROIPoolingBackwardAverage_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSROIPoolingBackwardAverage_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            proposals,
            nbProposals,
            inputSizeY,
@@ -517,6 +519,7 @@ void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
            nbChannels,
            channelsHeight,
            channelsWidth);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
@@ -553,8 +556,8 @@ void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSROIPoolingBackwardMax_kernel << <blocksPerGrid, threadsPerBlocks>>
-        > (alpha,
+    cudaSROIPoolingBackwardMax_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (alpha,
            proposals,
            nbProposals,
            inputSizeY,
@@ -571,4 +574,5 @@ void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
            channelsHeight,
            channelsWidth,
            argMax);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
