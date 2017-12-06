@@ -24,12 +24,17 @@
 __global__ void cudaSRectifier_propagate_kernel(float* x,
                                                 unsigned int size,
                                                 float leakSlope,
+                                                int shifting,
                                                 float clipping)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            x[index] /= (1 << shifting);
+        else if (shifting < 0)
+            x[index] *= (1 << (-shifting));
 
         if (clipping > 0.0)
             x[index] = (x[index] > 0.0f) ? min(x[index], clipping) : leakSlope
@@ -42,12 +47,17 @@ __global__ void cudaSRectifier_propagate_kernel(float* x,
 __global__ void cudaDRectifier_propagate_kernel(double* x,
                                                 unsigned int size,
                                                 double leakSlope,
+                                                int shifting,
                                                 double clipping)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            x[index] /= (1 << shifting);
+        else if (shifting < 0)
+            x[index] *= (1 << (-shifting));
 
         if (clipping > 0.0)
             x[index] = (x[index] > 0.0) ? min(x[index], clipping) : leakSlope
@@ -57,13 +67,21 @@ __global__ void cudaDRectifier_propagate_kernel(double* x,
     }
 }
 
-__global__ void cudaSRectifier_backPropagate_kernel(
-    float* x, float* dx, unsigned int size, float leakSlope, float clipping)
+__global__ void cudaSRectifier_backPropagate_kernel(float* x,
+                                                    float* dx,
+                                                    unsigned int size,
+                                                    float leakSlope,
+                                                    int shifting,
+                                                    float clipping)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            dx[index] /= (1 << shifting);
+        else if (shifting < 0)
+            dx[index] *= (1 << (-shifting));
 
         if (clipping > 0.0) {
             dx[index] *= (x[index] > clipping) ? 0.0f : (x[index] > 0.0f)
@@ -75,13 +93,21 @@ __global__ void cudaSRectifier_backPropagate_kernel(
     }
 }
 
-__global__ void cudaDRectifier_backPropagate_kernel(
-    double* x, double* dx, unsigned int size, double leakSlope, double clipping)
+__global__ void cudaDRectifier_backPropagate_kernel(double* x,
+                                                    double* dx,
+                                                    unsigned int size,
+                                                    double leakSlope,
+                                                    int shifting,
+                                                    double clipping)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            dx[index] /= (1 << shifting);
+        else if (shifting < 0)
+            dx[index] *= (1 << (-shifting));
 
         if (clipping > 0.0) {
             dx[index] *= (x[index] > clipping) ? 0.0 : (x[index] > 0.0)
@@ -184,36 +210,46 @@ cudaDSoftplus_backPropagate_kernel(double* x, double* dx, unsigned int size)
 void N2D2::cudaSRectifier_propagate(float* x,
                                     unsigned int size,
                                     float leakSlope,
+                                    int shifting,
                                     float clipping)
 {
-    cudaSRectifier_propagate_kernel << <(size + 255) / 256, 256>>
-        > (x, size, leakSlope, clipping);
+    cudaSRectifier_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, size, leakSlope, shifting, clipping);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDRectifier_propagate(double* x,
                                     unsigned int size,
                                     double leakSlope,
+                                    int shifting,
                                     double clipping)
 {
-    cudaDRectifier_propagate_kernel << <(size + 255) / 256, 256>>
-        > (x, size, leakSlope, clipping);
+    cudaDRectifier_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, size, leakSlope, shifting, clipping);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSRectifier_backPropagate(
-    float* x, float* dx, unsigned int size, float leakSlope, float clipping)
+void N2D2::cudaSRectifier_backPropagate(float* x,
+                                        float* dx,
+                                        unsigned int size,
+                                        float leakSlope,
+                                        int shifting,
+                                        float clipping)
 {
-    cudaSRectifier_backPropagate_kernel << <(size + 255) / 256, 256>>
-        > (x, dx, size, leakSlope, clipping);
+    cudaSRectifier_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, size, leakSlope, shifting, clipping);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaDRectifier_backPropagate(
-    double* x, double* dx, unsigned int size, double leakSlope, double clipping)
+void N2D2::cudaDRectifier_backPropagate(double* x,
+                                        double* dx,
+                                        unsigned int size,
+                                        double leakSlope,
+                                        int shifting,
+                                        double clipping)
 {
-    cudaDRectifier_backPropagate_kernel << <(size + 255) / 256, 256>>
-        > (x, dx, size, leakSlope, clipping);
+    cudaDRectifier_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, size, leakSlope, shifting, clipping);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 

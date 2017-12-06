@@ -37,6 +37,7 @@ public:
     virtual ~RectifierActivation_Frame() {};
 
     using RectifierActivation<T>::mLeakSlope;
+    using RectifierActivation<T>::mShifting;
     using RectifierActivation<T>::mClipping;
 
 private:
@@ -47,6 +48,17 @@ private:
 template <class T>
 void N2D2::RectifierActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
+    if (mShifting > 0) {
+#pragma omp parallel for if (data->size() > 1024)
+        for (int index = 0; index < (int)data->size(); ++index)
+            (*data)(index) /= (1 << mShifting);
+    }
+    else if (mShifting < 0) {
+#pragma omp parallel for if (data->size() > 1024)
+        for (int index = 0; index < (int)data->size(); ++index)
+            (*data)(index) *= (1 << (-mShifting));
+    }
+
     if (mClipping > 0.0) {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)data->size(); ++index) {
@@ -68,6 +80,17 @@ template <class T>
 void N2D2::RectifierActivation_Frame
     <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
 {
+    if (mShifting > 0) {
+#pragma omp parallel for if (data->size() > 1024)
+        for (int index = 0; index < (int)data->size(); ++index)
+            (*diffData)(index) /= (1 << mShifting);
+    }
+    else if (mShifting < 0) {
+#pragma omp parallel for if (data->size() > 1024)
+        for (int index = 0; index < (int)data->size(); ++index)
+            (*diffData)(index) *= (1 << (-mShifting));
+    }
+
     if (mClipping > 0.0) {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)diffData->size(); ++index) {

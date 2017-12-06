@@ -28,17 +28,24 @@ namespace N2D2 {
 void cudaSRectifier_propagate(float* x,
                               unsigned int size,
                               float leakSlope,
+                              int shifting,
                               float clipping);
 void cudaDRectifier_propagate(double* x,
                               unsigned int size,
                               double leakSlope,
+                              int shifting,
                               double clipping);
-void cudaSRectifier_backPropagate(
-    float* x, float* dx, unsigned int size, float leakSlope, float clipping);
+void cudaSRectifier_backPropagate(float* x,
+                                  float* dx,
+                                  unsigned int size,
+                                  float leakSlope,
+                                  int shifting,
+                                  float clipping);
 void cudaDRectifier_backPropagate(double* x,
                                   double* dx,
                                   unsigned int size,
                                   double leakSlope,
+                                  int shifting,
                                   double clipping);
 // Saturation
 void cudaSSaturation_propagate(float* x, unsigned int size);

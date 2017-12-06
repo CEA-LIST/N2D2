@@ -43,6 +43,7 @@ public:
     virtual ~RectifierActivation_Frame_CUDA();
 
     using RectifierActivation<T>::mLeakSlope;
+    using RectifierActivation<T>::mShifting;
     using RectifierActivation<T>::mClipping;
 
 protected:
@@ -58,7 +59,8 @@ private:
 }
 
 template <class T>
-N2D2::RectifierActivation_Frame_CUDA<T>::RectifierActivation_Frame_CUDA()
+N2D2::RectifierActivation_Frame_CUDA<T>::RectifierActivation_Frame_CUDA():
+    RectifierActivation<T>()
 {
 #if CUDNN_VERSION >= 5000
     CHECK_CUDNN_STATUS(cudnnCreateActivationDescriptor(&mActivationDesc));

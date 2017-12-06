@@ -38,7 +38,7 @@ void RectifierActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data)
 {
     CudaTensor4d<float>* cudaData = static_cast<CudaTensor4d<float>*>(data);
 
-    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
 
@@ -51,9 +51,12 @@ void RectifierActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data)
                                    &beta,
                                    cudaData->getCudnnTensorDesc(),
                                    cudaData->getDevicePtr()));
-    } else
+    }
+    else {
         cudaSRectifier_propagate(
-            cudaData->getDevicePtr(), cudaData->size(), mLeakSlope, mClipping);
+            cudaData->getDevicePtr(), cudaData->size(),
+            (double)mLeakSlope, (int)mShifting, (double)mClipping);
+    }
 }
 
 template <>
@@ -61,7 +64,7 @@ void RectifierActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data)
 {
     CudaTensor4d<double>* cudaData = static_cast<CudaTensor4d<double>*>(data);
 
-    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const double alpha = 1.0f;
         const double beta = 0.0f;
 
@@ -74,9 +77,12 @@ void RectifierActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data)
                                    &beta,
                                    cudaData->getCudnnTensorDesc(),
                                    cudaData->getDevicePtr()));
-    } else
+    }
+    else {
         cudaDRectifier_propagate(
-            cudaData->getDevicePtr(), cudaData->size(), mLeakSlope, mClipping);
+            cudaData->getDevicePtr(), cudaData->size(),
+            (double)mLeakSlope, (int)mShifting, (double)mClipping);
+    }
 }
 
 template <>
@@ -87,7 +93,7 @@ void RectifierActivation_Frame_CUDA
     CudaTensor4d<float>* cudaDiffData = static_cast
         <CudaTensor4d<float>*>(diffData);
 
-    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
 
@@ -104,12 +110,14 @@ void RectifierActivation_Frame_CUDA
                                     &beta,
                                     cudaDiffData->getCudnnTensorDesc(),
                                     cudaDiffData->getDevicePtr()));
-    } else {
+    }
+    else {
         cudaSRectifier_backPropagate(cudaData->getDevicePtr(),
                                      cudaDiffData->getDevicePtr(),
                                      cudaData->size(),
-                                     mLeakSlope,
-                                     mClipping);
+                                     (double)mLeakSlope,
+                                     (int)mShifting,
+                                     (double)mClipping);
     }
 }
 
@@ -121,7 +129,7 @@ void RectifierActivation_Frame_CUDA
     CudaTensor4d<double>* cudaDiffData = static_cast
         <CudaTensor4d<double>*>(diffData);
 
-    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const double alpha = 1.0f;
         const double beta = 0.0f;
 
@@ -138,12 +146,14 @@ void RectifierActivation_Frame_CUDA
                                     &beta,
                                     cudaDiffData->getCudnnTensorDesc(),
                                     cudaDiffData->getDevicePtr()));
-    } else {
+    }
+    else {
         cudaDRectifier_backPropagate(cudaData->getDevicePtr(),
                                      cudaDiffData->getDevicePtr(),
                                      cudaData->size(),
-                                     mLeakSlope,
-                                     mClipping);
+                                     (double)mLeakSlope,
+                                     (int)mShifting,
+                                     (double)mClipping);
     }
 }
 }

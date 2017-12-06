@@ -58,6 +58,8 @@ public:
 protected:
     /// Leak slope
     Parameter<double> mLeakSlope;
+    /// Shifting
+    Parameter<int> mShifting;
     /// Clipping
     Parameter<double> mClipping;
 };
@@ -67,7 +69,9 @@ template <class T> const char* N2D2::RectifierActivation<T>::Type = "Rectifier";
 
 template <class T>
 N2D2::RectifierActivation<T>::RectifierActivation()
-    : mLeakSlope(this, "LeakSlope", 0.0), mClipping(this, "Clipping", 0.0)
+    : mLeakSlope(this, "LeakSlope", 0.0),
+      mShifting(this, "Shifting", 0),
+      mClipping(this, "Clipping", 0.0)
 {
     // ctor
 }
