@@ -125,9 +125,6 @@ public:
         return mPooling;
     };
     void writeMap(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
-    // parameter to
-    // discretize
     void getStats(Stats& stats) const;
     virtual Interface<PoolCell_Frame_Kernels::ArgMax>* getArgMax()
     {

@@ -107,9 +107,6 @@ public:
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
-    void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
-    // parameter to
-    // discretize
     virtual ~BatchNormCell_Frame();
 
 protected:

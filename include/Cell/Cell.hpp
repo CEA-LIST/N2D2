@@ -267,7 +267,8 @@ public:
      *
      * @param nbLevels      Number of discrete levels
     */
-    virtual void discretizeFreeParameters(unsigned int /*nbLevels*/) = 0;
+    virtual void discretizeFreeParameters(unsigned int /*nbLevels*/) {};
+    virtual void normalizeFreeParameters() {};
     virtual void processFreeParameters(const std::function
                                        <double(const double&)>& /*func*/) {};
 

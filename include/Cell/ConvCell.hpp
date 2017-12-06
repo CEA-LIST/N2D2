@@ -203,6 +203,7 @@ public:
     void writeMap(const std::string& fileName) const;
     void discretizeFreeParameters(unsigned int nbLevels);
     void randomizeFreeParameters(double stdDev);
+    void normalizeFreeParameters();
     void processFreeParameters(const std::function
                                <double(const double&)>& func);
     void getStats(Stats& stats) const;

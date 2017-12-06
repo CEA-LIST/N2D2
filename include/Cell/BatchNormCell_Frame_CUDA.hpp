@@ -92,9 +92,6 @@ public:
     void exportFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
-    void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
-    // parameter to
-    // discretize
     virtual ~BatchNormCell_Frame_CUDA();
 
 protected:

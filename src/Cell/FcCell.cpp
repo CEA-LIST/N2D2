@@ -316,6 +316,50 @@ void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
+void N2D2::FcCell::normalizeFreeParameters()
+{
+    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
+                                      * getChannelsHeight();
+
+    Float_T wMin = 0.0;
+    Float_T wMax = 0.0;
+
+    for (int output = 0; output < (int)mNbOutputs; ++output) {
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            Float_T weight = getWeight(output, channel);
+
+            if (weight < wMin)  wMin = weight;
+            if (weight > wMax)  wMax = weight;
+        }
+
+        if (!mNoBias) {
+            Float_T bias = getBias(output);
+
+            if (bias < wMin)  wMin = bias;
+            if (bias > wMax)  wMax = bias;
+        }
+    }
+
+    const Float_T wNorm = std::max(-wMin, wMax);
+
+#pragma omp parallel for if (mNbOutputs > 32)
+    for (int output = 0; output < (int)mNbOutputs; ++output) {
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            Float_T weight = getWeight(output, channel);
+            weight/= wNorm;
+
+            setWeight(output, channel, weight);
+        }
+
+        if (!mNoBias) {
+            Float_T bias = getBias(output);
+            bias/= wNorm;
+
+            setBias(output, bias);
+        }
+    }
+}
+
 void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 {
     const unsigned int channelsSize = getNbChannels() * getChannelsWidth()

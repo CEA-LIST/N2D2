@@ -66,9 +66,6 @@ public:
     virtual void initialize();
     unsigned long long int getNbConnections() const;
     void writeMap(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
-    // parameter to
-    // discretize
     void getStats(Stats& stats) const;
     virtual ~FMPCell() {};
 

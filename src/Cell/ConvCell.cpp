@@ -667,6 +667,61 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
+void N2D2::ConvCell::normalizeFreeParameters()
+{
+    Float_T wMin = 0.0;
+    Float_T wMax = 0.0;
+
+    for (int output = 0; output < (int)mNbOutputs; ++output) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
+            if (!isConnection(channel, output))
+                continue;
+
+            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
+                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
+                    Float_T weight = getWeight(output, channel, sx, sy);
+
+                    if (weight < wMin)  wMin = weight;
+                    if (weight > wMax)  wMax = weight;
+                }
+            }
+        }
+
+        if (!mNoBias) {
+            Float_T bias = getBias(output);
+
+            if (bias < wMin)  wMin = bias;
+            if (bias > wMax)  wMax = bias;
+        }
+    }
+
+    const Float_T wNorm = std::max(-wMin, wMax);
+
+#pragma omp parallel for if (mNbOutputs > 16)
+    for (int output = 0; output < (int)mNbOutputs; ++output) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
+            if (!isConnection(channel, output))
+                continue;
+
+            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
+                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
+                    Float_T weight = getWeight(output, channel, sx, sy);
+                    weight/= wNorm;
+
+                    setWeight(output, channel, sx, sy, weight);
+                }
+            }
+        }
+
+        if (!mNoBias) {
+            Float_T bias = getBias(output);
+            bias/= wNorm;
+
+            setBias(output, bias);
+        }
+    }
+}
+
 void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
 {
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
