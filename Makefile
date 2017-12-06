@@ -54,7 +54,22 @@ ifdef CUDA
   LDFLAGS:=$(LDFLAGS) $(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) \
     -lcudart -lcublas -lcudadevrt -lcudnn
   NVFLAGS:=$(CPPFLAGS) -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
-    -lm -lstdc++
+    -lm -lstdc++ -arch=sm_30
+
+  NVFLAGS:=$(NVFLAGS) -gencode arch=compute_30,code=sm_30 \
+    -gencode arch=compute_50,code=sm_50 \
+    -gencode arch=compute_52,code=sm_52 \
+    -gencode arch=compute_53,code=sm_53
+
+  CUDA_CAPABILITY_6:= $(shell $(NVCC) --help | grep 'compute_60')
+
+  ifneq ($(CUDA_CAPABILITY_6),)
+    $(info Compiling up to CUDA capability 6)
+    NVFLAGS:=$(NVFLAGS) \
+    -gencode arch=compute_60,code=sm_60 \
+    -gencode arch=compute_61,code=sm_61 \
+    -gencode arch=compute_62,code=sm_62
+  endif
 endif
 
 ifdef PUGIXML

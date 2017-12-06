@@ -120,7 +120,7 @@ if (CUDA_FOUND)
 
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCUDA=1")
         SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
-        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+        SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -arch=sm_30")
 
         if (MSVC)
             SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -MD")
