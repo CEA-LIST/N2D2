@@ -527,7 +527,7 @@ void N2D2::ConvCell::logFreeParametersDistrib(const std::string& fileName) const
     // Plot results
     Gnuplot gnuplot;
     gnuplot.set("grid front").set("key off");
-    gnuplot << "binwidth=0.01";
+    gnuplot << "binwidth=0.0078";   // < 1/128
     gnuplot << "bin(x,width)=width*floor(x/width+0.5)";
     gnuplot.set("boxwidth", "binwidth");
     gnuplot.set("style data boxes").set("style fill solid noborder");
