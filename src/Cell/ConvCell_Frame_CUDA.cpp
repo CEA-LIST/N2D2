@@ -679,6 +679,58 @@ void N2D2::ConvCell_Frame_CUDA::logFreeParametersDistrib(const std::string
     mSynchronized = false;
 }
 
+void N2D2::ConvCell_Frame_CUDA::discretizeFreeParameters(unsigned int nbLevels)
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    ConvCell::discretizeFreeParameters(nbLevels);
+    mSynchronized = false;
+
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeHToD();
+
+    mBias->synchronizeHToD();
+}
+
+void N2D2::ConvCell_Frame_CUDA::normalizeFreeParameters()
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    ConvCell::normalizeFreeParameters();
+    mSynchronized = false;
+
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeHToD();
+
+    mBias->synchronizeHToD();
+}
+
+void N2D2::ConvCell_Frame_CUDA::processFreeParameters(const std::function
+                                                <double(const double&)>& func)
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    ConvCell::processFreeParameters(func);
+    mSynchronized = false;
+
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeHToD();
+
+    mBias->synchronizeHToD();
+}
+
 N2D2::ConvCell_Frame_CUDA::~ConvCell_Frame_CUDA()
 {
 

@@ -201,10 +201,10 @@ public:
                                       bool ignoreNotExists = false);
     virtual void logFreeParametersDistrib(const std::string& fileName) const;
     void writeMap(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int nbLevels);
     void randomizeFreeParameters(double stdDev);
-    void normalizeFreeParameters();
-    void processFreeParameters(const std::function
+    virtual void discretizeFreeParameters(unsigned int nbLevels);
+    virtual void normalizeFreeParameters();
+    virtual void processFreeParameters(const std::function
                                <double(const double&)>& func);
     void getStats(Stats& stats) const;
     virtual ~ConvCell() {};

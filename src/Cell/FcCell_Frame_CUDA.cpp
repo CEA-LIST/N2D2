@@ -385,6 +385,46 @@ void N2D2::FcCell_Frame_CUDA::logFreeParametersDistrib(const std::string
     mSynchronized = false;
 }
 
+void N2D2::FcCell_Frame_CUDA::discretizeFreeParameters(unsigned int nbLevels)
+{
+    mSynapses.synchronizeDToH();
+    mBias.synchronizeDToH();
+
+    mSynchronized = true;
+    FcCell::discretizeFreeParameters(nbLevels);
+    mSynchronized = false;
+
+    mSynapses.synchronizeHToD();
+    mBias.synchronizeHToD();
+}
+
+void N2D2::FcCell_Frame_CUDA::normalizeFreeParameters()
+{
+    mSynapses.synchronizeDToH();
+    mBias.synchronizeDToH();
+
+    mSynchronized = true;
+    FcCell::normalizeFreeParameters();
+    mSynchronized = false;
+
+    mSynapses.synchronizeHToD();
+    mBias.synchronizeHToD();
+}
+
+void N2D2::FcCell_Frame_CUDA::processFreeParameters(const std::function
+                                                <double(const double&)>& func)
+{
+    mSynapses.synchronizeDToH();
+    mBias.synchronizeDToH();
+
+    mSynchronized = true;
+    FcCell::processFreeParameters(func);
+    mSynchronized = false;
+
+    mSynapses.synchronizeHToD();
+    mBias.synchronizeHToD();
+}
+
 N2D2::FcCell_Frame_CUDA::~FcCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)

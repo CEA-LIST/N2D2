@@ -110,6 +110,10 @@ public:
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
     void exportSolverParameters(const std::string& fileName) const;
+    void discretizeFreeParameters(unsigned int nbLevels);
+    void normalizeFreeParameters();
+    void processFreeParameters(const std::function
+                               <double(const double&)>& func);
     virtual ~ConvCell_Frame_CUDA();
 
 protected:
