@@ -63,6 +63,8 @@ void N2D2::IMDBWIKI_Database::load(const std::string& dataPath,
 void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
                                           const std::string& labelPath)
 {
+    const unsigned int nbMsgMax = 100;
+
     /**
     Loading the "label_file".csv used to get :
         -stimuli path
@@ -82,41 +84,62 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
     if (!((std::string)mDefaultLabel).empty())
         labelID(mDefaultLabel);
 
+    unsigned int nbMsg = 0;
+
     for (unsigned int face = 0; face < facesParam.size(); ++face) {
         const double age = facesParam[face].photo_taken - facesParam[face].dob;
 
         if ((facesParam[face].x0 == 1 && facesParam[face].y0 == 1)
-            || (facesParam[face].x1 == 1 && facesParam[face].y1 == 1)) {
-            std::cout << Utils::cwarning << "Wrong label location for frame "
-                      << dirPath + "/" + facesParam[face].full_path
-                      << Utils::cdef
-                      << " (corrupted frame(s): " << (++mNbCorruptedFrames)
-                      << ")" << std::endl;
-        } else {
-            std::ostringstream labelStr;
-            if (facesParam[face].gender != 0.0 && facesParam[face].gender
-                                                  != 1.0) {
-                std::cout << Utils::cnotice
-                          << "Gender type not defined for frame "
+            || (facesParam[face].x1 == 1 && facesParam[face].y1 == 1))
+        {
+            ++nbMsg;
+            ++mNbCorruptedFrames;
+
+            if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
+                std::cout << Utils::cwarning << "Wrong label location for frame "
                           << dirPath + "/" + facesParam[face].full_path
-                          << Utils::cdef << std::endl;
+                          << Utils::cdef
+                          << " (corrupted frame(s): " << mNbCorruptedFrames
+                          << ")" << std::endl;
+            }
+        }
+        else {
+            std::ostringstream labelStr;
+            if (facesParam[face].gender != 0.0
+                && facesParam[face].gender != 1.0)
+            {
+                ++nbMsg;
+
+                if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
+                    std::cout << Utils::cnotice
+                              << "Gender type not defined for frame "
+                              << dirPath + "/" + facesParam[face].full_path
+                              << Utils::cdef << std::endl;
+                }
 
                 labelStr << "?";
-            } else
+            }
+            else
                 labelStr << ((facesParam[face].gender == 0.0) ? "F" : "M");
 
             labelStr << "-";
 
             if (age < 0.0 || age > 99.0) {
-                std::cout << Utils::cnotice
-                          << "Age out of bound (negative or greater than 100 "
-                             "years old) for frame "
-                          << dirPath + "/" + facesParam[face].full_path
-                          << Utils::cdef << std::endl;
+                ++nbMsg;
+
+                if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
+                    std::cout << Utils::cnotice
+                              << "Age out of bound (negative or greater than 100 "
+                                 "years old) for frame "
+                              << dirPath + "/" + facesParam[face].full_path
+                              << Utils::cdef << std::endl;
+                }
 
                 labelStr << "?";
-            } else
+            }
+            else
                 labelStr << age;
+
             if (!mCrop) {
                 mStimuli.push_back(
                     Stimulus(dirPath + "/" + facesParam[face].full_path, -1));
@@ -131,6 +154,19 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
                 loadFile(dirPath + "/" + facesParam[face].full_path,
                          labelID(labelStr.str()));
         }
+
+        if (nbMsgMax > 0 && nbMsg == nbMsgMax) {
+            std::cout << Utils::cnotice << "Already " << nbMsg << " messages, "
+                "ignoring further notices..." << Utils::cdef << std::endl;
+
+            ++nbMsg;
+        }
+    }
+
+    if (nbMsgMax > 0 && nbMsg > nbMsgMax + 1) {
+        std::cout << Utils::cwarning << (nbMsg - nbMsgMax - 1)
+            << " messages (warning and/or notices) were silenced"
+            << Utils::cdef << std::endl;
     }
 }
 
