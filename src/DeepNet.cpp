@@ -62,6 +62,176 @@ void N2D2::DeepNet::RangeStats::operator()(double value)
     }
 }
 
+N2D2::DeepNet::Histogram::Histogram(double minVal_,
+                                    double maxVal_,
+                                    unsigned int nbBins_)
+    : minVal(minVal_),
+      maxVal(maxVal_),
+      nbBins(nbBins_),
+      values(nbBins_, 0),
+      nbValues(0),
+      maxBin(0)
+{
+    // ctor
+}
+
+void N2D2::DeepNet::Histogram::operator()(double value, unsigned int count)
+{
+    const unsigned int binIdx = getBinIdx(value);
+
+    if (binIdx > maxBin)
+        maxBin = binIdx;
+
+    values[binIdx] += count;
+    nbValues += count;
+}
+
+unsigned int N2D2::DeepNet::Histogram::enlarge(double value)
+{
+    if (value > maxVal) {
+        const double binWidth = getBinWidth();
+
+        nbBins += (unsigned int)std::ceil((value - maxVal) / binWidth);
+        values.resize(nbBins, 0);
+        maxVal = minVal + nbBins * binWidth;
+
+        assert(maxVal >= value);
+    }
+
+    return nbBins;
+}
+
+unsigned int N2D2::DeepNet::Histogram::getBinIdx(double value) const
+{
+    const double clampedValue = Utils::clamp(value, minVal, maxVal);
+    unsigned int binIdx = (unsigned int)(nbBins * (clampedValue - minVal)
+                                    / (maxVal - minVal));
+
+    if (binIdx == nbBins)
+        --binIdx;
+
+    return  binIdx;
+}
+
+void N2D2::DeepNet::Histogram::log(const std::string& fileName,
+                                   double threshold) const
+{
+    std::ofstream histData(fileName.c_str());
+
+    if (!histData.good()) {
+        throw std::runtime_error("Could not open histogram file: "
+                                 + fileName);
+    }
+
+    for (unsigned int bin = 0; bin <= maxBin; ++bin) {
+        histData << bin << " " << getBinValue(bin) << " " << values[bin]
+            << " " << (values[bin] / (double)nbValues) << "\n";
+    }
+
+    histData.close();
+
+    Gnuplot gnuplot;
+    gnuplot.setXlabel("Output value");
+    gnuplot.setYlabel("Normalized number of counts");
+    gnuplot.set("grid");
+    gnuplot.set("key off");
+    gnuplot.set("xrange [0:]");
+    gnuplot.set("logscale y");
+
+    if (threshold > 0.0) {
+        std::stringstream cmdStr;
+        cmdStr << "arrow from " << threshold << ", "
+            "graph 0 to " << threshold << ", graph 1 nohead lt 3 lw 2";
+        gnuplot.set(cmdStr.str());
+
+        cmdStr.str(std::string());
+        cmdStr << "label 1 \" threshold = " << threshold << "\"";
+        gnuplot.set(cmdStr.str());
+
+        cmdStr.str(std::string());
+        cmdStr << "label 1 at " << threshold << ", graph 0.85 tc lt 3";
+        gnuplot.set(cmdStr.str());
+    }
+
+    gnuplot.saveToFile(fileName);
+    gnuplot.plot(fileName, "using 2:4 with points");
+}
+
+N2D2::DeepNet::Histogram N2D2::DeepNet::Histogram::quantize(
+    double newMaxVal,
+    unsigned int newNbBins) const
+{
+    Histogram hist(minVal, newMaxVal, newNbBins);
+
+    for (unsigned int bin = 0; bin <= maxBin; ++bin)
+        hist(getBinValue(bin), values[bin]);
+
+    assert(nbValues == hist.nbValues);
+    return hist;
+}
+
+double N2D2::DeepNet::Histogram::calibrateKL(double maxError,
+                                             unsigned int maxIters) const
+{
+    double lowerVal = minVal;
+    double upperVal = getBinValue(maxBin);
+    unsigned int iter = 0;
+
+    while ((upperVal - lowerVal) > maxError && iter < maxIters) {
+        const double middleVal = (upperVal + lowerVal) / 2.0;
+        const double middleLowerVal = (middleVal + lowerVal) / 2.0;
+        const double middleUpperVal = (upperVal + middleVal) / 2.0;
+        const double lowerDiv = KLDivergence(*this, quantize(middleLowerVal));
+        const double upperDiv = KLDivergence(*this, quantize(middleUpperVal));
+
+        if (upperDiv < lowerDiv)
+            lowerVal = middleLowerVal;
+        else
+            upperVal = middleUpperVal;
+
+        // DEBUG
+        //std::cout << "div = " << ((upperDiv < lowerDiv) ? upperDiv : lowerDiv)
+        //    << "   [" << lowerVal << ", " << upperVal << "]" << std::endl;
+        ++iter;
+    }
+
+    return (upperVal + lowerVal) / 2.0;
+}
+
+double N2D2::DeepNet::Histogram::KLDivergence(const Histogram& ref,
+                                              const Histogram& quant)
+{
+    assert(ref.nbValues == quant.nbValues);
+    assert(ref.maxBin >= quant.maxBin);
+    assert(ref.maxVal >= quant.maxVal);
+
+    double qNorm = 0.0;
+
+    for (unsigned int bin = 0; bin <= ref.maxBin; ++bin) {
+        const unsigned int quantIdx = quant.getBinIdx(ref.getBinValue(bin));
+        qNorm += quant.values[quantIdx];
+    }
+
+    double divergence = 0.0;
+
+    for (unsigned int bin = 0; bin <= ref.maxBin; ++bin) {
+        const unsigned int quantIdx = quant.getBinIdx(ref.getBinValue(bin));
+
+        // Sum of p and q over bin [0,ref.maxBin] must be 1
+        const double p = (ref.values[bin] / (double)ref.nbValues);
+        const double q = (quant.values[quantIdx] / qNorm);
+
+        // q = 0 => p = 0
+        // p = 0 => contribution = 0
+        if (p != 0) {
+            assert(q != 0);  // q = 0 => p = 0
+            divergence += p * std::log(p / q);
+        }
+    }
+
+    return divergence;
+}
+
 N2D2::DeepNet::DeepNet(Network& net)
     : mNet(net),
       mLayers(1, std::vector<std::string>(1, "env")),
@@ -539,11 +709,25 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
     }
 }
 
+void N2D2::DeepNet::normalizeFreeParameters()
+{
+    for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell) {
+            mCells[(*itCell)]->normalizeFreeParameters();
+        }
+    }
+}
+
 void
 N2D2::DeepNet::normalizeOutputsRange(const std::map
                                      <std::string, RangeStats>& outputsRange,
                                      double normFactor,
-                                     double useMean)
+                                     double useMean,
+                                     double stdDevOffset)
 {
     // const std::map<std::string, RangeStats>::const_iterator itEnvRange =
     // outputsRange.find(*(*mLayers.begin()).begin());
@@ -570,22 +754,40 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
         double scalingFactor = 0.0;
 
         if (useMean) {
+            std::string layerName;
             double nbElements = 0.0;
+            double sum = 0.0;
+            double sumSquare = 0.0;
 
             for (std::vector<std::string>::const_iterator itCell
                  = (nextIsPool) ? (*(it + 1)).begin() : (*it).begin(),
                  itCellEnd = (nextIsPool) ? (*(it + 1)).end() : (*it).end();
                  itCell != itCellEnd;
-                 ++itCell) {
+                 ++itCell)
+            {
+                if (!layerName.empty())
+                    layerName += "_";
+
+                layerName += (*itCell);
+
                 const std::map<std::string, RangeStats>::const_iterator itRange
                     = outputsRange.find(*itCell);
-                scalingFactor += (*itRange).second.moments[0]
-                                 * (*itRange).second.mean();
                 nbElements += (*itRange).second.moments[0];
+                sum += (*itRange).second.moments[1];
+                sumSquare += (*itRange).second.moments[2];
             }
 
-            scalingFactor /= nbElements;
-        } else {
+            const double mean = sum / nbElements;
+            const double meanSquare = sumSquare / nbElements;
+            const double stdDev = std::sqrt(meanSquare - mean * mean);
+
+            scalingFactor = mean + stdDevOffset * stdDev;
+
+            std::cout << "Scaling factor " << layerName << " = "
+                << scalingFactor << " (mean: " << mean << " | stddev: "
+                << stdDev << ")" << std::endl;
+        }
+        else {
             for (std::vector<std::string>::const_iterator itCell
                  = (nextIsPool) ? (*(it + 1)).begin() : (*it).begin(),
                  itCellEnd = (nextIsPool) ? (*(it + 1)).end() : (*it).end();
@@ -606,17 +808,103 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
         for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
                                                       itCellEnd = (*it).end();
              itCell != itCellEnd;
-             ++itCell) {
+             ++itCell)
+        {
             std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
             if (cellFrame && cellFrame->getActivation()
                 && cellFrame->getActivation()->getType()
-                   == std::string("Rectifier")) {
+                   == std::string("Rectifier"))
+            {
+/*
+                const int shifting = (appliedFactor > 1.0)
+                    ? Utils::round(log2(appliedFactor))
+                    : -Utils::round(log2(1.0 / appliedFactor));
+
+                cellFrame->getActivation()->setParameter<int>("Shifting",
+                    shifting);
+
+                std::cout << Utils::cnotice << "Shifting " << (*itCell)
+                    << " = " << shifting << Utils::cdef << std::endl;
+*/
+
                 cell->processFreeParameters(std::bind(std::divides<double>(),
                                                       std::placeholders::_1,
                                                       appliedFactor));
+
+                applied = true;
+            }
+        }
+
+        if (applied)
+            prevScalingFactor = scalingFactor;
+    }
+}
+
+void
+N2D2::DeepNet::normalizeOutputsRange(const std::map
+                                     <std::string, Histogram>& outputsHistogram,
+                                     bool applyDiscretization)
+{
+    double prevScalingFactor = 1.0;
+
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
+    {
+        double scalingFactor = 0.0;
+        bool applied = false;
+
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+             itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
+        {
+            const std::map<std::string, Histogram>::const_iterator itHistogram
+                = outputsHistogram.find(*itCell);
+            scalingFactor = (*itHistogram).second.calibrateKL();
+            const double targetFactor = scalingFactor / prevScalingFactor;
+
+            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+            if (cellFrame && cellFrame->getActivation()
+                && cellFrame->getActivation()->getType()
+                   == std::string("Rectifier"))
+            {
+                const int shifting = (targetFactor > 1.0)
+                    ? Utils::round(log2(targetFactor))
+                    : -Utils::round(log2(1.0 / targetFactor));
+                const double shiftedFactor = (shifting >= 0)
+                    ? 1.0 / (1 << shifting)
+                    : (1 << (-shifting));
+                // max(1, ...) is used to avoid weights truncation
+                const double remainingFactor = std::max(1.0,
+                                                targetFactor * shiftedFactor);
+                const double appliedFactor = prevScalingFactor
+                                            * (remainingFactor / shiftedFactor);
+
+                cellFrame->getActivation()->setParameter<int>("Shifting",
+                                                              shifting);
+                cellFrame->getActivation()->setParameter<double>("Clipping",
+                                                                 1.0);
+                cell->processFreeParameters(std::bind(std::divides<double>(),
+                                                      std::placeholders::_1,
+                                                      remainingFactor));
+
+                if (applyDiscretization) {
+                    mSignalsDiscretization = 128;
+                    mFreeParametersDiscretization = 128;
+                }
+
+                std::cout << (*itCell) << ": "
+                    "scaling = " << scalingFactor << "   "
+                    "target = " << targetFactor << "   "
+                    "applied = " << appliedFactor << "   "
+                    "shifting = " << shifting << "    "
+                    "remaining = " << remainingFactor << std::endl;
+
+                scalingFactor = appliedFactor;
                 applied = true;
             }
         }
@@ -1310,7 +1598,7 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
     const unsigned int nbLayers = mLayers.size();
 
     if (mFreeParametersDiscretization > 0 && !mFreeParametersDiscretized) {
-        const std::string dirName = "free_parameters_discretized";
+        const std::string dirName = "weights_discretized";
         Utils::createDirectories(dirName);
 
         for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
@@ -1583,7 +1871,7 @@ N2D2::DeepNet::reportOutputsRange(std::map
                                                       itCellEnd = (*it).end();
              itCell != itCellEnd;
              ++itCell) {
-            const Tensor4d<Float_T> outputs
+            const Tensor4d<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
                       ? std::dynamic_pointer_cast<Cell_Frame_Top>(
                             (*mCells.find(*itCell)).second)->getOutputs()
@@ -1596,6 +1884,43 @@ N2D2::DeepNet::reportOutputsRange(std::map
 
             (*itRange).second = std::for_each(
                 outputs.begin(), outputs.end(), (*itRange).second);
+        }
+    }
+}
+
+void
+N2D2::DeepNet::reportOutputsHistogram(std::map
+                            <std::string, Histogram>& outputsHistogram) const
+{
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin(),
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it) {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell) {
+            const Tensor4d<Float_T>& outputs
+                = (mCells.find(*itCell) != mCells.end())
+                      ? std::dynamic_pointer_cast<Cell_Frame_Top>(
+                            (*mCells.find(*itCell)).second)->getOutputs()
+                      : mStimuliProvider->getData();
+
+            const Float_T maxVal = *std::max_element(outputs.begin(),
+                                                     outputs.end());
+
+            bool newInsert;
+            std::map<std::string, Histogram>::iterator itHistogram;
+            std::tie(itHistogram, newInsert)
+                = outputsHistogram.insert(std::make_pair(*itCell,
+                                                    Histogram(0.0, maxVal)));
+
+            if (!newInsert)
+                (*itHistogram).second.enlarge(maxVal);
+
+            (*itHistogram).second = std::for_each(
+                outputs.begin(), outputs.end(), (*itHistogram).second);
         }
     }
 }
@@ -1652,6 +1977,38 @@ N2D2::DeepNet::logOutputsRange(const std::string& fileName,
         " '' using 0:($2):($2) with labels offset char 0,-1 textcolor lt 3,"
         " '' using 0:($4):($4) with labels offset char 7,0 textcolor lt -1,"
         " '' using 0:4:4:4:4 with candlesticks lt -1 lw 2 notitle");
+}
+
+void
+N2D2::DeepNet::logOutputsHistogram(const std::string& dirName,
+                               const std::map
+                               <std::string, Histogram>& outputsHistogram) const
+{
+    Utils::createDirectories(dirName);
+
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin(),
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it)
+    {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell)
+        {
+            const std::map<std::string, Histogram>::const_iterator itHistogram
+                = outputsHistogram.find(*itCell);
+            const double threshold = (*itHistogram).second.calibrateKL();
+
+            (*itHistogram).second.log(dirName + "/" + (*itCell) + ".dat",
+                                      threshold);
+            (*itHistogram).second.quantize(threshold).log(dirName + "/"
+                                                + (*itCell) + "_quant.dat");
+
+            //std::cout << (*itCell) << ": " << threshold << std::endl;
+        }
+    }
 }
 
 void N2D2::DeepNet::clear(Database::StimuliSet set)

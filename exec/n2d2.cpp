@@ -121,6 +121,10 @@ int main(int argc, char* argv[]) try
         = opts.parse<std::string>("-export", "", "generate an export and exit");
     const int nbBits
         = opts.parse("-nbbits", 8, "number of bits per weight for exports");
+    const int calibration
+        = opts.parse("-calib", -1, "number of stimuli used for the "
+                     "calibration (-1 = no calibration, 0 = use the full test "
+                     "dataset)");
     const bool envDataUnsigned
         = opts.parse("-uenv", "unsigned env data for exports");
     const double timeStep
@@ -176,6 +180,8 @@ int main(int argc, char* argv[]) try
 
     StimuliProvider& sp = *deepNet->getStimuliProvider();
 
+    bool afterCalibration = false;
+
     if (!genExport.empty()) {
         if (!weights.empty())
             deepNet->importNetworkFreeParameters(weights);
@@ -183,6 +189,47 @@ int main(int argc, char* argv[]) try
             deepNet->importNetworkFreeParameters("weights_validation");
         else
             deepNet->importNetworkFreeParameters("weights");
+
+        if (calibration >= 0) {
+            std::map<std::string, DeepNet::RangeStats> outputsRange;
+            std::map<std::string, DeepNet::Histogram> outputsHistogram;
+            unsigned int nextLog = log;
+            unsigned int nextReport = report;
+
+            const unsigned int nbTest = (calibration > 0)
+                ? std::min((unsigned int)calibration,
+                           database.getNbStimuli(Database::Test))
+                : database.getNbStimuli(Database::Test);
+            const unsigned int batchSize = sp.getBatchSize();
+            const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+
+            for (unsigned int b = 0; b < nbBatch; ++b) {
+                const unsigned int i = b * batchSize;
+
+                sp.readBatch(Database::Test, i);
+                deepNet->test(Database::Test);
+                deepNet->reportOutputsRange(outputsRange);
+                deepNet->reportOutputsHistogram(outputsHistogram);
+
+                if (i >= nextReport || b == nbBatch - 1) {
+                    nextReport += report;
+                    std::cout << "Calibration data #" << i << std::endl;
+                }
+
+                if (i >= nextLog || b == nbBatch - 1)
+                    nextLog += report;
+            }
+
+            deepNet->logOutputsRange("calibration_outputs_range.dat",
+                                     outputsRange);
+            deepNet->logOutputsHistogram("calibration_outputs_histogram",
+                                         outputsHistogram);
+
+            std::cout << "Calibration:" << std::endl;
+            deepNet->normalizeOutputsRange(outputsHistogram, true);
+
+            afterCalibration = true;
+        }
 
         std::stringstream exportDir;
         exportDir << "export_" << genExport << "_"
@@ -201,63 +248,67 @@ int main(int argc, char* argv[]) try
                                             deepNet.get());
         }
 
-        std::exit(0);
+        if (!afterCalibration)
+            std::exit(0);
     }
 
-    DrawNet::draw(*deepNet, Utils::baseName(iniConfig) + ".svg");
-    deepNet->logStats("stats");
-    deepNet->logLabelsMapping("labels_mapping.log");
-    deepNet->logLabelsLegend("labels_legend.png");
+    if (!afterCalibration) {
+        DrawNet::draw(*deepNet, Utils::baseName(iniConfig) + ".svg");
+        deepNet->logStats("stats");
+        deepNet->logLabelsMapping("labels_mapping.log");
+        deepNet->logLabelsLegend("labels_legend.png");
 
-    if (!weights.empty())
-        deepNet->importNetworkFreeParameters(weights, true);
+        if (!weights.empty())
+            deepNet->importNetworkFreeParameters(weights, true);
 
-    if (check) {
-        std::cout << "Checking gradient computation..." << std::endl;
-        deepNet->checkGradient(1.0e-3, 1.0e-3);
-    }
-
-    // Reconstruct some frames to see the pre-processing
-    Utils::createDirectories("frames");
-
-    for (unsigned int i = 0,
-                      size
-                      = std::min(10U, database.getNbStimuli(Database::Learn));
-         i < size;
-         ++i) {
-        std::ostringstream fileName;
-        fileName << "frames/frame_" << i << ".dat";
-
-        sp.readStimulus(Database::Learn, i);
-        StimuliProvider::logData(fileName.str(), sp.getData()[0]);
-
-        const Tensor3d<int> labelsData = sp.getLabelsData()[0];
-
-        if (labelsData.dimX() > 1 || labelsData.dimY() > 1) {
-            fileName.str(std::string());
-            fileName << "frames/frame_" << i << "_label.dat";
-
-            Tensor3d<Float_T> displayLabelsData(labelsData.dimX(),
-                                                labelsData.dimY(),
-                                                labelsData.dimZ());
-
-            for (unsigned int index = 0; index < labelsData.size(); ++index)
-                displayLabelsData(index) = labelsData(index);
-
-            StimuliProvider::logData(fileName.str(), displayLabelsData);
+        if (check) {
+            std::cout << "Checking gradient computation..." << std::endl;
+            deepNet->checkGradient(1.0e-3, 1.0e-3);
         }
-    }
 
-    for (unsigned int i = 0,
-                      size
-                      = std::min(10U, database.getNbStimuli(Database::Test));
-         i < size;
-         ++i) {
-        std::ostringstream fileName;
-        fileName << "frames/test_frame_" << i << ".dat";
+        // Reconstruct some frames to see the pre-processing
+        Utils::createDirectories("frames");
 
-        sp.readStimulus(Database::Test, i);
-        StimuliProvider::logData(fileName.str(), sp.getData()[0]);
+        for (unsigned int i = 0, size = std::min(10U,
+                                        database.getNbStimuli(Database::Learn));
+             i < size;
+             ++i) {
+            std::ostringstream fileName;
+            fileName << "frames/frame_" << i << ".dat";
+
+            sp.readStimulus(Database::Learn, i);
+            StimuliProvider::logData(fileName.str(), sp.getData()[0]);
+
+            const Tensor3d<int> labelsData = sp.getLabelsData()[0];
+
+            if (labelsData.dimX() > 1 || labelsData.dimY() > 1) {
+                fileName.str(std::string());
+                fileName << "frames/frame_" << i << "_label.dat";
+
+                Tensor3d<Float_T> displayLabelsData(labelsData.dimX(),
+                                                    labelsData.dimY(),
+                                                    labelsData.dimZ());
+
+                for (unsigned int index = 0; index < labelsData.size();
+                    ++index)
+                {
+                    displayLabelsData(index) = labelsData(index);
+                }
+
+                StimuliProvider::logData(fileName.str(), displayLabelsData);
+            }
+        }
+
+        for (unsigned int i = 0, size = std::min(10U,
+                                        database.getNbStimuli(Database::Test));
+             i < size;
+             ++i) {
+            std::ostringstream fileName;
+            fileName << "frames/test_frame_" << i << ".dat";
+
+            sp.readStimulus(Database::Test, i);
+            StimuliProvider::logData(fileName.str(), sp.getData()[0]);
+        }
     }
 
     if (learn > 0) {
@@ -506,12 +557,14 @@ int main(int argc, char* argv[]) try
         sp.synchronize();
     }
 
-    if (weights.empty() || learn > 0) {
+    if (!afterCalibration && (weights.empty() || learn > 0)) {
         if (database.getNbStimuli(Database::Validation) > 0)
             deepNet->importNetworkFreeParameters("weights_validation");
         else
             deepNet->importNetworkFreeParameters("weights");
     }
+
+    const std::string testName = (afterCalibration) ? "export" : "test";
 
     if (testIdx >= 0) {
         const int label = database.getStimulusLabel(Database::Test, testIdx);
@@ -534,6 +587,7 @@ int main(int argc, char* argv[]) try
                                                     <Cell_Frame_Top>();
 
         std::map<std::string, DeepNet::RangeStats> outputsRange;
+        std::map<std::string, DeepNet::Histogram> outputsHistogram;
 
         if (cellFrame && (learn > 0 || test)) {
             std::vector<std::pair<std::string, double> > timings, cumTimings;
@@ -554,14 +608,15 @@ int main(int argc, char* argv[]) try
                 sp.readBatch(Database::Test, idx);
                 deepNet->test(Database::Test, &timings);
                 deepNet->reportOutputsRange(outputsRange);
-                deepNet->logEstimatedLabels("test");
+                deepNet->reportOutputsHistogram(outputsHistogram);
+                deepNet->logEstimatedLabels(testName);
 
                 if (logOutputs && i == 0) {
                     std::cout << "First stimulus ID: " << sp.getBatch()[0]
                               << std::endl;
                     std::cout << "First stimulus label: "
                               << sp.getLabelsData()[0](0) << std::endl;
-                    deepNet->logOutputs("outputs_test");
+                    deepNet->logOutputs("outputs_" + testName);
                 }
 
                 if (!cumTimings.empty()) {
@@ -610,15 +665,15 @@ int main(int argc, char* argv[]) try
                             <TargetScore>(*itTargets);
 
                         if (target) {
-                            target->logSuccess("test", Database::Test);
-                            target->logTopNSuccess("test", Database::Test);
+                            target->logSuccess(testName, Database::Test);
+                            target->logTopNSuccess(testName, Database::Test);
                         }
                     }
                 }
             }
 
             if (nbTest > 0) {
-                deepNet->log("test", Database::Test);
+                deepNet->log(testName, Database::Test);
                 for (std::vector<std::pair<std::string, double> >::iterator it
                      = cumTimings.begin(),
                      itEnd = cumTimings.end();
@@ -652,9 +707,19 @@ int main(int argc, char* argv[]) try
                 }
             }
 
-            deepNet->logOutputsRange("test_outputs_range.dat", outputsRange);
-            deepNet->normalizeOutputsRange(outputsRange, 0.25);
-            deepNet->exportNetworkFreeParameters("weights_normalized");
+            deepNet->logOutputsHistogram(testName + "_outputs_histogram",
+                                         outputsHistogram);
+            deepNet->logOutputsRange(testName + "_outputs_range.dat",
+                                     outputsRange);
+
+            if (!afterCalibration) {
+                deepNet->normalizeFreeParameters();
+                deepNet->exportNetworkFreeParameters("weights_normalized");
+
+                deepNet->normalizeOutputsRange(outputsRange, 0.25);
+                deepNet->exportNetworkFreeParameters(
+                    "weights_range_normalized");
+            }
         }
     }
     catch (const std::exception& e)

@@ -68,6 +68,32 @@ public:
         void operator()(double value);
     };
 
+    struct Histogram {
+        double minVal;
+        double maxVal;
+        unsigned int nbBins;
+        std::vector<unsigned int> values;
+        unsigned long long int nbValues;
+        unsigned int maxBin;
+
+        Histogram(double minVal_ = 0.0,
+                  double maxVal_ = 1000.0,
+                  unsigned int nbBins_ = 100000);
+        void operator()(double value, unsigned int count = 1);
+        unsigned int enlarge(double value);
+        inline double getBinWidth() const;
+        inline double getBinValue(unsigned int binIdx) const;
+        unsigned int getBinIdx(double value) const;
+        void log(const std::string& fileName, double threshold = 0.0) const;
+        Histogram quantize(double newMaxVal,
+                           unsigned int newNbBins = 256) const;
+        double calibrateKL(double maxError = 1.0e-3,
+                           unsigned int maxIters = 100) const;
+
+        static double KLDivergence(const Histogram& ref,
+                                   const Histogram& quant);
+    };
+
     DeepNet(Network& net);
     void addCell(const std::shared_ptr<Cell>& cell,
                  const std::vector<std::shared_ptr<Cell> >& parents);
@@ -92,10 +118,15 @@ public:
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
+    void normalizeFreeParameters();
     void normalizeOutputsRange(const std::map
                                <std::string, RangeStats>& outputsRange,
                                double normFactor,
-                               double useMean = true);
+                               double useMean = true,
+                               double stdDevOffset = 0.0);
+    void normalizeOutputsRange(const std::map
+                               <std::string, Histogram>& outputsHistogram,
+                               bool applyDiscretization = false);
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)
@@ -200,9 +231,14 @@ public:
                     <std::pair<std::string, double> >& timings) const;
     void reportOutputsRange(std::map
                             <std::string, RangeStats>& outputsRange) const;
+    void reportOutputsHistogram(std::map
+                            <std::string, Histogram>& outputsHistogram) const;
     void logOutputsRange(const std::string& fileName,
                          const std::map
                          <std::string, RangeStats>& outputsRange) const;
+    void logOutputsHistogram(const std::string& fileName,
+                         const std::map
+                         <std::string, Histogram>& outputsHistogram) const;
 
     virtual ~DeepNet() {};
 
@@ -353,6 +389,16 @@ std::shared_ptr<T> N2D2::DeepNet::getTarget(unsigned int index) const
             + indexStr.str());
 
     return target;
+}
+
+double N2D2::DeepNet::Histogram::getBinWidth() const
+{
+    return ((maxVal - minVal) / (double)nbBins);
+}
+
+double N2D2::DeepNet::Histogram::getBinValue(unsigned int binIdx) const
+{
+    return (minVal + (binIdx + 0.5) * getBinWidth());
 }
 
 /** @mainpage N2D2 Index Page
