@@ -36,6 +36,7 @@ N2D2::Target::Target(const std::string& name,
       mNoDisplayLabel(this, "NoDisplayLabel", -1),
       mLabelsHueOffset(this, "LabelsHueOffset", 0),
       mMaskedLabel(this, "MaskedLabel", -1),
+      mBinaryThreshold(this, "BinaryThreshold", 0.5),
       mName(name),
       mCell(cell),
       mStimuliProvider(sp),
@@ -415,7 +416,7 @@ void N2D2::Target::process(Database::StimuliSet set)
                                 = sortedLabelsValues[i].first;
                         }
                     } else {
-                        estimatedLabels(0) = (value(0) > 0.5);
+                        estimatedLabels(0) = (value(0) > mBinaryThreshold);
                         estimatedLabelsValue(0) = value(0);
                     }
 
@@ -482,7 +483,7 @@ void N2D2::Target::process(Database::StimuliSet set)
                             }
                         } else {
                             estimatedLabels(ox, oy, 0)
-                                = (value(ox, oy, 0) > 0.5);
+                                = (value(ox, oy, 0) > mBinaryThreshold);
                             estimatedLabelsValue(ox, oy, 0)
                                 = (estimatedLabels(ox, oy, 0) == 1)
                                       ? value(ox, oy, 0)

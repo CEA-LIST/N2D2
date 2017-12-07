@@ -158,7 +158,7 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
             }
         }
         else {
-            estimatedLabels(0) = (value(0) > 0.5);
+            estimatedLabels(0) = (value(0) > mBinaryThreshold);
             estimatedLabelsValue(0) = value(0);
         }
 

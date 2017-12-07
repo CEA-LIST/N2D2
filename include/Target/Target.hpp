@@ -158,6 +158,8 @@ protected:
     Parameter<int> mNoDisplayLabel;
     Parameter<int> mLabelsHueOffset;
     Parameter<int> mMaskedLabel;
+    /// Threshold for single output (binary classification). Default is 0.5.
+    Parameter<double> mBinaryThreshold;
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;
