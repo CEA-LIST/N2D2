@@ -21,6 +21,7 @@
 #ifndef N2D2_CUDA_H
 #define N2D2_CUDA_H
 
+#include <string>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -36,7 +37,7 @@
             std::stringstream error;                                           \
             error << "CUDNN failure: " << cudnnGetErrorString(status) << " ("  \
                   << (int)status << ") in " << __FILE__ << ':' << __LINE__;    \
-            std::cerr << error << std::endl;                                   \
+            std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
         }                                                                      \
@@ -48,7 +49,7 @@
             std::stringstream error;                                           \
             error << "Cuda failure: " << cudaGetErrorString(status) << " ("    \
                   << (int)status << ") in " << __FILE__ << ':' << __LINE__;    \
-            std::cerr << error << std::endl;                                   \
+            std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
         }                                                                      \
@@ -61,7 +62,7 @@
             error << "Cublas failure: "                                        \
                   << N2D2::Cuda::cublasGetErrorString(status) << " ("          \
                   << (int)status << ") in " << __FILE__ << ':' << __LINE__;    \
-            std::cerr << error << std::endl;                                   \
+            std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
         }                                                                      \
