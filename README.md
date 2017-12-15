@@ -28,6 +28,8 @@ contains the following resources:
 The N2D2 executables and application examples are located in the [exec](exec)
 directory.
 
+Obtain N2D2 with Docker: `docker pull cealist/n2d2`
+
 License
 -------
 
