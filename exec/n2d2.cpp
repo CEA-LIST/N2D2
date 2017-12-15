@@ -226,7 +226,8 @@ int main(int argc, char* argv[]) try
                                          outputsHistogram);
 
             std::cout << "Calibration:" << std::endl;
-            deepNet->normalizeOutputsRange(outputsHistogram, true);
+            const unsigned int nbLevels = std::pow(2, nbBits - 1);
+            deepNet->normalizeOutputsRange(outputsHistogram, nbLevels, true);
 
             afterCalibration = true;
         }

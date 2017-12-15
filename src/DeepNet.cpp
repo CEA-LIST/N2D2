@@ -170,7 +170,8 @@ N2D2::DeepNet::Histogram N2D2::DeepNet::Histogram::quantize(
     return hist;
 }
 
-double N2D2::DeepNet::Histogram::calibrateKL(double maxError,
+double N2D2::DeepNet::Histogram::calibrateKL(unsigned int nbLevels,
+                                             double maxError,
                                              unsigned int maxIters) const
 {
     double lowerVal = minVal;
@@ -181,8 +182,10 @@ double N2D2::DeepNet::Histogram::calibrateKL(double maxError,
         const double middleVal = (upperVal + lowerVal) / 2.0;
         const double middleLowerVal = (middleVal + lowerVal) / 2.0;
         const double middleUpperVal = (upperVal + middleVal) / 2.0;
-        const double lowerDiv = KLDivergence(*this, quantize(middleLowerVal));
-        const double upperDiv = KLDivergence(*this, quantize(middleUpperVal));
+        const double lowerDiv = KLDivergence(*this,
+                                            quantize(middleLowerVal, nbLevels));
+        const double upperDiv = KLDivergence(*this,
+                                            quantize(middleUpperVal, nbLevels));
 
         if (upperDiv < lowerDiv)
             lowerVal = middleLowerVal;
@@ -846,6 +849,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 void
 N2D2::DeepNet::normalizeOutputsRange(const std::map
                                      <std::string, Histogram>& outputsHistogram,
+                                     unsigned int nbLevels,
                                      bool applyDiscretization)
 {
     double prevScalingFactor = 1.0;
@@ -861,7 +865,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
         {
             const std::map<std::string, Histogram>::const_iterator itHistogram
                 = outputsHistogram.find(*itCell);
-            scalingFactor = (*itHistogram).second.calibrateKL();
+            scalingFactor = (*itHistogram).second.calibrateKL(nbLevels);
             const double targetFactor = scalingFactor / prevScalingFactor;
 
             std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
@@ -893,8 +897,8 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                                       remainingFactor));
 
                 if (applyDiscretization) {
-                    mSignalsDiscretization = 128;
-                    mFreeParametersDiscretization = 128;
+                    mSignalsDiscretization = nbLevels;
+                    mFreeParametersDiscretization = nbLevels;
                 }
 
                 std::cout << (*itCell) << ": "
@@ -1982,7 +1986,8 @@ N2D2::DeepNet::logOutputsRange(const std::string& fileName,
 void
 N2D2::DeepNet::logOutputsHistogram(const std::string& dirName,
                                const std::map
-                               <std::string, Histogram>& outputsHistogram) const
+                               <std::string, Histogram>& outputsHistogram,
+                               unsigned int nbLevels) const
 {
     Utils::createDirectories(dirName);
 
@@ -1999,7 +2004,8 @@ N2D2::DeepNet::logOutputsHistogram(const std::string& dirName,
         {
             const std::map<std::string, Histogram>::const_iterator itHistogram
                 = outputsHistogram.find(*itCell);
-            const double threshold = (*itHistogram).second.calibrateKL();
+            const double threshold
+                = (*itHistogram).second.calibrateKL(nbLevels);
 
             (*itHistogram).second.log(dirName + "/" + (*itCell) + ".dat",
                                       threshold);

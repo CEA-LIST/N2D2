@@ -86,8 +86,9 @@ public:
         unsigned int getBinIdx(double value) const;
         void log(const std::string& fileName, double threshold = 0.0) const;
         Histogram quantize(double newMaxVal,
-                           unsigned int newNbBins = 256) const;
-        double calibrateKL(double maxError = 1.0e-3,
+                           unsigned int newNbBins = 128) const;
+        double calibrateKL(unsigned int nbLevels = 128,
+                           double maxError = 1.0e-3,
                            unsigned int maxIters = 100) const;
 
         static double KLDivergence(const Histogram& ref,
@@ -126,6 +127,7 @@ public:
                                double stdDevOffset = 0.0);
     void normalizeOutputsRange(const std::map
                                <std::string, Histogram>& outputsHistogram,
+                               unsigned int nbLevels = 128,
                                bool applyDiscretization = false);
 
     // Setters
@@ -238,7 +240,8 @@ public:
                          <std::string, RangeStats>& outputsRange) const;
     void logOutputsHistogram(const std::string& fileName,
                          const std::map
-                         <std::string, Histogram>& outputsHistogram) const;
+                         <std::string, Histogram>& outputsHistogram,
+                         unsigned int nbLevels = 128) const;
 
     virtual ~DeepNet() {};
 
