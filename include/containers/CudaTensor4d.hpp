@@ -110,6 +110,12 @@ public:
     /** Synchronize Host-based data To Device */
     void synchronizeHBasedToD() const;
 
+    /** Synchronize Device-based data To Host  */
+    void synchronizeDBasedToH() const;
+
+    /** Synchronize Host data To Device-based */
+    void synchronizeHToDBased() const;
+
     void setDevicePtr(T* dataDevice)
     {
         mDataDevice = dataDevice;
@@ -448,6 +454,18 @@ template <typename T> void N2D2::CudaTensor4d<T>::synchronizeDToHBased() const
 template <typename T> void N2D2::CudaTensor4d<T>::synchronizeHBasedToD() const
 {
     if (mHostBased)
+        synchronizeHToD();
+}
+
+template <typename T> void N2D2::CudaTensor4d<T>::synchronizeDBasedToH() const
+{
+    if (!mHostBased)
+        synchronizeDToH();
+}
+
+template <typename T> void N2D2::CudaTensor4d<T>::synchronizeHToDBased() const
+{
+    if (!mHostBased)
         synchronizeHToD();
 }
 

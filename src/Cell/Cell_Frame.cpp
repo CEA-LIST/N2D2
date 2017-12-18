@@ -323,6 +323,8 @@ unsigned int N2D2::Cell_Frame::getMaxOutput(unsigned int batchPos) const
 
 void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels)
 {
+    mInputs.synchronizeDToH();
+
     for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = mInputs.begin(),
                                                    itTensorEnd = mInputs.end();
          itTensor != itTensorEnd;
@@ -334,4 +336,6 @@ void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels)
             (*input)(index) = Utils::round((nbLevels - 1) * (*input)(index))
                               / (nbLevels - 1);
     }
+
+    mInputs.synchronizeHToD();
 }

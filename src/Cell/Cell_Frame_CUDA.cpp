@@ -376,8 +376,7 @@ N2D2::Cell_Frame_CUDA::~Cell_Frame_CUDA()
 
 void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels)
 {
-    if (!mDiffOutputs.empty())
-        mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = mInputs.begin(),
                                                    itTensorEnd = mInputs.end();
@@ -391,7 +390,7 @@ void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels)
                               / (nbLevels - 1);
     }
 
-    mInputs.synchronizeHToD();
+    mInputs.synchronizeHToDBased();
 }
 
 #endif

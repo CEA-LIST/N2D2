@@ -56,6 +56,12 @@ public:
     /** Synchronize Host-based data To Device */
     void synchronizeHBasedToD() const;
 
+    /** Synchronize Device-based data To Host  */
+    void synchronizeDBasedToH() const;
+
+    /** Synchronize Host data To Device-based */
+    void synchronizeHToDBased() const;
+
     virtual CudaTensor4d<T>& back();
     virtual const CudaTensor4d<T>& back() const;
     virtual CudaTensor4d<T>& operator[](unsigned int t);
@@ -113,6 +119,28 @@ template <typename T> void N2D2::CudaInterface<T>::synchronizeHBasedToD() const
          ++it)
     {
         static_cast<CudaTensor4d<T>*>(*it)->synchronizeHBasedToD();
+    }
+}
+
+template <typename T> void N2D2::CudaInterface<T>::synchronizeDBasedToH() const
+{
+    for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+    {
+        static_cast<CudaTensor4d<T>*>(*it)->synchronizeDBasedToH();
+    }
+}
+
+template <typename T> void N2D2::CudaInterface<T>::synchronizeHToDBased() const
+{
+    for (typename std::vector<Tensor4d<T>*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+    {
+        static_cast<CudaTensor4d<T>*>(*it)->synchronizeHToDBased();
     }
 }
 
