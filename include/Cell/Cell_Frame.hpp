@@ -113,7 +113,7 @@ public:
         return mDiffInputs;
     }
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
-    void discretizeSignals(unsigned int nbLevels);
+    void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
     virtual ~Cell_Frame() {};
 
 protected:

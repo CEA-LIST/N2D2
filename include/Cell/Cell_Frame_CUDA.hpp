@@ -99,7 +99,7 @@ public:
     virtual CudaTensor4d<Float_T>& getDiffInputs();
     virtual const CudaTensor4d<Float_T>& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
-    void discretizeSignals(unsigned int nbLevels);
+    void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
     virtual ~Cell_Frame_CUDA();
 
 protected:

@@ -321,21 +321,31 @@ unsigned int N2D2::Cell_Frame::getMaxOutput(unsigned int batchPos) const
                          std::max_element(output.begin(), output.end()));
 }
 
-void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels)
+void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels,
+                                         const Signals& signals)
 {
-    mInputs.synchronizeDToH();
+    if (signals & In) {
+        mInputs.synchronizeDToH();
 
-    for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = mInputs.begin(),
-                                                   itTensorEnd = mInputs.end();
-         itTensor != itTensorEnd;
-         ++itTensor) {
-        Tensor4d<Float_T>* input = (*itTensor);
+        for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = mInputs.begin(),
+                                                       itTensorEnd = mInputs.end();
+             itTensor != itTensorEnd;
+             ++itTensor) {
+            Tensor4d<Float_T>* input = (*itTensor);
 
-        //#pragma omp parallel for
-        for (int index = 0; index < (int)input->size(); ++index)
-            (*input)(index) = Utils::round((nbLevels - 1) * (*input)(index))
-                              / (nbLevels - 1);
+            //#pragma omp parallel for
+            for (int index = 0; index < (int)input->size(); ++index)
+                (*input)(index) = Utils::round((nbLevels - 1) * (*input)(index))
+                                  / (nbLevels - 1);
+        }
+
+        mInputs.synchronizeHToD();
     }
 
-    mInputs.synchronizeHToD();
+    if (signals & Out) {
+        //#pragma omp parallel for
+        for (int index = 0; index < (int)mOutputs.size(); ++index)
+            mOutputs(index) = Utils::round((nbLevels - 1) * mOutputs(index))
+                              / (nbLevels - 1);
+    }
 }

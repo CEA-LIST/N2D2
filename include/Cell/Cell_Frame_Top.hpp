@@ -38,6 +38,12 @@
 namespace N2D2 {
 class Cell_Frame_Top {
 public:
+    enum Signals {
+        In = 1,
+        Out = 2,
+        InOut = 3   // = In | Out
+    };
+
     Cell_Frame_Top(const std::shared_ptr<Activation<Float_T> >& activation
                    = std::shared_ptr<Activation<Float_T> >())
         : mNbChannels(0),
@@ -56,7 +62,8 @@ public:
     virtual void backPropagate() = 0;
     virtual void update() = 0;
     virtual void checkGradient(double /*epsilon*/, double /*maxError*/) = 0;
-    virtual void discretizeSignals(unsigned int /*nbLevels*/) = 0;
+    virtual void discretizeSignals(unsigned int /*nbLevels*/,
+                                   const Signals& /*signals*/ = In) = 0;
     virtual void setOutputTarget(const Tensor4d<int>& targets,
                                  double targetVal = 1.0,
                                  double defaultVal = 0.0) = 0;

@@ -374,23 +374,37 @@ N2D2::Cell_Frame_CUDA::~Cell_Frame_CUDA()
     // dtor
 }
 
-void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels)
+void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels,
+                                              const Signals& signals)
 {
-    mInputs.synchronizeDBasedToH();
+    if (signals & In) {
+        mInputs.synchronizeDBasedToH();
 
-    for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = mInputs.begin(),
-                                                   itTensorEnd = mInputs.end();
-         itTensor != itTensorEnd;
-         ++itTensor) {
-        Tensor4d<Float_T>* input = (*itTensor);
+        for (std::vector<Tensor4d<Float_T>*>::iterator
+            itTensor = mInputs.begin(), itTensorEnd = mInputs.end();
+             itTensor != itTensorEnd;
+             ++itTensor) {
+            Tensor4d<Float_T>* input = (*itTensor);
 
-        //#pragma omp parallel for
-        for (int index = 0; index < (int)input->size(); ++index)
-            (*input)(index) = Utils::round((nbLevels - 1) * (*input)(index))
-                              / (nbLevels - 1);
+            //#pragma omp parallel for
+            for (int index = 0; index < (int)input->size(); ++index)
+                (*input)(index) = Utils::round((nbLevels - 1) * (*input)(index))
+                                  / (nbLevels - 1);
+        }
+
+        mInputs.synchronizeHToDBased();
     }
 
-    mInputs.synchronizeHToDBased();
+    if (signals & Out) {
+        mOutputs.synchronizeDToH();
+
+        //#pragma omp parallel for
+        for (int index = 0; index < (int)mOutputs.size(); ++index)
+            mOutputs(index) = Utils::round((nbLevels - 1) * mOutputs(index))
+                              / (nbLevels - 1);
+
+        mOutputs.synchronizeHToD();
+    }
 }
 
 #endif

@@ -1524,6 +1524,15 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
          itTargets != itTargetsEnd;
          ++itTargets)
     {
+        if (mSignalsDiscretization > 0) {
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
+                                                            getCell());
+
+            cellFrame->discretizeSignals(mSignalsDiscretization,
+                                         Cell_Frame_Top::Out);
+        }
+
         //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(Database::Learn);
@@ -1664,6 +1673,15 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
          itTargetsEnd = mTargets.end();
          itTargets != itTargetsEnd;
          ++itTargets) {
+        if (mSignalsDiscretization > 0) {
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
+                                                            getCell());
+
+            cellFrame->discretizeSignals(mSignalsDiscretization,
+                                         Cell_Frame_Top::Out);
+        }
+
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(set);
 
