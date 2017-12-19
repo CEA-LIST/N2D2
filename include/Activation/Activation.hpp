@@ -29,11 +29,23 @@
 namespace N2D2 {
 template <class T> class Activation : public Parameterizable {
 public:
+    Activation();
     virtual const char* getType() const = 0;
     virtual void propagate(Tensor4d<T>* data) = 0;
     virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData) = 0;
     virtual ~Activation() {};
+
+protected:
+    /// Shifting
+    Parameter<int> mShifting;
 };
+}
+
+template <class T>
+N2D2::Activation<T>::Activation()
+    : mShifting(this, "Shifting", 0)
+{
+    // ctor
 }
 
 #endif // N2D2_ACTIVATION_H
