@@ -33,6 +33,7 @@ public:
         <void(StimuliProvider& sp,
               const std::string& dirName,
               Database::StimuliSet set,
+              double stimuliRange,
               DeepNet* deepNet)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -45,11 +46,16 @@ public:
                          const std::string& dirName,
                          const std::string& type,
                          Database::StimuliSet set,
+                         double stimuliRange = 1.0,
                          DeepNet* deepNet = NULL);
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
                          Database::StimuliSet set,
+                         double stimuliRange = 1.0,
                          DeepNet* deepNet = NULL);
+    static double getStimuliRange(StimuliProvider& sp,
+                                  const std::string& dirName,
+                                  Database::StimuliSet set);
 };
 }
 

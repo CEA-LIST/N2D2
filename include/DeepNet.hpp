@@ -47,6 +47,7 @@
 #include "Cell/FMPCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/UnpoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Target/Target.hpp"
 
@@ -127,6 +128,8 @@ public:
                                double stdDevOffset = 0.0);
     void normalizeOutputsRange(const std::map
                                <std::string, Histogram>& outputsHistogram,
+                               const std::map
+                               <std::string, RangeStats>& outputsRange,
                                unsigned int nbLevels = 128,
                                bool applyDiscretization = false);
 

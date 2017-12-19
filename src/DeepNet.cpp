@@ -849,6 +849,8 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 void
 N2D2::DeepNet::normalizeOutputsRange(const std::map
                                      <std::string, Histogram>& outputsHistogram,
+                                     const std::map
+                                     <std::string, RangeStats>& outputsRange,
                                      unsigned int nbLevels,
                                      bool applyDiscretization)
 {
@@ -863,18 +865,44 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
         for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
              itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
         {
-            const std::map<std::string, Histogram>::const_iterator itHistogram
-                = outputsHistogram.find(*itCell);
-            scalingFactor = (*itHistogram).second.calibrateKL(nbLevels);
-            const double targetFactor = scalingFactor / prevScalingFactor;
-
             std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (cellFrame && cellFrame->getActivation()
-                && cellFrame->getActivation()->getType()
-                   == std::string("Rectifier"))
+            if (!cellFrame
+                || cell->getType() == PoolCell::Type
+                || cell->getType() == UnpoolCell::Type)
+                continue;
+
+            const std::shared_ptr<Activation<Float_T> > activation
+                = cellFrame->getActivation();
+            const std::string activationType = (activation)
+                ? activation->getType() : "Linear";
+
+            const std::map<std::string, Histogram>::const_iterator itHistogram
+                = outputsHistogram.find(*itCell);
+            const std::map<std::string, RangeStats>::const_iterator itRange
+                = outputsRange.find(*itCell);
+
+            if (activationType == "Rectifier")
+                scalingFactor = (*itHistogram).second.calibrateKL(nbLevels);
+            else {
+                // Here we assume that this layer has either a logistic
+                // activation or is the preceding layer of a softmax.
+                // In both case, the loss function minimization tends to push
+                // the output values to either -inf (wrong class) or +inf
+                // (correct class)
+                // Therefore, high precision is required towards 0 in order to
+                // be able to distinguish the two.
+                scalingFactor = std::abs((*itRange).second.mean()) / nbLevels;
+            }
+
+            const double targetFactor = scalingFactor / prevScalingFactor;
+
+            if (activationType == "Rectifier"
+                || activationType == "Logistic"
+                || activationType == "LogisticWithLoss"
+                || activationType == "Linear")
             {
                 const int shifting = (targetFactor > 1.0)
                     ? Utils::round(log2(targetFactor))
@@ -888,18 +916,14 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 const double appliedFactor = prevScalingFactor
                                             * (remainingFactor / shiftedFactor);
 
-                cellFrame->getActivation()->setParameter<int>("Shifting",
-                                                              shifting);
-                cellFrame->getActivation()->setParameter<double>("Clipping",
-                                                                 1.0);
+                activation->setParameter<int>("Shifting", shifting);
+
+                if (activationType == "Rectifier")
+                    activation->setParameter<double>("Clipping", 1.0);
+
                 cell->processFreeParameters(std::bind(std::divides<double>(),
                                                       std::placeholders::_1,
                                                       remainingFactor));
-
-                if (applyDiscretization) {
-                    mSignalsDiscretization = nbLevels;
-                    mFreeParametersDiscretization = nbLevels;
-                }
 
                 std::cout << (*itCell) << ": "
                     "scaling = " << scalingFactor << "   "
@@ -915,6 +939,11 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
         if (applied)
             prevScalingFactor = scalingFactor;
+    }
+
+    if (applyDiscretization) {
+        mSignalsDiscretization = nbLevels;
+        mFreeParametersDiscretization = nbLevels;
     }
 }
 

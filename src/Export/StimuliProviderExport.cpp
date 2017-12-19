@@ -24,12 +24,14 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,
                                            const std::string& type,
                                            Database::StimuliSet set,
+                                           double stimuliRange,
                                            DeepNet* deepNet)
 {
     if (Registrar<StimuliProviderExport>::exists(type)) {
         Registrar<StimuliProviderExport>::create(type)(sp,
                                                        dirName,
                                                        set,
+                                                       stimuliRange,
                                                        deepNet);
     }
     else {
@@ -37,6 +39,7 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         StimuliProviderExport::generate(sp,
                                         dirName,
                                         set,
+                                        stimuliRange,
                                         deepNet);
     }
 }
@@ -44,12 +47,14 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
 void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,
                                            Database::StimuliSet set,
+                                           double stimuliRange,
                                            DeepNet* deepNet)
 {
     double wMax = (double)(std::pow(2,
                                     ((DeepNetExport::mEnvDataUnsigned)
                                          ? CellExport::mPrecision
                                          : (CellExport::mPrecision - 1))) - 1);
+    wMax /= stimuliRange;
 
     Utils::createDirectories(dirName);
 
@@ -58,26 +63,6 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     const unsigned int nbChannels = sp.getNbChannels();
     const unsigned int size = sp.getDatabase().getNbStimuli(set);
     const unsigned int zeroPad = (size > 0) ? std::ceil(std::log10(size)) : 0;
-    /*
-        if (CellExport::mPrecision > 0) {
-            StimuliData stimuliData(dirName + "_stats", sp);
-            stimuliData.generate(sp.getDatabase().getStimuliSetMask(set));
-            stimuliData.logValueRange();
-
-            const StimuliData::Value& globalValue =
-       stimuliData.getGlobalValue();
-            const double normValue = std::max(std::abs(globalValue.minVal),
-       std::abs(globalValue.maxVal));
-
-            if (normValue != 1.0) {
-                std::cout << Utils::cwarning << "Integer stimuli export with
-       range != 1 (" << normValue << ")"
-                    << Utils::cdef << std::endl;
-            }
-
-            wMax/= normValue;
-        }
-    */
 
     std::ofstream stimuliList((dirName + ".list").c_str());
 
@@ -169,4 +154,34 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
 
         envStimuli.close();
     }
+}
+
+double N2D2::StimuliProviderExport::getStimuliRange(StimuliProvider& sp,
+                                                    const std::string& dirName,
+                                                    Database::StimuliSet set)
+{
+    double normValue = 1.0;
+
+    if (CellExport::mPrecision > 0) {
+        StimuliData stimuliData(dirName + "_stats", sp);
+        stimuliData.generate(sp.getDatabase().getStimuliSetMask(set));
+        stimuliData.logValueRange();
+
+        const StimuliData::Value& globalValue = stimuliData.getGlobalValue();
+        normValue = std::max(std::abs(globalValue.minVal),
+                             std::abs(globalValue.maxVal));
+
+        if (DeepNetExport::mEnvDataUnsigned && globalValue.minVal < 0) {
+            std::cout << Utils::cwarning << "Unsigned stimuli export with min"
+                " value < 0 (" << globalValue.minVal << ")"
+                << Utils::cdef << std::endl;
+        }
+
+        if (normValue != 1.0) {
+            std::cout << Utils::cnotice << "Integer stimuli export with"
+                " range != 1 (" << normValue << ")" << Utils::cdef << std::endl;
+        }
+    }
+
+    return normValue;
 }

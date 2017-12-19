@@ -51,6 +51,7 @@
 #include "DrawNet.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "Export/StimuliProviderExport.hpp"
+#include "Transformation/RangeAffineTransformation.hpp"
 #include "Cell/FcCell_Spike.hpp"
 #include "Generator/DeepNetGenerator.hpp"
 #include "Target/TargetROIs.hpp"
@@ -190,7 +191,36 @@ int main(int argc, char* argv[]) try
         else
             deepNet->importNetworkFreeParameters("weights");
 
-        if (calibration >= 0) {
+        std::stringstream exportDir;
+        exportDir << "export_" << genExport << "_"
+                  << ((nbBits > 0) ? "int" : "float") << std::abs(nbBits);
+
+        DeepNetExport::mEnvDataUnsigned = envDataUnsigned;
+        CellExport::mPrecision = static_cast<CellExport::Precision>(nbBits);
+
+        if (calibration >= 0 && nbBits > 0) {
+            const double stimuliRange = StimuliProviderExport::getStimuliRange(
+                                                sp,
+                                                exportDir.str() + "/stimuli",
+                                                Database::Test);
+
+            if (stimuliRange != 1.0) {
+                // For calibration, normalizes the input in the full range of
+                // export data precision
+                // => stimuli range must therefore be in [-1,1] before export
+
+                // If test is following (after calibration):
+                // This step is necessary for mSignalsDiscretization parameter
+                // to work as expected, which is set in normalizeOutputsRange()
+                sp.addOnTheFlyTransformation(RangeAffineTransformation(
+                    RangeAffineTransformation::Divides, stimuliRange),
+                    Database::TestOnly);
+            }
+
+            // Globally disable logistic activation, in order to evaluate the
+            // correct range and shifting required for layers with logistic
+            LogisticActivationDisabled = true;
+
             std::map<std::string, DeepNet::RangeStats> outputsRange;
             std::map<std::string, DeepNet::Histogram> outputsHistogram;
             unsigned int nextLog = log;
@@ -220,32 +250,30 @@ int main(int argc, char* argv[]) try
                     nextLog += report;
             }
 
-            deepNet->logOutputsRange("calibration_outputs_range.dat",
-                                     outputsRange);
-            deepNet->logOutputsHistogram("calibration_outputs_histogram",
-                                         outputsHistogram);
+            Utils::createDirectories(exportDir.str() + "/calibration");
+            deepNet->logOutputsRange(exportDir.str() + "/calibration"
+                                     "/outputs_range.dat", outputsRange);
+            deepNet->logOutputsHistogram(exportDir.str() + "/calibration"
+                                        "/outputs_histogram", outputsHistogram);
 
-            std::cout << "Calibration:" << std::endl;
+            std::cout << "Calibration (" << nbBits << " bits):" << std::endl;
+
             const unsigned int nbLevels = std::pow(2, nbBits - 1);
-            deepNet->normalizeOutputsRange(outputsHistogram, nbLevels, true);
+            deepNet->normalizeOutputsRange(outputsHistogram, outputsRange,
+                                           nbLevels, true);
 
+            LogisticActivationDisabled = false;
             afterCalibration = true;
         }
-
-        std::stringstream exportDir;
-        exportDir << "export_" << genExport << "_"
-                  << ((nbBits > 0) ? "int" : "float") << std::abs(nbBits);
-
-        DeepNetExport::mEnvDataUnsigned = envDataUnsigned;
-        CellExport::mPrecision = static_cast<CellExport::Precision>(nbBits);
 
         DeepNetExport::generate(*deepNet, exportDir.str(), genExport);
 
         if (!noDB) {
-            StimuliProviderExport::generate(*deepNet->getStimuliProvider(),
+            StimuliProviderExport::generate(sp,
                                             exportDir.str() + "/stimuli",
                                             genExport,
                                             Database::Test,
+                                            1.0,
                                             deepNet.get());
         }
 
