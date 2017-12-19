@@ -1913,26 +1913,34 @@ void
 N2D2::DeepNet::reportOutputsRange(std::map
                                   <std::string, RangeStats>& outputsRange) const
 {
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin(),
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-                                                      itCellEnd = (*it).end();
+    if (outputsRange.empty()) {
+        // Populate outputsRange first to avoid thread issues
+        for (unsigned int i = 0; i < mLayers.size(); ++i) {
+            for (std::vector<std::string>::const_iterator
+                 itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
+                 itCell != itCellEnd;
+                 ++itCell)
+            {
+                outputsRange.insert(std::make_pair(*itCell, RangeStats()));
+            }
+        }
+    }
+
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < (int)mLayers.size(); ++i) {
+        for (std::vector<std::string>::const_iterator
+             itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
              itCell != itCellEnd;
-             ++itCell) {
+             ++itCell)
+        {
             const Tensor4d<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
                       ? std::dynamic_pointer_cast<Cell_Frame_Top>(
                             (*mCells.find(*itCell)).second)->getOutputs()
                       : mStimuliProvider->getData();
 
-            bool newInsert;
-            std::map<std::string, RangeStats>::iterator itRange;
-            std::tie(itRange, newInsert)
-                = outputsRange.insert(std::make_pair(*itCell, RangeStats()));
-
+            const std::map<std::string, RangeStats>::iterator itRange
+                = outputsRange.find(*itCell);
             (*itRange).second = std::for_each(
                 outputs.begin(), outputs.end(), (*itRange).second);
         }
@@ -1943,15 +1951,35 @@ void
 N2D2::DeepNet::reportOutputsHistogram(std::map
                             <std::string, Histogram>& outputsHistogram) const
 {
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin(),
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-                                                      itCellEnd = (*it).end();
+    if (outputsHistogram.empty()) {
+        // Populate outputsHistogram first to avoid thread issues
+        for (unsigned int i = 0; i < mLayers.size(); ++i) {
+            for (std::vector<std::string>::const_iterator
+                 itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
+                 itCell != itCellEnd;
+                 ++itCell)
+            {
+                const Tensor4d<Float_T>& outputs
+                    = (mCells.find(*itCell) != mCells.end())
+                          ? std::dynamic_pointer_cast<Cell_Frame_Top>(
+                                (*mCells.find(*itCell)).second)->getOutputs()
+                          : mStimuliProvider->getData();
+
+                const Float_T maxVal = *std::max_element(outputs.begin(),
+                                                         outputs.end());
+                outputsHistogram.insert(std::make_pair(*itCell,
+                                                    Histogram(0.0, maxVal)));
+            }
+        }
+    }
+
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < (int)mLayers.size(); ++i) {
+        for (std::vector<std::string>::const_iterator
+             itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
              itCell != itCellEnd;
-             ++itCell) {
+             ++itCell)
+        {
             const Tensor4d<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
                       ? std::dynamic_pointer_cast<Cell_Frame_Top>(
@@ -1961,15 +1989,9 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
             const Float_T maxVal = *std::max_element(outputs.begin(),
                                                      outputs.end());
 
-            bool newInsert;
-            std::map<std::string, Histogram>::iterator itHistogram;
-            std::tie(itHistogram, newInsert)
-                = outputsHistogram.insert(std::make_pair(*itCell,
-                                                    Histogram(0.0, maxVal)));
-
-            if (!newInsert)
-                (*itHistogram).second.enlarge(maxVal);
-
+            const std::map<std::string, Histogram>::iterator itHistogram
+                = outputsHistogram.find(*itCell);
+            (*itHistogram).second.enlarge(maxVal);
             (*itHistogram).second = std::for_each(
                 outputs.begin(), outputs.end(), (*itHistogram).second);
         }
