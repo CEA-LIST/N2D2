@@ -37,14 +37,18 @@ template <>
 void SaturationActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data)
 {
     CudaTensor4d<float>* cudaData = static_cast<CudaTensor4d<float>*>(data);
-    cudaSSaturation_propagate(cudaData->getDevicePtr(), cudaData->size());
+    cudaSSaturation_propagate(cudaData->getDevicePtr(),
+                              cudaData->size(),
+                              (double)mThreshold);
 }
 
 template <>
 void SaturationActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data)
 {
     CudaTensor4d<double>* cudaData = static_cast<CudaTensor4d<double>*>(data);
-    cudaDSaturation_propagate(cudaData->getDevicePtr(), cudaData->size());
+    cudaDSaturation_propagate(cudaData->getDevicePtr(),
+                              cudaData->size(),
+                              (double)mThreshold);
 }
 
 template <>
@@ -56,7 +60,8 @@ void SaturationActivation_Frame_CUDA
         <CudaTensor4d<float>*>(diffData);
     cudaSSaturation_backPropagate(cudaData->getDevicePtr(),
                                   cudaDiffData->getDevicePtr(),
-                                  cudaData->size());
+                                  cudaData->size(),
+                                  (double)mThreshold);
 }
 
 template <>
@@ -68,7 +73,8 @@ void SaturationActivation_Frame_CUDA
         <CudaTensor4d<double>*>(diffData);
     cudaDSaturation_backPropagate(cudaData->getDevicePtr(),
                                   cudaDiffData->getDevicePtr(),
-                                  cudaData->size());
+                                  cudaData->size(),
+                                  (double)mThreshold);
 }
 }
 

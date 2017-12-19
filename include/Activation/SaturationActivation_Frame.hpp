@@ -36,6 +36,8 @@ public:
     virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
     virtual ~SaturationActivation_Frame() {};
 
+    using SaturationActivation<T>::mThreshold;
+
 private:
     static Registrar<SaturationActivation<T> > mRegistrar;
 };
@@ -46,7 +48,8 @@ void N2D2::SaturationActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)data->size(); ++index)
-        (*data)(index) = Utils::clamp<T>((*data)(index), -1.0f, 1.0f);
+        (*data)(index) = Utils::clamp<T>((*data)(index),
+                                         -mThreshold, mThreshold);
 }
 
 template <class T>
@@ -56,7 +59,8 @@ void N2D2::SaturationActivation_Frame
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)diffData->size(); ++index)
         (*diffData)(index)
-            *= ((*data)(index) > -1.0f && (*data)(index) < 1.0f) ? 1.0f : 0.0f;
+            *= ((*data)(index) > -mThreshold && (*data)(index) < mThreshold)
+                    ? 1.0f : 0.0f;
 }
 
 #endif // N2D2_SATURATIONACTIVATION_FRAME_H

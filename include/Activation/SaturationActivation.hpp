@@ -48,15 +48,27 @@ public:
     }
     static const char* Type;
 
+    SaturationActivation();
     const char* getType() const
     {
         return Type;
     };
     virtual ~SaturationActivation() {};
+
+protected:
+    /// Threshold
+    Parameter<double> mThreshold;
 };
 }
 
 template <class T>
 const char* N2D2::SaturationActivation<T>::Type = "Saturation";
+
+template <class T>
+N2D2::SaturationActivation<T>::SaturationActivation()
+    : mThreshold(this, "Threshold", 1.0)
+{
+    // ctor
+}
 
 #endif // N2D2_SATURATIONACTIVATION_H
