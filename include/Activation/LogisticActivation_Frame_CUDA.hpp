@@ -72,6 +72,9 @@ N2D2::LogisticActivation_Frame_CUDA
 template <class T>
 void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(Tensor4d<T>* data)
 {
+    if (LogisticActivationDisabled)
+        return;
+
     CudaTensor4d<T>* cudaData = static_cast<CudaTensor4d<T>*>(data);
 
     const T alpha = 1.0f;
@@ -91,6 +94,9 @@ template <class T>
 void N2D2::LogisticActivation_Frame_CUDA
     <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
 {
+    if (LogisticActivationDisabled)
+        return;
+
     if (!this->mWithLoss) {
         CudaTensor4d<T>* cudaData = static_cast<CudaTensor4d<T>*>(data);
         CudaTensor4d<T>* cudaDiffData = static_cast<CudaTensor4d<T>*>(diffData);

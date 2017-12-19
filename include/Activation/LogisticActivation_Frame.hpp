@@ -52,6 +52,8 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 template <class T>
 void N2D2::LogisticActivation_Frame<T>::propagate(Tensor4d<T>* data)
 {
+    if (LogisticActivationDisabled)
+        return;
 
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)data->size(); ++index){
@@ -73,6 +75,9 @@ template <class T>
 void N2D2::LogisticActivation_Frame
     <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
 {
+    if (LogisticActivationDisabled)
+        return;
+
     if (!this->mWithLoss) {
 #pragma omp parallel for if (data->size() > 1024)
         for (int index = 0; index < (int)diffData->size(); ++index)

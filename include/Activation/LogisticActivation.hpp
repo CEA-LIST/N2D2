@@ -36,6 +36,8 @@
 #endif
 
 namespace N2D2 {
+extern bool LogisticActivationDisabled;     // declaration in Frame cpp file
+
 template <class T> class LogisticActivation : public Activation<T> {
 public:
     typedef std::function

@@ -33,3 +33,5 @@ N2D2::LogisticActivation_Frame
                                 "Spike_RRAM",
                                 "CSpike",
                                 NULL);
+
+bool N2D2::LogisticActivationDisabled = false;
