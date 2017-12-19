@@ -860,6 +860,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
          = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
     {
         double scalingFactor = 0.0;
+        double appliedFactor = 0.0;
         bool applied = false;
 
         for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
@@ -884,8 +885,10 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             const std::map<std::string, RangeStats>::const_iterator itRange
                 = outputsRange.find(*itCell);
 
-            if (activationType == "Rectifier")
-                scalingFactor = (*itHistogram).second.calibrateKL(nbLevels);
+            if (activationType == "Rectifier") {
+                scalingFactor = std::max(scalingFactor,
+                                (*itHistogram).second.calibrateKL(nbLevels));
+            }
             else {
                 // Here we assume that this layer has either a logistic
                 // activation or is the preceding layer of a softmax.
@@ -894,10 +897,29 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 // (correct class)
                 // Therefore, high precision is required towards 0 in order to
                 // be able to distinguish the two.
-                scalingFactor = std::abs((*itRange).second.mean()) / nbLevels;
+                scalingFactor = std::max(scalingFactor,
+                                std::abs((*itRange).second.mean()) / nbLevels);
             }
+        }
 
-            const double targetFactor = scalingFactor / prevScalingFactor;
+        const double targetFactor = scalingFactor / prevScalingFactor;
+
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+             itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
+        {
+            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+            if (!cellFrame
+                || cell->getType() == PoolCell::Type
+                || cell->getType() == UnpoolCell::Type)
+                continue;
+
+            const std::shared_ptr<Activation<Float_T> > activation
+                = cellFrame->getActivation();
+            const std::string activationType = (activation)
+                ? activation->getType() : "Linear";
 
             if (activationType == "Rectifier"
                 || activationType == "Logistic"
@@ -913,7 +935,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 // max(1, ...) is used to avoid weights truncation
                 const double remainingFactor = std::max(1.0,
                                                 targetFactor * shiftedFactor);
-                const double appliedFactor = prevScalingFactor
+                appliedFactor = prevScalingFactor
                                             * (remainingFactor / shiftedFactor);
 
                 activation->setParameter<int>("Shifting", shifting);
@@ -932,13 +954,12 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                     "shifting = " << shifting << "    "
                     "remaining = " << remainingFactor << std::endl;
 
-                scalingFactor = appliedFactor;
                 applied = true;
             }
         }
 
         if (applied)
-            prevScalingFactor = scalingFactor;
+            prevScalingFactor = appliedFactor;
     }
 
     if (applyDiscretization) {
