@@ -38,9 +38,12 @@
 #include "Cell/NodeOut.hpp"
 
 #include "Activation/RectifierActivation.hpp"
+#include "Activation/SaturationActivation.hpp"
 #include "Cell/BatchNormCell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/Cell_Frame.hpp"
+#include "Cell/Cell_Frame_CUDA.hpp"
 #include "Cell/Cell_Spike.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"

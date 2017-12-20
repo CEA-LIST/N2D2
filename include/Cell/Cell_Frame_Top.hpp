@@ -77,9 +77,13 @@ public:
     virtual Tensor4d<Float_T>& getDiffInputs() = 0;
     virtual const Tensor4d<Float_T>& getDiffInputs() const = 0;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const = 0;
-    std::shared_ptr<Activation<Float_T> > getActivation() const
+    const std::shared_ptr<Activation<Float_T> >& getActivation() const
     {
         return mActivation;
+    };
+    void setActivation(const std::shared_ptr<Activation<Float_T> >& activation)
+    {
+        mActivation = activation;
     };
     virtual ~Cell_Frame_Top() {};
 

@@ -916,7 +916,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 || cell->getType() == UnpoolCell::Type)
                 continue;
 
-            const std::shared_ptr<Activation<Float_T> > activation
+            const std::shared_ptr<Activation<Float_T> >& activation
                 = cellFrame->getActivation();
             const std::string activationType = (activation)
                 ? activation->getType() : "Linear";
@@ -937,6 +937,17 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                                 targetFactor * shiftedFactor);
                 appliedFactor = prevScalingFactor
                                             * (remainingFactor / shiftedFactor);
+
+                if (activationType == "Linear") {
+                    if (std::dynamic_pointer_cast<Cell_Frame_CUDA>(cell)) {
+                        cellFrame->setActivation(std::make_shared
+                            <SaturationActivation_Frame_CUDA<Float_T> >());
+                    }
+                    else {
+                        cellFrame->setActivation(std::make_shared
+                            <SaturationActivation_Frame<Float_T> >());
+                    }
+                }
 
                 activation->setParameter<int>("Shifting", shifting);
 
