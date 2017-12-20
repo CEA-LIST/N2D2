@@ -966,14 +966,18 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                             * (remainingFactor / shiftedFactor);
 
                 if (activationType == "Linear") {
+#ifdef CUDA
                     if (std::dynamic_pointer_cast<Cell_Frame_CUDA>(cell)) {
                         cellFrame->setActivation(std::make_shared
                             <SaturationActivation_Frame_CUDA<Float_T> >());
                     }
                     else {
+#endif
                         cellFrame->setActivation(std::make_shared
                             <SaturationActivation_Frame<Float_T> >());
+#ifdef CUDA
                     }
+#endif
                 }
 
                 activation->setParameter<int>("Shifting", shifting);
