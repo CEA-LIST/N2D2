@@ -55,6 +55,8 @@ public:
     };
     virtual ~SaturationActivation() {};
 
+    using Activation<T>::mShifting;
+
 protected:
     /// Threshold
     Parameter<double> mThreshold;

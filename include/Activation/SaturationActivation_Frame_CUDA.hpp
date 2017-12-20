@@ -42,6 +42,7 @@ public:
     virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
     virtual ~SaturationActivation_Frame_CUDA() {};
 
+    using SaturationActivation<T>::mShifting;
     using SaturationActivation<T>::mThreshold;
 
 private:

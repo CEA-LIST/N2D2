@@ -39,6 +39,7 @@ void SaturationActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data)
     CudaTensor4d<float>* cudaData = static_cast<CudaTensor4d<float>*>(data);
     cudaSSaturation_propagate(cudaData->getDevicePtr(),
                               cudaData->size(),
+                              (int)mShifting,
                               (double)mThreshold);
 }
 
@@ -48,6 +49,7 @@ void SaturationActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data)
     CudaTensor4d<double>* cudaData = static_cast<CudaTensor4d<double>*>(data);
     cudaDSaturation_propagate(cudaData->getDevicePtr(),
                               cudaData->size(),
+                              (int)mShifting,
                               (double)mThreshold);
 }
 
@@ -61,6 +63,7 @@ void SaturationActivation_Frame_CUDA
     cudaSSaturation_backPropagate(cudaData->getDevicePtr(),
                                   cudaDiffData->getDevicePtr(),
                                   cudaData->size(),
+                                  (int)mShifting,
                                   (double)mThreshold);
 }
 
@@ -74,6 +77,7 @@ void SaturationActivation_Frame_CUDA
     cudaDSaturation_backPropagate(cudaData->getDevicePtr(),
                                   cudaDiffData->getDevicePtr(),
                                   cudaData->size(),
+                                  (int)mShifting,
                                   (double)mThreshold);
 }
 }

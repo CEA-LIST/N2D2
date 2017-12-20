@@ -122,12 +122,18 @@ __global__ void cudaDRectifier_backPropagate_kernel(double* x,
 // Saturation
 __global__ void cudaSSaturation_propagate_kernel(float* x,
                                                  unsigned int size,
+                                                 int shifting,
                                                  float threshold)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            x[index] /= (1 << shifting);
+        else if (shifting < 0)
+            x[index] *= (1 << (-shifting));
+
         x[index] = (x[index] < -threshold) ? -threshold
                  : (x[index] > threshold) ? threshold
                  : x[index];
@@ -136,12 +142,18 @@ __global__ void cudaSSaturation_propagate_kernel(float* x,
 
 __global__ void cudaDSaturation_propagate_kernel(double* x,
                                                  unsigned int size,
+                                                 int shifting,
                                                  double threshold)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            x[index] /= (1 << shifting);
+        else if (shifting < 0)
+            x[index] *= (1 << (-shifting));
+
         x[index] = (x[index] < -threshold) ? -threshold
                  : (x[index] > threshold) ? threshold
                  : x[index];
@@ -152,12 +164,18 @@ __global__ void
 cudaSSaturation_backPropagate_kernel(float* x,
                                      float* dx,
                                      unsigned int size,
+                                     int shifting,
                                      float threshold)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            dx[index] /= (1 << shifting);
+        else if (shifting < 0)
+            dx[index] *= (1 << (-shifting));
+
         dx[index] *= (x[index] > -threshold && x[index] < threshold)
             ? 1.0f : 0.0f;
     }
@@ -167,12 +185,18 @@ __global__ void
 cudaDSaturation_backPropagate_kernel(double* x,
                                      double* dx,
                                      unsigned int size,
+                                     int shifting,
                                      double threshold)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            dx[index] /= (1 << shifting);
+        else if (shifting < 0)
+            dx[index] *= (1 << (-shifting));
+
         dx[index] *= (x[index] > -threshold && x[index] < threshold)
             ? 1.0 : 0.0;
     }
@@ -271,29 +295,32 @@ void N2D2::cudaDRectifier_backPropagate(double* x,
 // Saturation
 void N2D2::cudaSSaturation_propagate(float* x,
                                      unsigned int size,
+                                     int shifting,
                                      float threshold)
 {
     cudaSSaturation_propagate_kernel<<<(size + 255) / 256, 256>>>
-        (x, size, threshold);
+        (x, size, shifting, threshold);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaDSaturation_propagate(double* x,
                                      unsigned int size,
+                                     int shifting,
                                      double threshold)
 {
     cudaDSaturation_propagate_kernel<<<(size + 255) / 256, 256>>>
-        (x, size, threshold);
+        (x, size, shifting, threshold);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 void N2D2::cudaSSaturation_backPropagate(float* x,
                                          float* dx,
                                          unsigned int size,
+                                         int shifting,
                                          float threshold)
 {
     cudaSSaturation_backPropagate_kernel<<<(size + 255) / 256, 256>>>
-        (x, dx, size, threshold);
+        (x, dx, size, shifting, threshold);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -301,10 +328,11 @@ void
 N2D2::cudaDSaturation_backPropagate(double* x,
                                     double* dx,
                                     unsigned int size,
+                                    int shifting,
                                     double threshold)
 {
     cudaDSaturation_backPropagate_kernel<<<(size + 255) / 256, 256>>>
-        (x, dx, size, threshold);
+        (x, dx, size, shifting, threshold);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 

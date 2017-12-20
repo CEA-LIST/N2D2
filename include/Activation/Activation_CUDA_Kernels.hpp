@@ -50,17 +50,21 @@ void cudaDRectifier_backPropagate(double* x,
 // Saturation
 void cudaSSaturation_propagate(float* x,
                                unsigned int size,
+                               int shifting,
                                float threshold);
 void cudaDSaturation_propagate(double* x,
                                unsigned int size,
+                               int shifting,
                                double threshold);
 void cudaSSaturation_backPropagate(float* x,
                                    float* dx,
                                    unsigned int size,
+                                   int shifting,
                                    float threshold);
 void cudaDSaturation_backPropagate(double* x,
                                    double* dx,
                                    unsigned int size,
+                                   int shifting,
                                    double threshold);
 // Softplus
 void cudaSSoftplus_propagate(float* x, unsigned int size);
