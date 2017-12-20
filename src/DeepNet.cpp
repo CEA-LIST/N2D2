@@ -712,7 +712,7 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
     }
 }
 
-void N2D2::DeepNet::normalizeFreeParameters()
+void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
 {
     for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
@@ -720,7 +720,7 @@ void N2D2::DeepNet::normalizeFreeParameters()
              itCellEnd = mLayers[l].end();
              itCell != itCellEnd;
              ++itCell) {
-            mCells[(*itCell)]->normalizeFreeParameters();
+            mCells[(*itCell)]->normalizeFreeParameters(normFactor);
         }
     }
 }

@@ -120,7 +120,7 @@ public:
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
-    void normalizeFreeParameters();
+    void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeOutputsRange(const std::map
                                <std::string, RangeStats>& outputsRange,
                                double normFactor,

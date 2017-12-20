@@ -316,7 +316,7 @@ void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
-void N2D2::FcCell::normalizeFreeParameters()
+void N2D2::FcCell::normalizeFreeParameters(double normFactor)
 {
     const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
                                       * getChannelsHeight();
@@ -340,7 +340,7 @@ void N2D2::FcCell::normalizeFreeParameters()
         }
     }
 
-    const Float_T wNorm = std::max(-wMin, wMax);
+    const Float_T wNorm = std::max(-wMin, wMax) / normFactor;
 
 #pragma omp parallel for if (mNbOutputs > 32)
     for (int output = 0; output < (int)mNbOutputs; ++output) {

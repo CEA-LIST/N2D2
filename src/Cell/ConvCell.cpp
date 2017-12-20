@@ -667,7 +667,7 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
-void N2D2::ConvCell::normalizeFreeParameters()
+void N2D2::ConvCell::normalizeFreeParameters(double normFactor)
 {
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
@@ -695,7 +695,7 @@ void N2D2::ConvCell::normalizeFreeParameters()
         }
     }
 
-    const Float_T wNorm = std::max(-wMin, wMax);
+    const Float_T wNorm = std::max(-wMin, wMax) / normFactor;
 
 #pragma omp parallel for if (mNbOutputs > 16)
     for (int output = 0; output < (int)mNbOutputs; ++output) {
