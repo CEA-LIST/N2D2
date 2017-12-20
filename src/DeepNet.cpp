@@ -855,10 +855,27 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                      bool applyDiscretization)
 {
     double prevScalingFactor = 1.0;
+    bool nextIsMaxPool = false;
 
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
     {
+        if (nextIsMaxPool) {
+            nextIsMaxPool = false;
+            continue;
+        }
+
+        if (it + 1 != itEnd) {
+            std::shared_ptr<PoolCell> poolCell = std::dynamic_pointer_cast
+                <PoolCell>((*mCells.find(*(*(it + 1)).begin())).second);
+
+            if (poolCell && poolCell->getPooling() == PoolCell::Max) {
+                std::cout << "MAX pool following: " << *(*(it + 1)).begin()
+                    << std::endl;
+                nextIsMaxPool = true;
+            }
+        }
+
         double scalingFactor = 0.0;
         double appliedFactor = 0.0;
         bool applied = false;
@@ -870,9 +887,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (!cellFrame
-                || cell->getType() == PoolCell::Type
-                || cell->getType() == UnpoolCell::Type)
+            if (!cellFrame)
                 continue;
 
             const std::shared_ptr<Activation<Float_T> > activation
@@ -880,12 +895,25 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             const std::string activationType = (activation)
                 ? activation->getType() : "Linear";
 
-            const std::map<std::string, Histogram>::const_iterator itHistogram
-                = outputsHistogram.find(*itCell);
-            const std::map<std::string, RangeStats>::const_iterator itRange
-                = outputsRange.find(*itCell);
+            std::map<std::string, Histogram>::const_iterator itHistogram;
+            std::map<std::string, RangeStats>::const_iterator itRange;
 
-            if (activationType == "Rectifier") {
+            if (nextIsMaxPool) {
+                std::vector<std::string>::const_iterator itCellPool
+                    = (*(it + 1)).begin();
+
+                itHistogram = outputsHistogram.find(*itCellPool);
+                itRange = outputsRange.find(*itCellPool);
+            }
+            else {
+                itHistogram = outputsHistogram.find(*itCell);
+                itRange = outputsRange.find(*itCell);
+            }
+
+            if (activationType == "Rectifier"
+                || (*itRange).second.minVal >= 0.0)
+                    // e.g. average pooling following a Rectifier
+            {
                 scalingFactor = std::max(scalingFactor,
                                 (*itHistogram).second.calibrateKL(nbLevels));
             }
@@ -898,7 +926,8 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 // Therefore, high precision is required towards 0 in order to
                 // be able to distinguish the two.
                 scalingFactor = std::max(scalingFactor,
-                                std::abs((*itRange).second.mean()) / nbLevels);
+                            std::abs((*itRange).second.stdDev()) / nbLevels);
+                        // mean() cannot be used because it can be 0.0 or close
             }
         }
 
@@ -911,9 +940,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (!cellFrame
-                || cell->getType() == PoolCell::Type
-                || cell->getType() == UnpoolCell::Type)
+            if (!cellFrame)
                 continue;
 
             const std::shared_ptr<Activation<Float_T> >& activation
