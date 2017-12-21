@@ -101,6 +101,22 @@ unsigned int N2D2::DeepNet::Histogram::enlarge(double value)
     return nbBins;
 }
 
+unsigned int N2D2::DeepNet::Histogram::truncate(double value) {
+    if (value < maxVal) {
+        const unsigned int newMaxBin = getBinIdx(value);
+        maxVal = minVal + (newMaxBin + 1) * getBinWidth();
+
+        for (unsigned int bin = newMaxBin + 1; bin <= maxBin; ++bin)
+            values[newMaxBin] += values[bin];
+
+        maxBin = newMaxBin;
+        nbBins = (newMaxBin + 1);
+        values.resize(nbBins);
+    }
+
+    return nbBins;
+}
+
 unsigned int N2D2::DeepNet::Histogram::getBinIdx(double value) const
 {
     const double clampedValue = Utils::clamp(value, minVal, maxVal);
@@ -114,7 +130,8 @@ unsigned int N2D2::DeepNet::Histogram::getBinIdx(double value) const
 }
 
 void N2D2::DeepNet::Histogram::log(const std::string& fileName,
-                                   double threshold) const
+                                   const std::map<std::string, double>&
+                                        thresholds) const
 {
     std::ofstream histData(fileName.c_str());
 
@@ -138,19 +155,28 @@ void N2D2::DeepNet::Histogram::log(const std::string& fileName,
     gnuplot.set("xrange [0:]");
     gnuplot.set("logscale y");
 
-    if (threshold > 0.0) {
+    unsigned int i = 0;
+
+    for (std::map<std::string, double>::const_iterator it = thresholds.begin(),
+        itEnd = thresholds.end(); it != itEnd; ++it)
+    {
         std::stringstream cmdStr;
-        cmdStr << "arrow from " << threshold << ", "
-            "graph 0 to " << threshold << ", graph 1 nohead lt 3 lw 2";
+        cmdStr << "arrow from " << (*it).second << ", "
+            "graph 0 to " << (*it).second << ", graph 1 nohead "
+            "lt " << (3 + i) << " lw 2";
         gnuplot.set(cmdStr.str());
 
         cmdStr.str(std::string());
-        cmdStr << "label 1 \" threshold = " << threshold << "\"";
+        cmdStr << "label " << (i + 1) << " \" " << (*it).first << " = "
+            << (*it).second << "\"";
         gnuplot.set(cmdStr.str());
 
         cmdStr.str(std::string());
-        cmdStr << "label 1 at " << threshold << ", graph 0.85 tc lt 3";
+        cmdStr << "label " << (i + 1) << " at " << (*it).second
+            << ", graph " << (0.85 - i * 0.05) << " tc lt " << (3 + i);
         gnuplot.set(cmdStr.str());
+
+        ++i;
     }
 
     gnuplot.saveToFile(fileName);
@@ -852,7 +878,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                      const std::map
                                      <std::string, RangeStats>& outputsRange,
                                      unsigned int nbLevels,
-                                     bool applyDiscretization)
+                                     unsigned int nbPasses)
 {
     double prevScalingFactor = 1.0;
     bool nextIsMaxPool = false;
@@ -914,8 +940,22 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 || (*itRange).second.minVal >= 0.0)
                     // e.g. average pooling following a Rectifier
             {
-                scalingFactor = std::max(scalingFactor,
-                                (*itHistogram).second.calibrateKL(nbLevels));
+                double threshold = (*itRange).second.maxVal;
+
+                if (nbPasses > 0) {
+                    Histogram hist = (*itHistogram).second;
+
+                    // First pass
+                    threshold = hist.calibrateKL(nbLevels);
+
+                    // More passes
+                    for (unsigned int p = 1; p < nbPasses; ++p) {
+                        hist.truncate(threshold);
+                        threshold = hist.calibrateKL(nbLevels);
+                    }
+                }
+
+                scalingFactor = std::max(scalingFactor, threshold);
             }
             else {
                 // Here we assume that this layer has either a logistic
@@ -1002,11 +1042,6 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
         if (applied)
             prevScalingFactor = appliedFactor;
-    }
-
-    if (applyDiscretization) {
-        mSignalsDiscretization = nbLevels;
-        mFreeParametersDiscretization = nbLevels;
     }
 }
 
@@ -2136,11 +2171,36 @@ N2D2::DeepNet::logOutputsHistogram(const std::string& dirName,
         {
             const std::map<std::string, Histogram>::const_iterator itHistogram
                 = outputsHistogram.find(*itCell);
-            const double threshold
-                = (*itHistogram).second.calibrateKL(nbLevels);
+            std::map<std::string, double> thresholds;
+
+            Histogram hist = (*itHistogram).second;
+
+            // First pass
+            double threshold = hist.calibrateKL(nbLevels);
+            thresholds["KL 1-pass"] = threshold;
+
+            // Second pass on truncated hist
+            hist.truncate(threshold);
+            threshold = hist.calibrateKL(nbLevels);
+            thresholds["KL 2-passes"] = threshold;
+
+            // Third pass
+            hist.truncate(threshold);
+            threshold = hist.calibrateKL(nbLevels);
+            thresholds["KL 3-passes"] = threshold;
+
+            // Fourth pass
+            hist.truncate(threshold);
+            threshold = hist.calibrateKL(nbLevels);
+            thresholds["KL 4-passes"] = threshold;
+
+            // Fifth pass
+            hist.truncate(threshold);
+            threshold = hist.calibrateKL(nbLevels);
+            thresholds["KL 5-passes"] = threshold;
 
             (*itHistogram).second.log(dirName + "/" + (*itCell) + ".dat",
-                                      threshold);
+                                      thresholds);
             (*itHistogram).second.quantize(threshold).log(dirName + "/"
                                                 + (*itCell) + "_quant.dat");
 

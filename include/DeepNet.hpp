@@ -85,10 +85,13 @@ public:
                   unsigned int nbBins_ = 100000);
         void operator()(double value, unsigned int count = 1);
         unsigned int enlarge(double value);
+        unsigned int truncate(double value);
         inline double getBinWidth() const;
         inline double getBinValue(unsigned int binIdx) const;
         unsigned int getBinIdx(double value) const;
-        void log(const std::string& fileName, double threshold = 0.0) const;
+        void log(const std::string& fileName,
+                 const std::map<std::string, double>& thresholds
+                    = std::map<std::string, double>()) const;
         Histogram quantize(double newMaxVal,
                            unsigned int newNbBins = 128) const;
         double calibrateKL(unsigned int nbLevels = 128,
@@ -134,7 +137,7 @@ public:
                                const std::map
                                <std::string, RangeStats>& outputsRange,
                                unsigned int nbLevels = 128,
-                               bool applyDiscretization = false);
+                               unsigned int nbPasses = 1);
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)

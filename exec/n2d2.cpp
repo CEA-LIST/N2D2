@@ -259,8 +259,14 @@ int main(int argc, char* argv[]) try
             std::cout << "Calibration (" << nbBits << " bits):" << std::endl;
 
             const unsigned int nbLevels = std::pow(2, nbBits - 1);
+            const unsigned int nbPasses = 2;
+
             deepNet->normalizeOutputsRange(outputsHistogram, outputsRange,
-                                           nbLevels, true);
+                                           nbLevels, nbPasses);
+
+            // For following test simulation
+            deepNet->setSignalsDiscretization(nbLevels);
+            deepNet->setFreeParametersDiscretization(nbLevels);
 
             LogisticActivationDisabled = false;
             afterCalibration = true;
