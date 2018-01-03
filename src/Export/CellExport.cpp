@@ -39,7 +39,24 @@ void N2D2::CellExport::generate(Cell& cell,
     }
 }
 
-int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
+long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
+    if (method == Floor)
+        return std::floor(value);
+    else if (method == Ceil)
+        return std::ceil(value);
+    else if (method == Round)
+        return Utils::round(value);
+    else if (method == PowerOfTwo) {
+        const int sign = (value >= 0) ? 1 : -1;
+        return sign
+               * std::pow(
+                     2, std::max(0, (int)Utils::round(log2(std::abs(value)))));
+    }
+
+    return 0;
+}
+
+long long int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
 {
     const double scaling = (double)(std::pow(2, mPrecision - 1) - 1);
     const bool sat = (std::abs(value) > 1.0);
@@ -51,22 +68,7 @@ int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
                   << cell.getName() << "\"" << Utils::cdef << std::endl;
     }
 
-    const double satVal = scaling * value;
-
-    if (mIntApprox == Floor)
-        return std::floor(satVal);
-    else if (mIntApprox == Ceil)
-        return std::ceil(satVal);
-    else if (mIntApprox == Round)
-        return Utils::round(satVal);
-    else if (mIntApprox == PowerOfTwo) {
-        const int sign = (satVal >= 0) ? 1 : -1;
-        return sign
-               * std::pow(
-                     2, std::max(0, (int)Utils::round(log2(std::abs(satVal)))));
-    }
-
-    return 0;
+    return getIntApprox(scaling * value, mIntApprox);
 }
 
 bool N2D2::CellExport::generateFreeParameter(Cell& cell,

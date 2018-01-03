@@ -126,15 +126,18 @@ int main(int argc, char* argv[]) try
         = opts.parse("-calib", -1, "number of stimuli used for the "
                      "calibration (-1 = no calibration, 0 = use the full test "
                      "dataset)");
-    const bool envDataUnsigned
-        = opts.parse("-uenv", "unsigned env data for exports");
+    const bool exportNoUnsigned
+        = opts.parse("-no-unsigned", "disable the use of unsigned data type in "
+                     "integer exports");
     const double timeStep
         = opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
     const std::string weights = opts.parse<std::string>(
         "-w",
         "",
         "import initial weights from a specific location for the learning");
-    const bool noDB = opts.parse("-no-db-export", "disable database export");
+    const int exportNbStimuliMax = opts.parse("-db-export", -1,
+        "max. number of stimuli to export (0 = no dataset export, "
+        "-1 = unlimited)");
     N2D2::DeepNetExport::mExportParameters = opts.parse<std::string>(
         "-export-parameters", "", "parameters for export");
 #ifdef CUDA
@@ -195,13 +198,14 @@ int main(int argc, char* argv[]) try
         exportDir << "export_" << genExport << "_"
                   << ((nbBits > 0) ? "int" : "float") << std::abs(nbBits);
 
-        DeepNetExport::mEnvDataUnsigned = envDataUnsigned;
+        DeepNetExport::mUnsignedData = (!exportNoUnsigned);
         CellExport::mPrecision = static_cast<CellExport::Precision>(nbBits);
 
         if (calibration >= 0 && nbBits > 0) {
             const double stimuliRange = StimuliProviderExport::getStimuliRange(
                                                 sp,
-                                                exportDir.str() + "/stimuli",
+                                                exportDir.str()
+                                                + "/stimuli_before_calibration",
                                                 Database::Test);
 
             if (stimuliRange != 1.0) {
@@ -212,6 +216,9 @@ int main(int argc, char* argv[]) try
                 // If test is following (after calibration):
                 // This step is necessary for mSignalsDiscretization parameter
                 // to work as expected, which is set in normalizeOutputsRange()
+                std::cout << "Stimuli range before transformation is "
+                    << stimuliRange << std::endl;
+
                 sp.addOnTheFlyTransformation(RangeAffineTransformation(
                     RangeAffineTransformation::Divides, stimuliRange),
                     Database::TestOnly);
@@ -272,16 +279,17 @@ int main(int argc, char* argv[]) try
             afterCalibration = true;
         }
 
-        DeepNetExport::generate(*deepNet, exportDir.str(), genExport);
+        StimuliProviderExport::generate(sp,
+                                        exportDir.str() + "/stimuli",
+                                        genExport,
+                                        Database::Test,
+                                        exportNbStimuliMax,
+                                        false,
+                                        deepNet.get());
 
-        if (!noDB) {
-            StimuliProviderExport::generate(sp,
-                                            exportDir.str() + "/stimuli",
-                                            genExport,
-                                            Database::Test,
-                                            1.0,
-                                            deepNet.get());
-        }
+        // Must come after because StimuliProviderExport::generate() sets
+        // mEnvDataUnsigned
+        DeepNetExport::generate(*deepNet, exportDir.str(), genExport);
 
         if (!afterCalibration)
             std::exit(0);

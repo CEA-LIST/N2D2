@@ -20,6 +20,7 @@
 
 #include "Export/DeepNetExport.hpp"
 
+bool N2D2::DeepNetExport::mUnsignedData = true;
 bool N2D2::DeepNetExport::mEnvDataUnsigned = false;
 std::string N2D2::DeepNetExport::mExportParameters = "";
 
@@ -33,6 +34,9 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
                   << Utils::cdef << std::endl;
         return;
     }
+
+    std::cout << "Generating " << type << " export to \"" << dirName << "\":"
+        << std::endl;
 
     Utils::createDirectories(dirName);
 
@@ -65,12 +69,17 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
                                                       itEnd = (*itLayer).end();
              it != itEnd;
-             ++it) {
+             ++it)
+        {
+            std::cout << "-> Generating cell " << (*it) << std::endl;
             CellExport::generate(*deepNet.getCell(*it), dirName, type);
         }
     }
 
+    std::cout << "-> Generating network" << std::endl;
     Registrar<DeepNetExport>::create(type)(deepNet, dirName);
+
+    std::cout << "Done!" << std::endl;
 }
 
 std::string N2D2::DeepNetExport::getLayerName(DeepNet& deepNet,
@@ -259,4 +268,62 @@ N2D2::DeepNetExport::getMapLayer(DeepNet& deepNet,
         mapping.push_back(1); // for the last layer (target)
 
     return mapping;
+}
+
+bool N2D2::DeepNetExport::isCellUnsigned(DeepNet& deepNet, Cell& cell)
+{
+    if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
+        // Unsigned cells are not allowed
+        return false;
+    }
+
+    const std::vector<std::shared_ptr<Cell> > parentCells
+        = deepNet.getParentCells(cell.getName());
+    bool unsignedInputs = false;
+
+    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
+            = parentCells.begin(), itBegin = parentCells.begin(),
+        itEnd = parentCells.end(); it != itEnd; ++it)
+    {
+        bool unsignedInput = false;
+
+        if (!(*it)) {
+            // Parent is the environment
+            unsignedInput = DeepNetExport::mEnvDataUnsigned;
+        }
+        else {
+            const std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(*it);
+
+            if (cellFrame) {
+                if (cellFrame->getActivation()
+                    && cellFrame->getActivation()->getType()
+                        == std::string("Rectifier"))
+                {
+                    // Rectifier is unsigned
+                    unsignedInput = true;
+                }
+
+                if ((*it)->getType() == PoolCell::Type
+                    && !cellFrame->getActivation())
+                {
+                    // PoolCell without activation (linear):
+                    // Its output is unsigned if the cell is unsigned
+                    // (i.e. has unsigned inputs)
+                    unsignedInput = isCellUnsigned(deepNet, *(*it));
+                }
+            }
+        }
+
+        if (it == itBegin)
+            unsignedInputs = unsignedInput;
+        else if (unsignedInput != unsignedInputs) {
+            throw std::runtime_error("Unsupported: cell " + cell.getName()
+                                     + " mixes signed and unsigned inputs."
+                                     " Try setting DeepNetExport::mUnsignedData"
+                                     " to false");
+        }
+    }
+
+    return unsignedInputs;
 }

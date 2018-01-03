@@ -33,7 +33,8 @@ public:
         <void(StimuliProvider& sp,
               const std::string& dirName,
               Database::StimuliSet set,
-              double stimuliRange,
+              int nbStimuliMax,
+              bool normalize,
               DeepNet* deepNet)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -46,16 +47,27 @@ public:
                          const std::string& dirName,
                          const std::string& type,
                          Database::StimuliSet set,
-                         double stimuliRange = 1.0,
+                         int nbStimuliMax = -1,
+                         bool normalize = false,
                          DeepNet* deepNet = NULL);
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
                          Database::StimuliSet set,
-                         double stimuliRange = 1.0,
+                         int nbStimuliMax = -1,
+                         bool normalize = false,
                          DeepNet* deepNet = NULL);
     static double getStimuliRange(StimuliProvider& sp,
                                   const std::string& dirName,
                                   Database::StimuliSet set);
+
+protected:
+    static StimuliData getStimuliData(StimuliProvider& sp,
+                                      const std::string& dirName,
+                                      Database::StimuliSet set);
+    static std::pair<double, bool> getScaling(StimuliProvider& sp,
+                                              const std::string& dirName,
+                                              Database::StimuliSet set,
+                                              bool normalize = false);
 };
 }
 

@@ -49,6 +49,10 @@ public:
         return rMap;
     }
 
+    /// If true, enable the handling of unsigned data in the export
+    static bool mUnsignedData;
+    /// Indicate whereas the input stimuli are unsigned or not.
+    /// If mUnsignedData is false, mEnvDataUnsigned is necessary false too
     static bool mEnvDataUnsigned;
     static std::string mExportParameters;
 
@@ -73,6 +77,7 @@ protected:
     static std::string getCellOutputName(DeepNet& deepNet,
                                          const unsigned int layerNumber,
                                          const unsigned int cellNumber);
+    static bool isCellUnsigned(DeepNet& deepNet, Cell& cell);
 };
 }
 

@@ -102,7 +102,8 @@ public:
 
     static bool
     generateFreeParameter(Cell& cell, double value, std::ostream& stream);
-    static int getIntFreeParameter(Cell& cell, double value);
+    static long long int getIntApprox(double value, IntApprox method = Round);
+    static long long int getIntFreeParameter(Cell& cell, double value);
 };
 }
 

@@ -24,14 +24,16 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,
                                            const std::string& type,
                                            Database::StimuliSet set,
-                                           double stimuliRange,
+                                           int nbStimuliMax,
+                                           bool normalize,
                                            DeepNet* deepNet)
 {
     if (Registrar<StimuliProviderExport>::exists(type)) {
         Registrar<StimuliProviderExport>::create(type)(sp,
                                                        dirName,
                                                        set,
-                                                       stimuliRange,
+                                                       nbStimuliMax,
+                                                       normalize,
                                                        deepNet);
     }
     else {
@@ -39,7 +41,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         StimuliProviderExport::generate(sp,
                                         dirName,
                                         set,
-                                        stimuliRange,
+                                        nbStimuliMax,
+                                        normalize,
                                         deepNet);
     }
 }
@@ -47,21 +50,25 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
 void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,
                                            Database::StimuliSet set,
-                                           double stimuliRange,
+                                           int nbStimuliMax,
+                                           bool normalize,
                                            DeepNet* deepNet)
 {
-    double wMax = (double)(std::pow(2,
-                                    ((DeepNetExport::mEnvDataUnsigned)
-                                         ? CellExport::mPrecision
-                                         : (CellExport::mPrecision - 1))) - 1);
-    wMax /= stimuliRange;
-
     Utils::createDirectories(dirName);
+
+    double scaling;
+    bool unsignedData;
+    std::tie(scaling, unsignedData) = getScaling(sp, dirName, set, normalize);
+
+    DeepNetExport::mEnvDataUnsigned = unsignedData;
 
     const unsigned int envSizeX = sp.getSizeX();
     const unsigned int envSizeY = sp.getSizeY();
     const unsigned int nbChannels = sp.getNbChannels();
-    const unsigned int size = sp.getDatabase().getNbStimuli(set);
+    const unsigned int size = (nbStimuliMax >= 0)
+        ? std::min(sp.getDatabase().getNbStimuli(set),
+                   (unsigned int)nbStimuliMax)
+        : sp.getDatabase().getNbStimuli(set);
     const unsigned int zeroPad = (size > 0) ? std::ceil(std::log10(size)) : 0;
 
     std::ofstream stimuliList((dirName + ".list").c_str());
@@ -70,6 +77,11 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         throw std::runtime_error("Could not create stimuli list file: "
                                  + dirName + ".list");
     }
+
+    std::cout << "Exporting " << set << " dataset to \"" << dirName << "\""
+        << std::flush;
+
+    unsigned int progress = 0, progressPrev = 0;
 
     for (unsigned int i = 0; i < size; ++i) {
         std::stringstream stimuliName;
@@ -104,28 +116,105 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                         const double value = (double)frame(x, y);
                         envStimuli.write(reinterpret_cast<const char*>(&value),
                                          sizeof(value));
-                    } else if (CellExport::mPrecision == CellExport::Float32
+                    }
+                    else if (CellExport::mPrecision == CellExport::Float32
                                || CellExport::mPrecision
                                   == CellExport::Float16) {
                         const float value = (float)frame(x, y);
                         envStimuli.write(reinterpret_cast<const char*>(&value),
                                          sizeof(value));
-                    } else if (CellExport::mPrecision <= 8) {
-                        const int8_t value = (int8_t)(wMax * frame(x, y));
-                        envStimuli.write(reinterpret_cast<const char*>(&value),
-                                         sizeof(value));
-                    } else if (CellExport::mPrecision <= 16) {
-                        const int16_t value = (int16_t)(wMax * frame(x, y));
-                        envStimuli.write(reinterpret_cast<const char*>(&value),
-                                         sizeof(value));
-                    } else if (CellExport::mPrecision <= 32) {
-                        const int32_t value = (int32_t)(wMax * frame(x, y));
-                        envStimuli.write(reinterpret_cast<const char*>(&value),
-                                         sizeof(value));
-                    } else {
-                        const int64_t value = (int64_t)(wMax * frame(x, y));
-                        envStimuli.write(reinterpret_cast<const char*>(&value),
-                                         sizeof(value));
+                    }
+                    else if (CellExport::mPrecision <= 8) {
+                        const long long int approxValue
+                            = CellExport::getIntApprox(scaling * frame(x, y));
+
+                        if (unsignedData) {
+                            const uint8_t value
+                                = (uint8_t)Utils::clamp<long long int>(
+                                approxValue,
+                                std::numeric_limits<uint8_t>::min(),
+                                std::numeric_limits<uint8_t>::max());
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                        else {
+                            const int8_t value
+                                = (int8_t)Utils::clamp<long long int>(
+                                approxValue,
+                                std::numeric_limits<int8_t>::min(),
+                                std::numeric_limits<int8_t>::max());
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                    }
+                    else if (CellExport::mPrecision <= 16) {
+                        const long long int approxValue
+                            = CellExport::getIntApprox(scaling * frame(x, y));
+
+                        if (unsignedData) {
+                            const uint16_t value
+                                = (uint16_t)Utils::clamp<long long int>(
+                                approxValue,
+                                std::numeric_limits<uint16_t>::min(),
+                                std::numeric_limits<uint16_t>::max());
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                        else {
+                            const int16_t value
+                                = (int16_t)Utils::clamp<long long int>(
+                                approxValue,
+                                std::numeric_limits<int16_t>::min(),
+                                std::numeric_limits<int16_t>::max());
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                    }
+                    else if (CellExport::mPrecision <= 32) {
+                        const long long int approxValue
+                            = CellExport::getIntApprox(scaling * frame(x, y));
+
+                        if (unsignedData) {
+                            const uint32_t value
+                                = (uint32_t)Utils::clamp<long long int>(
+                                approxValue,
+                                std::numeric_limits<uint32_t>::min(),
+                                std::numeric_limits<uint32_t>::max());
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                        else {
+                            const int32_t value
+                                = (int32_t)Utils::clamp<long long int>(
+                                approxValue,
+                                std::numeric_limits<int32_t>::min(),
+                                std::numeric_limits<int32_t>::max());
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                    }
+                    else {
+                        const long long int approxValue
+                            = CellExport::getIntApprox(scaling * frame(x, y));
+
+                        if (unsignedData) {
+                            const uint64_t value = approxValue;
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
+                        else {
+                            const int64_t value = approxValue;
+                            envStimuli.write(reinterpret_cast<const char*>
+                                             (&value),
+                                             sizeof(value));
+                        }
                     }
                 }
             }
@@ -153,35 +242,85 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                      + stimuliName.str());
 
         envStimuli.close();
+
+        // Progress bar
+        progress = (unsigned int)(20.0 * (i + 1) / (double)size);
+
+        if (progress > progressPrev) {
+            std::cout << std::string(progress - progressPrev, '.')
+                      << std::flush;
+            progressPrev = progress;
+        }
     }
+
+    std::cout << std::endl;
 }
 
-double N2D2::StimuliProviderExport::getStimuliRange(StimuliProvider& sp,
-                                                    const std::string& dirName,
-                                                    Database::StimuliSet set)
+N2D2::StimuliData N2D2::StimuliProviderExport::getStimuliData(
+    StimuliProvider& sp,
+    const std::string& dirName,
+    Database::StimuliSet set)
 {
-    double normValue = 1.0;
+    StimuliData stimuliData(dirName + "_stats", sp);
+    stimuliData.generate(sp.getDatabase().getStimuliSetMask(set));
+    stimuliData.logValueRange();
+    return stimuliData;
+}
+
+double N2D2::StimuliProviderExport::getStimuliRange(
+    StimuliProvider& sp,
+    const std::string& dirName,
+    Database::StimuliSet set)
+{
+    const StimuliData::Value& globalValue
+        = getStimuliData(sp, dirName, set).getGlobalValue();
+    return std::max(std::abs(globalValue.minVal),
+                    std::abs(globalValue.maxVal));
+}
+
+std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
+    StimuliProvider& sp,
+    const std::string& dirName,
+    Database::StimuliSet set,
+    bool normalize)
+{
+    const StimuliData::Value& globalValue
+        = getStimuliData(sp, dirName, set).getGlobalValue();
+    const double dataRange = std::max(std::abs(globalValue.minVal),
+                                      std::abs(globalValue.maxVal));
+    const bool unsignedData = (globalValue.minVal >= 0
+                               && DeepNetExport::mUnsignedData);
+
+    double scalingValue = 1.0;
 
     if (CellExport::mPrecision > 0) {
-        StimuliData stimuliData(dirName + "_stats", sp);
-        stimuliData.generate(sp.getDatabase().getStimuliSetMask(set));
-        stimuliData.logValueRange();
+        const unsigned int nbBits = ((unsignedData) ? CellExport::mPrecision
+                                                : (CellExport::mPrecision - 1));
+        scalingValue = (double)(std::pow(2, nbBits) - 1);
+    }
 
-        const StimuliData::Value& globalValue = stimuliData.getGlobalValue();
-        normValue = std::max(std::abs(globalValue.minVal),
-                             std::abs(globalValue.maxVal));
+    if (normalize) {
+        if (dataRange != 1.0) {
+            scalingValue /= dataRange;
 
-        if (DeepNetExport::mEnvDataUnsigned && globalValue.minVal < 0) {
-            std::cout << Utils::cwarning << "Unsigned stimuli export with min"
-                " value < 0 (" << globalValue.minVal << ")"
+            std::cout << Utils::cnotice << "Stimuli export with"
+                " range != 1 (" << dataRange << "). Data will be normalized."
                 << Utils::cdef << std::endl;
         }
-
-        if (normValue != 1.0) {
+    }
+    else if (CellExport::mPrecision > 0) {
+        if (dataRange > 1.0) {
+            std::cout << Utils::cwarning << "Integer stimuli export with"
+                " range > 1 (" << dataRange << "). Data will be truncated,"
+                " possible data loss." << Utils::cdef << std::endl;
+        }
+        else if (dataRange < 1.0) {
             std::cout << Utils::cnotice << "Integer stimuli export with"
-                " range != 1 (" << normValue << ")" << Utils::cdef << std::endl;
+                " range < 1 (" << dataRange << "). The full "
+                << (int)CellExport::mPrecision << " bits data range will not be"
+                " used." << Utils::cdef << std::endl;
         }
     }
 
-    return normValue;
+    return std::make_pair(scalingValue, unsignedData);
 }
