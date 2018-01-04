@@ -937,8 +937,13 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             }
 
             if (activationType == "Rectifier"
-                || (*itRange).second.minVal >= 0.0)
+                || (*itRange).second.minVal >= 0.0
                     // e.g. average pooling following a Rectifier
+                || (activationType == "Linear" && cell->getNbOutputs() > 2))
+                    // Here we assume that this layer is the preceding layer of
+                    // a softmax with more than 2 channels.
+                    // In this case, the full range is required as several
+                    // values can be very high.
             {
                 double threshold = (*itRange).second.maxVal;
 
@@ -958,9 +963,9 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 scalingFactor = std::max(scalingFactor, threshold);
             }
             else {
-                // Here we assume that this layer has either a logistic
-                // activation or is the preceding layer of a softmax.
-                // In both case, the loss function minimization tends to push
+                // Here we assume that this layer has a logistic activation
+                // (or is preceding a 2 channels softmax, which is equivalent)
+                // The loss function minimization tends to push
                 // the output values to either -inf (wrong class) or +inf
                 // (correct class)
                 // Therefore, high precision is required towards 0 in order to
@@ -969,6 +974,16 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                             std::abs((*itRange).second.stdDev()) / nbLevels);
                         // mean() cannot be used because it can be 0.0 or close
             }
+/*
+            else {
+                // Here we assume that this layer is the preceding layer of a
+                // softmax with more than 2 channels.
+                // In this case, the full range is required as several values
+                // can be very high.
+                scalingFactor = std::max(scalingFactor,
+                                         (*itRange).second.maxVal);
+            }
+*/
         }
 
         const double targetFactor = scalingFactor / prevScalingFactor;

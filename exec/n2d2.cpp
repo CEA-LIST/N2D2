@@ -123,9 +123,13 @@ int main(int argc, char* argv[]) try
     const int nbBits
         = opts.parse("-nbbits", 8, "number of bits per weight for exports");
     const int calibration
-        = opts.parse("-calib", -1, "number of stimuli used for the "
-                     "calibration (-1 = no calibration, 0 = use the full test "
+        = opts.parse("-calib", 0, "number of stimuli used for the "
+                     "calibration (0 = no calibration, -1 = use the full test "
                      "dataset)");
+    const unsigned int nbCalibrationPasses
+        = opts.parse("-calib-passes", 2, "number of KL passes for determining "
+                     "the layer output values distribution truncation "
+                     "threshold (0 = use the max. value, no truncation)");
     const bool exportNoUnsigned
         = opts.parse("-no-unsigned", "disable the use of unsigned data type in "
                      "integer exports");
@@ -201,7 +205,7 @@ int main(int argc, char* argv[]) try
         DeepNetExport::mUnsignedData = (!exportNoUnsigned);
         CellExport::mPrecision = static_cast<CellExport::Precision>(nbBits);
 
-        if (calibration >= 0 && nbBits > 0) {
+        if (calibration != 0 && nbBits > 0) {
             const double stimuliRange = StimuliProviderExport::getStimuliRange(
                                                 sp,
                                                 exportDir.str()
@@ -266,10 +270,9 @@ int main(int argc, char* argv[]) try
             std::cout << "Calibration (" << nbBits << " bits):" << std::endl;
 
             const unsigned int nbLevels = std::pow(2, nbBits - 1);
-            const unsigned int nbPasses = 2;
 
             deepNet->normalizeOutputsRange(outputsHistogram, outputsRange,
-                                           nbLevels, nbPasses);
+                                           nbLevels, nbCalibrationPasses);
 
             // For following test simulation
             deepNet->setSignalsDiscretization(nbLevels);
