@@ -60,8 +60,6 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     bool unsignedData;
     std::tie(scaling, unsignedData) = getScaling(sp, dirName, set, normalize);
 
-    DeepNetExport::mEnvDataUnsigned = unsignedData;
-
     const unsigned int envSizeX = sp.getSizeX();
     const unsigned int envSizeY = sp.getSizeY();
     const unsigned int nbChannels = sp.getNbChannels();
@@ -290,6 +288,8 @@ std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
                                       std::abs(globalValue.maxVal));
     const bool unsignedData = (globalValue.minVal >= 0
                                && DeepNetExport::mUnsignedData);
+
+    DeepNetExport::mEnvDataUnsigned = unsignedData;
 
     double scalingValue = 1.0;
 
