@@ -35,12 +35,13 @@ N2D2::RangeAffineTransformationGenerator::generate(IniParser& iniConfig,
     const RangeAffineTransformation::Operator firstOperator
         = iniConfig.getProperty
           <RangeAffineTransformation::Operator>("FirstOperator");
-    const double firstValue = iniConfig.getProperty<double>("FirstValue");
+    const std::vector<double> firstValue = iniConfig.getProperty
+                                        <std::vector<double> >("FirstValue");
     const RangeAffineTransformation::Operator secondOperator
         = iniConfig.getProperty<RangeAffineTransformation::Operator>(
             "SecondOperator", RangeAffineTransformation::Plus);
-    const double secondValue = iniConfig.getProperty
-                               <double>("SecondValue", 0.0);
+    const std::vector<double> secondValue = iniConfig.getProperty
+                <std::vector<double> >("SecondValue", std::vector<double>());
 
     std::shared_ptr<RangeAffineTransformation> trans = std::make_shared
         <RangeAffineTransformation>(
