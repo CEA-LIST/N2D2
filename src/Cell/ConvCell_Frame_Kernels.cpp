@@ -133,7 +133,9 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
     }
 }
 
-void N2D2::ConvCell_Frame_Kernels::forwardBias(const Tensor4d<Float_T>& bias,
+void N2D2::ConvCell_Frame_Kernels::forwardBias(const Float_T* alpha,
+                                               const Tensor4d<Float_T>& bias,
+                                               const Float_T* beta,
                                                Tensor4d<Float_T>& outputs)
 {
     const unsigned int size = outputs.dimB() * outputs.dimZ();
@@ -146,8 +148,10 @@ void N2D2::ConvCell_Frame_Kernels::forwardBias(const Tensor4d<Float_T>& bias,
     for (int batchPos = 0; batchPos < (int)outputs.dimB(); ++batchPos) {
         for (unsigned int output = 0; output < outputs.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs.dimY(); ++oy) {
-                for (unsigned int ox = 0; ox < outputs.dimX(); ++ox)
-                    outputs(ox, oy, output, batchPos) += bias(output);
+                for (unsigned int ox = 0; ox < outputs.dimX(); ++ox) {
+                    outputs(ox, oy, output, batchPos) = (*alpha) * bias(output)
+                        + (*beta) * outputs(ox, oy, output, batchPos);
+                }
             }
         }
     }
@@ -319,8 +323,10 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
     }
 }
 
-void N2D2::ConvCell_Frame_Kernels::backwardBias(const Tensor4d
+void N2D2::ConvCell_Frame_Kernels::backwardBias(const Float_T* alpha,
+                                                const Tensor4d
                                                 <Float_T>& diffInputs,
+                                                const Float_T* beta,
                                                 Tensor4d<Float_T>& diffBias)
 {
 #pragma omp parallel for if (diffBias.dimZ() > 16)
@@ -335,6 +341,6 @@ void N2D2::ConvCell_Frame_Kernels::backwardBias(const Tensor4d
             }
         }
 
-        diffBias(output) = sum;
+        diffBias(output) = (*alpha) * sum + (*beta) * diffBias(output);
     }
 }

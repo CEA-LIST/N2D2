@@ -55,11 +55,13 @@ protected:
     using SGDSolver<T>::mMomentum;
     using SGDSolver<T>::mDecay;
     using SGDSolver<T>::mPower;
+    using SGDSolver<T>::mIterationSize;
     using SGDSolver<T>::mMaxIterations;
     using SGDSolver<T>::mLearningRatePolicy;
     using SGDSolver<T>::mLearningRateStepSize;
     using SGDSolver<T>::mLearningRateDecay;
     using SGDSolver<T>::mClamping;
+    using SGDSolver<T>::mIterationPass;
     using SGDSolver<T>::mNbIterations;
 
     /// Quantization levels (0 = no quantization)

@@ -150,7 +150,7 @@ void N2D2::DeconvCell_Frame::propagate(bool /*inference*/)
     }
 
     if (!mNoBias)
-        ConvCell_Frame_Kernels::forwardBias((*mBias), mOutputs);
+        ConvCell_Frame_Kernels::forwardBias(&alpha, (*mBias), &alpha, mOutputs);
 
     Cell_Frame::propagate();
     mDiffInputs.clearValid();
@@ -161,11 +161,13 @@ void N2D2::DeconvCell_Frame::backPropagate()
     Cell_Frame::backPropagate();
 
     const Float_T alpha = 1.0;
-    const Float_T beta = 0.0;
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        const Float_T beta = (mWeightsSolvers[k]->isNewIteration())
+            ? 0.0f : 1.0f;
+
         ConvCell_Frame_Kernels::backwardFilter(&alpha,
                                                mDiffInputs,
                                                mInputs[k],
@@ -178,8 +180,12 @@ void N2D2::DeconvCell_Frame::backPropagate()
         offset += mInputs[k].dimZ();
     }
 
-    if (!mNoBias)
-        ConvCell_Frame_Kernels::backwardBias(mDiffInputs, mDiffBias);
+    if (!mNoBias) {
+        const Float_T beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+
+        ConvCell_Frame_Kernels::backwardBias(&alpha, mDiffInputs,
+                                             &beta, mDiffBias);
+    }
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
         offset = 0;

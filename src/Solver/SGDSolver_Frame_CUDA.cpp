@@ -36,6 +36,11 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
                                          Tensor4d<float>* diffData,
                                          unsigned int batchSize)
 {
+    const float rate = SGDSolver<float>::getLearningRate(batchSize);
+
+    if (rate == 0.0)
+        return;
+
     CudaTensor4d<float>* cudaData = static_cast<CudaTensor4d<float>*>(data);
     CudaTensor4d<float>* cudaDiffData = static_cast
         <CudaTensor4d<float>*>(diffData);
@@ -52,36 +57,8 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
     CudaTensor4d<float>* cudaContinuousData
         = (mQuantizationLevels > 0) ? &mContinuousData : cudaData;
 
-    float rate = mLearningRate;
-    const unsigned int itFactor = mNbIterations / mLearningRateStepSize;
-
-    if (mLearningRatePolicy == SGDSolver<float>::StepDecay) {
-        rate *= std::pow(mLearningRateDecay, (double)itFactor);
-
-        if (mNbIterations > 0 && (mNbIterations - batchSize)
-                                 / mLearningRateStepSize != itFactor)
-            std::cout << "Learning rate after " << mNbIterations
-                      << " iteration(s): " << rate << std::endl;
-    } else if (mLearningRatePolicy == SGDSolver<float>::ExponentialDecay)
-        rate = mLearningRate * std::exp(-mLearningRateDecay * itFactor);
-    else if (mLearningRatePolicy == SGDSolver<float>::InvTDecay)
-        rate = mLearningRate / (1.0 + mLearningRateDecay * itFactor);
-    else if (mLearningRatePolicy == SGDSolver<float>::PolyDecay) {
-        float power = mPower;
-        float maxIterations = mMaxIterations;
-        rate = mLearningRate
-               * std::pow(1.0 - (mNbIterations / maxIterations), power);
-    }
-    else if (mLearningRatePolicy == SGDSolver<float>::InvDecay) {
-        float power = mPower;
-        rate = mLearningRate
-               * std::pow(1.0 + (mLearningRateDecay * mNbIterations), -power);
-    }
-
-    mNbIterations += batchSize;
-
-    // Normalize in function of the batch size
-    float rateDiff = rate / (float)batchSize;
+    // Normalize in function of the iteration size
+    const float rateDiff = rate / (batchSize * (float)mIterationSize);
     float momentum = mMomentum;
     float decay = mDecay;
     float unit = 1.0f;
@@ -156,6 +133,11 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
                                           Tensor4d<double>* diffData,
                                           unsigned int batchSize)
 {
+    const double rate = SGDSolver<double>::getLearningRate(batchSize);
+
+    if (rate == 0.0)
+        return;
+
     CudaTensor4d<double>* cudaData = static_cast<CudaTensor4d<double>*>(data);
     CudaTensor4d<double>* cudaDiffData = static_cast
         <CudaTensor4d<double>*>(diffData);
@@ -172,36 +154,8 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
     CudaTensor4d<double>* cudaContinuousData
         = (mQuantizationLevels > 0) ? &mContinuousData : cudaData;
 
-    double rate = mLearningRate;
-    const unsigned int itFactor = mNbIterations / mLearningRateStepSize;
-
-    if (mLearningRatePolicy == SGDSolver<double>::StepDecay) {
-        rate *= std::pow(mLearningRateDecay, (double)itFactor);
-
-        if (mNbIterations > 0 && (mNbIterations - batchSize)
-                                 / mLearningRateStepSize != itFactor)
-            std::cout << "Learning rate after " << mNbIterations
-                      << " iteration(s): " << rate << std::endl;
-    } else if (mLearningRatePolicy == SGDSolver<double>::ExponentialDecay)
-        rate = mLearningRate * std::exp(-mLearningRateDecay * itFactor);
-    else if (mLearningRatePolicy == SGDSolver<double>::InvTDecay)
-        rate = mLearningRate / (1.0 + mLearningRateDecay * itFactor);
-    else if (mLearningRatePolicy == SGDSolver<double>::PolyDecay) {
-        double power = mPower;
-        double maxIterations = mMaxIterations;
-        rate = mLearningRate
-               * std::pow(1.0 - (mNbIterations / maxIterations), power);
-    }
-    else if (mLearningRatePolicy == SGDSolver<double>::InvDecay) {
-        double power = mPower;
-        rate = mLearningRate
-               * std::pow(1.0 + (mLearningRateDecay * mNbIterations), -power);
-    }
-
-    mNbIterations += batchSize;
-
-    // Normalize in function of the batch size
-    double rateDiff = rate / (double)batchSize;
+    // Normalize in function of the iteration size
+    const double rateDiff = rate / (batchSize * (double)mIterationSize);
     double momentum = mMomentum;
     double decay = mDecay;
     double unit = 1.0;
