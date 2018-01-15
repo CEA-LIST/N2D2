@@ -1,7 +1,7 @@
 /*
     (C) Copyright 2014 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-
+                    David BRIAND (david.briand@cea.fr)
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
     modify and/ or redistribute the software under the terms of the CeCILL-C
@@ -30,6 +30,29 @@
 
 namespace N2D2 {
 // Forward
+void cudaSROIPoolingForwardBilinear(const float alpha,
+                                   float* proposals,
+                                   unsigned int nbProposals,
+                                   unsigned int inputSizeY,
+                                   unsigned int inputSizeX,
+                                   float* inputs,
+                                   unsigned int nbChannels,
+                                   unsigned int channelsHeight,
+                                   unsigned int channelsWidth,
+                                   unsigned int batchSize,
+                                   const float beta,
+                                   float* outputs,
+                                   unsigned int nbOutputs,
+                                   unsigned int outputsHeight,
+                                   unsigned int outputsWidth,
+                                   unsigned int outputOffset,
+                                   bool bilinearTF,
+                                   bool ignorePad,
+                                   float xOffset,
+                                   float yOffset,
+                                   float xRatio,
+                                   float yRatio);
+
 void cudaSROIPoolingForwardAverage(const float alpha,
                                    float* proposals,
                                    unsigned int nbProposals,

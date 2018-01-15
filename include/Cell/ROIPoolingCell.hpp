@@ -81,18 +81,32 @@ public:
     {
         return mPooling;
     };
+    bool isFlip()
+    {
+        return (bool) mFlip;
+    };
+    bool isIgnorePadding()
+    {
+        return (bool) mIgnorePad;
+    };
     void getStats(Stats& stats) const;
     virtual ~ROIPoolingCell() {};
+    unsigned int getParentProposals()
+    {
+        return mParentProposals;
+    };
 
 protected:
     virtual void setInputsSize(unsigned int width, unsigned int height);
     virtual void setOutputsSize();
 
     Parameter<bool> mFlip;
+    Parameter<bool> mIgnorePad;
 
     StimuliProvider& mStimuliProvider;
     // Pooling type
     const ROIPooling mPooling;
+    unsigned int mParentProposals;
 };
 }
 

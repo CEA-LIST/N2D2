@@ -1,6 +1,7 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    David BRIAND(david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -30,6 +31,7 @@ N2D2::ROIPoolingCell::ROIPoolingCell(const std::string& name,
                                      ROIPooling pooling)
     : Cell(name, nbOutputs),
       mFlip(this, "Flip", false),
+      mIgnorePad(this, "IgnorePadding", 0),
       mStimuliProvider(sp),
       mPooling(pooling)
 {

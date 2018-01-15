@@ -51,10 +51,11 @@ void N2D2::ROIPoolingCell_Frame::initialize()
                                  " ROIPoolingCell " + mName);
     }
 
-    const unsigned int inputBatch = mInputs[1].dimB();
+    unsigned int kRef = 1;
+    const unsigned int inputBatch = mInputs[kRef].dimB();
     unsigned int nbChannels = 0;
 
-    for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
+    for (unsigned int k = kRef, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0) {
             throw std::runtime_error("Zero-sized input for ROIPoolingCell "
                                       + mName);
@@ -80,6 +81,7 @@ void N2D2::ROIPoolingCell_Frame::initialize()
         throw std::runtime_error("The number of output channels must match the "
             "total number of input channels for ROIPoolingCell" + mName);
     }
+    mParentProposals = mInputs[kRef-1].dimB()/mInputs[kRef].dimB();
 }
 
 void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
@@ -93,8 +95,6 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
-        if (k > 1)
-            beta = 1.0;
 
         const double xRatio = std::ceil(mStimuliProvider.getSizeX()
                                         / (double)mInputs[k].dimX());
@@ -344,26 +344,26 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             const Float_T dx = sx - sx0;
                             const Float_T dy = sy - sy0;
 
-                            const Float_T i00 = mInputs[k](sx0,
-                                                           sy0,
-                                                           channel,
-                                                           inputBatch);
-                            const Float_T i10 = (sx0 + 1 < mInputs[k].dimX()) ?
-                                                 mInputs[k](sx0 + 1,
-                                                           sy0,
-                                                           channel,
-                                                           inputBatch) : 0.0;
-                            const Float_T i01 = (sy0 + 1 < mInputs[k].dimY()) ?
-                                                 mInputs[k](sx0,
-                                                           sy0 + 1,
-                                                           channel,
-                                                           inputBatch) : 0.0;
-                            const Float_T i11 = (sx0 + 1 < mInputs[k].dimX()
-                                                 && sy0 + 1 < mInputs[k].dimY())
-                                                 ? mInputs[k](sx0 + 1,
-                                                           sy0 + 1,
-                                                           channel,
-                                                           inputBatch) : 0.0;
+                            const bool invalid = mIgnorePad ? 
+                                    (((sx0 + 1 < mInputs[k].dimX() )  
+                                        && (sy0 + 1 < mInputs[k].dimY() ))  ? 
+                                        false : true) : false;
+
+  
+                            const Float_T i00 = (!invalid) ? 
+                                    mInputs[k](sx0, sy0, channel, inputBatch) 
+                                    : 0.0;
+
+                            const Float_T i10 = (sx0 + 1 < mInputs[k].dimX()) && (!invalid) ?
+                                        mInputs[k](sx0 + 1, sy0, channel, inputBatch)
+                                        : 0.0;
+                            const Float_T i01 = (sy0 + 1 < mInputs[k].dimY()) && (!invalid) ?
+                                        mInputs[k](sx0, sy0 + 1, channel, inputBatch) 
+                                        : 0.0;
+                            const Float_T i11 = (sx0 + 1 < mInputs[k].dimX() && sy0 + 1 
+                                                    < mInputs[k].dimY()) && (!invalid) ? 
+                                                mInputs[k](sx0 + 1, sy0 + 1, channel, inputBatch) 
+                                                : 0.0;
 
                             const Float_T value
                                 = i00 * (1 - dx) * (1 - dy)
