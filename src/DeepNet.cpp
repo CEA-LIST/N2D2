@@ -1968,7 +1968,9 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
         Utils::PairOp
         <std::string, double, Utils::Left<std::string>, std::plus<double> >())
                                  .second;
-
+    const double totalFPS = 1.0/totalTime;
+    std::stringstream totalFPSstr;
+    totalFPSstr << totalFPS << " (FPS)";
     std::ofstream timingsData(fileName.c_str());
     unsigned int maxStringSizeCellName = 1;
 
@@ -2003,7 +2005,7 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
     multiplot.setMultiplot(1, 2);
     multiplot.set("origin 0.0,0.0");
     multiplot.set("grid");
-    drawHistogram("Timing (s)",
+    drawHistogram("Timing (s)" + totalFPSstr.str(),
                   fileName,
                   2U,
                   maxStringSizeCellName,
@@ -2012,7 +2014,7 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
 
     multiplot.set("origin 0.5,0.0");
     multiplot.set("grid");
-    drawHistogram("Relative Timing (%)",
+    drawHistogram("Relative Timing (%)" + totalFPSstr.str(),
                   fileName,
                   3U,
                   maxStringSizeCellName,
