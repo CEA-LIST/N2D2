@@ -39,6 +39,9 @@ data = {
     "KITTI segmentation" : ["KITTI",15800, "http://kitti.is.tue.mpg.de/kitti/data_tracking_image_2.zip",\
         "http://kitti.is.tue.mpg.de/kitti/data_tracking_label_2.zip"],
 
+    "KITTI object" : ["KITTI_OBJECT",12600, " http://kitti.is.tue.mpg.de/kitti/data_object_image_2.zip",\
+        " http://kitti.is.tue.mpg.de/kitti/data_object_label_2.zip"],
+
     "MNIST" : ["mnist",110, "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",\
         "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",\
         "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",\
@@ -72,6 +75,11 @@ data = {
     "WIKI" : ["IMDB-WIKI",4000,"https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki.tar.gz",\
         "https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki_crop.tar"],
 
+    "ILSVRC2012" : ["ILSVRC2012", 1400000, "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_train.tar",\
+        "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_train_t3.tar",\
+        "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_val.tar",\
+        "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_test.tar"],
+        
     "DVS" : ["dvs",110, "http://www.ini.uzh.ch/~tobi/dvs/events20051221T014416 freeway.mat.dat",\
         "http://www.ini.uzh.ch/~tobi/dvs/events-2005-12-28T11-14-28-0800 drive SC postoffice.dat",\
         "http://www.ini.uzh.ch/~tobi/dvs/Tmpdiff128-2006-06-17T10-48-06+0200-0 vogelsang saturday monring #2.dat",\
