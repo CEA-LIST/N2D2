@@ -135,51 +135,57 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
             throw std::runtime_error("Could not open synaptic file: "
                                      + meansFile);
 
-        variances_.open(meansFile.c_str());
+        variances_.open(variancesFile.c_str());
 
         if (!variances_.good())
             throw std::runtime_error("Could not open synaptic file: "
-                                     + meansFile);
+                                     + variancesFile);
     }
 
     std::ifstream& scales = (!singleFile) ? scales_ : biases;
     std::ifstream& means = (!singleFile) ? means_ : biases;
     std::ifstream& variances = (!singleFile) ? variances_ : biases;
-
     double w;
+    means.precision(12);
+    variances.precision(12);
+    biases.precision(12);
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         for (unsigned int oy = 0; oy < 1; ++oy) {
             for (unsigned int ox = 0; ox < 1; ++ox) {
                 if (!(scales >> w))
-                    throw std::runtime_error(
-                        "Error while reading scale in parameter file: "
-                        + fileName);
-
-                setScale(output, ox, oy, w);
+                {
+                    if(!ignoreNotExists)
+                        throw std::runtime_error(
+                            "Error while reading scale in parameter file: "
+                            + scalesFile);
+                }
+                else
+                    setScale(output, ox, oy, w);
 
                 if (!(biases >> w))
                     throw std::runtime_error(
                         "Error while reading bias in parameter file: "
-                        + fileName);
+                        + biasesFile);
 
                 setBias(output, ox, oy, w);
 
                 if (!(means >> w))
                     throw std::runtime_error(
                         "Error while reading mean in parameter file: "
-                        + fileName);
+                        + meansFile);
 
                 setMean(output, ox, oy, w);
 
                 if (!(variances >> w))
                     throw std::runtime_error(
                         "Error while reading variance in parameter file: "
-                        + fileName);
+                        + variancesFile);
 
                 if (w < 0.0)
                     throw std::runtime_error(
-                        "Negative variance in parameter file: " + fileName);
+                        "Negative variance in parameter file: " 
+                        + variancesFile);
 
                 setVariance(output, ox, oy, w);
             }
