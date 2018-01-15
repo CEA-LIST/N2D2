@@ -38,7 +38,7 @@ LIBS=-lcudart -lcublas -lcudnn
 LPPFLAGS=$(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) $(LIBS)
 NVFLAGS:=$(CPPFLAGS) -lcutil -lcudpp -lcudart -lm -lstdc++ \
     -std=c++11 -Xcompiler -fPIC
-CPPFLAGS:=$(CPPFLAGS) -std=c++0x -fPIC
+CPPFLAGS:=$(CPPFLAGS) -std=c++0x -fPIC -fsigned-char
 
 ifndef BIN_DIR_EXPORT_CUDNN
   BIN_DIR_EXPORT_CUDNN=bin_dnn
