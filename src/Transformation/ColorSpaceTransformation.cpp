@@ -43,7 +43,24 @@ N2D2::ColorSpaceTransformation::apply(cv::Mat& frame,
             cv::cvtColor(frame, frameCvt, CV_BGRA2BGR);
             frame = frameCvt;
         }
-    } else if (frame.channels() > 1) {
+    }
+    else if (mColorSpace == RGB) {
+        if (frame.channels() == 1) {
+            cv::cvtColor(frame, frameCvt, CV_GRAY2RGB);
+            frame = frameCvt;
+        }
+        else if (frame.channels() == 3) {
+            cv::cvtColor(frame, frameCvt, CV_BGR2RGB);
+            frame = frameCvt;
+        }
+        else if (frame.channels() == 4) {
+            cv::cvtColor(frame, frameCvt, CV_RGBA2BGR);
+            frame = frameCvt;
+        }
+
+    }
+
+    else if (frame.channels() > 1) {
         if (mColorSpace == HSV)
             cv::cvtColor(frame, frameCvt, CV_BGR2HSV);
         else if (mColorSpace == HLS)

@@ -30,6 +30,7 @@ public:
 
     enum ColorSpace {
         BGR,
+        RGB,
         HSV,
         HLS,
         YCrCb,
@@ -64,6 +65,13 @@ private:
     }
 
     const ColorSpace mColorSpace;
+};
+
+class RGBColorSpaceTransformation : public ColorSpaceTransformation {
+public:
+    RGBColorSpaceTransformation() : ColorSpaceTransformation(RGB)
+    {
+    }
 };
 
 class HSVColorSpaceTransformation : public ColorSpaceTransformation {
@@ -106,7 +114,7 @@ namespace {
 template <>
 const char* const EnumStrings
     <N2D2::ColorSpaceTransformation::ColorSpace>::data[]
-    = {"BGR", "HSV", "HLS", "YCrCb", "CIELab", "CIELuv"};
+    = {"BGR", "RGB", "HSV", "HLS", "YCrCb", "CIELab", "CIELuv"};
 }
 
 #endif // N2D2_COLORSPACETRANSFORMATION_H
