@@ -26,6 +26,8 @@ N2D2::FcCell::FcCell(const std::string& name, unsigned int nbOutputs)
     : Cell(name, nbOutputs),
       mNoBias(this, "NoBias", true),
       mBackPropagate(this, "BackPropagate", true),
+      mWeightsExportFormat(this, "WeightsExportFormat", OC),  
+      mOutputsRemap(this, "OutputsRemap", ""),            
       mWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
       mBiasFiller(new NormalFiller<Float_T>(0.0, 0.05))
 {
@@ -153,24 +155,61 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
     const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
                                       * getChannelsHeight();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            if (!(weights >> weight))
-                throw std::runtime_error("Error while reading synaptic file: "
-                                         + fileName);
+    const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
+    
+    if (mWeightsExportFormat == OC) {  
+        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            const unsigned int outputRemap = (!outputsMap.empty())
+                            ? outputsMap.find(output)->second : output;
 
-            setWeight(output, channel, weight);
+            for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+
+                if (!(weights >> weight))
+                    throw std::runtime_error("Error while reading synaptic file: "
+                                            + fileName);
+
+                setWeight(outputRemap, channel, weight);
+            }
+
+            if (!mNoBias) {
+
+                if (!(biases >> weight))
+                    throw std::runtime_error("Error while reading synaptic file: "
+                                            + fileName);
+
+                setBias(outputRemap, weight);
+            }
+        }
+    }
+    else if (mWeightsExportFormat == CO) {
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+                
+                const unsigned int outputRemap = (!outputsMap.empty())
+                                ? outputsMap.find(output)->second : output;
+
+                if (!(weights >> weight))
+                    throw std::runtime_error("Error while reading synaptic file: "
+                                            + fileName);
+
+                setWeight(outputRemap, channel, weight);
+            }
         }
 
         if (!mNoBias) {
-            if (!(biases >> weight))
-                throw std::runtime_error("Error while reading synaptic file: "
-                                         + fileName);
+            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+                const unsigned int outputRemap = (!outputsMap.empty())
+                        ? outputsMap.find(output)->second : output;
 
-            setBias(output, weight);
+                if (!(biases >> weight))
+                    throw std::runtime_error("Error while reading synaptic file: "
+                                            + fileName);
+
+                setBias(outputRemap, weight);
+            }
         }
     }
-
+        
     // Discard trailing whitespaces
     while (std::isspace(weights.peek()))
         weights.ignore();
@@ -415,4 +454,51 @@ void N2D2::FcCell::getStats(Stats& stats) const
     stats.nbSynapses += nbSynapses;
     stats.nbVirtualSynapses += nbSynapses;
     stats.nbConnections += nbSynapses;
+}
+
+std::map<unsigned int, unsigned int> N2D2::FcCell::outputsRemap() const
+{
+    const std::vector<std::string> mapping = Utils::split(mOutputsRemap, ",", true);
+
+    unsigned int index = 0;
+    std::map<unsigned int, unsigned int> outputRemap;
+
+    for (std::vector<std::string>::const_iterator it = mapping.begin(),
+        itEnd = mapping.end(); it != itEnd; ++it)
+    {
+        unsigned int offset;
+        int step;
+
+        std::stringstream offsetStepStr(*it);
+        offsetStepStr.imbue(std::locale(std::locale(),
+                            new N2D2::Utils::streamIgnore(": \t")));
+
+        if (!(Utils::signChecked<unsigned int>(offsetStepStr) >> offset)
+            || !(offsetStepStr >> step)
+            || !offsetStepStr.eof())
+        {
+            throw std::runtime_error(
+                "FcCell::outputsRemap(): unable to read mapping: "
+                + (std::string)mOutputsRemap);
+        }
+
+        for (int k = offset; k >= 0 && k < (int)mNbOutputs; k+= step) {
+            outputRemap[k] = index;
+            ++index;
+        }
+    }
+
+    if (!outputRemap.empty()) {
+        std::cout << "FcCell::outputsRemap(): " << mName << std::endl;
+
+        for (std::map<unsigned int, unsigned int>::const_iterator
+            it = outputRemap.begin(), itEnd = outputRemap.end(); it != itEnd;
+            ++it)
+        {
+            std::cout << "  " << (*it).first << " -> " << (*it).second
+            << std::endl;
+        }
+    }
+
+    return outputRemap;
 }

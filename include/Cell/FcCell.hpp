@@ -78,7 +78,17 @@ public:
         return rMap;
     }
     static const char* Type;
-
+    // O = output feature map
+    // C = input feature map (channel)
+    enum WeightsExportFormat {
+        // N2D2 default format
+        OC,
+        // TensorFlow format:
+        // "filter: A Tensor. Must have the same type as input. A 4-D tensor of
+        // shape [in_channels, out_channels]"
+        // https://www.tensorflow.org/api_docs/python/tf/nn/conv2d
+        CO
+    };
     FcCell(const std::string& name, unsigned int nbOutputs);
     const char* getType() const
     {
@@ -133,17 +143,25 @@ protected:
     virtual void
     setWeight(unsigned int output, unsigned int channel, Float_T value) = 0;
     virtual void setBias(unsigned int output, Float_T value) = 0;
+    std::map<unsigned int, unsigned int> outputsRemap() const;
 
     /// If true, the output neurons don't have bias
     Parameter<bool> mNoBias;
     /// If true, enable backpropogation
     Parameter<bool> mBackPropagate;
+    Parameter<WeightsExportFormat> mWeightsExportFormat;
+    Parameter<std::string> mOutputsRemap;
 
     std::shared_ptr<Filler<Float_T> > mWeightsFiller;
     std::shared_ptr<Filler<Float_T> > mBiasFiller;
     std::shared_ptr<Solver<Float_T> > mWeightsSolver;
     std::shared_ptr<Solver<Float_T> > mBiasSolver;
 };
+}
+namespace {
+    template <>
+    const char* const EnumStrings<N2D2::FcCell::WeightsExportFormat>::data[]
+        = {"OC", "CO"};
 }
 
 #endif // N2D2_FCCELL_H
