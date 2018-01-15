@@ -130,7 +130,12 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
         if(targetIdx > 0)
             envHeader << ",";
 
-        envHeader << cell->getNbOutputs();
+        std::shared_ptr<Cell_Frame_Top> targetCellTop = std::dynamic_pointer_cast
+            <Cell_Frame_Top>(cell);
+
+        const Tensor4d<Float_T>& values = targetCellTop->getOutputs();
+
+        envHeader << cell->getNbOutputs()*(values.dimB()/sp->getBatchSize());
     }
     envHeader << "};\n";
 
