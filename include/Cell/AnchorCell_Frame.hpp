@@ -57,6 +57,8 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
+    virtual int getNbAnchors() const;
+    virtual std::vector<Float_T> getAnchor(const unsigned int idx) const;
     void checkGradient(double /*epsilon */ = 1.0e-4,
                        double /*maxError */ = 1.0e-6) {};
     virtual ~AnchorCell_Frame() {};

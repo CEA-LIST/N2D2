@@ -35,6 +35,18 @@ N2D2::AnchorCell_Frame::AnchorCell_Frame(
 {
     // ctor
 }
+int N2D2::AnchorCell_Frame::getNbAnchors() const { return mAnchors.size(); }
+
+std::vector<N2D2::Float_T> N2D2::AnchorCell_Frame::getAnchor(unsigned int idx)
+const
+{
+    std::vector<Float_T> vect_anchor;
+    vect_anchor.push_back(mAnchors[idx].x0);
+    vect_anchor.push_back(mAnchors[idx].y0);
+    vect_anchor.push_back(mAnchors[idx].x1);
+    vect_anchor.push_back(mAnchors[idx].y1);
+    return vect_anchor;
+}
 
 const std::vector<N2D2::AnchorCell_Frame_Kernels::BBox_T>&
 N2D2::AnchorCell_Frame::getGT(unsigned int batchPos) const

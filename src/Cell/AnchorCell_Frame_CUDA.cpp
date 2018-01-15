@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2015 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    David BRIAND (david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -41,7 +42,17 @@ N2D2::AnchorCell_Frame_CUDA::AnchorCell_Frame_CUDA(
     mAnchors.push_back(Tensor3d<AnchorCell_Frame_Kernels::Anchor>(
         1, 1, anchors.size(), anchors.begin(), anchors.end()));
 }
+int N2D2::AnchorCell_Frame_CUDA::getNbAnchors() const { return mAnchors.size(); }
 
+std::vector<N2D2::Float_T> N2D2::AnchorCell_Frame_CUDA::getAnchor(unsigned int idx) const
+{
+    std::vector<Float_T> vect_anchor;
+    vect_anchor.push_back(mAnchors(idx).x0);
+    vect_anchor.push_back(mAnchors(idx).y0);
+    vect_anchor.push_back(mAnchors(idx).x1);
+    vect_anchor.push_back(mAnchors(idx).y1);
+    return vect_anchor;
+}
 const std::vector<N2D2::AnchorCell_Frame_Kernels::BBox_T>&
 N2D2::AnchorCell_Frame_CUDA::getGT(unsigned int batchPos) const
 {
@@ -167,16 +178,16 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
 
     for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
         CHECK_CUDA_STATUS(
-            cudaMalloc(&mCudaGT[batchPos], mNbLabelsMax * sizeof(**mCudaGT)));
+            cudaMalloc(&mCudaGT + batchPos, mNbLabelsMax * sizeof(**mCudaGT)));
     }
 
-    mNbLabels.resize(mOutputs.dimB(), 0);
+    mNbLabels.resize(mOutputs.dimB(), 1, 1, 1, 0);
 
     mArgMaxIoU.resize(mOutputsWidth,
                       mOutputsHeight,
                       mAnchors.size(),
                       mOutputs.dimB());
-    mMaxIoU.resize(mOutputs.dimB(), 0.0);
+    mMaxIoU.resize(mOutputs.dimB(), 1, 1, 1, 0.0);
 }
 
 void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
@@ -196,9 +207,9 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
         mNbLabels(batchPos) = labelROIs.size();
 
         if (labelROIs.size() > mNbLabelsMax) {
-            CHECK_CUDA_STATUS(cudaFree(mCudaGT[batchPos]));
+            CHECK_CUDA_STATUS(cudaFree(mCudaGT + batchPos));
             CHECK_CUDA_STATUS(
-                cudaMalloc(&mCudaGT[batchPos],
+                cudaMalloc(&mCudaGT + batchPos,
                            labelROIs.size() * sizeof(**mCudaGT)));
 
             std::cout << Utils::cwarning
@@ -230,16 +241,16 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                                                      labelRect.height);
         }
 
-        CHECK_CUDA_STATUS(cudaMemcpy(&GT,
-                                     &mCudaGT[batchPos],
+        CHECK_CUDA_STATUS(cudaMemcpy(&mCudaGT[batchPos],
+                                     &GT,
                                      labelROIs.size() * sizeof(**mCudaGT),
                                      cudaMemcpyHostToDevice));
     }
 
     mNbLabels.synchronizeHToD();
-
     mMaxIoU.fill(0.0);
     mMaxIoU.synchronizeHToD();
+    mAnchors.synchronizeHToD();
 
     cudaSAnchorPropagate(mStimuliProvider.getSizeX(),
                          mStimuliProvider.getSizeY(),
@@ -261,7 +272,10 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                          mAnchors.size(),
                          mOutputs.dimY(),
                          mOutputs.dimX(),
-                         mInputs.dimB());
+                         mInputs.dimB(),
+                         mScoresCls,
+                         mInputs.size());
+    mOutputs.synchronizeDToH();
 
     Cell_Frame_CUDA::propagate();
     mDiffInputs.clearValid();
@@ -281,10 +295,8 @@ void N2D2::AnchorCell_Frame_CUDA::update()
 N2D2::AnchorCell_Frame_CUDA::~AnchorCell_Frame_CUDA()
 {
     if (mCudaGT != NULL) {
-        for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
-            CHECK_CUDA_STATUS(cudaFree(mCudaGT[batchPos]));
-
         CHECK_CUDA_STATUS(cudaFree(mCudaGT));
+        
         mCudaGT = NULL;
     }
 }

@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2015 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    David BRIAND (david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -61,6 +62,8 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
+    virtual int getNbAnchors() const;
+    virtual std::vector<Float_T> getAnchor(const unsigned int idx) const;
     void checkGradient(double /*epsilon */ = 1.0e-4,
                        double /*maxError */ = 1.0e-6) {};
     virtual ~AnchorCell_Frame_CUDA();

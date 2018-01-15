@@ -1,7 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-
+                    David BRIAND (david.briand@cea.fr)
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
     modify and/ or redistribute the software under the terms of the CeCILL-C
@@ -55,15 +55,24 @@ __global__ void cudaSAnchorPropagate_kernel(
     unsigned int nbAnchors,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize)
+    unsigned int batchSize,
+    unsigned int nbTotalCls,
+    unsigned int nbInputs)
 {
     const unsigned int batchOffset = blockIdx.z * 6 * nbAnchors
                                         * outputsHeight * outputsWidth;
+    
+    const unsigned int batchCoordOffset = blockIdx.z * 4 * nbAnchors 
+                                        * outputsHeight * outputsWidth;
+
+    const unsigned int batchClsOffset = blockIdx.z * nbAnchors * nbTotalCls
+                                        * outputsHeight * outputsWidth;
+
+
     const float xRatio = ceil(stimuliSizeX / (float)outputsWidth);
     const float yRatio = ceil(stimuliSizeY / (float)outputsHeight);
-
     float globalMaxIoU = 0.0;
-
+    
     for (unsigned int k = blockIdx.x; k < nbAnchors;
          k += gridDim.x)
     {
@@ -73,13 +82,18 @@ __global__ void cudaSAnchorPropagate_kernel(
             for (unsigned int xa = threadIdx.x; xa < outputsWidth;
                  xa += blockDim.x)
             {
+                
                 // Shifted anchors coordinates at (xa, ya)
                 const int xa0 = (int)(anchors[k].x0 + xa * xRatio);
                 const int ya0 = (int)(anchors[k].y0 + ya * yRatio);
                 const int xa1 = (int)(anchors[k].x1 + xa * xRatio);
                 const int ya1 = (int)(anchors[k].y1 + ya * yRatio);
-
-                // Anchors width and height
+/*
+                const int xa0 = (int)(anchors[k*4 + 0] + xa * xRatio);
+                const int ya0 = (int)(anchors[k*4 + 1] + ya * yRatio);
+                const int xa1 = (int)(anchors[k*4 + 2] + xa * xRatio);
+                const int ya1 = (int)(anchors[k*4 + 3] + ya * yRatio);
+*/
                 const int wa = xa1 - xa0;
                 const int ha = ya1 - ya0;
 
@@ -89,7 +103,13 @@ __global__ void cudaSAnchorPropagate_kernel(
 
                 const unsigned int addrBase = batchOffset
                     + xa + (ya + k * outputsHeight) * outputsWidth;
+
+                const unsigned int addrCoordBase = batchCoordOffset + k * outputsWidth * outputsHeight + ya * outputsWidth + xa;
+
+                const unsigned int addrClsBase = batchClsOffset + k * outputsWidth * outputsHeight + ya * outputsWidth + xa;
+
                 const unsigned int addrStep = outputsHeight * outputsWidth;
+
 
                 /**
                  * 1st condition: "During  training,  we  ignore all
@@ -98,24 +118,28 @@ __global__ void cudaSAnchorPropagate_kernel(
                  * 2nd condition: "During testing, however, we still apply
                  * the fully convolutional RPN  to  the  entire  image."
                 */
-                if ((xa0 >= 0
-                    && ya0 >= 0
-                    && xa1 < (int)stimuliSizeX
-                    && ya1 < (int)stimuliSizeY)
-                    || inference)
-                {
-                    // Score
-                    const float cls = inputsCls[addrBase];
 
+                if ((xa0 >= 0 && ya0 >= 0 && xa1 < (int)stimuliSizeX && ya1 < (int)stimuliSizeY) || inference)
+                {
+
+                    // Score
+                    //const float cls = inputsCls[addrBase];
                     // Parameterized coordinates
-                    const float txbb = inputsCoord[addrBase
-                        + scoresCls * nbAnchors * addrStep];
-                    const float tybb = inputsCoord[addrBase
-                        + (scoresCls + 1) * nbAnchors * addrStep];
-                    const float twbb = inputsCoord[addrBase
-                        + (scoresCls + 2) * nbAnchors * addrStep];
-                    const float thbb = inputsCoord[addrBase
-                        + (scoresCls + 3) * nbAnchors * addrStep];
+                    //const float txbb = inputsCoord[addrBase + scoresCls * nbAnchors * addrStep];
+                    //const float tybb = inputsCoord[addrBase + (scoresCls + 1) * nbAnchors * addrStep];
+                    //const float twbb = inputsCoord[addrBase + (scoresCls + 2) * nbAnchors * addrStep];
+                    //const float thbb = inputsCoord[addrBase + (scoresCls + 3) * nbAnchors * addrStep];
+
+                        
+
+                    // Score
+                    const float cls = inputsCls[addrClsBase];
+                    // Parameterized coordinates
+                   
+                    const float txbb = inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep];
+                    const float tybb = inputsCoord[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep];
+                    const float twbb = inputsCoord[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep];
+                    const float thbb = inputsCoord[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep];
 
                     // Predicted box center coordinates
                     const float xbbc = ((flip) ? -txbb : txbb) * wa
@@ -153,15 +177,17 @@ __global__ void cudaSAnchorPropagate_kernel(
                     // => if IoU is computed on predicted boxes during
                     // learning, predicted boxes may arbitrarily drift from
                     // anchors and learning does not converge
+
                     const N2D2::AnchorCell_Frame_Kernels::BBox_T bb
                         = (inference)
                             ? N2D2::AnchorCell_Frame_Kernels::BBox_T
                                 (xbb, ybb, wbb, hbb)
                             : N2D2::AnchorCell_Frame_Kernels::BBox_T
                                 (xa0, ya0, wa, ha);
-
+                    
                     float maxIoU_ = 0.0;
                     int argMaxIoU_ = -1;
+
 
                     for (unsigned int l = 0; l < nbLabels[blockIdx.z]; ++l) {
                         // Ground Truth box coordinates
@@ -188,6 +214,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                                 argMaxIoU_ = l;
                             }
                         }
+                        
                     }
 
                     outputs[addrBase] = cls;
@@ -199,8 +226,10 @@ __global__ void cudaSAnchorPropagate_kernel(
 
                     argMaxIoU[addrBase] = argMaxIoU_;
                     globalMaxIoU = max(globalMaxIoU, maxIoU_);
+                    
                 }
                 else {
+                    
                     outputs[addrBase] = -1.0;
                     outputs[addrBase + 1 * nbAnchors * addrStep] = 0.0;
                     outputs[addrBase + 2 * nbAnchors * addrStep] = 0.0;
@@ -208,6 +237,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                     outputs[addrBase + 4 * nbAnchors * addrStep] = 0.0;
                     outputs[addrBase + 5 * nbAnchors * addrStep] = 0.0;
                     argMaxIoU[addrBase] = -1;
+                    
                 }
             }
         }
@@ -241,7 +271,9 @@ void N2D2::cudaSAnchorPropagate(
     unsigned int nbAnchors,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize)
+    unsigned int batchSize,
+    unsigned int nbTotalCls,
+    unsigned int nbInputs)
 {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
@@ -275,6 +307,8 @@ void N2D2::cudaSAnchorPropagate(
            nbAnchors,
            outputsHeight,
            outputsWidth,
-           batchSize);
+           batchSize,
+           nbTotalCls,
+           nbInputs);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

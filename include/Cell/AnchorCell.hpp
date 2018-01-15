@@ -79,6 +79,14 @@ public:
     virtual Float_T getAnchorIoU(const Tensor4d<int>::Index& index) const = 0;
     virtual int getAnchorArgMaxIoU(const Tensor4d<int>::Index& index) const = 0;
     void getStats(Stats& stats) const;
+    virtual int getNbAnchors() const = 0;
+    virtual std::vector<Float_T> getAnchor(const unsigned int idx) const = 0;
+    bool isFlip()
+    {
+        bool flipStatus = mFlip;
+        return flipStatus;
+    };
+    unsigned int getScoreCls() { return mScoresCls; };
     virtual ~AnchorCell() {};
 
 protected:
