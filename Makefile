@@ -54,7 +54,7 @@ ifdef CUDA
   LDFLAGS:=$(LDFLAGS) $(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) \
     -lcudart -lcublas -lcudadevrt -lcudnn
   NVFLAGS:=$(CPPFLAGS) -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
-    -lm -lstdc++ -arch=sm_30
+    -lm -lstdc++ -arch=sm_30 -Xptxas -maxrregcount 64
 
   NVFLAGS:=$(NVFLAGS) -gencode arch=compute_30,code=sm_30 \
     -gencode arch=compute_50,code=sm_50 \
