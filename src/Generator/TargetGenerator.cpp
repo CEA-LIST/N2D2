@@ -105,6 +105,10 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
                                                                RPCellPtr,
                                                                anchorCellPtr);
     }
+    else if (type == "TargetBBox")
+    {
+        std::static_pointer_cast<TargetBBox>(target)->initialize();
+    }
 
     target->setParameters(iniConfig.getSection(section, true));
     return target;

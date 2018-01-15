@@ -25,6 +25,7 @@
 #include "Target/Target.hpp"
 #include "Target/TargetROIs.hpp"
 #include "Target/TargetRP.hpp"
+#include "Target/TargetBBox.hpp"
 #include "utils/IniParser.hpp"
 
 namespace N2D2 {
