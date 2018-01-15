@@ -50,6 +50,15 @@ public:
     }
     static const char* Type;
 
+    // N = Batch dimension
+    // C = Channel dimension
+    // H = Channel height dimension
+    // W = Channel width dimension
+    enum TargetFormat {
+        NCHW,
+        NHWC
+    };
+
     TargetCompare(const std::string& name,
              const std::shared_ptr<Cell>& cell,
              const std::shared_ptr<StimuliProvider>& sp,
@@ -67,10 +76,25 @@ public:
 protected:
     Parameter<std::string> mDataPath;
     Parameter<std::string> mMatching;
+    Parameter<TargetFormat> mDataTargetFormat;
+    Parameter<bool> mInputTranspose;
+    Parameter<bool> mLogDistrib;
+    Parameter<bool> mLogError;
+    Parameter<unsigned int> mBatchPacked;
+
+    void logTargetDistrib(const std::pair<double, double> meanStdDev,
+                          std::vector<double> target,
+                          const std::string& fileName);
 
 private:
     static Registrar<Target> mRegistrar;
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::TargetCompare::TargetFormat>::data[]
+    = {"NCHW", "NHWC"};
 }
 
 #endif // N2D2_TARGETCOMPARE_H
