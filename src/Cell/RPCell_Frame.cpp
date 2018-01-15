@@ -100,7 +100,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
             // FOR EMBEDDED GPU ARCHITECTURES"
             // http://rapid-project.eu/_docs/icassp2016.pdf
 
-            Tensor2d<char> invalid(ROIs.size(), ROIs.size(), 0);
+            Tensor2d<int> invalid(ROIs.size(), ROIs.size(), 0);
 
             // Flag
 #pragma omp parallel for if (ROIs.size() > 16)
@@ -178,10 +178,13 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                                   invalid[i].begin() + i,
                                   0);
 #else
-                const int isInvalid
-                    = std::accumulate(invalid[i].begin(),
-                                      invalid[i].begin() + i,
-                                      0);
+                int isInvalid = 0;
+                    //= std::accumulate(invalid[i].begin(),
+                    //                  invalid[i].begin() + i,
+                    //                  0);
+                for(unsigned int k = 0; k < i; ++k)
+                    if(invalid(i,k) == 1)
+                        isInvalid += 1;
 #endif
 
                 if (isInvalid) {
@@ -196,26 +199,26 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 }
                 else {
                     mOutputs(0, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[n].first.i,
-                                  ROIs[n].first.j,
-                                  ROIs[n].first.k + 1 * mNbAnchors,
-                                  ROIs[n].first.b);
+                        = mInputs(ROIs[i].first.i,
+                                  ROIs[i].first.j,
+                                  ROIs[i].first.k + 1 * mNbAnchors,
+                                  ROIs[i].first.b);
                     mOutputs(1, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[n].first.i,
-                                  ROIs[n].first.j,
-                                  ROIs[n].first.k + 2 * mNbAnchors,
-                                  ROIs[n].first.b);
+                        = mInputs(ROIs[i].first.i,
+                                  ROIs[i].first.j,
+                                  ROIs[i].first.k + 2 * mNbAnchors,
+                                  ROIs[i].first.b);
                     mOutputs(2, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[n].first.i,
-                                  ROIs[n].first.j,
-                                  ROIs[n].first.k + 3 * mNbAnchors,
-                                  ROIs[n].first.b);
+                        = mInputs(ROIs[i].first.i,
+                                  ROIs[i].first.j,
+                                  ROIs[i].first.k + 3 * mNbAnchors,
+                                  ROIs[i].first.b);
                     mOutputs(3, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[n].first.i,
-                                  ROIs[n].first.j,
-                                  ROIs[n].first.k + 4 * mNbAnchors,
-                                  ROIs[n].first.b);
-                    mAnchors[n + batchPos * mNbProposals] = ROIs[n].first;
+                        = mInputs(ROIs[i].first.i,
+                                  ROIs[i].first.j,
+                                  ROIs[i].first.k + 4 * mNbAnchors,
+                                  ROIs[i].first.b);
+                    mAnchors[n + batchPos * mNbProposals] = ROIs[i].first;
 
                     ++n;
                 }

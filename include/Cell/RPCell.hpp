@@ -76,6 +76,22 @@ public:
     {
         return mNbProposals;
     };
+    double getMinWidth() const { return (double) mMinWidth; };
+    double getMinHeight() const { return (double) mMinHeight; };
+    double getNMSParam() const { return (double) mNMS_IoU_Threshold; };
+    unsigned int getScoreIndex() const
+    {
+        return (unsigned int) mScoreIndex;
+    };
+    unsigned int getIoUIndex() const
+    {
+        return (unsigned int) mIoUIndex;
+    };
+
+    unsigned int getPreNMSParam() const
+    {
+        return (unsigned int) mPre_NMS_TopN;
+    };
     const std::vector<Tensor4d<int>::Index>& getAnchors() const
     {
         return mAnchors;
