@@ -17,6 +17,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
+#ifdef CUDA
 
 #include "Cell/RPCell_Frame_CUDA.hpp"
 #include <thrust/device_ptr.h>
@@ -266,3 +267,4 @@ void N2D2::RPCell_Frame_CUDA::setOutputsSize()
     }
 }
 
+#endif
