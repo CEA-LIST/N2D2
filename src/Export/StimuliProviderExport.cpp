@@ -282,6 +282,9 @@ std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
     Database::StimuliSet set,
     bool normalize)
 {
+    if (CellExport::mPrecision < 0 && !normalize)
+        return std::make_pair(1.0, false);
+
     const StimuliData::Value& globalValue
         = getStimuliData(sp, dirName, set).getGlobalValue();
     const double dataRange = std::max(std::abs(globalValue.minVal),
@@ -289,11 +292,11 @@ std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
     const bool unsignedData = (globalValue.minVal >= 0
                                && DeepNetExport::mUnsignedData);
 
-    DeepNetExport::mEnvDataUnsigned = unsignedData;
-
     double scalingValue = 1.0;
 
     if (CellExport::mPrecision > 0) {
+        DeepNetExport::mEnvDataUnsigned = unsignedData;
+
         const unsigned int nbBits = ((unsignedData) ? CellExport::mPrecision
                                                 : (CellExport::mPrecision - 1));
         scalingValue = (double)(std::pow(2, nbBits) - 1);
