@@ -740,13 +740,33 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
 
 void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
 {
-    for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell) {
-            mCells[(*itCell)]->normalizeFreeParameters(normFactor);
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
+    {
+        Float_T wNorm = 0.0;
+
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+            itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
+        {
+            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+
+            Float_T wMin, wMax;
+            std::tie(wMin, wMax) = cell->getFreeParametersRange();
+
+            const Float_T wMaxAbs = std::max(-wMin, wMax);
+            wNorm = std::max(wMaxAbs, wNorm);
+        }
+
+        wNorm /= normFactor;
+
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+            itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
+        {
+            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+
+            cell->processFreeParameters(std::bind(std::divides<double>(),
+                                                  std::placeholders::_1,
+                                                  wNorm));
         }
     }
 }

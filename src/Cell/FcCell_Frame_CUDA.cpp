@@ -400,17 +400,20 @@ void N2D2::FcCell_Frame_CUDA::discretizeFreeParameters(unsigned int nbLevels)
     mBias.synchronizeHToD();
 }
 
-void N2D2::FcCell_Frame_CUDA::normalizeFreeParameters()
+std::pair<N2D2::Float_T, N2D2::Float_T>
+N2D2::FcCell_Frame_CUDA::getFreeParametersRange() const
 {
     mSynapses.synchronizeDToH();
     mBias.synchronizeDToH();
 
     mSynchronized = true;
-    FcCell::normalizeFreeParameters();
+    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRange();
     mSynchronized = false;
 
     mSynapses.synchronizeHToD();
     mBias.synchronizeHToD();
+
+    return range;
 }
 
 void N2D2::FcCell_Frame_CUDA::processFreeParameters(const std::function

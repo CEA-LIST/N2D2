@@ -355,7 +355,8 @@ void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
-void N2D2::FcCell::normalizeFreeParameters(double normFactor)
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange()
+    const
 {
     const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
                                       * getChannelsHeight();
@@ -379,24 +380,7 @@ void N2D2::FcCell::normalizeFreeParameters(double normFactor)
         }
     }
 
-    const Float_T wNorm = std::max(-wMin, wMax) / normFactor;
-
-#pragma omp parallel for if (mNbOutputs > 32)
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            Float_T weight = getWeight(output, channel);
-            weight/= wNorm;
-
-            setWeight(output, channel, weight);
-        }
-
-        if (!mNoBias) {
-            Float_T bias = getBias(output);
-            bias/= wNorm;
-
-            setBias(output, bias);
-        }
-    }
+    return std::make_pair(wMin, wMax);
 }
 
 void N2D2::FcCell::randomizeFreeParameters(double stdDev)

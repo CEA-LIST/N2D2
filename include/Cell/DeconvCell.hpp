@@ -175,7 +175,7 @@ public:
     virtual void logFreeParametersDistrib(const std::string& fileName) const;
     void writeMap(const std::string& fileName) const;
     void discretizeFreeParameters(unsigned int nbLevels);
-    void normalizeFreeParameters();
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange() const;
     void randomizeFreeParameters(double stdDev);
     void getStats(Stats& stats) const;
     virtual ~DeconvCell() {};

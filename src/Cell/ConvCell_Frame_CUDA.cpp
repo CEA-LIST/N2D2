@@ -699,7 +699,8 @@ void N2D2::ConvCell_Frame_CUDA::discretizeFreeParameters(unsigned int nbLevels)
     mBias->synchronizeHToD();
 }
 
-void N2D2::ConvCell_Frame_CUDA::normalizeFreeParameters()
+std::pair<N2D2::Float_T, N2D2::Float_T>
+N2D2::ConvCell_Frame_CUDA::getFreeParametersRange() const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeDToH();
@@ -707,13 +708,16 @@ void N2D2::ConvCell_Frame_CUDA::normalizeFreeParameters()
     mBias->synchronizeDToH();
 
     mSynchronized = true;
-    ConvCell::normalizeFreeParameters();
+    const std::pair<Float_T, Float_T> range
+        = ConvCell::getFreeParametersRange();
     mSynchronized = false;
 
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeHToD();
 
     mBias->synchronizeHToD();
+
+    return range;
 }
 
 void N2D2::ConvCell_Frame_CUDA::processFreeParameters(const std::function

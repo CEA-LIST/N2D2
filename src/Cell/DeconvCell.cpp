@@ -654,7 +654,8 @@ void N2D2::DeconvCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
-void N2D2::DeconvCell::normalizeFreeParameters()
+std::pair<N2D2::Float_T, N2D2::Float_T>
+N2D2::DeconvCell::getFreeParametersRange() const
 {
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
@@ -682,31 +683,7 @@ void N2D2::DeconvCell::normalizeFreeParameters()
         }
     }
 
-    const Float_T wNorm = std::max(-wMin, wMax);
-
-#pragma omp parallel for if (mNbOutputs > 16)
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-            if (!isConnection(channel, output))
-                continue;
-
-            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                    Float_T weight = getWeight(output, channel, sx, sy);
-                    weight/= wNorm;
-
-                    setWeight(output, channel, sx, sy, weight);
-                }
-            }
-        }
-
-        if (!mNoBias) {
-            Float_T bias = getBias(output);
-            bias/= wNorm;
-
-            setBias(output, bias);
-        }
-    }
+    return std::make_pair(wMin, wMax);
 }
 
 void N2D2::DeconvCell::randomizeFreeParameters(double stdDev)

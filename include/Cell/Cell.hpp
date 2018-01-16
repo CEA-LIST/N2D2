@@ -268,7 +268,9 @@ public:
      * @param nbLevels      Number of discrete levels
     */
     virtual void discretizeFreeParameters(unsigned int /*nbLevels*/) {};
-    virtual void normalizeFreeParameters(double /*normFactor*/ = 1.0) {};
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange() const {
+        return std::pair<Float_T, Float_T>();
+    };
     virtual void processFreeParameters(const std::function
                                        <double(const double&)>& /*func*/) {};
 
