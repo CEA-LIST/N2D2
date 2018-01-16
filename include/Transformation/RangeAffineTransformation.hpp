@@ -36,6 +36,11 @@ public:
     };
 
     RangeAffineTransformation(Operator firstOperator,
+                              const std::vector<double>& firstValue,
+                              Operator secondOperator = Plus,
+                              const std::vector<double>& secondValue
+                                = std::vector<double>());
+    RangeAffineTransformation(Operator firstOperator,
                               double firstValue,
                               Operator secondOperator = Plus,
                               double secondValue = 0.0);
@@ -59,12 +64,14 @@ private:
     {
         return new RangeAffineTransformation(*this);
     }
-    void applyOperator(cv::Mat& mat, const Operator& op, double value) const;
+    void applyOperator(cv::Mat& mat,
+                       const Operator& op,
+                       double value) const;
 
     const Operator mFirstOperator;
-    const double mFirstValue;
+    const std::vector<double> mFirstValue;
     const Operator mSecondOperator;
-    const double mSecondValue;
+    const std::vector<double> mSecondValue;
 };
 }
 

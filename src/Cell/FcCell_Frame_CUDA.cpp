@@ -136,11 +136,11 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
     //  1   <-->    batch   <-->    mInputs.b()
 
     const float alpha = 1.0f;
-    const float beta = 0.0f;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const unsigned int inputSize = mInputs[k].dimX() * mInputs[k].dimY()
                                        * mInputs[k].dimZ();
+        const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
         // mDiffSynapses.getDevicePtr() = mInputs.getDevicePtr *
         // mDiffInputs.getDevicePtr*
@@ -161,6 +161,8 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
     }
 
     if (!mNoBias) {
+        const float beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+
         // mDiffBias.getDevicePtr() = mDiffInputs.getDevicePtr * mOnesVector
         CHECK_CUBLAS_STATUS(cublasSgemv(CudaContext::cublasHandle(),
                                         CUBLAS_OP_N,

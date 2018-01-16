@@ -46,11 +46,13 @@ protected:
     using SGDSolver<T>::mMomentum;
     using SGDSolver<T>::mDecay;
     using SGDSolver<T>::mPower;
+    using SGDSolver<T>::mIterationSize;
     using SGDSolver<T>::mMaxIterations;
     using SGDSolver<T>::mLearningRatePolicy;
     using SGDSolver<T>::mLearningRateStepSize;
     using SGDSolver<T>::mLearningRateDecay;
     using SGDSolver<T>::mClamping;
+    using SGDSolver<T>::mIterationPass;
     using SGDSolver<T>::mNbIterations;
 
     /// Quantization levels (0 = no quantization)
@@ -82,7 +84,9 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
                                       Tensor4d<T>* diffData,
                                       unsigned int batchSize)
 {
-    if (mLearningRate == 0.0)
+    const T rate = SGDSolver<T>::getLearningRate(batchSize);
+
+    if (rate == 0.0)
         return;
 
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
@@ -94,36 +98,8 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
     Tensor4d<T>* continuousData
         = (mQuantizationLevels > 0) ? &mContinuousData : data;
 
-    T rate = mLearningRate;
-    const unsigned int itFactor = mNbIterations / mLearningRateStepSize;
-
-    if (mLearningRatePolicy == SGDSolver<T>::StepDecay) {
-        rate *= std::pow(mLearningRateDecay, (double)itFactor);
-
-        if (mNbIterations > 0 && (mNbIterations - batchSize)
-                                 / mLearningRateStepSize != itFactor)
-            std::cout << "Learning rate after " << mNbIterations
-                      << " iteration(s): " << rate << std::endl;
-    } else if (mLearningRatePolicy == SGDSolver<T>::ExponentialDecay)
-        rate = mLearningRate * std::exp(-mLearningRateDecay * itFactor);
-    else if (mLearningRatePolicy == SGDSolver<T>::InvTDecay)
-        rate = mLearningRate / (1.0 + mLearningRateDecay * itFactor);
-    else if (mLearningRatePolicy == SGDSolver<T>::PolyDecay) {
-        const T power = mPower;
-        const T maxIterations = mMaxIterations;
-        rate = mLearningRate
-               * std::pow(1.0 - (mNbIterations / maxIterations), power);
-    }
-    else if (mLearningRatePolicy == SGDSolver<T>::InvDecay) {
-        const T power = mPower;
-        rate = mLearningRate
-               * std::pow(1.0 + (mLearningRateDecay * mNbIterations), -power);
-    }
-
-    mNbIterations += batchSize;
-
-    // Normalize in function of the batch size
-    const T rateDiff = rate / (T)batchSize;
+    // Normalize in function of the iteration size
+    const T rateDiff = rate / (batchSize * (T)mIterationSize);
     const T momentum = mMomentum;
     const T decay = mDecay;
 

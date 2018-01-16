@@ -211,8 +211,11 @@ $(N2D2_BINDIR)/% : $(OBJ) $(OBJ_CUDA) $(OBJDIR)/%.o
 	@mkdir -p $(@D)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 	@if git rev-parse --git-dir > /dev/null 2>&1; then \
-        git log -1 > $@.gitrev; \
-        git diff HEAD > $@.patch; [ -s $@.patch ] || rm -f $@.patch; \
+        git log -1 -p --submodule > $@.gitrev; \
+        git submodule foreach --recursive git log -1 >> $@.gitrev; \
+        git diff HEAD > $@.patch; \
+        git submodule foreach --recursive git diff HEAD >> $@.patch; \
+            [ -s $@.patch ] || rm -f $@.patch; \
 	fi
 
 ifneq (,$(filter $(MAKECMDGOALS),clean clean-all))

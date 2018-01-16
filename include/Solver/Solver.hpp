@@ -37,6 +37,7 @@ public:
     {
         return std::shared_ptr<Solver<T> >(doClone());
     }
+    virtual bool isNewIteration() const = 0;
     virtual ~Solver() {};
 
 private:

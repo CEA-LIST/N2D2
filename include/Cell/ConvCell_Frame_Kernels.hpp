@@ -57,7 +57,10 @@ namespace ConvCell_Frame_Kernels {
                  const Float_T* beta,
                  Tensor4d<Float_T>& outputs,
                  const Tensor2d<bool>& maps = Tensor2d<bool>());
-    void forwardBias(const Tensor4d<Float_T>& bias, Tensor4d<Float_T>& outputs);
+    void forwardBias(const Float_T* alpha,
+                     const Tensor4d<Float_T>& bias,
+                     const Float_T* beta,
+                     Tensor4d<Float_T>& outputs);
 
     // Backward
     void backwardData(const Float_T* alpha,
@@ -74,7 +77,9 @@ namespace ConvCell_Frame_Kernels {
                         const Float_T* beta,
                         Tensor4d<Float_T>& diffSharedSynapses,
                         const Tensor2d<bool>& maps = Tensor2d<bool>());
-    void backwardBias(const Tensor4d<Float_T>& diffInputs,
+    void backwardBias(const Float_T* alpha,
+                      const Tensor4d<Float_T>& diffInputs,
+                      const Float_T* beta,
                       Tensor4d<Float_T>& diffBias);
 }
 }

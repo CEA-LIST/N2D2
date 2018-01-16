@@ -337,9 +337,10 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
 
     const float alpha = 1.0f;
     const Float_T alphaMask = 0.0f;
-    const float beta = 0.0f;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
+
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(cudnnConvolutionBackwardFilter(
             CudaContext::cudnnHandle(),
@@ -392,6 +393,8 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
     }
 
     if (!mNoBias) {
+        const float beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+
         CHECK_CUDNN_STATUS(
             cudnnConvolutionBackwardBias(CudaContext::cudnnHandle(),
                                          &alpha,

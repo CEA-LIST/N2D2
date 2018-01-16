@@ -60,9 +60,15 @@ public:
     {
         return std::shared_ptr<SGDSolver<T> >(doClone());
     }
+    bool isNewIteration() const
+    {
+        return (mIterationPass == 0);
+    }
     virtual ~SGDSolver() {};
 
 protected:
+    T getLearningRate(unsigned int batchSize);
+
     /// Initial learning rate
     Parameter<double> mLearningRate;
     /// Momentum
@@ -71,8 +77,10 @@ protected:
     Parameter<double> mDecay;
     /// Power
     Parameter<double> mPower;
+    /// Global batch size = batch size * mIterationSize
+    Parameter<unsigned int> mIterationSize;
     /// MaxIterations
-    Parameter<double> mMaxIterations;
+    Parameter<unsigned long long int> mMaxIterations;
     /// Learning rate decay policy
     Parameter<LearningRatePolicy> mLearningRatePolicy;
     /// Learning rate step size
@@ -82,6 +90,7 @@ protected:
     /// If true, don't clamp the weights between -1 and 1 during learning
     Parameter<bool> mClamping;
 
+    unsigned int mIterationPass;
     unsigned int mNbIterations;
 
 private:
@@ -117,14 +126,72 @@ N2D2::SGDSolver<T>::SGDSolver()
       mMomentum(this, "Momentum", 0.0),
       mDecay(this, "Decay", 0.0),
       mPower(this, "Power", 0.0),
-      mMaxIterations(this, "MaxIterations", 0.0),
+      mIterationSize(this, "IterationSize", 1U),
+      mMaxIterations(this, "MaxIterations", 0U),
       mLearningRatePolicy(this, "LearningRatePolicy", None),
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
       mClamping(this, "Clamping", false),
+      mIterationPass(0),
       mNbIterations(0)
 {
     // ctor
+}
+
+template <class T>
+T N2D2::SGDSolver<T>::getLearningRate(unsigned int batchSize)
+{
+    if (mLearningRate == 0.0)
+        return 0.0;
+
+    if (mIterationPass < mIterationSize - 1) {
+        ++mIterationPass;
+        return 0.0;
+    }
+    else
+        mIterationPass = 0;
+
+    // Base learning rate
+    T rate = mLearningRate;
+
+    if (mLearningRatePolicy == SGDSolver<T>::StepDecay
+        || mLearningRatePolicy == SGDSolver<T>::ExponentialDecay
+        || mLearningRatePolicy == SGDSolver<T>::InvTDecay)
+    {
+        const unsigned int currentPattern = mNbIterations
+                                            * mIterationSize * batchSize;
+        const unsigned int currentStep = currentPattern / mLearningRateStepSize;
+
+        if (mLearningRatePolicy == SGDSolver<T>::StepDecay)
+            rate *= std::pow(mLearningRateDecay, (double)currentStep);
+        else if (mLearningRatePolicy == SGDSolver<T>::ExponentialDecay)
+            rate *= std::exp(-mLearningRateDecay * currentStep);
+        else if (mLearningRatePolicy == SGDSolver<T>::InvTDecay)
+            rate *= 1.0 / (1.0 + mLearningRateDecay * currentStep);
+
+        if (mNbIterations > 0) {
+            const unsigned int prevPattern = (mNbIterations - 1)
+                                                * mIterationSize * batchSize;
+            const unsigned int prevStep = prevPattern / mLearningRateStepSize;
+
+            if (currentStep != prevStep) {
+                std::cout << "Learning rate after " << mNbIterations
+                          << "(x" << (mIterationSize * batchSize) << ") "
+                          "iteration(s): " << rate << std::endl;
+            }
+        }
+    }
+    else if (mLearningRatePolicy == SGDSolver<T>::PolyDecay)
+        rate *= std::pow(1.0 - (mNbIterations / (T)mMaxIterations), (T)mPower);
+    else if (mLearningRatePolicy == SGDSolver<T>::InvDecay) {
+        rate *= std::pow(1.0 + (mLearningRateDecay * mNbIterations),
+                         -(T)mPower);
+    }
+
+    if (mMaxIterations == 0 || mNbIterations < mMaxIterations)
+        ++mNbIterations;
+
+    return rate;
 }
 
 #endif // N2D2_SGDSOLVER_H

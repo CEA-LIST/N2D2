@@ -210,6 +210,8 @@ void N2D2::BatchNormCell_Frame::backPropagate()
 
     const unsigned int size = mInputs[0].dimX() * mInputs[0].dimY()
                               * mInputs.dimB();
+    const float betaScale = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
+    const float betaBias = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
 
 #pragma omp parallel for if (mNbOutputs > 16)
     for (int output = 0; output < (int)mNbOutputs; ++output) {
@@ -252,8 +254,8 @@ void N2D2::BatchNormCell_Frame::backPropagate()
                                  + mDiffSavedVariance(output) * sumMean2
                                    / (Float_T)size;
 
-        mDiffScale(output) = sumScale;
-        mDiffBias(output) = sumBias;
+        mDiffScale(output) = sumScale + betaScale * mDiffScale(output);
+        mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
     }
 
     if (!mDiffOutputs.empty()) {

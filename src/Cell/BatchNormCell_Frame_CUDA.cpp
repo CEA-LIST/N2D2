@@ -189,7 +189,8 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
 
     const float alpha = 1.0f;
     const float alphaData = 1.0f;
-    const float beta = 0.0f;
+    assert(mScaleSolver->isNewIteration() == mBiasSolver->isNewIteration());
+    const float beta = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const float betaData = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
 
     CHECK_CUDNN_STATUS(

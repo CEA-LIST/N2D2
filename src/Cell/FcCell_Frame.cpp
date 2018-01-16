@@ -185,6 +185,8 @@ void N2D2::FcCell_Frame::backPropagate()
         Tensor4d<Float_T>& diffSynapses = mDiffSynapses[k];
         const unsigned int count2 = nbChannels * mNbOutputs;
 
+        const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count2 > 16)
 #else
@@ -201,14 +203,20 @@ void N2D2::FcCell_Frame::backPropagate()
                         sum += input(channel, batchPos)
                                * mDiffInputs(output, batchPos);
 
-                    diffSynapses(channel, output) = sum;
-                } else
-                    diffSynapses(channel, output) = 0.0;
+                    diffSynapses(channel, output) = sum
+                        + beta * diffSynapses(channel, output);
+                }
+                else {
+                    diffSynapses(channel, output) = beta
+                        * diffSynapses(channel, output);
+                }
             }
         }
     }
 
     if (!mNoBias) {
+        const float beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+
 #pragma omp parallel for if (mNbOutputs > 16)
         for (int output = 0; output < (int)mNbOutputs; ++output) {
             Float_T sum = 0.0;
@@ -217,7 +225,7 @@ void N2D2::FcCell_Frame::backPropagate()
                  ++batchPos)
                 sum += mDiffInputs(output, batchPos);
 
-            mDiffBias(output) = sum;
+            mDiffBias(output) = sum + beta * mDiffBias(output);
         }
     }
 
