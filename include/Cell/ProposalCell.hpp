@@ -106,6 +106,7 @@ protected:
 
     Parameter<double> mNMS_IoU_Threshold;
     Parameter<double> mScoreThreshold;
+    Parameter<bool> mKeepMax;
     StimuliProvider& mStimuliProvider;
 
     unsigned int mNbProposals;
@@ -114,6 +115,7 @@ protected:
     bool mApplyNMS;
     std::vector<double> mMeanFactor;
     std::vector<double> mStdFactor;
+    unsigned int mNbClass;
 
     
 };
