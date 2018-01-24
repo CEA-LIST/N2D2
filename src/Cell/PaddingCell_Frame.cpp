@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): David BRIAND (david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -28,7 +28,9 @@ N2D2::PaddingCell_Frame::PaddingCell_Frame(const std::string& name,
                                              unsigned int nbOutputs)
     : Cell(name, nbOutputs),
       PaddingCell(name, nbOutputs),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame(name, nbOutputs),
+      mPaddingDesc(0, 0, 0, 0)
+
 {
     // ctor
 }
@@ -58,61 +60,26 @@ void N2D2::PaddingCell_Frame::initialize()
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }   
- 
 
+    mPaddingDesc.leftPad = mLeftPad;
+    mPaddingDesc.rightPad = mRightPad;
+    mPaddingDesc.topPad = mTopPad;
+    mPaddingDesc.botPad = mBotPad;
 }
 
 void N2D2::PaddingCell_Frame::propagate(bool /*inference*/)
 {
     mInputs.synchronizeDToH();
 
-    //unsigned int inputLineSize = mOutputs.dimX() - mLeftPad - mRightPad;
-    unsigned int outOffset = 0;
+    unsigned int offset = 0;
 
-    if(mLeftPad < 0)
-        outOffset -= mLeftPad;
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) 
-    {
-        unsigned int inOffset = 0;
+        PaddingCell_Frame_Kernels::forward( mInputs[k],
+                                            mPaddingDesc,
+                                            mOutputs);
 
-        //if(mLeftPad < 0)
-        //    inOffset -= mLeftPad;
-        if(mTopPad < 0)
-            inOffset = -mTopPad*mInputs[k].dimX();
-
-        unsigned int cpySize = mInputs[k].dimX() + mLeftPad + mRightPad;
-        
-        cpySize = Utils::clamp<unsigned int>(cpySize, 0, mInputs[k].dimX());
-
-        for(int batchPos = 0; batchPos < (int) mOutputs.dimB(); ++batchPos)
-        {
-            for(int zIdx = 0; zIdx < (int) mOutputs.dimZ(); ++zIdx)
-            {
-                for(int yIdx = -mTopPad; yIdx < (int)mInputs[k].dimY() + mBotPad; ++yIdx)
-                {
-
-                    if(yIdx >= 0 && yIdx < (int) mInputs[k].dimY())
-                    {
-                        if(mLeftPad < 0)
-                            inOffset -= mLeftPad;
-            
-                        memcpy(&mOutputs(0 + outOffset + mLeftPad),
-                               &mInputs[k](inOffset),
-                               cpySize*sizeof(Float_T));
-
-                        if(mRightPad < 0)
-                            inOffset -= mRightPad;
-                         
-                        inOffset += cpySize;   
-                        
-                    }
-
-                    outOffset += mOutputs.dimX();
-
-                }
-            }
-        }
+        offset += mInputs[k].dimZ();
     }
 
     mDiffInputs.clearValid();

@@ -25,6 +25,7 @@
 
 #include "Cell_Frame.hpp"
 #include "PaddingCell.hpp"
+#include "PaddingCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
 class PaddingCell_Frame : public virtual PaddingCell, public Cell_Frame {
@@ -48,6 +49,7 @@ public:
     virtual ~PaddingCell_Frame();
 
 protected:
+    PaddingCell_Frame_Kernels::Descriptor mPaddingDesc;
 
 private:
     static Registrar<PaddingCell> mRegistrar;

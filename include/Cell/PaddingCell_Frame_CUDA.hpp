@@ -29,6 +29,7 @@
 
 #include "Cell_Frame_CUDA.hpp"
 #include "PaddingCell.hpp"
+#include "PaddingCell_Frame_CUDA_Kernels.hpp"
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
