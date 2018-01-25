@@ -52,11 +52,18 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
         mStdCUDA(i) = mStdFactor[i];
     }
 
-    mNormalizeROIs.resize(1, 1, 4, mNbProposals*inputBatch);
-
+    mNbClass = mInputs[2].dimX()*mInputs[2].dimY()*mInputs[2].dimZ();
+    mNormalizeROIs.resize(1, 4, (mNbClass - mScoreIndex), mNbProposals*inputBatch);
+    mMaxCls.resize(1, 1, 1, mNbProposals*inputBatch);
+    
+    mMaxCls.synchronizeHToD();    
     mNormalizeROIs.synchronizeHToD();    
     mMeansCUDA.synchronizeHToD();    
     mStdCUDA.synchronizeHToD();    
+
+    std::cout << "PropocalCell::Frame " << mName << " provide " 
+            <<  mNbClass << " class" << std::endl;
+
 
 }
 
@@ -75,6 +82,8 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mNbProposals, 
                         inputBatch, 
                         mScoreIndex,
+                        mNbClass,
+                        mKeepMax,
                         normX,
                         normY,
                         mMeansCUDA.getDevicePtr(),
@@ -83,54 +92,99 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mInputs[1].getDevicePtr(),
                         mInputs[2].getDevicePtr(),
                         mNormalizeROIs.getDevicePtr(),
+                        mMaxCls.getDevicePtr(),
                         mScoreThreshold,
                         nbThread,
                         nbBlocks);
 
+
     if(mApplyNMS)
     {
         mNormalizeROIs.synchronizeDToH();
-        // Non-Maximum Suppression (NMS)
+
         for(unsigned int n = 0; n < inputBatch; ++n)
         {
-            for (unsigned int i = 0; i < mNbProposals - 1;
-                ++i)
+            // Non-Maximum Suppression (NMS)
+
+            if(!mKeepMax)
+                mMaxCls.synchronizeDToH();
+
+            for(unsigned int cls = 0; cls < (mNbClass - mScoreIndex) ; ++cls)
             {
-                const Float_T x0 = mNormalizeROIs(0, i + n*mNbProposals);
-                const Float_T y0 = mNormalizeROIs(1, i + n*mNbProposals);
-                const Float_T w0 = mNormalizeROIs(2, i + n*mNbProposals);
-                const Float_T h0 = mNormalizeROIs(3, i + n*mNbProposals);
+                for (unsigned int i = 0; i < mNbProposals - 1;
+                    ++i)
+                {
+                    const Float_T x0 = mNormalizeROIs(0, 0, cls, i + n*mNbProposals);
+                    const Float_T y0 = mNormalizeROIs(0, 1, cls, i + n*mNbProposals);
+                    const Float_T w0 = mNormalizeROIs(0, 2, cls, i + n*mNbProposals);
+                    const Float_T h0 = mNormalizeROIs(0, 3, cls, i + n*mNbProposals);
 
-                for (unsigned int j = i + 1; j < mNbProposals; ) {
+                    for (unsigned int j = i + 1; j < mNbProposals; ) {
 
-                    const Float_T x = mNormalizeROIs(0, j + n*mNbProposals);
-                    const Float_T y = mNormalizeROIs(1, j + n*mNbProposals);
-                    const Float_T w = mNormalizeROIs(2, j + n*mNbProposals);
-                    const Float_T h = mNormalizeROIs(3, j + n*mNbProposals);
+                        const Float_T x = mNormalizeROIs(0, 0, cls, j + n*mNbProposals);
+                        const Float_T y = mNormalizeROIs(0, 1, cls, j + n*mNbProposals);
+                        const Float_T w = mNormalizeROIs(0, 2, cls, j + n*mNbProposals);
+                        const Float_T h = mNormalizeROIs(0, 3, cls, j + n*mNbProposals);
 
-                    const Float_T interLeft = std::max(x0, x);
-                    const Float_T interRight = std::min(x0 + w0, x + w);
-                    const Float_T interTop = std::max(y0, y);
-                    const Float_T interBottom = std::min(y0 + h0, y + h);
+                        const Float_T interLeft = std::max(x0, x);
+                        const Float_T interRight = std::min(x0 + w0, x + w);
+                        const Float_T interTop = std::max(y0, y);
+                        const Float_T interBottom = std::min(y0 + h0, y + h);
 
-                    if (interLeft < interRight && interTop < interBottom) {
-                        const Float_T interArea = (interRight - interLeft)
-                                                    * (interBottom - interTop);
-                        const Float_T unionArea = w0 * h0 + w * h - interArea;
-                        const Float_T IoU = interArea / unionArea;
+                        if (interLeft < interRight && interTop < interBottom) {
+                            const Float_T interArea = (interRight - interLeft)
+                                                        * (interBottom - interTop);
+                            const Float_T unionArea = w0 * h0 + w * h - interArea;
+                            const Float_T IoU = interArea / unionArea;
 
-                        if (IoU > mNMS_IoU_Threshold) {
+                            if (IoU > mNMS_IoU_Threshold) {
 
-                            // Suppress ROI
-                            //ROIs[n].erase(ROIs[n].begin() + j);
-                            mNormalizeROIs(0, j + n*mNbProposals) = 0.0;
-                            mNormalizeROIs(1, j + n*mNbProposals) = 0.0;
-                            mNormalizeROIs(2, j + n*mNbProposals) = 0.0;
-                            mNormalizeROIs(3, j + n*mNbProposals) = 0.0;
-                            continue;
+                                // Suppress ROI
+                                //ROIs[n].erase(ROIs[n].begin() + j);
+                                mNormalizeROIs(0, 0, cls, j + n*mNbProposals) = 0.0;
+                                mNormalizeROIs(0, 1, cls, j + n*mNbProposals) = 0.0;
+                                mNormalizeROIs(0, 2, cls, j + n*mNbProposals) = 0.0;
+                                mNormalizeROIs(0, 3, cls, j + n*mNbProposals) = 0.0;
+                                continue;
+                            }
                         }
+                        ++j;
                     }
-                    ++j;
+                }
+            }
+            unsigned int out = 0;
+            
+            for(unsigned int cls = 0; cls < (mNbClass - mScoreIndex) 
+                    && out < mNbProposals; ++cls)
+            {
+                for (unsigned int i = 0; i < mNbProposals && out < mNbProposals ;
+                    ++i)
+                {
+                    //Read before erase and write
+                    const Float_T x = mNormalizeROIs(0, 0, cls, i + n*mNbProposals);
+                    const Float_T y = mNormalizeROIs(0, 1, cls, i + n*mNbProposals);
+                    const Float_T w = mNormalizeROIs(0, 2, cls, i + n*mNbProposals);
+                    const Float_T h = mNormalizeROIs(0, 3, cls, i + n*mNbProposals);
+
+                    if(w > 0.0 && h > 0.0)
+                    {
+                        //Erase before write
+                        mNormalizeROIs(0, 0, cls, i + n*mNbProposals) = 0.0;
+                        mNormalizeROIs(0, 1, cls, i + n*mNbProposals) = 0.0;
+                        mNormalizeROIs(0, 2, cls, i + n*mNbProposals) = 0.0;
+                        mNormalizeROIs(0, 3, cls, i + n*mNbProposals) = 0.0;
+                        
+                        //Write result
+                        mNormalizeROIs(0, 0, 0, out + n*mNbProposals) = x;
+                        mNormalizeROIs(0, 1, 0, out + n*mNbProposals) = y;
+                        mNormalizeROIs(0, 2, 0, out + n*mNbProposals) = w;
+                        mNormalizeROIs(0, 3, 0, out + n*mNbProposals) = h;
+
+                        if(!mKeepMax)
+                            mMaxCls(out + n*mNbProposals) = cls + mScoreIndex;
+
+                        ++out;
+                    }
                 }
             }
         }
@@ -138,7 +192,10 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
         mNormalizeROIs.synchronizeHToD();
     }
 
+    
     cudaSToOutputROIs(  mNbProposals, 
+                        mScoreIndex,
+                        mNbClass,
                         mNormalizeROIs.getDevicePtr(),
                         mOutputs.getDevicePtr(),
                         nbThread,

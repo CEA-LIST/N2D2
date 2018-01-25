@@ -21,15 +21,19 @@
 #ifndef N2D2_PROPOSAL_FRAME_CUDA_KERNELS_H
 #define N2D2_PROPOSAL_FRAME_CUDA_KERNELS_H
 
+#include <stdexcept>
 #include <cfloat>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
+#include "CudaUtils.hpp"
 
 namespace N2D2 {
                                             
 
 void cudaSToOutputROIs( const unsigned int nbProposals,
+                        const unsigned int scoreIdx,
+                        const unsigned int nbCls,
                         const float* ROIEst,
                         float* outputs,
                         const dim3 threadsPerBlock,
@@ -40,6 +44,8 @@ void cudaSNormalizeROIs( unsigned int inputSizeX,
                         unsigned int nbProposals,
                         unsigned int batchSize,
                         unsigned int scoreIdx,
+                        unsigned int nbCls,
+                        bool keepMax,
                         const float normX,
                         const float normY,
                         const float* means,
@@ -48,6 +54,7 @@ void cudaSNormalizeROIs( unsigned int inputSizeX,
                         float* ROIEst,
                         float* ValueEst,
                         float* outputs,
+                        float* argMax,
                         float scoreThreshold,
                         const dim3 threadsPerBlock,
                         const dim3 blocksPerGrid);

@@ -82,6 +82,7 @@ protected:
     CudaTensor4d<Float_T> mMeansCUDA;
     CudaTensor4d<Float_T> mStdCUDA; 
     CudaTensor4d<Float_T> mNormalizeROIs; 
+    CudaTensor4d<Float_T> mMaxCls; 
 
 private:
     static Registrar<ProposalCell> mRegistrar;
