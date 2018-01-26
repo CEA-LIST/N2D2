@@ -41,10 +41,12 @@ public:
         float y;
         float w;
         float h;
-
+        float cls;
         DetectedBBox() {}
-        DetectedBBox(float x_, float y_, float w_, float h_):
-            x(x_), y(y_), w(w_), h(h_) {}
+        DetectedBBox(float x_, float y_,
+                     float w_, float h_,
+                     float cls_):
+            x(x_), y(y_), w(w_), h(h_), cls(cls_) {}
     };
 
     static std::shared_ptr<Target> create(

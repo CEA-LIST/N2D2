@@ -55,14 +55,14 @@ void N2D2::TargetBBox::initialize()
         <Cell_Frame_Top>(mCell);
     const Tensor4d<Float_T>& values = targetCell->getOutputs();
  
-    if (values.dimZ() != 4) {
-        throw std::runtime_error("TargetBBox::initialize(): cell must have 4"
+    if (values.dimZ() != 4 && values.dimZ() != 5) {
+        throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
                                 " output channels for BBox TargetBBox " + mName);
     }
 
     mTargets.resize(mCell->getOutputsWidth(),
                     mCell->getOutputsHeight(),
-                    4,
+                    values.dimZ(),
                     values.dimB());
 
 }
@@ -76,6 +76,7 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
     const std::vector<int>& batch = mStimuliProvider->getBatch();
     const int nbBBoxMax = (int)mTargets.dimB()/batch.size();
     const Tensor4d<Float_T>& values = targetCell->getOutputs();
+
     mBatchDetectedBBox.assign(mTargets.dimB(), std::vector<DetectedBBox>());
 
     //#pragma omp parallel for if (mTargets.dimB() > 4)
@@ -91,13 +92,19 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
             Float_T y = value(1);
             Float_T w = value(2);
             Float_T h = value(3);
-            //std::cout << "BBox{" << x << ", " << y << ", " << w << ", " << h << "}" << std::endl;
+            Float_T cls = 0.0;   
+            if(values.dimZ() == 5)
+                cls = value(4);
+            
+            //std::cout << "BBox{" << x << ", " << y << ", " << w << ", " << h << "}[" << cls << "]" << std::endl;
 
             if(w > 0.0 && h > 0.0)
-                bbox.push_back(DetectedBBox(x, y, w ,h));
-
+                bbox.push_back(DetectedBBox(x, y, w ,h, cls));
+            
         }
+
         mBatchDetectedBBox[batchPos].resize(bbox.size());
+
         for(unsigned int i = 0; i < bbox.size(); ++i)
             mBatchDetectedBBox[batchPos][i] = bbox[i];
 
@@ -177,8 +184,11 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
                                                  it != itEnd; ++it)
     {
       
-        cv::Scalar color = cv::Scalar(0, 255, 255);
-        RectangularROI<int> bbox(0, cv::Point((*it).x, (*it).y), (*it).w, (*it).h);
+        cv::Scalar color = cv::Scalar(255 * ((*it).cls / labelsName.size()),
+                                      255 - 255*((*it).cls / labelsName.size()),
+                                      255);
+
+        RectangularROI<int> bbox( (int) (*it).cls, cv::Point((*it).x, (*it).y), (*it).w, (*it).h);
         bbox.draw(imgBB, color);
 
         // Draw legend
