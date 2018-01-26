@@ -37,7 +37,7 @@ __global__ void cudaSNormalizeROIs_kernel( unsigned int inputSizeX,
                                             float* ROIEst,
                                             float* ValueEst,
                                             float* outputs,
-                                            float* argMax,
+                                            int* argMax,
                                             float scoreThreshold)
 {
     const int batchPos = blockIdx.z*nbProposals;
@@ -69,6 +69,8 @@ __global__ void cudaSNormalizeROIs_kernel( unsigned int inputSizeX,
             indexMin = cls;
             indexMax = cls + 1;
         }
+        else
+           argMax[index + batchPos] = -1; 
 
         for(unsigned int clsIdx = indexMin; clsIdx < indexMax; ++clsIdx)
         {
@@ -145,6 +147,8 @@ __global__ void cudaSNormalizeROIs_kernel( unsigned int inputSizeX,
 __global__ void cudaSToOutput_kernel( const unsigned int nbProposals,
                                       const unsigned int scoreIdx,
                                       const unsigned int nbCls,
+                                      const unsigned int nbOutputs,
+                                      const int* maxCls,
                                       const float* ROIEst,
                                       float* outputs)
 {
@@ -154,12 +158,24 @@ __global__ void cudaSToOutput_kernel( const unsigned int nbProposals,
     if(index < nbProposals)
     {
         const unsigned int inputIdx = index*4*(nbCls - scoreIdx) 
-                                            + batchPos*4*(nbCls - scoreIdx);
+                                        + batchPos*4*(nbCls - scoreIdx);
 
-        outputs[0 + index*4 + batchPos*4] = ROIEst[0 + inputIdx];
-        outputs[1 + index*4 + batchPos*4] = ROIEst[1 + inputIdx];
-        outputs[2 + index*4 + batchPos*4] = ROIEst[2 + inputIdx];
-        outputs[3 + index*4 + batchPos*4] = ROIEst[3 + inputIdx];        
+        const unsigned int outputIdx = (nbOutputs == 4) ?
+                                        index*4 + batchPos*4
+                                        : index*5 + batchPos*5;
+
+        outputs[0 + outputIdx] = ROIEst[0 + inputIdx];
+        outputs[1 + outputIdx] = ROIEst[1 + inputIdx];
+        outputs[2 + outputIdx] = ROIEst[2 + inputIdx];
+        outputs[3 + outputIdx] = ROIEst[3 + inputIdx];
+
+        if(nbOutputs > 4)    
+        {
+            int cls = maxCls[index + batchPos];
+            outputs[4 + outputIdx] = cls > -1 ? 
+                                    (float) cls
+                                    : 0.0;
+        }
     }
 
 }
@@ -178,7 +194,7 @@ void N2D2::cudaSNormalizeROIs(unsigned int inputSizeX,
                         float* ROIEst,
                         float* ValueEst,
                         float* outputs,
-                        float* argMax,
+                        int* maxCls,
                         float scoreThreshold,
                         const dim3 threadsPerBlock,
                         const dim3 blocksPerGrid)
@@ -199,7 +215,7 @@ void N2D2::cudaSNormalizeROIs(unsigned int inputSizeX,
                                                                     ROIEst,
                                                                     ValueEst,
                                                                     outputs,
-                                                                    argMax,
+                                                                    maxCls,
                                                                     scoreThreshold);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
@@ -209,6 +225,8 @@ void N2D2::cudaSNormalizeROIs(unsigned int inputSizeX,
 void N2D2::cudaSToOutputROIs(const unsigned int nbProposals,
                              const unsigned int scoreIdx,
                              const unsigned int nbCls,
+                             const unsigned int nbOutputs,
+                             const int* maxCls,
                              const float* ROIEst,
                              float* outputs,
                              const dim3 threadsPerBlock,
@@ -218,6 +236,8 @@ void N2D2::cudaSToOutputROIs(const unsigned int nbProposals,
     cudaSToOutput_kernel<<<blocksPerGrid, threadsPerBlock>>>( nbProposals,
                                                               scoreIdx,
                                                               nbCls,
+                                                              nbOutputs,
+                                                              maxCls,
                                                               ROIEst, 
                                                               outputs);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());

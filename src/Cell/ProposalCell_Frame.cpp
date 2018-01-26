@@ -26,19 +26,19 @@ N2D2::ProposalCell_Frame::mRegistrar("Frame", N2D2::ProposalCell_Frame::create);
 
 N2D2::ProposalCell_Frame::ProposalCell_Frame(const std::string& name,
                                             StimuliProvider& sp,
+                                            const unsigned int nbOutputs,
                                             unsigned int nbProposals,
                                             unsigned int scoreIndex,
                                             unsigned int IoUIndex,
                                             bool isNms,
                                             std::vector<double> meansFactor,
                                             std::vector<double> stdFactor)
-    : Cell(name, 4),
-      ProposalCell(name, sp, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor),
-      Cell_Frame(name, 4)
+    : Cell(name, nbOutputs),
+      ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor),
+      Cell_Frame(name, nbOutputs)
 {
     // ctor
 }
-
 
 void N2D2::ProposalCell_Frame::initialize()
 {
@@ -47,15 +47,12 @@ void N2D2::ProposalCell_Frame::initialize()
                                  " ProposalCell " + mName);
     }
 
-    if (mInputs[0].dimX() * mInputs[0].dimY() * mInputs[0].dimZ() != 4) {
-        throw std::runtime_error("The first input (BBox Ref) must have a XYZ size of 4 for"
+    if (mInputs[0].dimX() * mInputs[0].dimY() * mInputs[0].dimZ() != 4 
+        && mInputs[0].dimX() * mInputs[0].dimY() * mInputs[0].dimZ() != 5) {
+        throw std::runtime_error("The first input (BBox Ref) must have a XYZ size of 4 or 5 for"
                                  " ProposalCell " + mName);
     }
-    if((mInputs[1].dimX()*mInputs[1].dimY()*mInputs[1].dimZ()) 
-        / (mInputs[2].dimX()*mInputs[2].dimY()*mInputs[2].dimZ()) != 4)
-        throw std::runtime_error("The second input and the third inputs must have the same"
-                                 " class number in ProposalCell " + mName);
-
+    
     mNbClass = mInputs[2].dimX()*mInputs[2].dimY()*mInputs[2].dimZ();
 
     std::cout << "PropocalCell::Frame " << mName << " provide " 
@@ -73,10 +70,13 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
     if(mKeepMax)
     {
         std::vector< std::vector<BBox_T> > ROIs;
+        std::vector< std::vector<unsigned int>> maxCls;
         ROIs.resize(inputBatch);
+        maxCls.resize(inputBatch);
         for(unsigned int n = 0; n < inputBatch; ++n)
         {
             ROIs[n].resize(mNbProposals);
+            maxCls[n].resize(mNbProposals);
             for (unsigned int proposal = 0; proposal < mNbProposals; ++proposal)
             {
                 const unsigned int batchPos = proposal + n*mNbProposals;
@@ -86,7 +86,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     if(mInputs[2](i, batchPos) > mInputs[2](cls, batchPos))
                         cls = i;
                 }
-
+                maxCls[n].push_back(cls);
                 const Float_T xbbRef = mInputs[0](0, batchPos)*normX;
                 const Float_T ybbRef = mInputs[0](1, batchPos)*normY;
                 const Float_T wbbRef = mInputs[0](2, batchPos)*normX;
@@ -143,7 +143,11 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 mOutputs(0, batchPos) = ROIs[n][proposal].x;
                 mOutputs(1, batchPos) = ROIs[n][proposal].y;
                 mOutputs(2, batchPos) = ROIs[n][proposal].w;
-                mOutputs(3, batchPos) = ROIs[n][proposal].h;   
+                mOutputs(3, batchPos) = ROIs[n][proposal].h; 
+
+                if(mNbOutputs == 5)
+                    mOutputs(4, batchPos) = maxCls[n][proposal];   
+
             }
         }
     }
@@ -263,6 +267,9 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     mOutputs(2, batchPos) = ROIs[n][cls][i].w;
                     mOutputs(3, batchPos) = ROIs[n][cls][i].h;   
 
+                    if(mNbOutputs == 5)
+                        mOutputs(4, batchPos) = (float) cls;   
+
                     totalIdx++;
                 }
             }
@@ -273,7 +280,10 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     mOutputs(0, batchPos) = 0.0;
                     mOutputs(1, batchPos) = 0.0;
                     mOutputs(2, batchPos) = 0.0;
-                    mOutputs(3, batchPos) = 0.0;   
+                    mOutputs(3, batchPos) = 0.0; 
+                    if(mNbOutputs == 5)
+                        mOutputs(4, batchPos) = 0.0;   
+
             }
         }
     }

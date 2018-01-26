@@ -27,15 +27,16 @@ N2D2::ProposalCell_Frame_CUDA::mRegistrar("Frame_CUDA", N2D2::ProposalCell_Frame
 
 N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const std::string& name,
                                             StimuliProvider& sp,
+                                            const unsigned int nbOutputs,
                                             unsigned int nbProposals,
                                             unsigned int scoreIndex,
                                             unsigned int IoUIndex,
                                             bool isNms,
                                             std::vector<double> meansFactor,
                                             std::vector<double> stdFactor)
-    : Cell(name, 4),
-      ProposalCell(name, sp, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor),
-      Cell_Frame_CUDA(name, 4)
+    : Cell(name, nbOutputs),
+      ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor),
+      Cell_Frame_CUDA(name, nbOutputs)
 {
     // ctor
 }
@@ -55,7 +56,7 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
     mNbClass = mInputs[2].dimX()*mInputs[2].dimY()*mInputs[2].dimZ();
     mNormalizeROIs.resize(1, 4, (mNbClass - mScoreIndex), mNbProposals*inputBatch);
     mMaxCls.resize(1, 1, 1, mNbProposals*inputBatch);
-    
+
     mMaxCls.synchronizeHToD();    
     mNormalizeROIs.synchronizeHToD();    
     mMeansCUDA.synchronizeHToD();    
@@ -97,6 +98,7 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         nbThread,
                         nbBlocks);
 
+    mMaxCls.synchronizeDToH();
 
     if(mApplyNMS)
     {
@@ -105,10 +107,6 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
         for(unsigned int n = 0; n < inputBatch; ++n)
         {
             // Non-Maximum Suppression (NMS)
-
-            if(!mKeepMax)
-                mMaxCls.synchronizeDToH();
-
             for(unsigned int cls = 0; cls < (mNbClass - mScoreIndex) ; ++cls)
             {
                 for (unsigned int i = 0; i < mNbProposals - 1;
@@ -166,6 +164,7 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                     const Float_T w = mNormalizeROIs(0, 2, cls, i + n*mNbProposals);
                     const Float_T h = mNormalizeROIs(0, 3, cls, i + n*mNbProposals);
 
+                    
                     if(w > 0.0 && h > 0.0)
                     {
                         //Erase before write
@@ -180,22 +179,23 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mNormalizeROIs(0, 2, 0, out + n*mNbProposals) = w;
                         mNormalizeROIs(0, 3, 0, out + n*mNbProposals) = h;
 
-                        if(!mKeepMax)
-                            mMaxCls(out + n*mNbProposals) = cls + mScoreIndex;
+                        mMaxCls(out + n*mNbProposals) = (int) (cls + mScoreIndex);
 
                         ++out;
                     }
                 }
             }
         }
-
         mNormalizeROIs.synchronizeHToD();
     }
 
-    
+    mMaxCls.synchronizeHToD();
+
     cudaSToOutputROIs(  mNbProposals, 
                         mScoreIndex,
                         mNbClass,
+                        mNbOutputs,
+                        mMaxCls.getDevicePtr(),
                         mNormalizeROIs.getDevicePtr(),
                         mOutputs.getDevicePtr(),
                         nbThread,

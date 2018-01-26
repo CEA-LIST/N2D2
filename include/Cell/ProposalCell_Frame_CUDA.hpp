@@ -39,6 +39,7 @@ public:
 
     ProposalCell_Frame_CUDA(const std::string& name,
                             StimuliProvider& sp,
+                            const unsigned int nbOutputs,
                             unsigned int nbProposals,
                             unsigned int scoreIndex = 0,
                             unsigned int IoUIndex = 5,
@@ -48,6 +49,7 @@ public:
 
     static std::shared_ptr<ProposalCell> create(const std::string& name,
                                           StimuliProvider& sp,
+                                          const unsigned int nbOutputs,
                                           unsigned int nbProposals,
                                           unsigned int scoreIndex = 0,
                                           unsigned int IoUIndex = 5,
@@ -57,6 +59,7 @@ public:
     {
         return std::make_shared<ProposalCell_Frame_CUDA>(name,
                                                         sp,
+                                                        nbOutputs,
                                                         nbProposals,
                                                         scoreIndex,
                                                         IoUIndex,
@@ -82,7 +85,7 @@ protected:
     CudaTensor4d<Float_T> mMeansCUDA;
     CudaTensor4d<Float_T> mStdCUDA; 
     CudaTensor4d<Float_T> mNormalizeROIs; 
-    CudaTensor4d<Float_T> mMaxCls; 
+    CudaTensor4d<int> mMaxCls; 
 
 private:
     static Registrar<ProposalCell> mRegistrar;

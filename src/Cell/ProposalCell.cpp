@@ -25,13 +25,14 @@ const char* N2D2::ProposalCell::Type = "Proposal";
 
 N2D2::ProposalCell::ProposalCell(const std::string& name,
                                  StimuliProvider& sp,
+                                 const unsigned int nbOutputs,
                                  unsigned int nbProposals,
                                  unsigned int scoreIndex,
                                  unsigned int IoUIndex,
                                  bool isNMS,
                                  std::vector<double> meanFactor,
                                  std::vector<double> stdFactor)
-    : Cell(name, 4),
+    : Cell(name, nbOutputs),
       mNMS_IoU_Threshold(this, "NMS_IoU_Threshold", 0.3),
       mScoreThreshold(this, "Score_Threshold", 0.0),
       mKeepMax(this, "KeepMaxCls", false),

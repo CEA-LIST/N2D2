@@ -45,6 +45,7 @@ public:
 
     ProposalCell_Frame(const std::string& name,
                         StimuliProvider& sp,
+                        const unsigned int nbOutputs,
                         unsigned int nbProposals,
                         unsigned int scoreIndex = 0,
                         unsigned int IoUIndex = 5,
@@ -54,6 +55,7 @@ public:
 
     static std::shared_ptr<ProposalCell> create(const std::string& name,
                                           StimuliProvider& sp,
+                                          const unsigned int nbOutputs,
                                           unsigned int nbProposals,
                                           unsigned int scoreIndex = 0,
                                           unsigned int IoUIndex = 5,
@@ -63,6 +65,7 @@ public:
     {
         return std::make_shared<ProposalCell_Frame>(name,
                                                     sp,
+                                                    nbOutputs,
                                                     nbProposals,
                                                     scoreIndex,
                                                     IoUIndex,
@@ -70,7 +73,6 @@ public:
                                                     meansFactor,
                                                     stdFactor);
     }
-
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();

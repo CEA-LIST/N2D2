@@ -47,6 +47,7 @@ public:
     typedef std::function
         <std::shared_ptr<ProposalCell>(const std::string&,
                                         StimuliProvider&,
+                                        const unsigned int,
                                         unsigned int,
                                         unsigned int,
                                         unsigned int,
@@ -64,6 +65,7 @@ public:
 
     ProposalCell(const std::string& name,
                  StimuliProvider& sp,
+                 const unsigned int nbOutputs,
                  unsigned int nbProposals,
                  unsigned int scoreIndex = 0,
                  unsigned int IoUIndex = 5,

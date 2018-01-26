@@ -49,6 +49,9 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
     const bool withNMS = iniConfig.getProperty
                                    <bool>("ApplyNMS", false);
 
+    const bool withCls = iniConfig.getProperty
+                                   <bool>("WithCls", false);
+
     const std::vector<double> meansFactor = iniConfig.getProperty
                 <std::vector<double> >("MeansFactor", std::vector<double>(4, 0.0));
 
@@ -67,11 +70,13 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
     
     std::cout << "Layer: " << section << " [Proposal(" << model << ")]"
               << std::endl;
-
+    
+    const unsigned int nbOutputs = withCls ? 5 : 4;
     // Cell construction
     std::shared_ptr<ProposalCell> cell = Registrar
         <ProposalCell>::create(model)(section,
                                 sp,
+                                nbOutputs,
                                 nbProposals,
                                 scoreIndex,
                                 IoUIndex,
