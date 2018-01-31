@@ -96,6 +96,8 @@ public:
     };
 
     bool getIsNMS() const { return mApplyNMS; };
+    bool getKeepMax() const { return mKeepMax; };
+    unsigned int getNbClass() const { return mNbClass; };
     std::vector<double> getMeanFactor() const { return mMeanFactor; };
     std::vector<double> getStdFactor() const { return mStdFactor; };
     
