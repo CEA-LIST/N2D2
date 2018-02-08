@@ -33,9 +33,11 @@ N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const std::string& name,
                                             unsigned int IoUIndex,
                                             bool isNms,
                                             std::vector<double> meansFactor,
-                                            std::vector<double> stdFactor)
+                                            std::vector<double> stdFactor,
+                                            std::vector<unsigned int> numParts,
+                                            std::vector<unsigned int> numTemplates)
     : Cell(name, nbOutputs),
-      ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor),
+      ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor, numParts, numTemplates),
       Cell_Frame_CUDA(name, nbOutputs)
 {
     // ctor
@@ -43,7 +45,7 @@ N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const std::string& name,
 
 void N2D2::ProposalCell_Frame_CUDA::initialize()
 {
-    const unsigned int inputBatch = mOutputs.dimB()/mNbProposals;
+    //const unsigned int inputBatch = mOutputs.dimB()/mNbProposals;
 
     mMeansCUDA.resize(4);
     mStdCUDA.resize(4);
@@ -54,18 +56,140 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
     }
 
     mNbClass = mInputs[2].dimX()*mInputs[2].dimY()*mInputs[2].dimZ();
-    mNormalizeROIs.resize(1, 4, (mNbClass - mScoreIndex), mNbProposals*inputBatch);
-    mMaxCls.resize(1, 1, 1, mNbProposals*inputBatch);
+    mNormalizeROIs.resize(1, 4, (mNbClass - mScoreIndex), mOutputs.dimB());
+    mMaxCls.resize(1, 1, 1, mOutputs.dimB());
 
     mMaxCls.synchronizeHToD();    
     mNormalizeROIs.synchronizeHToD();    
     mMeansCUDA.synchronizeHToD();    
     mStdCUDA.synchronizeHToD();    
 
+    if(mInputs.size() > 3)
+    {
+        mKeepIndex.resize(mOutputs.dimB()*2);
+        mKeepIndex.fill(-1);
+        if(mInputs.size() < 5)
+        {
+            if(mNumTemplates.size() != mNbClass)
+                throw std::runtime_error("Specified mNumTemplates must have"
+                                         " the same size than NbClass in "
+                                         " ProposalCell::Frame_CUDA " + mName);
+
+            mMaxTemplates = *std::max_element(mNumTemplates.begin(), 
+                                              mNumTemplates.end());
+
+            //Templates predictions need 3 output per detection 
+            mTemplatesPrediction.resize(3, 
+                                        //std::accumulate( mNumTemplates.begin(), mNumTemplates.end(), 0), 
+                                        mMaxTemplates,
+                                        mNbClass, 
+                                        mOutputs.dimB());
+            std::cout << "Layer ProposalCell::Frame_CUDA: "
+                << mName << ": Provide templates prediction" << std::endl;
+
+            mNumTemplatesPerClass.resize(mNbClass);
+            for(unsigned int i = 0 ; i < mNbClass; ++i)
+                mNumTemplatesPerClass(i) = mNumTemplates[i];
+
+            mNumTemplatesPerClass.synchronizeHToD();
+            mTemplatesPrediction.synchronizeHToD();
+
+        }
+        else if(mInputs.size() < 6)
+        {
+            if(mNumParts.size() != mNbClass)
+                throw std::runtime_error("Specified NumParts must "
+                                         "have the same size than NbClass in "
+                                         " ProposalCell::Frame_CUDA " + mName);
+            mMaxParts = *std::max_element(mNumParts.begin(), 
+                                          mNumParts.end());
+
+            //Parts predictions need 2 output per detection 
+            mPartsPrediction.resize(2,
+                                    //std::accumulate( mNumParts.begin(), mNumParts.end(), 0), 
+                                    mMaxParts,
+                                    mNbClass, 
+                                    mOutputs.dimB());
+
+            //Parts predictions visibility need 1 output per detection 
+            mPartsVisibilityPrediction.resize(1, 
+                                              //std::accumulate( mNumParts.begin(), mNumParts.end(), 0), 
+                                              mMaxParts,
+                                              mNbClass, 
+                                              mOutputs.dimB());
+            std::cout << "Layer ProposalCell::Frame_CUDA: "
+                << mName << ": Provide parts prediction" << std::endl;
+
+            mNumPartsPerClass.resize(mNbClass);
+            for(unsigned int i = 0 ; i < mNbClass; ++i)
+                mNumPartsPerClass(i) = mNumParts[i];
+
+            mNumPartsPerClass.synchronizeHToD();
+            mPartsPrediction.synchronizeHToD();
+        }
+        else if (mInputs.size() == 6)
+        {
+            if(mNumParts.size() != mNbClass)
+                throw std::runtime_error("Specified NumParts must "
+                                         "have the same size than NbClass in "
+                                         " ProposalCell::Frame_CUDA " + mName);
+
+            mMaxParts = *std::max_element(mNumParts.begin(), 
+                                          mNumParts.end());
+
+            mMaxTemplates = *std::max_element(mNumTemplates.begin(), 
+                                              mNumTemplates.end());
+
+            //Parts predictions need 2 output per detection 
+            mPartsPrediction.resize(2,
+                                    //std::accumulate( mNumParts.begin(), mNumParts.end(), 0), 
+                                    mMaxParts,
+                                    mNbClass, 
+                                    mOutputs.dimB());
+
+            //Parts predictions visibility need 1 output per detection 
+            mPartsVisibilityPrediction.resize(1,
+                                            //std::accumulate( mNumParts.begin(), mNumParts.end(), 0), 
+                                              mMaxParts,
+                                              mNbClass, 
+                                              mOutputs.dimB());
+
+            if(mNumTemplates.size() != mNbClass)
+                throw std::runtime_error("Specified mNumTemplates must have"
+                                         " the same size than NbClass in "
+                                         " ProposalCell::Frame_CUDA " + mName);
+
+            //Templates predictions need 3 output per detection 
+            mTemplatesPrediction.resize(3, 
+                                        //std::accumulate( mNumTemplates.begin(), mNumTemplates.end(), 0), 
+                                        mMaxTemplates,
+                                        mNbClass, 
+                                        mOutputs.dimB());
+            std::cout << "Layer ProposalCell::Frame_CUDA: "
+                << mName << ": Provide parts and templates prediction" << std::endl;
+
+            mNumPartsPerClass.resize(mNbClass);
+            mNumTemplatesPerClass.resize(mNbClass);
+            for(unsigned int i = 0 ; i < mNbClass; ++i)
+            {
+                mNumPartsPerClass(i) = mNumParts[i];
+                mNumTemplatesPerClass(i) = mNumTemplates[i];
+            }
+            mNumPartsPerClass.synchronizeHToD();
+            mNumTemplatesPerClass.synchronizeHToD();
+            mPartsPrediction.synchronizeHToD();
+            mTemplatesPrediction.synchronizeHToD();
+
+        }
+        else
+            throw std::runtime_error("Too much entry for ProposalCell::Frame_CUDA: " + mName);      
+
+        //mKeepIndex.synchronizeHToD();
+    }
+
     std::cout << "PropocalCell::Frame " << mName << " provide " 
-            <<  mNbClass << " class" << std::endl;
-
-
+            <<  mNbClass << " class\n"
+            << std::endl;
 }
 
 void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
@@ -78,30 +202,48 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
     const dim3 nbThread = {32, 1 , 1};
     const dim3 nbBlocks = {blockSize, 1 , inputBatch};
 
+
     cudaSNormalizeROIs( mInputs[0].dimX(),
                         mInputs[0].dimY(), 
                         mNbProposals, 
                         inputBatch, 
                         mScoreIndex,
                         mNbClass,
+
+                        mMaxParts,
+                        mMaxTemplates,
                         mKeepMax,
+                        mMaxParts > 0 ? true : false,
+                        mMaxTemplates > 0 ? true : false,
+                        
                         normX,
                         normY,
                         mMeansCUDA.getDevicePtr(),
                         mStdCUDA.getDevicePtr(),
+                        mNumPartsPerClass.getDevicePtr(),
+                        mNumTemplatesPerClass.getDevicePtr(),
                         mInputs[0].getDevicePtr(), 
                         mInputs[1].getDevicePtr(),
                         mInputs[2].getDevicePtr(),
+                        (mMaxParts > 0 || mMaxTemplates > 0)  ? mInputs[3].getDevicePtr() 
+                        : mInputs[2].getDevicePtr(),
+                        mMaxParts > 0 ? mInputs[4].getDevicePtr() 
+                        : mInputs[2].getDevicePtr(),
+                        (mMaxParts > 0 && mMaxTemplates > 0) ? mInputs[5].getDevicePtr()
+                        : mInputs[2].getDevicePtr(),
                         mNormalizeROIs.getDevicePtr(),
                         mMaxCls.getDevicePtr(),
+                        mPartsPrediction.getDevicePtr(),
+                        mTemplatesPrediction.getDevicePtr(),
                         mScoreThreshold,
                         nbThread,
                         nbBlocks);
 
-    mMaxCls.synchronizeDToH();
+
 
     if(mApplyNMS)
     {
+        mMaxCls.synchronizeDToH();
         mNormalizeROIs.synchronizeDToH();
 
         for(unsigned int n = 0; n < inputBatch; ++n)
@@ -178,25 +320,35 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mNormalizeROIs(0, 1, 0, out + n*mNbProposals) = y;
                         mNormalizeROIs(0, 2, 0, out + n*mNbProposals) = w;
                         mNormalizeROIs(0, 3, 0, out + n*mNbProposals) = h;
-
                         mMaxCls(out + n*mNbProposals) = (int) (cls + mScoreIndex);
 
+                        mKeepIndex(out*2 + 0) = i;
+                        mKeepIndex(out*2 + 1) = cls + mScoreIndex;
                         ++out;
                     }
                 }
             }
         }
         mNormalizeROIs.synchronizeHToD();
+        mMaxCls.synchronizeHToD();
+        mKeepIndex.synchronizeHToD();
     }
-
-    mMaxCls.synchronizeHToD();
 
     cudaSToOutputROIs(  mNbProposals, 
                         mScoreIndex,
                         mNbClass,
                         mNbOutputs,
+                        mMaxParts,
+                        mMaxTemplates,
+                        mMaxParts > 0 ? true: false,
+                        mMaxTemplates > 0 ? true: false,
+                        mNumPartsPerClass.getDevicePtr(),
+                        mNumTemplatesPerClass.getDevicePtr(),
                         mMaxCls.getDevicePtr(),
                         mNormalizeROIs.getDevicePtr(),
+                        mKeepIndex.getDevicePtr(),
+                        mPartsPrediction.getDevicePtr(),
+                        mTemplatesPrediction.getDevicePtr(),
                         mOutputs.getDevicePtr(),
                         nbThread,
                         nbBlocks);

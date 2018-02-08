@@ -45,7 +45,9 @@ public:
                             unsigned int IoUIndex = 5,
                             bool isNms = false,
                             std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                            std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0});
+                            std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
+                            std::vector<unsigned int> numParts = {},
+                            std::vector<unsigned int> numTemplates = {});
 
     static std::shared_ptr<ProposalCell> create(const std::string& name,
                                           StimuliProvider& sp,
@@ -55,7 +57,9 @@ public:
                                           unsigned int IoUIndex = 5,
                                           bool isNms = false,
                                           std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                                          std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0})
+                                          std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
+                                          std::vector<unsigned int> numParts = {},
+                                          std::vector<unsigned int> numTemplates = {})
     {
         return std::make_shared<ProposalCell_Frame_CUDA>(name,
                                                         sp,
@@ -65,7 +69,9 @@ public:
                                                         IoUIndex,
                                                         isNms,
                                                         meansFactor,
-                                                        stdFactor);
+                                                        stdFactor,
+                                                        numParts,
+                                                        numTemplates);
     }
 
     virtual void initialize();
@@ -86,6 +92,15 @@ protected:
     CudaTensor4d<Float_T> mStdCUDA; 
     CudaTensor4d<Float_T> mNormalizeROIs; 
     CudaTensor4d<int> mMaxCls; 
+
+    CudaTensor4d<Float_T> mPartsPrediction;
+    CudaTensor4d<int> mNumPartsPerClass;
+    CudaTensor4d<int> mPartsVisibilityPrediction;
+
+    CudaTensor4d<Float_T> mTemplatesPrediction;
+    CudaTensor4d<int> mNumTemplatesPerClass;
+    CudaTensor4d<int> mKeepIndex;
+
 
 private:
     static Registrar<ProposalCell> mRegistrar;

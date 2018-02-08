@@ -51,7 +51,9 @@ public:
                         unsigned int IoUIndex = 5,
                         bool isNms = false,
                         std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                        std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0});
+                        std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
+                        std::vector<unsigned int> numParts = {},
+                        std::vector<unsigned int> numTemplates = {});
 
     static std::shared_ptr<ProposalCell> create(const std::string& name,
                                           StimuliProvider& sp,
@@ -61,7 +63,9 @@ public:
                                           unsigned int IoUIndex = 5,
                                           bool isNms = false,
                                           std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                                          std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0})
+                                          std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
+                                          std::vector<unsigned int> numParts = {},
+                                          std::vector<unsigned int> numTemplates = {})
     {
         return std::make_shared<ProposalCell_Frame>(name,
                                                     sp,
@@ -71,7 +75,9 @@ public:
                                                     IoUIndex,
                                                     isNms,
                                                     meansFactor,
-                                                    stdFactor);
+                                                    stdFactor,
+                                                    numParts,
+                                                    numTemplates);
     }
     virtual void initialize();
     virtual void propagate(bool inference = false);
@@ -83,6 +89,8 @@ public:
     // parameter to
     // discretize
     virtual ~ProposalCell_Frame() {};
+    Tensor4d<Float_T> mPartsPrediction;
+    Tensor4d<Float_T> mTemplatesPrediction;
 
 protected:
     virtual void setOutputsSize();

@@ -31,7 +31,9 @@ N2D2::ProposalCell::ProposalCell(const std::string& name,
                                  unsigned int IoUIndex,
                                  bool isNMS,
                                  std::vector<double> meanFactor,
-                                 std::vector<double> stdFactor)
+                                 std::vector<double> stdFactor,
+                                 std::vector<unsigned int> numParts,
+                                 std::vector<unsigned int> numTemplates)
     : Cell(name, nbOutputs),
       mNMS_IoU_Threshold(this, "NMS_IoU_Threshold", 0.3),
       mScoreThreshold(this, "Score_Threshold", 0.0),
@@ -42,7 +44,9 @@ N2D2::ProposalCell::ProposalCell(const std::string& name,
       mIoUIndex(IoUIndex),
       mApplyNMS(isNMS),
       mMeanFactor(meanFactor),
-      mStdFactor(stdFactor)
+      mStdFactor(stdFactor),
+      mNumParts(numParts),
+      mNumTemplates(numTemplates)
 {
 
 }

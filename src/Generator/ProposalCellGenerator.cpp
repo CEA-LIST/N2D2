@@ -67,11 +67,25 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
         throw std::runtime_error(
             "Cell model \"" + model + "\" is not valid in section [StdFactor]"
             " in network configuration file: " + iniConfig.getFileName() + " StdFactor must have a size of 4");
-    
+
+    const std::vector<unsigned int> partsPerCls = iniConfig.getProperty
+                <std::vector<unsigned int> >("NumParts", std::vector<unsigned int>(0, 0));
+
+    const std::vector<unsigned int> templatesPerCls = iniConfig.getProperty
+                <std::vector<unsigned int> >("NumTemplates", std::vector<unsigned int>(0, 0));
+
     std::cout << "Layer: " << section << " [Proposal(" << model << ")]"
               << std::endl;
-    
-    const unsigned int nbOutputs = withCls ? 5 : 4;
+    unsigned int nbOutputParts = 0;
+    unsigned int nbOutputTemplates = 0;
+
+    if(partsPerCls.size() > 0)
+        nbOutputParts = (*std::max_element(partsPerCls.begin(), partsPerCls.end()))*2;
+
+    if(templatesPerCls.size() > 0)
+        nbOutputTemplates = (*std::max_element(templatesPerCls.begin(), templatesPerCls.end()))*3;
+
+    const unsigned int nbOutputs = withCls ? 5 + nbOutputParts + nbOutputTemplates : 4;
     // Cell construction
     std::shared_ptr<ProposalCell> cell = Registrar
         <ProposalCell>::create(model)(section,
@@ -82,7 +96,9 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
                                 IoUIndex,
                                 withNMS,
                                 meansFactor,
-                                stdFactor);
+                                stdFactor,
+                                partsPerCls,
+                                templatesPerCls);
 
     if (!cell) {
         throw std::runtime_error(
