@@ -56,8 +56,10 @@ void N2D2::TargetBBox::initialize()
     const Tensor4d<Float_T>& values = targetCell->getOutputs();
  
     if (values.dimZ() != 4 && values.dimZ() != 5) {
-        throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
-                                " output channels for BBox TargetBBox " + mName);
+        //throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
+        //                        " output channels for BBox TargetBBox " + mName);
+
+        std::cout << "Target BBOX" << std::endl;
     }
 
     mTargets.resize(mCell->getOutputsWidth(),
@@ -93,14 +95,21 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
             Float_T w = value(2);
             Float_T h = value(3);
             Float_T cls = 0.0;   
-            if(values.dimZ() == 5)
+            if(values.dimZ() > 4)
                 cls = value(4);
             
-            //std::cout << "BBox{" << x << ", " << y << ", " << w << ", " << h << "}[" << cls << "]" << std::endl;
-
+            std::cout << "BBox{" << x << ", " << y << ", " << w << ", " << h << "}[" << cls << "]" << std::endl;
             if(w > 0.0 && h > 0.0)
+            {
                 bbox.push_back(DetectedBBox(x, y, w ,h, cls));
-            
+                if(values.dimZ() > 5)
+                {
+                    std::cout << "{";
+                    for(unsigned int p = 5; p < values.dimZ(); ++p)
+                        std::cout << value(p) << " ";
+                    std::cout << "}" << std::endl;
+                }
+            }  
         }
 
         mBatchDetectedBBox[batchPos].resize(bbox.size());
