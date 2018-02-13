@@ -27,7 +27,7 @@ import re
 from tensorflow.python import pywrap_tensorflow
 
 def exportFreeParameters(modelName, targetDir):
-    numpy.set_printoptions(threshold=numpy.inf)
+    numpy.set_printoptions(threshold=numpy.inf, precision=12)
 
     if not os.path.exists(targetDir):
         os.makedirs(targetDir)
