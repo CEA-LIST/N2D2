@@ -27,9 +27,9 @@ cudaSclamp_kernel(float* x, unsigned int size, float minVal, float maxVal)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        x[index] = (x[index] < minVal) ? minVal : (x[index] > maxVal)
-                                                      ? maxVal
-                                                      : x[index];
+        x[i] = (x[i] < minVal) ? minVal :
+               (x[i] > maxVal) ? maxVal :
+                                 x[i];
     }
 }
 
@@ -42,10 +42,10 @@ __global__ void cudaSquantize_kernel(float* y,
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        y[index] = (quantizationLevels > 1)
-                       ? (int)round((quantizationLevels - 1) * x[index])
+        y[i] = (quantizationLevels > 1)
+                       ? (int)round((quantizationLevels - 1) * x[i])
                          / (float)(quantizationLevels - 1)
-                       : ((x[index] >= 0) ? 1 : -1);
+                       : ((x[i] >= 0) ? 1 : -1);
     }
 }
 
@@ -56,9 +56,9 @@ cudaDclamp_kernel(double* x, unsigned int size, double minVal, double maxVal)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        x[index] = (x[index] < minVal) ? minVal : (x[index] > maxVal)
-                                                      ? maxVal
-                                                      : x[index];
+        x[i] = (x[i] < minVal) ? minVal :
+               (x[i] > maxVal) ? maxVal :
+                                 x[i];
     }
 }
 
@@ -71,10 +71,10 @@ __global__ void cudaDquantize_kernel(double* y,
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        y[index] = (quantizationLevels > 1)
-                       ? (int)round((quantizationLevels - 1) * x[index])
+        y[i] = (quantizationLevels > 1)
+                       ? (int)round((quantizationLevels - 1) * x[i])
                          / (double)(quantizationLevels - 1)
-                       : ((x[index] >= 0) ? 1 : -1);
+                       : ((x[i] >= 0) ? 1 : -1);
     }
 }
 

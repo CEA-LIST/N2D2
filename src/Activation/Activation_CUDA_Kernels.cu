@@ -32,15 +32,14 @@ __global__ void cudaSRectifier_propagate_kernel(float* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            x[index] /= (1 << shifting);
+            x[i] /= (1 << shifting);
         else if (shifting < 0)
-            x[index] *= (1 << (-shifting));
+            x[i] *= (1 << (-shifting));
 
         if (clipping > 0.0)
-            x[index] = (x[index] > 0.0f) ? min(x[index], clipping) : leakSlope
-                                                                     * x[index];
+            x[i] = (x[i] > 0.0f) ? min(x[i], clipping) : leakSlope * x[i];
         else
-            x[index] = (x[index] > 0.0f) ? x[index] : leakSlope * x[index];
+            x[i] = (x[i] > 0.0f) ? x[i] : leakSlope * x[i];
     }
 }
 
@@ -55,15 +54,14 @@ __global__ void cudaDRectifier_propagate_kernel(double* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            x[index] /= (1 << shifting);
+            x[i] /= (1 << shifting);
         else if (shifting < 0)
-            x[index] *= (1 << (-shifting));
+            x[i] *= (1 << (-shifting));
 
         if (clipping > 0.0)
-            x[index] = (x[index] > 0.0) ? min(x[index], clipping) : leakSlope
-                                                                    * x[index];
+            x[i] = (x[i] > 0.0) ? min(x[i], clipping) : leakSlope * x[i];
         else
-            x[index] = (x[index] > 0.0) ? x[index] : leakSlope * x[index];
+            x[i] = (x[i] > 0.0) ? x[i] : leakSlope * x[i];
     }
 }
 
@@ -79,17 +77,17 @@ __global__ void cudaSRectifier_backPropagate_kernel(float* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            dx[index] /= (1 << shifting);
+            dx[i] /= (1 << shifting);
         else if (shifting < 0)
-            dx[index] *= (1 << (-shifting));
+            dx[i] *= (1 << (-shifting));
 
         if (clipping > 0.0) {
-            dx[index] *= (x[index] > clipping) ? 0.0f : (x[index] > 0.0f)
-                                                            ? 1.0f
-                                                            : leakSlope;
+            dx[i] *= (x[i] > clipping) ? 0.0f : (x[i] > 0.0f)
+                                       ? 1.0f
+                                       : leakSlope;
         }
         else
-            dx[index] *= (x[index] > 0.0f) ? 1.0f : leakSlope;
+            dx[i] *= (x[i] > 0.0f) ? 1.0f : leakSlope;
     }
 }
 
@@ -105,17 +103,17 @@ __global__ void cudaDRectifier_backPropagate_kernel(double* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            dx[index] /= (1 << shifting);
+            dx[i] /= (1 << shifting);
         else if (shifting < 0)
-            dx[index] *= (1 << (-shifting));
+            dx[i] *= (1 << (-shifting));
 
         if (clipping > 0.0) {
-            dx[index] *= (x[index] > clipping) ? 0.0 : (x[index] > 0.0)
-                                                           ? 1.0
-                                                           : leakSlope;
+            dx[i] *= (x[i] > clipping) ? 0.0 : (x[i] > 0.0)
+                                       ? 1.0
+                                       : leakSlope;
         }
         else
-            dx[index] *= (x[index] > 0.0) ? 1.0 : leakSlope;
+            dx[i] *= (x[i] > 0.0) ? 1.0 : leakSlope;
     }
 }
 
@@ -130,13 +128,13 @@ __global__ void cudaSSaturation_propagate_kernel(float* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            x[index] /= (1 << shifting);
+            x[i] /= (1 << shifting);
         else if (shifting < 0)
-            x[index] *= (1 << (-shifting));
+            x[i] *= (1 << (-shifting));
 
-        x[index] = (x[index] < -threshold) ? -threshold
-                 : (x[index] > threshold) ? threshold
-                 : x[index];
+        x[i] = (x[i] < -threshold) ? -threshold
+             : (x[i] > threshold) ? threshold
+             : x[i];
     }
 }
 
@@ -150,13 +148,13 @@ __global__ void cudaDSaturation_propagate_kernel(double* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            x[index] /= (1 << shifting);
+            x[i] /= (1 << shifting);
         else if (shifting < 0)
-            x[index] *= (1 << (-shifting));
+            x[i] *= (1 << (-shifting));
 
-        x[index] = (x[index] < -threshold) ? -threshold
-                 : (x[index] > threshold) ? threshold
-                 : x[index];
+        x[i] = (x[i] < -threshold) ? -threshold
+             : (x[i] > threshold) ? threshold
+             : x[i];
     }
 }
 
@@ -172,11 +170,11 @@ cudaSSaturation_backPropagate_kernel(float* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            dx[index] /= (1 << shifting);
+            dx[i] /= (1 << shifting);
         else if (shifting < 0)
-            dx[index] *= (1 << (-shifting));
+            dx[i] *= (1 << (-shifting));
 
-        dx[index] *= (x[index] > -threshold && x[index] < threshold)
+        dx[i] *= (x[i] > -threshold && x[i] < threshold)
             ? 1.0f : 0.0f;
     }
 }
@@ -193,11 +191,11 @@ cudaDSaturation_backPropagate_kernel(double* x,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (shifting > 0)
-            dx[index] /= (1 << shifting);
+            dx[i] /= (1 << shifting);
         else if (shifting < 0)
-            dx[index] *= (1 << (-shifting));
+            dx[i] *= (1 << (-shifting));
 
-        dx[index] *= (x[index] > -threshold && x[index] < threshold)
+        dx[i] *= (x[i] > -threshold && x[i] < threshold)
             ? 1.0 : 0.0;
     }
 }
@@ -209,7 +207,7 @@ __global__ void cudaSSoftplus_propagate_kernel(float* x, unsigned int size)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        x[index] = log(1.0f + exp(x[index]));
+        x[i] = log(1.0f + exp(x[i]));
     }
 }
 
@@ -219,7 +217,7 @@ __global__ void cudaDSoftplus_propagate_kernel(double* x, unsigned int size)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        x[index] = log(1.0 + exp(x[index]));
+        x[i] = log(1.0 + exp(x[i]));
     }
 }
 
@@ -230,7 +228,7 @@ cudaSSoftplus_backPropagate_kernel(float* x, float* dx, unsigned int size)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        dx[index] *= (1.0f - exp(-x[index]));
+        dx[i] *= (1.0f - exp(-x[i]));
     }
 }
 
@@ -241,7 +239,7 @@ cudaDSoftplus_backPropagate_kernel(double* x, double* dx, unsigned int size)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        dx[index] *= (1.0 - exp(-x[index]));
+        dx[i] *= (1.0 - exp(-x[i]));
     }
 }
 
