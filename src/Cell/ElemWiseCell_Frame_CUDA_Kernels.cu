@@ -54,20 +54,20 @@ __global__ void cudaSMult_kernel(unsigned int size,
 
 __global__ void cudaSScale_kernel(unsigned int size,
                                   float* input,
-                                  float* scale,
+                                  const float scale,
                                   float* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride)
-        result[i] = input[i] * (*scale);
+        result[i] = input[i] * scale;
 }
 
 __global__ void cudaSMaxForward_kernel(unsigned int size,
                                        float* input,
                                        float* maxVal,
-                                       unsigned int idx,
+                                       const unsigned int idx,
                                        unsigned int* argMax)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -83,7 +83,7 @@ __global__ void cudaSMaxForward_kernel(unsigned int size,
 
 __global__ void cudaSMaxBackward_kernel(unsigned int size,
                                         float* diffInput,
-                                        unsigned int idx,
+                                        const unsigned int idx,
                                         unsigned int* argMax,
                                         float* result)
 {
@@ -120,7 +120,7 @@ void N2D2::cudaSMult(unsigned int size,
 
 void N2D2::cudaSScale(unsigned int size,
                       float* input,
-                      float* scale,
+                      const float scale,
                       float* result)
 {
     cudaSScale_kernel<<<(size + 255) / 256, 256>>>(size, input, scale, result);
@@ -130,7 +130,7 @@ void N2D2::cudaSScale(unsigned int size,
 void N2D2::cudaSMaxForward(unsigned int size,
                            float* input,
                            float* maxVal,
-                           unsigned int idx,
+                           const unsigned int idx,
                            unsigned int* argMax)
 {
     cudaSMaxForward_kernel<<<(size + 255) / 256, 256>>>(size,
@@ -143,7 +143,7 @@ void N2D2::cudaSMaxForward(unsigned int size,
 
 void N2D2::cudaSMaxBackward(unsigned int size,
                             float* diffInput,
-                            unsigned int idx,
+                            const unsigned int idx,
                             unsigned int* argMax,
                             float* result)
 {

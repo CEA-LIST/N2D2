@@ -76,7 +76,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
         // mOutputs <- mWeights[0] * mInputs[0]
         cudaSScale(nbElems,
                    mInputs[0].getDevicePtr(),
-                   &(mWeights[0]),
+                   mWeights[0],
                    mOutputs.getDevicePtr());
 
         for (unsigned int k = 1; k < nbInputs; ++k) {
@@ -169,7 +169,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                 // mDiffOutputs[k] <- mWeights[k] * mDiffInputs
                 cudaSScale(nbElems,
                            mDiffInputs.getDevicePtr(),
-                           &(mWeights[k]),
+                           mWeights[k],
                            mDiffOutputs[k].getDevicePtr());
             }
         }
