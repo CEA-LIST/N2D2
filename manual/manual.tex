@@ -956,15 +956,23 @@ Other program options related to the exports:
  \hline
  Option [default value] & Description\\
  \hline\hline
-  \lstinline!-uenv! & If present, treat the input stimuli data as unsigned \\
   \lstinline!-nbbits! [8] & Number of bits for the weights and signals.
   Must be 8, 16, 32 or 64 for integer export, or -32, -64 for floating
   point export. The number of bits can be arbitrary for the \lstinline!C_HLS!
   export (for example, 6 bits) \\
+  \lstinline!-calib! [0] & Number of stimuli used for the calibration.
+  0 = no calibration (default),
+  -1 = use the full test dataset for calibration \\
+  \lstinline!-calib-passes! [2] & Number of KL passes for determining the layer
+  output values distribution truncation threshold (0 = use the max. value,
+  no truncation) \\
+  \lstinline!-no-unsigned! & If present, disable the use of unsigned data type
+  in integer exports \\
+  \lstinline!-db-export! [-1] & Max. number of stimuli to export
+  (0 = no dataset export, -1 = unlimited) \\
  \hline
 \end{tabular}
 \end{center}
-
 
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!C! export\protect\iponly}{C export}}
@@ -3752,6 +3760,29 @@ area \\
    & \lstinline!Mapping(in).OffsetY!) \\
   \lstinline!Mapping(in).NbIterations! [0] & Mapping canvas pattern default
   number of iterations for input layer \lstinline!in! (0 means no limit) \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!ElemWise!}{ElemWise}}
+Element-wise operation layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+  \cellcolor{requiredcolor}\lstinline!Operation! & Type of operation
+  (\lstinline!Sum!, \lstinline!Prod!, or \lstinline!Max!)\\
+  \lstinline!Weights! [] & Weights for the \lstinline!Sum! operation, in the
+  same order as the inputs \\
+  \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
+  Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
+  \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
+  \lstinline!Linear!, \lstinline!Saturation! or \lstinline!Tanh! \\
  \hline
 \end{longtable}
 \end{center}
