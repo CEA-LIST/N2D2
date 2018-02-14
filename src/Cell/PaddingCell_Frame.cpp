@@ -25,11 +25,20 @@ N2D2::PaddingCell_Frame::mRegistrar("Frame",
                                      N2D2::PaddingCell_Frame::create);
 
 N2D2::PaddingCell_Frame::PaddingCell_Frame(const std::string& name,
-                                             unsigned int nbOutputs)
+                                            unsigned int nbOutputs,
+                                            int topPad,
+                                            int botPad,
+                                            int leftPad,
+                                            int rightPad)
     : Cell(name, nbOutputs),
-      PaddingCell(name, nbOutputs),
+      PaddingCell(name, 
+                  nbOutputs,
+                  topPad,
+                  botPad,
+                  leftPad,
+                  rightPad),
       Cell_Frame(name, nbOutputs),
-      mPaddingDesc(0, 0, 0, 0)
+      mPaddingDesc(mLeftPad, mRightPad, mTopPad, mBotPad)
 
 {
     // ctor
@@ -60,11 +69,6 @@ void N2D2::PaddingCell_Frame::initialize()
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }   
-
-    mPaddingDesc.leftPad = mLeftPad;
-    mPaddingDesc.rightPad = mRightPad;
-    mPaddingDesc.topPad = mTopPad;
-    mPaddingDesc.botPad = mBotPad;
 }
 
 void N2D2::PaddingCell_Frame::propagate(bool /*inference*/)
@@ -77,23 +81,78 @@ void N2D2::PaddingCell_Frame::propagate(bool /*inference*/)
 
         PaddingCell_Frame_Kernels::forward( mInputs[k],
                                             mPaddingDesc,
+                                            mInputs[k].dimZ(),
+                                            0,
+                                            offset,
                                             mOutputs);
 
         offset += mInputs[k].dimZ();
     }
 
+    Cell_Frame::propagate();
     mDiffInputs.clearValid();
-
 }
 
 void N2D2::PaddingCell_Frame::backPropagate()
 {
+    if (mDiffOutputs.empty())
+        return;
 
+    Cell_Frame::backPropagate();
+
+    unsigned int offset = 0;
+
+    PaddingCell_Frame_Kernels::Descriptor 
+            backwardPaddingDesc(-mPaddingDesc.leftPad,
+                                -mPaddingDesc.rightPad,
+                                -mPaddingDesc.topPad,
+                                -mPaddingDesc.botPad);
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+
+        PaddingCell_Frame_Kernels::forward( mDiffInputs,
+                                            backwardPaddingDesc,
+                                            mDiffOutputs[k].dimZ(),
+                                            offset,
+                                            0,
+                                            mDiffOutputs[k]);
+
+        offset += mDiffOutputs[k].dimZ();
+
+        mDiffOutputs[k].setValid();
+    }
+
+    mDiffOutputs.synchronizeHToD();
 }
 
 void N2D2::PaddingCell_Frame::update()
 {
 }
+
+
+void N2D2::PaddingCell_Frame::checkGradient(double epsilon, double maxError)
+{
+    GradientCheck gc(epsilon, maxError);
+    gc.initialize(mInputs,
+                  mOutputs,
+                  mDiffInputs,
+                  std::bind(&PaddingCell_Frame::propagate, this, false),
+                  std::bind(&PaddingCell_Frame::backPropagate, this));
+
+    if (!mDiffOutputs.empty()) {
+        for (unsigned int in = 0; in < mInputs.size(); ++in) {
+            std::stringstream name;
+            name << mName + "_mDiffOutputs[" << in << "]";
+
+            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+        }
+    } else {
+        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
+                  << ", could not check the gradient!" << Utils::cdef
+                  << std::endl;
+    }
+}
+
 
 N2D2::PaddingCell_Frame::~PaddingCell_Frame()
 {

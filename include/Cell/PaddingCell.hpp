@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2017 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): David BRIAND (david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -41,7 +41,12 @@ namespace N2D2 {
 class PaddingCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<PaddingCell>(const std::string&, unsigned int)>
+        <std::shared_ptr<PaddingCell>(const std::string&, 
+                                      unsigned int,
+                                      int,
+                                      int,
+                                      int,
+                                      int)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -51,7 +56,12 @@ public:
     }
     static const char* Type;
 
-    PaddingCell(const std::string& name, unsigned int nbOutputs);
+    PaddingCell(const std::string& name, 
+                unsigned int nbOutputs,
+                int topPad,
+                int botPad,
+                int leftPad,
+                int rightPad);
     
     const char* getType() const
     {
@@ -83,10 +93,10 @@ public:
 protected:
     virtual void setOutputsSize();
     
-    void setTopPad (int pad) { mTopPad = pad; };
-    void setBotPad (int pad) { mBotPad = pad; };
-    void setLeftPad (int pad) { mLeftPad = pad; };
-    void setRightPad (int pad) { mRightPad = pad; };
+    //void setTopPad (int pad) { mTopPad = pad; };
+    //void setBotPad (int pad) { mBotPad = pad; };
+    //void setLeftPad (int pad) { mLeftPad = pad; };
+    //void setRightPad (int pad) { mRightPad = pad; };
 
     //PaddingCell can be useful to implement asymetric padding///
     /*
@@ -104,11 +114,11 @@ protected:
             00000000000000000000000
     */
 
-    Parameter<int> mTopPad;
-    Parameter<int> mBotPad;
+    const int mTopPad;
+    const int mBotPad;
+    const int mLeftPad;
+    const int mRightPad;
 
-    Parameter<int> mLeftPad;
-    Parameter<int> mRightPad;
 };
 }
 

@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2017 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): David BRIAND (david.briand@cea.fr)
 
 
@@ -38,19 +38,33 @@
 namespace N2D2 {
 class PaddingCell_Frame_CUDA : public virtual PaddingCell, public Cell_Frame_CUDA {
 public:
-    PaddingCell_Frame_CUDA(const std::string& name, unsigned int nbOutputs);
+    PaddingCell_Frame_CUDA(const std::string& name, 
+                           unsigned int nbOutputs,
+                           int topPad,
+                           int botPad,
+                           int leftPad,
+                           int rightPad);
     static std::shared_ptr<PaddingCell> create(const std::string& name,
-                                           unsigned int nbOutputs)
+                                                unsigned int nbOutputs,
+                                                int topPad = 0,
+                                                int botPad = 0,
+                                                int leftPad = 0,
+                                                int rightPad = 0)
     {
-        return std::make_shared<PaddingCell_Frame_CUDA>(name, nbOutputs);
+        return std::make_shared<PaddingCell_Frame_CUDA>(name, 
+                                                        nbOutputs,
+                                                        topPad,
+                                                        botPad,
+                                                        leftPad,
+                                                        rightPad);
     }
 
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    void checkGradient(double /*epsilon*/ = 1.0e-4,
-                       double /*maxError*/ = 1.0e-6) {};
+    void checkGradient(double epsilon = 1.0e-4,
+                       double maxError = 1.0e-6);
     void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
     // parameter to
     // discretize

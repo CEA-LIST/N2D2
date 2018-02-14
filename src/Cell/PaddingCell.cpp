@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): David BRIAND (david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -22,12 +22,18 @@
 
 const char* N2D2::PaddingCell::Type = "Padding";
 
-N2D2::PaddingCell::PaddingCell(const std::string& name, unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      mTopPad(this, "TopPadding", 0),
-      mBotPad(this, "BottomPadding", 0),
-      mLeftPad(this, "LeftPadding", 0),
-      mRightPad(this, "RightPadding", 0)
+N2D2::PaddingCell::PaddingCell(const std::string& name, 
+                               unsigned int nbOutputs,
+                               int topPad,
+                               int botPad,
+                               int leftPad,
+                               int rightPad)
+    : Cell( name, 
+            nbOutputs),
+      mTopPad(topPad),
+      mBotPad(botPad),
+      mLeftPad(leftPad),
+      mRightPad(rightPad)
 {
     // ctor
 }

@@ -37,6 +37,16 @@ N2D2::PaddingCellGenerator::generate(Network& /*network*/,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+
+    const int topPad = iniConfig.getProperty
+                                   <int>("TopPadding");
+    const int botPad = iniConfig.getProperty
+                                    <int>("BottomPadding");
+    const int leftPad = iniConfig.getProperty
+                                   <int>("LeftPadding");
+    const int rightPad = iniConfig.getProperty
+                                    <int>("RightPadding");
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
 
@@ -44,7 +54,12 @@ N2D2::PaddingCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<PaddingCell> cell = Registrar
-        <PaddingCell>::create(model)(section, nbOutputs);
+        <PaddingCell>::create(model)(section, 
+                                     nbOutputs,
+                                     topPad,
+                                     botPad,
+                                     leftPad,
+                                     rightPad);
 
     if (!cell) {
         throw std::runtime_error(

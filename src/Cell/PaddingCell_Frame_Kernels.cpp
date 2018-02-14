@@ -22,6 +22,9 @@
 
 void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor4d<Float_T>& inputs,
                                            const Descriptor& desc,
+                                           const unsigned int nbChannels,
+                                           const unsigned int inputOffset,
+                                           const unsigned int outputOffset,
                                            Tensor4d<Float_T>& outputs)
 {
     const unsigned int size = inputs.dimB() * outputs.dimZ();
@@ -32,7 +35,7 @@ void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor4d<Float_T>& inputs,
 #pragma omp parallel for if (inputs.dimB() > 4 && size > 16)
 #endif
     for (int batchPos = 0; batchPos < (int)inputs.dimB(); ++batchPos) {
-        for (unsigned int output = 0; output < inputs.dimZ(); ++output) {
+        for (unsigned int output = 0; output < nbChannels; ++output) {
             for (unsigned int oy = 0; oy < outputs.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs.dimX(); ++ox) {
                     
@@ -46,13 +49,16 @@ void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor4d<Float_T>& inputs,
                     {
                         outputValue = inputs(ix,
                                              iy, 
-                                             output,
+                                             output + inputOffset,
                                              batchPos);
 
                     }
 
 #pragma omp critical
-                    outputs(ox, oy, output, batchPos) = outputValue;
+                    outputs(ox, 
+                            oy, 
+                            output + outputOffset, 
+                            batchPos) = outputValue;
 
                 }
             }

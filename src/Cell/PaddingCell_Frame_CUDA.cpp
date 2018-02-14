@@ -28,9 +28,18 @@ N2D2::PaddingCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                      N2D2::PaddingCell_Frame_CUDA::create);
 
 N2D2::PaddingCell_Frame_CUDA::PaddingCell_Frame_CUDA(const std::string& name,
-                                             unsigned int nbOutputs)
+                                                     unsigned int nbOutputs,
+                                                    int topPad,
+                                                    int botPad,
+                                                    int leftPad,
+                                                    int rightPad)
     : Cell(name, nbOutputs),
-      PaddingCell(name, nbOutputs),
+      PaddingCell(name, 
+                  nbOutputs,
+                  topPad,
+                  botPad,
+                  leftPad,
+                  rightPad),
       Cell_Frame_CUDA(name, nbOutputs)
 {
     // ctor
@@ -66,6 +75,7 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
 void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
 {
     mInputs.synchronizeHBasedToD();
+
     unsigned int outputOffset = 0;
 
     for(unsigned int k = 0; k < mInputs.size(); ++k)
@@ -87,17 +97,75 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
     }
 
+    Cell_Frame_CUDA::propagate();
+
     mDiffInputs.clearValid();
+
 }
 
 void N2D2::PaddingCell_Frame_CUDA::backPropagate()
 {
+    if (mDiffOutputs.empty())
+        return;
+
+    unsigned int outputOffset = 0;
+    Cell_Frame_CUDA::backPropagate();
+
+    for(unsigned int k = 0; k < mInputs.size(); ++k)
+    {
+
+        cudaSPadding(mDiffOutputs[k].dimX(),
+                    mDiffOutputs[k].dimY(),
+                    mDiffOutputs[k].dimZ(),
+                    mDiffOutputs[k].dimB(),
+                    mDiffInputs.dimX(),
+                    mDiffInputs.dimY(),
+                    -mLeftPad,
+                    -mRightPad,
+                    -mTopPad,
+                    -mBotPad,
+                    mDiffInputs.getDevicePtr() + outputOffset,
+                    mDiffOutputs[k].getDevicePtr());
+
+        outputOffset += mDiffOutputs[k].dimZ()
+                            *mDiffInputs.dimX()
+                            *mDiffInputs.dimY()
+                            *mDiffInputs.dimB();
+
+        mDiffOutputs[k].setValid();
+    }
+
+    mDiffOutputs.synchronizeDToHBased();
 
 }
 
 void N2D2::PaddingCell_Frame_CUDA::update()
 {
 }
+
+void N2D2::PaddingCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
+{
+    GradientCheck gc(epsilon, maxError);
+    gc.initialize(mInputs,
+                  mOutputs,
+                  mDiffInputs,
+                  std::bind(&PaddingCell_Frame_CUDA::propagate, this, false),
+                  std::bind(&PaddingCell_Frame_CUDA::backPropagate, this));
+
+    if (!mDiffOutputs.empty()) {
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            std::stringstream name;
+            name << mName + "_mDiffOutputs[" << k << "]";
+
+            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+        }
+    } else {
+        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
+                  << ", could not check the gradient!" << Utils::cdef
+                  << std::endl;
+    }
+}
+
 
 N2D2::PaddingCell_Frame_CUDA::~PaddingCell_Frame_CUDA()
 {
