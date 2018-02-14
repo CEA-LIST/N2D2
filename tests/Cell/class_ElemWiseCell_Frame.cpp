@@ -315,9 +315,9 @@ TEST_DATASET(ElemWiseCell_Frame,
     Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
-        inputsA(index) = Random::randUniform(-1.0e4, 1.0e4);
-        inputsB(index) = Random::randUniform(-1.0e4, 1.0e4);
-        inputsC(index) = Random::randUniform(-1.0e4, 1.0e4);
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
     }
 
     elemWise.addInput(inputsA, diffOutputsA);
@@ -338,10 +338,10 @@ TEST_DATASET(ElemWiseCell_Frame,
                             wA * std::abs(inputsA(o))
                                 + wB * std::abs(inputsB(o))
                                 + wC * std::abs(inputsC(o)),
-                            1.0e-2);
+                            1.0e-6);
     }
 
-    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-5, 1.0e-2));
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-5, 1.0e-1));
 }
 
 TEST(ElemWiseCell_Frame,
