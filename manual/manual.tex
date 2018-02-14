@@ -4152,6 +4152,26 @@ Dropout layer \citep{Srivastava2014}.
 \end{longtable}
 \end{center}
 
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Padding!}{Padding}}
+Padding layer.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
+  \cellcolor{requiredcolor}\lstinline!TopPadding! & Size of the top padding (positive or negative) \\
+  \cellcolor{requiredcolor}\lstinline!BottomPadding! & Size of the bottom padding (positive or negative) \\
+  \cellcolor{requiredcolor}\lstinline!LeftPadding! & Size of the left padding (positive or negative) \\
+  \cellcolor{requiredcolor}\lstinline!RightPadding! & Size of the right padding (positive or negative) \\
+  \hline
+\end{longtable}
+\end{center}
+
+The padding layer allow to insert asymmetric padding for each layer axes. \\
+
 
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!BatchNorm!}{BatchNorm}}
