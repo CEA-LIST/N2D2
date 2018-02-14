@@ -122,27 +122,33 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
     #pragma omp parallel for
     for (int k = 0; k < (int)nbInputs; ++k) {
         Tensor4d<Float_T>& diffOutputs = mDiffOutputs[k];
+        const float beta = (diffOutputs.isValid()) ? 1.0f : 0.0f;
 
         if (mOperation == Sum) {
-            for (unsigned int n = 0; n < nbElems; ++n)
-                diffOutputs(n) = mWeights[k] * mDiffInputs(n);
+            for (unsigned int n = 0; n < nbElems; ++n) {
+                diffOutputs(n) = mWeights[k] * mDiffInputs(n)
+                                    + beta * diffOutputs(n);
+            }
         }
         else if (mOperation == Prod) {
             for (unsigned int n = 0; n < nbElems; ++n) {
-                Float_T factor = 1.0;
+                Float_T prodTerm = 1.0;
 
                 for (unsigned int i = 0; i < nbInputs; ++i) {
                     if (i != (unsigned int)k)
-                        factor *= mInputs[i](n);
+                        prodTerm *= mInputs[i](n);
                 }
 
-                diffOutputs(n) = factor * mDiffInputs(n);
+                diffOutputs(n) = prodTerm * mDiffInputs(n)
+                                    + beta * diffOutputs(n);
             }
         }
         else if (mOperation == Max) {
-            for (unsigned int n = 0; n < nbElems; ++n)
+            for (unsigned int n = 0; n < nbElems; ++n) {
                 diffOutputs(n) = (mArgMax(n) == (unsigned int)k)
-                                    ? mDiffInputs(n) : 0.0;
+                    ? (mDiffInputs(n) + beta * diffOutputs(n))
+                    : beta * diffOutputs(n);
+            }
         }
         else {
             throw std::runtime_error("ElemWiseCell_Frame::propagate(): "

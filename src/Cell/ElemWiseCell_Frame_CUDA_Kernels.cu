@@ -43,13 +43,14 @@ __global__ void cudaSZeroInit_kernel(unsigned int size,
 __global__ void cudaSMult_kernel(unsigned int size,
                                  float* a,
                                  float* b,
+                                 const float beta,
                                  float* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride)
-        result[i] = a[i] * b[i];
+        result[i] = a[i] * b[i] + beta * result[i];
 }
 
 __global__ void cudaSScale_kernel(unsigned int size,
@@ -85,13 +86,15 @@ __global__ void cudaSMaxBackward_kernel(unsigned int size,
                                         float* diffInput,
                                         const unsigned int idx,
                                         unsigned int* argMax,
+                                        const float beta,
                                         float* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        result[i] = (argMax[i] == idx) ? diffInput[i] : 0.0f;
+        result[i] = (argMax[i] == idx) ? (diffInput[i] + beta * result[i])
+                                       : beta * result[i];
     }
 }
 
@@ -112,9 +115,10 @@ void N2D2::cudaSZeroInit(unsigned int size,
 void N2D2::cudaSMult(unsigned int size,
                      float* a,
                      float* b,
+                     const float beta,
                      float* result)
 {
-    cudaSMult_kernel<<<(size + 255) / 256, 256>>>(size, a, b, result);
+    cudaSMult_kernel<<<(size + 255) / 256, 256>>>(size, a, b, beta, result);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -145,12 +149,14 @@ void N2D2::cudaSMaxBackward(unsigned int size,
                             float* diffInput,
                             const unsigned int idx,
                             unsigned int* argMax,
+                            const float beta,
                             float* result)
 {
     cudaSMaxBackward_kernel<<<(size + 255) / 256, 256>>>(size,
                                                          diffInput,
                                                          idx,
                                                          argMax,
+                                                         beta,
                                                          result);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

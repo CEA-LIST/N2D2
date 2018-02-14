@@ -35,6 +35,7 @@ void cudaSZeroInit(unsigned int size,
 void cudaSMult(unsigned int size,
                float* a,
                float* b,
+               const float beta,
                float* result);
 void cudaSScale(unsigned int size,
                 float* input,
@@ -49,6 +50,7 @@ void cudaSMaxBackward(unsigned int size,
                       float* diffInput,
                       const unsigned int idx,
                       unsigned int* argMax,
+                      const float beta,
                       float* result);
 }
 

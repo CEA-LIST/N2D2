@@ -67,6 +67,7 @@ public:
 
 protected:
     CudaTensor4d<unsigned int> mArgMax;
+    CudaTensor4d<Float_T> mProdTerm;
 
 private:
     static Registrar<ElemWiseCell> mRegistrar;

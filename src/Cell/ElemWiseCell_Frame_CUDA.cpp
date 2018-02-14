@@ -63,6 +63,13 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
                        mOutputs.dimZ(),
                        mOutputs.dimB());
     }
+
+    if (mOperation == Prod) {
+        mProdTerm.resize(mOutputs.dimX(),
+                         mOutputs.dimY(),
+                         mOutputs.dimZ(),
+                         mOutputs.dimB());
+    }
 }
 
 void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
@@ -96,6 +103,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
             cudaSMult(nbElems,
                       mInputs[0].getDevicePtr(),
                       mInputs[1].getDevicePtr(),
+                      0.0f,
                       mOutputs.getDevicePtr());
 
             for (unsigned int k = 2; k < nbInputs; ++k) {
@@ -103,6 +111,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
                 cudaSMult(nbElems,
                           mOutputs.getDevicePtr(),
                           mInputs[k].getDevicePtr(),
+                          0.0f,
                           mOutputs.getDevicePtr());
             }
         }
@@ -155,8 +164,20 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
     Cell_Frame_CUDA::backPropagate();
 
     for (unsigned int k = 0; k < nbInputs; ++k) {
+        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+
         if (mOperation == Sum) {
-            if (mWeights[k] == 1.0) {
+            if (mDiffOutputs[k].isValid()) {
+                // mDiffOutputs[k] <- mWeights[k] * mDiffInputs + mDiffOutputs[k]
+                CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
+                                                nbElems,
+                                                &(mWeights[k]),
+                                                mDiffInputs.getDevicePtr(),
+                                                1,
+                                                mDiffOutputs[k].getDevicePtr(),
+                                                1));
+            }
+            else if (mWeights[k] == 1.0) {
                 // mDiffOutputs[k] <- mDiffInputs
                 CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
                                                 nbElems,
@@ -181,29 +202,31 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                     continue;
 
                 if (!init) {
-                    // mDiffOutputs[k] <- mInputs[i]
+                    // mProdTerm <- mInputs[i]
                     CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
                                                     nbElems,
                                                     mInputs[i].getDevicePtr(),
                                                     1,
-                                                    mDiffOutputs[k].getDevicePtr(),
+                                                    mProdTerm.getDevicePtr(),
                                                     1));
                     init = true;
                 }
                 else {
-                    // mDiffOutputs[k] <- mInputs[i] * mDiffOutputs[k]
+                    // mProdTerm <- mInputs[i] * mProdTerm
                     cudaSMult(nbElems,
-                              mDiffOutputs[k].getDevicePtr(),
+                              mProdTerm.getDevicePtr(),
                               mInputs[i].getDevicePtr(),
-                              mDiffOutputs[k].getDevicePtr());
+                              0.0f,
+                              mProdTerm.getDevicePtr());
 
                 }
             }
 
-            // mDiffOutputs[k] <- mDiffInputs * mDiffOutputs[k]
+            // mDiffOutputs[k] <- mDiffInputs * mProdTerm + beta * mDiffOutputs[k]
             cudaSMult(nbElems,
-                      mDiffOutputs[k].getDevicePtr(),
+                      mProdTerm.getDevicePtr(),
                       mDiffInputs.getDevicePtr(),
+                      beta,
                       mDiffOutputs[k].getDevicePtr());
         }
         else if (mOperation == Max) {
@@ -211,6 +234,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                              mDiffInputs.getDevicePtr(),
                              k,
                              mArgMax.getDevicePtr(),
+                             beta,
                              mDiffOutputs[k].getDevicePtr());
         }
         else {
