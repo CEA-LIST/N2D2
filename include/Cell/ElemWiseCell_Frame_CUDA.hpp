@@ -66,8 +66,8 @@ public:
     virtual ~ElemWiseCell_Frame_CUDA();
 
 protected:
+    CudaTensor4d<Float_T> mInterTerm;
     CudaTensor4d<unsigned int> mArgMax;
-    CudaTensor4d<Float_T> mProdTerm;
 
 private:
     static Registrar<ElemWiseCell> mRegistrar;

@@ -49,6 +49,8 @@ class ElemWiseCell : public virtual Cell {
 public:
     enum Operation {
         Sum,
+        AbsSum,
+        EuclideanSum,
         Prod,
         Max
     };
@@ -97,7 +99,7 @@ protected:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::ElemWiseCell::Operation>::data[]
-    = {"Sum", "Prod", "Max"};
+    = {"Sum", "AbsSum", "EuclideanSum", "Prod", "Max"};
 }
 
 #endif // N2D2_ELEMWISECELL_H

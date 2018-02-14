@@ -3776,9 +3776,10 @@ Element-wise operation layer.
  \hline\hline
   \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
   \cellcolor{requiredcolor}\lstinline!Operation! & Type of operation
-  (\lstinline!Sum!, \lstinline!Prod!, or \lstinline!Max!)\\
-  \lstinline!Weights! [] & Weights for the \lstinline!Sum! operation, in the
-  same order as the inputs \\
+  (\lstinline!Sum!, \lstinline!AbsSum!, \lstinline!EuclideanSum!,
+  \lstinline!Prod!, or \lstinline!Max!)\\
+  \lstinline!Weights! [] & Weights for the \lstinline!Sum!, \lstinline!AbsSum!,
+  and \lstinline!EuclideanSum! operation, in the same order as the inputs \\
   \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
@@ -3786,6 +3787,72 @@ Element-wise operation layer.
  \hline
 \end{longtable}
 \end{center}
+
+Given $N$ input tensors $T_{i}$, performs the following operation:
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Sum! operation}{Sum operation}}
+$T_{out} = \sum_{1}^{N}(w_{i} T_{i})$
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!AbsSum! operation}{AbsSum operation}}
+$T_{out} = \sum_{1}^{N}(w_{i} |T_{i}|)$
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!EuclideanSum! operation}{EuclideanSum operation}}
+$T_{out} = \sqrt{\sum_{1}^{N}\left(w_{i} T_{i}\right)^{2}}$
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Prod! operation}{Prod operation}}
+$T_{out} = \prod_{1}^{N}(T_{i})$
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Max! operation}{Max operation}}
+$T_{out} = MAX_{1}^{N}(T_{i})$
+
+\paragraph{Examples}
+
+Sum of two inputs ($T_{out} = T_{1} + T_{2}$):
+
+\begin{lstlisting}[language=ini]
+[elemwise_sum]
+Input=layer1,layer2
+Type=ElemWise
+NbOutputs=[layer1]NbChannels
+Operation=Sum
+\end{lstlisting}
+
+Weighted sum of two inputs, by a factor 0.5 for \lstinline!layer1! and 1.0 for \lstinline!layer2! ($T_{out} = 0.5 \times T_{1} + 1.0 \times T_{2}$):
+
+\begin{lstlisting}[language=ini]
+[elemwise_weighted_sum]
+Input=layer1,layer2
+Type=ElemWise
+NbOutputs=[layer1]NbChannels
+Operation=Sum
+Weights=0.5 1.0
+\end{lstlisting}
+
+Single input scaling by a factor 0.5 ($T_{out} = 0.5 \times T_{1}$):
+
+\begin{lstlisting}[language=ini]
+[elemwise_scale]
+Input=layer1
+Type=ElemWise
+NbOutputs=[layer1]NbChannels
+Operation=Sum
+Weights=0.5
+\end{lstlisting}
+
+Absolute value of an input ($T_{out} = |T_{1}|$):
+
+\begin{lstlisting}[language=ini]
+[elemwise_abs]
+Input=layer1
+Type=ElemWise
+NbOutputs=[layer1]NbChannels
+Operation=Abs
+\end{lstlisting}
 
 
 \subsubsection{\texorpdfstring{%%

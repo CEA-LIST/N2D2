@@ -59,6 +59,13 @@ void N2D2::ElemWiseCell_Frame::initialize()
                        mOutputs.dimZ(),
                        mOutputs.dimB());
     }
+
+    if (mOperation == EuclideanSum) {
+        mInterTerm.resize(mOutputs.dimX(),
+                          mOutputs.dimY(),
+                          mOutputs.dimZ(),
+                          mOutputs.dimB());
+    }
 }
 
 void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
@@ -74,6 +81,28 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
 
             for (unsigned int k = 1; k < nbInputs; ++k)
                 mOutputs(n) += mWeights[k] * mInputs[k](n);
+        }
+    }
+    else if (mOperation == AbsSum) {
+        for (unsigned int n = 0; n < nbElems; ++n) {
+            mOutputs(n) = mWeights[0] * std::abs(mInputs[0](n));
+
+            for (unsigned int k = 1; k < nbInputs; ++k)
+                mOutputs(n) += mWeights[k] * std::abs(mInputs[k](n));
+        }
+    }
+    else if (mOperation == EuclideanSum) {
+        for (unsigned int n = 0; n < nbElems; ++n) {
+            mInterTerm(n) = (mWeights[0] * mWeights[0])
+                * (mInputs[0](n) * mInputs[0](n));
+
+            for (unsigned int k = 1; k < nbInputs; ++k) {
+                mInterTerm(n) += (mWeights[k] * mWeights[k])
+                    * (mInputs[k](n) * mInputs[k](n));
+            }
+
+            mInterTerm(n) = std::sqrt(mInterTerm(n));
+            mOutputs(n) = mInterTerm(n);
         }
     }
     else if (mOperation == Prod) {
@@ -128,6 +157,22 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
             for (unsigned int n = 0; n < nbElems; ++n) {
                 diffOutputs(n) = mWeights[k] * mDiffInputs(n)
                                     + beta * diffOutputs(n);
+            }
+        }
+        else if (mOperation == AbsSum) {
+            for (unsigned int n = 0; n < nbElems; ++n) {
+                const Float_T sign = (mInputs[k](n) >= 0.0) ? 1.0 : -1.0;
+                diffOutputs(n) = mWeights[k] * sign * mDiffInputs(n)
+                                    + beta * diffOutputs(n);
+            }
+        }
+        else if (mOperation == EuclideanSum) {
+            for (unsigned int n = 0; n < nbElems; ++n) {
+                diffOutputs(n) = (mInterTerm(n) != 0.0)
+                    ? (mWeights[k] * mWeights[k])
+                        * (mInputs[k](n) / mInterTerm(n))
+                        * mDiffInputs(n) + beta * diffOutputs(n)
+                    : beta * diffOutputs(n);
             }
         }
         else if (mOperation == Prod) {

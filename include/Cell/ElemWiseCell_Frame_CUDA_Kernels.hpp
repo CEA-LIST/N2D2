@@ -32,6 +32,8 @@ void cudaUZeroInit(unsigned int size,
                    unsigned int* data);
 void cudaSZeroInit(unsigned int size,
                    float* data);
+void cudaSSqrt(unsigned int size,
+               float* data);
 void cudaSMult(unsigned int size,
                float* a,
                float* b,
@@ -40,7 +42,24 @@ void cudaSMult(unsigned int size,
 void cudaSScale(unsigned int size,
                 float* input,
                 const float scale,
+                const float beta,
                 float* result);
+void cudaSScaleAbs(unsigned int size,
+                   float* input,
+                   const float scale,
+                   const float beta,
+                   float* result);
+void cudaSScaleSign(unsigned int size,
+                    float* input,
+                    float* sign,
+                    const float scale,
+                    const float beta,
+                    float* result);
+void cudaSScaleSquare(unsigned int size,
+                      float* input,
+                      const float scale,
+                      const float beta,
+                      float* result);
 void cudaSMaxForward(unsigned int size,
                float* input,
                float* maxVal,
@@ -52,6 +71,13 @@ void cudaSMaxBackward(unsigned int size,
                       unsigned int* argMax,
                       const float beta,
                       float* result);
+void cudaSEuclideanSumBackward(unsigned int size,
+                               float* diffInput,
+                               float* input,
+                               float* output,
+                               const float scale,
+                               const float beta,
+                               float* result);
 }
 
 #endif // N2D2_ELEMWISECELL_FRAME_CUDA_KERNELS_H

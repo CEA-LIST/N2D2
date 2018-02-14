@@ -64,11 +64,11 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
                        mOutputs.dimB());
     }
 
-    if (mOperation == Prod) {
-        mProdTerm.resize(mOutputs.dimX(),
-                         mOutputs.dimY(),
-                         mOutputs.dimZ(),
-                         mOutputs.dimB());
+    if (mOperation == EuclideanSum || mOperation == Prod) {
+        mInterTerm.resize(mOutputs.dimX(),
+                          mOutputs.dimY(),
+                          mOutputs.dimZ(),
+                          mOutputs.dimB());
     }
 }
 
@@ -84,6 +84,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
         cudaSScale(nbElems,
                    mInputs[0].getDevicePtr(),
                    mWeights[0],
+                   0.0f,
                    mOutputs.getDevicePtr());
 
         for (unsigned int k = 1; k < nbInputs; ++k) {
@@ -96,6 +97,51 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
                                             mOutputs.getDevicePtr(),
                                             1));
         }
+    }
+    else if (mOperation == AbsSum) {
+        // mOutputs <- mWeights[0] * |mInputs[0]|
+        cudaSScaleAbs(nbElems,
+                   mInputs[0].getDevicePtr(),
+                   mWeights[0],
+                   0.0f,
+                   mOutputs.getDevicePtr());
+
+        for (unsigned int k = 1; k < nbInputs; ++k) {
+            // mOutputs <- mWeights[k] * |mInputs[k]| + mOutputs
+            cudaSScaleAbs(nbElems,
+                          mInputs[k].getDevicePtr(),
+                          mWeights[k],
+                          1.0f,
+                          mOutputs.getDevicePtr());
+        }
+    }
+    else if (mOperation == EuclideanSum) {
+        // mInterTerm <- (mWeights[0] * mInputs[0])^2
+        cudaSScaleSquare(nbElems,
+                         mInputs[0].getDevicePtr(),
+                         mWeights[0] * mWeights[0],
+                         0.0f,
+                         mInterTerm.getDevicePtr());
+
+        for (unsigned int k = 1; k < nbInputs; ++k) {
+            // mInterTerm <- (mWeights[k] * mInputs[k])^2 + mInterTerm
+            cudaSScaleSquare(nbElems,
+                             mInputs[k].getDevicePtr(),
+                             mWeights[k] * mWeights[k],
+                             1.0f,
+                             mInterTerm.getDevicePtr());
+        }
+
+        // mInterTerm <- sqrt(mInterTerm)
+        cudaSSqrt(nbElems, mInterTerm.getDevicePtr());
+
+        // mOutputs <- mInterTerm
+        CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
+                                        nbElems,
+                                        mInterTerm.getDevicePtr(),
+                                        1,
+                                        mOutputs.getDevicePtr(),
+                                        1));
     }
     else if (mOperation == Prod) {
         if (nbInputs > 1) {
@@ -191,8 +237,31 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                 cudaSScale(nbElems,
                            mDiffInputs.getDevicePtr(),
                            mWeights[k],
+                           0.0f,
                            mDiffOutputs[k].getDevicePtr());
             }
+        }
+        else if (mOperation == AbsSum) {
+            // mDiffOutputs[k] <- mWeights[k] * sign(mInputs[k]) * mDiffInputs
+            //                      + beta * mDiffOutputs[k]
+            cudaSScaleSign(nbElems,
+                           mDiffInputs.getDevicePtr(),
+                           mInputs[k].getDevicePtr(),
+                           mWeights[k],
+                           beta,
+                           mDiffOutputs[k].getDevicePtr());
+        }
+        else if (mOperation == EuclideanSum) {
+            // mDiffOutputs[k] <- (mWeights[k] * mWeights[k])
+            //                      * (mInputs[k] / mInterTerm) * mDiffInputs
+            //                      + beta * mDiffOutputs[k]
+            cudaSEuclideanSumBackward(nbElems,
+                                      mDiffInputs.getDevicePtr(),
+                                      mInputs[k].getDevicePtr(),
+                                      mInterTerm.getDevicePtr(),
+                                      mWeights[k] * mWeights[k],
+                                      beta,
+                                      mDiffOutputs[k].getDevicePtr());
         }
         else if (mOperation == Prod) {
             bool init = false;
@@ -202,29 +271,30 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                     continue;
 
                 if (!init) {
-                    // mProdTerm <- mInputs[i]
+                    // mInterTerm <- mInputs[i]
                     CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
                                                     nbElems,
                                                     mInputs[i].getDevicePtr(),
                                                     1,
-                                                    mProdTerm.getDevicePtr(),
+                                                    mInterTerm.getDevicePtr(),
                                                     1));
                     init = true;
                 }
                 else {
-                    // mProdTerm <- mInputs[i] * mProdTerm
+                    // mInterTerm <- mInputs[i] * mInterTerm
                     cudaSMult(nbElems,
-                              mProdTerm.getDevicePtr(),
+                              mInterTerm.getDevicePtr(),
                               mInputs[i].getDevicePtr(),
                               0.0f,
-                              mProdTerm.getDevicePtr());
+                              mInterTerm.getDevicePtr());
 
                 }
             }
 
-            // mDiffOutputs[k] <- mDiffInputs * mProdTerm + beta * mDiffOutputs[k]
+            // mDiffOutputs[k] <- mDiffInputs * mInterTerm
+            //                      + beta * mDiffOutputs[k]
             cudaSMult(nbElems,
-                      mProdTerm.getDevicePtr(),
+                      mInterTerm.getDevicePtr(),
                       mDiffInputs.getDevicePtr(),
                       beta,
                       mDiffOutputs[k].getDevicePtr());

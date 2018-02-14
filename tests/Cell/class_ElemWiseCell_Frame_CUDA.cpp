@@ -205,6 +205,341 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 }
 
 TEST(ElemWiseCell_Frame_CUDA,
+     propagate_abs_sum2)
+{
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::AbsSum);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            std::abs(inputsA(o)) + std::abs(inputsB(o)),
+                            1.0e-9);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+TEST(ElemWiseCell_Frame_CUDA,
+     propagate_abs_sum3)
+{
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::AbsSum);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+    inputsC.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsC, diffOutputsC);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            std::abs(inputsA(o))
+                                + std::abs(inputsB(o))
+                                + std::abs(inputsC(o)),
+                            1.0e-9);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-5, 1.0e-2));
+}
+
+TEST_DATASET(ElemWiseCell_Frame_CUDA,
+             propagate_abs_sum3_w,
+             (double wA, double wB, double wC),
+             std::make_tuple(1.0, 1.0, 1.0),
+             std::make_tuple(0.33, 0.66, 0.99),
+             std::make_tuple(0.0, 2.0, -1.0))
+{
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+    std::vector<Float_T> weights;
+    weights.push_back(wA);
+    weights.push_back(wB);
+    weights.push_back(wC);
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::AbsSum,
+                                          weights);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+    inputsC.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsC, diffOutputsC);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            wA * std::abs(inputsA(o))
+                                + wB * std::abs(inputsB(o))
+                                + wC * std::abs(inputsC(o)),
+                            1.0e-6);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-5, 1.0e-2));
+}
+
+TEST(ElemWiseCell_Frame_CUDA,
+     propagate_euclidean_sum2)
+{
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::EuclideanSum);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            std::sqrt(inputsA(o) * inputsA(o)
+                                      + inputsB(o) * inputsB(o)),
+                            1.0e-6);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+TEST(ElemWiseCell_Frame_CUDA,
+     propagate_euclidean_sum3)
+{
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::EuclideanSum);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+    inputsC.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsC, diffOutputsC);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            std::sqrt(inputsA(o) * inputsA(o)
+                                + inputsB(o) * inputsB(o)
+                                + inputsC(o) * inputsC(o)),
+                            1.0e-6);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+TEST_DATASET(ElemWiseCell_Frame_CUDA,
+             propagate_euclidean_sum3_w,
+             (double wA, double wB, double wC),
+             std::make_tuple(1.0, 1.0, 1.0),
+             std::make_tuple(0.33, 0.66, 0.99),
+             std::make_tuple(0.0, 2.0, -1.0))
+{
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+    std::vector<Float_T> weights;
+    weights.push_back(wA);
+    weights.push_back(wB);
+    weights.push_back(wC);
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::EuclideanSum,
+                                          weights);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+    inputsC.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsC, diffOutputsC);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            std::sqrt(wA * wA * inputsA(o) * inputsA(o)
+                                + wB * wB * inputsB(o) * inputsB(o)
+                                + wC * wC * inputsC(o) * inputsC(o)),
+                            1.0e-6);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+TEST(ElemWiseCell_Frame_CUDA,
      propagate_prod2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
