@@ -207,6 +207,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 TEST(ElemWiseCell_Frame_CUDA,
      propagate_abs_sum2)
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -255,6 +256,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 TEST(ElemWiseCell_Frame_CUDA,
      propagate_abs_sum3)
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -314,6 +316,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -374,6 +377,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 TEST(ElemWiseCell_Frame_CUDA,
      propagate_euclidean_sum2)
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -423,6 +427,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 TEST(ElemWiseCell_Frame_CUDA,
      propagate_euclidean_sum3)
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -482,6 +487,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
