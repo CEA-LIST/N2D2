@@ -38,13 +38,13 @@ public:
                             int rightPad)
 
         : Cell(name, nbOutputs),
-          PaddingCell(name, 
+          PaddingCell(name,
                       nbOutputs,
                       topPad,
                       botPad,
                       leftPad,
                       rightPad),
-          PaddingCell_Frame_CUDA(name, 
+          PaddingCell_Frame_CUDA(name,
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -73,6 +73,8 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
              std::make_tuple(0, 0, 1, -4, 48, 48, 2),
              std::make_tuple(0, -8, 0, -8, 48, 48, 2))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 10;
     Tensor4d<Float_T> inputs(inputWidth, inputHeight, nbOutputs, batchSize);
     Tensor4d<Float_T> diffOutputs(inputWidth, inputHeight, nbOutputs, batchSize);
@@ -80,7 +82,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         inputs(i) = Random::randNormal();
     inputs.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1", 
+    PaddingCell_Frame_CUDA padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -91,10 +93,10 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     padding1.addInput(inputs, diffOutputs);
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
@@ -106,7 +108,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         for (unsigned int output = 0; output < inputs.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs1.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs1.dimX(); ++ox) {
-                    
+
                     int ix = (int) ox - leftPad;
                     int iy = (int) oy - topPad;
 
@@ -143,6 +145,8 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
              std::make_tuple(0, 0, 1, -4, 5, 3, 48, 48, 2),
              std::make_tuple(0, -8, 0, -8, 1, 1, 48, 48, 2))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = nbInputA + nbInputB;
     Tensor4d<Float_T> inputsA(inputWidth, inputHeight, nbInputA, batchSize);
     Tensor4d<Float_T> inputsB(inputWidth, inputHeight, nbInputB, batchSize);
@@ -159,7 +163,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     inputsA.synchronizeHToD();
     inputsB.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1", 
+    PaddingCell_Frame_CUDA padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -172,10 +176,10 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
@@ -187,15 +191,15 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         for (unsigned int output = 0; output < inputsA.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs1.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs1.dimX(); ++ox) {
-                    
+
                     int ix = (int) ox - leftPad;
                     int iy = (int) oy - topPad;
 
                     if( ix >= 0  && ix < (int) inputsA.dimX()
                         && iy >= 0  && iy < (int) inputsA.dimY())
                     {
-                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output, batchPos), 
-                                            inputsA(ix, iy , output, batchPos), 
+                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output, batchPos),
+                                            inputsA(ix, iy , output, batchPos),
                                             1.0e-9);
                     }
                     else
@@ -211,15 +215,15 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         for (unsigned int output = 0; output < inputsB.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs1.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs1.dimX(); ++ox) {
-                    
+
                     int ix = (int) ox - leftPad;
                     int iy = (int) oy - topPad;
 
                     if( ix >= 0  && ix < (int) inputsB.dimX()
                         && iy >= 0  && iy < (int) inputsB.dimY())
                     {
-                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output + nbInputA, batchPos), 
-                                            inputsB(ix, iy , output, batchPos), 
+                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output + nbInputA, batchPos),
+                                            inputsB(ix, iy , output, batchPos),
                                             1.0e-9);
                     }
                     else
@@ -246,6 +250,8 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
              std::make_tuple(0, 0, 1, -4, 12, 12, 2),
              std::make_tuple(0, -8, 0, -8, 12, 12, 2))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = 10;
     Tensor4d<Float_T> inputs(inputWidth, inputHeight, nbOutputs, batchSize);
     Tensor4d<Float_T> diffOutputs(inputWidth, inputHeight, nbOutputs, batchSize);
@@ -253,7 +259,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         inputs(i) = Random::randNormal();
     inputs.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1", 
+    PaddingCell_Frame_CUDA padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -264,10 +270,10 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     padding1.addInput(inputs, diffOutputs);
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
@@ -291,6 +297,8 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
              std::make_tuple(-1, 2, 4, 1, 4, 8, 12, 12, 2),
              std::make_tuple(0, 0, 1, -4, 5, 3, 12, 12, 2))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     const unsigned int nbOutputs = nbInputA + nbInputB;
     Tensor4d<Float_T> inputsA(inputWidth, inputHeight, nbInputA, batchSize);
     Tensor4d<Float_T> inputsB(inputWidth, inputHeight, nbInputB, batchSize);
@@ -307,7 +315,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     inputsA.synchronizeHToD();
     inputsB.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1", 
+    PaddingCell_Frame_CUDA padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -320,10 +328,10 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
