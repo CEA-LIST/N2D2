@@ -26,6 +26,7 @@
 #include <cuda_runtime_api.h>
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
+#include <thrust/gather.h>
 
 #define DIVUP(m,n) ((m) / (n) + ((m) % (n) > 0))
 
