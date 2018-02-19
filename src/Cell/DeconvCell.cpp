@@ -31,7 +31,7 @@ N2D2::DeconvCell::DeconvCell(const std::string& name,
                              int paddingX,
                              int paddingY)
     : Cell(name, nbOutputs),
-      mNoBias(this, "NoBias", true),
+      mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OCHW),
       mWeightsExportTranspose(this, "WeightsExportTranspose", false),

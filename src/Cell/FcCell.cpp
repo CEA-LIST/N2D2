@@ -24,10 +24,10 @@ const char* N2D2::FcCell::Type = "Fc";
 
 N2D2::FcCell::FcCell(const std::string& name, unsigned int nbOutputs)
     : Cell(name, nbOutputs),
-      mNoBias(this, "NoBias", true),
+      mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
-      mWeightsExportFormat(this, "WeightsExportFormat", OC),  
-      mOutputsRemap(this, "OutputsRemap", ""),            
+      mWeightsExportFormat(this, "WeightsExportFormat", OC),
+      mOutputsRemap(this, "OutputsRemap", ""),
       mWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
       mBiasFiller(new NormalFiller<Float_T>(0.0, 0.05))
 {
@@ -156,8 +156,8 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
                                       * getChannelsHeight();
 
     const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
-    
-    if (mWeightsExportFormat == OC) {  
+
+    if (mWeightsExportFormat == OC) {
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                             ? outputsMap.find(output)->second : output;
@@ -184,7 +184,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
     else if (mWeightsExportFormat == CO) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                
+
                 const unsigned int outputRemap = (!outputsMap.empty())
                                 ? outputsMap.find(output)->second : output;
 
@@ -209,7 +209,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
             }
         }
     }
-        
+
     // Discard trailing whitespaces
     while (std::isspace(weights.peek()))
         weights.ignore();

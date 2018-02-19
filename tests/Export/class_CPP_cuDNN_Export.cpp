@@ -111,7 +111,6 @@ TEST(CPP_cuDNN_Export, generate)
                              "DefaultValue=-1.0\n"
                              "\n"
                              "[common.config]\n"
-                             "NoBias=0\n"
                              "WeightsSolver.LearningRate=0.01\n"
                              "Solvers.LearningRatePolicy=StepDecay\n"
                              "Solvers.LearningRateStepSize=20000\n"

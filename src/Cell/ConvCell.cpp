@@ -33,7 +33,7 @@ N2D2::ConvCell::ConvCell(const std::string& name,
                          int paddingX,
                          int paddingY)
     : Cell(name, nbOutputs),
-      mNoBias(this, "NoBias", true),
+      mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OCHW),
       mWeightsExportTranspose(this, "WeightsExportTranspose", false),

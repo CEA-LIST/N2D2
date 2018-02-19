@@ -326,7 +326,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
                     + strideY) / (double)strideY) / (double)subSampleY);
 
     ASSERT_EQUALS(conv2.getNbSharedSynapses(),
-                  kernelWidth * kernelHeight * 16U * nbOutputs);
+                  (kernelWidth * kernelHeight * 16U + 1) * nbOutputs);
     ASSERT_EQUALS(conv2.getNbChannels(), 16U);
     ASSERT_EQUALS(conv2.getChannelsWidth(), conv1.getOutputsWidth());
     ASSERT_EQUALS(conv2.getChannelsHeight(), conv1.getOutputsHeight());

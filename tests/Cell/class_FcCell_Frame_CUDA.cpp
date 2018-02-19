@@ -137,7 +137,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
     fc1.initialize();
     fc2.initialize();
 
-    ASSERT_EQUALS(fc2.getNbSynapses(), 16U * nbOutputs);
+    ASSERT_EQUALS(fc2.getNbSynapses(), (16U + 1U) * nbOutputs);
     ASSERT_EQUALS(fc2.getNbChannels(), 16U);
     ASSERT_EQUALS(fc2.getChannelsWidth(), 1U);
     ASSERT_EQUALS(fc2.getChannelsHeight(), 1U);
