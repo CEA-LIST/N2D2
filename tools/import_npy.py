@@ -39,7 +39,7 @@ def exportFreeParameters(sourceDir, targetDir):
             params = numpy.load(os.path.join(sourceDir, fileName))
             numpy.savetxt(targetFile, params.flatten())
 
-parser = optparse.OptionParser(usage="""%prog <ckpt model> <output dir>
+parser = optparse.OptionParser(usage="""%prog <source dir> <output dir>
 
 Convert NumPy saved weights (*.npy) to N2D2 .syntxt files.""")
 options, args = parser.parse_args()

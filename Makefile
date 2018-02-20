@@ -77,6 +77,11 @@ ifdef PUGIXML
   LDFLAGS:=$(LDFLAGS) -lpugixml
 endif
 
+ifdef JSONCPP
+  CPPFLAGS:=$(CPPFLAGS) -DJSONCPP
+  LDFLAGS:=$(LDFLAGS) -ljsoncpp
+endif
+
 ifdef MONGODB
   CPPFLAGS:=$(CPPFLAGS) -DMONGODB
   LDFLAGS:=$(LDFLAGS) -pthread -lmongoclient

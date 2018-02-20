@@ -322,10 +322,12 @@ namespace Utils {
     std::string expandEnvVars(std::string str);
     bool createDirectories(const std::string& dirName);
     bool isAbsolutePath(const std::string& path);
-    std::string dirName(const std::string& filePath);
+    std::string dirName(const std::string& filePath, bool stripSlash = false);
     std::string baseName(const std::string& filePath);
-    std::string fileBaseName(const std::string& filePath);
-    std::string fileExtension(const std::string& filePath);
+    std::string fileBaseName(const std::string& filePath,
+                             const std::string& sep = ".");
+    std::string fileExtension(const std::string& filePath,
+                              const std::string& sep = ".");
     bool isNotValidIdentifier(int c);
     std::string CIdentifier(const std::string& str);
 

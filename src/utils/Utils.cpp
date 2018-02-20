@@ -486,11 +486,12 @@ bool N2D2::Utils::isAbsolutePath(const std::string& path) {
     return false;
 }
 
-std::string N2D2::Utils::dirName(const std::string& filePath)
+std::string N2D2::Utils::dirName(const std::string& filePath, bool stripSlash)
 {
     const size_t slashPos = filePath.find_last_of("/\\");
-    return (slashPos == std::string::npos) ? "."
-                                           : filePath.substr(0, slashPos + 1);
+    return (slashPos == std::string::npos)
+        ? "."
+        : filePath.substr(0, (stripSlash) ? slashPos : (slashPos + 1));
 }
 
 std::string N2D2::Utils::baseName(const std::string& filePath)
@@ -500,9 +501,10 @@ std::string N2D2::Utils::baseName(const std::string& filePath)
                                            : filePath.substr(slashPos + 1);
 }
 
-std::string N2D2::Utils::fileBaseName(const std::string& filePath)
+std::string N2D2::Utils::fileBaseName(const std::string& filePath,
+                                      const std::string& sep)
 {
-    const size_t dotPos = filePath.find_last_of(".");
+    const size_t dotPos = filePath.find_last_of(sep);
     if (dotPos == std::string::npos || dotPos == 0)
         return filePath;
 
@@ -512,9 +514,10 @@ std::string N2D2::Utils::fileBaseName(const std::string& filePath)
                : filePath.substr(0, dotPos);
 }
 
-std::string N2D2::Utils::fileExtension(const std::string& filePath)
+std::string N2D2::Utils::fileExtension(const std::string& filePath,
+                                       const std::string& sep)
 {
-    const size_t dotPos = filePath.find_last_of(".");
+    const size_t dotPos = filePath.find_last_of(sep);
     if (dotPos == std::string::npos || dotPos == 0)
         return "";
 
