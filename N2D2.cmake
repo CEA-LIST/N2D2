@@ -141,7 +141,12 @@ endif()
 
 FIND_PACKAGE(JsonCpp)
 if (JSONCPP_FOUND)
-    INCLUDE_DIRECTORIES(SYSTEM ${JSONCPP_INCLUDE_DIR})
+    message(STATUS "JsonCpp library status:")
+    message(STATUS "    version: ${JsonCpp_VERSION_STRING}")
+    message(STATUS "    include path: ${JsonCpp_INCLUDE_DIR}")
+    message(STATUS "    libraries: ${JsonCpp_LIBRARIES}")
+
+    INCLUDE_DIRECTORIES(SYSTEM ${JsonCpp_INCLUDE_DIR})
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSONCPP=1")
 endif()
 
@@ -246,7 +251,7 @@ MACRO(N2D2_MAKE_LIBRARY name)
     endif()
 
     if (JSONCPP_FOUND)
-        TARGET_LINK_LIBRARIES(${name} ${JSONCPP_LIBRARIES})
+        TARGET_LINK_LIBRARIES(${name} ${JsonCpp_LIBRARIES})
     endif()
 
     if (MongoDB_FOUND)
