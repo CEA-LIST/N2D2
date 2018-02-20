@@ -120,8 +120,9 @@ unsigned int N2D2::DeepNet::Histogram::truncate(double value) {
 unsigned int N2D2::DeepNet::Histogram::getBinIdx(double value) const
 {
     const double clampedValue = Utils::clamp(value, minVal, maxVal);
-    unsigned int binIdx = (unsigned int)(nbBins * (clampedValue - minVal)
-                                    / (maxVal - minVal));
+    unsigned int binIdx = (maxVal != minVal)
+        ? (unsigned int)(nbBins * (clampedValue - minVal) / (maxVal - minVal))
+        : 0;
 
     if (binIdx == nbBins)
         --binIdx;
