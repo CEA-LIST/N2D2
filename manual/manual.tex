@@ -64,8 +64,13 @@
 \usepackage{xcolor,soul}						% Pour la gestion des couleurs
 \usepackage{longtable}
 \usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
 \usepackage{titling}
 \usepackage{color, colortbl}
+\usepackage{multirow}
 
 
 % Définition des couleurs utilisées dans le document
@@ -1700,6 +1705,33 @@ dbExtract()
  \hline
 \end{tabular}
 \end{center}
+
+
+
+\paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!Cityscapes_Database!}{Cityscapes\_Database}}
+Cityscapes database \citep{Cordts2016Cityscapes}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!IncTrainExtra! [0] & If true, includes the left 8-bit images -
+  trainextra set (19,998 images) \\
+  \lstinline!UseCoarse! [0] & If true, only use coarse annotations (which are
+  the only annotations available for the trainextra set) \\
+  \lstinline!SingleInstanceLabels! [1] & If true, convert group labels to single
+  instance labels (for example, \lstinline!cargroup! becomes \lstinline!car!) \\
+  \lstinline!DataPath! & Path to the database images \\
+   \noindent [\lstinline!$N2D2_DATA!/ & \\
+   \noindent Cityscapes/leftImg8bit] or & \\
+   \noindent [\lstinline!$CITYSCAPES_DATASET!] if defined & \\
+  \lstinline!LabelPath! [] & Path to the database annotations
+  (deduced from \lstinline!DataPath! if left empty) \\
+ \hline
+\end{tabular}
+\end{center}
+
 
 \paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!Daimler_Database!}{Daimler\_Database}}
@@ -3604,6 +3636,54 @@ Deconvolutionlayer.
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!Pool!}{Pool}}
 Pooling layer.
+
+There are two CUDA models for this cell:
+\begin{myitemize}
+    \item \lstinline!Frame_CUDA!, which uses CuDNN as back-end and only supports
+    one-to-one input to output map connection;
+    \item \lstinline!Frame_EXT_CUDA!, which uses custom CUDA kernels and allows
+    arbitrary connections between input and output maps (and can therefore be
+    used to implement Maxout or both Maxout and Pooling simultaneously).
+\end{myitemize}
+
+\paragraph{Maxout example}
+
+In the following INI section, one implements a Maxout between each consecutive
+pair of 8 input maps:
+
+\begin{lstlisting}[language=ini]
+[maxout_layer]
+Input=...
+Type=Pool
+Model=Frame_EXT_CUDA
+PoolWidth=1
+PoolHeight=1
+NbChannels=4
+Pooling=Max
+Mapping.SizeY=2
+Mapping.StrideY=2
+\end{lstlisting}
+
+The layer connectivity is the following:
+\begin{center}
+ \begin{tabular}{| c c | C{0.33cm}  C{0.33cm}  C{0.33cm}  C{0.33cm} | }
+ \hline
+  \multirow{8}{*}{\rotatebox[origin=c]{90}{\# input map}}
+      & 1 & \cellcolor{black} &   &   &   \\
+      & 2 & \cellcolor{black} &   &   &   \\
+      & 3 &   & \cellcolor{black} &   &   \\
+      & 4 &   & \cellcolor{black} &   &   \\
+      & 5 &   &   & \cellcolor{black} &   \\
+      & 6 &   &   & \cellcolor{black} &   \\
+      & 7 &   &   &   & \cellcolor{black} \\
+      & 8 &   &   &   & \cellcolor{black} \\
+ \hline
+  & & 1 & 2 & 3 & 4 \\
+  & & \multicolumn{4}{|c|}{\# output map}\\
+ \hline
+\end{tabular}
+\end{center}
+
 
 \begin{center}
  \begin{longtable}{| p{5cm} | p{10cm} | }
