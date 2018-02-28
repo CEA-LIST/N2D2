@@ -27,13 +27,15 @@ N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const std::string& name,
                                      unsigned int nbOutputs,
                                      Operation operation,
                                      const std::vector<Float_T>& weights,
+                                     const std::vector<Float_T>& shifts,
                                      const std::shared_ptr
                                      <Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       ElemWiseCell(name,
                nbOutputs,
                operation,
-               weights),
+               weights,
+               shifts),
       Cell_Frame(name, nbOutputs, activation)
 {
     // ctor
@@ -52,6 +54,7 @@ void N2D2::ElemWiseCell_Frame::initialize()
     }
 
     mWeights.resize(mInputs.size(), 1.0);
+    mShifts.resize(mInputs.size(), 0.0);
 
     if (mOperation == Max) {
         mArgMax.resize(mOutputs.dimX(),
@@ -77,10 +80,12 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
 
     if (mOperation == Sum) {
         for (unsigned int n = 0; n < nbElems; ++n) {
-            mOutputs(n) = mWeights[0] * mInputs[0](n);
+            mOutputs(n) = mWeights[0] * mInputs[0](n) 
+                            + mShifts[0];
 
             for (unsigned int k = 1; k < nbInputs; ++k)
-                mOutputs(n) += mWeights[k] * mInputs[k](n);
+                mOutputs(n) += mWeights[k] * mInputs[k](n) 
+                                + mShifts[k];
         }
     }
     else if (mOperation == AbsSum) {
@@ -94,11 +99,13 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
     else if (mOperation == EuclideanSum) {
         for (unsigned int n = 0; n < nbElems; ++n) {
             mInterTerm(n) = (mWeights[0] * mWeights[0])
-                * (mInputs[0](n) * mInputs[0](n));
+                * (mInputs[0](n) * mInputs[0](n))
+                + (mShifts[0]*mShifts[0]);
 
             for (unsigned int k = 1; k < nbInputs; ++k) {
                 mInterTerm(n) += (mWeights[k] * mWeights[k])
-                    * (mInputs[k](n) * mInputs[k](n));
+                    * (mInputs[k](n) * mInputs[k](n))
+                    + (mShifts[k]*mShifts[k]);
             }
 
             mInterTerm(n) = std::sqrt(mInterTerm(n));

@@ -25,10 +25,12 @@ const char* N2D2::ElemWiseCell::Type = "ElemWise";
 N2D2::ElemWiseCell::ElemWiseCell(const std::string& name,
                          unsigned int nbOutputs,
                          Operation operation,
-                         const std::vector<Float_T>& weights)
+                         const std::vector<Float_T>& weights,
+                         const std::vector<Float_T>& shifts)
     : Cell(name, nbOutputs),
       mOperation(operation),
-      mWeights(weights)
+      mWeights(weights),
+      mShifts(shifts)
 {
     // ctor
 }

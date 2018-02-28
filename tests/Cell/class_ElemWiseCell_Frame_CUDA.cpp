@@ -33,11 +33,12 @@ public:
                             unsigned int nbOutputs,
                             Operation operation,
                    const std::vector<Float_T>& weights = std::vector<Float_T>(),
+                   const std::vector<Float_T>& shifts = std::vector<Float_T>(),
                    const std::shared_ptr<Activation<Float_T> >& activation
                    = std::shared_ptr<Activation<Float_T> >())
         : Cell(name, nbOutputs),
-          ElemWiseCell(name, nbOutputs, operation, weights),
-          ElemWiseCell_Frame_CUDA(name, nbOutputs, operation, weights, activation)
+          ElemWiseCell(name, nbOutputs, operation, weights, shifts),
+          ElemWiseCell_Frame_CUDA(name, nbOutputs, operation, weights, shifts, activation)
     {}
 };
 
@@ -198,6 +199,77 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     for (unsigned int o = 0; o < outputs.size(); ++o) {
         ASSERT_EQUALS_DELTA(outputs(o),
                             wA * inputsA(o) + wB * inputsB(o) + wC * inputsC(o),
+                            1.0e-6);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+TEST_DATASET(ElemWiseCell_Frame_CUDA,
+             propagate_sum3_w_s,
+             (double wA, double wB, double wC,
+              double sA, double sB, double sC),
+             std::make_tuple(1.0, 1.0, 1.0, 0.0, 0.0, 0.0),
+             std::make_tuple(0.33, 0.66, 0.99, 0.4, 0.67, 1.256),
+             std::make_tuple(0.0, 2.0, -1.0, -0.58, 0.39, 4.2))
+{
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+    std::vector<Float_T> weights;
+    weights.push_back(wA);
+    weights.push_back(wB);
+    weights.push_back(wC);
+    std::vector<Float_T> shifts;
+    shifts.push_back(sA);
+    shifts.push_back(sB);
+    shifts.push_back(sC);
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                     nbOutputs,
+                                     ElemWiseCell::Sum,
+                                     weights,
+                                     shifts);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+    inputsC.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsC, diffOutputsC);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            wA * inputsA(o) + sA 
+                            + wB * inputsB(o) + sB 
+                            + wC * inputsC(o) + sC,
                             1.0e-6);
     }
 
@@ -544,6 +616,78 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 
     ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
 }
+
+TEST_DATASET(ElemWiseCell_Frame_CUDA,
+             propagate_euclidean_sum3_w_s,
+             (double wA, double wB, double wC,
+              double sA, double sB, double sC),
+             std::make_tuple(1.0, 1.0, 1.0, 0.0, 0.0, 0.0),
+             std::make_tuple(0.33, 0.66, 0.99, 0.4, 0.67, 1.256),
+             std::make_tuple(0.0, 2.0, -1.0, -0.58, 0.39, 4.2))
+{
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 4;
+    std::vector<Float_T> weights;
+    weights.push_back(wA);
+    weights.push_back(wB);
+    weights.push_back(wC);
+    std::vector<Float_T> shifts;
+    shifts.push_back(sA);
+    shifts.push_back(sB);
+    shifts.push_back(sC);
+
+    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+                                          nbOutputs,
+                                          ElemWiseCell::EuclideanSum,
+                                          weights,
+                                          shifts);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+        inputsC(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+    inputsC.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsC, diffOutputsC);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+
+    ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsA.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsA.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        ASSERT_EQUALS_DELTA(outputs(o),
+                            std::sqrt(wA * wA * inputsA(o) * inputsA(o) + sA*sA
+                                + wB * wB * inputsB(o) * inputsB(o) + sB*sB
+                                + wC * wC * inputsC(o) * inputsC(o) + sC*sC),
+                            1.0e-6);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
 
 TEST(ElemWiseCell_Frame_CUDA,
      propagate_prod2)

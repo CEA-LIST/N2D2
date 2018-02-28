@@ -48,6 +48,9 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
     const std::vector<Float_T> weights = iniConfig.getProperty
                     <std::vector<Float_T> >("Weights", std::vector<Float_T>());
 
+    const std::vector<Float_T> shifts = iniConfig.getProperty
+                    <std::vector<Float_T> >("Shifts", std::vector<Float_T>());
+
     std::shared_ptr<Activation<Float_T> > activation
         = ActivationGenerator::generate(
             iniConfig, section, model, "ActivationFunction");
@@ -59,6 +62,7 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
                                   nbOutputs,
                                   operation,
                                   weights,
+                                  shifts,
                                   activation);
 
     if (!cell) {
@@ -72,7 +76,7 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
 
     // Load configuration file (if exists)
     cell->loadParameters(section + ".cfg", true);
-
+/*
     const unsigned int x0 = iniConfig.getProperty
                             <unsigned int>("InputOffsetX", 0);
     const unsigned int y0 = iniConfig.getProperty
@@ -93,7 +97,18 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
         else
             cell->addInput((*it).get(), x0, y0, width, height);
     }
-
+*/
+    // Connect the cell to the parents
+    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
+         = parents.begin(),
+         itEnd = parents.end();
+         it != itEnd;
+         ++it) {
+        if (!(*it))
+            cell->addInput(sp, 0, 0, sp.getSizeX(), sp.getSizeY());
+        else
+            cell->addInput((*it).get());
+    }
     std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
 
     return cell;

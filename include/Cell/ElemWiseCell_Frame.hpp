@@ -31,6 +31,7 @@ public:
                    unsigned int nbOutputs,
                    Operation operation = Sum,
                    const std::vector<Float_T>& weights = std::vector<Float_T>(),
+                   const std::vector<Float_T>& shifts = std::vector<Float_T>(),
                    const std::shared_ptr<Activation<Float_T> >& activation
                    = std::shared_ptr<Activation<Float_T> >());
     static std::shared_ptr<ElemWiseCell> create(Network& /*net*/,
@@ -38,6 +39,8 @@ public:
                                             unsigned int nbOutputs,
                                             Operation operation = Sum,
                                             const std::vector<Float_T>& weights
+                                            = std::vector<Float_T>(),
+                                            const std::vector<Float_T>& shifts
                                             = std::vector<Float_T>(),
                                             const std::shared_ptr
                                             <Activation<Float_T> >& activation
@@ -48,6 +51,7 @@ public:
                                                 nbOutputs,
                                                 operation,
                                                 weights,
+                                                shifts,
                                                 activation);
     }
 

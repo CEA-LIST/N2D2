@@ -72,6 +72,7 @@ __global__ void cudaSMult_kernel(unsigned int size,
 __global__ void cudaSScale_kernel(unsigned int size,
                                   float* input,
                                   const float scale,
+                                  const float shift,
                                   const float beta,
                                   float* result)
 {
@@ -80,11 +81,11 @@ __global__ void cudaSScale_kernel(unsigned int size,
 
     if (beta != 0.0f) {
         for (unsigned int i = index; i < size; i += stride)
-            result[i] = input[i] * scale + beta * result[i];
+            result[i] = input[i] * scale + shift + beta * result[i];
     }
     else {
         for (unsigned int i = index; i < size; i += stride)
-            result[i] = input[i] * scale;
+            result[i] = input[i] * scale  + shift;
     }
 }
 
@@ -134,6 +135,7 @@ __global__ void cudaSScaleSign_kernel(unsigned int size,
 __global__ void cudaSScaleSquare_kernel(unsigned int size,
                                         float* input,
                                         const float scale,
+                                        const float shift,
                                         const float beta,
                                         float* result)
 {
@@ -142,11 +144,13 @@ __global__ void cudaSScaleSquare_kernel(unsigned int size,
 
     if (beta != 0.0f) {
         for (unsigned int i = index; i < size; i += stride)
-            result[i] = input[i] * input[i] * scale + beta * result[i];
+            result[i] = input[i] * input[i] * scale 
+                            + shift + beta * result[i];
     }
     else {
         for (unsigned int i = index; i < size; i += stride)
-            result[i] = input[i] * input[i] * scale;
+            result[i] = input[i] * input[i] * scale
+                            + shift;
     }
 }
 
@@ -252,12 +256,14 @@ void N2D2::cudaSMult(unsigned int size,
 void N2D2::cudaSScale(unsigned int size,
                       float* input,
                       const float scale,
+                      const float shift,
                       const float beta,
                       float* result)
 {
     cudaSScale_kernel<<<(size + 255) / 256, 256>>>(size,
                                                    input,
                                                    scale,
+                                                   shift,
                                                    beta,
                                                    result);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
@@ -296,12 +302,14 @@ void N2D2::cudaSScaleSign(unsigned int size,
 void N2D2::cudaSScaleSquare(unsigned int size,
                             float* input,
                             const float scale,
+                            const float shift,
                             const float beta,
                             float* result)
 {
     cudaSScaleSquare_kernel<<<(size + 255) / 256, 256>>>(size,
                                                          input,
                                                          scale,
+                                                         shift,
                                                          beta,
                                                          result);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());

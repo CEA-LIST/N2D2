@@ -61,6 +61,7 @@ public:
                                    unsigned int,
                                    Operation,
                                    const std::vector<Float_T>&,
+                                   const std::vector<Float_T>&,
                                    const std::shared_ptr<Activation<Float_T> >&
                                        activation)> RegistryCreate_T;
 
@@ -74,7 +75,8 @@ public:
     ElemWiseCell(const std::string& name,
              unsigned int nbOutputs,
              Operation operation = Sum,
-             const std::vector<Float_T>& weights = std::vector<Float_T>());
+             const std::vector<Float_T>& weights = std::vector<Float_T>(),
+             const std::vector<Float_T>& shifts = std::vector<Float_T>());
     const char* getType() const
     {
         return Type;
@@ -83,6 +85,15 @@ public:
     {
         return mOperation;
     };
+    std::vector<Float_T> getWeights() const
+    {
+        return mWeights;
+    };
+    std::vector<Float_T> getShifts() const
+    {
+        return mShifts;
+    };
+
     void getStats(Stats& stats) const;
     virtual ~ElemWiseCell() {};
 
@@ -93,6 +104,9 @@ protected:
     const Operation mOperation;
     // Block coefficients
     std::vector<Float_T> mWeights;
+    // Block shifts
+    std::vector<Float_T> mShifts;
+
 };
 }
 

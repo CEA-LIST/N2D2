@@ -32,12 +32,14 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
     unsigned int nbOutputs,
     Operation operation,
     const std::vector<Float_T>& weights,
+    const std::vector<Float_T>& shifts,
     const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       ElemWiseCell(name,
                nbOutputs,
                operation,
-               weights),
+               weights,
+               shifts),
       Cell_Frame_CUDA(name, nbOutputs, activation)
 {
     // ctor
@@ -56,6 +58,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
     }
 
     mWeights.resize(mInputs.size(), 1.0);
+    mShifts.resize(mInputs.size(), 0.0);
 
     if (mOperation == Max) {
         mArgMax.resize(mOutputs.dimX(),
@@ -80,10 +83,12 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
     mInputs.synchronizeHBasedToD();
 
     if (mOperation == Sum) {
-        // mOutputs <- mWeights[0] * mInputs[0]
+        // mOutputs <- mWeights[0] * mInputs[0] + mShifts[0]
+
         cudaSScale(nbElems,
                    mInputs[0].getDevicePtr(),
                    mWeights[0],
+                   mShifts[0],
                    0.0f,
                    mOutputs.getDevicePtr());
 
@@ -96,6 +101,16 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
                                             1,
                                             mOutputs.getDevicePtr(),
                                             1));
+
+            // mOutputs <- mOutputs + mShifts[k]
+            if(mShifts[k] != 0.0)
+                cudaSScale(nbElems,
+                            mOutputs.getDevicePtr(),
+                            1.0f,
+                            mShifts[k],
+                            0.0f,
+                            mOutputs.getDevicePtr());
+
         }
     }
     else if (mOperation == AbsSum) {
@@ -120,6 +135,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
         cudaSScaleSquare(nbElems,
                          mInputs[0].getDevicePtr(),
                          mWeights[0] * mWeights[0],
+                         mShifts[0] * mShifts[0],
                          0.0f,
                          mInterTerm.getDevicePtr());
 
@@ -128,6 +144,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
             cudaSScaleSquare(nbElems,
                              mInputs[k].getDevicePtr(),
                              mWeights[k] * mWeights[k],
+                             mShifts[k] * mShifts[k],
                              1.0f,
                              mInterTerm.getDevicePtr());
         }
@@ -238,6 +255,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                            mDiffInputs.getDevicePtr(),
                            mWeights[k],
                            0.0f,
+                           0.0f,
                            mDiffOutputs[k].getDevicePtr());
             }
         }
@@ -345,6 +363,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::checkGradient(double epsilon, double maxErro
                   << std::endl;
     }
 }
+
 
 N2D2::ElemWiseCell_Frame_CUDA::~ElemWiseCell_Frame_CUDA()
 {
