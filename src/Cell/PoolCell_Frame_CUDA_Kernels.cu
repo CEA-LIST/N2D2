@@ -94,10 +94,18 @@ void cudaSPoolForwardAverage_kernel(const float alpha,
 
                 const unsigned int outputsIdx
                     = ox + (oy + output * outputsHeight) * outputsWidth;
-                outputs[outputsIdx + batchOutputOffset]
-                    = alpha * ((poolCount > 0) ?
-                                  (poolValue / poolCount) : 0.0)
-                      + beta * outputs[outputsIdx + batchOutputOffset];
+
+                if (beta != 0.0f) {
+                    outputs[outputsIdx + batchOutputOffset]
+                        = alpha * ((poolCount > 0) ?
+                                      (poolValue / poolCount) : 0.0)
+                          + beta * outputs[outputsIdx + batchOutputOffset];
+                }
+                else {
+                    outputs[outputsIdx + batchOutputOffset]
+                        = alpha * ((poolCount > 0) ?
+                                      (poolValue / poolCount) : 0.0);
+                }
             }
         }
     }
@@ -210,9 +218,14 @@ void cudaSPoolForwardMax_kernel(const float alpha,
                     argMax[outputsIdx].valid = valid;
                 }
 
-                outputs[outputsIdx]
-                    = alpha * poolValue
-                      + beta * outputs[outputsIdx];
+                if (beta != 0.0f) {
+                    outputs[outputsIdx]
+                        = alpha * poolValue
+                          + beta * outputs[outputsIdx];
+                }
+                else {
+                    outputs[outputsIdx] = alpha * poolValue;
+                }
             }
         }
     }
@@ -310,9 +323,15 @@ void cudaSPoolBackwardAverage_kernel(const float alpha,
                 const unsigned int inputsIdx
                     = ix + (iy + channel * channelsHeight) * channelsWidth
                         + batchInputOffset;
-                diffOutputs[inputsIdx]
-                    = alpha * (poolGradient / poolCount)
-                      + beta * diffOutputs[inputsIdx];
+
+                if (beta != 0.0f) {
+                    diffOutputs[inputsIdx]
+                        = alpha * (poolGradient / poolCount)
+                          + beta * diffOutputs[inputsIdx];
+                }
+                else {
+                    diffOutputs[inputsIdx] = alpha * (poolGradient / poolCount);
+                }
             }
         }
     }
@@ -407,9 +426,15 @@ void cudaSPoolBackwardMax_kernel(const float alpha,
                 const unsigned int inputsIdx
                     = ix + (iy + channel * channelsHeight) * channelsWidth
                         + batchInputOffset;
-                diffOutputs[inputsIdx]
-                    = alpha * poolGradient
-                      + beta * diffOutputs[inputsIdx];
+
+                if (beta != 0.0f) {
+                    diffOutputs[inputsIdx]
+                        = alpha * poolGradient
+                          + beta * diffOutputs[inputsIdx];
+                }
+                else {
+                    diffOutputs[inputsIdx] = alpha * poolGradient;
+                }
             }
         }
     }

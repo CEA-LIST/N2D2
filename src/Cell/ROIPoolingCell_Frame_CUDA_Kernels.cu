@@ -130,7 +130,7 @@ void cudaSROIPoolingForwardBilinearTF_kernel(const float alpha,
                                             + channel*channelsHeight*channelsWidth
                                             + batchInputOffset;
                 const bool invalid = ignorePad ? (((sx0 + 1 < channelsWidth )  && (sy0 + 1 < channelsHeight ))  ? false : true) : false;
-                                            
+
 /**INITIAL
                 const float i00 = inputs[idxI00];
 
@@ -140,7 +140,7 @@ void cudaSROIPoolingForwardBilinearTF_kernel(const float alpha,
                 const float i01 = (sy0 + 1 < channelsHeight ) ?
                                      inputs[idxI01]: 0.0;
 
-                const float i11 = (sx0 + 1 < channelsWidth 
+                const float i11 = (sx0 + 1 < channelsWidth
                                      && sy0 + 1 < channelsHeight )
                                      ? inputs[idxI11] : 0.0;
 **/
@@ -152,8 +152,8 @@ void cudaSROIPoolingForwardBilinearTF_kernel(const float alpha,
                 const float i01 = (sy0 + 1 < channelsHeight ) && (!invalid)  ?
                                      inputs[idxI01]: 0.0;
 
-                const float i11 = (sx0 + 1 < channelsWidth 
-                                     && sy0 + 1 < channelsHeight ) && (!invalid) 
+                const float i11 = (sx0 + 1 < channelsWidth
+                                     && sy0 + 1 < channelsHeight ) && (!invalid)
                                      ? inputs[idxI11] : 0.0;
 
 
@@ -168,8 +168,13 @@ void cudaSROIPoolingForwardBilinearTF_kernel(const float alpha,
                     = ox + (oy + (channel + outputOffset) * outputsHeight)
                         * outputsWidth + batchOutputOffset;
 
-                outputs[outputsIdx]
-                    = alpha * value + beta * outputs[outputsIdx];
+                if (beta != 0.0f) {
+                    outputs[outputsIdx]
+                        = alpha * value + beta * outputs[outputsIdx];
+                }
+                else {
+                    outputs[outputsIdx] = alpha * value;
+                }
             }
         }
     }
@@ -260,10 +265,18 @@ void cudaSROIPoolingForwardAverage_kernel(const float alpha,
                 const unsigned int outputsIdx
                     = ox + (oy + (channel + outputOffset) * outputsHeight)
                         * outputsWidth + batchOutputOffset;
-                outputs[outputsIdx]
-                    = alpha * ((poolCount > 0) ?
-                                  (poolValue / poolCount) : 0.0)
-                      + beta * outputs[outputsIdx];
+
+                if (beta != 0.0f) {
+                    outputs[outputsIdx]
+                        = alpha * ((poolCount > 0) ?
+                                      (poolValue / poolCount) : 0.0)
+                          + beta * outputs[outputsIdx];
+                }
+                else {
+                    outputs[outputsIdx]
+                        = alpha * ((poolCount > 0) ?
+                                      (poolValue / poolCount) : 0.0);
+                }
             }
         }
     }
@@ -374,9 +387,15 @@ void cudaSROIPoolingForwardMax_kernel(const float alpha,
                 argMax[argMaxIdx].channel = channel;
                 argMax[argMaxIdx].valid = valid;
 
-                outputs[outputsIdx]
-                    = alpha * poolValue
-                      + beta * outputs[outputsIdx];
+                if (beta != 0.0f) {
+                    outputs[outputsIdx]
+                        = alpha * poolValue
+                          + beta * outputs[outputsIdx];
+                }
+                else {
+                    outputs[outputsIdx]
+                        = alpha * poolValue;
+                }
             }
         }
     }

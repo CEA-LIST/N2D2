@@ -134,7 +134,7 @@ void N2D2::GradientCheck::check(const std::string& tensorName,
                     cumulativeError += error;
                     ++nbGradients;
 
-                    if (error >= mMaxError) {
+                    if (error >= mMaxError || std::isnan(error)) {
                         std::cout << "Gradient check error for \"" << tensorName
                                   << "\""
                                   << " @ (" << x << ", " << y << ", " << z

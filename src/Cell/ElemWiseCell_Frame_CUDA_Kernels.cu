@@ -59,8 +59,14 @@ __global__ void cudaSMult_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride)
-        result[i] = a[i] * b[i] + beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = a[i] * b[i] + beta * result[i];
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = a[i] * b[i];
+    }
 }
 
 __global__ void cudaSScale_kernel(unsigned int size,
@@ -72,8 +78,14 @@ __global__ void cudaSScale_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride)
-        result[i] = input[i] * scale + beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = input[i] * scale + beta * result[i];
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = input[i] * scale;
+    }
 }
 
 __global__ void cudaSScaleAbs_kernel(unsigned int size,
@@ -85,8 +97,14 @@ __global__ void cudaSScaleAbs_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride)
-        result[i] = fabs(input[i]) * scale + beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = fabs(input[i]) * scale + beta * result[i];
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = fabs(input[i]) * scale;
+    }
 }
 
 __global__ void cudaSScaleSign_kernel(unsigned int size,
@@ -99,9 +117,17 @@ __global__ void cudaSScaleSign_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        const float sgn = (sign[i] >= 0) ? 1.0f : -1.0f;
-        result[i] = input[i] * sgn * scale + beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride) {
+            const float sgn = (sign[i] >= 0) ? 1.0f : -1.0f;
+            result[i] = input[i] * sgn * scale + beta * result[i];
+        }
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride) {
+            const float sgn = (sign[i] >= 0) ? 1.0f : -1.0f;
+            result[i] = input[i] * sgn * scale;
+        }
     }
 }
 
@@ -114,8 +140,14 @@ __global__ void cudaSScaleSquare_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride)
-        result[i] = input[i] * input[i] * scale + beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = input[i] * input[i] * scale + beta * result[i];
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            result[i] = input[i] * input[i] * scale;
+    }
 }
 
 __global__ void cudaSMaxForward_kernel(unsigned int size,
@@ -145,9 +177,17 @@ __global__ void cudaSMaxBackward_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        result[i] = (argMax[i] == idx) ? (diffInput[i] + beta * result[i])
-                                       : beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride) {
+            result[i] = (argMax[i] == idx) ? (diffInput[i] + beta * result[i])
+                                           : beta * result[i];
+        }
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride) {
+            result[i] = (argMax[i] == idx) ? diffInput[i]
+                                           : 0.0f;
+        }
     }
 }
 
@@ -162,10 +202,19 @@ __global__ void cudaSEuclideanSumBackward_kernel(unsigned int size,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        result[i] = (output[i] != 0.0f)
-            ? diffInput[i] * scale * (input[i] / output[i]) + beta * result[i]
-            : beta * result[i];
+    if (beta != 0.0f) {
+        for (unsigned int i = index; i < size; i += stride) {
+            result[i] = (output[i] != 0.0f)
+                ? diffInput[i] * scale * (input[i] / output[i]) + beta * result[i]
+                : beta * result[i];
+        }
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride) {
+            result[i] = (output[i] != 0.0f)
+                ? diffInput[i] * scale * (input[i] / output[i])
+                : 0.0f;
+        }
     }
 }
 
