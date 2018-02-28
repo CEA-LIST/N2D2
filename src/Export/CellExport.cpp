@@ -73,7 +73,8 @@ long long int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
 
 bool N2D2::CellExport::generateFreeParameter(Cell& cell,
                                              double value,
-                                             std::ostream& stream)
+                                             std::ostream& stream,
+                                             bool typeAccuracy)
 {
     if (mPrecision > 0) {
         const double scaling = (double)(std::pow(2, mPrecision - 1) - 1);
@@ -91,11 +92,14 @@ bool N2D2::CellExport::generateFreeParameter(Cell& cell,
             stream << std::showpoint
                    << std::setprecision(std::numeric_limits<double>::digits10
                                         + 1) << ((double)value);
-        else
+        else {
             stream << std::showpoint << std::setprecision(std::numeric_limits
                                                           <float>::digits10 + 1)
-                   << ((float)value) << "f";
-
+                   << ((float)value);
+        
+            if(typeAccuracy)
+                stream << "f";
+        }
         return false;
     }
 }
