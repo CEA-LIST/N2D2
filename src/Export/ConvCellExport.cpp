@@ -28,6 +28,9 @@ void N2D2::ConvCellExport::generate(Cell& cell,
                                     const std::string& dirName,
                                     const std::string& type)
 {
-    Registrar<ConvCellExport>::create(type)(*dynamic_cast<ConvCell*>(&cell),
-                                            dirName);
+    if (Registrar<ConvCellExport>::exists(type)) {
+        std::cout << "-> Generating cell " << cell.getName() << std::endl;
+        Registrar<ConvCellExport>::create(type)(*dynamic_cast<ConvCell*>(&cell),
+                                                dirName);
+    }
 }

@@ -510,6 +510,22 @@ std::shared_ptr<N2D2::Monitor> N2D2::DeepNet::getMonitor(const std::string
 }
 
 std::vector<std::shared_ptr<N2D2::Cell> >
+N2D2::DeepNet::getChildCells(const std::string& name) const
+{
+    std::vector<std::shared_ptr<Cell> > childCells;
+
+    for (std::multimap<std::string, std::string>::const_iterator it
+         = mParentLayers.begin(), itEnd = mParentLayers.end(); it != itEnd;
+         ++it)
+    {
+        if ((*it).second == name)
+            childCells.push_back((*mCells.find((*it).first)).second);
+    }
+
+    return childCells;
+}
+
+std::vector<std::shared_ptr<N2D2::Cell> >
 N2D2::DeepNet::getParentCells(const std::string& name) const
 {
     std::vector<std::shared_ptr<Cell> > parentCells;

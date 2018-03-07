@@ -197,6 +197,8 @@ public:
     {
         return mLayers.at(layer);
     };
+    std::vector<std::shared_ptr<Cell> > getChildCells(const std::string
+                                                       & name) const;
     std::vector<std::shared_ptr<Cell> > getParentCells(const std::string
                                                        & name) const;
     template <class T = Cell>

@@ -18,19 +18,19 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Export/SoftmaxCellExport.hpp"
+#include "Export/ElemWiseCellExport.hpp"
 
 N2D2::Registrar<N2D2::CellExport>
-N2D2::SoftmaxCellExport::mRegistrar(SoftmaxCell::Type,
-                                    N2D2::SoftmaxCellExport::generate);
+N2D2::ElemWiseCellExport::mRegistrar(ElemWiseCell::Type,
+                                 N2D2::ElemWiseCellExport::generate);
 
-void N2D2::SoftmaxCellExport::generate(Cell& cell,
-                                       const std::string& dirName,
-                                       const std::string& type)
+void N2D2::ElemWiseCellExport::generate(Cell& cell,
+                                    const std::string& dirName,
+                                    const std::string& type)
 {
-    if (Registrar<SoftmaxCellExport>::exists(type)) {
+    if (Registrar<ElemWiseCellExport>::exists(type)) {
         std::cout << "-> Generating cell " << cell.getName() << std::endl;
-        Registrar<SoftmaxCellExport>::create(type)(
-            *dynamic_cast<SoftmaxCell*>(&cell), dirName);
+        Registrar<ElemWiseCellExport>::create(type)(
+            *dynamic_cast<ElemWiseCell*>(&cell), dirName);
     }
 }

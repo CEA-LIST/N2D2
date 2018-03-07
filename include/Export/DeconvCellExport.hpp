@@ -18,19 +18,34 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Export/SoftmaxCellExport.hpp"
+#ifndef N2D2_DECONVCELLEXPORT_H
+#define N2D2_DECONVCELLEXPORT_H
 
-N2D2::Registrar<N2D2::CellExport>
-N2D2::SoftmaxCellExport::mRegistrar(SoftmaxCell::Type,
-                                    N2D2::SoftmaxCellExport::generate);
+#include "CellExport.hpp"
+#include "Cell/DeconvCell.hpp"
 
-void N2D2::SoftmaxCellExport::generate(Cell& cell,
-                                       const std::string& dirName,
-                                       const std::string& type)
-{
-    if (Registrar<SoftmaxCellExport>::exists(type)) {
-        std::cout << "-> Generating cell " << cell.getName() << std::endl;
-        Registrar<SoftmaxCellExport>::create(type)(
-            *dynamic_cast<SoftmaxCell*>(&cell), dirName);
+namespace N2D2 {
+/**
+ * Base class for methods for the DeconvCell type for any export type
+ * DeconvCell, ANY EXPORT
+*/
+class DeconvCellExport : public CellExport {
+public:
+    typedef std::function
+        <void(DeconvCell& cell, const std::string&)> RegistryCreate_T;
+
+    static RegistryMap_T& registry()
+    {
+        static RegistryMap_T rMap;
+        return rMap;
     }
+
+    static void
+    generate(Cell& cell, const std::string& dirName, const std::string& type);
+
+private:
+    static Registrar<CellExport> mRegistrar;
+};
 }
+
+#endif // N2D2_DECONVCELLEXPORT_H

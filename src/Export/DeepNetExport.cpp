@@ -71,7 +71,6 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
              it != itEnd;
              ++it)
         {
-            std::cout << "-> Generating cell " << (*it) << std::endl;
             CellExport::generate(*deepNet.getCell(*it), dirName, type);
         }
     }

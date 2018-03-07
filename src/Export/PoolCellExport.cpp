@@ -28,6 +28,9 @@ void N2D2::PoolCellExport::generate(Cell& cell,
                                     const std::string& dirName,
                                     const std::string& type)
 {
-    Registrar<PoolCellExport>::create(type)(*dynamic_cast<PoolCell*>(&cell),
-                                            dirName);
+    if (Registrar<PoolCellExport>::exists(type)) {
+        std::cout << "-> Generating cell " << cell.getName() << std::endl;
+        Registrar<PoolCellExport>::create(type)(*dynamic_cast<PoolCell*>(&cell),
+                                                dirName);
+    }
 }

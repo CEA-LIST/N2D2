@@ -28,6 +28,9 @@ void N2D2::BatchNormCellExport::generate(Cell& cell,
                                          const std::string& dirName,
                                          const std::string& type)
 {
-    Registrar<BatchNormCellExport>::create(type)(
-        *dynamic_cast<BatchNormCell*>(&cell), dirName);
+    if (Registrar<BatchNormCellExport>::exists(type)) {
+        std::cout << "-> Generating cell " << cell.getName() << std::endl;
+        Registrar<BatchNormCellExport>::create(type)(
+            *dynamic_cast<BatchNormCell*>(&cell), dirName);
+    }
 }

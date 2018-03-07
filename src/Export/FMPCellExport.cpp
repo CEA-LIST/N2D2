@@ -28,6 +28,9 @@ void N2D2::FMPCellExport::generate(Cell& cell,
                                    const std::string& dirName,
                                    const std::string& type)
 {
-    Registrar
-        <FMPCellExport>::create(type)(*dynamic_cast<FMPCell*>(&cell), dirName);
+    if (Registrar<FMPCellExport>::exists(type)) {
+        std::cout << "-> Generating cell " << cell.getName() << std::endl;
+        Registrar<FMPCellExport>::create(type)(*dynamic_cast<FMPCell*>(&cell),
+                                               dirName);
+    }
 }
