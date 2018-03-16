@@ -275,8 +275,8 @@ int main(int argc, char* argv[]) try
                                            nbLevels, nbCalibrationPasses);
 
             // For following test simulation
-            deepNet->setSignalsDiscretization(nbLevels);
-            deepNet->setFreeParametersDiscretization(nbLevels);
+            deepNet->setParameter("SignalsDiscretization", nbLevels);
+            deepNet->setParameter("FreeParametersDiscretization", nbLevels);
 
             LogisticActivationDisabled = false;
             afterCalibration = true;

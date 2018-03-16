@@ -263,10 +263,11 @@ double N2D2::DeepNet::Histogram::KLDivergence(const Histogram& ref,
 }
 
 N2D2::DeepNet::DeepNet(Network& net)
-    : mNet(net),
+    : mName(this, "Name", ""),
+      mSignalsDiscretization(this, "SignalsDiscretization", 0U),
+      mFreeParametersDiscretization(this, "FreeParametersDiscretization", 0U),
+      mNet(net),
       mLayers(1, std::vector<std::string>(1, "env")),
-      mSignalsDiscretization(0),
-      mFreeParametersDiscretization(0),
       mFreeParametersDiscretized(false),
       mStreamIdx(0),
       mStreamTestIdx(0)

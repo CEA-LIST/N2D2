@@ -69,9 +69,10 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
                                         <bool>("CheckWeightRange", true));
 
     std::shared_ptr<DeepNet> deepNet(new DeepNet(network));
-    deepNet->setSignalsDiscretization(
+    deepNet->setParameter("Name", Utils::baseName(fileName));
+    deepNet->setParameter("SignalsDiscretization",
         iniConfig.getProperty<unsigned int>("SignalsDiscretization", 0U));
-    deepNet->setFreeParametersDiscretization(
+    deepNet->setParameter("FreeParametersDiscretization",
         iniConfig.getProperty
         <unsigned int>("FreeParametersDiscretization", 0U));
 

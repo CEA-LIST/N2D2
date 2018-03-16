@@ -59,7 +59,7 @@
 #endif
 
 namespace N2D2 {
-class DeepNet {
+class DeepNet : public Parameterizable {
 public:
     struct RangeStats {
         double minVal;
@@ -148,16 +148,6 @@ public:
     {
         mStimuliProvider = sp;
     }
-    void setSignalsDiscretization(unsigned int signalsDiscretization = 0)
-    {
-        mSignalsDiscretization = signalsDiscretization;
-    }
-    void
-    setFreeParametersDiscretization(unsigned int freeParametersDiscretization
-                                    = 0)
-    {
-        mFreeParametersDiscretization = freeParametersDiscretization;
-    }
     template <class T>
     void setCellsParameter(const std::string& name,
                            T value,
@@ -209,14 +199,6 @@ public:
     };
     template <class T = Target>
     std::shared_ptr<T> getTarget(unsigned int index = 0) const;
-    unsigned int getSignalsDiscretization() const
-    {
-        return mSignalsDiscretization;
-    }
-    unsigned int getFreeParametersDiscretization() const
-    {
-        return mFreeParametersDiscretization;
-    }
     void getStats(Cell::Stats& stats) const;
 
     // Clear
@@ -260,6 +242,11 @@ public:
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
                    Gnuplot& p);
 
+protected:
+    Parameter<std::string> mName;
+    Parameter<unsigned int> mSignalsDiscretization;
+    Parameter<unsigned int> mFreeParametersDiscretization;
+
 private:
     Network& mNet;
     std::shared_ptr<Database> mDatabase;
@@ -269,8 +256,6 @@ private:
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
     std::vector<std::vector<std::string> > mLayers;
     std::multimap<std::string, std::string> mParentLayers;
-    unsigned int mSignalsDiscretization;
-    unsigned int mFreeParametersDiscretization;
     bool mFreeParametersDiscretized;
     unsigned int mStreamIdx;
     unsigned int mStreamTestIdx;
