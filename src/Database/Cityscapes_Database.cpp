@@ -169,7 +169,7 @@ void N2D2::Cityscapes_Database::loadLabels(const std::string& labelPath) {
 
         if (!reader.parse(jsonData, labels)) {
             std::cerr << "Error parsing JSON file " << labelName << " at line "
-                << reader.getFormatedErrorMessages() << std::endl;
+                << reader.getFormattedErrorMessages() << std::endl;
 
             throw std::runtime_error("JSON file parsing failed");
         }
