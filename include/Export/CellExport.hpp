@@ -81,6 +81,7 @@ public:
     enum IntApprox {
         Floor,
         Ceil,
+        Truncate,
         Round,
         PowerOfTwo
     };
@@ -110,7 +111,7 @@ public:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::CellExport::IntApprox>::data[]
-    = {"Floor", "Ceil", "Round", "PowerOfTwo"};
+    = {"Floor", "Ceil", "Truncate", "Round", "PowerOfTwo"};
 }
 
 #endif // N2D2_CELLEXPORT_H

@@ -44,6 +44,8 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
         return std::floor(value);
     else if (method == Ceil)
         return std::ceil(value);
+    else if (method == Truncate)
+        return (long long int)value;
     else if (method == Round)
         return Utils::round(value);
     else if (method == PowerOfTwo) {
@@ -96,7 +98,7 @@ bool N2D2::CellExport::generateFreeParameter(Cell& cell,
             stream << std::showpoint << std::setprecision(std::numeric_limits
                                                           <float>::digits10 + 1)
                    << ((float)value);
-        
+
             if(typeAccuracy)
                 stream << "f";
         }
