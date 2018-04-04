@@ -23,6 +23,8 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 
 OPTION(CHECK_COVERAGE "Generate coveralls data" OFF)
 
+message(STATUS "CMake version is ${CMAKE_VERSION}")
+
 if (NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "No build type selected, default to Release")
     SET(CMAKE_BUILD_TYPE "Release")
@@ -214,10 +216,10 @@ SET(SRC "")
 SET(CU_SRC "")
 
 MACRO(N2D2_AUX_SOURCE src_path)
-    GET_DIRECTORIES(sources_dirs ${src_path}/*.cpp)
-    FOREACH(source_dir ${sources_dirs})
-        AUX_SOURCE_DIRECTORY(${source_dir} SRC)
-    ENDFOREACH()
+    # CMake 3.11.0 adds *.cu when using the AUX_SOURCE_DIRECTORY command
+    # But this should be done only if CUDA_FOUND is true
+    FILE(GLOB_RECURSE CPP_SRC_PATH "${src_path}/*.cpp")
+    LIST(APPEND SRC "${CPP_SRC_PATH}")
 
     if (CUDA_FOUND)
         FILE(GLOB_RECURSE CU_SRC_PATH "${src_path}/*.cu")
