@@ -455,10 +455,10 @@ bool N2D2::Utils::createDirectories(const std::string& dirName)
 
         if (stat(pathToDir.c_str(), &fileStat) != 0) {
 // Directory does not exist
-#if defined(WIN32) || defined(_WIN32)
+#if defined(WIN32)
             status = _mkdir(pathToDir.c_str());
 #else
-#ifdef S_IRWXU
+#if !defined(_WIN32) && defined(S_IRWXU)
             status = mkdir(pathToDir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 #else
             status = mkdir(pathToDir.c_str());

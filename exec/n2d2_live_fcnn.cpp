@@ -33,7 +33,7 @@
 #include "Export/StimuliProviderExport.hpp"
 #include "utils/Key.hpp"
 
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32)
 #include <windows.h>
 #endif
 
@@ -66,7 +66,7 @@ void capture(cv::VideoCapture& video, cv::Mat& frame)
         if (!flag)
             return;
 
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32)
         Sleep(10); // ms
 #else
         usleep(10000);
@@ -428,7 +428,7 @@ int main(int argc, char* argv[])
                       << recordFileName << Utils::cdef << std::endl;
     }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(_WIN32)
     // The signalHandler is there to make sure that video.release() is called
     // when doing a CTRL+C
     // Otherwise, the webcam can be left in corrupted state and may not work
