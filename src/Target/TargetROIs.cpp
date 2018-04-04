@@ -442,7 +442,7 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     if (ret < 0) {
     } // avoid ignoring return value warning
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
     ret = symlink(N2D2_PATH("tools/target_rois_viewer.py"),
                   (dirPath + ".py").c_str());
     if (ret < 0) {

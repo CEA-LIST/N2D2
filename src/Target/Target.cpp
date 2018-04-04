@@ -504,7 +504,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
     const int ret = symlink(N2D2_PATH("tools/target_viewer.py"),
                             (dirPath + ".py").c_str());
     if (ret < 0) {

@@ -172,7 +172,11 @@ if(MSVC)
     ADD_DEFINITIONS(/wd4250 /wd4512)
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char -std=c++0x -fPIC")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char -std=c++0x")
+
+    if (NOT MINGW)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    endif()
 
     if(${OpenCV_VERSION} VERSION_EQUAL "2.0.0")
         MESSAGE(WARNING "Compiling with _GLIBCXX_PARALLEL flag")
