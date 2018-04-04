@@ -33,7 +33,7 @@ const Time_T TimeUs = 1000 * TimeNs;
 const Time_T TimeMs = 1000 * TimeUs;
 const Time_T TimeS = 1000 * TimeMs;
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
 void exceptionHandler(int sig, siginfo_t* info, void* /*data*/)
 {
     void* array[50];
@@ -96,7 +96,7 @@ N2D2::Network::Network(unsigned int seed)
       mStartTime(std::chrono::high_resolution_clock::now())
 {
 // ctor
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
     // Additional check on floating point operations.
     {
         struct sigaction action;

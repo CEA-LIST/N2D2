@@ -40,7 +40,7 @@
 #include <fenv.h>
 #endif
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
 #include <csignal>
 #include <cstring>
 #include <execinfo.h>
@@ -52,7 +52,7 @@
 #endif
 
 namespace N2D2 {
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
 void UnitTest_exceptionHandler(int sig);
 #endif
 

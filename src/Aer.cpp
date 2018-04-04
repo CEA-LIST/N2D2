@@ -510,7 +510,7 @@ void N2D2::Aer::viewer(const std::string& fileName,
         cv::imshow("N2D2", frame);
         timeLast += 20 * TimeMs;
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         const int excepts = fegetexcept();
         fedisableexcept(FE_UNDERFLOW); // cv::waitKey() can trigger a floating
 // exception, apparently an underflow,
@@ -524,7 +524,7 @@ void N2D2::Aer::viewer(const std::string& fileName,
                 break;
         }
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
 #endif
 

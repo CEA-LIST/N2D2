@@ -20,7 +20,7 @@
 
 #include "utils/UnitTest.hpp"
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
 namespace N2D2 {
 void UnitTest_exceptionHandler(int sig, siginfo_t* info, void* /*data*/)
 {
@@ -105,7 +105,7 @@ void N2D2::UnitTest::addTest(UnitTest_Test* test)
 
 int N2D2::UnitTest::runTests()
 {
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
     // Additional check on floating point operations.
     {
         struct sigaction action;

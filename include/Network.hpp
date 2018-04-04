@@ -37,7 +37,7 @@
 #include <fenv.h>
 #endif
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
 #include <csignal>
 #include <cstring>
 #include <execinfo.h>
@@ -69,7 +69,7 @@ typedef unsigned int XcellId_T;
 typedef unsigned long long int EventType_T;
 typedef std::vector<std::pair<Time_T, EventType_T> > NodeEvents_T;
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
 void exceptionHandler(int sig);
 #endif
 

@@ -57,14 +57,14 @@ void N2D2::LogisticActivation_Frame<T>::propagate(Tensor4d<T>* data)
 
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)data->size(); ++index){
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         const int excepts = fegetexcept();
         fedisableexcept(FE_OVERFLOW);
 #endif
 
         (*data)(index) = 1.0f / (1.0f + std::exp(-(*data)(index)));
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
 #endif
     }
