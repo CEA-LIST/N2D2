@@ -31,7 +31,7 @@
 #include "Export/DeepNetExport.hpp"
 #include "Export/StimuliProviderExport.hpp"
 #include "utils/Key.hpp"
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32)
     #include <windows.h>
 #endif
 
@@ -69,7 +69,7 @@ void capture(cv::VideoCapture& video, cv::Mat& frame) {
         if (!flag)
             return;
 
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32)
         Sleep(10);    // ms
 #else
         usleep(100000);
