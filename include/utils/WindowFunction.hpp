@@ -24,6 +24,9 @@
 #include <cmath>
 #include <vector>
 
+// for M_PI definition
+#include "utils/Utils.hpp"
+
 namespace N2D2 {
 /**
  * Abstract base class to implement a window function, used for various signal
