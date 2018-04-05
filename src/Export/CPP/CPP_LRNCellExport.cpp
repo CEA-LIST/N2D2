@@ -66,13 +66,6 @@ void N2D2::CPP_LRNCellExport::generateHeaderConstants(LRNCell& cell,
               "#define " << prefix << "_CHANNELS_HEIGHT "
            << cell.getChannelsHeight() << "\n\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
-
-    if (cellFrame != NULL) {
-        header << "#define " << prefix << "_ACTIVATION "
-               << cellFrame->getActivation()->getType() << "\n";
-    }
-
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
            << "_NB_OUTPUTS*" << prefix << "_OUTPUTS_WIDTH*" << prefix
            << "_OUTPUTS_HEIGHT)\n"
