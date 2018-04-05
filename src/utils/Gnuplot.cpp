@@ -29,7 +29,7 @@ N2D2::Gnuplot::Gnuplot(const std::string& fileName) : mSubPipe(false)
 {
     if (mMasterCmdPipe == NULL) {
 #ifdef WIN32
-        mCmdPipe = _popen("pgnuplot.exe", "w");
+        mCmdPipe = _popen("gnuplot.exe", "w");
 #else
         mCmdPipe = popen("gnuplot", "w");
 #endif
