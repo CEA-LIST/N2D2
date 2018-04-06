@@ -84,7 +84,13 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     for (unsigned int i = 0; i < size; ++i) {
         std::stringstream stimuliName;
         stimuliName << dirName << "/env" << std::setfill('0')
-                    << std::setw(zeroPad) << i << ".pgm";
+                    << std::setw(zeroPad) << i;
+
+        if (nbChannels > 1)
+            stimuliName << ".ppm";
+        else
+            stimuliName << ".pgm";
+
         stimuliList << Utils::baseName(dirName) << "/"
                     << Utils::baseName(stimuliName.str()) << "\n";
 
@@ -100,8 +106,12 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                   ? 255
                   : 65535;
 
-        envStimuli << "P5\n" << envSizeX << " " << envSizeY << "\n" << maxValue
-                   << "\n";
+        if (nbChannels > 1)
+            envStimuli << "P6\n";
+        else
+            envStimuli << "P5\n";
+
+        envStimuli << envSizeX << " " << envSizeY << "\n" << maxValue << "\n";
 
         sp.readStimulus(set, i);
 
