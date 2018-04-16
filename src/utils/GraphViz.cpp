@@ -121,9 +121,9 @@ void N2D2::GraphViz::render(const std::string& fileName) const
         throw std::runtime_error("Could not open command file: " + fileName);
 
     if (mDirected)
-        dot << "digraph " << mName << " {\n";
+        dot << "digraph " << escape(mName) << " {\n";
     else
-        dot << "graph " << mName << " {\n";
+        dot << "graph " << escape(mName) << " {\n";
 
     const std::map<std::string,
         std::vector<std::pair<std::string, std::string> > >
@@ -135,8 +135,8 @@ void N2D2::GraphViz::render(const std::string& fileName) const
              itAttrsEnd = (*itGraphAttrs).second.end();
              itAttrs != itAttrsEnd; ++itAttrs)
         {
-            dot << "  " << (*itAttrs).first << "=\""
-                << (*itAttrs).second << "\";\n";
+            dot << "  " << (*itAttrs).first << "="
+                << escape((*itAttrs).second) << ";\n";
         }
     }
 
@@ -144,7 +144,7 @@ void N2D2::GraphViz::render(const std::string& fileName) const
          = mNodes.begin(), itEnd = mNodes.end(); it != itEnd; ++it)
     {
         if ((*it).first != mName) {
-            dot << "  subgraph " << (*it).first << " {\n";
+            dot << "  subgraph " << escape((*it).first) << " {\n";
 
             const std::map<std::string,
                 std::vector<std::pair<std::string, std::string> > >
@@ -156,8 +156,8 @@ void N2D2::GraphViz::render(const std::string& fileName) const
                      itAttrsEnd = (*itGraphAttrs).second.end();
                      itAttrs != itAttrsEnd; ++itAttrs)
                 {
-                    dot << "    " << (*itAttrs).first << "=\""
-                        << (*itAttrs).second << "\";\n";
+                    dot << "    " << (*itAttrs).first << "="
+                        << escape((*itAttrs).second) << ";\n";
                 }
             }
         }
@@ -169,7 +169,7 @@ void N2D2::GraphViz::render(const std::string& fileName) const
             if ((*it).first != mName)
                 dot << "  ";
 
-            dot << "  " << (*itNodes);
+            dot << "  " << escape(*itNodes);
 
             const std::map<std::string,
                 std::vector<std::pair<std::string, std::string> > >
@@ -181,8 +181,8 @@ void N2D2::GraphViz::render(const std::string& fileName) const
                      itAttrsEnd = (*itNodeAttrs).second.end();
                      itAttrs != itAttrsEnd; ++itAttrs)
                 {
-                    dot << "[" << (*itAttrs).first << "=\""
-                        << (*itAttrs).second << "\"]";
+                    dot << "[" << (*itAttrs).first << "="
+                        << escape((*itAttrs).second) << "]";
                 }
             }
 
@@ -196,7 +196,7 @@ void N2D2::GraphViz::render(const std::string& fileName) const
     for (std::vector<std::pair<std::string, std::string> >::const_iterator it
          = mEdges.begin(), itEnd = mEdges.end(); it != itEnd; ++it)
     {
-        dot << "  " << (*it).first << " -> " << (*it).second;
+        dot << "  " << escape((*it).first) << " -> " << escape((*it).second);
 
         const std::string attrName = (*it).first + "->" + (*it).second;
         const std::map<std::string,
@@ -209,8 +209,8 @@ void N2D2::GraphViz::render(const std::string& fileName) const
                  itAttrsEnd = (*itEdgeAttrs).second.end();
                  itAttrs != itAttrsEnd; ++itAttrs)
             {
-                dot << "[" << (*itAttrs).first << "=\""
-                    << (*itAttrs).second << "\"]";
+                dot << "[" << (*itAttrs).first << "="
+                    << escape((*itAttrs).second) << "]";
             }
         }
 
@@ -234,4 +234,17 @@ void N2D2::GraphViz::render(const std::string& fileName) const
 N2D2::GraphViz::~GraphViz()
 {
     //dtor
+}
+
+std::string N2D2::GraphViz::escape(const std::string& str) const
+{
+    if (std::find_if(str.begin(), str.end(), Utils::isNotValidIdentifier)
+        != str.end() || (!str.empty() && !isalpha(str[0])))
+    {
+        std::stringstream quotedStr;
+        quotedStr << Utils::quoted(str);
+        return quotedStr.str();
+    }
+    else
+        return str;
 }

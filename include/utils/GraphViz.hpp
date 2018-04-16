@@ -57,6 +57,9 @@ public:
     void render(const std::string& fileName) const;
     virtual ~GraphViz();
 
+protected:
+    std::string escape(const std::string& str) const;
+
 private:
     std::string mName;
     bool mDirected;
