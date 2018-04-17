@@ -54,7 +54,7 @@ void envRead(const std::string& fileName,
     char header[2];
     stimuli.read(reinterpret_cast<char*>(&header[0]), sizeof(header));
 
-    if (header[0] != 'P' || header[1] != '5')
+    if (header[0] != 'P' || (header[1] != '5' && header[1] != '6'))
         throw std::runtime_error("Unknown PGM file format for file: "
                                  + fileName);
 
