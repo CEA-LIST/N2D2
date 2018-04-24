@@ -44,10 +44,14 @@ public:
                             unsigned int scoreIndex = 0,
                             unsigned int IoUIndex = 5,
                             bool isNms = false,
-                            std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                            std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
-                            std::vector<unsigned int> numParts = {},
-                            std::vector<unsigned int> numTemplates = {});
+                            std::vector<double> meansFactor
+                                                        = std::vector<double>(),
+                            std::vector<double> stdFactor
+                                                        = std::vector<double>(),
+                            std::vector<unsigned int> numParts
+                                                = std::vector<unsigned int>(),
+                            std::vector<unsigned int> numTemplates
+                                                = std::vector<unsigned int>());
 
     static std::shared_ptr<ProposalCell> create(const std::string& name,
                                           StimuliProvider& sp,
@@ -56,10 +60,14 @@ public:
                                           unsigned int scoreIndex = 0,
                                           unsigned int IoUIndex = 5,
                                           bool isNms = false,
-                                          std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                                          std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
-                                          std::vector<unsigned int> numParts = {},
-                                          std::vector<unsigned int> numTemplates = {})
+                                          std::vector<double> meansFactor
+                                                        = std::vector<double>(),
+                                          std::vector<double> stdFactor
+                                                        = std::vector<double>(),
+                                          std::vector<unsigned int> numParts
+                                                = std::vector<unsigned int>(),
+                                          std::vector<unsigned int> numTemplates
+                                                = std::vector<unsigned int>())
     {
         return std::make_shared<ProposalCell_Frame_CUDA>(name,
                                                         sp,
@@ -87,11 +95,11 @@ public:
 
 protected:
     virtual void setOutputsSize();
-  
+
     CudaTensor4d<Float_T> mMeansCUDA;
-    CudaTensor4d<Float_T> mStdCUDA; 
-    CudaTensor4d<Float_T> mNormalizeROIs; 
-    CudaTensor4d<int> mMaxCls; 
+    CudaTensor4d<Float_T> mStdCUDA;
+    CudaTensor4d<Float_T> mNormalizeROIs;
+    CudaTensor4d<int> mMaxCls;
 
     CudaTensor4d<Float_T> mPartsPrediction;
     CudaTensor4d<int> mNumPartsPerClass;

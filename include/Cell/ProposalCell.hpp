@@ -72,10 +72,12 @@ public:
                  unsigned int scoreIndex = 0,
                  unsigned int IoUIndex = 5,
                  bool isNms = false,
-                 std::vector<double> meansFactor = { 0.0, 0.0, 0.0, 0.0},
-                 std::vector<double> stdFactor = {1.0, 1.0, 1.0, 1.0},
-                 std::vector<unsigned int> numParts = {},
-                 std::vector<unsigned int> numTemplates = {});
+                 std::vector<double> meansFactor = std::vector<double>(),
+                 std::vector<double> stdFactor = std::vector<double>(),
+                 std::vector<unsigned int> numParts
+                                            = std::vector<unsigned int>(),
+                 std::vector<unsigned int> numTemplates
+                                            = std::vector<unsigned int>());
 
     const char* getType() const
     {
@@ -102,7 +104,7 @@ public:
     bool getIsNMS() const { return mApplyNMS; };
     bool getKeepMax() const { return mKeepMax; };
     unsigned int getNbClass() const { return mNbClass; };
-    
+
     bool getWithParts() const { return (mMaxParts > 0 ? true: false); };
     bool getWithTemplates() const { return (mMaxTemplates > 0 ? true: false); };
     unsigned int getMaxParts() const { return mMaxParts; };
@@ -113,7 +115,7 @@ public:
 
     std::vector<double> getMeanFactor() const { return mMeanFactor; };
     std::vector<double> getStdFactor() const { return mStdFactor; };
-    
+
     void getStats(Stats& stats) const;
 
     virtual ~ProposalCell() {};
@@ -129,8 +131,8 @@ protected:
     unsigned int mNbProposals;
     unsigned int mScoreIndex;
     unsigned int mIoUIndex;
-    unsigned int mMaxParts = 0;
-    unsigned int mMaxTemplates = 0;
+    unsigned int mMaxParts;
+    unsigned int mMaxTemplates;
     bool mApplyNMS;
     std::vector<double> mMeanFactor;
     std::vector<double> mStdFactor;
@@ -138,7 +140,7 @@ protected:
     std::vector<unsigned int> mNumTemplates;
     unsigned int mNbClass;
 
-    
+
 };
 }
 
