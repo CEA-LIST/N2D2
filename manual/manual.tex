@@ -4140,6 +4140,8 @@ Softmax layer.
   \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output neurons \\
   \lstinline!WithLoss! [0] & Softmax followed with a multinomial logistic
   layer \\
+  \lstinline!GroupSize! [0] & Softmax is applied on groups of outputs.
+   The group size must be a divisor of \lstinline!NbOutputs! parameter.\\
  \hline
 \end{longtable}
 \end{center}

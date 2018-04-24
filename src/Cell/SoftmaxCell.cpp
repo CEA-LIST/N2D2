@@ -25,8 +25,9 @@ const char* N2D2::SoftmaxCell::Type = "Softmax";
 
 N2D2::SoftmaxCell::SoftmaxCell(const std::string& name,
                                unsigned int nbOutputs,
-                               bool withLoss)
-    : Cell(name, nbOutputs), mWithLoss(withLoss)
+                               bool withLoss,
+                               unsigned int groupSize)
+    : Cell(name, nbOutputs), mWithLoss(withLoss), mGroupSize(groupSize)
 {
     // ctor
 }

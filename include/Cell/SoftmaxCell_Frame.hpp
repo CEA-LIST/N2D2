@@ -33,12 +33,14 @@ class SoftmaxCell_Frame : public virtual SoftmaxCell, public Cell_Frame {
 public:
     SoftmaxCell_Frame(const std::string& name,
                       unsigned int nbOutputs,
-                      bool withLoss = false);
+                      bool withLoss = false,
+                      unsigned int groupSize = 0);
     static std::shared_ptr<SoftmaxCell> create(const std::string& name,
                                                unsigned int nbOutputs,
-                                               bool withLoss = false)
+                                               bool withLoss = false,
+                                               unsigned int groupSize = 0)
     {
-        return std::make_shared<SoftmaxCell_Frame>(name, nbOutputs, withLoss);
+        return std::make_shared<SoftmaxCell_Frame>(name, nbOutputs, withLoss, groupSize);
     }
 
     virtual void initialize();

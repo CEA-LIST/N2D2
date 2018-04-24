@@ -39,13 +39,15 @@ class SoftmaxCell_Frame_CUDA : public virtual SoftmaxCell,
 public:
     SoftmaxCell_Frame_CUDA(const std::string& name,
                            unsigned int nbOutputs,
-                           bool withLoss = false);
+                           bool withLoss = false,
+                           unsigned int groupSize = 0);
     static std::shared_ptr<SoftmaxCell> create(const std::string& name,
                                                unsigned int nbOutputs,
-                                               bool withLoss = false)
+                                               bool withLoss = false,
+                                               unsigned int groupSize = 0)
     {
         return std::make_shared
-            <SoftmaxCell_Frame_CUDA>(name, nbOutputs, withLoss);
+            <SoftmaxCell_Frame_CUDA>(name, nbOutputs, withLoss, groupSize);
     }
 
     virtual void initialize();
@@ -57,6 +59,8 @@ public:
     virtual ~SoftmaxCell_Frame_CUDA();
 
 private:
+    cudnnTensorDescriptor_t mGroupTensor;
+
     static Registrar<SoftmaxCell> mRegistrar;
 };
 }

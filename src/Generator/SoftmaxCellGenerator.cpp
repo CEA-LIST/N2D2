@@ -39,6 +39,9 @@ N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
         "Model", CellGenerator::mDefaultModel);
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
+    const unsigned int groupSize = iniConfig.getProperty
+                                   <unsigned int>("GroupSize", 0U);
+
     const bool withLoss = iniConfig.getProperty<bool>("WithLoss", false);
 
     std::cout << "Layer: " << section << " [Softmax(" << model << ")]"
@@ -46,7 +49,7 @@ N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<SoftmaxCell> cell = Registrar
-        <SoftmaxCell>::create(model)(section, nbOutputs, withLoss);
+        <SoftmaxCell>::create(model)(section, nbOutputs, withLoss, groupSize);
 
     if (!cell) {
         throw std::runtime_error(

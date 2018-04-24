@@ -29,9 +29,10 @@ N2D2::SoftmaxCell_Frame_CUDA::mRegistrar("Frame_CUDA",
 
 N2D2::SoftmaxCell_Frame_CUDA::SoftmaxCell_Frame_CUDA(const std::string& name,
                                                      unsigned int nbOutputs,
-                                                     bool withLoss)
+                                                     bool withLoss,
+                                                     unsigned int groupSize)
     : Cell(name, nbOutputs),
-      SoftmaxCell(name, nbOutputs, withLoss),
+      SoftmaxCell(name, nbOutputs, withLoss, groupSize),
       Cell_Frame_CUDA(name, nbOutputs)
 {
     // ctor
@@ -42,6 +43,27 @@ void N2D2::SoftmaxCell_Frame_CUDA::initialize()
     if (mInputs.size() > 1)
         throw std::domain_error("SoftmaxCell_Frame_CUDA::initialize(): inputs "
                                 "concatenation is not supported.");
+
+    if(mGroupSize > 0)
+    {
+        if(mNbOutputs % mGroupSize)
+            throw std::domain_error("SoftmaxCell_Frame::initialize():"
+                                    " the group size must be divisible by "
+                                    "the number of outputs.");
+        CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mGroupTensor));
+
+        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(mGroupTensor,
+                                                      CUDNN_DATA_FLOAT,
+                                                      mInputs[0].dimB(),
+                                                      mGroupSize,
+                                                      mInputs[0].dimY(),
+                                                      mInputs[0].dimX(),
+                                                      mInputs[0].dimZ()*mInputs[0].dimY()*mInputs[0].dimX(),
+                                                      mInputs[0].dimY()*mInputs[0].dimX(),
+                                                      mInputs[0].dimX(),
+                                                      1));
+
+    }
 }
 
 void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
@@ -50,17 +72,33 @@ void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
 
     const float alpha = 1.0f;
     const float beta = 0.0f;
+    if(mGroupSize > 0)
+    {
+        for(unsigned int step = 0; step < mNbOutputs; step += mGroupSize)
+            CHECK_CUDNN_STATUS(cudnnSoftmaxForward(CudaContext::cudnnHandle(),
+                                                CUDNN_SOFTMAX_ACCURATE,
+                                                CUDNN_SOFTMAX_MODE_CHANNEL,
+                                                &alpha,
+                                                mGroupTensor,
+                                                mInputs[0].getDevicePtr() + step,
+                                                &beta,
+                                                mGroupTensor,
+                                                mOutputs.getDevicePtr() + step));
 
-    CHECK_CUDNN_STATUS(cudnnSoftmaxForward(CudaContext::cudnnHandle(),
-                                           CUDNN_SOFTMAX_ACCURATE,
-                                           CUDNN_SOFTMAX_MODE_CHANNEL,
-                                           &alpha,
-                                           mInputs[0].getCudnnTensorDesc(),
-                                           mInputs[0].getDevicePtr(),
-                                           &beta,
-                                           mOutputs.getCudnnTensorDesc(),
-                                           mOutputs.getDevicePtr()));
+    }
+    else
+    {
 
+        CHECK_CUDNN_STATUS(cudnnSoftmaxForward(CudaContext::cudnnHandle(),
+                                            CUDNN_SOFTMAX_ACCURATE,
+                                            CUDNN_SOFTMAX_MODE_CHANNEL,
+                                            &alpha,
+                                            mInputs[0].getCudnnTensorDesc(),
+                                            mInputs[0].getDevicePtr(),
+                                            &beta,
+                                            mOutputs.getCudnnTensorDesc(),
+                                            mOutputs.getDevicePtr()));
+    }
     mDiffInputs.clearValid();
 }
 
@@ -103,7 +141,24 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
         */
     } else {
         const float beta = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
+    if(mGroupSize > 0)
+    {
+        for(unsigned int step = 0; step < mNbOutputs; step += mGroupSize)
+            CHECK_CUDNN_STATUS(
+                cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
+                                    CUDNN_SOFTMAX_ACCURATE,
+                                    CUDNN_SOFTMAX_MODE_CHANNEL,
+                                    &alpha,
+                                    mGroupTensor,
+                                    mOutputs.getDevicePtr() + step,
+                                    mGroupTensor,
+                                    mDiffInputs.getDevicePtr() + step,
+                                    &beta,
+                                    mGroupTensor,
+                                    mDiffOutputs[0].getDevicePtr() + step));
 
+    }
+    else
         CHECK_CUDNN_STATUS(
             cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
                                  CUDNN_SOFTMAX_ACCURATE,
@@ -128,6 +183,9 @@ void N2D2::SoftmaxCell_Frame_CUDA::update()
 
 N2D2::SoftmaxCell_Frame_CUDA::~SoftmaxCell_Frame_CUDA()
 {
+    if(mGroupSize > 0)
+        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mGroupTensor));
+
 }
 
 #endif
