@@ -126,6 +126,7 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
 
             mNumPartsPerClass.synchronizeHToD();
             mPartsPrediction.synchronizeHToD();
+            mPartsVisibilityPrediction.synchronizeHToD();
         }
         else if (mInputs.size() == 6)
         {
@@ -178,6 +179,7 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
             mNumPartsPerClass.synchronizeHToD();
             mNumTemplatesPerClass.synchronizeHToD();
             mPartsPrediction.synchronizeHToD();
+            mPartsVisibilityPrediction.synchronizeHToD();
             mTemplatesPrediction.synchronizeHToD();
 
         }
@@ -202,20 +204,17 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
     const dim3 nbThread = {32, 1 , 1};
     const dim3 nbBlocks = {blockSize, 1 , inputBatch};
 
-
     cudaSNormalizeROIs( mInputs[0].dimX(),
                         mInputs[0].dimY(), 
                         mNbProposals, 
                         inputBatch, 
                         mScoreIndex,
                         mNbClass,
-
                         mMaxParts,
                         mMaxTemplates,
                         mKeepMax,
                         mMaxParts > 0 ? true : false,
                         mMaxTemplates > 0 ? true : false,
-                        
                         normX,
                         normY,
                         mMeansCUDA.getDevicePtr(),
@@ -234,13 +233,12 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mNormalizeROIs.getDevicePtr(),
                         mMaxCls.getDevicePtr(),
                         mPartsPrediction.getDevicePtr(),
+                        mPartsVisibilityPrediction.getDevicePtr(),
                         mTemplatesPrediction.getDevicePtr(),
                         mScoreThreshold,
                         nbThread,
                         nbBlocks);
-
-
-
+            
     if(mApplyNMS)
     {
         mMaxCls.synchronizeDToH();
@@ -348,6 +346,7 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mNormalizeROIs.getDevicePtr(),
                         mKeepIndex.getDevicePtr(),
                         mPartsPrediction.getDevicePtr(),
+                        mPartsVisibilityPrediction.getDevicePtr(),
                         mTemplatesPrediction.getDevicePtr(),
                         mOutputs.getDevicePtr(),
                         nbThread,

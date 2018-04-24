@@ -48,6 +48,7 @@ __global__ void cudaSNormalizeROIs_kernel( unsigned int inputSizeX,
                                             float* outputs,
                                             int* argMax,
                                             float* partsPrediction,
+                                            float* partsVisibilityPrediction,
                                             float* templatesPrediction,
                                             float scoreThreshold)
 {
@@ -155,6 +156,7 @@ __global__ void cudaSNormalizeROIs_kernel( unsigned int inputSizeX,
                     for(unsigned int part = 0; part < numPartsPerClass[clsIdx];
                             ++part)
                     {
+                        /// PARTS PROCESSING
                         //const unsigned int partIdx = (partsIdx + part)*2;
                         const unsigned int inPartIdx = batchPos*2*proposalPartIdx 
                                                         + index*2*proposalPartIdx 
@@ -171,6 +173,30 @@ __global__ void cudaSNormalizeROIs_kernel( unsigned int inputSizeX,
                         partsPrediction[0 + outPartIdx] = ((partY + 0.5) * hbbRef + ybbRef) / normY;
                         partsPrediction[1 + outPartIdx] = ((partX + 0.5) * wbbRef + xbbRef) / normX;
 
+                        /// PARTS VISIBILITY PROCESSING
+                        const unsigned int inPartVisibilityIdx = batchPos*4*proposalPartIdx 
+                                                                    + index*4*proposalPartIdx 
+                                                                    + partsIdx*4
+                                                                    + part*4;
+
+                        const unsigned int outPartVisibilityIdx = batchPos*maxParts*nbCls 
+                                                                    + index*maxParts*nbCls
+                                                                    + clsIdx*maxParts
+                                                                    + part;
+
+                        float idxMax = 0.0;
+                        float valueMax = partsVisibilityEst[inPartVisibilityIdx];
+                        
+                        for(unsigned int v = 1; v < 4; ++v)
+                        {
+                            if(partsVisibilityEst[v + inPartVisibilityIdx] > 
+                                        valueMax)
+                            {
+                                idxMax = (float) v;
+                                valueMax = partsVisibilityEst[v + inPartVisibilityIdx];
+                            }
+                        }
+                        partsVisibilityPrediction[outPartVisibilityIdx] = idxMax;
                     }
                 }
                 if(generateTemplates)
@@ -235,6 +261,7 @@ __global__ void cudaSToOutput_kernel( const unsigned int nbProposals,
                                       const float* ROIEst,
                                       const int* predictionIndex,
                                       const float* partsPrediction,
+                                      const float* partsVisibilityPrediction,
                                       const float* templatesPrediction,
                                       float* outputs)
 {
@@ -253,11 +280,11 @@ __global__ void cudaSToOutput_kernel( const unsigned int nbProposals,
         else if((nbOutputs == 5))
             outputIdx = index*5 + batchPos*5;
         else if(generateParts && generateTemplates)
-            outputIdx = (index + batchPos)*(5 + maxParts*2 + maxTemplates*3);
+            outputIdx = (index + batchPos)*(5 + maxParts*3 + maxTemplates*3);
         else if(generateTemplates)
             outputIdx = (index + batchPos)*(5 + maxTemplates*3);
         else if(generateParts)
-            outputIdx = (index + batchPos)*(5 + maxParts*2);
+            outputIdx = (index + batchPos)*(5 + maxParts*3);
 
         outputs[0 + outputIdx] = ROIEst[0 + inputIdx];
         outputs[1 + outputIdx] = ROIEst[1 + inputIdx];
@@ -282,6 +309,7 @@ __global__ void cudaSToOutput_kernel( const unsigned int nbProposals,
 
             if(predCls > -1)
             {
+                // PARTS PROCESSING
                 for(unsigned int part = 0; part < numPartsPerClass[predCls];
                      ++part)
                 {
@@ -299,7 +327,27 @@ __global__ void cudaSToOutput_kernel( const unsigned int nbProposals,
                     outputs[1 + offset + numPartsPerClass[predCls]*2 + idx*2 + outputIdx] = 0.0;
                 }
             }
-            offset += maxParts*2;
+
+            offset += 2*maxParts;
+
+            if(predCls > -1)
+            {
+                // PARTS VISIBILITY PROCESSING
+                for(unsigned int part = 0; part < numPartsPerClass[predCls];
+                     ++part)
+                {
+                    const unsigned int partVisibilityIdx = batchPos*maxParts*nbCls 
+                                                            + predProp*maxParts*nbCls
+                                                            + predCls*maxParts
+                                                            + part;
+                    outputs[offset + part + outputIdx] = partsVisibilityPrediction[partVisibilityIdx];
+
+                }
+
+                for(int idx = numPartsPerClass[predCls]; idx < maxParts; ++idx)
+                    outputs[offset + numPartsPerClass[predCls] + idx + outputIdx] = -1.0;
+            }
+            offset += maxParts;
         }
 
         if(generateTemplates)
@@ -361,6 +409,7 @@ void N2D2::cudaSNormalizeROIs(unsigned int inputSizeX,
                         float* outputs,
                         int* maxCls,
                         float* partsPrediction,
+                        float* partsVisibilityPrediction,
                         float* templatesPrediction,
                         float scoreThreshold,
                         const dim3 threadsPerBlock,
@@ -392,6 +441,7 @@ void N2D2::cudaSNormalizeROIs(unsigned int inputSizeX,
                                                                     outputs,
                                                                     maxCls,
                                                                     partsPrediction,
+                                                                    partsVisibilityPrediction,
                                                                     templatesPrediction,
                                                                     scoreThreshold);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
@@ -413,6 +463,7 @@ void N2D2::cudaSToOutputROIs(const unsigned int nbProposals,
                             const float* ROIEst,
                             const int* predictionIndex,
                             const float* partsPrediction,
+                            const float* partsVisibilityPrediction,
                             const float* templatesPrediction,
                             float* outputs,
                             const dim3 threadsPerBlock,
@@ -433,6 +484,7 @@ void N2D2::cudaSToOutputROIs(const unsigned int nbProposals,
                                                               ROIEst, 
                                                               predictionIndex,
                                                               partsPrediction,
+                                                              partsVisibilityPrediction,
                                                               templatesPrediction,
                                                               outputs);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());

@@ -80,12 +80,12 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
     unsigned int nbOutputTemplates = 0;
 
     if(partsPerCls.size() > 0)
-        nbOutputParts = (*std::max_element(partsPerCls.begin(), partsPerCls.end()))*2;
+        nbOutputParts = (*std::max_element(partsPerCls.begin(), partsPerCls.end()));
 
     if(templatesPerCls.size() > 0)
         nbOutputTemplates = (*std::max_element(templatesPerCls.begin(), templatesPerCls.end()))*3;
 
-    const unsigned int nbOutputs = withCls ? 5 + nbOutputParts + nbOutputTemplates : 4;
+    const unsigned int nbOutputs = withCls ? 5 + nbOutputParts*2 + nbOutputParts + nbOutputTemplates : 4;
     // Cell construction
     std::shared_ptr<ProposalCell> cell = Registrar
         <ProposalCell>::create(model)(section,

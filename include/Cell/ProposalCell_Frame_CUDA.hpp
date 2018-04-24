@@ -95,7 +95,7 @@ protected:
 
     CudaTensor4d<Float_T> mPartsPrediction;
     CudaTensor4d<int> mNumPartsPerClass;
-    CudaTensor4d<int> mPartsVisibilityPrediction;
+    CudaTensor4d<Float_T> mPartsVisibilityPrediction;
 
     CudaTensor4d<Float_T> mTemplatesPrediction;
     CudaTensor4d<int> mNumTemplatesPerClass;
