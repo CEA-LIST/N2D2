@@ -75,6 +75,10 @@ void N2D2::CPP_SoftmaxCellExport::generateHeaderConstants(SoftmaxCell& cell,
            << "_CHANNELS_HEIGHT)\n"
               "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
            << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+
+    header << "#define " << "GROUP_SIZE_" << prefix 
+            << " " << cell.getGroupSize() << "\n"; 
+
 }
 
 

@@ -48,7 +48,8 @@ N2D2::ProposalCell::ProposalCell(const std::string& name,
       mNumParts(numParts),
       mNumTemplates(numTemplates)
 {
-
+    mMaxParts = 0;
+    mMaxTemplates = 0;
 }
 
 void N2D2::ProposalCell::getStats(Stats& /*stats*/) const

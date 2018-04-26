@@ -65,6 +65,11 @@ public:
     {
         return Type;
     };
+    unsigned int getGroupSize() const
+    {
+        return mGroupSize;
+    };
+
     void getStats(Stats& stats) const;
     virtual ~SoftmaxCell() {};
 
