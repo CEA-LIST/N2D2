@@ -25,7 +25,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <algorithm> 
+#include <algorithm>
 
 #include "Cell_Frame_CUDA.hpp"
 #include "PaddingCell.hpp"
@@ -33,12 +33,12 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class PaddingCell_Frame_CUDA : public virtual PaddingCell, public Cell_Frame_CUDA {
 public:
-    PaddingCell_Frame_CUDA(const std::string& name, 
+    PaddingCell_Frame_CUDA(const std::string& name,
                            unsigned int nbOutputs,
                            int topPad,
                            int botPad,
@@ -51,7 +51,7 @@ public:
                                                 int leftPad = 0,
                                                 int rightPad = 0)
     {
-        return std::make_shared<PaddingCell_Frame_CUDA>(name, 
+        return std::make_shared<PaddingCell_Frame_CUDA>(name,
                                                         nbOutputs,
                                                         topPad,
                                                         botPad,

@@ -44,7 +44,7 @@ TEST_DATASET(Interface,
              std::make_tuple(12U, 34U),
              std::make_tuple(34U, 12U))
 {
-    Tensor4d<int> A(dimX, dimY, 1, 1);
+    Tensor<int> A({dimX, dimY, 1, 1});
     Interface<int> interface;
 
     ASSERT_EQUALS(interface.dimZ(), 0U);
@@ -76,8 +76,8 @@ TEST_DATASET(Interface,
              std::make_tuple(4U, 3U, 3U, 5U, 10U))
 {
     Interface<int> interface;
-    Tensor4d<int> A1(dimX, dimY, dimZ1, dimB);
-    Tensor4d<int> A2(dimX, dimY, dimZ2, dimB);
+    Tensor<int> A1({dimX, dimY, dimZ1, dimB});
+    Tensor<int> A2({dimX, dimY, dimZ2, dimB});
 
     interface.push_back(&A1);
     interface.push_back(&A2);
@@ -104,8 +104,8 @@ TEST_DATASET(Interface,
              std::make_tuple(3U, 4U, 1U, 1U, 3U, 4U, 1U, 5U))
 {
     Interface<int> interface;
-    Tensor4d<int> A1(dimX1, dimY1, dimZ1, dimB1);
-    Tensor4d<int> A2(dimX2, dimY2, dimZ2, dimB2);
+    Tensor<int> A1({dimX1, dimY1, dimZ1, dimB1});
+    Tensor<int> A2({dimX2, dimY2, dimZ2, dimB2});
 
     interface.push_back(&A1);
     ASSERT_THROW_ANY(interface.push_back(&A2));
@@ -131,8 +131,8 @@ TEST_DATASET(Interface,
     Random::mtSeed(0);
 
     Interface<int> interface;
-    Tensor4d<int> A1(dimX, dimY, dimZ1, dimB);
-    Tensor4d<int> A2(dimX, dimY, dimZ2, dimB);
+    Tensor<int> A1({dimX, dimY, dimZ1, dimB});
+    Tensor<int> A2({dimX, dimY, dimZ2, dimB});
 
     for (unsigned int b = 0; b < dimB; ++b) {
         for (unsigned int k = 0; k < dimZ1 + dimZ2; ++k) {
@@ -193,8 +193,8 @@ TEST_DATASET(Interface,
     Random::mtSeed(0);
 
     Interface<int> interface;
-    Tensor4d<int> A1(dimX, dimY, dimZ1, dimB, 0);
-    Tensor4d<int> A2(dimX, dimY, dimZ2, dimB, 23);
+    Tensor<int> A1({dimX, dimY, dimZ1, dimB}, 0);
+    Tensor<int> A2({dimX, dimY, dimZ2, dimB}, 23);
 
     interface.push_back(&A1);
     interface.push_back(&A2);
@@ -239,8 +239,8 @@ TEST_DATASET(Interface,
              std::make_tuple(125))
 {
     Interface<int> interface;
-    Tensor4d<int> A1(8, 8, 3, 4);
-    Tensor4d<int> A2(8, 8, 5, 4);
+    Tensor<int> A1({8, 8, 3, 4});
+    Tensor<int> A2({8, 8, 5, 4});
 
     interface.push_back(&A1);
     interface.push_back(&A2);
@@ -267,8 +267,8 @@ TEST_DATASET(Interface,
 TEST(Interface, clear)
 {
     Interface<int> interface;
-    Tensor4d<int> A1(1, 2, 3, 4);
-    Tensor4d<int> A2(1, 2, 5, 4);
+    Tensor<int> A1({1, 2, 3, 4});
+    Tensor<int> A2({1, 2, 5, 4});
 
     interface.push_back(&A1);
     interface.push_back(&A2);

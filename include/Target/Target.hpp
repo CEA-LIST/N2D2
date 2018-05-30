@@ -138,11 +138,11 @@ public:
     virtual void process(Database::StimuliSet set);
     virtual void logEstimatedLabels(const std::string& dirName) const;
     virtual void logLabelsLegend(const std::string& fileName) const;
-    const Tensor4d<int>& getEstimatedLabels() const
+    const Tensor<int>& getEstimatedLabels() const
     {
         return mEstimatedLabels;
     };
-    const Tensor4d<Float_T>& getEstimatedLabelsValue() const
+    const Tensor<Float_T>& getEstimatedLabelsValue() const
     {
         return mEstimatedLabelsValue;
     };
@@ -170,10 +170,10 @@ protected:
 
     std::map<int, int> mLabelsMapping;
     int mDefaultTarget;
-    Tensor4d<int> mTargets;
-    Tensor4d<int> mEstimatedLabels;
-    Tensor4d<Float_T> mEstimatedLabelsValue;
-    Tensor4d<Float_T> mEstimatedValues;
+    Tensor<int> mTargets;
+    Tensor<int> mEstimatedLabels;
+    Tensor<Float_T> mEstimatedLabelsValue;
+    Tensor<Float_T> mEstimatedValues;
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
 

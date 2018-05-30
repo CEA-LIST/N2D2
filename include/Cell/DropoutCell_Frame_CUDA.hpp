@@ -30,7 +30,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class DropoutCell_Frame_CUDA : public virtual DropoutCell,

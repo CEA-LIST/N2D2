@@ -18,15 +18,14 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "containers/Tensor3d.hpp"
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
 
 TEST(Tensor4d, Tensor4d)
 {
-    const Tensor4d<double> A;
+    const Tensor<double> A({0, 0, 0, 0});
 
     ASSERT_EQUALS(A.dimX(), 0U);
     ASSERT_EQUALS(A.dimY(), 0U);
@@ -50,7 +49,7 @@ TEST_DATASET(Tensor4d,
              std::make_tuple(12U, 34U, 1U, 1U),
              std::make_tuple(34U, 12U, 5U, 21U))
 {
-    Tensor4d<int> tensor(dimX, dimY, dimZ, dimB);
+    Tensor<int> tensor({dimX, dimY, dimZ, dimB});
 
     ASSERT_EQUALS(tensor.dimX(), dimX);
     ASSERT_EQUALS(tensor.dimY(), dimY);
@@ -61,8 +60,8 @@ TEST_DATASET(Tensor4d,
 
 TEST(Tensor4d, push_back)
 {
-    Tensor3d<int> A;
-    Tensor4d<int> tensor;
+    Tensor<int> A({0, 0, 0});
+    Tensor<int> tensor;
 
     ASSERT_EQUALS(tensor.dimB(), 0U);
     ASSERT_EQUALS(tensor.size(), 0U);
@@ -89,8 +88,8 @@ TEST_DATASET(Tensor4d,
              std::make_tuple(12U, 34U, 1U, 1U),
              std::make_tuple(34U, 12U, 5U, 21U))
 {
-    Tensor3d<int> A(dimX, dimY, dimZ);
-    Tensor4d<int> tensor;
+    Tensor<int> A({dimX, dimY, dimZ});
+    Tensor<int> tensor;
 
     for (unsigned int i = 0; i < dimB; ++i)
         tensor.push_back(A);
@@ -106,7 +105,7 @@ TEST_DATASET(Tensor4d,
              std::make_tuple(-10),
              std::make_tuple(125))
 {
-    Tensor4d<int> A1(8, 8, 3, 4);
+    Tensor<int> A1({8, 8, 3, 4});
     A1.fill(value);
 
     for (unsigned int b = 0; b < 4; ++b) {
@@ -122,7 +121,7 @@ TEST_DATASET(Tensor4d,
 
 TEST(Tensor4d, clear)
 {
-    Tensor4d<double> A(2, 3, 4, 5, 1.0);
+    Tensor<double> A({2, 3, 4, 5}, 1.0);
 
     ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
 

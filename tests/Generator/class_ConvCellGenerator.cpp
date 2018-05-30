@@ -38,7 +38,7 @@ TEST(ConvCellGenerator, ConvCellGenerator)
     iniConfig.load("ConvCellGenerator.in");
 
     Network net;
-    Environment env(net, EmptyDatabase, 24, 24);
+    Environment env(net, EmptyDatabase, {24, 24, 1});
 
     std::shared_ptr<ConvCell> convCell = ConvCellGenerator::generate(
         net, env, std::vector<std::shared_ptr<Cell> >(1), iniConfig, "conv1");
@@ -103,7 +103,7 @@ TEST_DATASET(ConvCellGenerator,
     iniConfig.load("ConvCellGenerator_mapping.in");
 
     Network net;
-    Environment env(net, EmptyDatabase, 24, 24);
+    Environment env(net, EmptyDatabase, {24, 24, 1});
 
     std::shared_ptr<ConvCell> convCell1 = ConvCellGenerator::generate(
         net, env, std::vector<std::shared_ptr<Cell> >(1), iniConfig, "conv1");

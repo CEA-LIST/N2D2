@@ -63,7 +63,7 @@ protected:
 
     // mInputsBackProp (ix, iy, channel, batchPos)
     // list of the output node(s) to backpropagate from] (for Max pooling)
-    Tensor4d<std::vector<unsigned int> > mInputsBackProp;
+    Tensor<std::vector<unsigned int> > mInputsBackProp;
     bool mLockRandom;
 
 private:

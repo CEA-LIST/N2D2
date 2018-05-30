@@ -70,9 +70,9 @@ void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& sp,
 
     if (mOutputs.empty()) {
         mOutputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, sp.getBatchSize());
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, sp.getBatchSize()});
         mDiffInputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB()});
     }
 
     // Define input-output connections
@@ -83,7 +83,7 @@ void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& sp,
                                  " channels");
     }
 
-    mMaps.resize(mNbOutputs, mNbChannels);
+    mMaps.resize({mNbOutputs, mNbChannels});
     const unsigned int channelOffset = mNbChannels - sp.getNbChannels();
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
@@ -116,9 +116,9 @@ void N2D2::Cell_Frame_CUDA::addInput(Cell* cell, const Matrix<bool>& mapping)
 
     if (mOutputs.empty()) {
         mOutputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB()});
         mDiffInputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB()});
     }
 
     // Define input-output connections
@@ -129,7 +129,7 @@ void N2D2::Cell_Frame_CUDA::addInput(Cell* cell, const Matrix<bool>& mapping)
                                  " channels");
     }
 
-    mMaps.resize(mNbOutputs, mNbChannels);
+    mMaps.resize({mNbOutputs, mNbChannels});
     const unsigned int channelOffset = mNbChannels - cell->getNbOutputs();
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
@@ -161,8 +161,8 @@ void N2D2::Cell_Frame_CUDA::addInput(Cell* cell,
     Cell_Frame_CUDA::addInput(cell);
 }
 
-void N2D2::Cell_Frame_CUDA::addInput(Tensor4d<Float_T>& inputs,
-                                     Tensor4d<Float_T>& diffOutputs)
+void N2D2::Cell_Frame_CUDA::addInput(Tensor<Float_T>& inputs,
+                                     Tensor<Float_T>& diffOutputs)
 {
     // Define input-output sizes
     setInputsSize(inputs.dimX(), inputs.dimY());
@@ -177,12 +177,12 @@ void N2D2::Cell_Frame_CUDA::addInput(Tensor4d<Float_T>& inputs,
 
     if (mOutputs.empty()) {
         mOutputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB()});
         mDiffInputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB());
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, mInputs.dimB()});
     }
 
-    mMaps.resize(mNbOutputs, mNbChannels, true);
+    mMaps.resize({mNbOutputs, mNbChannels}, true);
 }
 
 void N2D2::Cell_Frame_CUDA::propagate(bool /*inference*/)
@@ -197,7 +197,7 @@ void N2D2::Cell_Frame_CUDA::backPropagate()
         mActivation->backPropagate(&mOutputs, &mDiffInputs);
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputTarget(const Tensor4d<int>& targets,
+void N2D2::Cell_Frame_CUDA::setOutputTarget(const Tensor<int>& targets,
                                             double targetVal,
                                             double defaultVal)
 {
@@ -240,7 +240,7 @@ void N2D2::Cell_Frame_CUDA::setOutputTarget(const Tensor4d<int>& targets,
     mDiffInputs.synchronizeHToD();
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor4d<int>& targets,
+void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<int>& targets,
                                              double targetVal,
                                              double defaultVal)
 {
@@ -255,7 +255,7 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor4d<int>& targets,
     mOutputs.synchronizeDToH();
 
     for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
-        const Tensor2d<int> target = targets[batchPos][0];
+        const Tensor<int> target = targets[batchPos][0];
 
         std::vector<unsigned int> nbTargetOutputs(
             (mNbOutputs > 1) ? mNbOutputs : 2, 0);
@@ -300,7 +300,7 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor4d<int>& targets,
     mDiffInputs.synchronizeHToD();
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor4d<Float_T>& targets)
+void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<Float_T>& targets)
 {
     if (targets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
@@ -319,7 +319,7 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor4d<Float_T>& targets)
     mDiffInputs.synchronizeHToD();
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputErrors(const Tensor4d<Float_T>& errors)
+void N2D2::Cell_Frame_CUDA::setOutputErrors(const Tensor<Float_T>& errors)
 {
     if (errors.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
@@ -336,25 +336,25 @@ void N2D2::Cell_Frame_CUDA::setOutputErrors(const Tensor4d<Float_T>& errors)
     mDiffInputs.synchronizeHToD();
 }
 
-N2D2::CudaTensor4d<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs()
+N2D2::CudaTensor<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs()
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
 }
 
-const N2D2::CudaTensor4d<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs() const
+const N2D2::CudaTensor<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs() const
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
 }
 
-N2D2::CudaTensor4d<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getDiffInputs()
+N2D2::CudaTensor<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getDiffInputs()
 {
     mDiffInputs.synchronizeDToH();
     return mDiffInputs;
 }
 
-const N2D2::CudaTensor4d<N2D2::Float_T>&
+const N2D2::CudaTensor<N2D2::Float_T>&
 N2D2::Cell_Frame_CUDA::getDiffInputs() const
 {
     mDiffInputs.synchronizeDToH();
@@ -364,7 +364,7 @@ N2D2::Cell_Frame_CUDA::getDiffInputs() const
 unsigned int N2D2::Cell_Frame_CUDA::getMaxOutput(unsigned int batchPos) const
 {
     mOutputs.synchronizeDToH();
-    const Tensor3d<Float_T> output = mOutputs[batchPos];
+    const Tensor<Float_T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
 }
@@ -380,11 +380,11 @@ void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels,
     if (signals & In) {
         mInputs.synchronizeDBasedToH();
 
-        for (std::vector<Tensor4d<Float_T>*>::iterator
+        for (std::vector<Tensor<Float_T>*>::iterator
             itTensor = mInputs.begin(), itTensorEnd = mInputs.end();
              itTensor != itTensorEnd;
              ++itTensor) {
-            Tensor4d<Float_T>* input = (*itTensor);
+            Tensor<Float_T>* input = (*itTensor);
 
             //#pragma omp parallel for
             for (int index = 0; index < (int)input->size(); ++index)

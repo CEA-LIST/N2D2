@@ -32,8 +32,8 @@ public:
         return std::make_shared<SaturationActivation_Frame<T> >();
     }
 
-    virtual void propagate(Tensor4d<T>* data);
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
+    virtual void propagate(Tensor<T>* data);
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
     virtual ~SaturationActivation_Frame() {};
 
     using SaturationActivation<T>::mShifting;
@@ -45,7 +45,7 @@ private:
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame<T>::propagate(Tensor4d<T>* data)
+void N2D2::SaturationActivation_Frame<T>::propagate(Tensor<T>* data)
 {
     if (mShifting > 0) {
 #pragma omp parallel for if (data->size() > 1024)
@@ -66,7 +66,7 @@ void N2D2::SaturationActivation_Frame<T>::propagate(Tensor4d<T>* data)
 
 template <class T>
 void N2D2::SaturationActivation_Frame
-    <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
+    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
 {
     if (mShifting > 0) {
 #pragma omp parallel for if (data->size() > 1024)

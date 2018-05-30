@@ -63,8 +63,8 @@ public:
     virtual ~ElemWiseCell_Frame();
 
 protected:
-    Tensor4d<Float_T> mInterTerm;
-    Tensor4d<unsigned int> mArgMax;
+    Tensor<Float_T> mInterTerm;
+    Tensor<unsigned int> mArgMax;
 
 private:
     static Registrar<ElemWiseCell> mRegistrar;

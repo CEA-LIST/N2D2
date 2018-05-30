@@ -84,7 +84,7 @@ void N2D2::UnpoolCell_Frame_CUDA::initialize()
         mInputMap.push_back(NULL);
 
         if (!mMaps.empty()) {
-            const Tensor2d<bool> inputMap = mMaps.rows(offset,
+            const Tensor<bool> inputMap = mMaps.rows(offset,
                                                        mInputs[k].dimZ());
 
             std::vector<char> inputMapData;

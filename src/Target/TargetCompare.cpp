@@ -53,21 +53,21 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
                                  "(empty) DataPath");
     }
 /*
-    const Tensor4d<int>& labels = mStimuliProvider->getLabelsData();
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
 
     if (mTargets.empty()) {
-        mTargets.resize(mCell->getOutputsWidth(),
+        mTargets.resize({mCell->getOutputsWidth(),
                         mCell->getOutputsHeight(),
                         1,
-                        labels.dimB());
-        mEstimatedLabels.resize(mCell->getOutputsWidth(),
+                        labels.dimB()});
+        mEstimatedLabels.resize({mCell->getOutputsWidth(),
                                 mCell->getOutputsHeight(),
                                 mTargetTopN,
-                                labels.dimB());
-        mEstimatedLabelsValue.resize(mCell->getOutputsWidth(),
+                                labels.dimB()});
+        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
                                      mCell->getOutputsHeight(),
                                      mTargetTopN,
-                                     labels.dimB());
+                                     labels.dimB()});
     }
 */
     const std::string dirPath = mCell->getName() + ".Target/Compare";
@@ -78,7 +78,7 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
 
-    const Tensor4d<Float_T>& values = targetCell->getOutputs();
+    const Tensor<Float_T>& values = targetCell->getOutputs();
 
     std::vector<double> meanSquareErrors(values.dimB());
     std::cout << "target " << mCell->getName()<< std::endl;
@@ -112,15 +112,15 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
                                      + dataFileName);
         }
 
-        //Tensor3d<int> target = mTargets[batchPos];
-        const Tensor4d<Float_T> value = values;//[batchPos];
+        //Tensor<int> target = mTargets[batchPos];
+        const Tensor<Float_T> value = values;//[batchPos];
         unsigned int TargetDimX = value.dimX();
         unsigned int TargetDimY = value.dimY();
         unsigned int TargetDimZ = value.dimZ();
         unsigned int TargetDimB = mBatchPacked;
 
-        Tensor4d<Float_T> errorValues(TargetDimX, TargetDimY, TargetDimZ, TargetDimB, 0.0);
-        Tensor4d<Float_T> refValues(TargetDimX, TargetDimY, TargetDimZ, TargetDimB, 0.0);
+        Tensor<Float_T> errorValues({TargetDimX, TargetDimY, TargetDimZ, TargetDimB}, 0.0);
+        Tensor<Float_T> refValues({TargetDimX, TargetDimY, TargetDimZ, TargetDimB}, 0.0);
 
         std::vector<double> refVect;
         std::vector<double> estVect;
@@ -139,10 +139,10 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
             TargetDimY = value.dimX();
             TargetDimZ = value.dimY();
         }
-        Tensor4d<Float_T> targetValues(TargetDimX,
+        Tensor<Float_T> targetValues({TargetDimX,
                                        TargetDimY,
                                        TargetDimZ,
-                                       TargetDimB);
+                                       TargetDimB});
         if (!(dataFile >> targetValues.data()))
             throw std::runtime_error("Unreadable data file: " + dataFileName);
 
@@ -236,8 +236,8 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
                       << "is different than the Std Dev of the reference target (" << meanStdDevRef.second << ")"
                       << " for cell " << mCell->getName()
                       << Utils::cdef << std::endl;
-        for(unsigned int batchPacked = 0; batchPacked < TargetDimB; ++ batchPacked) {  
-            //unsigned int batchPacked = 0;    
+        for(unsigned int batchPacked = 0; batchPacked < TargetDimB; ++ batchPacked) {
+            //unsigned int batchPacked = 0;
             if(mLogError) {
                 std::stringstream fileErr;
                 fileErr << dirPath << "/compare_" << batchPacked << "_";

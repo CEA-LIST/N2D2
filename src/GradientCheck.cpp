@@ -27,8 +27,8 @@ N2D2::GradientCheck::GradientCheck(double epsilon, double maxError)
 }
 
 void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
-                                     Tensor4d<Float_T>& outputs,
-                                     Tensor4d<Float_T>& diffInputs,
+                                     Tensor<Float_T>& outputs,
+                                     Tensor<Float_T>& diffInputs,
                                      PropagateType propagate,
                                      BackPropagateType backPropagate,
                                      bool avoidDiscontinuity)
@@ -38,12 +38,12 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
     mPropagate = propagate;
 
     // Initialize input values
-    for (std::vector<Tensor4d<Float_T>*>::iterator itTensor = inputs.begin(),
+    for (std::vector<Tensor<Float_T>*>::iterator itTensor = inputs.begin(),
                                                    itTensorEnd = inputs.end();
          itTensor != itTensorEnd;
          ++itTensor)
     {
-        Tensor4d<Float_T>* input = (*itTensor);
+        Tensor<Float_T>* input = (*itTensor);
 
         if (input->isValid()) {
             std::cout << "GradientCheck::initialize(): do not initialize valid"
@@ -96,8 +96,8 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
 }
 
 void N2D2::GradientCheck::check(const std::string& tensorName,
-                                Tensor4d<Float_T>& tensor,
-                                Tensor4d<Float_T>& diffTensor)
+                                Tensor<Float_T>& tensor,
+                                Tensor<Float_T>& diffTensor)
 {
     double cumulativeError = 0.0;
     unsigned int nbGradients = 0;

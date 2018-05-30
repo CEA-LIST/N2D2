@@ -85,11 +85,11 @@ void N2D2::FMPCell_Frame_CUDA::update()
 {
 }
 
-void N2D2::FMPCell_Frame_CUDA::generateRegions(CudaTensor4d<unsigned int>& grid,
+void N2D2::FMPCell_Frame_CUDA::generateRegions(CudaTensor<unsigned int>& grid,
                                                unsigned int sizeIn,
                                                unsigned int sizeOut)
 {
-    grid.resize(1, 1, sizeOut, 1);
+    grid.resize({1, 1, sizeOut, 1});
 
     if (mPseudoRandom) {
         // Compute the true scaling ratio

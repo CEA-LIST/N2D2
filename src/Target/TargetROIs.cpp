@@ -77,7 +77,7 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
     if (confusionMatrix.empty())
         confusionMatrix.resize(nbTargets, nbTargets, 0);
 
-    const Tensor4d<int>& labels = mStimuliProvider->getLabelsData();
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     const double xRatio = (labels.dimX() - 1)
                           / (double)(mCell->getOutputsWidth() - 1);
     const double yRatio = (labels.dimY() - 1)
@@ -96,9 +96,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         std::vector<DetectedBB> detectedBB;
 
         // Extract estimated BB
-        const Tensor3d<int> target = mTargets[batchPos];
-        const Tensor2d<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        const Tensor2d<Float_T> estimatedLabelsValue
+        const Tensor<int> target = mTargets[batchPos];
+        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
+        const Tensor<Float_T> estimatedLabelsValue
             = mEstimatedLabelsValue[batchPos][0];
 
         ComputerVision::LSL_Box lsl(mMinSize);

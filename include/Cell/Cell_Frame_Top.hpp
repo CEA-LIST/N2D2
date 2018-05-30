@@ -32,8 +32,7 @@
 #include "Activation/SoftplusActivation.hpp"
 #include "Activation/TanhActivation.hpp"
 #include "Environment.hpp"
-#include "containers/Tensor2d.hpp"
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
 class Cell_Frame_Top {
@@ -56,26 +55,26 @@ public:
     }
     inline virtual bool isFullMap() const;
     inline virtual bool isUnitMap() const;
-    virtual void addInput(Tensor4d<Float_T>& inputs,
-                          Tensor4d<Float_T>& diffOutputs) = 0;
+    virtual void addInput(Tensor<Float_T>& inputs,
+                          Tensor<Float_T>& diffOutputs) = 0;
     virtual void propagate(bool inference = false) = 0;
     virtual void backPropagate() = 0;
     virtual void update() = 0;
     virtual void checkGradient(double /*epsilon*/, double /*maxError*/) = 0;
     virtual void discretizeSignals(unsigned int /*nbLevels*/,
                                    const Signals& /*signals*/ = In) = 0;
-    virtual void setOutputTarget(const Tensor4d<int>& targets,
+    virtual void setOutputTarget(const Tensor<int>& targets,
                                  double targetVal = 1.0,
                                  double defaultVal = 0.0) = 0;
-    virtual void setOutputTargets(const Tensor4d<int>& targets,
+    virtual void setOutputTargets(const Tensor<int>& targets,
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0) = 0;
-    virtual void setOutputTargets(const Tensor4d<Float_T>& targets) = 0;
-    virtual void setOutputErrors(const Tensor4d<Float_T>& errors) = 0;
-    virtual Tensor4d<Float_T>& getOutputs() = 0;
-    virtual const Tensor4d<Float_T>& getOutputs() const = 0;
-    virtual Tensor4d<Float_T>& getDiffInputs() = 0;
-    virtual const Tensor4d<Float_T>& getDiffInputs() const = 0;
+    virtual void setOutputTargets(const Tensor<Float_T>& targets) = 0;
+    virtual void setOutputErrors(const Tensor<Float_T>& errors) = 0;
+    virtual Tensor<Float_T>& getOutputs() = 0;
+    virtual const Tensor<Float_T>& getOutputs() const = 0;
+    virtual Tensor<Float_T>& getDiffInputs() = 0;
+    virtual const Tensor<Float_T>& getDiffInputs() const = 0;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const = 0;
     const std::shared_ptr<Activation<Float_T> >& getActivation() const
     {
@@ -91,7 +90,7 @@ protected:
     // Number of input channels
     unsigned int mNbChannels;
     // Input-output mapping
-    Tensor2d<bool> mMaps;
+    Tensor<bool> mMaps;
     std::shared_ptr<Activation<Float_T> > mActivation;
 
 private:

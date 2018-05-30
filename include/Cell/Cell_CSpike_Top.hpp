@@ -33,7 +33,7 @@ public:
     }
     virtual bool tick(Time_T timestamp) = 0;
     virtual void reset(Time_T timestamp) = 0;
-    virtual Tensor4d<Float_T>& getOutputsActivity() = 0;
+    virtual Tensor<Float_T>& getOutputsActivity() = 0;
     virtual ~Cell_CSpike_Top() {};
 
 protected:
@@ -41,7 +41,7 @@ protected:
     // Number of input channels
     unsigned int mNbChannels;
     // Input-output mapping
-    Tensor2d<bool> mMaps;
+    Tensor<bool> mMaps;
 };
 }
 

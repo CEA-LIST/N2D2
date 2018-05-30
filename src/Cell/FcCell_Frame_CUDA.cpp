@@ -47,8 +47,8 @@ N2D2::FcCell_Frame_CUDA::FcCell_Frame_CUDA(const std::string& name,
 void N2D2::FcCell_Frame_CUDA::initialize()
 {
     if (!mNoBias) {
-        mBias.resize(mOutputs.dimZ());
-        mDiffBias.resize(mOutputs.dimZ());
+        mBias.resize({mOutputs.dimZ(), 1, 1, 1});
+        mDiffBias.resize({mOutputs.dimZ(), 1, 1, 1});
         mBiasFiller->apply(mBias);
         mBias.synchronizeHToD();
 
@@ -67,10 +67,10 @@ void N2D2::FcCell_Frame_CUDA::initialize()
             throw std::runtime_error("Zero-sized input for FcCell " + mName);
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
-        mSynapses.push_back(new CudaTensor4d<Float_T>(
-            1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()));
-        mDiffSynapses.push_back(new CudaTensor4d<Float_T>(
-            1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()));
+        mSynapses.push_back(new CudaTensor<Float_T>(
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+        mDiffSynapses.push_back(new CudaTensor<Float_T>(
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
         mWeightsFiller->apply(mSynapses.back());
         mSynapses.back().synchronizeHToD();
     }

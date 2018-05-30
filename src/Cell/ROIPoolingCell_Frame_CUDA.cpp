@@ -2,7 +2,7 @@
     (C) Copyright 2015 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     David BRIAND (david.briand@cea.fr)
-                    
+
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
     modify and/ or redistribute the software under the terms of the CeCILL-C
@@ -38,8 +38,8 @@ N2D2::ROIPoolingCell_Frame_CUDA::ROIPoolingCell_Frame_CUDA(const std::string& na
       Cell_Frame_CUDA(name, nbOutputs)
 {
     // ctor
-    mInputs.matchingDimB(false);
-    mDiffOutputs.matchingDimB(false);
+    mInputs.matchingDims({});
+    mDiffOutputs.matchingDims({});
 }
 
 void N2D2::ROIPoolingCell_Frame_CUDA::initialize()
@@ -70,11 +70,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::initialize()
         }
 
         if (mArgMax.size() == (k - 1)) {
-            mArgMax.push_back(new CudaTensor4d<PoolCell_Frame_Kernels::ArgMax>(
-                mOutputs.dimX(),
-                mOutputs.dimY(),
-                mOutputs.dimZ(),
-                mOutputs.dimB()));
+            mArgMax.push_back(new CudaTensor<PoolCell_Frame_Kernels::ArgMax>(
+                mOutputs.dims()));
         }
 
         nbChannels += mInputs[k].dimZ();
@@ -173,7 +170,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
                                                 xOffset,
                                                 yOffset,
                                                 xRatio,
-                                                yRatio);  
+                                                yRatio);
         }
         else {
             throw std::runtime_error("ROIPoolingCell_Frame_CUDA::propagate():"

@@ -21,16 +21,13 @@
 #include "CEnvironment.hpp"
 
 N2D2::CEnvironment::CEnvironment(Database& database,
-                                 unsigned int sizeX,
-                                 unsigned int sizeY,
-                                 unsigned int nbChannels,
+                                 const std::vector<size_t>& size,
                                  unsigned int batchSize,
                                  bool compositeStimuli)
-    : StimuliProvider(
-          database, sizeX, sizeY, nbChannels, batchSize, compositeStimuli),
+    : StimuliProvider(database, size, batchSize, compositeStimuli),
       SpikeGenerator(),
       mInitialized(false),
-      mTickData(sizeX, sizeY, nbChannels, batchSize, 0)
+      mTickData(mData.dims(), 0)
 {
     // ctor
 }
@@ -38,16 +35,8 @@ N2D2::CEnvironment::CEnvironment(Database& database,
 void N2D2::CEnvironment::addChannel(const CompositeTransformation
                                     & transformation)
 {
-    if (!mChannelsTransformations.empty())
-        mTickData.resize(mTickData.dimX(),
-                         mTickData.dimY(),
-                         mTickData.dimZ() + 1,
-                         mTickData.dimB());
-    else
-        mTickData.resize(
-            mTickData.dimX(), mTickData.dimY(), 1, mTickData.dimB());
-
     StimuliProvider::addChannel(transformation);
+    mTickData.resize(mData.dims());
 }
 
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
@@ -55,11 +44,7 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
     SpikeGenerator::checkParameters();
 
     if (!mInitialized) {
-        mNextEvent.assign(mData.dimX(),
-                          mData.dimY(),
-                          mData.dimZ(),
-                          mData.dimB(),
-                          std::make_pair(start, 0));
+        mNextEvent.assign(mData.dims(), std::make_pair(start, 0));
 
         for (unsigned int idx = 0, size = mData.size(); idx < size; ++idx)
             SpikeGenerator::nextEvent(mNextEvent(idx), mData(idx), start, stop);

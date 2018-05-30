@@ -38,19 +38,17 @@ namespace N2D2 {
 class CEnvironment : public StimuliProvider, public SpikeGenerator {
 public:
     CEnvironment(Database& database,
-                 unsigned int sizeX,
-                 unsigned int sizeY = 1,
-                 unsigned int nbChannels = 1,
+                 const std::vector<size_t>& size,
                  unsigned int batchSize = 1,
                  bool compositeStimuli = false);
     virtual void addChannel(const CompositeTransformation& transformation);
     void tick(Time_T timestamp, Time_T start, Time_T stop);
     void reset(Time_T timestamp);
-    Tensor4d<char>& getTickData()
+    Tensor<char>& getTickData()
     {
         return mTickData;
     };
-    const Tensor4d<char>& getTickData() const
+    const Tensor<char>& getTickData() const
     {
         return mTickData;
     };
@@ -59,8 +57,8 @@ public:
 protected:
     /// For each scale, tensor (x, y, channel, batch)
     bool mInitialized;
-    Tensor4d<char> mTickData;
-    Tensor4d<std::pair<Time_T, char> > mNextEvent;
+    Tensor<char> mTickData;
+    Tensor<std::pair<Time_T, char> > mNextEvent;
 };
 }
 

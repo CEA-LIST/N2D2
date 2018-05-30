@@ -26,7 +26,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -38,8 +38,8 @@ public:
     }
 
     SoftplusActivation_Frame_CUDA();
-    virtual void propagate(Tensor4d<T>* data);
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
+    virtual void propagate(Tensor<T>* data);
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
     virtual ~SoftplusActivation_Frame_CUDA() {};
 
 private:
@@ -56,16 +56,16 @@ N2D2::SoftplusActivation_Frame_CUDA<T>::SoftplusActivation_Frame_CUDA()
 
 namespace N2D2 {
 template <>
-void SoftplusActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data);
+void SoftplusActivation_Frame_CUDA<float>::propagate(Tensor<float>* data);
 template <>
 void SoftplusActivation_Frame_CUDA
-    <float>::backPropagate(Tensor4d<float>* data, Tensor4d<float>* diffData);
+    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData);
 
 template <>
-void SoftplusActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data);
+void SoftplusActivation_Frame_CUDA<double>::propagate(Tensor<double>* data);
 template <>
 void SoftplusActivation_Frame_CUDA
-    <double>::backPropagate(Tensor4d<double>* data, Tensor4d<double>* diffData);
+    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData);
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_CUDA_H

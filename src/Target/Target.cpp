@@ -272,21 +272,21 @@ void N2D2::Target::process(Database::StimuliSet set)
             targetCell->setOutputTargets(mStimuliProvider->getData());
         }
     } else {
-        const Tensor4d<int>& labels = mStimuliProvider->getLabelsData();
+        const Tensor<int>& labels = mStimuliProvider->getLabelsData();
 
         if (mTargets.empty()) {
-            mTargets.resize(mCell->getOutputsWidth(),
+            mTargets.resize({mCell->getOutputsWidth(),
                             mCell->getOutputsHeight(),
                             1,
-                            labels.dimB());
-            mEstimatedLabels.resize(mCell->getOutputsWidth(),
+                            labels.dimB()});
+            mEstimatedLabels.resize({mCell->getOutputsWidth(),
                                     mCell->getOutputsHeight(),
                                     mTargetTopN,
-                                    labels.dimB());
-            mEstimatedLabelsValue.resize(mCell->getOutputsWidth(),
+                                    labels.dimB()});
+            mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
                                          mCell->getOutputsHeight(),
                                          mTargetTopN,
-                                         labels.dimB());
+                                         labels.dimB()});
         }
 
         if (mPopulateTargets) {
@@ -301,8 +301,8 @@ void N2D2::Target::process(Database::StimuliSet set)
                 for (int batchPos = 0; batchPos < (int)labels.dimB();
                     ++batchPos)
                 {
-                    const Tensor2d<int> label = labels[batchPos][0];
-                    Tensor2d<int> target = mTargets[batchPos][0];
+                    const Tensor<int> label = labels[batchPos][0];
+                    Tensor<int> target = mTargets[batchPos][0];
 
                     for (unsigned int x = 0; x < mTargets.dimX(); ++x) {
                         for (unsigned int y = 0; y < mTargets.dimY(); ++y) {
@@ -316,8 +316,8 @@ void N2D2::Target::process(Database::StimuliSet set)
                 for (int batchPos = 0; batchPos < (int)labels.dimB();
                     ++batchPos)
                 {
-                    const Tensor3d<int> label = labels[batchPos];
-                    Tensor3d<int> target = mTargets[batchPos];
+                    const Tensor<int> label = labels[batchPos];
+                    Tensor<int> target = mTargets[batchPos];
 
                     // target only has 1 channel, whereas label has as many
                     // channels as environment channels
@@ -353,7 +353,7 @@ void N2D2::Target::process(Database::StimuliSet set)
         // Retrieve estimated labels
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
-        const Tensor4d<Float_T>& values
+        const Tensor<Float_T>& values
             = (targetCell) ? targetCell->getOutputs()
                            : targetCellCSpike->getOutputsActivity();
 
@@ -367,10 +367,10 @@ void N2D2::Target::process(Database::StimuliSet set)
                 continue;
             }
 
-            const Tensor3d<Float_T> value = values[batchPos];
-            const Tensor3d<int> target = mTargets[batchPos];
-            Tensor3d<int> estimatedLabels = mEstimatedLabels[batchPos];
-            Tensor3d<Float_T> estimatedLabelsValue
+            const Tensor<Float_T> value = values[batchPos];
+            const Tensor<int> target = mTargets[batchPos];
+            Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
+            Tensor<Float_T> estimatedLabelsValue
                 = mEstimatedLabelsValue[batchPos];
 
             if (mTargetTopN > value.dimZ())
@@ -529,7 +529,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             }
 
             // Retrieve estimated labels
-            const Tensor4d<Float_T>& values
+            const Tensor<Float_T>& values
                 = (targetCell) ? targetCell->getOutputs()
                                : targetCellCSpike->getOutputsActivity();
             const std::string imgFile
@@ -576,9 +576,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             continue;
         }
 
-        const Tensor2d<int> target = mTargets[batchPos][0];
-        const Tensor2d<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        const Tensor2d<Float_T> estimatedLabelsValue
+        const Tensor<int> target = mTargets[batchPos][0];
+        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
+        const Tensor<Float_T> estimatedLabelsValue
             = mEstimatedLabelsValue[batchPos][0];
 
         cv::Mat targetImgHsv(cv::Size(mTargets.dimX(), mTargets.dimY()),
@@ -588,9 +588,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                 CV_8UC3,
                                 cv::Scalar(0, 0, 0));
 
-        const Tensor2d<int> mask = (mMaskLabelTarget && mMaskedLabel >= 0)
+        const Tensor<int> mask = (mMaskLabelTarget && mMaskedLabel >= 0)
             ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
-            : Tensor2d<int>();
+            : Tensor<int>();
 
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
@@ -742,7 +742,7 @@ std::pair<int, N2D2::Float_T>
 N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                 unsigned int batchPos) const
 {
-    const Tensor4d<int>& labels = mStimuliProvider->getLabelsData();
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     const double xRatio = labels.dimX() / (double)mCell->getOutputsWidth();
     const double yRatio = labels.dimY() / (double)mCell->getOutputsHeight();
 
@@ -756,7 +756,7 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         <Cell_Frame_Top>(mCell);
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
         = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
-    const Tensor3d<Float_T>& value
+    const Tensor<Float_T>& value
         = (targetCell) ? targetCell->getOutputs()[batchPos]
                        : targetCellCSpike->getOutputsActivity()[batchPos];
 

@@ -107,7 +107,7 @@ private:
     Parameter<bool> mRefractoryIntegration;
     Parameter<bool> mDigitalIntegration;
 
-    Tensor4d<Time_T> mInputsActivationTime;
+    Tensor<Time_T> mInputsActivationTime;
 
 private:
     static Registrar<FcCell> mRegistrar;

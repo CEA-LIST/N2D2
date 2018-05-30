@@ -47,8 +47,7 @@
 #endif
 
 #include "ROI/ROI.hpp"
-#include "containers/Tensor2d.hpp"
-#include "containers/Tensor3d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
@@ -66,16 +65,11 @@ public:
                          cv::Mat& /*labels*/,
                          std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
                          int /*id*/ = -1) {};
-    template <class T1> void apply(Tensor2d<T1>& frame, int id = -1);
+    template <class T1> void apply(Tensor<T1>& frame, int id = -1);
     template <class T1>
-    Tensor2d<T1> apply(const Tensor2d<T1>& frame, int id = -1);
+    Tensor<T1> apply(const Tensor<T1>& frame, int id = -1);
     template <class T1, class T2>
-    void apply(Tensor2d<T1>& frame, Tensor2d<T2>& labels, int id = -1);
-    template <class T1> void apply(Tensor3d<T1>& frame, int id = -1);
-    template <class T1>
-    Tensor3d<T1> apply(const Tensor3d<T1>& frame, int id = -1);
-    template <class T1, class T2>
-    void apply(Tensor3d<T1>& frame, Tensor3d<T2>& labels, int id = -1);
+    void apply(Tensor<T1>& frame, Tensor<T2>& labels, int id = -1);
     std::shared_ptr<Transformation> clone() const
     {
         return std::shared_ptr<Transformation>(doClone());
@@ -112,59 +106,31 @@ void N2D2::Transformation::apply(cv::Mat& frame, cv::Mat& labels, int id)
 }
 
 template <class T1>
-N2D2::Tensor2d<T1> N2D2::Transformation::apply(const Tensor2d<T1>& frame,
+N2D2::Tensor<T1> N2D2::Transformation::apply(const Tensor<T1>& frame,
                                                int id)
 {
     cv::Mat mat = (cv::Mat)frame;
     apply(mat, id);
-    return Tensor2d<T1>(mat);
+    return Tensor<T1>(mat);
 }
 
 template <class T1>
-void N2D2::Transformation::apply(Tensor2d<T1>& frame, int id)
+void N2D2::Transformation::apply(Tensor<T1>& frame, int id)
 {
     cv::Mat mat = (cv::Mat)frame;
     apply(mat, id);
-    frame = Tensor2d<T1>(mat);
+    frame = Tensor<T1>(mat);
 }
 
 template <class T1, class T2>
 void
-N2D2::Transformation::apply(Tensor2d<T1>& frame, Tensor2d<T2>& labels, int id)
+N2D2::Transformation::apply(Tensor<T1>& frame, Tensor<T2>& labels, int id)
 {
     cv::Mat mat = (cv::Mat)frame;
     cv::Mat labelsMat = (cv::Mat)labels;
     apply(mat, labelsMat, id);
-    frame = Tensor2d<T1>(mat);
-    labels = Tensor2d<T2>(labelsMat);
-}
-
-template <class T1>
-void N2D2::Transformation::apply(Tensor3d<T1>& frame, int id)
-{
-    cv::Mat mat = (cv::Mat)frame;
-    apply(mat, id);
-    frame = Tensor3d<T1>(mat);
-}
-
-template <class T1>
-N2D2::Tensor3d<T1> N2D2::Transformation::apply(const Tensor3d<T1>& frame,
-                                               int id)
-{
-    cv::Mat mat = (cv::Mat)frame;
-    apply(mat, id);
-    return Tensor3d<T1>(mat);
-}
-
-template <class T1, class T2>
-void
-N2D2::Transformation::apply(Tensor3d<T1>& frame, Tensor3d<T2>& labels, int id)
-{
-    cv::Mat mat = (cv::Mat)frame;
-    cv::Mat labelsMat = (cv::Mat)labels;
-    apply(mat, labelsMat, id);
-    frame = Tensor3d<T1>(mat);
-    labels = Tensor3d<T2>(labelsMat);
+    frame = Tensor<T1>(mat);
+    labels = Tensor<T2>(labelsMat);
 }
 
 void

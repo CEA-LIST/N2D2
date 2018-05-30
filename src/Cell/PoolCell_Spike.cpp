@@ -53,16 +53,16 @@ N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
 
 void N2D2::PoolCell_Spike::initialize()
 {
-    mInputsActivity.resize(mChannelsWidth, mChannelsHeight, mNbChannels, 1);
+    mInputsActivity.resize({mChannelsWidth, mChannelsHeight, mNbChannels, 1});
 
-    mInputMax.resize(mOutputsWidth, mOutputsHeight, mNbOutputs, 1, -1);
-    mPoolActivity.resize(mOutputsWidth,
+    mInputMax.resize({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, -1);
+    mPoolActivity.resize({mOutputsWidth,
                          mOutputsHeight,
                          mNbOutputs,
-                         1,
+                         1},
                          (mPooling == Max) ? std::numeric_limits<int>::min()
                                            : 0);
-    mOutputsActivity.resize(mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0);
+    mOutputsActivity.resize({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
@@ -221,17 +221,17 @@ void N2D2::PoolCell_Spike::notify(Time_T /*timestamp*/, NotifyType notify)
 {
     if (notify == Reset) {
         mInputsActivity.assign(
-            mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
+            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
 
-        mInputMax.assign(mOutputsWidth, mOutputsHeight, mNbOutputs, 1, -1);
-        mPoolActivity.assign(mOutputsWidth,
+        mInputMax.assign({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, -1);
+        mPoolActivity.assign({mOutputsWidth,
                              mOutputsHeight,
                              mNbOutputs,
-                             1,
+                             1},
                              (mPooling == Max) ? std::numeric_limits<int>::min()
                                                : 0);
         mOutputsActivity.assign(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0);
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
     } else if (notify == Load)
         load(mNet.getLoadSavePath());
     else if (notify == Save)

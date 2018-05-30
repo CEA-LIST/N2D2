@@ -54,10 +54,10 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -69,7 +69,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -97,12 +97,12 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -116,7 +116,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -154,12 +154,12 @@ TEST_DATASET(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -173,7 +173,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -218,12 +218,12 @@ TEST_DATASET(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -237,7 +237,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -246,7 +246,7 @@ TEST_DATASET(ElemWiseCell_Frame,
 
     for (unsigned int o = 0; o < outputs.size(); ++o) {
         ASSERT_EQUALS_DELTA(outputs(o),
-                            wA * inputsA(o) + sA 
+                            wA * inputsA(o) + sA
                             + wB * inputsB(o) + sB
                             + wC * inputsC(o) + sC,
                             1.0e-6);
@@ -270,10 +270,10 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -285,7 +285,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -315,12 +315,12 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -334,7 +334,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -375,12 +375,12 @@ TEST_DATASET(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -394,7 +394,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -426,10 +426,10 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -441,7 +441,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -472,12 +472,12 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -491,7 +491,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -532,12 +532,12 @@ TEST_DATASET(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -551,7 +551,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -599,12 +599,12 @@ TEST_DATASET(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -618,7 +618,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -651,10 +651,10 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -666,7 +666,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -693,12 +693,12 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(8, 8, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(8, 8, nbOutputs, 2);
+    Tensor<Float_T> inputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> inputsC({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({8, 8, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({8, 8, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -712,7 +712,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -740,10 +740,10 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(4, 4, nbOutputs, 2);
+    Tensor<Float_T> inputsA({4, 4, nbOutputs, 2});
+    Tensor<Float_T> inputsB({4, 4, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({4, 4, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({4, 4, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -755,7 +755,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());
@@ -784,12 +784,12 @@ TEST(ElemWiseCell_Frame,
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
     ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
 
-    Tensor4d<Float_T> inputsA(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> inputsB(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> inputsC(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsA(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsB(4, 4, nbOutputs, 2);
-    Tensor4d<Float_T> diffOutputsC(4, 4, nbOutputs, 2);
+    Tensor<Float_T> inputsA({4, 4, nbOutputs, 2});
+    Tensor<Float_T> inputsB({4, 4, nbOutputs, 2});
+    Tensor<Float_T> inputsC({4, 4, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsA({4, 4, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsB({4, 4, nbOutputs, 2});
+    Tensor<Float_T> diffOutputsC({4, 4, nbOutputs, 2});
 
     for (unsigned int index = 0; index < inputsA.size(); ++index) {
         inputsA(index) = Random::randUniform(-1.0, 1.0);
@@ -803,7 +803,7 @@ TEST(ElemWiseCell_Frame,
     elemWise.initialize();
 
     elemWise.propagate();
-    const Tensor4d<Float_T>& outputs = elemWise.getOutputs();
+    const Tensor<Float_T>& outputs = elemWise.getOutputs();
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
     ASSERT_EQUALS(outputs.dimY(), inputsA.dimY());

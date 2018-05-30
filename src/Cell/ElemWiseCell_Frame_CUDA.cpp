@@ -60,19 +60,11 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
     mWeights.resize(mInputs.size(), 1.0);
     mShifts.resize(mInputs.size(), 0.0);
 
-    if (mOperation == Max) {
-        mArgMax.resize(mOutputs.dimX(),
-                       mOutputs.dimY(),
-                       mOutputs.dimZ(),
-                       mOutputs.dimB());
-    }
+    if (mOperation == Max)
+        mArgMax.resize(mOutputs.dims());
 
-    if (mOperation == EuclideanSum || mOperation == Prod) {
-        mInterTerm.resize(mOutputs.dimX(),
-                          mOutputs.dimY(),
-                          mOutputs.dimZ(),
-                          mOutputs.dimB());
-    }
+    if (mOperation == EuclideanSum || mOperation == Prod)
+        mInterTerm.resize(mOutputs.dims());
 }
 
 void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)

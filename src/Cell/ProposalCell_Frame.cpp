@@ -49,7 +49,7 @@ void N2D2::ProposalCell_Frame::initialize()
                                  " ProposalCell " + mName);
     }
 
-    if (mInputs[0].dimX() * mInputs[0].dimY() * mInputs[0].dimZ() != 4 
+    if (mInputs[0].dimX() * mInputs[0].dimY() * mInputs[0].dimZ() != 4
         && mInputs[0].dimX() * mInputs[0].dimY() * mInputs[0].dimZ() != 5) {
         throw std::runtime_error("The first input (BBox Ref) must have a XYZ size of 4 or 5 for"
                                  " ProposalCell " + mName);
@@ -58,27 +58,27 @@ void N2D2::ProposalCell_Frame::initialize()
     mNbClass = mInputs[2].dimX()*mInputs[2].dimY()*mInputs[2].dimZ();
     if(mInputs.size() > 3)
     {
-        mMaxParts = *std::max_element(mNumParts.begin(), 
+        mMaxParts = *std::max_element(mNumParts.begin(),
                                         mNumParts.end());
 
-        mMaxTemplates = *std::max_element(mNumTemplates.begin(), 
+        mMaxTemplates = *std::max_element(mNumTemplates.begin(),
                                             mNumTemplates.end());
 
         if(mNumParts.size() != mNbClass)
             throw std::runtime_error("Specified NumParts must have the same size than NbClass in "
                                     " ProposalCell " + mName);
         //mPartsPrediction.resize(partSize*2, mOutputs.dimB());
-        mPartsPrediction.resize(2, std::accumulate(mNumParts.begin(), mNumParts.end(), 0), mNbClass, mOutputs.dimB());
+        mPartsPrediction.resize({2, std::accumulate(mNumParts.begin(), mNumParts.end(), 0U), mNbClass, mOutputs.dimB()});
 
         if(mNumTemplates.size() != mNbClass)
             throw std::runtime_error("Specified mNumTemplates must have the same size than NbClass in "
                                     " ProposalCell " + mName);
 
-        mTemplatesPrediction.resize(3, std::accumulate(mNumTemplates.begin(), mNumTemplates.end(), 0), mNbClass, mOutputs.dimB());
-        
+        mTemplatesPrediction.resize({3, std::accumulate(mNumTemplates.begin(), mNumTemplates.end(), 0U), mNbClass, mOutputs.dimB()});
+
     }
 
-    std::cout << "PropocalCell::Frame " << mName << " provide " 
+    std::cout << "PropocalCell::Frame " << mName << " provide "
             <<  mNbClass << " class\n"
             << std::endl;
 }
@@ -89,7 +89,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
 
     const Float_T normX = 1.0 / (mStimuliProvider.getSizeX() - 1) ;
     const Float_T normY = 1.0 / (mStimuliProvider.getSizeY() - 1) ;
-    const unsigned int inputBatch = mOutputs.dimB()/mNbProposals; 
+    const unsigned int inputBatch = mOutputs.dimB()/mNbProposals;
 
     if(mKeepMax)
     {
@@ -121,9 +121,9 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 const Float_T wbbEst = mInputs[1](2 + cls*4, batchPos)*mStdFactor[2] + mMeanFactor[2];
                 const Float_T hbbEst = mInputs[1](3 + cls*4, batchPos)*mStdFactor[3] + mMeanFactor[3];
 
-                Float_T x = xbbEst*wbbRef + xbbRef + wbbRef/2.0 
+                Float_T x = xbbEst*wbbRef + xbbRef + wbbRef/2.0
                                 - (wbbRef/2.0)*std::exp(wbbEst);
-                Float_T y = ybbEst*hbbRef + ybbRef + hbbRef/2.0 
+                Float_T y = ybbEst*hbbRef + ybbRef + hbbRef/2.0
                                 - (hbbRef/2.0)*std::exp(hbbEst);
                 Float_T w = wbbRef*std::exp(wbbEst);
                 Float_T h = hbbRef*std::exp(hbbEst);
@@ -158,7 +158,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     ROIs[n][proposal].w = 0.0;
                     ROIs[n][proposal].h = 0.0;
                 }
-            }   
+            }
 
             for (unsigned int proposal = 0; proposal < mNbProposals; ++proposal)
             {
@@ -167,10 +167,10 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 mOutputs(0, batchPos) = ROIs[n][proposal].x;
                 mOutputs(1, batchPos) = ROIs[n][proposal].y;
                 mOutputs(2, batchPos) = ROIs[n][proposal].w;
-                mOutputs(3, batchPos) = ROIs[n][proposal].h; 
+                mOutputs(3, batchPos) = ROIs[n][proposal].h;
 
                 if(mNbOutputs == 5)
-                    mOutputs(4, batchPos) = maxCls[n][proposal];   
+                    mOutputs(4, batchPos) = maxCls[n][proposal];
 
             }
         }
@@ -206,9 +206,9 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     const Float_T scoreEstimated = mInputs[2](cls, batchPos);
 
 
-                    Float_T x = xbbEst*wbbRef + xbbRef + wbbRef/2.0 
+                    Float_T x = xbbEst*wbbRef + xbbRef + wbbRef/2.0
                                     - (wbbRef/2.0)*std::exp(wbbEst);
-                    Float_T y = ybbEst*hbbRef + ybbRef + hbbRef/2.0 
+                    Float_T y = ybbEst*hbbRef + ybbRef + hbbRef/2.0
                                     - (hbbRef/2.0)*std::exp(hbbEst);
                     Float_T w = wbbRef*std::exp(wbbEst);
                     Float_T h = hbbRef*std::exp(hbbEst);
@@ -235,7 +235,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     if( scoreEstimated >= mScoreThreshold )
                     {
                         ROIs[n][cls].push_back(BBox_T(x,y,w,h));
-                        if(mMaxParts > 0) 
+                        if(mMaxParts > 0)
                         {
                             int partsIdx = std::accumulate(mNumParts.begin(), mNumParts.begin() + cls, 0) * 2;
                             int templatesIdx = std::accumulate(mNumTemplates.begin(), mNumTemplates.begin() + cls, 0) * 3;
@@ -249,10 +249,10 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                                 const Float_T partY = mInputs[3](0 + partIdx, batchPos);
                                 const Float_T partX = mInputs[3](1 + partIdx, batchPos);
 
-                                mPartsPrediction(0, part, cls, batchPos) 
+                                mPartsPrediction(0, part, cls, batchPos)
                                                 = ((partY + 0.5) * hbbRef + ybbRef) / normY;
 
-                                mPartsPrediction(1, part, cls, batchPos) 
+                                mPartsPrediction(1, part, cls, batchPos)
                                                 = ((partX + 0.5) * wbbRef + xbbRef) / normX;
 
                             }
@@ -261,16 +261,16 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                             {
                                 const unsigned int tplIdx = templatesIdx + tpl*3;
 
-                                mTemplatesPrediction(0, tpl, cls, batchPos) 
+                                mTemplatesPrediction(0, tpl, cls, batchPos)
                                     = std::exp(mInputs[4](0 + tplIdx, batchPos));
-                                mTemplatesPrediction(1, tpl, cls, batchPos) 
+                                mTemplatesPrediction(1, tpl, cls, batchPos)
                                     = std::exp(mInputs[4](1 + tplIdx, batchPos));
-                                mTemplatesPrediction(2, tpl, cls, batchPos) 
+                                mTemplatesPrediction(2, tpl, cls, batchPos)
                                     = std::exp(mInputs[4](2 + tplIdx, batchPos));
-                            }                            
+                            }
                         }
                     }
-                }   
+                }
 
                 if(mApplyNMS)
                 {
@@ -287,7 +287,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                             const Float_T h0 = ROIs[n][cls][i].h;
 
                             for (unsigned int j = i + 1; j < ROIs[n][cls].size(); ) {
-                
+
                                 const Float_T x = ROIs[n][cls][j].x;
                                 const Float_T y = ROIs[n][cls][j].y;
                                 const Float_T w = ROIs[n][cls][j].w;
@@ -345,11 +345,11 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     mOutputs(0, batchPos) = ROIs[n][cls][i].x;
                     mOutputs(1, batchPos) = ROIs[n][cls][i].y;
                     mOutputs(2, batchPos) = ROIs[n][cls][i].w;
-                    mOutputs(3, batchPos) = ROIs[n][cls][i].h;   
+                    mOutputs(3, batchPos) = ROIs[n][cls][i].h;
 
                     if(mNbOutputs > 4)
                     {
-                        mOutputs(4, batchPos) = (float) cls;   
+                        mOutputs(4, batchPos) = (float) cls;
 
                         if(mMaxParts > 0)
                         {
@@ -364,11 +364,11 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                             for(unsigned int tpl = 0; tpl < mNumTemplates[cls]; ++tpl)
                             {
                                 unsigned int tplIdx = offset + mNumParts[cls]*2;
-                                mOutputs(tplIdx + tpl*3 + 0, batchPos) 
+                                mOutputs(tplIdx + tpl*3 + 0, batchPos)
                                     = mTemplatesPrediction(0, tpl, cls, indexP[cls][i]);
-                                mOutputs(tplIdx + tpl*3 + 1, batchPos) 
+                                mOutputs(tplIdx + tpl*3 + 1, batchPos)
                                     = mTemplatesPrediction(1, tpl, cls, indexP[cls][i]);
-                                mOutputs(tplIdx + tpl*3 + 2, batchPos) 
+                                mOutputs(tplIdx + tpl*3 + 2, batchPos)
                                     = mTemplatesPrediction(2, tpl, cls, indexP[cls][i]);
                             }
 
@@ -385,9 +385,9 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     mOutputs(0, batchPos) = 0.0;
                     mOutputs(1, batchPos) = 0.0;
                     mOutputs(2, batchPos) = 0.0;
-                    mOutputs(3, batchPos) = 0.0; 
+                    mOutputs(3, batchPos) = 0.0;
                     if(mNbOutputs > 4 )
-                        mOutputs(4, batchPos) = 0.0;  
+                        mOutputs(4, batchPos) = 0.0;
 
             }
         }
@@ -411,13 +411,13 @@ void N2D2::ProposalCell_Frame::setOutputsSize()
     ProposalCell::setOutputsSize();
 
     if (mOutputs.empty()) {
-        mOutputs.resize(mOutputsWidth,
+        mOutputs.resize({mOutputsWidth,
                         mOutputsHeight,
                         mNbOutputs,
-                        mInputs.dimB());
-        mDiffInputs.resize(mOutputsWidth,
+                        mInputs.dimB()});
+        mDiffInputs.resize({mOutputsWidth,
                            mOutputsHeight,
                            mNbOutputs,
-                           mInputs.dimB());
+                           mInputs.dimB()});
     }
 }

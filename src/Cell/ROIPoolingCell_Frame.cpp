@@ -35,8 +35,8 @@ N2D2::ROIPoolingCell_Frame::ROIPoolingCell_Frame(const std::string& name,
       Cell_Frame(name, nbOutputs)
 {
     // ctor
-    mInputs.matchingDimB(false);
-    mDiffOutputs.matchingDimB(false);
+    mInputs.matchingDims({});
+    mDiffOutputs.matchingDims({});
 }
 
 void N2D2::ROIPoolingCell_Frame::initialize()
@@ -67,11 +67,8 @@ void N2D2::ROIPoolingCell_Frame::initialize()
         }
 
         if (mArgMax.size() == (k - 1)) {
-            mArgMax.push_back(new Tensor4d<PoolCell_Frame_Kernels::ArgMax>(
-                mOutputs.dimX(),
-                mOutputs.dimY(),
-                mOutputs.dimZ(),
-                mOutputs.dimB()));
+            mArgMax.push_back(new Tensor<PoolCell_Frame_Kernels::ArgMax>(
+                mOutputs.dims()));
         }
 
         nbChannels += mInputs[k].dimZ();
@@ -91,7 +88,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
     const float alpha = 1.0f;
     float beta = 0.0f;
 
-    const Tensor4d<Float_T>& proposals = mInputs[0];
+    const Tensor<Float_T>& proposals = mInputs[0];
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
@@ -112,12 +109,13 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                 for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                     ++channel)
                 {
+                    const Tensor<Float_T>& proposal = proposals[batchPos];
                     const unsigned int inputBatch = batchPos / proposals.dimB();
 
-                    Float_T x = proposals(0, batchPos) / xRatio;
-                    Float_T y = proposals(1, batchPos) / yRatio;
-                    Float_T w = proposals(2, batchPos) / xRatio;
-                    Float_T h = proposals(3, batchPos) / yRatio;
+                    Float_T x = proposal(0) / xRatio;
+                    Float_T y = proposal(1) / yRatio;
+                    Float_T w = proposal(2) / xRatio;
+                    Float_T h = proposal(3) / yRatio;
 
                     assert(w >= 0);
                     assert(h >= 0);
@@ -204,12 +202,13 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                 for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                     ++channel)
                 {
+                    const Tensor<Float_T>& proposal = proposals[batchPos];
                     const unsigned int inputBatch = batchPos / proposals.dimB();
 
-                    Float_T x = proposals(0, batchPos) / xRatio;
-                    Float_T y = proposals(1, batchPos) / yRatio;
-                    Float_T w = proposals(2, batchPos) / xRatio;
-                    Float_T h = proposals(3, batchPos) / yRatio;
+                    Float_T x = proposal(0) / xRatio;
+                    Float_T y = proposal(1) / yRatio;
+                    Float_T w = proposal(2) / xRatio;
+                    Float_T h = proposal(3) / yRatio;
 
                     // Crop ROI to image boundaries
                     if (x < 0) {
@@ -287,12 +286,13 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                 for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                     ++channel)
                 {
+                    const Tensor<Float_T>& proposal = proposals[batchPos];
                     const unsigned int inputBatch = batchPos / proposals.dimB();
 
-                    Float_T x = proposals(0, batchPos) / xRatio - xOffset;
-                    Float_T y = proposals(1, batchPos) / yRatio - yOffset;
-                    Float_T w = proposals(2, batchPos) / xRatio;
-                    Float_T h = proposals(3, batchPos) / yRatio;
+                    Float_T x = proposal(0) / xRatio - xOffset;
+                    Float_T y = proposal(1) / yRatio - yOffset;
+                    Float_T w = proposal(2) / xRatio;
+                    Float_T h = proposal(3) / yRatio;
 
                     // Crop ROI to image boundaries
                     if (x < 0) {
@@ -344,25 +344,25 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             const Float_T dx = sx - sx0;
                             const Float_T dy = sy - sy0;
 
-                            const bool invalid = mIgnorePad ? 
-                                    (((sx0 + 1 < mInputs[k].dimX() )  
-                                        && (sy0 + 1 < mInputs[k].dimY() ))  ? 
+                            const bool invalid = mIgnorePad ?
+                                    (((sx0 + 1 < mInputs[k].dimX() )
+                                        && (sy0 + 1 < mInputs[k].dimY() ))  ?
                                         false : true) : false;
 
-  
-                            const Float_T i00 = (!invalid) ? 
-                                    mInputs[k](sx0, sy0, channel, inputBatch) 
+
+                            const Float_T i00 = (!invalid) ?
+                                    mInputs[k](sx0, sy0, channel, inputBatch)
                                     : 0.0;
 
                             const Float_T i10 = (sx0 + 1 < mInputs[k].dimX()) && (!invalid) ?
                                         mInputs[k](sx0 + 1, sy0, channel, inputBatch)
                                         : 0.0;
                             const Float_T i01 = (sy0 + 1 < mInputs[k].dimY()) && (!invalid) ?
-                                        mInputs[k](sx0, sy0 + 1, channel, inputBatch) 
+                                        mInputs[k](sx0, sy0 + 1, channel, inputBatch)
                                         : 0.0;
-                            const Float_T i11 = (sx0 + 1 < mInputs[k].dimX() && sy0 + 1 
-                                                    < mInputs[k].dimY()) && (!invalid) ? 
-                                                mInputs[k](sx0 + 1, sy0 + 1, channel, inputBatch) 
+                            const Float_T i11 = (sx0 + 1 < mInputs[k].dimX() && sy0 + 1
+                                                    < mInputs[k].dimY()) && (!invalid) ?
+                                                mInputs[k](sx0 + 1, sy0 + 1, channel, inputBatch)
                                                 : 0.0;
 
                             const Float_T value
@@ -397,7 +397,7 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
 
     const Float_T alpha = 1.0;
 
-    const Tensor4d<Float_T>& proposals = mInputs[0];
+    const Tensor<Float_T>& proposals = mInputs[0];
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
@@ -425,14 +425,15 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
                 for (unsigned int channel = 0; channel < mDiffOutputs[k].dimZ();
                      ++channel)
                 {
+                    const Tensor<Float_T>& proposal = proposals[batchPos];
                     const unsigned int inputBatch = batchPos / proposals.dimB();
                     //const Float_T betaBatch = (batchPos % proposals.dimB() == 0)
                     //                            ? beta : 1.0;
 
-                    Float_T x = proposals(0, batchPos) / xRatio;
-                    Float_T y = proposals(1, batchPos) / yRatio;
-                    Float_T w = proposals(2, batchPos) / xRatio;
-                    Float_T h = proposals(3, batchPos) / yRatio;
+                    Float_T x = proposal(0) / xRatio;
+                    Float_T y = proposal(1) / yRatio;
+                    Float_T w = proposal(2) / xRatio;
+                    Float_T h = proposal(3) / yRatio;
 
                     // Crop ROI to image boundaries
                     if (x < 0) {

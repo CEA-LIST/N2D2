@@ -21,13 +21,13 @@
 #include "Cell/PoolCell_Frame_Kernels.hpp"
 
 void N2D2::PoolCell_Frame_Kernels::forwardAverage(const Float_T* alpha,
-                                                  const Tensor4d<Float_T>&
+                                                  const Tensor<Float_T>&
                                                   inputs,
                                                   const Descriptor& desc,
                                                   const Float_T* beta,
-                                                  Tensor4d<Float_T>& outputs,
+                                                  Tensor<Float_T>& outputs,
                                                   bool countIncludePadding,
-                                                  const Tensor2d<bool>& maps)
+                                                  const Tensor<bool>& maps)
 {
     const unsigned int size = inputs.dimB() * outputs.dimZ();
 
@@ -91,14 +91,14 @@ void N2D2::PoolCell_Frame_Kernels::forwardAverage(const Float_T* alpha,
 }
 
 void N2D2::PoolCell_Frame_Kernels::forwardMax(const Float_T* alpha,
-                                              const Tensor4d<Float_T>&
+                                              const Tensor<Float_T>&
                                               inputs,
                                               const Descriptor& desc,
                                               const Float_T* beta,
-                                              Tensor4d<Float_T>& outputs,
-                                              Tensor4d<ArgMax>& argMax,
+                                              Tensor<Float_T>& outputs,
+                                              Tensor<ArgMax>& argMax,
                                               bool useArgMax,
-                                              const Tensor2d<bool>& maps)
+                                              const Tensor<bool>& maps)
 {
     const unsigned int size = inputs.dimB() * outputs.dimZ();
 
@@ -187,14 +187,14 @@ void N2D2::PoolCell_Frame_Kernels::forwardMax(const Float_T* alpha,
 }
 
 void N2D2::PoolCell_Frame_Kernels::backwardAverage(const Float_T* alpha,
-                                                   const Tensor4d
+                                                   const Tensor
                                                    <Float_T>& diffInputs,
                                                    const Descriptor& desc,
                                                    const Float_T* beta,
-                                                   Tensor4d<Float_T>&
+                                                   Tensor<Float_T>&
                                                    diffOutputs,
                                                    bool countIncludePadding,
-                                                   const Tensor2d<bool>& maps)
+                                                   const Tensor<bool>& maps)
 {
     if (!countIncludePadding) {
         throw std::runtime_error("PoolCell_Frame_Kernels::backwardAverage()"
@@ -281,14 +281,14 @@ void N2D2::PoolCell_Frame_Kernels::backwardAverage(const Float_T* alpha,
 }
 
 void N2D2::PoolCell_Frame_Kernels::backwardMax(const Float_T* alpha,
-                                               const Tensor4d
+                                               const Tensor
                                                <Float_T>& diffInputs,
                                                const Descriptor& desc,
                                                const Float_T* beta,
-                                               Tensor4d<Float_T>&
+                                               Tensor<Float_T>&
                                                diffOutputs,
-                                               const Tensor4d<ArgMax>& argMax,
-                                               const Tensor2d<bool>& maps)
+                                               const Tensor<ArgMax>& argMax,
+                                               const Tensor<bool>& maps)
 {
     const unsigned int oxStride = desc.strideX * diffInputs.dimX();
     const unsigned int oyStride = desc.strideY * diffInputs.dimY();

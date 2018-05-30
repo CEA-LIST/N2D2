@@ -32,8 +32,8 @@ N2D2::Registrar<N2D2::SGDSolver<N2D2::Float_T> > N2D2::SGDSolver_Frame_CUDA
 
 namespace N2D2 {
 template <>
-void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
-                                         Tensor4d<float>* diffData,
+void SGDSolver_Frame_CUDA<float>::update(Tensor<float>* data,
+                                         Tensor<float>* diffData,
                                          unsigned int batchSize)
 {
     const float rate = SGDSolver<float>::getLearningRate(batchSize);
@@ -41,20 +41,19 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
     if (rate == 0.0)
         return;
 
-    CudaTensor4d<float>* cudaData = static_cast<CudaTensor4d<float>*>(data);
-    CudaTensor4d<float>* cudaDiffData = static_cast
-        <CudaTensor4d<float>*>(diffData);
+    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
+    CudaTensor<float>* cudaDiffData = static_cast
+        <CudaTensor<float>*>(diffData);
 
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(
-            data->dimX(), data->dimY(), data->dimZ(), data->dimB());
+        mContinuousData.resize(data->dims());
         CHECK_CUDA_STATUS(cudaMemcpy(mContinuousData.getDevicePtr(),
                                      cudaData->getDevicePtr(),
                                      cudaData->size() * sizeof(float),
                                      cudaMemcpyDeviceToDevice));
     }
 
-    CudaTensor4d<float>* cudaContinuousData
+    CudaTensor<float>* cudaContinuousData
         = (mQuantizationLevels > 0) ? &mContinuousData : cudaData;
 
     // Normalize in function of the iteration size
@@ -74,8 +73,7 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
                                         1));
     } else {
         if (mMomentumData.empty()) {
-            mMomentumData.resize(
-                data->dimX(), data->dimY(), data->dimZ(), data->dimB());
+            mMomentumData.resize(data->dims());
             mMomentumData.fill(0.0);
             mMomentumData.synchronizeHToD();
         }
@@ -129,8 +127,8 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
 }
 
 template <>
-void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
-                                          Tensor4d<double>* diffData,
+void SGDSolver_Frame_CUDA<double>::update(Tensor<double>* data,
+                                          Tensor<double>* diffData,
                                           unsigned int batchSize)
 {
     const double rate = SGDSolver<double>::getLearningRate(batchSize);
@@ -138,20 +136,19 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
     if (rate == 0.0)
         return;
 
-    CudaTensor4d<double>* cudaData = static_cast<CudaTensor4d<double>*>(data);
-    CudaTensor4d<double>* cudaDiffData = static_cast
-        <CudaTensor4d<double>*>(diffData);
+    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
+    CudaTensor<double>* cudaDiffData = static_cast
+        <CudaTensor<double>*>(diffData);
 
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(
-            data->dimX(), data->dimY(), data->dimZ(), data->dimB());
+        mContinuousData.resize(data->dims());
         CHECK_CUDA_STATUS(cudaMemcpy(mContinuousData.getDevicePtr(),
                                      cudaData->getDevicePtr(),
                                      cudaData->size() * sizeof(double),
                                      cudaMemcpyDeviceToDevice));
     }
 
-    CudaTensor4d<double>* cudaContinuousData
+    CudaTensor<double>* cudaContinuousData
         = (mQuantizationLevels > 0) ? &mContinuousData : cudaData;
 
     // Normalize in function of the iteration size
@@ -171,8 +168,7 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
                                         1));
     } else {
         if (mMomentumData.empty()) {
-            mMomentumData.resize(
-                data->dimX(), data->dimY(), data->dimZ(), data->dimB());
+            mMomentumData.resize(data->dims());
             mMomentumData.fill(0.0);
             mMomentumData.synchronizeHToD();
         }

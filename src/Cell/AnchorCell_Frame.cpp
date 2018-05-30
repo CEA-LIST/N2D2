@@ -57,13 +57,13 @@ N2D2::AnchorCell_Frame::getGT(unsigned int batchPos) const
 }
 
 std::shared_ptr<N2D2::ROI>
-N2D2::AnchorCell_Frame::getAnchorROI(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame::getAnchorROI(const Tensor<int>::Index& index) const
 {
     const int argMaxIoU = mArgMaxIoU(index);
 
     if (argMaxIoU >= 0) {
         std::vector<std::shared_ptr<ROI> > labelROIs
-            = mStimuliProvider.getLabelsROIs(index.b);
+            = mStimuliProvider.getLabelsROIs(index[3]);
         assert(argMaxIoU < (int)labelROIs.size());
         return labelROIs[argMaxIoU];
     }
@@ -72,52 +72,52 @@ N2D2::AnchorCell_Frame::getAnchorROI(const Tensor4d<int>::Index& index) const
 }
 
 N2D2::AnchorCell_Frame_Kernels::BBox_T
-N2D2::AnchorCell_Frame::getAnchorBBox(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame::getAnchorBBox(const Tensor<int>::Index& index) const
 {
-    assert(index.i < mArgMaxIoU.dimX());
-    assert(index.j < mArgMaxIoU.dimY());
-    assert(index.k < mArgMaxIoU.dimZ());
-    assert(index.b < mArgMaxIoU.dimB());
+    assert(index[0] < mArgMaxIoU.dimX());
+    assert(index[1] < mArgMaxIoU.dimY());
+    assert(index[2] < mArgMaxIoU.dimZ());
+    assert(index[3] < mArgMaxIoU.dimB());
 
     const unsigned int nbAnchors = mAnchors.size();
-    const Float_T xa = mOutputs(index.i, index.j,
-                                index.k + 1 * nbAnchors, index.b);
-    const Float_T ya = mOutputs(index.i, index.j,
-                                index.k + 2 * nbAnchors, index.b);
-    const Float_T wa = mOutputs(index.i, index.j,
-                                index.k + 3 * nbAnchors, index.b);
-    const Float_T ha = mOutputs(index.i, index.j,
-                                index.k + 4 * nbAnchors, index.b);
+    const Float_T xa = mOutputs(index[0], index[1],
+                                index[2] + 1 * nbAnchors, index[3]);
+    const Float_T ya = mOutputs(index[0], index[1],
+                                index[2] + 2 * nbAnchors, index[3]);
+    const Float_T wa = mOutputs(index[0], index[1],
+                                index[2] + 3 * nbAnchors, index[3]);
+    const Float_T ha = mOutputs(index[0], index[1],
+                                index[2] + 4 * nbAnchors, index[3]);
     return AnchorCell_Frame_Kernels::BBox_T(xa, ya, wa, ha);
 }
 
 N2D2::AnchorCell_Frame_Kernels::BBox_T
-N2D2::AnchorCell_Frame::getAnchorGT(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame::getAnchorGT(const Tensor<int>::Index& index) const
 {
-    assert(index.b < mGT.size());
+    assert(index[3] < mGT.size());
 
     const int argMaxIoU = mArgMaxIoU(index);
 
-    assert(argMaxIoU < 0 || argMaxIoU < (int)mGT[index.b].size());
+    assert(argMaxIoU < 0 || argMaxIoU < (int)mGT[index[3]].size());
 
     return ((argMaxIoU >= 0)
-        ? mGT[index.b][argMaxIoU]
+        ? mGT[index[3]][argMaxIoU]
         : AnchorCell_Frame_Kernels::BBox_T(0.0, 0.0, 0.0, 0.0));
 }
 
 N2D2::Float_T
-N2D2::AnchorCell_Frame::getAnchorIoU(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame::getAnchorIoU(const Tensor<int>::Index& index) const
 {
-    assert(index.i < mArgMaxIoU.dimX());
-    assert(index.j < mArgMaxIoU.dimY());
-    assert(index.k < mArgMaxIoU.dimZ());
-    assert(index.b < mArgMaxIoU.dimB());
+    assert(index[0] < mArgMaxIoU.dimX());
+    assert(index[1] < mArgMaxIoU.dimY());
+    assert(index[2] < mArgMaxIoU.dimZ());
+    assert(index[3] < mArgMaxIoU.dimB());
 
-    return mOutputs(index.i, index.j, index.k + 5 * mAnchors.size(), index.b);
+    return mOutputs(index[0], index[1], index[2] + 5 * mAnchors.size(), index[3]);
 }
 
 int
-N2D2::AnchorCell_Frame::getAnchorArgMaxIoU(const Tensor4d<int>::Index& index)
+N2D2::AnchorCell_Frame::getAnchorArgMaxIoU(const Tensor<int>::Index& index)
     const
 {
     return mArgMaxIoU(index);
@@ -162,10 +162,10 @@ void N2D2::AnchorCell_Frame::initialize()
     }
 
     mGT.resize(mOutputs.dimB());
-    mArgMaxIoU.resize(mOutputsWidth,
+    mArgMaxIoU.resize({mOutputsWidth,
                       mOutputsHeight,
                       mAnchors.size(),
-                      mOutputs.dimB());
+                      mOutputs.dimB()});
 }
 
 void N2D2::AnchorCell_Frame::propagate(bool inference)
@@ -521,8 +521,8 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
 #pragma omp parallel for if (mDiffInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mDiffInputs.dimB(); ++batchPos) {
-        std::vector<Tensor4d<int>::Index> positive;
-        std::vector<Tensor4d<int>::Index> negative;
+        std::vector<Tensor<int>::Index> positive;
+        std::vector<Tensor<int>::Index> negative;
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             const AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
@@ -548,11 +548,11 @@ void N2D2::AnchorCell_Frame::backPropagate()
                                 && IoU == mMaxIoU[batchPos]))
                         {
                             positive.push_back(
-                                Tensor4d<int>::Index(xa, ya, k, batchPos));
+                                Tensor<int>::Index(xa, ya, k, batchPos));
                         }
                         else if (IoU < mNegativeIoU) {
                             negative.push_back(
-                                Tensor4d<int>::Index(xa, ya, k, batchPos));
+                                Tensor<int>::Index(xa, ya, k, batchPos));
                         }
                     }
 
@@ -582,7 +582,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
             const bool isPositive = (n < mLossPositiveSample
                                      && !positive.empty());
 
-            std::vector<Tensor4d<int>::Index>& anchorIndex =
+            std::vector<Tensor<int>::Index>& anchorIndex =
                                     (isPositive)
                                         ? positive
                                         : negative;
@@ -595,9 +595,9 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
             const unsigned int idx = Random::randUniform(0,
                                         anchorIndex.size() - 1);
-            const unsigned int xa = anchorIndex[idx].i;
-            const unsigned int ya = anchorIndex[idx].j;
-            const unsigned int k = anchorIndex[idx].k;
+            const unsigned int xa = anchorIndex[idx][0];
+            const unsigned int ya = anchorIndex[idx][1];
+            const unsigned int k = anchorIndex[idx][2];
 
             mDiffOutputs(xa, ya, k, batchPos)
                 = (isPositive - mInputs(xa, ya, k, batchPos)) / miniBatchSize;

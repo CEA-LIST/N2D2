@@ -37,7 +37,7 @@
     #endif
 #endif
 
-#include "containers/Tensor2d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
@@ -63,7 +63,7 @@ public:
     virtual void append(cv::Mat& labels,
                         unsigned int outsideMargin = 0,
                         int outsideLabel = 0) const = 0;
-    inline void append(Tensor2d<int>& labels,
+    inline void append(Tensor<int>& labels,
                        unsigned int outsideMargin = 0,
                        int outsideLabel = 0) const;
     virtual void rescale(double xRatio, double yRatio) = 0;
@@ -133,13 +133,13 @@ cv::Mat N2D2::ROI::extract(const cv::Mat& stimulus) const
     return stimulus(rect);
 }
 
-void N2D2::ROI::append(Tensor2d<int>& labels,
+void N2D2::ROI::append(Tensor<int>& labels,
                        unsigned int outsideMargin,
                        int outsideLabel) const
 {
     cv::Mat mat = (cv::Mat)labels;
     append(mat, outsideMargin, outsideLabel);
-    labels = Tensor2d<int>(mat);
+    labels = Tensor<int>(mat);
 }
 
 #endif // N2D2_ROI_H

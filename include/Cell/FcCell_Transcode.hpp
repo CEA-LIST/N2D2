@@ -223,7 +223,7 @@ void N2D2::FcCell_Transcode
         throw std::runtime_error(
             "Could not save spike coding compare data file.");
 
-    const Tensor4d<Float_T>& outputs = FRAME::getOutputs();
+    const Tensor<Float_T>& outputs = FRAME::getOutputs();
     Float_T minSignal = 0.0;
     Float_T maxSignal = 1.0;
     int minActivity = 0;

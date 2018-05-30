@@ -1,6 +1,6 @@
 /*
     (C) Copyright 2018 CEA LIST. All Rights Reserved.
-    Contributor(s): David BRIAND (david.briand@cea.fr) 
+    Contributor(s): David BRIAND (david.briand@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,12 +20,12 @@
 
 #include "Cell/PaddingCell_Frame_Kernels.hpp"
 
-void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor4d<Float_T>& inputs,
+void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor<Float_T>& inputs,
                                            const Descriptor& desc,
                                            const unsigned int nbChannels,
                                            const unsigned int inputOffset,
                                            const unsigned int outputOffset,
-                                           Tensor4d<Float_T>& outputs)
+                                           Tensor<Float_T>& outputs)
 {
     const unsigned int size = inputs.dimB() * outputs.dimZ();
 
@@ -38,7 +38,7 @@ void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor4d<Float_T>& inputs,
         for (unsigned int output = 0; output < nbChannels; ++output) {
             for (unsigned int oy = 0; oy < outputs.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs.dimX(); ++ox) {
-                    
+
                     float outputValue = 0.0;
 
                     int ix = (int) ox - desc.leftPad;
@@ -48,16 +48,16 @@ void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor4d<Float_T>& inputs,
                         && iy >= 0  && iy < (int) inputs.dimY())
                     {
                         outputValue = inputs(ix,
-                                             iy, 
+                                             iy,
                                              output + inputOffset,
                                              batchPos);
 
                     }
 
 #pragma omp critical
-                    outputs(ox, 
-                            oy, 
-                            output + outputOffset, 
+                    outputs(ox,
+                            oy,
+                            output + outputOffset,
                             batchPos) = outputValue;
 
                 }

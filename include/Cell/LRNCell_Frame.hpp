@@ -47,7 +47,7 @@ protected:
         Float_T input, Float_T xAcc, Float_T alpha, Float_T beta, Float_T k);
     // mInputsBackProp (ix, iy, channel, batchPos)
     // list of the output node(s) to backpropagate from] (for Max pooling)
-    Tensor4d<std::vector<unsigned int> > mInputsBackProp;
+    Tensor<std::vector<unsigned int> > mInputsBackProp;
 
 private:
     static Registrar<LRNCell> mRegistrar;

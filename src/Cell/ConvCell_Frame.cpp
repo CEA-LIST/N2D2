@@ -49,8 +49,8 @@ N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
       Cell_Frame(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(std::make_shared<Tensor4d<Float_T> >()),
-      mDiffBias(1, 1, mNbOutputs, 1),
+      mBias(std::make_shared<Tensor<Float_T> >()),
+      mDiffBias({1, 1, mNbOutputs, 1}),
       mConvDesc(subSampleX, subSampleY, strideX, strideY, paddingX, paddingY)
 {
     // ctor
@@ -62,7 +62,7 @@ void N2D2::ConvCell_Frame::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
-            mBias->resize(1, 1, mNbOutputs, 1);
+            mBias->resize({1, 1, mNbOutputs, 1});
             mBiasFiller->apply((*mBias));
         }
         else {
@@ -86,7 +86,7 @@ void N2D2::ConvCell_Frame::initialize()
                 it = mExtSharedSynapses.find(k);
 
         if (it != mExtSharedSynapses.end()) {
-            Tensor4d<Float_T>* extWeights
+            Tensor<Float_T>* extWeights
                 = &(*((*it).second.first))[(*it).second.second];
 
             if (extWeights->dimX() != mKernelWidth
@@ -110,13 +110,13 @@ void N2D2::ConvCell_Frame::initialize()
             mSharedSynapses.push_back(extWeights);
         }
         else {
-            mSharedSynapses.push_back(new Tensor4d<Float_T>(
-                mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
+            mSharedSynapses.push_back(new Tensor<Float_T>(
+                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
             mWeightsFiller->apply(mSharedSynapses.back());
         }
 
-        mDiffSharedSynapses.push_back(new Tensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
+        mDiffSharedSynapses.push_back(new Tensor<Float_T>(
+            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
     }
 }
 

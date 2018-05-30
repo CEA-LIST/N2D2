@@ -79,8 +79,8 @@ void N2D2::ConvCell_Spike_Analog::initialize()
     ConvCell_Spike::initialize();
 
     mInputsActivationTime.resize(
-        mChannelsWidth, mChannelsHeight, mNbChannels, 1);
-    mInputsActivity.resize(mChannelsWidth, mChannelsHeight, mNbChannels, 1);
+        {mChannelsWidth, mChannelsHeight, mNbChannels, 1});
+    mInputsActivity.resize({mChannelsWidth, mChannelsHeight, mNbChannels, 1});
 }
 
 void N2D2::ConvCell_Spike_Analog::propagateSpike(NodeIn* origin,
@@ -247,7 +247,7 @@ void N2D2::ConvCell_Spike_Analog::incomingSpike(NodeIn* origin,
 
             // Lateral inhibition
             mOutputsIntegration.assign(
-                mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0.0);
+                {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0.0);
 
             if (mInhibitRefractory > 0) {
                 std::replace_if(mOutputsRefractoryEnd.begin(),
@@ -279,9 +279,9 @@ void N2D2::ConvCell_Spike_Analog::notify(Time_T timestamp, NotifyType notify)
 
     if (notify == Reset) {
         mInputsActivationTime.assign(
-            mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
+            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
         mInputsActivity.assign(
-            mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
+            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
     }
 }
 

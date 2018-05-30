@@ -116,7 +116,7 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         sp.readStimulus(set, i);
 
         for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-            const Tensor2d<Float_T> frame = sp.getData(channel);
+            const Tensor<Float_T> frame = sp.getData(channel);
 
             for (unsigned int y = 0; y < envSizeY; ++y) {
                 for (unsigned int x = 0; x < envSizeX; ++x) {
@@ -228,7 +228,7 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
             }
         }
 
-        const Tensor2d<int> label = sp.getLabelsData(0);
+        const Tensor<int> label = sp.getLabelsData(0);
         const std::vector<std::shared_ptr<Target> > outputTargets
                                                     =  deepNet->getTargets();
         const unsigned int netNbTarget = outputTargets.size();

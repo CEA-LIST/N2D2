@@ -92,7 +92,7 @@ public:
     {
         return (unsigned int) mPre_NMS_TopN;
     };
-    const std::vector<Tensor4d<int>::Index>& getAnchors() const
+    const std::vector<Tensor<int>::Index>& getAnchors() const
     {
         return mAnchors;
     }
@@ -115,7 +115,7 @@ protected:
     unsigned int mNbProposals;
     unsigned int mScoreIndex;
     unsigned int mIoUIndex;
-    std::vector<Tensor4d<int>::Index> mAnchors;
+    std::vector<Tensor<int>::Index> mAnchors;
 };
 }
 

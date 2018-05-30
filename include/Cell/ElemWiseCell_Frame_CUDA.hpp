@@ -28,7 +28,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class ElemWiseCell_Frame_CUDA : public virtual ElemWiseCell, public Cell_Frame_CUDA {
@@ -71,8 +71,8 @@ public:
     virtual ~ElemWiseCell_Frame_CUDA();
 
 protected:
-    CudaTensor4d<Float_T> mInterTerm;
-    CudaTensor4d<unsigned int> mArgMax;
+    CudaTensor<Float_T> mInterTerm;
+    CudaTensor<unsigned int> mArgMax;
 
 private:
     static Registrar<ElemWiseCell> mRegistrar;

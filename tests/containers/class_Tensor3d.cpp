@@ -18,8 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "containers/Tensor2d.hpp"
-#include "containers/Tensor3d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Random.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Utils.hpp"
@@ -28,7 +27,7 @@ using namespace N2D2;
 
 TEST(Tensor3d, Tensor3d)
 {
-    const Tensor3d<double> A;
+    const Tensor<double> A({0, 0, 0});
 
     ASSERT_EQUALS(A.dimX(), 0U);
     ASSERT_EQUALS(A.dimY(), 0U);
@@ -49,7 +48,7 @@ TEST_DATASET(Tensor3d,
              std::make_tuple(34U, 12U, 1U),
              std::make_tuple(34U, 12U, 10U))
 {
-    Tensor3d<int> tensor(dimX, dimY, dimZ);
+    Tensor<int> tensor({dimX, dimY, dimZ});
 
     ASSERT_EQUALS(tensor.dimX(), dimX);
     ASSERT_EQUALS(tensor.dimY(), dimY);
@@ -59,8 +58,8 @@ TEST_DATASET(Tensor3d,
 
 TEST(Tensor3d, push_back)
 {
-    Tensor2d<int> A;
-    Tensor3d<int> tensor;
+    Tensor<int> A({0, 0});
+    Tensor<int> tensor({0, 0, 0});
 
     ASSERT_EQUALS(tensor.dimZ(), 0U);
     ASSERT_EQUALS(tensor.size(), 0U);
@@ -87,12 +86,12 @@ TEST_DATASET(Tensor3d,
 {
     Random::mtSeed(0);
 
-    Tensor3d<int> tensor(dimX, dimY, dimZ);
+    Tensor<int> tensor({dimX, dimY, dimZ});
 
     for (unsigned int i = 0; i < tensor.size(); ++i)
         tensor(i) = Random::randUniform(-100, 100);
 
-    Tensor2d<int> subTensor = tensor[1];
+    Tensor<int> subTensor = tensor[1];
 
     ASSERT_EQUALS(subTensor.dimX(), dimX);
     ASSERT_EQUALS(subTensor.dimY(), dimY);
@@ -122,8 +121,8 @@ TEST_DATASET(Tensor3d,
 {
     Random::mtSeed(0);
 
-    Tensor3d<int> tensor(dimX, dimY, dimZ, 1);
-    Tensor2d<int> subTensor = tensor[1];
+    Tensor<int> tensor({dimX, dimY, dimZ}, 1);
+    Tensor<int> subTensor = tensor[1];
 
     for (unsigned int i = 0; i < subTensor.size(); ++i)
         subTensor(i) = Random::randUniform(-100, 100);
@@ -151,8 +150,8 @@ TEST_DATASET(Tensor3d,
 {
     Random::mtSeed(0);
 
-    Tensor3d<int> tensor(dimX, dimY, dimZ, 1);
-    Tensor2d<int> subTensor(dimX, dimY);
+    Tensor<int> tensor({dimX, dimY, dimZ}, 1);
+    Tensor<int> subTensor({dimX, dimY});
 
     for (unsigned int i = 0; i < subTensor.size(); ++i)
         subTensor(i) = Random::randUniform(-100, 100);
@@ -180,8 +179,8 @@ TEST_DATASET(Tensor3d,
              std::make_tuple(34U, 12U, 1U),
              std::make_tuple(34U, 12U, 10U))
 {
-    Tensor2d<int> A(dimX, dimY);
-    Tensor3d<int> tensor;
+    Tensor<int> A({dimX, dimY});
+    Tensor<int> tensor;
 
     for (unsigned int i = 0; i < dimZ; ++i)
         tensor.push_back(A);
@@ -251,14 +250,14 @@ TEST_DATASET(Tensor3d,
                       (int)(dimX * dimY * dimZ) - 1);
     }
 
-    const Tensor3d<int> A(mat);
+    const Tensor<int> A(mat);
 
     ASSERT_EQUALS(mat.cols, (int)dimX);
     ASSERT_EQUALS(mat.rows, (int)dimY);
     ASSERT_EQUALS(mat.channels(), (int)dimZ);
     ASSERT_EQUALS(A.dimX(), dimX);
     ASSERT_EQUALS(A.dimY(), dimY);
-    ASSERT_EQUALS(A.dimZ(), dimZ);
+    ASSERT_EQUALS(A.dimZ(), (dimZ > 1) ? dimZ : dimX);
     ASSERT_EQUALS(A.size(), dimX * dimY * dimZ);
     ASSERT_TRUE(A.empty() == (dimX * dimY * dimZ == 0));
 
@@ -266,7 +265,7 @@ TEST_DATASET(Tensor3d,
         for (unsigned int j = 0; j < dimY; ++j) {
             for (unsigned int k = 0; k < dimZ; ++k) {
                 if (dimZ == 1) {
-                    ASSERT_EQUALS(A(i, j, k), mat.at<int>(j, i));
+                    ASSERT_EQUALS(A(i, j), mat.at<int>(j, i));
                 } else if (dimZ == 2) {
                     ASSERT_EQUALS(A(i, j, k), mat.at<cv::Vec2i>(j, i)[k]);
                 } else if (dimZ == 3) {
@@ -301,7 +300,7 @@ TEST_DATASET(Tensor3d,
              std::make_tuple(12U, 34U, 4U),
              std::make_tuple(34U, 12U, 4U))
 {
-    Tensor3d<double> A(dimX, dimY, dimZ);
+    Tensor<double> A({dimX, dimY, dimZ});
 
     for (unsigned int i = 0; i < A.size(); ++i)
         A(i) = i;
@@ -345,7 +344,7 @@ TEST_DATASET(Tensor3d,
 
 TEST(Tensor3d, clear)
 {
-    Tensor3d<double> A(2, 3, 4, 1.0);
+    Tensor<double> A({2, 3, 4}, 1.0);
 
     ASSERT_EQUALS(A(1, 1, 1), 1.0);
 

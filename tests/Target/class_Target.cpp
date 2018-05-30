@@ -31,7 +31,7 @@ TEST(Target, Target)
 {
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 10));
     std::shared_ptr
-        <StimuliProvider> sp(new StimuliProvider(EmptyDatabase, 32, 32));
+        <StimuliProvider> sp(new StimuliProvider(EmptyDatabase, {32, 32, 1}));
     Target target("TEST", fcCell, sp);
 
     ASSERT_EQUALS(target.getParameter<bool>("DataAsTarget"), false);
@@ -57,7 +57,7 @@ TEST_DATASET(Target,
 {
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", nbOutputs));
     std::shared_ptr
-        <StimuliProvider> sp(new StimuliProvider(EmptyDatabase, 32, 32));
+        <StimuliProvider> sp(new StimuliProvider(EmptyDatabase, {32, 32, 1}));
     Target target("TEST", fcCell, sp, targetValue, defaultValue, targetTopN);
 
     ASSERT_EQUALS(target.getParameter<bool>("DataAsTarget"), false);
@@ -85,7 +85,8 @@ TEST(Target, Target_ter)
     database.addStimulus("s4", "label3");
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
-    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database, 32, 32));
+    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
+                                                            {32, 32, 1}));
 
     Target target("TEST", fcCell, sp);
     target.labelsMapping("Target_LabelsMapping.in");
@@ -127,7 +128,8 @@ TEST(Target, Target_ter2)
     database.addStimulus("s4", "label3");
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
-    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database, 32, 32));
+    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
+                                                            {32, 32, 1}));
 
     Target target("TEST", fcCell, sp);
     target.labelsMapping("Target_LabelsMapping.in");
@@ -170,7 +172,8 @@ TEST(Target, Target_ter3)
     database.addStimulus("s6", -1);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
-    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database, 32, 32));
+    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
+                                                            {32, 32, 1}));
 
     Target target("TEST", fcCell, sp);
     target.labelsMapping("Target_LabelsMapping.in");
@@ -207,7 +210,8 @@ TEST(Target, setLabelTarget)
     database.addStimulus("s6", -1);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
-    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database, 32, 32));
+    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
+                                                            {32, 32, 1}));
 
     Target target("TEST", fcCell, sp);
     target.setLabelTarget(0, 1);

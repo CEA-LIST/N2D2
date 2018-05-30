@@ -33,9 +33,9 @@ N2D2::TanhActivation_Frame_CUDA
                                 NULL);
 
 template <>
-void N2D2::TanhActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data)
+void N2D2::TanhActivation_Frame_CUDA<float>::propagate(Tensor<float>* data)
 {
-    CudaTensor4d<float>* cudaData = static_cast<CudaTensor4d<float>*>(data);
+    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
 
     if (mAlpha != 1.0) {
         const float alpha = mAlpha;
@@ -62,9 +62,9 @@ void N2D2::TanhActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data)
 }
 
 template <>
-void N2D2::TanhActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data)
+void N2D2::TanhActivation_Frame_CUDA<double>::propagate(Tensor<double>* data)
 {
-    CudaTensor4d<double>* cudaData = static_cast<CudaTensor4d<double>*>(data);
+    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
 
     if (mAlpha != 1.0) {
         const double alpha = mAlpha;

@@ -48,7 +48,7 @@
 
 #include "DataFile/DataFile.hpp"
 #include "ROI/RectangularROI.hpp"
-#include "containers/Tensor2d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"

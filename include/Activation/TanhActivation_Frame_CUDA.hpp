@@ -25,7 +25,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 template <class T> class TanhActivation_Frame_CUDA : public TanhActivation<T> {
@@ -36,8 +36,8 @@ public:
     }
 
     TanhActivation_Frame_CUDA();
-    virtual void propagate(Tensor4d<T>* data);
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
+    virtual void propagate(Tensor<T>* data);
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
     virtual ~TanhActivation_Frame_CUDA();
 
     using TanhActivation<T>::mAlpha;
@@ -68,17 +68,17 @@ N2D2::TanhActivation_Frame_CUDA<T>::TanhActivation_Frame_CUDA()
 
 namespace N2D2 {
 template <>
-void TanhActivation_Frame_CUDA<float>::propagate(Tensor4d<float>* data);
+void TanhActivation_Frame_CUDA<float>::propagate(Tensor<float>* data);
 template <>
-void TanhActivation_Frame_CUDA<double>::propagate(Tensor4d<double>* data);
+void TanhActivation_Frame_CUDA<double>::propagate(Tensor<double>* data);
 }
 
 template <class T>
 void N2D2::TanhActivation_Frame_CUDA
-    <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
+    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
 {
-    CudaTensor4d<T>* cudaData = static_cast<CudaTensor4d<T>*>(data);
-    CudaTensor4d<T>* cudaDiffData = static_cast<CudaTensor4d<T>*>(diffData);
+    CudaTensor<T>* cudaData = static_cast<CudaTensor<T>*>(data);
+    CudaTensor<T>* cudaDiffData = static_cast<CudaTensor<T>*>(diffData);
 
     const float alpha = mAlpha;
     const float beta = 0.0f;

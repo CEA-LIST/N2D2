@@ -34,10 +34,10 @@ N2D2::BatchNormCell_Frame_CUDA::BatchNormCell_Frame_CUDA(
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
       Cell_Frame_CUDA(name, nbOutputs, activation),
-      mScale(std::make_shared<CudaTensor4d<Float_T> >()),
-      mBias(std::make_shared<CudaTensor4d<Float_T> >()),
-      mMean(std::make_shared<CudaTensor4d<Float_T> >()),
-      mVariance(std::make_shared<CudaTensor4d<Float_T> >())
+      mScale(std::make_shared<CudaTensor<Float_T> >()),
+      mBias(std::make_shared<CudaTensor<Float_T> >()),
+      mMean(std::make_shared<CudaTensor<Float_T> >()),
+      mVariance(std::make_shared<CudaTensor<Float_T> >())
 {
     // ctor
     mScaleSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
@@ -79,7 +79,7 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(derivedBnDesc));
 
     if (mScale->empty())
-        mScale->resize(w, h, c, n, 1.0);
+        mScale->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 1.0);
     else {
         if ((int)mScale->dimX() != w || (int)mScale->dimY() != h
             || (int)mScale->dimZ() != c || (int)mScale->dimB() != n)
@@ -90,7 +90,7 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     }
 
     if (mBias->empty())
-        mBias->resize(w, h, c, n, 0.0);
+        mBias->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 0.0);
     else {
         if ((int)mBias->dimX() != w || (int)mBias->dimY() != h
             || (int)mBias->dimZ() != c || (int)mBias->dimB() != n)
@@ -101,7 +101,7 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     }
 
     if (mMean->empty())
-        mMean->resize(w, h, c, n, 0.0);
+        mMean->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 0.0);
     else {
         if ((int)mMean->dimX() != w || (int)mMean->dimY() != h
             || (int)mMean->dimZ() != c || (int)mMean->dimB() != n)
@@ -112,7 +112,7 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     }
 
     if (mVariance->empty())
-        mVariance->resize(w, h, c, n, 0.0);
+        mVariance->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 0.0);
     else {
         if ((int)mVariance->dimX() != w || (int)mVariance->dimY() != h
             || (int)mVariance->dimZ() != c || (int)mVariance->dimB() != n)
@@ -122,11 +122,11 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
         }
     }
 
-    mSavedMean.resize(w, h, c, n);
-    mSavedVariance.resize(w, h, c, n);
+    mSavedMean.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
+    mSavedVariance.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
 
-    mDiffScale.resize(w, h, c, n);
-    mDiffBias.resize(w, h, c, n);
+    mDiffScale.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
+    mDiffBias.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
@@ -225,56 +225,56 @@ void N2D2::BatchNormCell_Frame_CUDA::update()
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setScales(
-    const std::shared_ptr<Tensor4d<Float_T> >& scales)
+    const std::shared_ptr<Tensor<Float_T> >& scales)
 {
-    std::shared_ptr<CudaTensor4d<Float_T> > cudaScales
-        = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(scales);
+    std::shared_ptr<CudaTensor<Float_T> > cudaScales
+        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(scales);
 
     if (!cudaScales) {
         throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases(): scales"
-                                 " must be a CudaTensor4d");
+                                 " must be a CudaTensor");
     }
 
     mScale = cudaScales;
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setBiases(
-    const std::shared_ptr<Tensor4d<Float_T> >& biases)
+    const std::shared_ptr<Tensor<Float_T> >& biases)
 {
-    std::shared_ptr<CudaTensor4d<Float_T> > cudaBiases
-        = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(biases);
+    std::shared_ptr<CudaTensor<Float_T> > cudaBiases
+        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(biases);
 
     if (!cudaBiases) {
         throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases(): biases"
-                                 " must be a CudaTensor4d");
+                                 " must be a CudaTensor");
     }
 
     mBias = cudaBiases;
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setMeans(
-    const std::shared_ptr<Tensor4d<Float_T> >& means)
+    const std::shared_ptr<Tensor<Float_T> >& means)
 {
-    std::shared_ptr<CudaTensor4d<Float_T> > cudaMeans
-        = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(means);
+    std::shared_ptr<CudaTensor<Float_T> > cudaMeans
+        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(means);
 
     if (!cudaMeans) {
         throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases(): means"
-                                 " must be a CudaTensor4d");
+                                 " must be a CudaTensor");
     }
 
     mMean = cudaMeans;
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setVariances(
-    const std::shared_ptr<Tensor4d<Float_T> >& variances)
+    const std::shared_ptr<Tensor<Float_T> >& variances)
 {
-    std::shared_ptr<CudaTensor4d<Float_T> > cudaVariances
-        = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(variances);
+    std::shared_ptr<CudaTensor<Float_T> > cudaVariances
+        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(variances);
 
     if (!cudaVariances) {
         throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases():"
-                                 " variances must be a CudaTensor4d");
+                                 " variances must be a CudaTensor");
     }
 
     mVariance = cudaVariances;

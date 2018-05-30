@@ -174,7 +174,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     const unsigned int nbOutputs = 1;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     PoolCell_Frame_CUDA_Test pool1("pool1",
                                    poolWidth,
@@ -255,7 +255,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     const unsigned int nbOutputs = 1;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     PoolCell_Frame_CUDA_Test pool1("pool1", 4, 4, 1, 2, 2, 0, 0, PoolCell::Max);
     PoolCell_Frame_CUDA_Test pool2("pool2",
@@ -358,7 +358,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 3, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -366,7 +366,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     env.readRandomBatch(Database::Test);
 
-    Tensor4d<Float_T>& in = env.getData();
+    Tensor<Float_T>& in = env.getData();
 
     ASSERT_EQUALS(in.dimZ(), 3U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -385,7 +385,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
-    const Tensor4d<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = pool1.getOutputs();
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -501,7 +501,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 3, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -509,7 +509,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     env.readRandomBatch(Database::Test);
 
-    Tensor4d<Float_T>& in = env.getData();
+    Tensor<Float_T>& in = env.getData();
 
     ASSERT_EQUALS(in.dimZ(), 3U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -534,7 +534,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
-    const Tensor4d<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = pool1.getOutputs();
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {

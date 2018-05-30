@@ -18,14 +18,14 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "containers/Tensor2d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
 
 TEST(Tensor2d, Tensor2d)
 {
-    const Tensor2d<double> A;
+    const Tensor<double> A({0, 0});
 
     ASSERT_EQUALS(A.dimX(), 0U);
     ASSERT_EQUALS(A.dimY(), 0U);
@@ -44,7 +44,7 @@ TEST_DATASET(Tensor2d,
              std::make_tuple(12U, 34U),
              std::make_tuple(34U, 12U))
 {
-    const Tensor2d<double> A(dimX, dimY);
+    const Tensor<double> A({dimX, dimY});
 
     ASSERT_EQUALS(A.dimX(), dimX);
     ASSERT_EQUALS(A.dimY(), dimY);
@@ -62,7 +62,7 @@ TEST_DATASET(Tensor2d,
              std::make_tuple(12U, 34U),
              std::make_tuple(34U, 12U))
 {
-    Tensor2d<double> A(dimX, dimY);
+    Tensor<double> A({dimX, dimY});
 
     ASSERT_EQUALS(A.dimX(), dimX);
     ASSERT_EQUALS(A.dimY(), dimY);
@@ -79,8 +79,8 @@ TEST_DATASET(Tensor2d,
              std::make_tuple(12U, 34U),
              std::make_tuple(34U, 12U))
 {
-    Tensor2d<double> A;
-    A.resize(dimX, dimY);
+    Tensor<double> A;
+    A.resize({dimX, dimY});
 
     ASSERT_EQUALS(A.dimX(), dimX);
     ASSERT_EQUALS(A.dimY(), dimY);
@@ -107,7 +107,7 @@ TEST_DATASET(Tensor2d,
     ASSERT_EQUALS(mat.at<int>(0, 0), 0);
     ASSERT_EQUALS(mat.at<int>(dimY - 1, dimX - 1), (int)(dimX * dimY) - 1);
 
-    const Tensor2d<int> A(mat);
+    const Tensor<int> A(mat);
 
     ASSERT_EQUALS(mat.cols, (int)dimX);
     ASSERT_EQUALS(mat.rows, (int)dimY);
@@ -143,7 +143,7 @@ TEST_DATASET(Tensor2d,
     ASSERT_EQUALS(mat.at<unsigned char>(dimY - 1, dimX - 1),
                   (unsigned char)(dimX * dimY) - 1);
 
-    const Tensor2d<float> A(mat);
+    const Tensor<float> A(mat);
 
     ASSERT_EQUALS(mat.cols, (int)dimX);
     ASSERT_EQUALS(mat.rows, (int)dimY);
@@ -169,7 +169,7 @@ TEST_DATASET(Tensor2d,
              std::make_tuple(12U, 34U),
              std::make_tuple(34U, 12U))
 {
-    Tensor2d<double> A(dimX, dimY);
+    Tensor<double> A({dimX, dimY});
 
     for (unsigned int i = 0; i < A.size(); ++i)
         A(i) = i;
@@ -190,7 +190,7 @@ TEST_DATASET(Tensor2d,
 
 TEST(Tensor2d, clear)
 {
-    Tensor2d<double> A(2, 2, 1.0);
+    Tensor<double> A({2, 2}, 1.0);
 
     ASSERT_EQUALS(A(1, 1), 1.0);
 

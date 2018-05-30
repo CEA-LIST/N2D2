@@ -26,10 +26,20 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    const unsigned int sizeX = iniConfig.getProperty<unsigned int>("SizeX");
-    const unsigned int sizeY = iniConfig.getProperty<unsigned int>("SizeY");
-    const unsigned int nbChannels = iniConfig.getProperty
-                                    <unsigned int>("NbChannels", 1U);
+    std::vector<size_t> size;
+
+    if (iniConfig.isProperty("Size"))
+        size = iniConfig.getProperty<std::vector<size_t> >("Size");
+    else {
+        size.push_back(iniConfig.getProperty<size_t>("SizeX"));
+        size.push_back(iniConfig.getProperty<size_t>("SizeY"));
+
+        if (iniConfig.isProperty("SizeD"))
+            size.push_back(iniConfig.getProperty<size_t>("SizeD"));
+
+        size.push_back(iniConfig.getProperty<size_t>("NbChannels", 1U));
+    }
+
     const unsigned int batchSize = iniConfig.getProperty
                                    <unsigned int>("BatchSize", 1U);
     const bool compositeStimuli = iniConfig.getProperty
@@ -38,7 +48,7 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
                                   <std::string>("CachePath", "");
 
     std::shared_ptr<CEnvironment> cEnv(new CEnvironment(
-        database, sizeX, sizeY, nbChannels, batchSize, compositeStimuli));
+        database, size, batchSize, compositeStimuli));
     cEnv->setCachePath(cachePath);
 
     iniConfig.setProperty("_EpochSize", database.getNbStimuli(Database::Learn));

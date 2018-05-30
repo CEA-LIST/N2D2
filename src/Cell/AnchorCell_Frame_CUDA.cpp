@@ -39,8 +39,8 @@ N2D2::AnchorCell_Frame_CUDA::AnchorCell_Frame_CUDA(
       mNbLabelsMax(16)
 {
     // ctor
-    mAnchors.push_back(Tensor3d<AnchorCell_Frame_Kernels::Anchor>(
-        1, 1, anchors.size(), anchors.begin(), anchors.end()));
+    mAnchors.push_back(Tensor<AnchorCell_Frame_Kernels::Anchor>(
+        {1, 1, anchors.size()}, anchors.begin(), anchors.end()));
 }
 int N2D2::AnchorCell_Frame_CUDA::getNbAnchors() const { return mAnchors.size(); }
 
@@ -62,14 +62,14 @@ N2D2::AnchorCell_Frame_CUDA::getGT(unsigned int batchPos) const
 }
 
 std::shared_ptr<N2D2::ROI>
-N2D2::AnchorCell_Frame_CUDA::getAnchorROI(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame_CUDA::getAnchorROI(const Tensor<int>::Index& index) const
 {
     mArgMaxIoU.synchronizeDToH();
     const int argMaxIoU = mArgMaxIoU(index);
 
     if (argMaxIoU >= 0) {
         std::vector<std::shared_ptr<ROI> > labelROIs
-            = mStimuliProvider.getLabelsROIs(index.b);
+            = mStimuliProvider.getLabelsROIs(index[3]);
         assert(argMaxIoU < (int)labelROIs.size());
         return labelROIs[argMaxIoU];
     }
@@ -78,55 +78,55 @@ N2D2::AnchorCell_Frame_CUDA::getAnchorROI(const Tensor4d<int>::Index& index) con
 }
 
 N2D2::AnchorCell_Frame_Kernels::BBox_T
-N2D2::AnchorCell_Frame_CUDA::getAnchorBBox(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame_CUDA::getAnchorBBox(const Tensor<int>::Index& index) const
 {
-    assert(index.i < mArgMaxIoU.dimX());
-    assert(index.j < mArgMaxIoU.dimY());
-    assert(index.k < mArgMaxIoU.dimZ());
-    assert(index.b < mArgMaxIoU.dimB());
+    assert(index[0] < mArgMaxIoU.dimX());
+    assert(index[1] < mArgMaxIoU.dimY());
+    assert(index[2] < mArgMaxIoU.dimZ());
+    assert(index[3] < mArgMaxIoU.dimB());
 
     const unsigned int nbAnchors = mAnchors.size();
     mOutputs.synchronizeDToH();
-    const Float_T xa = mOutputs(index.i, index.j,
-                                index.k + 1 * nbAnchors, index.b);
-    const Float_T ya = mOutputs(index.i, index.j,
-                                index.k + 2 * nbAnchors, index.b);
-    const Float_T wa = mOutputs(index.i, index.j,
-                                index.k + 3 * nbAnchors, index.b);
-    const Float_T ha = mOutputs(index.i, index.j,
-                                index.k + 4 * nbAnchors, index.b);
+    const Float_T xa = mOutputs(index[0], index[1],
+                                index[2] + 1 * nbAnchors, index[3]);
+    const Float_T ya = mOutputs(index[0], index[1],
+                                index[2] + 2 * nbAnchors, index[3]);
+    const Float_T wa = mOutputs(index[0], index[1],
+                                index[2] + 3 * nbAnchors, index[3]);
+    const Float_T ha = mOutputs(index[0], index[1],
+                                index[2] + 4 * nbAnchors, index[3]);
     return AnchorCell_Frame_Kernels::BBox_T(xa, ya, wa, ha);
 }
 
 N2D2::AnchorCell_Frame_Kernels::BBox_T
-N2D2::AnchorCell_Frame_CUDA::getAnchorGT(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame_CUDA::getAnchorGT(const Tensor<int>::Index& index) const
 {
-    assert(index.b < mGT.size());
+    assert(index[3] < mGT.size());
 
     mArgMaxIoU.synchronizeDToH();
     const int argMaxIoU = mArgMaxIoU(index);
 
-    assert(argMaxIoU < 0 || argMaxIoU < (int)mGT[index.b].size());
+    assert(argMaxIoU < 0 || argMaxIoU < (int)mGT[index[3]].size());
 
     return ((argMaxIoU >= 0)
-        ? mGT[index.b][argMaxIoU]
+        ? mGT[index[3]][argMaxIoU]
         : AnchorCell_Frame_Kernels::BBox_T(0.0, 0.0, 0.0, 0.0));
 }
 
 N2D2::Float_T
-N2D2::AnchorCell_Frame_CUDA::getAnchorIoU(const Tensor4d<int>::Index& index) const
+N2D2::AnchorCell_Frame_CUDA::getAnchorIoU(const Tensor<int>::Index& index) const
 {
-    assert(index.i < mArgMaxIoU.dimX());
-    assert(index.j < mArgMaxIoU.dimY());
-    assert(index.k < mArgMaxIoU.dimZ());
-    assert(index.b < mArgMaxIoU.dimB());
+    assert(index[0] < mArgMaxIoU.dimX());
+    assert(index[1] < mArgMaxIoU.dimY());
+    assert(index[2] < mArgMaxIoU.dimZ());
+    assert(index[3] < mArgMaxIoU.dimB());
 
     mOutputs.synchronizeDToH();
-    return mOutputs(index.i, index.j, index.k + 5 * mAnchors.size(), index.b);
+    return mOutputs(index[0], index[1], index[2] + 5 * mAnchors.size(), index[3]);
 }
 
 int
-N2D2::AnchorCell_Frame_CUDA::getAnchorArgMaxIoU(const Tensor4d<int>::Index& index)
+N2D2::AnchorCell_Frame_CUDA::getAnchorArgMaxIoU(const Tensor<int>::Index& index)
     const
 {
     mArgMaxIoU.synchronizeDToH();
@@ -181,13 +181,13 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
             cudaMalloc(&mCudaGT + batchPos, mNbLabelsMax * sizeof(**mCudaGT)));
     }
 
-    mNbLabels.resize(mOutputs.dimB(), 1, 1, 1, 0);
+    mNbLabels.resize({mOutputs.dimB(), 1, 1, 1}, 0);
 
-    mArgMaxIoU.resize(mOutputsWidth,
+    mArgMaxIoU.resize({mOutputsWidth,
                       mOutputsHeight,
                       mAnchors.size(),
-                      mOutputs.dimB());
-    mMaxIoU.resize(mOutputs.dimB(), 1, 1, 1, 0.0);
+                      mOutputs.dimB()});
+    mMaxIoU.resize({mOutputs.dimB(), 1, 1, 1}, 0.0);
 }
 
 void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
@@ -296,7 +296,7 @@ N2D2::AnchorCell_Frame_CUDA::~AnchorCell_Frame_CUDA()
 {
     if (mCudaGT != NULL) {
         CHECK_CUDA_STATUS(cudaFree(mCudaGT));
-        
+
         mCudaGT = NULL;
     }
 }

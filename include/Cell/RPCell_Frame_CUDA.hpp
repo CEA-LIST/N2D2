@@ -31,7 +31,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 #include <thrust/sort.h>
 #include <thrust/functional.h>
 
@@ -70,27 +70,27 @@ public:
 protected:
     virtual void setOutputsSize();
 
-    CudaTensor4d<int> mIndexI;
-    CudaTensor4d<int> mSortedIndexI;
+    CudaTensor<int> mIndexI;
+    CudaTensor<int> mSortedIndexI;
 
-    CudaTensor4d<int> mIndexJ;
-    CudaTensor4d<int> mSortedIndexJ;
+    CudaTensor<int> mIndexJ;
+    CudaTensor<int> mSortedIndexJ;
 
-    CudaTensor4d<int> mIndexK;
-    CudaTensor4d<int> mSortedIndexK;
+    CudaTensor<int> mIndexK;
+    CudaTensor<int> mSortedIndexK;
 
-    CudaTensor4d<int> mIndexB;
-    CudaTensor4d<int> mSortedIndexB;
+    CudaTensor<int> mIndexB;
+    CudaTensor<int> mSortedIndexB;
 
-    CudaTensor4d<unsigned int> mMap;
-    CudaTensor4d<unsigned long long> mMask;
-    
-    CudaTensor4d<Float_T> mValues;
+    CudaTensor<unsigned int> mMap;
+    CudaTensor<unsigned long long> mMask;
 
-    CudaTensor4d<int> mSortedIndex;
-    CudaTensor4d<int> mGPUAnchors;
-    
-    
+    CudaTensor<Float_T> mValues;
+
+    CudaTensor<int> mSortedIndex;
+    CudaTensor<int> mGPUAnchors;
+
+
 private:
     static Registrar<RPCell> mRegistrar;
 };

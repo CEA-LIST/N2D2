@@ -48,9 +48,7 @@ class Environment : public StimuliProvider, public SpikeGenerator {
 public:
     Environment(Network& network,
                 Database& database,
-                unsigned int sizeX,
-                unsigned int sizeY = 1,
-                unsigned int nbChannels = 1,
+                const std::vector<size_t>& size,
                 unsigned int batchSize = 1,
                 bool compositeStimuli = false);
     virtual void addChannel(const CompositeTransformation& transformation);
@@ -94,9 +92,11 @@ public:
     virtual ~Environment();
 
 protected:
+    void fillNodes(Tensor<NodeEnv*> nodes, double orientation = 0.0);
+
     Network& mNetwork;
     /// For each scale, tensor (x, y, channel, batch)
-    Tensor4d<NodeEnv*> mNodes;
+    Tensor<NodeEnv*> mNodes;
 };
 
 // DEPRECATED: legacy special empty database
@@ -121,7 +121,7 @@ N2D2::NodeEnv* N2D2::Environment::getNodeByIndex(unsigned int channel,
 const std::vector<N2D2::NodeEnv*>
 N2D2::Environment::getNodes(unsigned int channel, unsigned int batchPos) const
 {
-    const Tensor2d<NodeEnv*> nodes = mNodes[batchPos][channel];
+    const Tensor<NodeEnv*> nodes = mNodes[batchPos][channel];
     return std::vector<NodeEnv*>(nodes.begin(), nodes.end());
 }
 

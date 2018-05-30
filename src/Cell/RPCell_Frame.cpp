@@ -47,7 +47,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 #pragma omp parallel for if (mInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         // Collect all ROIs in the "ROIs" vector
-        std::vector<std::pair<Tensor4d<int>::Index, Float_T> > ROIs;
+        std::vector<std::pair<Tensor<int>::Index, Float_T> > ROIs;
         ROIs.reserve(mNbAnchors * mInputs[0].dimY() * mInputs[0].dimX());
 
         for (unsigned int k = 0; k < mNbAnchors; ++k) {
@@ -68,7 +68,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
                     if (value >= 0.0 && w >= mMinWidth && h >= mMinHeight) {
                         ROIs.push_back(std::make_pair(
-                            Tensor4d<int>::Index(x, y, k, batchPos), value));
+                            Tensor<int>::Index(x, y, k, batchPos), value));
                     }
                 }
             }
@@ -79,7 +79,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
             std::partial_sort(ROIs.begin(),
                               ROIs.begin() + mPre_NMS_TopN,
                               ROIs.end(),
-                              Utils::PairSecondPred<Tensor4d<int>::Index,
+                              Utils::PairSecondPred<Tensor<int>::Index,
                                 Float_T, std::greater<Float_T> >());
 
             // Drop the lowest score (unsorted) ROIs
@@ -88,7 +88,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
         else {
             std::sort(ROIs.begin(),
                       ROIs.end(),
-                      Utils::PairSecondPred<Tensor4d<int>::Index, Float_T,
+                      Utils::PairSecondPred<Tensor<int>::Index, Float_T,
                         std::greater<Float_T> >());
         }
 
@@ -100,49 +100,49 @@ void N2D2::RPCell_Frame::propagate(bool inference)
             // FOR EMBEDDED GPU ARCHITECTURES"
             // http://rapid-project.eu/_docs/icassp2016.pdf
 
-            Tensor2d<int> invalid(ROIs.size(), ROIs.size(), 0);
+            Tensor<int> invalid({ROIs.size(), ROIs.size()}, 0);
 
             // Flag
 #pragma omp parallel for if (ROIs.size() > 16)
             for (int i = 0; i < (int)ROIs.size(); ++i) {
-                const Tensor4d<int>::Index& ROIMax = ROIs[i].first;
+                const Tensor<int>::Index& ROIMax = ROIs[i].first;
 
-                const Float_T x0 = mInputs(ROIMax.i,
-                                           ROIMax.j,
-                                           ROIMax.k + 1 * mNbAnchors,
-                                           ROIMax.b);
-                const Float_T y0 = mInputs(ROIMax.i,
-                                           ROIMax.j,
-                                           ROIMax.k + 2 * mNbAnchors,
-                                           ROIMax.b);
-                const Float_T w0 = mInputs(ROIMax.i,
-                                           ROIMax.j,
-                                           ROIMax.k + 3 * mNbAnchors,
-                                           ROIMax.b);
-                const Float_T h0 = mInputs(ROIMax.i,
-                                           ROIMax.j,
-                                           ROIMax.k + 4 * mNbAnchors,
-                                           ROIMax.b);
+                const Float_T x0 = mInputs(ROIMax[0],
+                                           ROIMax[1],
+                                           ROIMax[2] + 1 * mNbAnchors,
+                                           ROIMax[3]);
+                const Float_T y0 = mInputs(ROIMax[0],
+                                           ROIMax[1],
+                                           ROIMax[2] + 2 * mNbAnchors,
+                                           ROIMax[3]);
+                const Float_T w0 = mInputs(ROIMax[0],
+                                           ROIMax[1],
+                                           ROIMax[2] + 3 * mNbAnchors,
+                                           ROIMax[3]);
+                const Float_T h0 = mInputs(ROIMax[0],
+                                           ROIMax[1],
+                                           ROIMax[2] + 4 * mNbAnchors,
+                                           ROIMax[3]);
 
                 for (unsigned int j = i + 1; j < ROIs.size(); ++j) {
-                    const Tensor4d<int>::Index& ROI = ROIs[j].first;
+                    const Tensor<int>::Index& ROI = ROIs[j].first;
 
-                    const Float_T x = mInputs(ROI.i,
-                                              ROI.j,
-                                              ROI.k + 1 * mNbAnchors,
-                                              ROI.b);
-                    const Float_T y = mInputs(ROI.i,
-                                              ROI.j,
-                                              ROI.k + 2 * mNbAnchors,
-                                              ROI.b);
-                    const Float_T w = mInputs(ROI.i,
-                                              ROI.j,
-                                              ROI.k + 3 * mNbAnchors,
-                                              ROI.b);
-                    const Float_T h = mInputs(ROI.i,
-                                              ROI.j,
-                                              ROI.k + 4 * mNbAnchors,
-                                              ROI.b);
+                    const Float_T x = mInputs(ROI[0],
+                                              ROI[1],
+                                              ROI[2] + 1 * mNbAnchors,
+                                              ROI[3]);
+                    const Float_T y = mInputs(ROI[0],
+                                              ROI[1],
+                                              ROI[2] + 2 * mNbAnchors,
+                                              ROI[3]);
+                    const Float_T w = mInputs(ROI[0],
+                                              ROI[1],
+                                              ROI[2] + 3 * mNbAnchors,
+                                              ROI[3]);
+                    const Float_T h = mInputs(ROI[0],
+                                              ROI[1],
+                                              ROI[2] + 4 * mNbAnchors,
+                                              ROI[3]);
 
                     const Float_T interLeft = std::max(x0, x);
                     const Float_T interRight = std::min(x0 + w0, x + w);
@@ -199,25 +199,25 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 }
                 else {
                     mOutputs(0, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first.i,
-                                  ROIs[i].first.j,
-                                  ROIs[i].first.k + 1 * mNbAnchors,
-                                  ROIs[i].first.b);
+                        = mInputs(ROIs[i].first[0],
+                                  ROIs[i].first[1],
+                                  ROIs[i].first[2] + 1 * mNbAnchors,
+                                  ROIs[i].first[3]);
                     mOutputs(1, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first.i,
-                                  ROIs[i].first.j,
-                                  ROIs[i].first.k + 2 * mNbAnchors,
-                                  ROIs[i].first.b);
+                        = mInputs(ROIs[i].first[0],
+                                  ROIs[i].first[1],
+                                  ROIs[i].first[2] + 2 * mNbAnchors,
+                                  ROIs[i].first[3]);
                     mOutputs(2, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first.i,
-                                  ROIs[i].first.j,
-                                  ROIs[i].first.k + 3 * mNbAnchors,
-                                  ROIs[i].first.b);
+                        = mInputs(ROIs[i].first[0],
+                                  ROIs[i].first[1],
+                                  ROIs[i].first[2] + 3 * mNbAnchors,
+                                  ROIs[i].first[3]);
                     mOutputs(3, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first.i,
-                                  ROIs[i].first.j,
-                                  ROIs[i].first.k + 4 * mNbAnchors,
-                                  ROIs[i].first.b);
+                        = mInputs(ROIs[i].first[0],
+                                  ROIs[i].first[1],
+                                  ROIs[i].first[2] + 4 * mNbAnchors,
+                                  ROIs[i].first[3]);
                     mAnchors[n + batchPos * mNbProposals] = ROIs[i].first;
 
                     ++n;
@@ -234,8 +234,8 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 size = std::min(5, (int)ROIs.size() - 1);
                 i < size; ++i)
             {
-                std::cout << "  " << ROIs[i].first.i
-                    << "x" << ROIs[i].first.j << ": " << ROIs[i].second
+                std::cout << "  " << ROIs[i].first[0]
+                    << "x" << ROIs[i].first[1] << ": " << ROIs[i].second
                     << std::endl;
             }
 */
@@ -249,8 +249,8 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 && i >= (int)ROIs.size() - 5;
                 --i)
             {
-                std::cout << "  " << ROIs[i].first.i << "x"
-                    << ROIs[i].first.j
+                std::cout << "  " << ROIs[i].first[0] << "x"
+                    << ROIs[i].first[1]
                     << ": " << ROIs[i].second << std::endl;
             }
 */
@@ -259,16 +259,16 @@ void N2D2::RPCell_Frame::propagate(bool inference)
             const unsigned int nbBackgroundROIs = mNbProposals
                 - (int)nbForegroundROIs;
 
-            std::vector<Tensor4d<int>::Index> foregroundIoU;
-            std::vector<Tensor4d<int>::Index> backgroundIoU;
-            std::vector<Tensor4d<int>::Index> remainingIoU;
+            std::vector<Tensor<int>::Index> foregroundIoU;
+            std::vector<Tensor<int>::Index> backgroundIoU;
+            std::vector<Tensor<int>::Index> remainingIoU;
 
             for (unsigned int i = 0, size = ROIs.size(); i < size; ++i) {
-                const Tensor4d<int>::Index& ROI = ROIs[i].first;
-                const Float_T IoU = mInputs(ROI.i,
-                                            ROI.j,
-                                            ROI.k + mIoUIndex * mNbAnchors,
-                                            ROI.b);
+                const Tensor<int>::Index& ROI = ROIs[i].first;
+                const Float_T IoU = mInputs(ROI[0],
+                                            ROI[1],
+                                            ROI[2] + mIoUIndex * mNbAnchors,
+                                            ROI[3]);
 
                 if (IoU >= mForegroundMinIoU)
                     foregroundIoU.push_back(ROI);
@@ -311,7 +311,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 "Background ROIs (2): " << backgroundIoU.size() << std::endl;
 */
             for (unsigned int n = 0; n < mNbProposals; ++n) {
-                std::vector<Tensor4d<int>::Index>& IoU =
+                std::vector<Tensor<int>::Index>& IoU =
                                         (n < nbForegroundROIs)
                                             ? foregroundIoU
                                             : backgroundIoU;
@@ -319,24 +319,24 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 const unsigned int idx = Random::randUniform(0, IoU.size() - 1);
 
                 mOutputs(0, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx].i,
-                              IoU[idx].j,
-                              IoU[idx].k + 1 * mNbAnchors,
+                    = mInputs(IoU[idx][0],
+                              IoU[idx][1],
+                              IoU[idx][2] + 1 * mNbAnchors,
                               batchPos);
                 mOutputs(1, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx].i,
-                              IoU[idx].j,
-                              IoU[idx].k + 2 * mNbAnchors,
+                    = mInputs(IoU[idx][0],
+                              IoU[idx][1],
+                              IoU[idx][2] + 2 * mNbAnchors,
                               batchPos);
                 mOutputs(2, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx].i,
-                              IoU[idx].j,
-                              IoU[idx].k + 3 * mNbAnchors,
+                    = mInputs(IoU[idx][0],
+                              IoU[idx][1],
+                              IoU[idx][2] + 3 * mNbAnchors,
                               batchPos);
                 mOutputs(3, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx].i,
-                              IoU[idx].j,
-                              IoU[idx].k + 4 * mNbAnchors,
+                    = mInputs(IoU[idx][0],
+                              IoU[idx][1],
+                              IoU[idx][2] + 4 * mNbAnchors,
                               batchPos);
                 mAnchors[n + batchPos * mNbProposals] = IoU[idx];
 
@@ -363,13 +363,13 @@ void N2D2::RPCell_Frame::setOutputsSize()
     RPCell::setOutputsSize();
 
     if (mOutputs.empty()) {
-        mOutputs.resize(mOutputsWidth,
+        mOutputs.resize({mOutputsWidth,
                         mOutputsHeight,
                         mNbOutputs,
-                        mNbProposals * mInputs.dimB());
-        mDiffInputs.resize(mOutputsWidth,
+                        mNbProposals * mInputs.dimB()});
+        mDiffInputs.resize({mOutputsWidth,
                            mOutputsHeight,
                            mNbOutputs,
-                           mNbProposals * mInputs.dimB());
+                           mNbProposals * mInputs.dimB()});
     }
 }

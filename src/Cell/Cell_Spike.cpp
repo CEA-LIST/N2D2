@@ -66,7 +66,7 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
         throw std::runtime_error("Cell_Spike::addInput(): mapping length must "
                                  "be equal to the number of outputs");
 
-    mMaps.resize(mNbOutputs, mNbChannels);
+    mMaps.resize({mNbOutputs, mNbChannels});
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
         mMaps(output, mNbChannels - 1) = (!mapping.empty()) ? mapping[output]
@@ -140,7 +140,7 @@ void N2D2::Cell_Spike::addInput(Cell* cell, const Matrix<bool>& mapping)
                                  "rows must be equal to the number of input "
                                  "channels");
 
-    mMaps.resize(mNbOutputs, mNbChannels);
+    mMaps.resize({mNbOutputs, mNbChannels});
     const unsigned int channelOffset = mNbChannels - cellSpike->mNbOutputs;
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
@@ -192,7 +192,7 @@ void N2D2::Cell_Spike::addInput(Cell* cell,
     setOutputsSize();
 
     // Define input-output connections
-    mMaps.resize(mNbOutputs, mNbChannels, true);
+    mMaps.resize({mNbOutputs, mNbChannels}, true);
 
     mInputs.reserve(mNbChannels * mChannelsWidth * mChannelsHeight);
 
@@ -217,7 +217,7 @@ void N2D2::Cell_Spike::addInput(Cell* cell,
 void N2D2::Cell_Spike::populateOutputs()
 {
     if (mOutputs.empty()) {
-        mOutputs.resize(mOutputsWidth, mOutputsHeight, mNbOutputs, 1, NULL);
+        mOutputs.resize({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, NULL);
 
         for (unsigned int output = 0; output < mNbOutputs; ++output) {
             for (unsigned int y = 0; y < mOutputsHeight; ++y) {

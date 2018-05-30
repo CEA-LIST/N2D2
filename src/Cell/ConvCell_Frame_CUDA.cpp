@@ -52,8 +52,8 @@ N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
       Cell_Frame_CUDA(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(std::make_shared<CudaTensor4d<Float_T> >()),
-      mDiffBias(1, 1, mNbOutputs, 1),
+      mBias(std::make_shared<CudaTensor<Float_T> >()),
+      mDiffBias({1, 1, mNbOutputs, 1}),
       mWorkspaceSize(0),
       mWorkspace(NULL),
       mSynchronized(false)
@@ -68,7 +68,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
-            mBias->resize(1, 1, mNbOutputs, 1);
+            mBias->resize({1, 1, mNbOutputs, 1});
             mBiasFiller->apply((*mBias));
             mBias->synchronizeHToD();
         }
@@ -118,7 +118,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                 it = mExtSharedSynapses.find(k);
 
         if (it != mExtSharedSynapses.end()) {
-            CudaTensor4d<Float_T>* extWeights
+            CudaTensor<Float_T>* extWeights
                 = &(*((*it).second.first))[(*it).second.second];
 
             if (extWeights->dimX() != mKernelWidth
@@ -142,8 +142,8 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             mSharedSynapses.push_back(extWeights);
         }
         else {
-            mSharedSynapses.push_back(new CudaTensor4d<Float_T>(
-                mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
+            mSharedSynapses.push_back(new CudaTensor<Float_T>(
+                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
             mWeightsFiller->apply(mSharedSynapses.back());
 
             if (!isFullMap()) {
@@ -152,8 +152,8 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                     for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                          ++channel) {
                         if (!isConnection(channel, output))
-                            mSharedSynapses.back()[output][channel] = Tensor2d
-                                <Float_T>(mKernelWidth, mKernelHeight, 0.0);
+                            mSharedSynapses.back()[output][channel] = Tensor
+                                <Float_T>({mKernelWidth, mKernelHeight}, 0.0);
                     }
                 }
             }
@@ -161,8 +161,8 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             mSharedSynapses.back().synchronizeHToD();
         }
 
-        mDiffSharedSynapses.push_back(new CudaTensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs));
+        mDiffSharedSynapses.push_back(new CudaTensor<Float_T>(
+            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
@@ -472,14 +472,14 @@ void N2D2::ConvCell_Frame_CUDA::setWeights(unsigned int k,
 }
 
 void N2D2::ConvCell_Frame_CUDA::setBiases(
-    const std::shared_ptr<Tensor4d<Float_T> >& biases)
+    const std::shared_ptr<Tensor<Float_T> >& biases)
 {
-    std::shared_ptr<CudaTensor4d<Float_T> > cudaBiases
-        = std::dynamic_pointer_cast<CudaTensor4d<Float_T> >(biases);
+    std::shared_ptr<CudaTensor<Float_T> > cudaBiases
+        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(biases);
 
     if (!cudaBiases) {
         throw std::runtime_error("ConvCell_Frame_CUDA::setBiases(): biases"
-                                 " must be a CudaTensor4d");
+                                 " must be a CudaTensor");
     }
 
     mBias = cudaBiases;

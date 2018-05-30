@@ -53,8 +53,8 @@ void N2D2::TargetBBox::initialize()
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const Tensor4d<Float_T>& values = targetCell->getOutputs();
- 
+    const Tensor<Float_T>& values = targetCell->getOutputs();
+
     if (values.dimZ() != 4 && values.dimZ() != 5) {
         //throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
         //                        " output channels for BBox TargetBBox " + mName);
@@ -62,10 +62,10 @@ void N2D2::TargetBBox::initialize()
         std::cout << "Target BBOX" << std::endl;
     }
 
-    mTargets.resize(mCell->getOutputsWidth(),
+    mTargets.resize({mCell->getOutputsWidth(),
                     mCell->getOutputsHeight(),
                     values.dimZ(),
-                    values.dimB());
+                    values.dimB()});
 
 }
 
@@ -77,7 +77,7 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();
     const int nbBBoxMax = (int)mTargets.dimB()/batch.size();
-    const Tensor4d<Float_T>& values = targetCell->getOutputs();
+    const Tensor<Float_T>& values = targetCell->getOutputs();
 
     mBatchDetectedBBox.assign(mTargets.dimB(), std::vector<DetectedBBox>());
 
@@ -89,15 +89,15 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
 
         for(int bboxIdx = 0; bboxIdx < nbBBoxMax; ++ bboxIdx)
         {
-            const Tensor3d<Float_T>& value = values[bboxIdx + batchPos*nbBBoxMax];
+            const Tensor<Float_T>& value = values[bboxIdx + batchPos*nbBBoxMax];
             Float_T x = value(0);
             Float_T y = value(1);
             Float_T w = value(2);
             Float_T h = value(3);
-            Float_T cls = 0.0;   
+            Float_T cls = 0.0;
             if(values.dimZ() > 4)
                 cls = value(4);
-            
+
             std::cout << "BBox{" << x << ", " << y << ", " << w << ", " << h << "}[" << cls << "]" << std::endl;
             if(w > 0.0 && h > 0.0)
             {
@@ -109,7 +109,7 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
                         std::cout << value(p) << " ";
                     std::cout << "}" << std::endl;
                 }
-            }  
+            }
         }
 
         mBatchDetectedBBox[batchPos].resize(bbox.size());
@@ -119,8 +119,8 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
 
         //mBatchDetectedBBox[batchPos].swap(bbox);
 
-        std::cout << "TargetBBox: Number of BBox detected on batch " 
-            << batchPos << ": " << bbox.size() << std::endl; 
+        std::cout << "TargetBBox: Number of BBox detected on batch "
+            << batchPos << ": " << bbox.size() << std::endl;
 
     }
 
@@ -192,7 +192,7 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
                                                  itEnd = detectedBB.end();
                                                  it != itEnd; ++it)
     {
-      
+
         cv::Scalar color = cv::Scalar(255 * ((*it).cls / labelsName.size()),
                                       255 - 255*((*it).cls / labelsName.size()),
                                       255);
@@ -217,9 +217,9 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
                     color,
                     1,
                     CV_AA);
-            
 
-        
+
+
     }
 
     return imgBB;
@@ -252,7 +252,7 @@ void N2D2::TargetBBox::logEstimatedLabels(const std::string& dirName) const
 
         if (!cv::imwrite(fileName, drawEstimatedBBox(batchPos)))
             throw std::runtime_error("Unable to write image: " + fileName);
-        
+
     }
 }
 

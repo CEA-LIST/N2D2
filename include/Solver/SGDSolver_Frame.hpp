@@ -33,7 +33,7 @@ public:
 
     SGDSolver_Frame();
     void
-    update(Tensor4d<T>* data, Tensor4d<T>* diffData, unsigned int batchSize);
+    update(Tensor<T>* data, Tensor<T>* diffData, unsigned int batchSize);
     void exportFreeParameters(const std::string& fileName) const;
     std::shared_ptr<SGDSolver_Frame<T> > clone() const
     {
@@ -58,8 +58,8 @@ protected:
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
 
-    Tensor4d<T> mMomentumData;
-    Tensor4d<T> mContinuousData;
+    Tensor<T> mMomentumData;
+    Tensor<T> mContinuousData;
 
 private:
     virtual SGDSolver_Frame<T>* doClone() const
@@ -80,8 +80,8 @@ N2D2::SGDSolver_Frame<T>::SGDSolver_Frame()
 }
 
 template <class T>
-void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
-                                      Tensor4d<T>* diffData,
+void N2D2::SGDSolver_Frame<T>::update(Tensor<T>* data,
+                                      Tensor<T>* diffData,
                                       unsigned int batchSize)
 {
     const T rate = SGDSolver<T>::getLearningRate(batchSize);
@@ -90,12 +90,11 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
         return;
 
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(
-            data->dimX(), data->dimY(), data->dimZ(), data->dimB());
+        mContinuousData.resize(data->dims());
         std::copy((*data).begin(), (*data).end(), mContinuousData.begin());
     }
 
-    Tensor4d<T>* continuousData
+    Tensor<T>* continuousData
         = (mQuantizationLevels > 0) ? &mContinuousData : data;
 
     // Normalize in function of the iteration size
@@ -118,10 +117,8 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor4d<T>* data,
                 (*continuousData)(index) += rateDiff * (*diffData)(index);
         }
     } else {
-        if (mMomentumData.empty()) {
-            mMomentumData.resize(
-                data->dimX(), data->dimY(), data->dimZ(), data->dimB(), 0.0);
-        }
+        if (mMomentumData.empty())
+            mMomentumData.resize(data->dims(), 0.0);
 
 #pragma omp parallel for if (mMomentumData.size() > 1024)
         for (int index = 0; index < (int)mMomentumData.size(); ++index) {

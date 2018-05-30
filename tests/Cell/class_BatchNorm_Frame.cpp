@@ -46,7 +46,7 @@ public:
 TEST(BatchNormCell_Frame, setScales)
 {
     Network net;
-    Environment env(net, EmptyDatabase, 10, 10);
+    Environment env(net, EmptyDatabase, {10, 10, 1});
 
     BatchNormCell_Frame_Test bn1(
         "bn1", 1, std::shared_ptr<Activation<Float_T> >());
@@ -77,7 +77,7 @@ TEST_DATASET(BatchNormCell_Frame,
              std::make_tuple(32U, 24U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     BatchNormCell_Frame_Test bn1(
         "bn1", 1, std::shared_ptr<Activation<Float_T> >());
@@ -109,7 +109,7 @@ TEST_DATASET(BatchNormCell_Frame,
     const unsigned int nbOutputs = 16;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame conv1("conv1",
                          3,

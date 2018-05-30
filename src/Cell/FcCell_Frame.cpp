@@ -43,8 +43,8 @@ N2D2::FcCell_Frame::FcCell_Frame(const std::string& name,
 void N2D2::FcCell_Frame::initialize()
 {
     if (!mNoBias) {
-        mBias.resize(mOutputs.dimZ());
-        mDiffBias.resize(mOutputs.dimZ());
+        mBias.resize({mOutputs.dimZ(), 1, 1, 1});
+        mDiffBias.resize({mOutputs.dimZ(), 1, 1, 1});
         mBiasFiller->apply(mBias);
     }
 
@@ -53,12 +53,12 @@ void N2D2::FcCell_Frame::initialize()
             throw std::runtime_error("Zero-sized input for FcCell " + mName);
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
-        mSynapses.push_back(new Tensor4d<Float_T>(
-            1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()));
-        mDiffSynapses.push_back(new Tensor4d<Float_T>(
-            1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()));
-        mDropConnectMask.push_back(new Tensor4d<bool>(
-            1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ(), true));
+        mSynapses.push_back(new Tensor<Float_T>(
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+        mDiffSynapses.push_back(new Tensor<Float_T>(
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+        mDropConnectMask.push_back(new Tensor<bool>(
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}, true));
         mWeightsFiller->apply(mSynapses.back());
     }
 }
@@ -85,7 +85,7 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                     = Random::randBernoulli(mDropConnect);
         }
 
-        const Tensor4d<Float_T>& synapses = mSynapses[k];
+        const Tensor<Float_T>& synapses = mSynapses[k];
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count > 16)
@@ -94,7 +94,7 @@ void N2D2::FcCell_Frame::propagate(bool inference)
 #endif
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
             for (unsigned int output = 0; output < outputSize; ++output) {
-                const Tensor3d<Float_T> inputs = mInputs[k][batchPos];
+                const Tensor<Float_T> inputs = mInputs[k][batchPos];
                 const int inputSize = inputs.size();
 
                 // Compute the weighted sum
@@ -102,9 +102,9 @@ void N2D2::FcCell_Frame::propagate(bool inference)
 
                 if (mDropConnect < 1.0 && !inference) {
                     for (int channel = 0; channel < inputSize; ++channel) {
-                        if (mDropConnectMask[k](channel, output))
+                        if (mDropConnectMask[k][output](channel))
                             weightedSum += inputs(channel)
-                                           * synapses(channel, output);
+                                           * synapses[output](channel);
                     }
                 } else {
                     // init with weightedSum and not 0.0 to match for loop
@@ -116,8 +116,8 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                                                      weightedSum);
                 }
 
-                mOutputs(output, batchPos)
-                    = weightedSum + beta * mOutputs(output, batchPos);
+                mOutputs[batchPos](output)
+                    = weightedSum + beta * mOutputs[batchPos](output);
             }
         }
     }
@@ -134,14 +134,14 @@ void N2D2::FcCell_Frame::backPropagate()
                                     * mOutputs.dimZ();
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const Tensor4d<Float_T>& input = mInputs[k];
+        const Tensor<Float_T>& input = mInputs[k];
         const unsigned int nbChannels = input.size() / input.dimB();
 
         if (!mDiffOutputs.empty() && mBackPropagate) {
-            Tensor4d<Float_T>& diffOutputs = mDiffOutputs[k];
+            Tensor<Float_T>& diffOutputs = mDiffOutputs[k];
             const Float_T beta = (diffOutputs.isValid()) ? 1.0 : 0.0;
 
-            const Tensor4d<Float_T>& synapses = mSynapses[k];
+            const Tensor<Float_T>& synapses = mSynapses[k];
             const unsigned int count = mInputs.dimB() * nbChannels;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -152,7 +152,7 @@ void N2D2::FcCell_Frame::backPropagate()
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                 for (unsigned int channel = 0; channel < nbChannels; ++channel)
                 {
-                    const Tensor3d<Float_T> diffInputs = mDiffInputs[batchPos];
+                    const Tensor<Float_T> diffInputs = mDiffInputs[batchPos];
 
                     Float_T gradient = 0.0;
 
@@ -160,8 +160,8 @@ void N2D2::FcCell_Frame::backPropagate()
                         for (unsigned int output = 0; output < outputSize;
                              ++output)
                         {
-                            if (mDropConnectMask[k](channel, output))
-                                gradient += synapses(channel, output)
+                            if (mDropConnectMask[k][output](channel))
+                                gradient += synapses[output](channel)
                                             * diffInputs(output);
                         }
                     }
@@ -169,20 +169,20 @@ void N2D2::FcCell_Frame::backPropagate()
                         for (unsigned int output = 0; output < outputSize;
                              ++output)
                         {
-                            gradient += synapses(channel, output)
+                            gradient += synapses[output](channel)
                                         * diffInputs(output);
                         }
                     }
 
-                    diffOutputs(channel, batchPos) = gradient
-                        + beta * diffOutputs(channel, batchPos);
+                    diffOutputs[batchPos](channel) = gradient
+                        + beta * diffOutputs[batchPos](channel);
                 }
             }
 
             diffOutputs.setValid();
         }
 
-        Tensor4d<Float_T>& diffSynapses = mDiffSynapses[k];
+        Tensor<Float_T>& diffSynapses = mDiffSynapses[k];
         const unsigned int count2 = nbChannels * mNbOutputs;
 
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
@@ -195,20 +195,20 @@ void N2D2::FcCell_Frame::backPropagate()
         for (int output = 0; output < (int)mNbOutputs; ++output) {
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 if (!(mDropConnect < 1.0)
-                    || mDropConnectMask[k](channel, output)) {
+                    || mDropConnectMask[k][output](channel)) {
                     Float_T sum = 0.0;
 
                     for (unsigned int batchPos = 0; batchPos < input.dimB();
                          ++batchPos)
-                        sum += input(channel, batchPos)
-                               * mDiffInputs(output, batchPos);
+                        sum += input[batchPos](channel)
+                               * mDiffInputs[batchPos](output);
 
-                    diffSynapses(channel, output) = sum
-                        + beta * diffSynapses(channel, output);
+                    diffSynapses[output](channel) = sum
+                        + beta * diffSynapses[output](channel);
                 }
                 else {
-                    diffSynapses(channel, output) = beta
-                        * diffSynapses(channel, output);
+                    diffSynapses[output](channel) = beta
+                        * diffSynapses[output](channel);
                 }
             }
         }
@@ -223,7 +223,7 @@ void N2D2::FcCell_Frame::backPropagate()
 
             for (unsigned int batchPos = 0; batchPos < mInputs.dimB();
                  ++batchPos)
-                sum += mDiffInputs(output, batchPos);
+                sum += mDiffInputs[batchPos](output);
 
             mDiffBias(output) = sum + beta * mDiffBias(output);
         }

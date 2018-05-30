@@ -44,7 +44,7 @@ void N2D2::FcCell::logFreeParameters(const std::string& fileName,
     const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
                                       * getChannelsHeight();
 
-    Tensor3d<Float_T> weights(1, 1, channelsSize);
+    Tensor<Float_T> weights({1, 1, channelsSize});
 
     for (unsigned int channel = 0; channel < channelsSize; ++channel)
         weights(channel) = getWeight(output, channel);

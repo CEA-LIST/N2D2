@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
     Network net;
     std::shared_ptr
-        <Environment> env(new Environment(net, EmptyDatabase, 128, 128));
+        <Environment> env(new Environment(net, EmptyDatabase, {128, 128, 1}));
     env->addChannelTransformation(FilterTransformationAerPositive);
     env->addChannelTransformation(FilterTransformationAerNegative);
 

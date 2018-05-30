@@ -23,7 +23,7 @@
 
 #include "DataFile/DataFile.hpp"
 #include "Sound.hpp"
-#include "containers/Tensor2d.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
 class WavDataFile : public DataFile {

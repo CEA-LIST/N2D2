@@ -136,7 +136,7 @@ TEST(DeepNetGenerator, DeepNetGenerator)
 
     for (unsigned int i = 0; i < 10; ++i) {
         deepNet->getStimuliProvider()->readBatch(Database::Learn, 0);
-        Tensor4d<Float_T>& data = deepNet->getStimuliProvider()->getData();
+        Tensor<Float_T>& data = deepNet->getStimuliProvider()->getData();
 
         ASSERT_EQUALS(data.dimX(), 24U);
         ASSERT_EQUALS(data.dimY(), 24U);

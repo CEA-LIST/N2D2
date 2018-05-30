@@ -29,8 +29,7 @@
 
 #include "Database/Database.hpp"
 #include "Transformation/CompositeTransformation.hpp"
-#include "containers/Tensor3d.hpp"
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
@@ -58,9 +57,7 @@ public:
     };
 
     StimuliProvider(Database& database,
-                    unsigned int sizeX,
-                    unsigned int sizeY = 1,
-                    unsigned int nbChannels = 1,
+                    const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
                     bool compositeStimuli = false);
     virtual void addChannel(const CompositeTransformation& /*transformation*/);
@@ -173,11 +170,11 @@ public:
                         unsigned int batchPos = 0);
     void reverseLabels(const cv::Mat& mat,
                        Database::StimuliSet set,
-                       Tensor2d<int>& labels,
+                       Tensor<int>& labels,
                        std::vector<std::shared_ptr<ROI> >& labelsROIs);
 
-    Tensor3d<Float_T> readRawData(Database::StimulusID id) const;
-    inline Tensor3d<Float_T> readRawData(Database::StimuliSet set,
+    Tensor<Float_T> readRawData(Database::StimulusID id) const;
+    inline Tensor<Float_T> readRawData(Database::StimuliSet set,
                                          unsigned int index) const;
 
     void setBatchSize(unsigned int batchSize);
@@ -192,13 +189,24 @@ public:
     {
         return mDatabase;
     };
-    unsigned int getSizeX() const
+    const std::vector<size_t>& getSize() const
     {
-        return mSizeX;
+        return mSize;
     };
-    unsigned int getSizeY() const
+    size_t getSizeX() const
     {
-        return mSizeY;
+        assert(mSize.size() > 0);
+        return mSize[0];
+    };
+    size_t getSizeY() const
+    {
+        assert(mSize.size() > 1);
+        return mSize[1];
+    };
+    size_t getSizeD() const
+    {
+        assert(mSize.size() > 2);
+        return mSize[2];
     };
     unsigned int getBatchSize() const
     {
@@ -222,19 +230,19 @@ public:
     {
         return mBatch;
     };
-    Tensor4d<Float_T>& getData()
+    Tensor<Float_T>& getData()
     {
         return mData;
     };
-    Tensor4d<int>& getLabelsData()
+    Tensor<int>& getLabelsData()
     {
         return mLabelsData;
     };
-    const Tensor4d<Float_T>& getData() const
+    const Tensor<Float_T>& getData() const
     {
         return mData;
     };
-    const Tensor4d<int>& getLabelsData() const
+    const Tensor<int>& getLabelsData() const
     {
         return mLabelsData;
     };
@@ -243,9 +251,9 @@ public:
     {
         return mLabelsROI;
     };
-    const Tensor2d<Float_T> getData(unsigned int channel,
+    const Tensor<Float_T> getData(unsigned int channel,
                                     unsigned int batchPos = 0) const;
-    const Tensor2d<int> getLabelsData(unsigned int channel,
+    const Tensor<int> getLabelsData(unsigned int channel,
                                       unsigned int batchPos = 0) const;
     const std::vector<std::shared_ptr<ROI> >&
     getLabelsROIs(unsigned int batchPos = 0) const
@@ -259,9 +267,7 @@ public:
     virtual ~StimuliProvider() {};
 
     static void logData(const std::string& fileName,
-                        const Tensor2d<Float_T>& data);
-    static void logData(const std::string& fileName,
-                        const Tensor3d<Float_T>& data);
+                        Tensor<Float_T> data);
 
 protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
@@ -270,9 +276,7 @@ protected:
 
     // Internal variables
     Database& mDatabase;
-    unsigned int mSizeX;
-    unsigned int mSizeY;
-    unsigned int mNbChannels;
+    std::vector<size_t> mSize;
     unsigned int mBatchSize;
     bool mCompositeStimuli;
     /// Disk cache path for pre-processed stimuli (no disk cache if empty)
@@ -285,11 +289,11 @@ protected:
     std::vector<int> mBatch;
     std::vector<int> mFutureBatch;
     /// Tensor (x, y, channel, batch)
-    Tensor4d<Float_T> mData;
-    Tensor4d<Float_T> mFutureData;
+    Tensor<Float_T> mData;
+    Tensor<Float_T> mFutureData;
     /// Tensor (x, y, channel, batch)
-    Tensor4d<int> mLabelsData;
-    Tensor4d<int> mFutureLabelsData;
+    Tensor<int> mLabelsData;
+    Tensor<int> mFutureLabelsData;
     /// ROIs of current batch
     std::vector<std::vector<std::shared_ptr<ROI> > > mLabelsROI;
     std::vector<std::vector<std::shared_ptr<ROI> > > mFutureLabelsROI;
@@ -317,7 +321,7 @@ operator()(Database::StimuliSet set) const
 
 unsigned int N2D2::StimuliProvider::getNbChannels() const
 {
-    return (mChannelsTransformations.empty()) ? mNbChannels
+    return (mChannelsTransformations.empty()) ? mSize.back()
                                               : mChannelsTransformations.size();
 }
 
@@ -347,7 +351,7 @@ N2D2::StimuliProvider::getChannelOnTheFlyTransformation(
     return mChannelsTransformations.at(channel)(set).onTheFly;
 }
 
-N2D2::Tensor3d<N2D2::Float_T>
+N2D2::Tensor<N2D2::Float_T>
 N2D2::StimuliProvider::readRawData(Database::StimuliSet set,
                                    unsigned int index) const
 {

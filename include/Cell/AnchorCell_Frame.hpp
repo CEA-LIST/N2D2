@@ -45,14 +45,14 @@ public:
 
     virtual const std::vector<AnchorCell_Frame_Kernels::BBox_T>&
         getGT(unsigned int batchPos) const;
-    virtual std::shared_ptr<ROI> getAnchorROI(const Tensor4d<int>::Index& index)
+    virtual std::shared_ptr<ROI> getAnchorROI(const Tensor<int>::Index& index)
         const;
     virtual AnchorCell_Frame_Kernels::BBox_T getAnchorBBox(
-        const Tensor4d<int>::Index& index) const;
+        const Tensor<int>::Index& index) const;
     virtual AnchorCell_Frame_Kernels::BBox_T getAnchorGT(
-        const Tensor4d<int>::Index& index) const;
-    virtual Float_T getAnchorIoU(const Tensor4d<int>::Index& index) const;
-    virtual int getAnchorArgMaxIoU(const Tensor4d<int>::Index& index) const;
+        const Tensor<int>::Index& index) const;
+    virtual Float_T getAnchorIoU(const Tensor<int>::Index& index) const;
+    virtual int getAnchorArgMaxIoU(const Tensor<int>::Index& index) const;
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -66,7 +66,7 @@ public:
 protected:
     std::vector<AnchorCell_Frame_Kernels::Anchor> mAnchors;
     std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> > mGT;
-    Tensor4d<int> mArgMaxIoU;
+    Tensor<int> mArgMaxIoU;
     std::vector<Float_T> mMaxIoU;
 
 private:

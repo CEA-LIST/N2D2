@@ -95,8 +95,8 @@ public:
     // parameter to
     // discretize
     virtual ~ProposalCell_Frame() {};
-    Tensor4d<Float_T> mPartsPrediction;
-    Tensor4d<Float_T> mTemplatesPrediction;
+    Tensor<Float_T> mPartsPrediction;
+    Tensor<Float_T> mTemplatesPrediction;
 
 protected:
     virtual void setOutputsSize();

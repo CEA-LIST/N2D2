@@ -22,15 +22,15 @@
 #define N2D2_SOLVER_H
 
 #include "Environment.hpp"
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
 template <class T> class Solver : public Parameterizable {
 public:
-    virtual void update(Tensor4d<T>* data,
-                        Tensor4d<T>* diffData,
+    virtual void update(Tensor<T>* data,
+                        Tensor<T>* diffData,
                         unsigned int batchSize) = 0;
     virtual void exportFreeParameters(const std::string& fileName) const = 0;
     std::shared_ptr<Solver<T> > clone() const

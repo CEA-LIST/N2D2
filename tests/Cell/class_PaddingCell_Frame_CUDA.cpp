@@ -76,8 +76,8 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     const unsigned int nbOutputs = 10;
-    Tensor4d<Float_T> inputs(inputWidth, inputHeight, nbOutputs, batchSize);
-    Tensor4d<Float_T> diffOutputs(inputWidth, inputHeight, nbOutputs, batchSize);
+    Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
     inputs.synchronizeHToD();
@@ -102,7 +102,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     padding1.propagate();
 
 
-    const Tensor4d<Float_T>& outputs1 = padding1.getOutputs();
+    const Tensor<Float_T>& outputs1 = padding1.getOutputs();
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int output = 0; output < inputs.dimZ(); ++output) {
@@ -148,11 +148,11 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     const unsigned int nbOutputs = nbInputA + nbInputB;
-    Tensor4d<Float_T> inputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> inputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
-    Tensor4d<Float_T> diffOutputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> diffOutputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> diffOutputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> diffOutputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
     for(unsigned int i = 0; i < inputsA.size(); ++i)
         inputsA(i) = Random::randNormal();
@@ -185,7 +185,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     padding1.propagate();
 
 
-    const Tensor4d<Float_T>& outputs1 = padding1.getOutputs();
+    const Tensor<Float_T>& outputs1 = padding1.getOutputs();
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int output = 0; output < inputsA.dimZ(); ++output) {
@@ -253,8 +253,8 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     const unsigned int nbOutputs = 10;
-    Tensor4d<Float_T> inputs(inputWidth, inputHeight, nbOutputs, batchSize);
-    Tensor4d<Float_T> diffOutputs(inputWidth, inputHeight, nbOutputs, batchSize);
+    Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
     inputs.synchronizeHToD();
@@ -300,11 +300,11 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     const unsigned int nbOutputs = nbInputA + nbInputB;
-    Tensor4d<Float_T> inputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> inputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
-    Tensor4d<Float_T> diffOutputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> diffOutputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> diffOutputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> diffOutputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
     for(unsigned int i = 0; i < inputsA.size(); ++i)
         inputsA(i) = Random::randNormal();

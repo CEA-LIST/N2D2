@@ -30,7 +30,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class LRNCell_Frame_CUDA : public virtual LRNCell, public Cell_Frame_CUDA {

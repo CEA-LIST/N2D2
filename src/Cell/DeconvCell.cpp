@@ -67,7 +67,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& fileName,
         return;
     }
 
-    Tensor2d<Float_T> weights(mKernelWidth, mKernelHeight);
+    Tensor<Float_T> weights({mKernelWidth, mKernelHeight});
 
     for (unsigned int y = 0; y < mKernelHeight; ++y) {
         for (unsigned int x = 0; x < mKernelWidth; ++x)
@@ -84,7 +84,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& fileName,
         throw std::domain_error(
             "DeconvCell::logFreeParameters(): output not within range.");
 
-    Tensor3d<Float_T> weights(mKernelWidth, mKernelHeight, getNbChannels());
+    Tensor<Float_T> weights({mKernelWidth, mKernelHeight, getNbChannels()});
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
         for (unsigned int y = 0; y < mKernelHeight; ++y) {

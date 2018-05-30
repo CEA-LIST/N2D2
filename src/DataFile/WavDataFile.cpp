@@ -43,6 +43,6 @@ void N2D2::WavDataFile::write(const std::string& fileName, const cv::Mat& data)
             "WavDataFile::write(): multiple channels WAV not supported: "
             + fileName);
 
-    Sound snd(Tensor2d<double>(data).data());
+    Sound snd(Tensor<double>(data).data());
     snd.save(fileName);
 }

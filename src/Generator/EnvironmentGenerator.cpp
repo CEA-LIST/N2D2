@@ -29,10 +29,20 @@ N2D2::EnvironmentGenerator::generate(Network& network,
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    const unsigned int sizeX = iniConfig.getProperty<unsigned int>("SizeX");
-    const unsigned int sizeY = iniConfig.getProperty<unsigned int>("SizeY");
-    const unsigned int nbChannels = iniConfig.getProperty
-                                    <unsigned int>("NbChannels", 1U);
+    std::vector<size_t> size;
+
+    if (iniConfig.isProperty("Size"))
+        size = iniConfig.getProperty<std::vector<size_t> >("Size");
+    else {
+        size.push_back(iniConfig.getProperty<size_t>("SizeX"));
+        size.push_back(iniConfig.getProperty<size_t>("SizeY"));
+
+        if (iniConfig.isProperty("SizeD"))
+            size.push_back(iniConfig.getProperty<size_t>("SizeD"));
+
+        size.push_back(iniConfig.getProperty<size_t>("NbChannels", 1U));
+    }
+
     const unsigned int batchSize = iniConfig.getProperty
                                    <unsigned int>("BatchSize", 1U);
     const bool compositeStimuli = iniConfig.getProperty
@@ -42,9 +52,7 @@ N2D2::EnvironmentGenerator::generate(Network& network,
 
     std::shared_ptr<Environment> env(new Environment(network,
                                                      database,
-                                                     sizeX,
-                                                     sizeY,
-                                                     nbChannels,
+                                                     size,
                                                      batchSize,
                                                      compositeStimuli));
     env->setCachePath(cachePath);

@@ -245,7 +245,7 @@ void N2D2::PoolCell_Transcode
         = (unsigned int)((PoolCell::mChannelsHeight - PoolCell::mPoolHeight
                           + PoolCell::mStrideY) / (double)PoolCell::mStrideY);
 
-    const Tensor4d<Float_T>& outputs = FRAME::getOutputs();
+    const Tensor<Float_T>& outputs = FRAME::getOutputs();
     std::vector<Float_T> minVal(PoolCell::mNbOutputs);
     std::vector<Float_T> maxVal(PoolCell::mNbOutputs);
 

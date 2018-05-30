@@ -37,13 +37,13 @@ public:
                             int rightPad)
 
         : Cell(name, nbOutputs),
-          PaddingCell(name, 
+          PaddingCell(name,
                       nbOutputs,
                       topPad,
                       botPad,
                       leftPad,
                       rightPad),
-          PaddingCell_Frame(name, 
+          PaddingCell_Frame(name,
                             nbOutputs,
                             topPad,
                             botPad,
@@ -73,12 +73,12 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, -8, 0, -8, 48, 48, 2))
 {
     const unsigned int nbOutputs = 10;
-    Tensor4d<Float_T> inputs(inputWidth, inputHeight, nbOutputs, batchSize);
-    Tensor4d<Float_T> diffOutputs(inputWidth, inputHeight, nbOutputs, batchSize);
+    Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1", 
+    PaddingCell_Frame padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -89,22 +89,22 @@ TEST_DATASET(PaddingCell_Frame,
     padding1.addInput(inputs, diffOutputs);
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
 
 
-    const Tensor4d<Float_T>& outputs1 = padding1.getOutputs();
+    const Tensor<Float_T>& outputs1 = padding1.getOutputs();
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int output = 0; output < inputs.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs1.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs1.dimX(); ++ox) {
-                    
+
                     int ix = (int) ox - leftPad;
                     int iy = (int) oy - topPad;
 
@@ -139,12 +139,12 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, -8, 0, -8, 12, 12, 2))
 {
     const unsigned int nbOutputs = 10;
-    Tensor4d<Float_T> inputs(inputWidth, inputHeight, nbOutputs, batchSize);
-    Tensor4d<Float_T> diffOutputs(inputWidth, inputHeight, nbOutputs, batchSize);
+    Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1", 
+    PaddingCell_Frame padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -155,10 +155,10 @@ TEST_DATASET(PaddingCell_Frame,
     padding1.addInput(inputs, diffOutputs);
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
@@ -185,11 +185,11 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, -8, 0, -8, 1, 1, 48, 48, 2))
 {
     const unsigned int nbOutputs = nbInputA + nbInputB;
-    Tensor4d<Float_T> inputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> inputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
-    Tensor4d<Float_T> diffOutputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> diffOutputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> diffOutputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> diffOutputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
     for(unsigned int i = 0; i < inputsA.size(); ++i)
         inputsA(i) = Random::randNormal();
@@ -197,7 +197,7 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1", 
+    PaddingCell_Frame padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -210,30 +210,30 @@ TEST_DATASET(PaddingCell_Frame,
 
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
 
 
-    const Tensor4d<Float_T>& outputs1 = padding1.getOutputs();
+    const Tensor<Float_T>& outputs1 = padding1.getOutputs();
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int output = 0; output < inputsA.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs1.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs1.dimX(); ++ox) {
-                    
+
                     int ix = (int) ox - leftPad;
                     int iy = (int) oy - topPad;
 
                     if( ix >= 0  && ix < (int) inputsA.dimX()
                         && iy >= 0  && iy < (int) inputsA.dimY())
                     {
-                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output, batchPos), 
-                                            inputsA(ix, iy , output, batchPos), 
+                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output, batchPos),
+                                            inputsA(ix, iy , output, batchPos),
                                             1.0e-9);
                     }
                     else
@@ -249,15 +249,15 @@ TEST_DATASET(PaddingCell_Frame,
         for (unsigned int output = 0; output < inputsB.dimZ(); ++output) {
             for (unsigned int oy = 0; oy < outputs1.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs1.dimX(); ++ox) {
-                    
+
                     int ix = (int) ox - leftPad;
                     int iy = (int) oy - topPad;
 
                     if( ix >= 0  && ix < (int) inputsB.dimX()
                         && iy >= 0  && iy < (int) inputsB.dimY())
                     {
-                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output + nbInputA, batchPos), 
-                                            inputsB(ix, iy , output, batchPos), 
+                        ASSERT_EQUALS_DELTA(outputs1(ox, oy, output + nbInputA, batchPos),
+                                            inputsB(ix, iy , output, batchPos),
                                             1.0e-9);
                     }
                     else
@@ -287,11 +287,11 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, -8, 0, -8, 1, 1, 12, 12, 2))
 {
     const unsigned int nbOutputs = nbInputA + nbInputB;
-    Tensor4d<Float_T> inputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> inputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
-    Tensor4d<Float_T> diffOutputsA(inputWidth, inputHeight, nbInputA, batchSize);
-    Tensor4d<Float_T> diffOutputsB(inputWidth, inputHeight, nbInputB, batchSize);
+    Tensor<Float_T> diffOutputsA({inputWidth, inputHeight, nbInputA, batchSize});
+    Tensor<Float_T> diffOutputsB({inputWidth, inputHeight, nbInputB, batchSize});
 
     for(unsigned int i = 0; i < inputsA.size(); ++i)
         inputsA(i) = Random::randNormal();
@@ -299,7 +299,7 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1", 
+    PaddingCell_Frame padding1("padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -312,10 +312,10 @@ TEST_DATASET(PaddingCell_Frame,
 
     padding1.initialize();
 
-    ASSERT_EQUALS(padding1.getOutputsWidth(), 
+    ASSERT_EQUALS(padding1.getOutputsWidth(),
                   leftPad + rightPad + inputWidth);
 
-    ASSERT_EQUALS(padding1.getOutputsHeight(), 
+    ASSERT_EQUALS(padding1.getOutputsHeight(),
                   topPad + botPad + inputHeight);
 
     padding1.propagate();

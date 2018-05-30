@@ -21,23 +21,17 @@
 #include "StimuliProvider.hpp"
 
 N2D2::StimuliProvider::StimuliProvider(Database& database,
-                                       unsigned int sizeX,
-                                       unsigned int sizeY,
-                                       unsigned int nbChannels,
+                                       const std::vector<size_t>& size,
                                        unsigned int batchSize,
                                        bool compositeStimuli)
     : // Variables
       mDatabase(database),
-      mSizeX(sizeX),
-      mSizeY(sizeY),
-      mNbChannels(nbChannels),
+      mSize(size),
       mBatchSize(batchSize),
       mCompositeStimuli(compositeStimuli),
       mCachePath("_cache"),
       mBatch(batchSize),
       mFutureBatch(batchSize),
-      mData(sizeX, sizeY, nbChannels, batchSize),
-      mFutureData(sizeX, sizeY, nbChannels, batchSize),
       mLabelsROI(batchSize, std::vector<std::shared_ptr<ROI> >()),
       mFutureLabelsROI(batchSize, std::vector<std::shared_ptr<ROI> >()),
       mFuture(false)
@@ -45,35 +39,49 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
     // ctor
     Utils::createDirectories(mCachePath); // Create default cache directory
 
+    std::vector<size_t> dataSize(mSize);
+    dataSize.push_back(batchSize);
+
+    mData.resize(dataSize);
+    mFutureData.resize(dataSize);
+
+    std::vector<size_t> labelSize(mSize);
+
     if (mCompositeStimuli) {
-        mLabelsData.resize(sizeX, sizeY, 1, batchSize);
-        mFutureLabelsData.resize(sizeX, sizeY, 1, batchSize);
-    } else {
-        mLabelsData.resize(1, 1, 1, batchSize);
-        mFutureLabelsData.resize(1, 1, 1, batchSize);
+        // Last dimension is channel, mCompositeStimuli assumes unique label
+        // for all channels by default
+        labelSize.back() = 1;
     }
+    else
+        std::fill(labelSize.begin(), labelSize.end(), 1U);
+
+    labelSize.push_back(batchSize);
+    mLabelsData.resize(labelSize);
+    mFutureLabelsData.resize(labelSize);
 }
 
 void N2D2::StimuliProvider::addChannel(const CompositeTransformation
                                        & /*transformation*/)
 {
     if (mChannelsTransformations.empty())
-        mNbChannels = 1;
+        mSize.back() = 1;
     else
-        ++mNbChannels;
+        ++mSize.back();
 
-    mData.resize(mSizeX, mSizeY, mNbChannels, mBatchSize);
-    mFutureData.resize(mSizeX, mSizeY, mNbChannels, mBatchSize);
+    std::vector<size_t> dataSize(mSize);
+    dataSize.push_back(mBatchSize);
+
+    mData.resize(dataSize);
+    mFutureData.resize(dataSize);
 
     if (!mChannelsTransformations.empty()) {
-        mLabelsData.resize(mLabelsData.dimX(),
-                           mLabelsData.dimY(),
-                           mLabelsData.dimZ() + 1,
-                           mBatchSize);
-        mFutureLabelsData.resize(mFutureLabelsData.dimX(),
-                                 mFutureLabelsData.dimY(),
-                                 mFutureLabelsData.dimZ() + 1,
-                                 mBatchSize);
+        std::vector<size_t> labelSize(mLabelsData.dims());
+        labelSize.pop_back();
+        ++labelSize.back();
+        labelSize.push_back(mBatchSize);
+
+        mLabelsData.resize(labelSize);
+        mFutureLabelsData.resize(labelSize);
     }
 
     mChannelsTransformations.push_back(TransformationsSets());
@@ -364,12 +372,25 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
         mTransformations(set).onTheFly.apply(
             rawChannelsData[0], rawChannelsLabels[0], labelsROI, id);
 
-    Tensor3d<Float_T> data = (mChannelsTransformations.empty())
-                                 ? Tensor3d<Float_T>(rawChannelsData[0])
-                                 : Tensor3d<Float_T>();
-    Tensor3d<int> labels = (mChannelsTransformations.empty()) ? Tensor3d
-                               <int>(rawChannelsLabels[0])
-                                                              : Tensor3d<int>();
+    Tensor<Float_T> data = (mChannelsTransformations.empty())
+                        ? Tensor<Float_T>(rawChannelsData[0])
+                        : Tensor<Float_T>(std::vector<size_t>(mSize.size(), 0));
+    Tensor<int> labels = (mChannelsTransformations.empty())
+                        ? Tensor<int>(rawChannelsLabels[0])
+                        : Tensor<int>(std::vector<size_t>(mSize.size(), 0));
+
+    if (data.nbDims() < mSize.size()) {
+        // rawChannelsData[0] can be 2D or 3D
+        std::vector<size_t> dataSize(data.dims());
+        dataSize.resize(mSize.size(), 1);
+        data.reshape(dataSize);
+    }
+
+    if (labels.nbDims() < mSize.size()) {
+        std::vector<size_t> labelsSize(labels.dims());
+        labelsSize.resize(mSize.size(), 1);
+        labels.reshape(labelsSize);
+    }
 
     // 2.1 Process channels
     if (!mChannelsTransformations.empty()) {
@@ -379,49 +400,63 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
              itEnd = mChannelsTransformations.end();
              it != itEnd;
              ++it) {
-            cv::Mat channelData((rawChannelsData.size() > 1)
+            cv::Mat channelDataMat((rawChannelsData.size() > 1)
                                     ? rawChannelsData[it - itBegin].clone()
                                     : rawChannelsData[0].clone());
-            cv::Mat channelLabels
+            cv::Mat channelLabelsMat
                 = ((rawChannelsLabels.size() > 1)
                        ? rawChannelsLabels[it - itBegin].clone()
                        : rawChannelsLabels[0].clone());
 
             if (!mTransformations(set).onTheFly.empty())
-                (*it)(set).cacheable.apply(channelData, channelLabels, id);
+                (*it)(set).cacheable.apply(channelDataMat, channelLabelsMat, id);
 
-            (*it)(set).onTheFly.apply(channelData, channelLabels, id);
-            data.push_back(Tensor2d<Float_T>(channelData));
-            labels.push_back(Tensor2d<int>(channelLabels));
+            (*it)(set).onTheFly.apply(channelDataMat, channelLabelsMat, id);
+
+            Tensor<Float_T> channelData(channelDataMat);
+            Tensor<int> channelLabels(channelLabelsMat);
+
+            if (channelData.nbDims() < mSize.size() - 1) {
+                std::vector<size_t> dataSize(channelData.dims());
+                dataSize.resize(mSize.size() - 1, 1);
+                channelData.reshape(dataSize);
+            }
+
+            if (channelLabels.nbDims() < mSize.size() - 1) {
+                std::vector<size_t> labelsSize(channelLabels.dims());
+                labelsSize.resize(mSize.size() - 1, 1);
+                channelLabels.reshape(labelsSize);
+            }
+
+            data.push_back(channelData);
+            labels.push_back(channelLabels);
         }
     }
 
-    Tensor4d<Float_T>& dataRef = (mFuture) ? mFutureData : mData;
-    Tensor4d<int>& labelsRef = (mFuture) ? mFutureLabelsData : mLabelsData;
+    Tensor<Float_T>& dataRef = (mFuture) ? mFutureData : mData;
+    Tensor<int>& labelsRef = (mFuture) ? mFutureLabelsData : mLabelsData;
 
     if (mBatchSize > 0) {
-        if (dataRef.dimX() != data.dimX() || dataRef.dimY() != data.dimY()
-            || dataRef.dimZ() != data.dimZ()) {
+        if (!std::equal(data.dims().begin(), data.dims().end(),
+                   dataRef.dims().begin()))
+        {
             std::stringstream msg;
             msg << "StimuliProvider::readStimulus(): expected data size is "
-                << dataRef.dimX() << "x" << dataRef.dimY() << "x"
-                << dataRef.dimZ() << ", but size after transformations is "
-                << data.dimX() << "x" << data.dimY() << "x" << data.dimZ();
+                << dataRef.dims() << ", but size after transformations is "
+                << data.dims();
 
             throw std::runtime_error(msg.str());
         }
 
         dataRef[batchPos] = data;
 
-        if (labelsRef.dimX() != labels.dimX()
-            || labelsRef.dimY() != labels.dimY()
-            || labelsRef.dimZ() != labels.dimZ()) {
+        if (!std::equal(labels.dims().begin(), labels.dims().end(),
+                   labelsRef.dims().begin()))
+        {
             std::stringstream msg;
             msg << "StimuliProvider::readStimulus(): expected labels size is "
-                << labelsRef.dimX() << "x" << labelsRef.dimY() << "x"
-                << labelsRef.dimZ() << ", but size after transformations is "
-                << labels.dimX() << "x" << labels.dimY() << "x"
-                << labels.dimZ();
+                << labelsRef.dims() << ", but size after transformations is "
+                << labels.dims();
 
             throw std::runtime_error(msg.str());
         }
@@ -447,16 +482,23 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
                                            Database::StimuliSet set,
                                            unsigned int batchPos)
 {
-    Tensor4d<Float_T>& dataRef = (mFuture) ? mFutureData : mData;
+    Tensor<Float_T>& dataRef = (mFuture) ? mFutureData : mData;
 
     // Apply global transformation
     cv::Mat rawData = mat.clone();
     mTransformations(set).cacheable.apply(rawData);
     mTransformations(set).onTheFly.apply(rawData);
 
-    Tensor3d<Float_T> data = (mChannelsTransformations.empty())
-                                 ? Tensor3d<Float_T>(rawData)
-                                 : Tensor3d<Float_T>();
+    Tensor<Float_T> data = (mChannelsTransformations.empty())
+                                 ? Tensor<Float_T>(rawData)
+                                 : Tensor<Float_T>();
+
+    if (data.nbDims() < mSize.size()) {
+        // rawChannelsData[0] can be 2D or 3D
+        std::vector<size_t> dataSize(data.dims());
+        dataSize.resize(mSize.size(), 1);
+        data.reshape(dataSize);
+    }
 
     if (!mChannelsTransformations.empty()) {
         // Apply channels transformations
@@ -465,10 +507,19 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
              itEnd = mChannelsTransformations.end();
              it != itEnd;
              ++it) {
-            cv::Mat channelData(rawData.clone());
-            (*it)(set).cacheable.apply(channelData);
-            (*it)(set).onTheFly.apply(channelData);
-            data.push_back(Tensor2d<Float_T>(channelData));
+            cv::Mat channelDataMat(rawData.clone());
+            (*it)(set).cacheable.apply(channelDataMat);
+            (*it)(set).onTheFly.apply(channelDataMat);
+
+            Tensor<Float_T> channelData(channelDataMat);
+
+            if (channelData.nbDims() < mSize.size() - 1) {
+                std::vector<size_t> dataSize(channelData.dims());
+                dataSize.resize(mSize.size() - 1, 1);
+                channelData.reshape(dataSize);
+            }
+
+            data.push_back(channelData);
         }
     }
 
@@ -477,7 +528,7 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
 
 void N2D2::StimuliProvider::reverseLabels(const cv::Mat& mat,
                                           Database::StimuliSet set,
-                                          Tensor2d<int>& labels,
+                                          Tensor<int>& labels,
                                           std::vector
                                           <std::shared_ptr<ROI> >& labelsROIs)
 {
@@ -500,7 +551,7 @@ void N2D2::StimuliProvider::reverseLabels(const cv::Mat& mat,
 
     mTransformations(set)
         .cacheable.reverse(frameSteps.back(), labelsMat, labelsROIs);
-    labels = Tensor2d<int>(labelsMat);
+    labels = Tensor<int>(labelsMat);
 }
 
 void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
@@ -508,36 +559,28 @@ void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
     mBatchSize = batchSize;
 
     if (mBatchSize > 0) {
-        const unsigned int nbChannels = (!mChannelsTransformations.empty())
-                                            ? mChannelsTransformations.size()
-                                            : mNbChannels;
-        const unsigned int nbChannelsLabels
-            = (!mChannelsTransformations.empty())
-                  ? mChannelsTransformations.size()
-                  : 1;
+        std::vector<size_t> dataSize(mData.dims());
+        dataSize.back() = mBatchSize;
 
-        mData.resize(mSizeX, mSizeY, nbChannels, mBatchSize);
-        mFutureData.resize(mSizeX, mSizeY, nbChannels, mBatchSize);
+        mData.resize(dataSize);
+        mFutureData.resize(dataSize);
 
-        if (mCompositeStimuli) {
-            mLabelsData.resize(mSizeX, mSizeY, nbChannelsLabels, batchSize);
-            mFutureLabelsData.resize(
-                mSizeX, mSizeY, nbChannelsLabels, batchSize);
-        } else {
-            mLabelsData.resize(1, 1, nbChannelsLabels, batchSize);
-            mFutureLabelsData.resize(1, 1, nbChannelsLabels, batchSize);
-        }
+        std::vector<size_t> labelSize(mLabelsData.dims());
+        labelSize.back() = mBatchSize;
+
+        mLabelsData.resize(labelSize);
+        mFutureLabelsData.resize(labelSize);
     }
 }
 
-N2D2::Tensor3d<N2D2::Float_T>
+N2D2::Tensor<N2D2::Float_T>
 N2D2::StimuliProvider::readRawData(Database::StimulusID id) const
 {
     const cv::Mat mat = mDatabase.getStimulusData(id);
 
     cv::Mat mat64F;
     mat.convertTo(mat64F, CV_64F);
-    return Tensor3d<Float_T>(mat64F);
+    return Tensor<Float_T>(mat64F);
 }
 
 void N2D2::StimuliProvider::setCachePath(const std::string& path)
@@ -566,35 +609,32 @@ N2D2::StimuliProvider::getNbTransformations(Database::StimuliSet set) const
     return nbTransformations;
 }
 
-const N2D2::Tensor2d<N2D2::Float_T>
+const N2D2::Tensor<N2D2::Float_T>
 N2D2::StimuliProvider::getData(unsigned int channel,
                                unsigned int batchPos) const
 {
-    return Tensor2d<Float_T>(mData[batchPos][channel]);
+    return Tensor<Float_T>(mData[batchPos][channel]);
 }
 
-const N2D2::Tensor2d<int>
+const N2D2::Tensor<int>
 N2D2::StimuliProvider::getLabelsData(unsigned int channel,
                                      unsigned int batchPos) const
 {
-    return Tensor2d<int>(mLabelsData[batchPos][channel]);
+    return Tensor<int>(mLabelsData[batchPos][channel]);
 }
 
 void N2D2::StimuliProvider::logData(const std::string& fileName,
-                                    const Tensor2d<Float_T>& data)
+                                    Tensor<Float_T> data)
 {
-    logData(fileName,
-            Tensor3d
-            <Float_T>(data.dimX(), data.dimY(), 1, data.begin(), data.end()));
-}
-
-void N2D2::StimuliProvider::logData(const std::string& fileName,
-                                    const Tensor3d<Float_T>& data)
-{
-    if (data.dimX() == 1 && data.dimY() == 1 && data.dimZ() > 1) {
-        logData(fileName,
-                Tensor2d<Float_T>(data.dimZ(), 1, data.begin(), data.end()));
-        return;
+    if (data.dims().size() == 2)
+        data.reshape({data.dimX(), data.dimY(), 1});
+    else if (data.dims().size() == 3
+             && (data.dimX() == 1 && data.dimY() == 1 && data.dimZ() > 1))
+    {
+        data.reshape({data.dimZ(), 1, 1});
+    }
+    else if (data.dims().size() > 3) {
+        throw std::runtime_error("Could not log Tensor of dimension > 3");
     }
 
     std::ofstream dataFile(fileName.c_str());
@@ -609,7 +649,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     unsigned int dimY = data.dimY();
 
     for (unsigned int z = 0; z < data.dimZ(); ++z) {
-        const Tensor2d<Float_T> channel = data[z];
+        const Tensor<Float_T> channel = data[z];
 
         if (dimX > 1 && dimY > 1) {
             // 2D data

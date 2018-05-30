@@ -66,7 +66,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
              std::make_tuple(10U, 7U, 1U),
              std::make_tuple(7U, 10U, 2U))
 {
-    StimuliProvider sp(EmptyDatabase, 16, 16, 1, 5);
+    StimuliProvider sp(EmptyDatabase, {16, 16, 1}, 5);
     ROIPoolingCell_Frame pool1("pool1",
                                sp,
                                outputsWidth,
@@ -99,7 +99,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     const unsigned int nbProposals = 2;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ROIPoolingCell_Frame_Test pool1("pool1",
                                     env,
@@ -107,8 +107,8 @@ TEST_DATASET(ROIPoolingCell_Frame,
                                     outputsHeight,
                                     1,
                                     ROIPoolingCell::Max);
-    Tensor4d<Float_T> proposals(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> proposalsDiff;
+    Tensor<Float_T> proposals({1, 1, 4, nbProposals});
+    Tensor<Float_T> proposalsDiff;
 
     pool1.addInput(proposals, proposalsDiff);
     pool1.addInput(env);
@@ -152,7 +152,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     const unsigned int nbProposals = 2;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame conv1("conv1",
                               1,
@@ -173,17 +173,17 @@ TEST_DATASET(ROIPoolingCell_Frame,
                                     nbOutputs,
                                     ROIPoolingCell::Max);
 
-    Tensor4d<Float_T> proposals(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> proposalsDiff(1, 1, 4, nbProposals);
+    Tensor<Float_T> proposals({1, 1, 4, nbProposals});
+    Tensor<Float_T> proposalsDiff({1, 1, 4, nbProposals});
 
-    proposals(0, 0) = 11;
-    proposals(1, 0) = 27;
-    proposals(2, 0) = 2 * outputsWidth;
-    proposals(3, 0) = 2 * outputsHeight;
-    proposals(0, 1) = 4;
-    proposals(1, 1) = 1;
-    proposals(2, 1) = 4 * outputsWidth;
-    proposals(3, 1) = 3 * outputsHeight;
+    proposals[0](0) = 11;
+    proposals[0](1) = 27;
+    proposals[0](2) = 2 * outputsWidth;
+    proposals[0](3) = 2 * outputsHeight;
+    proposals[1](0) = 4;
+    proposals[1](1) = 1;
+    proposals[1](2) = 4 * outputsWidth;
+    proposals[1](3) = 3 * outputsHeight;
 
     conv1.addInput(env);
     pool2.addInput(proposals, proposalsDiff);
@@ -234,7 +234,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     const unsigned int nbProposals = 2;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ROIPoolingCell_Frame_Test pool1("pool1",
                                     env,
@@ -243,19 +243,19 @@ TEST_DATASET(ROIPoolingCell_Frame,
                                     nbOutputs,
                                     ROIPoolingCell::Max);
 
-    Tensor4d<Float_T> proposals(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> proposalsDiff(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> inputs(channelsWidth, channelsHeight, nbOutputs, 1);
-    Tensor4d<Float_T> inputsDiff(channelsWidth, channelsHeight, nbOutputs, 1);
+    Tensor<Float_T> proposals({1, 1, 4, nbProposals});
+    Tensor<Float_T> proposalsDiff({1, 1, 4, nbProposals});
+    Tensor<Float_T> inputs({channelsWidth, channelsHeight, nbOutputs, 1});
+    Tensor<Float_T> inputsDiff({channelsWidth, channelsHeight, nbOutputs, 1});
 
-    proposals(0, 0) = 11;
-    proposals(1, 0) = 27;
-    proposals(2, 0) = 2 * outputsWidth;
-    proposals(3, 0) = 2 * outputsHeight;
-    proposals(0, 1) = 4;
-    proposals(1, 1) = 1;
-    proposals(2, 1) = 4 * outputsWidth;
-    proposals(3, 1) = 3 * outputsHeight;
+    proposals[0](0) = 11;
+    proposals[0](1) = 27;
+    proposals[0](2) = 2 * outputsWidth;
+    proposals[0](3) = 2 * outputsHeight;
+    proposals[1](0) = 4;
+    proposals[1](1) = 1;
+    proposals[1](2) = 4 * outputsWidth;
+    proposals[1](3) = 3 * outputsHeight;
 
     for (unsigned int index = 0; index < inputs.size(); ++index)
         inputs(index) = Random::randUniform(-1.0, 1.0);
@@ -266,12 +266,12 @@ TEST_DATASET(ROIPoolingCell_Frame,
 
     pool1.propagate();
 
-    const Tensor4d<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = pool1.getOutputs();
 
     for (unsigned int batch = 0; batch < nbProposals; ++batch) {
-        const unsigned int poolWidth = Utils::round(proposals(2, batch)
+        const unsigned int poolWidth = Utils::round(proposals[batch](2)
                                                     / outputsWidth);
-        const unsigned int poolHeight = Utils::round(proposals(3, batch)
+        const unsigned int poolHeight = Utils::round(proposals[batch](3)
                                                      / outputsHeight);
 
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -282,8 +282,8 @@ TEST_DATASET(ROIPoolingCell_Frame,
                     for (unsigned int y = 0; y < poolHeight; ++y) {
                         for (unsigned int x = 0; x < poolWidth; ++x) {
                             poolElem.push_back(inputs(
-                                proposals(0, batch) + poolWidth * ox + x,
-                                proposals(1, batch) + poolHeight * oy + y,
+                                proposals[batch](0) + poolWidth * ox + x,
+                                proposals[batch](1) + poolHeight * oy + y,
                                 output, 0));
                         }
                     }
@@ -310,7 +310,7 @@ TEST(ROIPoolingCell_Frame,
     const unsigned int nbProposals = 2;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ROIPoolingCell_Frame_Test pool1("pool1",
                                     env,
@@ -319,19 +319,19 @@ TEST(ROIPoolingCell_Frame,
                                     nbOutputs,
                                     ROIPoolingCell::Average);
 
-    Tensor4d<Float_T> proposals(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> proposalsDiff(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> inputs(channelsWidth, channelsHeight, nbOutputs, 1);
-    Tensor4d<Float_T> inputsDiff(channelsWidth, channelsHeight, nbOutputs, 1);
+    Tensor<Float_T> proposals({1, 1, 4, nbProposals});
+    Tensor<Float_T> proposalsDiff({1, 1, 4, nbProposals});
+    Tensor<Float_T> inputs({channelsWidth, channelsHeight, nbOutputs, 1});
+    Tensor<Float_T> inputsDiff({channelsWidth, channelsHeight, nbOutputs, 1});
 
-    proposals(0, 0) = 0;
-    proposals(1, 0) = 0;
-    proposals(2, 0) = 2 * outputsWidth;
-    proposals(3, 0) = 2 * outputsHeight;
-    proposals(0, 1) = 16;
-    proposals(1, 1) = 16;
-    proposals(2, 1) = 2 * outputsWidth;
-    proposals(3, 1) = outputsHeight;
+    proposals[0](0) = 0;
+    proposals[0](1) = 0;
+    proposals[0](2) = 2 * outputsWidth;
+    proposals[0](3) = 2 * outputsHeight;
+    proposals[1](0) = 16;
+    proposals[1](1) = 16;
+    proposals[1](2) = 2 * outputsWidth;
+    proposals[1](3) = outputsHeight;
 
     for (unsigned int index = 0; index < inputs.size(); ++index)
         inputs(index) = Random::randUniform(-1.0, 1.0);
@@ -342,12 +342,12 @@ TEST(ROIPoolingCell_Frame,
 
     pool1.propagate();
 
-    const Tensor4d<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = pool1.getOutputs();
 
     for (unsigned int batch = 0; batch < nbProposals; ++batch) {
-        const unsigned int poolWidth = Utils::round(proposals(2, batch)
+        const unsigned int poolWidth = Utils::round(proposals[batch](2)
                                                     / outputsWidth);
-        const unsigned int poolHeight = Utils::round(proposals(3, batch)
+        const unsigned int poolHeight = Utils::round(proposals[batch](3)
                                                      / outputsHeight);
 
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -358,8 +358,8 @@ TEST(ROIPoolingCell_Frame,
                     for (unsigned int y = 0; y < poolHeight; ++y) {
                         for (unsigned int x = 0; x < poolWidth; ++x) {
                             poolValue += inputs(
-                                proposals(0, batch) + poolWidth * ox + x,
-                                proposals(1, batch) + poolHeight * oy + y,
+                                proposals[batch](0) + poolWidth * ox + x,
+                                proposals[batch](1) + poolHeight * oy + y,
                                 output, 0);
                         }
                     }
@@ -391,7 +391,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     const unsigned int nbProposals = 2;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ROIPoolingCell_Frame_Test pool1("pool1",
                                     env,
@@ -400,19 +400,19 @@ TEST_DATASET(ROIPoolingCell_Frame,
                                     nbOutputs,
                                     ROIPoolingCell::Bilinear);
 
-    Tensor4d<Float_T> proposals(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> proposalsDiff(1, 1, 4, nbProposals);
-    Tensor4d<Float_T> inputs(channelsWidth, channelsHeight, nbOutputs, 1);
-    Tensor4d<Float_T> inputsDiff(channelsWidth, channelsHeight, nbOutputs, 1);
+    Tensor<Float_T> proposals({1, 1, 4, nbProposals});
+    Tensor<Float_T> proposalsDiff({1, 1, 4, nbProposals});
+    Tensor<Float_T> inputs({channelsWidth, channelsHeight, nbOutputs, 1});
+    Tensor<Float_T> inputsDiff({channelsWidth, channelsHeight, nbOutputs, 1});
 
-    proposals(0, 0) = 0;
-    proposals(1, 0) = 0;
-    proposals(2, 0) = outputsWidth / factorX;
-    proposals(3, 0) = outputsHeight / factorY;
-    proposals(0, 1) = 16;
-    proposals(1, 1) = 16;
-    proposals(2, 1) = outputsWidth / 2;
-    proposals(3, 1) = outputsHeight;
+    proposals[0](0) = 0;
+    proposals[0](1) = 0;
+    proposals[0](2) = outputsWidth / factorX;
+    proposals[0](3) = outputsHeight / factorY;
+    proposals[1](0) = 16;
+    proposals[1](1) = 16;
+    proposals[1](2) = outputsWidth / 2;
+    proposals[1](3) = outputsHeight;
 
     for (unsigned int index = 0; index < inputs.size(); ++index)
         inputs(index) = Random::randUniform(-1.0, 1.0);
@@ -423,16 +423,16 @@ TEST_DATASET(ROIPoolingCell_Frame,
 
     pool1.propagate();
 
-    const Tensor4d<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = pool1.getOutputs();
 
     for (unsigned int batch = 0; batch < nbProposals; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
             const cv::Mat prop = inputs[0][output];
             cv::Mat outRef;
-            cv::resize(prop(cv::Rect(proposals(0, batch),
-                                     proposals(1, batch),
-                                     proposals(2, batch),
-                                     proposals(3, batch))),
+            cv::resize(prop(cv::Rect(proposals[batch](0),
+                                     proposals[batch](1),
+                                     proposals[batch](2),
+                                     proposals[batch](3))),
                        outRef,
                        cv::Size(pool1.getOutputsWidth(),
                                 pool1.getOutputsHeight()),

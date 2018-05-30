@@ -45,8 +45,8 @@ N2D2::DeconvCell_Frame::DeconvCell_Frame(const std::string& name,
       Cell_Frame(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(std::make_shared<Tensor4d<Float_T> >()),
-      mDiffBias(1, 1, mNbOutputs, 1),
+      mBias(std::make_shared<Tensor<Float_T> >()),
+      mDiffBias({1, 1, mNbOutputs, 1}),
       mConvDesc(1, 1, strideX, strideY, paddingX, paddingY)
 {
     // ctor
@@ -58,7 +58,7 @@ void N2D2::DeconvCell_Frame::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
-            mBias->resize(1, 1, mNbOutputs, 1);
+            mBias->resize({1, 1, mNbOutputs, 1});
             mBiasFiller->apply((*mBias));
         }
         else {
@@ -84,7 +84,7 @@ void N2D2::DeconvCell_Frame::initialize()
                 it = mExtSharedSynapses.find(k);
 
         if (it != mExtSharedSynapses.end()) {
-            Tensor4d<Float_T>* extWeights
+            Tensor<Float_T>* extWeights
                 = &(*((*it).second.first))[(*it).second.second];
 
             if (extWeights->dimX() != mKernelWidth
@@ -109,18 +109,18 @@ void N2D2::DeconvCell_Frame::initialize()
         }
         else {
             // Weight filler expect dimZ as input and dimB as output
-            Tensor4d<Float_T>* sharedSynapses = new Tensor4d<Float_T>(
-                mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs);
+            Tensor<Float_T>* sharedSynapses = new Tensor<Float_T>(
+                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs});
             mWeightsFiller->apply(*sharedSynapses);
             // Inverse dimZ and dimB for Deconv
             sharedSynapses->resize(
-                mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ());
+                {mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()});
 
             mSharedSynapses.push_back(sharedSynapses);
         }
 
-        mDiffSharedSynapses.push_back(new Tensor4d<Float_T>(
-            mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()));
+        mDiffSharedSynapses.push_back(new Tensor<Float_T>(
+            {mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()}));
     }
 }
 

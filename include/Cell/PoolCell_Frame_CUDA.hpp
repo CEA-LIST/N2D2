@@ -27,7 +27,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class PoolCell_Frame_CUDA : public virtual PoolCell, public Cell_Frame_CUDA {

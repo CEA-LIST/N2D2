@@ -57,10 +57,10 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
     mInputs.synchronizeDToH();
 
     if (!inference)
-        mInputsBackProp.assign(mInputs[0].dimX(),
+        mInputsBackProp.assign({mInputs[0].dimX(),
                                mInputs[0].dimY(),
                                mInputs.dimZ(),
-                               mInputs.dimB(),
+                               mInputs.dimB()},
                                std::vector<unsigned int>());
 
     if (!mLockRandom) {
@@ -166,7 +166,7 @@ void N2D2::FMPCell_Frame::backPropagate()
 #endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int channel = 0; channel < mNbChannels; ++channel) {
-            const bool isValid = mDiffOutputs.getTensor4d(channel).isValid();
+            const bool isValid = mDiffOutputs.getTensor(channel).isValid();
 
             for (unsigned int iy = 0; iy < mInputs[0].dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < mInputs[0].dimX(); ++ix) {
@@ -230,7 +230,7 @@ void N2D2::FMPCell_Frame::checkGradient(double epsilon, double maxError)
 
 void N2D2::FMPCell_Frame::logRegions(const std::string& fileName) const
 {
-    Tensor2d<Float_T> regions(mInputs[0].dimX(), mInputs[0].dimY(), 0.0);
+    Tensor<Float_T> regions({mInputs[0].dimX(), mInputs[0].dimY()}, 0.0);
 
     for (unsigned int oy = 0; oy < mOutputs.dimY(); ++oy) {
         for (unsigned int ox = 0; ox < mOutputs.dimX(); ++ox) {

@@ -60,18 +60,18 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
 void N2D2::ConvCell_Spike::initialize()
 {
     mSharedSynapses.resize(
-        mKernelWidth, mKernelHeight, mNbChannels, mNbOutputs);
+        {mKernelWidth, mKernelHeight, mNbChannels, mNbOutputs});
 
     for (unsigned int index = 0, size = mSharedSynapses.size(); index < size;
          ++index)
         mSharedSynapses(index) = newSynapse();
 
     mOutputsLastIntegration.resize(
-        mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0);
+        {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
     mOutputsIntegration.resize(
-        mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0.0);
+        {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0.0);
     mOutputsRefractoryEnd.resize(
-        mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0);
+        {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
 }
 
 void N2D2::ConvCell_Spike::propagateSpike(NodeIn* origin,
@@ -203,11 +203,11 @@ void N2D2::ConvCell_Spike::notify(Time_T timestamp, NotifyType notify)
             throw std::domain_error("mThreshold is <= 0.0");
     } else if (notify == Reset) {
         mOutputsLastIntegration.assign(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, 1, timestamp);
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, timestamp);
         mOutputsIntegration.assign(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0.0);
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0.0);
         mOutputsRefractoryEnd.assign(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, 1, 0);
+            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
     } else if (notify == Load)
         load(mNet.getLoadSavePath());
     else if (notify == Save)

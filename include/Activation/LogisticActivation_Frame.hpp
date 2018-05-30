@@ -33,8 +33,8 @@ public:
     }
 
     LogisticActivation_Frame(bool withLoss = false);
-    virtual void propagate(Tensor4d<T>* data);
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
+    virtual void propagate(Tensor<T>* data);
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
     virtual ~LogisticActivation_Frame() {};
 
 private:
@@ -50,7 +50,7 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame<T>::propagate(Tensor4d<T>* data)
+void N2D2::LogisticActivation_Frame<T>::propagate(Tensor<T>* data)
 {
     if (LogisticActivationDisabled)
         return;
@@ -73,7 +73,7 @@ void N2D2::LogisticActivation_Frame<T>::propagate(Tensor4d<T>* data)
 
 template <class T>
 void N2D2::LogisticActivation_Frame
-    <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
+    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
 {
     if (LogisticActivationDisabled)
         return;

@@ -24,7 +24,7 @@
 #include <iomanip>
 
 #include "DataFile/DataFile.hpp"
-#include "containers/Tensor2d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
@@ -39,10 +39,10 @@ public:
     void setReadDelimiters(const std::string& delimiters = "");
     virtual cv::Mat read(const std::string& fileName);
     virtual void write(const std::string& fileName, const cv::Mat& data);
-    template <class T> Tensor2d<T> read(const std::string& fileName);
+    template <class T> Tensor<T> read(const std::string& fileName);
     template <class T>
     void write(const std::string& fileName,
-               const Tensor2d<T>& data,
+               const Tensor<T>& data,
                char delimiter = ';');
     virtual ~CsvDataFile() {};
 
@@ -55,7 +55,7 @@ private:
 }
 
 template <class T>
-N2D2::Tensor2d<T> N2D2::CsvDataFile::read(const std::string& fileName)
+N2D2::Tensor<T> N2D2::CsvDataFile::read(const std::string& fileName)
 {
     std::ifstream dataFile(fileName.c_str());
 
@@ -65,7 +65,7 @@ N2D2::Tensor2d<T> N2D2::CsvDataFile::read(const std::string& fileName)
     std::string line;
     unsigned int nbRows = 0;
     unsigned int nbCols = 0;
-    Tensor2d<T> data;
+    Tensor<T> data;
 
     while (std::getline(dataFile, line)) {
         // Remove optional comments
@@ -112,13 +112,13 @@ N2D2::Tensor2d<T> N2D2::CsvDataFile::read(const std::string& fileName)
 
     assert(data.data().size() == nbCols * nbRows);
 
-    data.resize(nbCols, nbRows);
+    data.resize({nbCols, nbRows});
     return data;
 }
 
 template <class T>
 void N2D2::CsvDataFile::write(const std::string& fileName,
-                              const Tensor2d<T>& data,
+                              const Tensor<T>& data,
                               char delimiter)
 {
     std::ofstream dataFile(fileName.c_str());

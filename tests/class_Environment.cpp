@@ -35,7 +35,7 @@ TEST_DATASET(Environment,
              std::make_tuple(3U, 3U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, x, y);
+    Environment env(net, EmptyDatabase, {x, y, 1});
 
     ASSERT_EQUALS(env.getSizeX(), x);
     ASSERT_EQUALS(env.getSizeY(), y);
@@ -63,7 +63,7 @@ TEST_DATASET(Environment,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 1, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 

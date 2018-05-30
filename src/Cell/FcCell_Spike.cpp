@@ -45,7 +45,7 @@ N2D2::FcCell_Spike::FcCell_Spike(Network& net,
 void N2D2::FcCell_Spike::initialize()
 {
     mSynapses.resize(
-        mChannelsWidth, mChannelsHeight, mNbChannels, mOutputs.dimZ());
+        {mChannelsWidth, mChannelsHeight, mNbChannels, mOutputs.dimZ()});
 
     for (unsigned int index = 0; index < mSynapses.size(); ++index)
         mSynapses(index) = newSynapse();

@@ -26,7 +26,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 template <class T> class SGDSolver_Frame_CUDA : public SGDSolver<T> {
@@ -38,7 +38,7 @@ public:
 
     SGDSolver_Frame_CUDA();
     void
-    update(Tensor4d<T>* data, Tensor4d<T>* diffData, unsigned int batchSize);
+    update(Tensor<T>* data, Tensor<T>* diffData, unsigned int batchSize);
     void exportFreeParameters(const std::string& fileName) const;
 
     std::shared_ptr<SGDSolver_Frame_CUDA<T> > clone() const
@@ -67,8 +67,8 @@ protected:
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
 
-    CudaTensor4d<T> mMomentumData;
-    CudaTensor4d<T> mContinuousData;
+    CudaTensor<T> mMomentumData;
+    CudaTensor<T> mContinuousData;
 
 private:
     virtual SGDSolver_Frame_CUDA<T>* doClone() const
@@ -90,13 +90,13 @@ N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA()
 
 namespace N2D2 {
 template <>
-void SGDSolver_Frame_CUDA<float>::update(Tensor4d<float>* data,
-                                         Tensor4d<float>* diffData,
+void SGDSolver_Frame_CUDA<float>::update(Tensor<float>* data,
+                                         Tensor<float>* diffData,
                                          unsigned int batchSize);
 
 template <>
-void SGDSolver_Frame_CUDA<double>::update(Tensor4d<double>* data,
-                                          Tensor4d<double>* diffData,
+void SGDSolver_Frame_CUDA<double>::update(Tensor<double>* data,
+                                          Tensor<double>* diffData,
                                           unsigned int batchSize);
 
 template <>

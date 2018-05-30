@@ -32,8 +32,8 @@ public:
         return std::make_shared<SoftplusActivation_Frame<T> >();
     }
 
-    virtual void propagate(Tensor4d<T>* data);
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
+    virtual void propagate(Tensor<T>* data);
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
     virtual ~SoftplusActivation_Frame() {};
 
 private:
@@ -42,7 +42,7 @@ private:
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor4d<T>* data)
+void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor<T>* data)
 {
 
 
@@ -64,7 +64,7 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor4d<T>* data)
 
 template <class T>
 void N2D2::SoftplusActivation_Frame
-    <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
+    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
 {
 #pragma omp parallel for if (data->size() > 1024)
     for (int index = 0; index < (int)diffData->size(); ++index)

@@ -39,7 +39,7 @@ public:
 
     XavierFiller(VarianceNorm varianceNorm = FanIn,
                  Distribution distribution = Uniform);
-    void apply(Tensor4d<T>& data);
+    void apply(Tensor<T>& data);
     virtual ~XavierFiller() {};
 
 private:
@@ -71,7 +71,7 @@ N2D2::XavierFiller
     // ctor
 }
 
-template <class T> void N2D2::XavierFiller<T>::apply(Tensor4d<T>& data)
+template <class T> void N2D2::XavierFiller<T>::apply(Tensor<T>& data)
 {
     const unsigned int fanIn = data.size() / data.dimB();
     const unsigned int fanOut = data.size() / data.dimZ();
@@ -86,13 +86,13 @@ template <class T> void N2D2::XavierFiller<T>::apply(Tensor4d<T>& data)
         // in order to have a variance of 1/n, the scale is therefore:
         const T scale = std::sqrt(3.0 / n);
 
-        for (typename Tensor4d<T>::iterator it = data.begin(),
+        for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
              it != itEnd;
              ++it)
             (*it) = Random::randUniform(-scale, scale);
     } else {
-        for (typename Tensor4d<T>::iterator it = data.begin(),
+        for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
              it != itEnd;
              ++it)

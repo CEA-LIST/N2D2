@@ -266,7 +266,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 if (!rawData)
                     mProvider.readStimulus(*it, index, 0);
 
-                const Tensor3d<Float_T> data
+                const Tensor<Float_T> data
                     = (rawData) ? mProvider.readRawData(*it, index)
                                 : mProvider.getData()[0];
 
@@ -279,12 +279,12 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                     mMinSize = size;
                     mMaxSize = size;
                 } else {
-                    mMinSize.dimX = std::min(mMinSize.dimX, data.dimX());
-                    mMinSize.dimY = std::min(mMinSize.dimY, data.dimY());
-                    mMinSize.dimZ = std::min(mMinSize.dimZ, data.dimZ());
-                    mMaxSize.dimX = std::max(mMaxSize.dimX, data.dimX());
-                    mMaxSize.dimY = std::max(mMaxSize.dimY, data.dimY());
-                    mMaxSize.dimZ = std::max(mMaxSize.dimZ, data.dimZ());
+                    mMinSize.dimX = std::min<unsigned int>(mMinSize.dimX, data.dimX());
+                    mMinSize.dimY = std::min<unsigned int>(mMinSize.dimY, data.dimY());
+                    mMinSize.dimZ = std::min<unsigned int>(mMinSize.dimZ, data.dimZ());
+                    mMaxSize.dimX = std::max<unsigned int>(mMaxSize.dimX, data.dimX());
+                    mMaxSize.dimY = std::max<unsigned int>(mMaxSize.dimY, data.dimY());
+                    mMaxSize.dimZ = std::max<unsigned int>(mMaxSize.dimZ, data.dimZ());
                 }
 
                 mSize.push_back(size);
@@ -371,7 +371,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 if (!rawData)
                     mProvider.readStimulus(*it, index, 0);
 
-                const Tensor3d<Float_T> data
+                const Tensor<Float_T> data
                     = (rawData) ? mProvider.readRawData(*it, index)
                                 : mProvider.getData()[0];
 
@@ -413,7 +413,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
             BinaryCvMat::write(meanDataFile, meanData);
 
             StimuliProvider::logData(Utils::fileBaseName(meanDataFile) + ".dat",
-                                     Tensor3d<Float_T>(meanData));
+                                     Tensor<Float_T>(meanData));
         }
 
         mProvider.setBatchSize(batchSize);

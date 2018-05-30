@@ -42,7 +42,7 @@ TEST(MappingGenerator, MappingGenerator)
     iniConfig.load("MappingGenerator.in");
 
     Network net;
-    Environment env(net, EmptyDatabase, 24, 24);
+    Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr
         <ConvCell_Frame> conv1(new ConvCell_Frame("conv1", 4, 4, 10));
 
@@ -90,7 +90,7 @@ TEST(MappingGenerator, MappingGenerator_bis)
     iniConfig.load("MappingGenerator_bis.in");
 
     Network net;
-    Environment env(net, EmptyDatabase, 24, 24);
+    Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr
         <ConvCell_Frame> conv1(new ConvCell_Frame("conv1", 4, 4, 10));
 
@@ -127,7 +127,7 @@ TEST(MappingGenerator, MappingGenerator_ter)
     iniConfig.load("MappingGenerator_ter.in");
 
     Network net;
-    Environment env(net, EmptyDatabase, 24, 24);
+    Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr
         <ConvCell_Frame> conv1(new ConvCell_Frame("conv1", 4, 4, 10));
 
@@ -153,7 +153,7 @@ TEST(MappingGenerator, MappingGenerator_env_ter)
     iniConfig.load("MappingGenerator_env_ter.in");
 
     Network net;
-    Environment env(net, EmptyDatabase, 24, 24);
+    Environment env(net, EmptyDatabase, {24, 24, 1});
     Matrix<bool> mapping = MappingGenerator::generate(
         env, std::shared_ptr<Cell>(), 10, iniConfig, "conv1");
 

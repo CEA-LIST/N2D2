@@ -21,13 +21,13 @@
 #include "Cell/ConvCell_Frame_Kernels.hpp"
 
 void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
-                                           const Tensor4d<Float_T>& inputs,
-                                           const Tensor4d
+                                           const Tensor<Float_T>& inputs,
+                                           const Tensor
                                            <Float_T>& sharedSynapses,
                                            const Descriptor& desc,
                                            const Float_T* beta,
-                                           Tensor4d<Float_T>& outputs,
-                                           const Tensor2d<bool>& maps)
+                                           Tensor<Float_T>& outputs,
+                                           const Tensor<bool>& maps)
 {
     const unsigned int oxSize
         = (unsigned int)((inputs.dimX() + 2 * desc.paddingX
@@ -134,9 +134,9 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
 }
 
 void N2D2::ConvCell_Frame_Kernels::forwardBias(const Float_T* alpha,
-                                               const Tensor4d<Float_T>& bias,
+                                               const Tensor<Float_T>& bias,
                                                const Float_T* beta,
-                                               Tensor4d<Float_T>& outputs)
+                                               Tensor<Float_T>& outputs)
 {
     const unsigned int size = outputs.dimB() * outputs.dimZ();
 
@@ -158,14 +158,14 @@ void N2D2::ConvCell_Frame_Kernels::forwardBias(const Float_T* alpha,
 }
 
 void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
-                                                const Tensor4d
+                                                const Tensor
                                                 <Float_T>& sharedSynapses,
-                                                const Tensor4d
+                                                const Tensor
                                                 <Float_T>& diffInputs,
                                                 const Descriptor& desc,
                                                 const Float_T* beta,
-                                                Tensor4d<Float_T>& diffOutputs,
-                                                const Tensor2d<bool>& maps)
+                                                Tensor<Float_T>& diffOutputs,
+                                                const Tensor<bool>& maps)
 {
     const unsigned int oxStride
         = desc.strideX * (unsigned int)((diffOutputs.dimX() + 2 * desc.paddingX
@@ -191,9 +191,9 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
                     const unsigned int ixPad = ix + desc.paddingX;
                     const unsigned int iyPad = iy + desc.paddingY;
                     const unsigned int sxMax
-                        = std::min(sharedSynapses.dimX(), ixPad + 1);
+                        = std::min<unsigned int>(sharedSynapses.dimX(), ixPad + 1);
                     const unsigned int syMax
-                        = std::min(sharedSynapses.dimY(), iyPad + 1);
+                        = std::min<unsigned int>(sharedSynapses.dimY(), iyPad + 1);
 
                     Float_T gradient = 0.0;
 
@@ -240,15 +240,15 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
 }
 
 void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
-                                                  const Tensor4d
+                                                  const Tensor
                                                   <Float_T>& inputs,
-                                                  const Tensor4d
+                                                  const Tensor
                                                   <Float_T>& diffInputs,
                                                   const Descriptor& desc,
                                                   const Float_T* beta,
-                                                  Tensor4d
+                                                  Tensor
                                                   <Float_T>& diffSharedSynapses,
-                                                  const Tensor2d<bool>& maps)
+                                                  const Tensor<bool>& maps)
 {
     const unsigned int oxSize
         = (unsigned int)((inputs.dimX() + 2 * desc.paddingX
@@ -324,10 +324,10 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
 }
 
 void N2D2::ConvCell_Frame_Kernels::backwardBias(const Float_T* alpha,
-                                                const Tensor4d
+                                                const Tensor
                                                 <Float_T>& diffInputs,
                                                 const Float_T* beta,
-                                                Tensor4d<Float_T>& diffBias)
+                                                Tensor<Float_T>& diffBias)
 {
 #pragma omp parallel for if (diffBias.dimZ() > 16)
     for (int output = 0; output < (int)diffBias.dimZ(); ++output) {

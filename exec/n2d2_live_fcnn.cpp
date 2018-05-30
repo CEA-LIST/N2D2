@@ -157,7 +157,7 @@ unsigned int process(unsigned int frameId,
     for (unsigned int id = 0, size = detectedBB.size(); id < size; ++id)
         estimatedLabelsROIs.push_back(detectedBB[id].bb->clone());
 
-    Tensor2d<int> estimatedLabels;
+    Tensor<int> estimatedLabels;
     targetROIs->getStimuliProvider()->reverseLabels(
         img, Database::Test, estimatedLabels, estimatedLabelsROIs);
 
@@ -225,9 +225,9 @@ unsigned int process(unsigned int frameId,
 
             std::shared_ptr<TargetScore> targetSub = deepNetSub->getTarget
                                                          <TargetScore>();
-            const Tensor3d<int> estimatedLabelSub
+            const Tensor<int> estimatedLabelSub
                 = targetSub->getEstimatedLabels()[0];
-            const Tensor3d<Float_T> estimatedLabelValueSub
+            const Tensor<Float_T> estimatedLabelValueSub
                 = targetSub->getEstimatedLabelsValue()[0];
 
             std::cout << "  |-Subclass(es):";

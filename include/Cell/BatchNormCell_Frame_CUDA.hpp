@@ -31,7 +31,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class BatchNormCell_Frame_CUDA : public virtual BatchNormCell,
@@ -65,26 +65,26 @@ public:
     getMean(unsigned int channel, unsigned int sx, unsigned int sy) const;
     inline Float_T
     getVariance(unsigned int channel, unsigned int sx, unsigned int sy) const;
-    inline std::shared_ptr<Tensor4d<Float_T> > getScales()
+    inline std::shared_ptr<Tensor<Float_T> > getScales()
     {
         return mScale;
     };
-    void setScales(const std::shared_ptr<Tensor4d<Float_T> >& scales);
-    inline std::shared_ptr<Tensor4d<Float_T> > getBiases()
+    void setScales(const std::shared_ptr<Tensor<Float_T> >& scales);
+    inline std::shared_ptr<Tensor<Float_T> > getBiases()
     {
         return mBias;
     };
-    void setBiases(const std::shared_ptr<Tensor4d<Float_T> >& biases);
-    inline std::shared_ptr<Tensor4d<Float_T> > getMeans()
+    void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases);
+    inline std::shared_ptr<Tensor<Float_T> > getMeans()
     {
         return mMean;
     };
-    void setMeans(const std::shared_ptr<Tensor4d<Float_T> >& means);
-    inline std::shared_ptr<Tensor4d<Float_T> > getVariances()
+    void setMeans(const std::shared_ptr<Tensor<Float_T> >& means);
+    inline std::shared_ptr<Tensor<Float_T> > getVariances()
     {
         return mVariance;
     };
-    void setVariances(const std::shared_ptr<Tensor4d<Float_T> >& variances);
+    void setVariances(const std::shared_ptr<Tensor<Float_T> >& variances);
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,
@@ -114,14 +114,14 @@ protected:
 
     cudnnBatchNormMode_t mMode;
     unsigned int mNbPropagate;
-    std::shared_ptr<CudaTensor4d<Float_T> > mScale;
-    std::shared_ptr<CudaTensor4d<Float_T> > mBias;
-    CudaTensor4d<Float_T> mDiffScale;
-    CudaTensor4d<Float_T> mDiffBias;
-    std::shared_ptr<CudaTensor4d<Float_T> > mMean;
-    std::shared_ptr<CudaTensor4d<Float_T> > mVariance;
-    CudaTensor4d<Float_T> mSavedMean;
-    CudaTensor4d<Float_T> mSavedVariance;
+    std::shared_ptr<CudaTensor<Float_T> > mScale;
+    std::shared_ptr<CudaTensor<Float_T> > mBias;
+    CudaTensor<Float_T> mDiffScale;
+    CudaTensor<Float_T> mDiffBias;
+    std::shared_ptr<CudaTensor<Float_T> > mMean;
+    std::shared_ptr<CudaTensor<Float_T> > mVariance;
+    CudaTensor<Float_T> mSavedMean;
+    CudaTensor<Float_T> mSavedVariance;
     mutable bool mSynchronized;
 
 private:

@@ -31,7 +31,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class ProposalCell_Frame_CUDA : public virtual ProposalCell, public Cell_Frame_CUDA {
@@ -96,18 +96,18 @@ public:
 protected:
     virtual void setOutputsSize();
 
-    CudaTensor4d<Float_T> mMeansCUDA;
-    CudaTensor4d<Float_T> mStdCUDA;
-    CudaTensor4d<Float_T> mNormalizeROIs;
-    CudaTensor4d<int> mMaxCls;
+    CudaTensor<Float_T> mMeansCUDA;
+    CudaTensor<Float_T> mStdCUDA;
+    CudaTensor<Float_T> mNormalizeROIs;
+    CudaTensor<int> mMaxCls;
 
-    CudaTensor4d<Float_T> mPartsPrediction;
-    CudaTensor4d<int> mNumPartsPerClass;
-    CudaTensor4d<Float_T> mPartsVisibilityPrediction;
+    CudaTensor<Float_T> mPartsPrediction;
+    CudaTensor<int> mNumPartsPerClass;
+    CudaTensor<Float_T> mPartsVisibilityPrediction;
 
-    CudaTensor4d<Float_T> mTemplatesPrediction;
-    CudaTensor4d<int> mNumTemplatesPerClass;
-    CudaTensor4d<int> mKeepIndex;
+    CudaTensor<Float_T> mTemplatesPrediction;
+    CudaTensor<int> mNumTemplatesPerClass;
+    CudaTensor<int> mKeepIndex;
 
 
 private:

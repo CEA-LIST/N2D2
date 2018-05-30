@@ -78,7 +78,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA::initialize()
             mInputMap.push_back(NULL);
 
             if (!mMaps.empty()) {
-                const Tensor2d<bool> inputMap = mMaps.rows(offset,
+                const Tensor<bool> inputMap = mMaps.rows(offset,
                                                            mInputs[k].dimZ());
 
                 std::vector<char> inputMapData;
@@ -96,11 +96,8 @@ void N2D2::PoolCell_Frame_EXT_CUDA::initialize()
         }
 
         if (mArgMax.size() == k) {
-            mArgMax.push_back(new CudaTensor4d<PoolCell_Frame_Kernels::ArgMax>(
-                mOutputs.dimX(),
-                mOutputs.dimY(),
-                mOutputs.dimZ(),
-                mOutputs.dimB()));
+            mArgMax.push_back(new CudaTensor<PoolCell_Frame_Kernels::ArgMax>
+                              (mOutputs.dims()));
         }
 
         offset += mInputs[k].dimZ();

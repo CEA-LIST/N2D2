@@ -84,31 +84,31 @@ public:
                           unsigned int y0,
                           unsigned int width = 0,
                           unsigned int height = 0);
-    virtual void addInput(Tensor4d<Float_T>& inputs,
-                          Tensor4d<Float_T>& diffOutputs);
+    virtual void addInput(Tensor<Float_T>& inputs,
+                          Tensor<Float_T>& diffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
-    virtual void setOutputTarget(const Tensor4d<int>& targets,
+    virtual void setOutputTarget(const Tensor<int>& targets,
                                  double targetVal = 1.0,
                                  double defaultVal = 0.0);
-    virtual void setOutputTargets(const Tensor4d<int>& targets,
+    virtual void setOutputTargets(const Tensor<int>& targets,
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0);
-    virtual void setOutputTargets(const Tensor4d<Float_T>& targets);
-    virtual void setOutputErrors(const Tensor4d<Float_T>& errors);
-    virtual Tensor4d<Float_T>& getOutputs()
+    virtual void setOutputTargets(const Tensor<Float_T>& targets);
+    virtual void setOutputErrors(const Tensor<Float_T>& errors);
+    virtual Tensor<Float_T>& getOutputs()
     {
         return mOutputs;
     }
-    virtual const Tensor4d<Float_T>& getOutputs() const
+    virtual const Tensor<Float_T>& getOutputs() const
     {
         return mOutputs;
     }
-    virtual Tensor4d<Float_T>& getDiffInputs()
+    virtual Tensor<Float_T>& getDiffInputs()
     {
         return mDiffInputs;
     }
-    virtual const Tensor4d<Float_T>& getDiffInputs() const
+    virtual const Tensor<Float_T>& getDiffInputs() const
     {
         return mDiffInputs;
     }
@@ -120,10 +120,10 @@ protected:
     // Internal
     // Forward
     Interface<Float_T> mInputs;
-    Tensor4d<Float_T> mOutputs;
+    Tensor<Float_T> mOutputs;
 
     // Backward
-    Tensor4d<Float_T> mDiffInputs;
+    Tensor<Float_T> mDiffInputs;
     Interface<Float_T> mDiffOutputs;
 };
 }

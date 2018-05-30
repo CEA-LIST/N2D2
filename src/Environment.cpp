@@ -27,23 +27,31 @@ Database EmptyDatabase;
 
 N2D2::Environment::Environment(Network& network,
                                Database& database,
-                               unsigned int sizeX,
-                               unsigned int sizeY,
-                               unsigned int nbChannels,
+                               const std::vector<size_t>& size,
                                unsigned int batchSize,
                                bool compositeStimuli)
-    : StimuliProvider(
-          database, sizeX, sizeY, nbChannels, batchSize, compositeStimuli),
+    : StimuliProvider(database, size, batchSize, compositeStimuli),
       mNetwork(network),
-      mNodes(sizeX, sizeY, nbChannels, batchSize, NULL)
+      mNodes(mData.dims(), NULL)
 {
     // ctor
     // Create default nodes, if the Environment has no transformation
-    for (unsigned int b = 0; b < batchSize; ++b) {
-        for (unsigned int c = 0; c < nbChannels; ++c) {
-            for (unsigned int y = 0; y < sizeY; ++y) {
-                for (unsigned int x = 0; x < sizeX; ++x)
-                    mNodes(x, y, c, b) = new NodeEnv(mNetwork, 1.0, 0.0, x, y);
+    fillNodes(mNodes);
+}
+
+void N2D2::Environment::fillNodes(Tensor<NodeEnv*> nodes, double orientation)
+{
+    if (nodes.nbDims() > 2) {
+        for (size_t i = 0; i < nodes.dims().back(); ++i)
+            fillNodes(nodes[i]);
+    }
+    else {
+        const size_t dimY = (nodes.nbDims() > 1) ? nodes.dimY() : 1;
+
+        for (size_t y = 0; y < dimY; ++y) {
+            for (size_t x = 0; x < nodes.dimX(); ++x) {
+                if (nodes(x, y) == NULL)
+                    nodes(x, y) = new NodeEnv(mNetwork, 1.0, orientation, x, y);
             }
         }
     }
@@ -59,40 +67,42 @@ void N2D2::Environment::addChannel(const CompositeTransformation
                                                 : 0.0;
     // <--
 
-    Tensor4d<NodeEnv*> nodes;
+    std::vector<size_t> dataSize(mNodes.dims());
+    dataSize.pop_back();
 
     if (!mChannelsTransformations.empty())
-        nodes.resize(
-            mNodes.dimX(), mNodes.dimY(), mNodes.dimZ() + 1, mNodes.dimB());
+        ++dataSize.back();
+    else
+        dataSize.back() = 1;
+
+    dataSize.push_back(mBatchSize);
+
+    if (!mChannelsTransformations.empty()) {
+        Tensor<NodeEnv*> nodes(dataSize, NULL);
+
+        for (unsigned int b = 0; b < nodes.dimB(); ++b) {
+            for (unsigned int z = 0; z < nodes.dimZ(); ++z) {
+                if (z < mNodes.dimZ())
+                    nodes[b][z] = mNodes[b][z];
+            }
+        }
+
+        mNodes.swap(nodes);
+    }
     else {
         // Delete the default nodes created in the constructor, which may not
         // have the right orientation anymore
         std::for_each(mNodes.begin(), mNodes.end(), Utils::Delete());
-        nodes.resize(mNodes.dimX(), mNodes.dimY(), 1, mNodes.dimB());
+        mNodes.resize(dataSize, NULL);
     }
 
-    for (unsigned int b = 0; b < nodes.dimB(); ++b) {
-        for (unsigned int z = 0; z < nodes.dimZ(); ++z) {
-            if (!mChannelsTransformations.empty() && z < mNodes.dimZ())
-                nodes[b][z] = mNodes[b][z];
-            else {
-                for (unsigned int y = 0; y < nodes.dimY(); ++y) {
-                    for (unsigned int x = 0; x < nodes.dimX(); ++x)
-                        nodes(x, y, z, b)
-                            = new NodeEnv(mNetwork, 1.0, orientation, x, y);
-                }
-            }
-        }
-    }
-
-    mNodes.swap(nodes);
+    fillNodes(mNodes, orientation);
 
     StimuliProvider::addChannel(transformation);
 
-    assert(mNodes.dimX() == mData.dimX());
-    assert(mNodes.dimY() == mData.dimY());
-    assert(mNodes.dimZ() == mData.dimZ());
-    assert(mNodes.dimB() == mData.dimB());
+    assert(mNodes.nbDims() == mData.nbDims());
+    assert(std::equal(mNodes.dims().begin(), mNodes.dims().end(),
+                      mData.dims().begin()));
     assert(mNodes.size() == mData.size());
 }
 
@@ -102,7 +112,7 @@ void N2D2::Environment::propagate(Time_T start, Time_T end)
 
     SpikeGenerator::checkParameters();
 
-    for (Tensor4d<NodeEnv*>::const_iterator it = mNodes.begin(),
+    for (Tensor<NodeEnv*>::const_iterator it = mNodes.begin(),
                                             itBegin = mNodes.begin(),
                                             itEnd = mNodes.end();
          it != itEnd;
@@ -136,7 +146,7 @@ N2D2::Environment::testFrame(unsigned int channel, Time_T start, Time_T end)
     const Time_T dt = (end - start) / size;
 
     for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos) {
-        const Tensor2d<NodeEnv*> channelNodes = mNodes[batchPos][channel];
+        const Tensor<NodeEnv*> channelNodes = mNodes[batchPos][channel];
 
         for (unsigned int i = 0; i < size; ++i)
             channelNodes(i)->incomingSpike(NULL, start + i * dt);

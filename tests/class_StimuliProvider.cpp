@@ -41,7 +41,7 @@ TEST_DATASET(StimuliProvider,
              std::make_tuple(30U, 30U, 10U))
 {
     Database database;
-    StimuliProvider sp(database, sizeX, sizeY, 1, batchSize);
+    StimuliProvider sp(database, {sizeX, sizeY, 1}, batchSize);
 
     ASSERT_EQUALS(sp.getSizeX(), sizeX);
     ASSERT_EQUALS(sp.getSizeY(), sizeY);
@@ -74,7 +74,7 @@ TEST_DATASET(StimuliProvider,
     database.loadFile("tests_data/Lenna.png", "Lenna");
     database.loadFile("tests_data/SIPI_Jelly_Beans_4.1.07.tiff", "Jelly_Beans");
 
-    StimuliProvider sp(database, 256, 256);
+    StimuliProvider sp(database, {256, 256, 1});
     sp.addTransformation(GrayChannelExtractionTransformation());
     sp.addTransformation(RescaleTransformation(256, 256));
 
@@ -90,7 +90,7 @@ TEST_DATASET(StimuliProvider,
     for (int i = 0; i < 4; ++i) {
         sp.readStimulus(i % 2, Database::Learn);
 
-        Tensor2d<Float_T> data = sp.getData(0);
+        Tensor<Float_T> data = sp.getData(0);
 
         ASSERT_EQUALS(data.dimX(), 256U);
         ASSERT_EQUALS(data.dimY(), 256U);
@@ -106,7 +106,7 @@ TEST_DATASET(StimuliProvider,
             throw std::runtime_error("Unable to write image: "
                                      + fileName.str());
 
-        const Tensor4d<Float_T>& fullData = sp.getData();
+        const Tensor<Float_T>& fullData = sp.getData();
 
         ASSERT_EQUALS(fullData.dimX(), 256U);
         ASSERT_EQUALS(fullData.dimY(), 256U);
@@ -130,7 +130,7 @@ TEST_DATASET(StimuliProvider,
     database.loadFile("tests_data/Lenna.png", "Lenna");
     database.loadFile("tests_data/SIPI_Jelly_Beans_4.1.07.tiff", "Jelly_Beans");
 
-    StimuliProvider sp(database, 256, 256);
+    StimuliProvider sp(database, {256, 256, 1});
     sp.addTransformation(GrayChannelExtractionTransformation(), setMask);
     sp.addTransformation(RescaleTransformation(256, 256), setMask);
 
@@ -167,7 +167,7 @@ TEST_DATASET(StimuliProvider,
     database.loadFile("tests_data/Lenna.png", "Lenna");
     database.loadFile("tests_data/SIPI_Jelly_Beans_4.1.07.tiff", "Jelly_Beans");
 
-    StimuliProvider sp(database, 256, 256);
+    StimuliProvider sp(database, {256, 256, 1});
     sp.addTransformation(GrayChannelExtractionTransformation());
     sp.addTransformation(RescaleTransformation(256, 256));
 
@@ -187,7 +187,7 @@ TEST_DATASET(StimuliProvider,
     for (int i = 0; i < 4; ++i) {
         sp.readStimulus(i % 2, Database::Learn);
 
-        Tensor2d<Float_T> data = sp.getData(0);
+        Tensor<Float_T> data = sp.getData(0);
 
         ASSERT_EQUALS(data.dimX(), 256U);
         ASSERT_EQUALS(data.dimY(), 256U);
@@ -203,7 +203,7 @@ TEST_DATASET(StimuliProvider,
             throw std::runtime_error("Unable to write image: "
                                      + fileName.str());
 
-        const Tensor4d<Float_T>& fullData = sp.getData();
+        const Tensor<Float_T>& fullData = sp.getData();
 
         ASSERT_EQUALS(fullData.dimX(), 256U);
         ASSERT_EQUALS(fullData.dimY(), 256U);
@@ -222,7 +222,7 @@ TEST_DATASET(StimuliProvider,
     database.loadFile("tests_data/Lenna.png", "Lenna");
     database.loadFile("tests_data/SIPI_Jelly_Beans_4.1.07.tiff", "Jelly_Beans");
 
-    StimuliProvider sp(database, 256, 256, 1, 1, false);
+    StimuliProvider sp(database, {256, 256, 1}, 1, false);
     sp.addTransformation(RescaleTransformation(256, 256));
     sp.addChannelTransformation(HueChannelExtractionTransformation());
     sp.addChannelTransformation(SaturationChannelExtractionTransformation());
@@ -262,7 +262,7 @@ TEST_DATASET(StimuliProvider,
         sp.readStimulus(i % 2, Database::Learn);
 
         for (int channel = 0; channel < 3; ++channel) {
-            Tensor2d<Float_T> data = sp.getData(channel);
+            Tensor<Float_T> data = sp.getData(channel);
 
             ASSERT_EQUALS(data.dimX(), 256U);
             ASSERT_EQUALS(data.dimY(), 256U);
@@ -279,7 +279,7 @@ TEST_DATASET(StimuliProvider,
                                          + fileName.str());
         }
 
-        const Tensor4d<Float_T>& fullData = sp.getData();
+        const Tensor<Float_T>& fullData = sp.getData();
 
         ASSERT_EQUALS(fullData.dimX(), 256U);
         ASSERT_EQUALS(fullData.dimY(), 256U);
@@ -297,7 +297,7 @@ TEST(StimuliProvider, readRandomBatch)
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    StimuliProvider sp(database, 28, 28, 1, 1, false);
+    StimuliProvider sp(database, {28, 28, 1}, 1, false);
     sp.setCachePath();
 
     sp.readRandomBatch(Database::Test);
@@ -312,7 +312,7 @@ TEST(StimuliProvider, readRandomBatch_bis)
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    StimuliProvider sp(database, 32, 32, 1, 1, false);
+    StimuliProvider sp(database, {32, 32, 1}, 1, false);
     sp.addTransformation(RescaleTransformation(32, 32));
     sp.setCachePath();
 
@@ -321,7 +321,7 @@ TEST(StimuliProvider, readRandomBatch_bis)
 
 TEST(StimuliProvider, streamStimulus)
 {
-    StimuliProvider sp(EmptyDatabase, 28, 28, 1, 2, false);
+    StimuliProvider sp(EmptyDatabase, {28, 28, 1}, 2, false);
 
     const cv::Mat img0(28, 28, CV_8UC1, cv::Scalar(1));
     const cv::Mat img1(28, 28, CV_8UC1, cv::Scalar(2));
@@ -329,8 +329,8 @@ TEST(StimuliProvider, streamStimulus)
     sp.streamStimulus(img0, Database::Learn, 0);
     sp.streamStimulus(img1, Database::Learn, 1);
 
-    Tensor2d<Float_T> data0 = sp.getData(0, 0);
-    Tensor2d<Float_T> data1 = sp.getData(0, 1);
+    Tensor<Float_T> data0 = sp.getData(0, 0);
+    Tensor<Float_T> data1 = sp.getData(0, 1);
 
     ASSERT_EQUALS(data0.dimX(), 28U);
     ASSERT_EQUALS(data0.dimY(), 28U);
@@ -340,6 +340,13 @@ TEST(StimuliProvider, streamStimulus)
     for (unsigned int index = 0; index < data0.size(); ++index) {
         ASSERT_EQUALS_DELTA(data0(index), 1.0 / 255.0, 1e-6);
         ASSERT_EQUALS_DELTA(data1(index), 2.0 / 255.0, 1e-6);
+    }
+
+    for (unsigned int y = 0; y < data0.dimY(); ++y) {
+        for (unsigned int x = 0; x < data0.dimX(); ++x) {
+            ASSERT_EQUALS_DELTA(data0(x, y), 1.0 / 255.0, 1e-6);
+            ASSERT_EQUALS_DELTA(data1(x, y), 2.0 / 255.0, 1e-6);
+        }
     }
 }
 

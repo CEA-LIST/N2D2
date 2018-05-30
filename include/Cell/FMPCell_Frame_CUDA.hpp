@@ -27,7 +27,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class FMPCell_Frame_CUDA : public virtual FMPCell, public Cell_Frame_CUDA {
@@ -59,12 +59,12 @@ public:
     virtual ~FMPCell_Frame_CUDA() {};
 
 protected:
-    void generateRegions(CudaTensor4d<unsigned int>& grid,
+    void generateRegions(CudaTensor<unsigned int>& grid,
                          unsigned int sizeIn,
                          unsigned int sizeOut);
 
-    CudaTensor4d<unsigned int> mGridX;
-    CudaTensor4d<unsigned int> mGridY;
+    CudaTensor<unsigned int> mGridX;
+    CudaTensor<unsigned int> mGridY;
 
 private:
     static Registrar<FMPCell> mRegistrar;

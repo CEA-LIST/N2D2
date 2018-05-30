@@ -76,8 +76,8 @@ private:
     Parameter<bool> mEnableStdp;
     Parameter<bool> mRefractoryIntegration;
 
-    Tensor4d<Time_T> mInputsActivationTime;
-    Tensor4d<int> mInputsActivity;
+    Tensor<Time_T> mInputsActivationTime;
+    Tensor<int> mInputsActivity;
 
 private:
     static Registrar<FcCell> mRegistrar;

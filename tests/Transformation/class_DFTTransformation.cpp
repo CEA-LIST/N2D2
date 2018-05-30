@@ -19,7 +19,7 @@
 */
 
 #include "Transformation/DFTTransformation.hpp"
-#include "containers/Tensor2d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
@@ -36,7 +36,7 @@ TEST_DATASET(DFTTransformation,
                  "0 1 2 3\n4 5 6 7",
                  "(6,0) (-2,2) (-2,0) (-2,-2)\n(22,0) (-2,2) (-2,0) (-2,-2)"))
 {
-    Tensor2d<double> x;
+    Tensor<double> x;
     x << xStr;
 
     cv::Mat data = (cv::Mat)x;
@@ -44,7 +44,7 @@ TEST_DATASET(DFTTransformation,
     DFTTransformation trans(false);
     trans.apply(data);
 
-    Tensor2d<std::complex<double> > y;
+    Tensor<std::complex<double> > y;
     y << yStr;
 
     ASSERT_EQUALS(data.channels(), 2);

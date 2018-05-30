@@ -48,10 +48,7 @@ void N2D2::DropoutCell_Frame::initialize()
         }
     }
 
-    mMask.resize(mOutputs.dimX(),
-                 mOutputs.dimY(),
-                 mOutputs.dimZ(),
-                 mOutputs.dimB());
+    mMask.resize(mOutputs.dims());
 }
 
 void N2D2::DropoutCell_Frame::propagate(bool inference)

@@ -308,7 +308,7 @@ void N2D2::ConvCell_Transcode
                           - ConvCell::mKernelHeight + ConvCell::mStrideY)
                          / (double)ConvCell::mStrideY);
 
-    const Tensor4d<Float_T>& outputs = FRAME::getOutputs();
+    const Tensor<Float_T>& outputs = FRAME::getOutputs();
     std::vector<Float_T> minVal(ConvCell::mNbOutputs);
     std::vector<Float_T> maxVal(ConvCell::mNbOutputs);
 

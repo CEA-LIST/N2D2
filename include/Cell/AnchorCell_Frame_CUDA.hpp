@@ -50,14 +50,14 @@ public:
 
     virtual const std::vector<AnchorCell_Frame_Kernels::BBox_T>&
         getGT(unsigned int batchPos) const;
-    virtual std::shared_ptr<ROI> getAnchorROI(const Tensor4d<int>::Index& index)
+    virtual std::shared_ptr<ROI> getAnchorROI(const Tensor<int>::Index& index)
         const;
     virtual AnchorCell_Frame_Kernels::BBox_T getAnchorBBox(
-        const Tensor4d<int>::Index& index) const;
+        const Tensor<int>::Index& index) const;
     virtual AnchorCell_Frame_Kernels::BBox_T getAnchorGT(
-        const Tensor4d<int>::Index& index) const;
-    virtual Float_T getAnchorIoU(const Tensor4d<int>::Index& index) const;
-    virtual int getAnchorArgMaxIoU(const Tensor4d<int>::Index& index) const;
+        const Tensor<int>::Index& index) const;
+    virtual Float_T getAnchorIoU(const Tensor<int>::Index& index) const;
+    virtual int getAnchorArgMaxIoU(const Tensor<int>::Index& index) const;
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -69,13 +69,13 @@ public:
     virtual ~AnchorCell_Frame_CUDA();
 
 protected:
-    CudaTensor4d<AnchorCell_Frame_Kernels::Anchor> mAnchors;
+    CudaTensor<AnchorCell_Frame_Kernels::Anchor> mAnchors;
     std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> > mGT;
     AnchorCell_Frame_Kernels::BBox_T** mCudaGT;
     unsigned int mNbLabelsMax;
-    CudaTensor4d<unsigned int> mNbLabels;
-    CudaTensor4d<int> mArgMaxIoU;
-    CudaTensor4d<Float_T> mMaxIoU;
+    CudaTensor<unsigned int> mNbLabels;
+    CudaTensor<int> mArgMaxIoU;
+    CudaTensor<Float_T> mMaxIoU;
 
 private:
     static Registrar<AnchorCell> mRegistrar;

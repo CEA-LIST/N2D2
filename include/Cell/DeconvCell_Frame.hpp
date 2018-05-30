@@ -85,11 +85,11 @@ public:
     void setWeights(unsigned int k,
                     Interface<Float_T>* weights,
                     unsigned int offset);
-    inline std::shared_ptr<Tensor4d<Float_T> > getBiases()
+    inline std::shared_ptr<Tensor<Float_T> > getBiases()
     {
         return mBias;
     };
-    inline void setBiases(const std::shared_ptr<Tensor4d<Float_T> >& biases)
+    inline void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases)
     {
         mBias = biases;
     }
@@ -119,9 +119,9 @@ protected:
     Interface<Float_T> mSharedSynapses;
     std::map<unsigned int,
         std::pair<Interface<Float_T>*, unsigned int> > mExtSharedSynapses;
-    std::shared_ptr<Tensor4d<Float_T> > mBias;
+    std::shared_ptr<Tensor<Float_T> > mBias;
     Interface<Float_T> mDiffSharedSynapses;
-    Tensor4d<Float_T> mDiffBias;
+    Tensor<Float_T> mDiffBias;
     ConvCell_Frame_Kernels::Descriptor mConvDesc;
 
 private:

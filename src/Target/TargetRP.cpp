@@ -64,7 +64,7 @@ void N2D2::TargetRP::initialize(TargetType targetType,
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const Tensor4d<Float_T>& values = targetCell->getOutputs();
+    const Tensor<Float_T>& values = targetCell->getOutputs();
 
     if (targetType == BBox && values.dimZ() != 4) {
         throw std::runtime_error("TargetRP::initialize(): cell must have 4"
@@ -74,20 +74,20 @@ void N2D2::TargetRP::initialize(TargetType targetType,
     mTargetType = targetType;
     mRPCell = RPCell;
     mAnchorCell = anchorCell;
-    mTargets.resize(mCell->getOutputsWidth(),
+    mTargets.resize({mCell->getOutputsWidth(),
                     mCell->getOutputsHeight(),
-                    (mTargetType == BBox) ? 4 : 1,
-                    values.dimB());
+                    (mTargetType == BBox) ? 4U : 1U,
+                    values.dimB()});
 
     if (mTargetType == Cls) {
-        mEstimatedLabels.resize(mCell->getOutputsWidth(),
+        mEstimatedLabels.resize({mCell->getOutputsWidth(),
                                 mCell->getOutputsHeight(),
                                 mTargetTopN,
-                                values.dimB());
-        mEstimatedLabelsValue.resize(mCell->getOutputsWidth(),
+                                values.dimB()});
+        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
                                      mCell->getOutputsHeight(),
                                      mTargetTopN,
-                                     values.dimB());
+                                     values.dimB()});
     }
 
     const std::string targetRP = anchorCell->getName()
@@ -112,8 +112,8 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const Tensor4d<Float_T>& values = targetCell->getOutputs();
-    const std::vector<Tensor4d<int>::Index> anchors = mRPCell->getAnchors();
+    const Tensor<Float_T>& values = targetCell->getOutputs();
+    const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
 
     ConfusionMatrix<unsigned long long int>& confusionMatrix
         = mScoreSet[set].confusionMatrix;
@@ -130,9 +130,9 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
 
 #pragma omp parallel for if (mTargets.dimB() > 16)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
-        const Tensor3d<Float_T> value = values[batchPos];
-        Tensor3d<int> estimatedLabels = mEstimatedLabels[batchPos];
-        Tensor3d<Float_T> estimatedLabelsValue
+        const Tensor<Float_T> value = values[batchPos];
+        Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
+        Tensor<Float_T> estimatedLabelsValue
             = mEstimatedLabelsValue[batchPos];
 
         if (value.size() > 1) {
@@ -188,13 +188,13 @@ void N2D2::TargetRP::processBBox(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const std::vector<Tensor4d<int>::Index> anchors = mRPCell->getAnchors();
-    const Tensor4d<Float_T>& values = targetCell->getOutputs();
+    const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
+    const Tensor<Float_T>& values = targetCell->getOutputs();
 
-    Tensor4d<Float_T> smoothTargets(mCell->getOutputsWidth(),
+    Tensor<Float_T> smoothTargets({mCell->getOutputsWidth(),
                                     mCell->getOutputsHeight(),
                                     mTargets.dimZ(),
-                                    mTargets.dimB(),
+                                    mTargets.dimB()},
                                     0.0);
 
 #pragma omp parallel for if (mTargets.dimB() > 16)
@@ -304,9 +304,9 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
     std::shared_ptr<Cell_Frame_Top> targetBBoxCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mTargetRP[targetRP][BBox]->getCell());
 
-    const Tensor4d<Float_T>& valuesBBox = targetBBoxCell->getOutputs();
+    const Tensor<Float_T>& valuesBBox = targetBBoxCell->getOutputs();
 
-    const std::vector<Tensor4d<int>::Index> anchors = mRPCell->getAnchors();
+    const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
 
     for (unsigned int n = 0, nbProposals = mRPCell->getNbProposals();
         n < nbProposals; ++n)

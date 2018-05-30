@@ -28,36 +28,36 @@ namespace N2D2 {
 namespace PoolCell_Frame_Kernels {
     // Forward
     void forwardAverage(const Float_T* alpha,
-                        const Tensor4d<Float_T>& inputs,
+                        const Tensor<Float_T>& inputs,
                         const Descriptor& desc,
                         const Float_T* beta,
-                        Tensor4d<Float_T>& outputs,
+                        Tensor<Float_T>& outputs,
                         bool countIncludePadding = true,
-                        const Tensor2d<bool>& maps = Tensor2d<bool>());
+                        const Tensor<bool>& maps = Tensor<bool>());
     void forwardMax(const Float_T* alpha,
-                    const Tensor4d<Float_T>& inputs,
+                    const Tensor<Float_T>& inputs,
                     const Descriptor& desc,
                     const Float_T* beta,
-                    Tensor4d<Float_T>& outputs,
-                    Tensor4d<ArgMax>& argMax,
+                    Tensor<Float_T>& outputs,
+                    Tensor<ArgMax>& argMax,
                     bool useArgMax = false,
-                    const Tensor2d<bool>& maps = Tensor2d<bool>());
+                    const Tensor<bool>& maps = Tensor<bool>());
 
     // Backward
     void backwardAverage(const Float_T* alpha,
-                         const Tensor4d<Float_T>& diffInputs,
+                         const Tensor<Float_T>& diffInputs,
                          const Descriptor& desc,
                          const Float_T* beta,
-                         Tensor4d<Float_T>& diffOutputs,
+                         Tensor<Float_T>& diffOutputs,
                          bool countIncludePadding = true,
-                         const Tensor2d<bool>& maps = Tensor2d<bool>());
+                         const Tensor<bool>& maps = Tensor<bool>());
     void backwardMax(const Float_T* alpha,
-                     const Tensor4d<Float_T>& diffInputs,
+                     const Tensor<Float_T>& diffInputs,
                      const Descriptor& desc,
                      const Float_T* beta,
-                     Tensor4d<Float_T>& diffOutputs,
-                     const Tensor4d<ArgMax>& argMax,
-                     const Tensor2d<bool>& maps = Tensor2d<bool>());
+                     Tensor<Float_T>& diffOutputs,
+                     const Tensor<ArgMax>& argMax,
+                     const Tensor<bool>& maps = Tensor<bool>());
 }
 }
 

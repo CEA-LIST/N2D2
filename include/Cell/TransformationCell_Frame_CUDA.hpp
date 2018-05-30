@@ -31,7 +31,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class TransformationCell_Frame_CUDA : public virtual TransformationCell,
@@ -50,13 +50,13 @@ public:
             <TransformationCell_Frame_CUDA>(name, nbOutputs, transformation);
     }
 
-    virtual void setOutputTarget(const Tensor4d<int>& /*targets*/,
+    virtual void setOutputTarget(const Tensor<int>& /*targets*/,
                                  double /*targetVal*/ = 1.0,
                                  double /*defaultVal*/ = 0.0) {};
-    virtual void setOutputTargets(const Tensor4d<int>& /*targets*/,
+    virtual void setOutputTargets(const Tensor<int>& /*targets*/,
                                   double /*targetVal*/ = 1.0,
                                   double /*defaultVal*/ = 0.0) {};
-    virtual void setOutputTargets(const Tensor4d<Float_T>& /*targets*/) {};
+    virtual void setOutputTargets(const Tensor<Float_T>& /*targets*/) {};
     virtual void propagate(bool inference = false);
     virtual void backPropagate() {};
     virtual void update() {};

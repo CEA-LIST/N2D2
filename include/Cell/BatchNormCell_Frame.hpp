@@ -70,35 +70,35 @@ public:
     {
         return (*mVariance)(sx, sy, channel, 0);
     }
-    inline std::shared_ptr<Tensor4d<Float_T> > getScales()
+    inline std::shared_ptr<Tensor<Float_T> > getScales()
     {
         return mScale;
     };
-    inline void setScales(const std::shared_ptr<Tensor4d<Float_T> >& scales)
+    inline void setScales(const std::shared_ptr<Tensor<Float_T> >& scales)
     {
         mScale = scales;
     }
-    inline std::shared_ptr<Tensor4d<Float_T> > getBiases()
+    inline std::shared_ptr<Tensor<Float_T> > getBiases()
     {
         return mBias;
     };
-    inline void setBiases(const std::shared_ptr<Tensor4d<Float_T> >& biases)
+    inline void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases)
     {
         mBias = biases;
     }
-    inline std::shared_ptr<Tensor4d<Float_T> > getMeans()
+    inline std::shared_ptr<Tensor<Float_T> > getMeans()
     {
         return mMean;
     };
-    inline void setMeans(const std::shared_ptr<Tensor4d<Float_T> >& means)
+    inline void setMeans(const std::shared_ptr<Tensor<Float_T> >& means)
     {
         mMean = means;
     }
-    inline std::shared_ptr<Tensor4d<Float_T> > getVariances()
+    inline std::shared_ptr<Tensor<Float_T> > getVariances()
     {
         return mVariance;
     };
-    inline void setVariances(const std::shared_ptr<Tensor4d<Float_T> >&
+    inline void setVariances(const std::shared_ptr<Tensor<Float_T> >&
                              variances)
     {
         mVariance = variances;
@@ -140,16 +140,16 @@ protected:
     }
 
     unsigned int mNbPropagate;
-    std::shared_ptr<Tensor4d<Float_T> > mScale;
-    std::shared_ptr<Tensor4d<Float_T> > mBias;
-    std::shared_ptr<Tensor4d<Float_T> > mMean;
-    std::shared_ptr<Tensor4d<Float_T> > mVariance;
-    Tensor4d<Float_T> mDiffScale;
-    Tensor4d<Float_T> mDiffBias;
-    Tensor4d<Float_T> mDiffSavedMean;
-    Tensor4d<Float_T> mDiffSavedVariance;
-    Tensor4d<Float_T> mSavedMean;
-    Tensor4d<Float_T> mSavedVariance;
+    std::shared_ptr<Tensor<Float_T> > mScale;
+    std::shared_ptr<Tensor<Float_T> > mBias;
+    std::shared_ptr<Tensor<Float_T> > mMean;
+    std::shared_ptr<Tensor<Float_T> > mVariance;
+    Tensor<Float_T> mDiffScale;
+    Tensor<Float_T> mDiffBias;
+    Tensor<Float_T> mDiffSavedMean;
+    Tensor<Float_T> mDiffSavedVariance;
+    Tensor<Float_T> mSavedMean;
+    Tensor<Float_T> mSavedVariance;
 
 private:
     static Registrar<BatchNormCell> mRegistrar;

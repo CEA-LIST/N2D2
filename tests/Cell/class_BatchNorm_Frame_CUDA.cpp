@@ -52,7 +52,7 @@ TEST(BatchNormCell_Frame_CUDA, setScales)
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
-    Environment env(net, EmptyDatabase, 10, 10);
+    Environment env(net, EmptyDatabase, {10, 10, 1});
 
     BatchNormCell_Frame_CUDA_Test bn1(
         "bn1", 1, std::shared_ptr<Activation<Float_T> >());
@@ -85,7 +85,7 @@ TEST_DATASET(BatchNormCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     BatchNormCell_Frame_CUDA_Test bn1(
         "bn1", 1, std::shared_ptr<Activation<Float_T> >());
@@ -121,7 +121,7 @@ TEST_DATASET(BatchNormCell_Frame_CUDA,
     const unsigned int nbOutputs = 16;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA conv1("conv1",
                               3,

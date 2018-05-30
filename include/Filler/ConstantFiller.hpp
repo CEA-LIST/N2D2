@@ -28,7 +28,7 @@ namespace N2D2 {
 template <class T> class ConstantFiller : public Filler<T> {
 public:
     ConstantFiller(T value = 0.0);
-    void apply(Tensor4d<T>& data);
+    void apply(Tensor<T>& data);
     virtual ~ConstantFiller() {};
 
 private:
@@ -43,9 +43,9 @@ N2D2::ConstantFiller<T>::ConstantFiller(T value)
     // ctor
 }
 
-template <class T> void N2D2::ConstantFiller<T>::apply(Tensor4d<T>& data)
+template <class T> void N2D2::ConstantFiller<T>::apply(Tensor<T>& data)
 {
-    for (typename Tensor4d<T>::iterator it = data.begin(), itEnd = data.end();
+    for (typename Tensor<T>::iterator it = data.begin(), itEnd = data.end();
          it != itEnd;
          ++it)
         (*it) = mValue;

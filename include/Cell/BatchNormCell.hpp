@@ -85,29 +85,29 @@ public:
     virtual Float_T getVariance(unsigned int channel,
                                 unsigned int sx,
                                 unsigned int sy) const = 0;
-    virtual std::shared_ptr<Tensor4d<Float_T> > getScales()
+    virtual std::shared_ptr<Tensor<Float_T> > getScales()
     {
-        return std::shared_ptr<Tensor4d<Float_T> >();
+        return std::shared_ptr<Tensor<Float_T> >();
     };
-    virtual void setScales(const std::shared_ptr<Tensor4d<Float_T> >&
+    virtual void setScales(const std::shared_ptr<Tensor<Float_T> >&
                            /*scales*/) {};
-    virtual std::shared_ptr<Tensor4d<Float_T> > getBiases()
+    virtual std::shared_ptr<Tensor<Float_T> > getBiases()
     {
-        return std::shared_ptr<Tensor4d<Float_T> >();
+        return std::shared_ptr<Tensor<Float_T> >();
     };
-    virtual void setBiases(const std::shared_ptr<Tensor4d<Float_T> >&
+    virtual void setBiases(const std::shared_ptr<Tensor<Float_T> >&
                            /*biases*/) {};
-    virtual std::shared_ptr<Tensor4d<Float_T> > getMeans()
+    virtual std::shared_ptr<Tensor<Float_T> > getMeans()
     {
-        return std::shared_ptr<Tensor4d<Float_T> >();
+        return std::shared_ptr<Tensor<Float_T> >();
     };
-    virtual void setMeans(const std::shared_ptr<Tensor4d<Float_T> >&
+    virtual void setMeans(const std::shared_ptr<Tensor<Float_T> >&
                           /*means*/) {};
-    virtual std::shared_ptr<Tensor4d<Float_T> > getVariances()
+    virtual std::shared_ptr<Tensor<Float_T> > getVariances()
     {
-        return std::shared_ptr<Tensor4d<Float_T> >();
+        return std::shared_ptr<Tensor<Float_T> >();
     };
-    virtual void setVariances(const std::shared_ptr<Tensor4d<Float_T> >&
+    virtual void setVariances(const std::shared_ptr<Tensor<Float_T> >&
                               /*variances*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,

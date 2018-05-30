@@ -89,12 +89,12 @@ protected:
     // Number of input channels
     unsigned int mNbChannels;
     // Input-output mapping
-    Tensor2d<bool> mMaps;
+    Tensor<bool> mMaps;
 
     Network& mNet;
     // Forward
     std::vector<NodeIn*> mInputs;
-    Tensor4d<NodeOut*> mOutputs;
+    Tensor<NodeOut*> mOutputs;
 };
 }
 

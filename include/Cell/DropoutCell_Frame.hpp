@@ -27,7 +27,7 @@
 
 #include "Cell_Frame.hpp"
 #include "DropoutCell.hpp"
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
 class DropoutCell_Frame : public virtual DropoutCell,
@@ -49,7 +49,7 @@ public:
     virtual ~DropoutCell_Frame();
 
 protected:
-    Tensor4d<char> mMask;
+    Tensor<char> mMask;
 
 private:
     static Registrar<DropoutCell> mRegistrar;

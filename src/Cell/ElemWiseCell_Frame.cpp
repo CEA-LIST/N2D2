@@ -56,19 +56,11 @@ void N2D2::ElemWiseCell_Frame::initialize()
     mWeights.resize(mInputs.size(), 1.0);
     mShifts.resize(mInputs.size(), 0.0);
 
-    if (mOperation == Max) {
-        mArgMax.resize(mOutputs.dimX(),
-                       mOutputs.dimY(),
-                       mOutputs.dimZ(),
-                       mOutputs.dimB());
-    }
+    if (mOperation == Max)
+        mArgMax.resize(mOutputs.dims());
 
-    if (mOperation == EuclideanSum) {
-        mInterTerm.resize(mOutputs.dimX(),
-                          mOutputs.dimY(),
-                          mOutputs.dimZ(),
-                          mOutputs.dimB());
-    }
+    if (mOperation == EuclideanSum)
+        mInterTerm.resize(mOutputs.dims());
 }
 
 void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
@@ -80,11 +72,11 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
 
     if (mOperation == Sum) {
         for (unsigned int n = 0; n < nbElems; ++n) {
-            mOutputs(n) = mWeights[0] * mInputs[0](n) 
+            mOutputs(n) = mWeights[0] * mInputs[0](n)
                             + mShifts[0];
 
             for (unsigned int k = 1; k < nbInputs; ++k)
-                mOutputs(n) += mWeights[k] * mInputs[k](n) 
+                mOutputs(n) += mWeights[k] * mInputs[k](n)
                                 + mShifts[k];
         }
     }
@@ -157,7 +149,7 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
 
     #pragma omp parallel for
     for (int k = 0; k < (int)nbInputs; ++k) {
-        Tensor4d<Float_T>& diffOutputs = mDiffOutputs[k];
+        Tensor<Float_T>& diffOutputs = mDiffOutputs[k];
         const float beta = (diffOutputs.isValid()) ? 1.0f : 0.0f;
 
         if (mOperation == Sum) {

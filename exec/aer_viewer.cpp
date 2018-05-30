@@ -45,7 +45,8 @@ int main(int argc, char* argv[])
 
     Network net;
     std::shared_ptr
-        <Environment> env(new Environment(net, EmptyDatabase, sizeX, sizeY));
+        <Environment> env(new Environment(net, EmptyDatabase,
+                                          {sizeX, sizeY, 1}));
 
     if (accDiff) {
         env->addChannelTransformation(FilterTransformationAerPositive);

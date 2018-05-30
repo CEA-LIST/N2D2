@@ -71,13 +71,13 @@ public:
     virtual const std::vector<AnchorCell_Frame_Kernels::BBox_T>&
         getGT(unsigned int batchPos) const = 0;
     virtual std::shared_ptr<ROI> getAnchorROI(
-        const Tensor4d<int>::Index& index) const = 0;
+        const Tensor<int>::Index& index) const = 0;
     virtual AnchorCell_Frame_Kernels::BBox_T getAnchorBBox(
-        const Tensor4d<int>::Index& index) const = 0;
+        const Tensor<int>::Index& index) const = 0;
     virtual AnchorCell_Frame_Kernels::BBox_T getAnchorGT(
-        const Tensor4d<int>::Index& index) const = 0;
-    virtual Float_T getAnchorIoU(const Tensor4d<int>::Index& index) const = 0;
-    virtual int getAnchorArgMaxIoU(const Tensor4d<int>::Index& index) const = 0;
+        const Tensor<int>::Index& index) const = 0;
+    virtual Float_T getAnchorIoU(const Tensor<int>::Index& index) const = 0;
+    virtual int getAnchorArgMaxIoU(const Tensor<int>::Index& index) const = 0;
     void getStats(Stats& stats) const;
     virtual int getNbAnchors() const = 0;
     virtual std::vector<Float_T> getAnchor(const unsigned int idx) const = 0;

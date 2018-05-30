@@ -77,9 +77,9 @@ protected:
     // Internal
     std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
     Interface<Float_T> mSynapses;
-    Tensor4d<Float_T> mBias;
+    Tensor<Float_T> mBias;
     Interface<Float_T> mDiffSynapses;
-    Tensor4d<Float_T> mDiffBias;
+    Tensor<Float_T> mDiffBias;
 
     Interface<bool> mDropConnectMask;
     bool mLockRandom;

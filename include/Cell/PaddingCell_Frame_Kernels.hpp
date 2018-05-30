@@ -44,12 +44,12 @@ namespace PaddingCell_Frame_Kernels {
     };
 
     // Forward
-    void forward(const Tensor4d<Float_T>& inputs,
+    void forward(const Tensor<Float_T>& inputs,
                  const Descriptor& desc,
                  const unsigned int nbChannels,
                  const unsigned int inputOffset,
                  const unsigned int outputOffset,
-                 Tensor4d<Float_T>& outputs);
+                 Tensor<Float_T>& outputs);
 
 }
 }

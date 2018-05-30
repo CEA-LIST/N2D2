@@ -52,8 +52,8 @@ void N2D2::FcCell_Spike_Analog::initialize()
     FcCell_Spike::initialize();
 
     mInputsActivationTime.resize(
-        mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
-    mInputsActivity.resize(mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
+        {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+    mInputsActivity.resize({mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
 }
 
 void N2D2::FcCell_Spike_Analog::propagateSpike(NodeIn* origin,
@@ -207,9 +207,9 @@ void N2D2::FcCell_Spike_Analog::notify(Time_T timestamp, NotifyType notify)
 
     if (notify == Reset) {
         mInputsActivationTime.assign(
-            mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
+            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
         mInputsActivity.assign(
-            mChannelsWidth, mChannelsHeight, mNbChannels, 1, 0);
+            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
     }
 }
 

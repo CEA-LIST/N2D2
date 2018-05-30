@@ -22,7 +22,7 @@
 #define N2D2_ACTIVATION_H
 
 #include "Environment.hpp"
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"
 
@@ -31,8 +31,8 @@ template <class T> class Activation : public Parameterizable {
 public:
     Activation();
     virtual const char* getType() const = 0;
-    virtual void propagate(Tensor4d<T>* data) = 0;
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData) = 0;
+    virtual void propagate(Tensor<T>* data) = 0;
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData) = 0;
     virtual ~Activation() {};
 
 protected:

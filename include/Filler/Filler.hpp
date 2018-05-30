@@ -21,13 +21,13 @@
 #ifndef N2D2_FILLER_H
 #define N2D2_FILLER_H
 
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
 template <class T> class Filler : public Parameterizable {
 public:
-    virtual void apply(Tensor4d<T>& data) = 0;
+    virtual void apply(Tensor<T>& data) = 0;
     virtual ~Filler() {};
 };
 }

@@ -51,9 +51,7 @@ void N2D2::HeteroEnvironment::addMap(double scale)
         } else {
             push_back(Environment(baseEnv->getNetwork(),
                                   baseEnv->getDatabase(),
-                                  width,
-                                  height,
-                                  1,
+                                  {width, height, 1},
                                   baseEnv->getBatchSize(),
                                   baseEnv->isCompositeStimuli()));
             mItems.back()->addTransformation(

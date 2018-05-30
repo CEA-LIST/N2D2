@@ -652,7 +652,7 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
     const unsigned int envSizeY = env->getSizeY();
 
     env->readStimulus(Database::Test, idx);
-    const Tensor2d<Float_T> frame = env->getData(0);
+    const Tensor<Float_T> frame = env->getData(0);
 
     Float_T minVal = frame(0);
     Float_T maxVal = frame(0);
@@ -1112,7 +1112,7 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
              itCell != itCellEnd;
              ++itCell) {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-            const Tensor3d<Float_T> outputs
+            const Tensor<Float_T> outputs
                 = std::dynamic_pointer_cast
                   <Cell_Frame_Top>(cell)->getOutputs()[batchPos];
 
@@ -1136,7 +1136,7 @@ void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
              itCell != itCellEnd;
              ++itCell) {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-            const Tensor3d<Float_T> diffInputs
+            const Tensor<Float_T> diffInputs
                 = std::dynamic_pointer_cast
                   <Cell_Frame_Top>(cell)->getDiffInputs()[batchPos];
 
@@ -2086,7 +2086,7 @@ N2D2::DeepNet::reportOutputsRange(std::map
              itCell != itCellEnd;
              ++itCell)
         {
-            const Tensor4d<Float_T>& outputs
+            const Tensor<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
                       ? std::dynamic_pointer_cast<Cell_Frame_Top>(
                             (*mCells.find(*itCell)).second)->getOutputs()
@@ -2112,7 +2112,7 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
                  itCell != itCellEnd;
                  ++itCell)
             {
-                const Tensor4d<Float_T>& outputs
+                const Tensor<Float_T>& outputs
                     = (mCells.find(*itCell) != mCells.end())
                           ? std::dynamic_pointer_cast<Cell_Frame_Top>(
                                 (*mCells.find(*itCell)).second)->getOutputs()
@@ -2133,7 +2133,7 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
              itCell != itCellEnd;
              ++itCell)
         {
-            const Tensor4d<Float_T>& outputs
+            const Tensor<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
                       ? std::dynamic_pointer_cast<Cell_Frame_Top>(
                             (*mCells.find(*itCell)).second)->getOutputs()

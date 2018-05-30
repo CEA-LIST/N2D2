@@ -25,7 +25,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -37,8 +37,8 @@ public:
     }
 
     LogisticActivation_Frame_CUDA(bool withLoss = false);
-    virtual void propagate(Tensor4d<T>* data);
-    virtual void backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData);
+    virtual void propagate(Tensor<T>* data);
+    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
     virtual ~LogisticActivation_Frame_CUDA();
 
 protected:
@@ -70,12 +70,12 @@ N2D2::LogisticActivation_Frame_CUDA
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(Tensor4d<T>* data)
+void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(Tensor<T>* data)
 {
     if (LogisticActivationDisabled)
         return;
 
-    CudaTensor4d<T>* cudaData = static_cast<CudaTensor4d<T>*>(data);
+    CudaTensor<T>* cudaData = static_cast<CudaTensor<T>*>(data);
 
     const T alpha = 1.0f;
     const T beta = 0.0f;
@@ -92,14 +92,14 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(Tensor4d<T>* data)
 
 template <class T>
 void N2D2::LogisticActivation_Frame_CUDA
-    <T>::backPropagate(Tensor4d<T>* data, Tensor4d<T>* diffData)
+    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
 {
     if (LogisticActivationDisabled)
         return;
 
     if (!this->mWithLoss) {
-        CudaTensor4d<T>* cudaData = static_cast<CudaTensor4d<T>*>(data);
-        CudaTensor4d<T>* cudaDiffData = static_cast<CudaTensor4d<T>*>(diffData);
+        CudaTensor<T>* cudaData = static_cast<CudaTensor<T>*>(data);
+        CudaTensor<T>* cudaDiffData = static_cast<CudaTensor<T>*>(diffData);
 
         const float alpha = 1.0f;
         const float beta = 0.0f;

@@ -118,7 +118,7 @@ public:
     };
     void writeMap(const std::string& fileName) const;
     void getStats(Stats& stats) const;
-    virtual void addArgMax(Tensor4d<PoolCell_Frame_Kernels::ArgMax>*
+    virtual void addArgMax(Tensor<PoolCell_Frame_Kernels::ArgMax>*
                            /*argMax*/) {}
     virtual void addArgMax(Interface<PoolCell_Frame_Kernels::ArgMax>*
                            /*argMax*/) {}

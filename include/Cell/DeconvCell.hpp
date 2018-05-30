@@ -163,11 +163,11 @@ public:
     virtual void setWeights(unsigned int /*k*/,
                     Interface<Float_T>* /*weights*/,
                     unsigned int /*offset*/) {};
-    virtual std::shared_ptr<Tensor4d<Float_T> > getBiases()
+    virtual std::shared_ptr<Tensor<Float_T> > getBiases()
     {
-        return std::shared_ptr<Tensor4d<Float_T> >();
+        return std::shared_ptr<Tensor<Float_T> >();
     };
-    virtual void setBiases(const std::shared_ptr<Tensor4d<Float_T> >&
+    virtual void setBiases(const std::shared_ptr<Tensor<Float_T> >&
                            /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,

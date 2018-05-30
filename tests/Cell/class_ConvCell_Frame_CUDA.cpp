@@ -190,7 +190,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     const unsigned int nbOutputs = 10;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA_Test conv1("conv1",
                                    kernelWidth,
@@ -286,7 +286,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     const unsigned int nbOutputs = 10;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA_Test conv1("conv1",
                                    4,
@@ -416,13 +416,13 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 1, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
     env.readRandomBatch(Database::Test);
 
-    Tensor4d<Float_T>& in = env.getData();
+    Tensor<Float_T>& in = env.getData();
 
     ASSERT_EQUALS(in.dimZ(), 1U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -461,7 +461,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
 #endif
     conv1.propagate();
 
-    const Tensor4d<Float_T>& out = conv1.getOutputs();
+    const Tensor<Float_T>& out = conv1.getOutputs();
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -578,13 +578,13 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 1, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
     env.readRandomBatch(Database::Test);
 
-    Tensor4d<Float_T>& in = env.getData();
+    Tensor<Float_T>& in = env.getData();
 
     ASSERT_EQUALS(in.dimZ(), 1U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -628,7 +628,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
 #endif
     conv1.propagate();
 
-    const Tensor4d<Float_T>& out = conv1.getOutputs();
+    const Tensor<Float_T>& out = conv1.getOutputs();
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -721,7 +721,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     const unsigned int nbOutputs = 10;
 
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA_Test conv1("conv1",
                                    kernelWidth,

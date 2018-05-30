@@ -27,7 +27,7 @@
 #include "FcCell.hpp"
 #include "Network.hpp"
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
 class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA {
@@ -79,9 +79,9 @@ protected:
     // Internal
     std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
     CudaInterface<Float_T> mSynapses;
-    CudaTensor4d<Float_T> mBias;
+    CudaTensor<Float_T> mBias;
     CudaInterface<Float_T> mDiffSynapses;
-    CudaTensor4d<Float_T> mDiffBias;
+    CudaTensor<Float_T> mDiffBias;
 
     Float_T* mOnesVector; // Bias inputs
     mutable bool mSynchronized;

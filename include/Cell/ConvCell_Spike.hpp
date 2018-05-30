@@ -132,11 +132,11 @@ protected:
 
     // mSharedSynapses[output feature map][input channel][synapse, in a 2D
     // matrix = convolution kernel]
-    Tensor4d<Synapse*> mSharedSynapses;
+    Tensor<Synapse*> mSharedSynapses;
 
-    Tensor4d<Time_T> mOutputsLastIntegration;
-    Tensor4d<double> mOutputsIntegration;
-    Tensor4d<Time_T> mOutputsRefractoryEnd;
+    Tensor<Time_T> mOutputsLastIntegration;
+    Tensor<double> mOutputsIntegration;
+    Tensor<Time_T> mOutputsRefractoryEnd;
 
 private:
     static Registrar<ConvCell> mRegistrar;

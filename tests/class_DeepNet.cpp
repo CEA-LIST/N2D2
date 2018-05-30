@@ -131,7 +131,7 @@ TEST(DeepNet, setEnvironment)
     ASSERT_EQUALS((bool)deepNet.getStimuliProvider(), false);
 
     std::shared_ptr<DIR_Database> database(new DIR_Database);
-    std::shared_ptr<Environment> env(new Environment(net, *database, 10));
+    std::shared_ptr<Environment> env(new Environment(net, *database, {10, 1, 1}));
     deepNet.setStimuliProvider(env);
 
     ASSERT_EQUALS(deepNet.getStimuliProvider(), env);

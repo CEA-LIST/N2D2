@@ -149,6 +149,14 @@ namespace Utils {
         }
     };
 
+    template <class T>
+    struct IsZero : public std::unary_function<T, bool> {
+        inline bool operator()(const T& value) const
+        {
+            return (value == 0);
+        }
+    };
+
     template <class T1, class T2, class Pred = std::less<T1> >
     struct PairFirstPred : public std::binary_function
                            <std::pair<T1, T2>, std::pair<T1, T2>, bool> {

@@ -196,9 +196,9 @@ int main(int argc, char *argv[]) {
         std::shared_ptr<TargetScore> targetPicture
             = deepNet->getTarget<TargetScore>();
 
-        const Tensor3d<int> estimatedLabel
+        const Tensor<int> estimatedLabel
             = targetPicture->getEstimatedLabels()[0];
-        const Tensor3d<Float_T> estimatedLabelValue
+        const Tensor<Float_T> estimatedLabelValue
             = targetPicture->getEstimatedLabelsValue()[0];
 
 

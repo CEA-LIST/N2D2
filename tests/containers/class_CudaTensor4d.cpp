@@ -22,7 +22,7 @@
 
 #ifdef CUDA
 
-#include "containers/CudaTensor4d.hpp"
+#include "containers/CudaTensor.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
@@ -31,7 +31,7 @@ TEST(CudaTensor4d, CudaTensor4d)
 {
     REQUIRED(UnitTest::CudaDeviceExists());
 
-    CudaTensor4d<double> A;
+    CudaTensor<double> A({0, 0, 0, 0});
 
     ASSERT_EQUALS(A.dimB(), 0U);
     ASSERT_EQUALS(A.size(), 0U);
@@ -42,8 +42,8 @@ TEST(CudaTensor4d, push_back)
 {
     REQUIRED(UnitTest::CudaDeviceExists());
 
-    Tensor3d<int> A;
-    CudaTensor4d<int> tensor;
+    Tensor<int> A({0, 0, 0, 0});
+    CudaTensor<int> tensor;
 
     ASSERT_EQUALS(tensor.dimB(), 0U);
     ASSERT_EQUALS(tensor.size(), 0U);
@@ -72,8 +72,8 @@ TEST_DATASET(CudaTensor4d,
 {
     REQUIRED(UnitTest::CudaDeviceExists());
 
-    Tensor3d<int> A(dimX, dimY, dimZ);
-    CudaTensor4d<int> tensor;
+    Tensor<int> A({dimX, dimY, dimZ});
+    CudaTensor<int> tensor;
 
     for (unsigned int b = 0; b < dimB; ++b)
         tensor.push_back(A);
@@ -98,7 +98,7 @@ TEST_DATASET(CudaTensor4d,
 {
     REQUIRED(UnitTest::CudaDeviceExists());
 
-    CudaTensor4d<int> tensor(dimX, dimY, dimZ, dimB);
+    CudaTensor<int> tensor({dimX, dimY, dimZ, dimB});
 
     ASSERT_EQUALS(tensor.dimB(), dimB);
     ASSERT_EQUALS(tensor.size(), dimX * dimY * dimZ * dimB);
@@ -120,8 +120,8 @@ TEST_DATASET(CudaTensor4d,
 {
     REQUIRED(UnitTest::CudaDeviceExists());
 
-    CudaTensor4d<float> tensor;
-    tensor.resize(dimX, dimY, dimZ, dimB, 1.0);
+    CudaTensor<float> tensor;
+    tensor.resize({dimX, dimY, dimZ, dimB}, 1.0);
 
     std::vector<float> hostDest(dimX * dimY * dimZ * dimB, 0.0);
     CHECK_CUDA_STATUS(cudaMemcpy(&hostDest[0],
@@ -153,9 +153,9 @@ TEST_DATASET(CudaTensor4d,
 {
     REQUIRED(UnitTest::CudaDeviceExists());
 
-    CudaTensor4d<float> tensor;
+    CudaTensor<float> tensor;
 
-    tensor.resize(dimX, dimY, dimZ, dimB, 0.0);
+    tensor.resize({dimX, dimY, dimZ, dimB}, 0.0);
 
     for (unsigned int i = 0; i < dimB; ++i) {
         tensor(dimX - 1, dimY - 1, dimZ - 1, i) = 1.0;

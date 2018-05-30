@@ -22,7 +22,7 @@
 #define N2D2_GRADIENT_CHECK_H
 
 #include "Environment.hpp" // Defines Float_T
-#include "containers/Tensor4d.hpp"
+#include "containers/Tensor.hpp"
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
@@ -33,15 +33,15 @@ public:
 
     GradientCheck(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void initialize(Interface<Float_T>& inputs,
-                    Tensor4d<Float_T>& outputs,
-                    Tensor4d<Float_T>& diffInputs,
+                    Tensor<Float_T>& outputs,
+                    Tensor<Float_T>& diffInputs,
                     PropagateType propagate,
                     BackPropagateType backPropagate,
                     bool avoidDiscontinuity = false);
 
     void check(const std::string& tensorName,
-               Tensor4d<Float_T>& inputs,
-               Tensor4d<Float_T>& diffOutputs);
+               Tensor<Float_T>& inputs,
+               Tensor<Float_T>& diffOutputs);
     virtual ~GradientCheck();
 
 private:
@@ -50,8 +50,8 @@ private:
     double mEpsilon;
     double mMaxError;
 
-    Tensor4d<Float_T>* mOutputs;
-    Tensor4d<Float_T>* mDiffInputs;
+    Tensor<Float_T>* mOutputs;
+    Tensor<Float_T>* mDiffInputs;
     PropagateType mPropagate;
 };
 }

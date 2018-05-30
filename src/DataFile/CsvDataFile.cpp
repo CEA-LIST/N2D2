@@ -47,28 +47,28 @@ void N2D2::CsvDataFile::write(const std::string& fileName, const cv::Mat& data)
 {
     switch (data.depth()) {
     case CV_8U:
-        write(fileName, Tensor2d<unsigned char>(data));
+        write(fileName, Tensor<unsigned char>(data));
         break;
     case CV_8S:
-        write(fileName, Tensor2d<char>(data));
+        write(fileName, Tensor<char>(data));
         break;
     case CV_16U:
-        write(fileName, Tensor2d<unsigned short>(data));
+        write(fileName, Tensor<unsigned short>(data));
         break;
     case CV_16S:
-        write(fileName, Tensor2d<short>(data));
+        write(fileName, Tensor<short>(data));
         break;
     case CV_32S:
-        write(fileName, Tensor2d<int>(data));
+        write(fileName, Tensor<int>(data));
         break;
     case CV_32F:
-        write(fileName, Tensor2d<float>(data));
+        write(fileName, Tensor<float>(data));
         break;
     case CV_64F:
-        write(fileName, Tensor2d<double>(data));
+        write(fileName, Tensor<double>(data));
         break;
     default:
         throw std::runtime_error(
-            "Cannot convert cv::Mat to Tensor2d: incompatible types.");
+            "Cannot convert cv::Mat to Tensor: incompatible types.");
     }
 }

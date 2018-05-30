@@ -344,8 +344,8 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
             continue;
         }
 
-        const Tensor3d<int> target = mTargets[batchPos];
-        const Tensor3d<int> estimatedLabels = mEstimatedLabels[batchPos];
+        const Tensor<int> target = mTargets[batchPos];
+        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
 
         if (target.size() == 1) {
             if (target(0) >= 0) {

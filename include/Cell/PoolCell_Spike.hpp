@@ -81,13 +81,13 @@ protected:
     inline std::tuple<unsigned int, unsigned int, unsigned int, bool>
     unmaps(EventType_T type) const;
 
-    Tensor4d<int> mInputsActivity;
+    Tensor<int> mInputsActivity;
     // Coordinate of the input with max. activity for this output node
-    Tensor4d<int> mInputMax;
+    Tensor<int> mInputMax;
     // Activity of the input with max. activity for this output node
-    Tensor4d<int> mPoolActivity;
+    Tensor<int> mPoolActivity;
     // activity of the output node
-    Tensor4d<int> mOutputsActivity;
+    Tensor<int> mOutputsActivity;
     // mPoolNbChannels[output channel] -> number of input channels connected to
     // this output channel
     std::vector<unsigned int> mPoolNbChannels;

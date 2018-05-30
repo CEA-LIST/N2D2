@@ -89,7 +89,7 @@ protected:
     Parameter<unsigned int> mTerminateMax;
 
     // mSynapses[output node][input node]
-    Tensor4d<Synapse*> mSynapses;
+    Tensor<Synapse*> mSynapses;
 
     std::vector<Time_T> mOutputsLastIntegration;
     std::vector<double> mOutputsIntegration;

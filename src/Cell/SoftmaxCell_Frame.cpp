@@ -109,7 +109,7 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
 #endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int channel = 0; channel < mNbChannels; ++channel) {
-            const bool isValid = mDiffOutputs.getTensor4d(channel).isValid();
+            const bool isValid = mDiffOutputs.getTensor(channel).isValid();
 
             for (unsigned int iy = 0; iy < mInputs[0].dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < mInputs[0].dimX(); ++ix) {

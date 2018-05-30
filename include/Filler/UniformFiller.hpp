@@ -28,7 +28,7 @@ namespace N2D2 {
 template <class T> class UniformFiller : public Filler<T> {
 public:
     UniformFiller(T min = 0.0, T max = 1.0);
-    void apply(Tensor4d<T>& data);
+    void apply(Tensor<T>& data);
     virtual ~UniformFiller() {};
 
 private:
@@ -44,9 +44,9 @@ N2D2::UniformFiller<T>::UniformFiller(T min, T max)
     // ctor
 }
 
-template <class T> void N2D2::UniformFiller<T>::apply(Tensor4d<T>& data)
+template <class T> void N2D2::UniformFiller<T>::apply(Tensor<T>& data)
 {
-    for (typename Tensor4d<T>::iterator it = data.begin(), itEnd = data.end();
+    for (typename Tensor<T>::iterator it = data.begin(), itEnd = data.end();
          it != itEnd;
          ++it)
         (*it) = Random::randUniform(mMin, mMax);

@@ -77,7 +77,7 @@ TEST_DATASET(FcCell_Frame,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
         "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<Float_T> >());
@@ -116,7 +116,7 @@ TEST_DATASET(FcCell_Frame,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
         "fc1", 16, std::make_shared<TanhActivation_Frame<Float_T> >());
@@ -160,7 +160,7 @@ TEST_DATASET(FcCell_Frame,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
         "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
@@ -252,7 +252,7 @@ TEST_DATASET(FcCell_Frame,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
         "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
@@ -346,7 +346,7 @@ TEST_DATASET(FcCell_Frame,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
-    Environment env(net, EmptyDatabase, channelsWidth, channelsHeight);
+    Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
         "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<Float_T> >());
@@ -398,13 +398,13 @@ TEST_DATASET(FcCell_Frame,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 1, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
     env.readRandomBatch(Database::Test);
 
-    Tensor4d<Float_T>& in = env.getData();
+    Tensor<Float_T>& in = env.getData();
 
     ASSERT_EQUALS(in.dimZ(), 1U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -428,7 +428,7 @@ TEST_DATASET(FcCell_Frame,
 
     fc1.propagate();
 
-    const Tensor4d<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = fc1.getOutputs();
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
     ASSERT_EQUALS(out.dimX(), 1U);
@@ -440,7 +440,7 @@ TEST_DATASET(FcCell_Frame,
                           0.0f); // Warning: 0.0 leads to wrong results!
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
-        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-5);
+        ASSERT_EQUALS_DELTA(out[0](output), sum, 1e-5);
     }
 }
 
@@ -470,7 +470,7 @@ TEST_DATASET(FcCell_Frame,
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));
 
-    Environment env(net, database, channelsWidth, channelsHeight, 1, 2, false);
+    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -505,7 +505,7 @@ TEST_DATASET(FcCell_Frame,
         }
     }
 
-    const Tensor4d<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = fc1.getOutputs();
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
     ASSERT_EQUALS(out.dimX(), fc1.getOutputsWidth());
@@ -536,7 +536,7 @@ TEST_DATASET(FcCell_Frame,
 {
     Network net;
     Environment env(
-        net, EmptyDatabase, channelsWidth, channelsHeight, 1, 2, false);
+        net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test fc1(
         "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
@@ -558,7 +558,7 @@ TEST_DATASET(FcCell_Frame,
 
     fc1.propagate();
 
-    const Tensor4d<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = fc1.getOutputs();
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
     ASSERT_EQUALS(out.dimX(), 1U);
@@ -570,7 +570,7 @@ TEST_DATASET(FcCell_Frame,
         for (unsigned int channel = 0; channel < inputSize; ++channel)
             sum += fc1.getWeight(output, channel);
 
-        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-5);
+        ASSERT_EQUALS_DELTA(out[0](output), sum, 1e-5);
     }
 }
 
