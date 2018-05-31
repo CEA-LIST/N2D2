@@ -31,6 +31,8 @@ for f in $(find . -maxdepth 2 -type f);
 do
     # Check for ELF file for Windows 10 Ubuntu, as -x check doesn't work
     if [ -x "$f" ] && [ "$f" != "$SELF" ] && file "$f" | grep -q "ELF"; then
+        echo "$(tput bold)Running $f test:$(tput sgr0)"
+
         x_last_modified=`stat -c "%Y" $f`
         if [ -f "$f.log" ]; then
             log_last_modified=`stat -c "%Y" $f.log`
@@ -50,6 +52,7 @@ do
             fi
         else
             cat ${f}.log
+            echo "--------"
             if [ -f "${f}.error" ]; then
                 rc=-1
                 break
