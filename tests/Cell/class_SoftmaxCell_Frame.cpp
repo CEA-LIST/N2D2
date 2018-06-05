@@ -75,18 +75,18 @@ TEST_DATASET(SoftmaxCell_Frame,
     inputs.fill(0.0);
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
-        inputs[batchPos](0) = 1.0;
+        inputs(0, batchPos) = 1.0;
 
     softmax1.propagate();
     const Tensor<Float_T>& outputs3 = softmax1.getOutputs();
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
-        ASSERT_EQUALS_DELTA(outputs3[batchPos](0),
+        ASSERT_EQUALS_DELTA(outputs3(0, batchPos),
                             std::exp(1.0) / (std::exp(1.0) + (nbOutputs - 1)),
                             1.0e-6);
 
         for (unsigned int o = 1; o < nbOutputs; ++o) {
-            ASSERT_EQUALS_DELTA(outputs3[batchPos](o),
+            ASSERT_EQUALS_DELTA(outputs3(o, batchPos),
                                 1.0 / (std::exp(1.0) + (nbOutputs - 1)),
                                 1.0e-6);
         }
@@ -119,13 +119,13 @@ TEST_DATASET(SoftmaxCell_Frame,
     inputs.fill(0.0);
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
-        inputs[batchPos](0) = 1.0;
+        inputs(0, batchPos) = 1.0;
 
     softmax1.propagate();
     softmax1.mDiffInputs.fill(0.0);
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
-        softmax1.mDiffInputs[batchPos](nbOutputs - 1) = 1.0;
+        softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
     softmax1.backPropagate();
     Tensor<Float_T>& outputs = softmax1.getOutputs();
@@ -135,13 +135,13 @@ TEST_DATASET(SoftmaxCell_Frame,
             Float_T gradient = 0.0;
 
             for (unsigned int output = 0; output < nbOutputs; ++output) {
-                gradient += ((output == channel) - outputs[batchPos](channel))
-                            * outputs[batchPos](output)
-                            * softmax1.mDiffInputs[batchPos](output);
+                gradient += ((output == channel) - outputs(channel, batchPos))
+                            * outputs(output, batchPos)
+                            * softmax1.mDiffInputs(output, batchPos);
             }
 
             ASSERT_EQUALS_DELTA(
-                diffOutputs[batchPos](channel), gradient, 1.0e-6);
+                diffOutputs(channel, batchPos), gradient, 1.0e-6);
         }
     }
 }

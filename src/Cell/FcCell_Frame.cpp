@@ -86,6 +86,9 @@ void N2D2::FcCell_Frame::propagate(bool inference)
         }
 
         const Tensor<Float_T>& synapses = mSynapses[k];
+        const Tensor<Float_T>& inputs = mInputs[k];
+        const unsigned int inputSize = inputs.dimX() * inputs.dimY()
+                                        * inputs.dimZ();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count > 16)
@@ -94,30 +97,30 @@ void N2D2::FcCell_Frame::propagate(bool inference)
 #endif
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
             for (unsigned int output = 0; output < outputSize; ++output) {
-                const Tensor<Float_T> inputs = mInputs[k][batchPos];
-                const int inputSize = inputs.size();
-
                 // Compute the weighted sum
                 Float_T weightedSum = (!mNoBias) ? mBias(output) : 0.0;
 
                 if (mDropConnect < 1.0 && !inference) {
-                    for (int channel = 0; channel < inputSize; ++channel) {
-                        if (mDropConnectMask[k][output](channel))
-                            weightedSum += inputs(channel)
-                                           * synapses[output](channel);
+                    for (unsigned int channel = 0; channel < inputSize;
+                        ++channel)
+                    {
+                        if (mDropConnectMask[k](channel, output))
+                            weightedSum += inputs(channel, batchPos)
+                                           * synapses(channel, output);
                     }
                 } else {
                     // init with weightedSum and not 0.0 to match for loop
                     // (otherwise it can lead to different result because of
                     // limited machine precision)
-                    weightedSum = std::inner_product(inputs.begin(),
-                                                     inputs.end(),
-                                                     synapses[output].begin(),
-                                                     weightedSum);
+                    weightedSum = std::inner_product(
+                                    inputs.begin() + batchPos * inputSize,
+                                    inputs.begin() + (batchPos + 1) * inputSize,
+                                    synapses[output].begin(),
+                                    weightedSum);
                 }
 
-                mOutputs[batchPos](output)
-                    = weightedSum + beta * mOutputs[batchPos](output);
+                mOutputs(output, batchPos)
+                    = weightedSum + beta * mOutputs(output, batchPos);
             }
         }
     }
@@ -152,30 +155,28 @@ void N2D2::FcCell_Frame::backPropagate()
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                 for (unsigned int channel = 0; channel < nbChannels; ++channel)
                 {
-                    const Tensor<Float_T> diffInputs = mDiffInputs[batchPos];
-
                     Float_T gradient = 0.0;
 
                     if (mDropConnect < 1.0) {
                         for (unsigned int output = 0; output < outputSize;
                              ++output)
                         {
-                            if (mDropConnectMask[k][output](channel))
-                                gradient += synapses[output](channel)
-                                            * diffInputs(output);
+                            if (mDropConnectMask[k](channel, output))
+                                gradient += synapses(channel, output)
+                                            * mDiffInputs(output, batchPos);
                         }
                     }
                     else {
                         for (unsigned int output = 0; output < outputSize;
                              ++output)
                         {
-                            gradient += synapses[output](channel)
-                                        * diffInputs(output);
+                            gradient += synapses(channel, output)
+                                        * mDiffInputs(output, batchPos);
                         }
                     }
 
-                    diffOutputs[batchPos](channel) = gradient
-                        + beta * diffOutputs[batchPos](channel);
+                    diffOutputs(channel, batchPos) = gradient
+                        + beta * diffOutputs(channel, batchPos);
                 }
             }
 
@@ -195,20 +196,20 @@ void N2D2::FcCell_Frame::backPropagate()
         for (int output = 0; output < (int)mNbOutputs; ++output) {
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 if (!(mDropConnect < 1.0)
-                    || mDropConnectMask[k][output](channel)) {
+                    || mDropConnectMask[k](channel, output)) {
                     Float_T sum = 0.0;
 
                     for (unsigned int batchPos = 0; batchPos < input.dimB();
                          ++batchPos)
-                        sum += input[batchPos](channel)
-                               * mDiffInputs[batchPos](output);
+                        sum += input(channel, batchPos)
+                               * mDiffInputs(output, batchPos);
 
-                    diffSynapses[output](channel) = sum
-                        + beta * diffSynapses[output](channel);
+                    diffSynapses(channel, output) = sum
+                        + beta * diffSynapses(channel, output);
                 }
                 else {
-                    diffSynapses[output](channel) = beta
-                        * diffSynapses[output](channel);
+                    diffSynapses(channel, output) = beta
+                        * diffSynapses(channel, output);
                 }
             }
         }
@@ -223,7 +224,7 @@ void N2D2::FcCell_Frame::backPropagate()
 
             for (unsigned int batchPos = 0; batchPos < mInputs.dimB();
                  ++batchPos)
-                sum += mDiffInputs[batchPos](output);
+                sum += mDiffInputs(output, batchPos);
 
             mDiffBias(output) = sum + beta * mDiffBias(output);
         }

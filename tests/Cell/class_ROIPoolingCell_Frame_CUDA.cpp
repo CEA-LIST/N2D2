@@ -182,14 +182,14 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     CudaTensor<Float_T> proposals({1, 1, 4, nbProposals});
     CudaTensor<Float_T> proposalsDiff({1, 1, 4, nbProposals});
 
-    proposals[0](0) = 11;
-    proposals[0](1) = 27;
-    proposals[0](2) = 2 * outputsWidth;
-    proposals[0](3) = 2 * outputsHeight;
-    proposals[1](0) = 4;
-    proposals[1](1) = 1;
-    proposals[1](2) = 4 * outputsWidth;
-    proposals[1](3) = 3 * outputsHeight;
+    proposals(0, 0) = 11;
+    proposals(1, 0) = 27;
+    proposals(2, 0) = 2 * outputsWidth;
+    proposals(3, 0) = 2 * outputsHeight;
+    proposals(0, 1) = 4;
+    proposals(1, 1) = 1;
+    proposals(2, 1) = 4 * outputsWidth;
+    proposals(3, 1) = 3 * outputsHeight;
     proposals.synchronizeHToD();
 
     conv1.addInput(env);
@@ -257,14 +257,14 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     CudaTensor<Float_T> inputs({channelsWidth, channelsHeight, nbOutputs, 1});
     CudaTensor<Float_T> inputsDiff({channelsWidth, channelsHeight, nbOutputs, 1});
 
-    proposals[0](0) = 11;
-    proposals[0](1) = 27;
-    proposals[0](2) = 2 * outputsWidth;
-    proposals[0](3) = 2 * outputsHeight;
-    proposals[1](0) = 4;
-    proposals[1](1) = 1;
-    proposals[1](2) = 4 * outputsWidth;
-    proposals[1](3) = 3 * outputsHeight;
+    proposals(0, 0) = 11;
+    proposals(1, 0) = 27;
+    proposals(2, 0) = 2 * outputsWidth;
+    proposals(3, 0) = 2 * outputsHeight;
+    proposals(0, 1) = 4;
+    proposals(1, 1) = 1;
+    proposals(2, 1) = 4 * outputsWidth;
+    proposals(3, 1) = 3 * outputsHeight;
     proposals.synchronizeHToD();
 
     for (unsigned int index = 0; index < inputs.size(); ++index)
@@ -281,9 +281,9 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     const Tensor<Float_T>& out = pool1.getOutputs();
 
     for (unsigned int batch = 0; batch < nbProposals; ++batch) {
-        const unsigned int poolWidth = Utils::round(proposals[batch](2)
+        const unsigned int poolWidth = Utils::round(proposals(2, batch)
                                                     / outputsWidth);
-        const unsigned int poolHeight = Utils::round(proposals[batch](3)
+        const unsigned int poolHeight = Utils::round(proposals(3, batch)
                                                      / outputsHeight);
 
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -294,8 +294,8 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
                     for (unsigned int y = 0; y < poolHeight; ++y) {
                         for (unsigned int x = 0; x < poolWidth; ++x) {
                             poolElem.push_back(inputs(
-                                proposals[batch](0) + poolWidth * ox + x,
-                                proposals[batch](1) + poolHeight * oy + y,
+                                proposals(0, batch) + poolWidth * ox + x,
+                                proposals(1, batch) + poolHeight * oy + y,
                                 output, 0));
                         }
                     }

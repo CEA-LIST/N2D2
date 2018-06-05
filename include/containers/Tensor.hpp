@@ -121,10 +121,6 @@ public:
     Tensor(const std::vector<size_t>& dims,
              InputIterator first,
              InputIterator last);
-    Tensor(const std::vector<size_t>& dims,
-             const std::shared_ptr<std::vector<T> >& data,
-             const std::shared_ptr<bool>& valid,
-             size_t dataOffset);
     Tensor(const cv::Mat& mat);
     bool empty() const
     {
@@ -164,10 +160,7 @@ public:
     }
     size_t size() const
     {
-        return (!mDims.empty()) ? std::accumulate(mDims.begin(),
-                                               mDims.end(),
-                                               1U,
-                                               std::multiplies<size_t>()) : 0U;
+        return mSize;
     }
     iterator begin()
     {
@@ -265,6 +258,21 @@ public:
     virtual ~Tensor() {};
 
 protected:
+    Tensor(const std::vector<size_t>& dims,
+             const std::shared_ptr<std::vector<T> >& data,
+             const std::shared_ptr<bool>& valid,
+             size_t dataOffset,
+             size_t size,
+             size_t sizeM1);
+    size_t computeSize()
+    {
+        mSizeM1 = (!mDims.empty()) ? std::accumulate(mDims.begin(),
+                                               --mDims.end(),
+                                               1U,
+                                               std::multiplies<size_t>()) : 0U;
+        mSize = (!mDims.empty()) ? mSizeM1 * mDims.back() : 0U;
+        return mSize;
+    }
     template <class CV_T>
     static void convert(const cv::Mat& mat, std::vector<T>& data);
 
@@ -279,6 +287,10 @@ protected:
     const std::shared_ptr<std::vector<T> > mData;
     const std::shared_ptr<bool> mValid;
     const size_t mDataOffset;
+
+    // Cached data
+    size_t mSize;
+    size_t mSizeM1;
 };
 }
 
@@ -286,7 +298,9 @@ template <class T>
 N2D2::Tensor<T>::Tensor()
     : mData(std::make_shared<std::vector<T> >()),
       mValid(std::make_shared<bool>(false)),
-      mDataOffset(0)
+      mDataOffset(0),
+      mSize(0),
+      mSizeM1(0)
 {
     // ctor
 }
@@ -295,7 +309,7 @@ template <class T>
 N2D2::Tensor<T>::Tensor(std::initializer_list<size_t> dims,
                             const T& value)
     : mDims(dims),
-      mData(std::make_shared<std::vector<T> >(size(), value)),
+      mData(std::make_shared<std::vector<T> >(computeSize(), value)),
       mValid(std::make_shared<bool>(false)),
       mDataOffset(0)
 {
@@ -306,7 +320,7 @@ template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
                             const T& value)
     : mDims(dims),
-      mData(std::make_shared<std::vector<T> >(size(), value)),
+      mData(std::make_shared<std::vector<T> >(computeSize(), value)),
       mValid(std::make_shared<bool>(false)),
       mDataOffset(0)
 {
@@ -324,7 +338,7 @@ N2D2::Tensor<T>::Tensor(std::initializer_list<size_t> dims,
       mDataOffset(0)
 {
     // ctor
-    if (size() != (*mData).size())
+    if (computeSize() != (*mData).size())
         throw std::runtime_error("Invalid size.");
 }
 
@@ -339,19 +353,23 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
       mDataOffset(0)
 {
     // ctor
-    if (size() != (*mData).size())
+    if (computeSize() != (*mData).size())
         throw std::runtime_error("Invalid size.");
 }
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
-                            const std::shared_ptr<std::vector<T> >& data,
-                            const std::shared_ptr<bool>& valid,
-                            size_t dataOffset)
+                        const std::shared_ptr<std::vector<T> >& data,
+                        const std::shared_ptr<bool>& valid,
+                        size_t dataOffset,
+                        size_t size,
+                        size_t sizeM1)
     : mDims(dims),
       mData(data),
       mValid(valid),
-      mDataOffset(dataOffset)
+      mDataOffset(dataOffset),
+      mSize(size),
+      mSizeM1(sizeM1)
 {
     // ctor
 }
@@ -369,6 +387,8 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
 
     if (mat.channels() > 1)
         mDims.push_back(mat.channels());
+
+    computeSize();
 
     std::vector<cv::Mat> channels;
     cv::split(mat, channels);
@@ -447,7 +467,7 @@ void N2D2::Tensor<T>::reserve(const std::vector<size_t>& dims)
     assert(mData.unique());
 
     mDims = dims;
-    (*mData).reserve(size());
+    (*mData).reserve(computeSize());
 }
 
 template <class T>
@@ -462,7 +482,7 @@ void N2D2::Tensor<T>::reshape(const std::vector<size_t>& dims)
     const size_t oldSize = size();
     const std::vector<size_t> oldDims = mDims;
     mDims = dims;
-    const size_t newSize = size();
+    const size_t newSize = computeSize();
 
     if (newSize != oldSize) {
         std::stringstream errorStr;
@@ -488,7 +508,7 @@ void N2D2::Tensor<T>::resize(const std::vector<size_t>& dims,
     assert(mData.unique());
 
     mDims = dims;
-    (*mData).resize(size(), value);
+    (*mData).resize(computeSize(), value);
 }
 
 template <class T>
@@ -505,7 +525,7 @@ void N2D2::Tensor<T>::assign(const std::vector<size_t>& dims,
     assert(mData.unique());
 
     mDims = dims;
-    (*mData).assign(size(), value);
+    (*mData).assign(computeSize(), value);
 }
 
 template <typename T> void N2D2::Tensor<T>::fill(const T& value)
@@ -536,6 +556,7 @@ template <class T> void N2D2::Tensor<T>::push_back(const T& value)
         throw std::runtime_error(errorStr.str());
     }
 
+    computeSize();
     (*mData).push_back(value);
 }
 
@@ -568,6 +589,7 @@ template <class T> void N2D2::Tensor<T>::push_back(const std::vector<T>& vec)
     }
 
     ++mDims.back();
+    computeSize();
     (*mData).insert((*mData).end(), vec.begin(), vec.end());
 }
 
@@ -604,6 +626,7 @@ template <class T> void N2D2::Tensor<T>::push_back(const Tensor<T>& frame)
     }
 
     ++mDims.back();
+    computeSize();
     (*mData).insert((*mData).end(), frame.begin(), frame.end());
 }
 
@@ -612,6 +635,8 @@ template <class T> void N2D2::Tensor<T>::clear()
     assert(mData.unique());
 
     mDims.clear();
+    mSize = 0;
+    mSizeM1 = 0;
     (*mData).clear();
 }
 
@@ -619,6 +644,8 @@ template <class T> void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
 {
     std::swap(mDims, tensor.mDims);
     (*mData).swap((*tensor.mData));
+    std::swap(mSize, tensor.mSize);
+    std::swap(mSizeM1, tensor.mSizeM1);
 
     assert((*mData).size() == size());
     assert((*tensor.mData).size() == tensor.size());
@@ -654,6 +681,13 @@ operator()(Args... args)
         assert(i[0] < size());
         return (*mData)[mDataOffset + i[0]];
     }
+    else if (sizeof...(args) == 2) {
+        const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
+        assert(mDims.size() > 1);
+        assert(i[0] < mSizeM1);
+        assert(i[1] < mDims.back());
+        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+    }
     else {
         assert(sizeof...(args) == mDims.size());
         return (*mData)[mDataOffset + getOffset(0U, args...)];
@@ -669,6 +703,13 @@ operator()(Args... args) const
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
         assert(i[0] < size());
         return (*mData)[mDataOffset + i[0]];
+    }
+    else if (sizeof...(args) == 2) {
+        const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
+        assert(mDims.size() > 1);
+        assert(i[0] < mSizeM1);
+        assert(i[1] < mDims.back());
+        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
     }
     else {
         assert(sizeof...(args) == mDims.size());
@@ -741,14 +782,34 @@ typename N2D2::Tensor<T>::reference N2D2::Tensor<T>::at(Args... args)
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
 
         if (i[0] >= size())
-            throw std::runtime_error("Out of range!");
+            throw std::runtime_error("Tensor<T>::at(): Out of range!");
 
         return (*mData)[mDataOffset + i[0]];
     }
+    else if (sizeof...(args) == 2) {
+        const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
+
+        if (mDims.size() == 1) {
+            std::stringstream errorStr;
+            errorStr << "Tensor<T>::at(): trying to access a 1D tensor (size: "
+                << mDims[0] << ") with two dimensions (" << i[0] << ", " << i[1]
+                << ")." << std::endl;
+
+            throw std::runtime_error(errorStr.str());
+        }
+
+        if (i[0] >= mSizeM1)
+            throw std::runtime_error("Tensor<T>::at(): Out of range!");
+
+        if (i[1] >= mDims.back())
+            throw std::runtime_error("Tensor<T>::at(): Out of range!");
+
+        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+    }
     else {
         if (sizeof...(args) != mDims.size())
-            throw std::runtime_error("Argument count must match "
-                                     "tensor dimension");
+            throw std::runtime_error("Tensor<T>::at(): Argument count must "
+                                     "match tensor dimension");
 
         return (*mData)[mDataOffset + getOffset(0U, args...)];
     }
@@ -763,14 +824,34 @@ typename N2D2::Tensor<T>::const_reference N2D2::Tensor<T>::at(Args... args)
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
 
         if (i[0] >= size())
-            throw std::runtime_error("Out of range!");
+            throw std::runtime_error("Tensor<T>::at(): Out of range!");
 
         return (*mData)[mDataOffset + i[0]];
     }
+    else if (sizeof...(args) == 2) {
+        const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
+
+        if (mDims.size() == 1) {
+            std::stringstream errorStr;
+            errorStr << "Tensor<T>::at(): trying to access a 1D tensor (size: "
+                << mDims[0] << ") with two dimensions (" << i[0] << ", " << i[1]
+                << ")." << std::endl;
+
+            throw std::runtime_error(errorStr.str());
+        }
+
+        if (i[0] >= mSizeM1)
+            throw std::runtime_error("Tensor<T>::at(): Out of range!");
+
+        if (i[1] >= mDims.back())
+            throw std::runtime_error("Tensor<T>::at(): Out of range!");
+
+        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+    }
     else {
         if (sizeof...(args) != mDims.size())
-            throw std::runtime_error("Argument count must match "
-                                     "tensor dimension");
+            throw std::runtime_error("Tensor<T>::at(): Argument count must "
+                                     "match tensor dimension");
 
         return (*mData)[mDataOffset + getOffset(0U, args...)];
     }
@@ -782,13 +863,8 @@ N2D2::Tensor<T> N2D2::Tensor<T>::operator[](size_t i)
     assert(mDims.size() > 1);
     std::vector<size_t> newDims = mDims;
     newDims.pop_back();
-
-    const size_t offset = std::accumulate(newDims.begin(),
-                                                newDims.end(),
-                                                1U,
-                                            std::multiplies<size_t>());
-
-    return Tensor<T>(newDims, mData, mValid, mDataOffset + i * offset);
+    return Tensor<T>(newDims, mData, mValid, mDataOffset + i * mSizeM1,
+                mSizeM1, (newDims.back() > 0) ? mSizeM1 / newDims.back() : 0);
 }
 
 template <class T>
@@ -797,13 +873,8 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::operator[](size_t i) const
     assert(mDims.size() > 1);
     std::vector<size_t> newDims = mDims;
     newDims.pop_back();
-
-    const size_t offset = std::accumulate(newDims.begin(),
-                                                newDims.end(),
-                                                1U,
-                                            std::multiplies<size_t>());
-
-    return Tensor<T>(newDims, mData, mValid, mDataOffset + i * offset);
+    return Tensor<T>(newDims, mData, mValid, mDataOffset + i * mSizeM1,
+                mSizeM1, (newDims.back() > 0) ? mSizeM1 / newDims.back() : 0);
 }
 
 template <class T>
@@ -814,14 +885,9 @@ N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
     assert(j0 + nb <= mDims.back());
 
     std::vector<size_t> newDims = mDims;
-    newDims.pop_back();
-
-    const size_t offset = std::accumulate(newDims.begin(),
-                                                newDims.end(),
-                                                1U,
-                                            std::multiplies<size_t>());
-    newDims.push_back(nb);
-    return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * offset);
+    newDims.back() = nb;
+    return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
+                     nb * mSizeM1, mSizeM1);
 }
 
 template <class T>
@@ -832,14 +898,9 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
     assert(j0 + nb <= mDims.back());
 
     std::vector<size_t> newDims = mDims;
-    newDims.pop_back();
-
-    const size_t offset = std::accumulate(newDims.begin(),
-                                                newDims.end(),
-                                                1U,
-                                            std::multiplies<size_t>());
-    newDims.push_back(nb);
-    return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * offset);
+    newDims.back() = nb;
+    return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
+                     nb * mSizeM1, mSizeM1);
 }
 
 template <class T>

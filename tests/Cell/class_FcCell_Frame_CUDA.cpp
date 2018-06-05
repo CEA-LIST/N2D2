@@ -222,7 +222,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
                           0.0f); // Warning: 0.0 leads to wrong results!
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
-        ASSERT_EQUALS_DELTA(out[0](output), sum, 1e-4);
+        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
     }
 }
 
@@ -356,7 +356,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
         for (unsigned int channel = 0; channel < inputSize; ++channel)
             sum += fc1.getWeight(output, channel);
 
-        ASSERT_EQUALS_DELTA(out[0](output), sum, 1e-4);
+        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
     }
 }
 
