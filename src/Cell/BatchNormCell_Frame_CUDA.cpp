@@ -37,7 +37,8 @@ N2D2::BatchNormCell_Frame_CUDA::BatchNormCell_Frame_CUDA(
       mScale(std::make_shared<CudaTensor<Float_T> >()),
       mBias(std::make_shared<CudaTensor<Float_T> >()),
       mMean(std::make_shared<CudaTensor<Float_T> >()),
-      mVariance(std::make_shared<CudaTensor<Float_T> >())
+      mVariance(std::make_shared<CudaTensor<Float_T> >()),
+      mSynchronized(false)
 {
     // ctor
     mScaleSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
