@@ -541,21 +541,17 @@ template <class T> void N2D2::Tensor<T>::push_back(const T& value)
     if (mDims.empty() || std::all_of(mDims.begin(), mDims.end(),
                                      Utils::IsZero<size_t>()))
     {
-        mDims.resize(1, 1);
+        mDims.resize(1, 0);
     }
-    else if (mDims.size() == 1 || (mDims.size() == 2 && mDims[1] <= 1)) {
-        ++mDims[0];
-        mDims[1] = 1;
-    }
-    else {
+    else if (mDims.size() != 1) {
         std::stringstream errorStr;
-        errorStr << "Tensor<T>::push_back(): tensor second dimension must be"
-            " 0 or 1 to push back a single value, but tensor dimension is "
-            << mDims << std::endl;
+        errorStr << "Tensor<T>::push_back(): tensor must be 1D to push back a"
+            " single value, but tensor dimension is " << mDims << std::endl;
 
         throw std::runtime_error(errorStr.str());
     }
 
+    ++mDims.back();
     computeSize();
     (*mData).push_back(value);
 }
