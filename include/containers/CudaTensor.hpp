@@ -27,10 +27,15 @@
 #include <string>
 #include <vector>
 
+#include <thrust/device_ptr.h>
+#include <thrust/fill.h>
+
 #include "CudaUtils.hpp"
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {
+template <typename T> void thrust_fill(T* devData, size_t size, T value);
+
 template <typename T> class CudaTensor : public Tensor<T> {
 public:
     using Tensor<T>::size;
@@ -95,6 +100,10 @@ public:
 
 protected:
     void setCudnnTensor();
+    template <typename U>
+    void syncFill(typename std::enable_if<std::is_pod<U>::value, U>::type value);
+    template <typename U>
+    void syncFill(typename std::enable_if<!std::is_pod<U>::value, U>::type value);
 
     using Tensor<T>::mDims;
     using Tensor<T>::mData;
@@ -190,7 +199,7 @@ void N2D2::CudaTensor<T>::resize(std::initializer_list<size_t> dims,
 
 template <typename T>
 void N2D2::CudaTensor<T>::resize(const std::vector<size_t>& dims,
-                                   const T& value)
+                                 const T& value)
 {
     Tensor<T>::resize(dims, value);
 
@@ -200,7 +209,7 @@ void N2D2::CudaTensor<T>::resize(const std::vector<size_t>& dims,
     }
 
     setCudnnTensor();
-    synchronizeHToD();
+    syncFill<T>(value);
 }
 
 template <typename T>
@@ -222,6 +231,20 @@ void N2D2::CudaTensor<T>::assign(const std::vector<size_t>& dims,
     }
 
     setCudnnTensor();
+    syncFill<T>(value);
+}
+
+template <typename T>
+template <typename U>
+void N2D2::CudaTensor<T>::syncFill(typename std::enable_if<std::is_pod<U>::value, U>::type value)
+{
+    thrust_fill(mDataDevice, size(), value);
+}
+
+template <typename T>
+template <typename U>
+void N2D2::CudaTensor<T>::syncFill(typename std::enable_if<!std::is_pod<U>::value, U>::type /*value*/)
+{
     synchronizeHToD();
 }
 

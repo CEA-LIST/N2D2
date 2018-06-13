@@ -1162,31 +1162,79 @@ void N2D2::DeepNet::logFreeParameters(const std::string& dirName) const
 void N2D2::DeepNet::logStats(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
+
+    // Global stats
+    const std::string logFileName = dirName + "/stats.log";
+
+    Cell::Stats globalStats;
+
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
+    {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd; ++itCell)
+        {
+            const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            cell->getStats(globalStats);
+        }
+    }
+
+    std::ofstream logData(logFileName.c_str());
+
+    if (!logData.good())
+        throw std::runtime_error("Could not open log stats file: "
+                                 + logFileName);
+
+    logData << "[Global stats]\n"
+               "Total number of neurons: " << globalStats.nbNeurons
+            << "\n"
+               "Total number of nodes: " << globalStats.nbNodes
+            << "\n"
+               "Total number of synapses: " << globalStats.nbSynapses
+            << "\n"
+               "Total number of virtual synapses: "
+            << globalStats.nbVirtualSynapses
+            << "\n"
+               "Total number of connections: " << globalStats.nbConnections
+            << "\n\n";
+
+    const unsigned int inputData = mStimuliProvider->getSizeX()
+                                   * mStimuliProvider->getSizeY()
+                                   * mStimuliProvider->getNbChannels();
+    const unsigned int freeParameters = globalStats.nbSynapses;
+    const unsigned int hiddenData = globalStats.nbNodes;
+
+    logData << "[Memory]\n"
+               "Input data (int-8 bits): " << inputData / 1024.0
+            << " kBytes\n"
+               "Input data (float-16 bits): " << 2.0 * inputData / 1024.0
+            << " kBytes\n"
+               "Input data (float-32 bits): " << 4.0 * inputData / 1024.0
+            << " kBytes\n"
+               "Free parameters (int-8 bits): " << freeParameters / 1024.0
+            << " kBytes\n"
+               "Free parameters (float-16 bits): " << 2.0 * freeParameters
+                                                      / 1024.0
+            << " kBytes\n"
+               "Free parameters (float-32 bits): " << 4.0 * freeParameters
+                                                      / 1024.0
+            << " kBytes\n"
+               "Layers data (int-8 bits): " << hiddenData / 1024.0
+            << " kBytes\n"
+               "Layers data (float-16 bits): " << 2.0 * hiddenData / 1024.0
+            << " kBytes\n"
+               "Layers data (float-32 bits): " << 4.0 * hiddenData / 1024.0
+                                               << " kBytes\n\n";
+
+    logData << "[Computing]\n"
+               "MACS / input data: " << globalStats.nbConnections / 1.0e6
+            << "M\n";
+
+    // Cells stats
     const std::string statsFileName = dirName + "/stats.dat";
     const std::string relStatsFileName = dirName + "/stats_relative.dat";
 
-    const std::string logStatsDataFileName = dirName
-                                        + "/stats_data_logarithmic.dat";
-    const std::string relStatsDataFileName = dirName
-                                        + "/stats_data_relative.dat";
-    const std::string logStatsParamFileName = dirName
-                                        + "/stats_parameters_logarithmic.dat";
-    const std::string relStatsParamFileName = dirName
-                                        + "/stats_parameters_relative.dat";
-    const std::string logStatsComputingFileName = dirName
-                                        + "/stats_computing_logarithmic.dat";
-    const std::string relStatsComputingFileName = dirName
-                                        + "/stats_computing_relative.dat";
-
-    const std::string logFileName = dirName + "/stats.log";
-    std::string paramTitle = "Param Memory";
-    std::string dataTitle = "Data Memory";
-    std::string computingTitle = "Computing";
-
-
-
-    unsigned int maxStringSizeCellName = 1;
-    // Cells stats
     std::ofstream stats(statsFileName.c_str());
 
     if (!stats.good())
@@ -1194,22 +1242,27 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
 
     stats << "Cell ParamMemory Computing DataMemory\n";
 
-    Cell::Stats globalStats;
+    std::ofstream relStats(relStatsFileName.c_str());
+
+    if (!relStats.good())
+        throw std::runtime_error("Could not open stats file: "
+                                 + relStatsFileName);
+
+    relStats << "Cell ParamMemory(%) Computing(%) DataMemory(%)\n";
+
+    unsigned int maxStringSizeCellName = 1;
 
     for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin() + 1,
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
+         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
+    {
         for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
                                                       itCellEnd = (*it).end();
-             itCell != itCellEnd;
-             ++itCell) {
+             itCell != itCellEnd; ++itCell)
+        {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
 
             Cell::Stats cellStats;
             cell->getStats(cellStats);
-            cell->getStats(globalStats);
 
             maxStringSizeCellName = (maxStringSizeCellName >
                                         cell->getName().size()) ?
@@ -1220,31 +1273,6 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
                        << cellStats.nbSynapses << " "
                        << cellStats.nbConnections << " "
                        << cellStats.nbNodes << "\n";
-        }
-    }
-
-    stats.close();
-
-    std::ofstream relStats(relStatsFileName.c_str());
-    if (!relStats.good())
-        throw std::runtime_error("Could not open stats file: "
-                                 + relStatsFileName);
-
-    relStats << "Cell ParamMemory(%) Computing(%) DataMemory(%)\n";
-
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin() + 1,
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-                                                      itCellEnd = (*it).end();
-             itCell != itCellEnd;
-             ++itCell) {
-            const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-
-            Cell::Stats cellStats;
-            cell->getStats(cellStats);
 
             relStats << (*itCell) << " " << std::fixed << std::setprecision(2)
                     << std::setfill('0')
@@ -1260,7 +1288,92 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
         }
     }
 
+    stats.close();
     relStats.close();
+
+    const std::string logStatsDataFileName = dirName
+                                        + "/stats_data_logarithmic.dat";
+    const std::string relStatsDataFileName = dirName
+                                        + "/stats_data_relative.dat";
+    const std::string logStatsParamFileName = dirName
+                                        + "/stats_parameters_logarithmic.dat";
+    const std::string relStatsParamFileName = dirName
+                                        + "/stats_parameters_relative.dat";
+    const std::string logStatsComputingFileName = dirName
+                                        + "/stats_computing_logarithmic.dat";
+    const std::string relStatsComputingFileName = dirName
+                                        + "/stats_computing_relative.dat";
+
+    std::string paramTitle = "Param Memory";
+    std::string dataTitle = "Data Memory";
+    std::string computingTitle = "Computing";
+
+    std::stringstream multiTermStr;
+    multiTermStr << "set term png size "
+            << (mLayers.size() * 50)*2
+            << ",1800 enhanced large";
+
+    Gnuplot multiplot;
+    multiplot.saveToFile(statsFileName);
+    multiplot << multiTermStr.str();
+    multiplot.setMultiplot(3, 2);
+    multiplot.set("origin 0,0.66");
+    multiplot.set("grid");
+    drawHistogram(paramTitle + "[int-8 bits] (bytes)",
+                  statsFileName,
+                  2U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
+
+    multiplot.set("origin 0.5,0.66");
+    multiplot.set("grid");
+    drawHistogram(paramTitle + " (%)",
+                  relStatsFileName,
+                  2U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
+
+
+    multiplot.set("origin 0.0,0.33");
+    multiplot.set("grid");
+    drawHistogram(dataTitle + "[int-8 bits] (bytes)",
+                  statsFileName,
+                  4U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
+
+    multiplot.set("origin 0.5,0.33");
+    multiplot.set("grid");
+    drawHistogram(dataTitle + " (%)",
+                  relStatsFileName,
+                  4U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
+
+    multiplot.set("origin 0.0,0.0");
+    multiplot.set("grid");
+    drawHistogram(computingTitle + "(MACs)",
+                  statsFileName,
+                  3U,
+                  maxStringSizeCellName,
+                  true,
+                  multiplot);
+
+    multiplot.set("origin 0.5,0.0");
+    multiplot.set("grid");
+    drawHistogram(computingTitle + " (%)",
+                  relStatsFileName,
+                  3U,
+                  maxStringSizeCellName,
+                  false,
+                  multiplot);
+
+    multiplot.unsetMultiplot();
+
     std::stringstream termStr;
     termStr << "set term png size "
             << (mLayers.size() * 50)
@@ -1325,126 +1438,6 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
                   maxStringSizeCellName,
                   false,
                   relDataPlot);
-
-    std::stringstream multiTermStr;
-    multiTermStr << "set term png size "
-            << (mLayers.size() * 50)*2
-            << ",1800 enhanced large";
-
-    //termStr << "set term png size 1600,1800 enhanced";
-
-    Gnuplot multiplot;
-    multiplot.saveToFile(statsFileName);
-    multiplot << multiTermStr.str();
-    multiplot.setMultiplot(3, 2);
-    multiplot.set("origin 0,0.66");
-    multiplot.set("grid");
-    drawHistogram(paramTitle + "[int-8 bits] (bytes)",
-                  statsFileName,
-                  2U,
-                  maxStringSizeCellName,
-                  true,
-                  multiplot);
-
-    multiplot.set("origin 0.5,0.66");
-    multiplot.set("grid");
-    drawHistogram(paramTitle + " (%)",
-                  relStatsFileName,
-                  2U,
-                  maxStringSizeCellName,
-                  false,
-                  multiplot);
-
-
-    multiplot.set("origin 0.0,0.33");
-    multiplot.set("grid");
-    drawHistogram(dataTitle + "[int-8 bits] (bytes)",
-                  statsFileName,
-                  4U,
-                  maxStringSizeCellName,
-                  true,
-                  multiplot);
-
-    multiplot.set("origin 0.5,0.33");
-    multiplot.set("grid");
-    drawHistogram(dataTitle + " (%)",
-                  relStatsFileName,
-                  4U,
-                  maxStringSizeCellName,
-                  false,
-                  multiplot);
-
-    multiplot.set("origin 0.0,0.0");
-    multiplot.set("grid");
-    drawHistogram(computingTitle + "(MACs)",
-                  statsFileName,
-                  3U,
-                  maxStringSizeCellName,
-                  true,
-                  multiplot);
-
-    multiplot.set("origin 0.5,0.0");
-    multiplot.set("grid");
-    drawHistogram(computingTitle + " (%)",
-                  relStatsFileName,
-                  3U,
-                  maxStringSizeCellName,
-                  false,
-                  multiplot);
-
-    multiplot.unsetMultiplot();
-
-    // Global stats
-    std::ofstream logData(logFileName.c_str());
-
-    if (!logData.good())
-        throw std::runtime_error("Could not open log stats file: "
-                                 + logFileName);
-
-    logData << "[Global stats]\n"
-               "Total number of neurons: " << globalStats.nbNeurons
-            << "\n"
-               "Total number of nodes: " << globalStats.nbNodes
-            << "\n"
-               "Total number of synapses: " << globalStats.nbSynapses
-            << "\n"
-               "Total number of virtual synapses: "
-            << globalStats.nbVirtualSynapses
-            << "\n"
-               "Total number of connections: " << globalStats.nbConnections
-            << "\n\n";
-
-    const unsigned int inputData = mStimuliProvider->getSizeX()
-                                   * mStimuliProvider->getSizeY()
-                                   * mStimuliProvider->getNbChannels();
-    const unsigned int freeParameters = globalStats.nbSynapses;
-    const unsigned int hiddenData = globalStats.nbNodes;
-
-    logData << "[Memory]\n"
-               "Input data (int-8 bits): " << inputData / 1024.0
-            << " kBytes\n"
-               "Input data (float-16 bits): " << 2.0 * inputData / 1024.0
-            << " kBytes\n"
-               "Input data (float-32 bits): " << 4.0 * inputData / 1024.0
-            << " kBytes\n"
-               "Free parameters (int-8 bits): " << freeParameters / 1024.0
-            << " kBytes\n"
-               "Free parameters (float-16 bits): " << 2.0 * freeParameters
-                                                      / 1024.0
-            << " kBytes\n"
-               "Free parameters (float-32 bits): " << 4.0 * freeParameters
-                                                      / 1024.0
-            << " kBytes\n"
-               "Layers data (int-8 bits): " << hiddenData / 1024.0
-            << " kBytes\n"
-               "Layers data (float-16 bits): " << 2.0 * hiddenData / 1024.0
-            << " kBytes\n"
-               "Layers data (float-32 bits): " << 4.0 * hiddenData / 1024.0
-                                               << " kBytes\n\n";
-
-    logData << "[Computing]\n"
-               "MACS / input data: " << globalStats.nbConnections / 1.0e6
-            << "M\n";
 }
 
 void N2D2::DeepNet::drawHistogram(std::string title,

@@ -154,27 +154,36 @@ unsigned long long int N2D2::DeconvCell::getNbSharedSynapses() const
 
 unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
 {
+    unsigned long long int nbSynapsesPerConnection = 0;
+
+#pragma omp parallel for reduction(+:nbSynapsesPerConnection)
+    for (int iy = 0; iy < (int) mChannelsHeight; ++iy) {
+        unsigned long long int nbSynapsesIx = 0;
+
+        for (unsigned int ix = 0; ix < mChannelsWidth; ++ix) {
+            const unsigned int sxMin = (unsigned int)std::max(
+                (int)mPaddingX - (int)(ix * mStrideX), 0);
+            const unsigned int syMin = (unsigned int)std::max(
+                (int)mPaddingY - (int)(iy * mStrideY), 0);
+            const unsigned int sxMax = Utils::clamp<int>(
+                mOutputsWidth + mPaddingX - ix * mStrideX, 0, mKernelWidth);
+            const unsigned int syMax = Utils::clamp
+                <int>(mOutputsHeight + mPaddingY - iy * mStrideY,
+                      0,
+                      mKernelHeight);
+
+            nbSynapsesIx += (sxMax - sxMin) * (syMax - syMin);
+        }
+
+        nbSynapsesPerConnection += nbSynapsesIx;
+    }
+
     unsigned long long int nbVirtualSynapses = 0;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int iy = 0; iy < mChannelsHeight; ++iy) {
-            for (unsigned int ix = 0; ix < mChannelsWidth; ++ix) {
-                const unsigned int sxMin = (unsigned int)std::max(
-                    (int)mPaddingX - (int)(ix * mStrideX), 0);
-                const unsigned int syMin = (unsigned int)std::max(
-                    (int)mPaddingY - (int)(iy * mStrideY), 0);
-                const unsigned int sxMax = Utils::clamp<int>(
-                    mOutputsWidth + mPaddingX - ix * mStrideX, 0, mKernelWidth);
-                const unsigned int syMax = Utils::clamp
-                    <int>(mOutputsHeight + mPaddingY - iy * mStrideY,
-                          0,
-                          mKernelHeight);
-
-                for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                    if (isConnection(channel, output))
-                        nbVirtualSynapses += (sxMax - sxMin) * (syMax - syMin);
-                }
-            }
+        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            if (isConnection(channel, output))
+                nbVirtualSynapses += nbSynapsesPerConnection;
         }
 
         if (!mNoBias)

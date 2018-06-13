@@ -165,30 +165,38 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
         = (unsigned int)((mChannelsHeight + 2 * mPaddingY - mKernelHeight
                           + mStrideY) / (double)mStrideY);
 
+    unsigned long long int nbSynapsesPerConnection = 0;
+
+#pragma omp parallel for reduction(+:nbSynapsesPerConnection)
+    for (int oy = 0; oy < (int)oySize; ++oy) {
+        unsigned long long int nbSynapsesOx = 0;
+
+        for (unsigned int ox = 0; ox < oxSize; ++ox) {
+            const unsigned int sxMin = (unsigned int)std::max(
+                (int)mPaddingX - (int)(ox * mStrideX), 0);
+            const unsigned int syMin = (unsigned int)std::max(
+                (int)mPaddingY - (int)(oy * mStrideY), 0);
+            const unsigned int sxMax = Utils::clamp
+                <int>(mChannelsWidth + mPaddingX - ox * mStrideX,
+                      0,
+                      mKernelWidth);
+            const unsigned int syMax = Utils::clamp
+                <int>(mChannelsHeight + mPaddingY - oy * mStrideY,
+                      0,
+                      mKernelHeight);
+
+            nbSynapsesOx += (sxMax - sxMin) * (syMax - syMin);
+        }
+
+        nbSynapsesPerConnection += nbSynapsesOx;
+    }
+
     unsigned long long int nbVirtualSynapses = 0;
 
     for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int oy = 0; oy < oySize; ++oy) {
-            for (unsigned int ox = 0; ox < oxSize; ++ox) {
-                const unsigned int sxMin = (unsigned int)std::max(
-                    (int)mPaddingX - (int)(ox * mStrideX), 0);
-                const unsigned int syMin = (unsigned int)std::max(
-                    (int)mPaddingY - (int)(oy * mStrideY), 0);
-                const unsigned int sxMax = Utils::clamp
-                    <int>(mChannelsWidth + mPaddingX - ox * mStrideX,
-                          0,
-                          mKernelWidth);
-                const unsigned int syMax = Utils::clamp
-                    <int>(mChannelsHeight + mPaddingY - oy * mStrideY,
-                          0,
-                          mKernelHeight);
-
-                for (unsigned int channel = 0; channel < getNbChannels();
-                     ++channel) {
-                    if (isConnection(channel, output))
-                        nbVirtualSynapses += (sxMax - sxMin) * (syMax - syMin);
-                }
-            }
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
+            if (isConnection(channel, output))
+                nbVirtualSynapses += nbSynapsesPerConnection;
         }
 
         if (!mNoBias)

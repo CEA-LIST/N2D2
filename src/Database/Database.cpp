@@ -714,16 +714,26 @@ void N2D2::Database::partitionStimuli(unsigned int nbStimuli, StimuliSet set)
                                  "larger than the number of available "
                                  "stimuli.");
 
-    for (unsigned int i = 0; i < nbStimuli; ++i) {
-        const unsigned int idx = (mRandomPartitioning)
-            ? Random::randUniform(0, maxStimuli - 1) : 0;
-        mStimuliSets(set).push_back(mStimuliSets(Unpartitioned)[idx]);
-        mStimuliSets(Unpartitioned)
-            .erase(mStimuliSets(Unpartitioned).begin() + idx);
-        --maxStimuli;
-    }
+    mStimuliSets(set).reserve(mStimuliSets(set).size() + nbStimuli);
 
-    assert(maxStimuli == mStimuliSets(Unpartitioned).size());
+    if (!mRandomPartitioning) {
+        mStimuliSets(set).insert(mStimuliSets(set).end(),
+                            mStimuliSets(Unpartitioned).begin(),
+                            mStimuliSets(Unpartitioned).begin() + nbStimuli);
+        mStimuliSets(Unpartitioned).erase(mStimuliSets(Unpartitioned).begin(),
+                            mStimuliSets(Unpartitioned).begin() + nbStimuli);
+    }
+    else {
+        for (unsigned int i = 0; i < nbStimuli; ++i) {
+            const unsigned int idx = Random::randUniform(0, maxStimuli - 1);
+            mStimuliSets(set).push_back(mStimuliSets(Unpartitioned)[idx]);
+            mStimuliSets(Unpartitioned)
+                .erase(mStimuliSets(Unpartitioned).begin() + idx);
+            --maxStimuli;
+        }
+
+        assert(maxStimuli == mStimuliSets(Unpartitioned).size());
+    }
 }
 
 void
