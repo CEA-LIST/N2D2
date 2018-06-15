@@ -38,7 +38,7 @@ N2D2::RPCell_Frame_CUDA::RPCell_Frame_CUDA(const std::string& name,
 
 void N2D2::RPCell_Frame_CUDA::initialize()
 {
-    mAnchors.resize(mNbProposals * mInputs.dimB());
+    mAnchors.resize({mNbProposals * mInputs.dimB()}, {4});
     unsigned int outputMaxSize = mNbAnchors*mInputs[0].dimY()*mInputs[0].dimX();
     unsigned int sortedSize = outputMaxSize;
 
