@@ -253,11 +253,25 @@ void N2D2::CudaTensor<T>::setCudnnTensor() {
     const size_t size_ = size();
 
     if (size_ > 0) {
-        std::vector<int> dims;
-        std::vector<int> strides;
+/**
+**      cudNN Tensors are restricted to having at least 4 dimensions :
+**      When working with lower dimensionsal data, unused dimensions are set to 1.
+**      Referes to the cudnnSetTensorNdDescriptor documentation from :
+**      https://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html
+**/
+        std::vector<int> dims(4,1);
+        std::vector<int> strides(4,1);
         int stride = 1;
 
-        for (unsigned int dim = 0; dim < mDims.size(); ++dim) {
+        for (unsigned int dim = 0; dim < 4; ++dim) {
+            if(dim < mDims.size()) {
+                dims[dim] = mDims[dim];
+                strides[dim] = stride;
+                stride  *= mDims[dim];
+            }
+        }
+
+        for (unsigned int dim = 4; dim < mDims.size(); ++dim) {
             dims.push_back(mDims[dim]);
             strides.push_back(stride);
             stride *= mDims[dim];
@@ -269,7 +283,8 @@ void N2D2::CudaTensor<T>::setCudnnTensor() {
         CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size_ * sizeof(T)));
         CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(mTensor,
                                                       CUDNN_DATA_FLOAT,
-                                                      mDims.size(),
+                                                      /*mDims.size(),*/
+                                                      dims.size(),
                                                       &dims[0],
                                                       &strides[0]));
     }
