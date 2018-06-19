@@ -31,7 +31,6 @@ N2D2::Cell_Spike::Cell_Spike(Network& net,
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mIncomingDelay(this, "IncomingDelay", 1 * TimePs, 100 * TimeFs),
-      mNbChannels(0),
       mNet(net)
 {
     // ctor
@@ -57,31 +56,30 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
         height = sp.getSizeY() - y0;
 
     // Define input-output sizes
-    setInputsSize(width, height);
-    mNbChannels += 1;
-    setOutputsSize();
+    setInputsDims({width, height, 1U});
+    setOutputsDims();
 
     // Define input-output connections
-    if (!mapping.empty() && mapping.size() != mNbOutputs)
+    if (!mapping.empty() && mapping.size() != getNbOutputs())
         throw std::runtime_error("Cell_Spike::addInput(): mapping length must "
                                  "be equal to the number of outputs");
 
-    mMaps.resize({mNbOutputs, mNbChannels});
+    mMaps.resize({getNbOutputs(), getNbChannels()});
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        mMaps(output, mNbChannels - 1) = (!mapping.empty()) ? mapping[output]
-                                                            : true;
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        mMaps(output, getNbChannels() - 1)
+            = (!mapping.empty()) ? mapping[output] : true;
     }
 
-    mInputs.reserve(mNbChannels * mChannelsWidth * mChannelsHeight);
+    mInputs.reserve(getInputsSize());
 
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
             mInputs.push_back(new NodeIn(
                 mNet,
                 *this,
-                (mNbChannels - 1) + (x + width * y)
-                                    / (mChannelsWidth * mChannelsHeight)));
+                (getNbChannels() - 1) + (x + width * y)
+                                    / (mInputsDims[0] * mInputsDims[1])));
             mInputs.back()->addLink(env->getNode(channel, x0 + x, y0 + y));
         }
     }
@@ -130,39 +128,37 @@ void N2D2::Cell_Spike::addInput(Cell* cell, const Matrix<bool>& mapping)
             "Cell_Spike::addInput(): cannot mix Spike and Frame models");
 
     // Define input-output sizes
-    setInputsSize(cellSpike->mOutputsWidth, cellSpike->mOutputsHeight);
-    mNbChannels += cellSpike->mNbOutputs;
-    setOutputsSize();
+    setInputsDims(cellSpike->getOutputsDims());
+    setOutputsDims();
 
     // Define input-output connections
-    if (!mapping.empty() && mapping.rows() != cellSpike->mNbOutputs)
+    const unsigned int cellNbOutputs = cellSpike->getNbOutputs();
+
+    if (!mapping.empty() && mapping.rows() != cellNbOutputs)
         throw std::runtime_error("Cell_Spike::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
 
-    mMaps.resize({mNbOutputs, mNbChannels});
-    const unsigned int channelOffset = mNbChannels - cellSpike->mNbOutputs;
+    mMaps.resize({getNbOutputs(), getNbChannels()});
+    const unsigned int channelOffset = getNbChannels() - cellNbOutputs;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int channel = 0; channel < cellSpike->mNbOutputs;
-             ++channel) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < cellNbOutputs; ++channel) {
             mMaps(output, channelOffset + channel)
                 = (!mapping.empty()) ? mapping(channel, output) : true;
         }
     }
 
-    mInputs.reserve(mNbChannels * mChannelsWidth * mChannelsHeight);
+    mInputs.reserve(getInputsSize());
 
-    for (unsigned int index = 0,
-                      size = cellSpike->mNbOutputs * cellSpike->mOutputsHeight
-                             * cellSpike->mOutputsWidth;
-         index < size;
-         ++index) {
+    for (unsigned int index = 0, size = cellSpike->getOutputsSize();
+        index < size; ++index)
+    {
         mInputs.push_back(
             new NodeIn(mNet,
                        *this,
-                       (mNbChannels - cellSpike->mNbOutputs)
-                       + index / (mChannelsWidth * mChannelsHeight)));
+                       (getNbChannels() - cellSpike->getNbOutputs())
+                       + index / (mInputsDims[0] * mInputsDims[1])));
         mInputs.back()->addLink(cellSpike->mOutputs(index));
     }
 
@@ -182,27 +178,28 @@ void N2D2::Cell_Spike::addInput(Cell* cell,
             "Cell_Spike::addInput(): cannot mix Spike and Frame models");
 
     if (width == 0)
-        width = cellSpike->mOutputsWidth - x0;
+        width = cellSpike->getOutputsDim(0) - x0;
     if (height == 0)
-        height = cellSpike->mOutputsHeight - y0;
+        height = cellSpike->getOutputsDim(1) - y0;
 
     // Define input-output sizes
-    setInputsSize(width, height);
-    mNbChannels += cellSpike->mNbOutputs;
-    setOutputsSize();
+    const unsigned int cellNbOutputs = cellSpike->getNbOutputs();
+
+    setInputsDims({width, height, cellNbOutputs});
+    setOutputsDims();
 
     // Define input-output connections
-    mMaps.resize({mNbOutputs, mNbChannels}, true);
+    mMaps.resize({getNbOutputs(), getNbChannels()}, true);
 
-    mInputs.reserve(mNbChannels * mChannelsWidth * mChannelsHeight);
+    mInputs.reserve(getInputsSize());
 
-    for (unsigned int output = 0; output < cellSpike->mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < cellNbOutputs; ++output) {
         for (unsigned int y = 0; y < height; ++y) {
             for (unsigned int x = 0; x < width; ++x) {
                 mInputs.push_back(
                     new NodeIn(mNet,
                                *this,
-                               (mNbChannels - cellSpike->mNbOutputs)
+                               (getNbChannels() - cellNbOutputs)
                                + (output * height * width + (x + width * y))
                                  / (width * height)));
                 mInputs.back()->addLink(
@@ -217,17 +214,20 @@ void N2D2::Cell_Spike::addInput(Cell* cell,
 void N2D2::Cell_Spike::populateOutputs()
 {
     if (mOutputs.empty()) {
-        mOutputs.resize({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, NULL);
+        std::vector<size_t> outputsDims(mOutputsDims);
+        outputsDims.push_back(1);
 
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
-            for (unsigned int y = 0; y < mOutputsHeight; ++y) {
-                for (unsigned int x = 0; x < mOutputsWidth; ++x)
+        mOutputs.resize(outputsDims, NULL);
+
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+            for (unsigned int y = 0; y < mOutputsDims[1]; ++y) {
+                for (unsigned int x = 0; x < mOutputsDims[0]; ++x)
                     mOutputs(x, y, output, 0)
                         = new NodeOut(mNet,
                                       *this,
                                       output,
                                       1.0,
-                                      output / (double)mNbOutputs,
+                                      output / (double)getNbOutputs(),
                                       x,
                                       y);
             }

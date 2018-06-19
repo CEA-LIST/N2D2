@@ -36,7 +36,7 @@ N2D2::FMPCell::FMPCell(const std::string& name,
 
 void N2D2::FMPCell::initialize()
 {
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             mPoolNbChannels[output] += isConnection(channel, output);
     }
@@ -46,9 +46,9 @@ unsigned long long int N2D2::FMPCell::getNbConnections() const
 {
     double nbConnections = 0;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int oy = 0; oy < mOutputsHeight; ++oy) {
-            for (unsigned int ox = 0; ox < mOutputsWidth; ++ox) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
+            for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
                 for (unsigned int channel = 0; channel < getNbChannels();
                      ++channel) {
                     if (isConnection(channel, output))
@@ -90,12 +90,12 @@ void N2D2::FMPCell::writeMap(const std::string& fileName) const
     std::stringstream plotCmd;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             data << isConnection(channel, output) << " ";
             plotCmd << isConnection(channel, output) << " ";
         }
 
-        if (mNbOutputs == 1)
+        if (getNbOutputs() == 1)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -108,7 +108,7 @@ void N2D2::FMPCell::writeMap(const std::string& fileName) const
     }
 
     if (getNbChannels() == 1) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
+        for (unsigned int output = 0; output < getNbOutputs(); ++output)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -120,7 +120,7 @@ void N2D2::FMPCell::writeMap(const std::string& fileName) const
     std::stringstream xtics;
     xtics << "(";
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         if (output > 0)
             xtics << ", ";
 
@@ -141,13 +141,14 @@ void N2D2::FMPCell::writeMap(const std::string& fileName) const
 
 void N2D2::FMPCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
     stats.nbConnections += getNbConnections();
 }
 
-void N2D2::FMPCell::setOutputsSize()
+void N2D2::FMPCell::setOutputsDims()
 {
-    mOutputsWidth = (unsigned int)Utils::round(mChannelsWidth / mScalingRatio);
-    mOutputsHeight
-        = (unsigned int)Utils::round(mChannelsHeight / mScalingRatio);
+    mOutputsDims[0] = (unsigned int)Utils::round(mInputsDims[0]
+                                                 / mScalingRatio);
+    mOutputsDims[1] = (unsigned int)Utils::round(mInputsDims[1]
+                                                 / mScalingRatio);
 }

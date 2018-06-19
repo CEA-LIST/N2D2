@@ -71,32 +71,67 @@ public:
     /// Returns cell type
     virtual const char* getType() const = 0;
     /// Returns number of channels in the cell
-    virtual unsigned int getNbChannels() const = 0;
-    /// Returns cell input channels width
-    unsigned int getChannelsWidth() const
+    size_t getNbChannels() const
     {
-        return mChannelsWidth;
+        return mInputsDims.back();
+    };
+    /// Returns cell input channels width
+    size_t getChannelsWidth() const
+    {
+        return mInputsDims[0];
     };
     /// Returns cell input channels height
-    unsigned int getChannelsHeight() const
+    size_t getChannelsHeight() const
     {
-        return mChannelsHeight;
+        return mInputsDims[1];
+    };
+    size_t getInputsDim(unsigned int dim) const
+    {
+        assert(dim < mInputsDims.size());
+        return mInputsDims[dim];
+    };
+    const std::vector<size_t>& getInputsDims() const
+    {
+        return mInputsDims;
+    };
+    size_t getInputsSize() const
+    {
+        return (!mInputsDims.empty())
+            ? std::accumulate(mInputsDims.begin(), mInputsDims.end(),
+                              1U, std::multiplies<size_t>())
+            : 0;
     };
     /// Returns number of output maps in the cell (or number of outputs for 1D
     /// cells)
-    unsigned int getNbOutputs() const
+    size_t getNbOutputs() const
     {
-        return mNbOutputs;
+        return mOutputsDims.back();
     };
     /// Returns cell output maps width (returns 1 for 1D cells)
-    unsigned int getOutputsWidth() const
+    size_t getOutputsWidth() const
     {
-        return mOutputsWidth;
+        return mOutputsDims[0];
     };
     /// Returns cell output maps height (returns 1 for 1D cells)
-    unsigned int getOutputsHeight() const
+    size_t getOutputsHeight() const
     {
-        return mOutputsHeight;
+        return mOutputsDims[1];
+    };
+    size_t getOutputsDim(unsigned int dim) const
+    {
+        assert(dim < mOutputsDims.size());
+        return mOutputsDims[dim];
+    };
+    const std::vector<size_t>& getOutputsDims() const
+    {
+        return mOutputsDims;
+    };
+    size_t getOutputsSize() const
+    {
+        return (!mOutputsDims.empty())
+            ? std::accumulate(mOutputsDims.begin(), mOutputsDims.end(),
+                              1U, std::multiplies<size_t>())
+            : 0;
     };
     /// Fill cell stats
     virtual void getStats(Stats& stats) const = 0;
@@ -108,8 +143,10 @@ public:
      * @param output        Output map number
      * @return true if the output map if connected to input channel
     */
-    virtual bool isConnection(unsigned int channel,
-                              unsigned int output) const = 0;
+    bool isConnection(unsigned int channel, unsigned int output) const
+    {
+        return mMaps(output, channel);
+    };
 
     /**
      * Connect an input filter from the environment to the cell
@@ -273,30 +310,33 @@ public:
     };
     virtual void processFreeParameters(const std::function
                                        <double(const double&)>& /*func*/) {};
-
+    bool isFullMap() const;
+    bool isUnitMap() const;
     /// Destructor
     virtual ~Cell() {};
 
 protected:
-    virtual void setInputsSize(unsigned int width, unsigned int height);
-    virtual void setOutputsSize() = 0;
+    void setInputsDims(std::initializer_list<size_t> dims);
+    virtual void setInputsDims(const std::vector<size_t>& dims);
+    virtual void setOutputsDims() = 0;
 
     const CellId_T mId;
     const std::string mName;
 
-    // Input width
-    unsigned int mChannelsWidth;
-    // Input height
-    unsigned int mChannelsHeight;
-    // Number of output feature maps
-    const unsigned int mNbOutputs;
-    // Input width
-    unsigned int mOutputsWidth;
-    // Input height
-    unsigned int mOutputsHeight;
+    // Input dims
+    std::vector<size_t> mInputsDims;
+    // Output dims
+    std::vector<size_t> mOutputsDims;
+    // Input-output mapping
+    Tensor<bool> mMaps;
 
 private:
     static unsigned int mIdCnt;
+
+    mutable bool mFullMap;
+    mutable bool mFullMapInitialized;
+    mutable bool mUnitMap;
+    mutable bool mUnitMapInitialized;
 };
 }
 

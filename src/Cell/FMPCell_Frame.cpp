@@ -68,7 +68,7 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
         generateRegions(mGridY, mInputs[0].dimY(), mOutputs.dimY());
     }
 
-    const unsigned int size = mInputs.dimB() * mNbOutputs;
+    const unsigned int size = mInputs.dimB() * getNbOutputs();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -76,7 +76,7 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             for (unsigned int oy = 0; oy < mOutputs.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < mOutputs.dimX(); ++ox) {
                     if (mPoolNbChannels[output] == 0)
@@ -89,7 +89,7 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
                     unsigned int ixMax = 0;
                     unsigned int iyMax = 0;
 
-                    for (unsigned int channel = 0; channel < mNbChannels;
+                    for (unsigned int channel = 0; channel < getNbChannels();
                          ++channel) {
                         if (!isConnection(channel, output))
                             continue;
@@ -157,7 +157,7 @@ void N2D2::FMPCell_Frame::backPropagate()
 
     Cell_Frame::backPropagate();
 
-    const unsigned int size = mInputs.dimB() * mNbChannels;
+    const unsigned int size = mInputs.dimB() * getNbChannels();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -165,7 +165,8 @@ void N2D2::FMPCell_Frame::backPropagate()
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        for (unsigned int channel = 0; channel < mNbChannels; ++channel) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+        {
             const bool isValid = mDiffOutputs.getTensor(channel).isValid();
 
             for (unsigned int iy = 0; iy < mInputs[0].dimY(); ++iy) {

@@ -97,8 +97,8 @@ public:
     };
 
 protected:
-    virtual void setInputsSize(unsigned int width, unsigned int height);
-    virtual void setOutputsSize();
+    virtual void setInputsDims(const std::vector<size_t>& dims);
+    virtual void setOutputsDims();
 
     Parameter<bool> mFlip;
     Parameter<bool> mIgnorePad;

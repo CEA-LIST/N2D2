@@ -45,16 +45,9 @@ public:
 
     Cell_Frame_Top(const std::shared_ptr<Activation<Float_T> >& activation
                    = std::shared_ptr<Activation<Float_T> >())
-        : mNbChannels(0),
-          mActivation(activation),
-          mFullMap(true),
-          mFullMapInitialized(false),
-          mUnitMap(true),
-          mUnitMapInitialized(false)
+        : mActivation(activation)
     {
     }
-    inline virtual bool isFullMap() const;
-    inline virtual bool isUnitMap() const;
     virtual void addInput(Tensor<Float_T>& inputs,
                           Tensor<Float_T>& diffOutputs) = 0;
     virtual void propagate(bool inference = false) = 0;
@@ -87,68 +80,8 @@ public:
     virtual ~Cell_Frame_Top() {};
 
 protected:
-    // Number of input channels
-    unsigned int mNbChannels;
-    // Input-output mapping
-    Tensor<bool> mMaps;
     std::shared_ptr<Activation<Float_T> > mActivation;
-
-private:
-    mutable bool mFullMap;
-    mutable bool mFullMapInitialized;
-    mutable bool mUnitMap;
-    mutable bool mUnitMapInitialized;
 };
-}
-
-bool N2D2::Cell_Frame_Top::isFullMap() const
-{
-    if (!mFullMapInitialized) {
-        for (unsigned int output = 0,
-                          nbOutputs = mMaps.dimX(),
-                          nbChannels = mMaps.dimY();
-             output < nbOutputs;
-             ++output) {
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                if (!mMaps(output, channel)) {
-                    mFullMap = false;
-                    break;
-                }
-            }
-        }
-
-        mFullMapInitialized = true;
-    }
-
-    return mFullMap;
-}
-
-bool N2D2::Cell_Frame_Top::isUnitMap() const
-{
-    if (!mUnitMapInitialized) {
-        for (unsigned int output = 0,
-                          nbOutputs = mMaps.dimX(),
-                          nbChannels = mMaps.dimY();
-             output < nbOutputs;
-             ++output) {
-            if (nbChannels < nbOutputs) {
-                mUnitMap = false;
-                break;
-            }
-
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                if ((channel != output && mMaps(output, channel))
-                    || (channel == output && !mMaps(output, channel))) {
-                    mUnitMap = false;
-                    break;
-                }
-            }
-        }
-
-        mUnitMapInitialized = true;
-    }
-
-    return mUnitMap;
 }
 
 #endif // N2D2_CELL_FRAME_TOP_H

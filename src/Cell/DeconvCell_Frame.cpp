@@ -46,7 +46,7 @@ N2D2::DeconvCell_Frame::DeconvCell_Frame(const std::string& name,
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<Float_T> >()),
-      mDiffBias({1, 1, mNbOutputs, 1}),
+      mDiffBias({1, 1, getNbOutputs(), 1}),
       mConvDesc(1, 1, strideX, strideY, paddingX, paddingY)
 {
     // ctor
@@ -58,12 +58,12 @@ void N2D2::DeconvCell_Frame::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
-            mBias->resize({1, 1, mNbOutputs, 1});
+            mBias->resize({1, 1, getNbOutputs(), 1});
             mBiasFiller->apply((*mBias));
         }
         else {
             if (mBias->dimX() != 1 || mBias->dimY() != 1
-                || mBias->dimZ() != mNbOutputs || mBias->dimB() != 1)
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
                 throw std::runtime_error("DeconvCell_Frame::initialize(): in "
                     "cell " + mName + ", wrong size for shared bias");
@@ -89,7 +89,7 @@ void N2D2::DeconvCell_Frame::initialize()
 
             if (extWeights->dimX() != mKernelWidth
                 || extWeights->dimY() != mKernelHeight
-                || extWeights->dimZ() != mNbOutputs
+                || extWeights->dimZ() != getNbOutputs()
                 || extWeights->dimB() != mInputs[k].dimZ())
             {
                 std::stringstream errorStr;
@@ -100,7 +100,7 @@ void N2D2::DeconvCell_Frame::initialize()
                     << extWeights->dimZ() << "x"
                     << extWeights->dimB() << ") and expected dim. ("
                     << mKernelWidth << "x" << mKernelHeight << "x"
-                    << mNbOutputs << "x" << mInputs[k].dimZ() << ")";
+                    << getNbOutputs() << "x" << mInputs[k].dimZ() << ")";
 
                 throw std::runtime_error(errorStr.str());
             }
@@ -110,17 +110,17 @@ void N2D2::DeconvCell_Frame::initialize()
         else {
             // Weight filler expect dimZ as input and dimB as output
             Tensor<Float_T>* sharedSynapses = new Tensor<Float_T>(
-                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs});
+                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()});
             mWeightsFiller->apply(*sharedSynapses);
             // Inverse dimZ and dimB for Deconv
             sharedSynapses->resize(
-                {mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()});
+                {mKernelWidth, mKernelHeight, getNbOutputs(), mInputs[k].dimZ()});
 
             mSharedSynapses.push_back(sharedSynapses);
         }
 
         mDiffSharedSynapses.push_back(new Tensor<Float_T>(
-            {mKernelWidth, mKernelHeight, mNbOutputs, mInputs[k].dimZ()}));
+            {mKernelWidth, mKernelHeight, getNbOutputs(), mInputs[k].dimZ()}));
     }
 }
 

@@ -36,23 +36,27 @@ N2D2::ROIPoolingCell::ROIPoolingCell(const std::string& name,
       mPooling(pooling)
 {
     // ctor
-    mOutputsWidth = outputsWidth;
-    mOutputsHeight = outputsHeight;
+    mOutputsDims[0] = outputsWidth;
+    mOutputsDims[1] = outputsHeight;
 }
 
 void N2D2::ROIPoolingCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
 }
 
-void N2D2::ROIPoolingCell::setInputsSize(unsigned int width,
-                                         unsigned int height)
+void N2D2::ROIPoolingCell::setInputsDims(const std::vector<size_t>& dims)
 {
-    mChannelsWidth = width;
-    mChannelsHeight = height;
+    if (mInputsDims.empty())
+        mInputsDims = dims;
+    else {
+        mInputsDims[0] = dims[0];
+        mInputsDims[1] = dims[1];
+        mInputsDims.back() += dims.back();
+    }
 }
 
-void N2D2::ROIPoolingCell::setOutputsSize()
+void N2D2::ROIPoolingCell::setOutputsDims()
 {
 
 }

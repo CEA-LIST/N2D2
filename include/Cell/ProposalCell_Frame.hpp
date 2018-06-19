@@ -99,7 +99,7 @@ public:
     Tensor<Float_T> mTemplatesPrediction;
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
 private:
     static Registrar<ProposalCell> mRegistrar;

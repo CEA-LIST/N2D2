@@ -35,12 +35,16 @@ void N2D2::TransformationCell::getStats(Stats& /*stats*/) const
 {
 }
 
-void N2D2::TransformationCell::setOutputsSize()
+void N2D2::TransformationCell::setOutputsDims()
 {
-    std::tie(mOutputsWidth, mOutputsHeight)
-        = mTransformation->getOutputsSize(mChannelsWidth, mChannelsHeight);
+    unsigned int outputsWidth, outputsHeight;
+    std::tie(outputsWidth, outputsHeight)
+        = mTransformation->getOutputsSize(mInputsDims[0], mInputsDims[1]);
 
-    if (mOutputsWidth == 0 && mOutputsHeight == 0)
+    if (outputsWidth == 0 && outputsHeight == 0)
         throw std::runtime_error(
             "TransformationCell outputs size must be known in advance");
+
+    mOutputsDims[0] = outputsWidth;
+    mOutputsDims[1] = outputsHeight;
 }

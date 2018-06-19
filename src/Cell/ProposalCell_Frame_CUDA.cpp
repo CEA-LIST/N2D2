@@ -335,7 +335,7 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
     cudaSToOutputROIs(  mNbProposals,
                         mScoreIndex,
                         mNbClass,
-                        mNbOutputs,
+                        getNbOutputs(),
                         mMaxParts,
                         mMaxTemplates,
                         mMaxParts > 0 ? true: false,
@@ -367,18 +367,18 @@ void N2D2::ProposalCell_Frame_CUDA::update()
     // Nothing to update
 }
 
-void N2D2::ProposalCell_Frame_CUDA::setOutputsSize()
+void N2D2::ProposalCell_Frame_CUDA::setOutputsDims()
 {
-    ProposalCell::setOutputsSize();
+    ProposalCell::setOutputsDims();
 
     if (mOutputs.empty()) {
-        mOutputs.resize({mOutputsWidth,
-                        mOutputsHeight,
-                        mNbOutputs,
+        mOutputs.resize({mOutputsDims[0],
+                        mOutputsDims[1],
+                        getNbOutputs(),
                         mInputs.dimB()});
-        mDiffInputs.resize({mOutputsWidth,
-                           mOutputsHeight,
-                           mNbOutputs,
+        mDiffInputs.resize({mOutputsDims[0],
+                           mOutputsDims[1],
+                           getNbOutputs(),
                            mInputs.dimB()});
     }
 }

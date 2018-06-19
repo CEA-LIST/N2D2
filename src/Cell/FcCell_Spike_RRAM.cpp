@@ -58,8 +58,10 @@ void N2D2::FcCell_Spike_RRAM::initialize()
 {
     FcCell_Spike::initialize();
 
-    mInputsActivationTime.resize(
-        {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+    std::vector<size_t> inputsDims = mInputsDims;
+    inputsDims.push_back(1);
+
+    mInputsActivationTime.resize(inputsDims, 0);
 }
 
 void N2D2::FcCell_Spike_RRAM::propagateSpike(NodeIn* origin,
@@ -71,7 +73,7 @@ void N2D2::FcCell_Spike_RRAM::propagateSpike(NodeIn* origin,
 
     mInputsActivationTime(area.x, area.y, channel, 0) = timestamp;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         const Time_T delay = static_cast<Synapse_RRAM*>(
             mSynapses(area.x, area.y, channel, output))->delay;
 
@@ -171,8 +173,7 @@ void N2D2::FcCell_Spike_RRAM::incomingSpike(NodeIn* origin,
         const bool negSpike = (integration < 0);
 
         if (mEnableStdp) {
-            const unsigned int channelsSize
-                = getNbChannels() * getChannelsWidth() * getChannelsHeight();
+            const unsigned int channelsSize = getInputsSize();
 
             for (unsigned int channel = 0; channel < channelsSize; ++channel) {
                 Synapse_RRAM* synapse = static_cast
@@ -186,7 +187,7 @@ void N2D2::FcCell_Spike_RRAM::incomingSpike(NodeIn* origin,
             }
 
             // Lateral inhibition
-            mOutputsIntegration.assign(mNbOutputs, 0.0);
+            mOutputsIntegration.assign(getNbOutputs(), 0.0);
 
             if (mInhibitRefractory > 0) {
                 std::replace_if(mOutputsRefractoryEnd.begin(),
@@ -232,8 +233,7 @@ void N2D2::FcCell_Spike_RRAM::notify(Time_T timestamp, NotifyType notify)
     FcCell_Spike::notify(timestamp, notify);
 
     if (notify == Reset)
-        mInputsActivationTime.assign(
-            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+        mInputsActivationTime.assign(mInputsActivationTime.dims(), 0);
 }
 
 N2D2::Synapse* N2D2::FcCell_Spike_RRAM::newSynapse() const

@@ -78,11 +78,11 @@ void N2D2::ConvCell_Spike_PCM::propagateSpike(NodeIn* origin,
     const Area& area = origin->getArea();
     const unsigned int oxStride
         = mStrideX
-          * (unsigned int)((mChannelsWidth + 2 * mPaddingX - mKernelWidth
+          * (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
                             + mStrideX) / (double)mStrideX);
     const unsigned int oyStride
         = mStrideY
-          * (unsigned int)((mChannelsHeight + 2 * mPaddingY - mKernelHeight
+          * (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
                             + mStrideY) / (double)mStrideY);
     const unsigned int ixPad = area.x + mPaddingX;
     const unsigned int iyPad = area.y + mPaddingY;
@@ -103,7 +103,7 @@ void N2D2::ConvCell_Spike_PCM::propagateSpike(NodeIn* origin,
             const unsigned int ox = (ixPad - sx) / mStrideX;
             const unsigned int oy = (iyPad - sy) / mStrideY;
 
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(origin->getChannel(), output))
                     continue;
 

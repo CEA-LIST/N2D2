@@ -113,7 +113,7 @@ void N2D2::BatchNormCell_Frame::initialize()
 
 void N2D2::BatchNormCell_Frame::propagate(bool inference)
 {
-    const unsigned int size = mInputs.dimB() * mNbOutputs;
+    const unsigned int size = mInputs.dimB() * getNbOutputs();
 
     if (inference) {
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -122,7 +122,7 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 const Float_T var = std::sqrt((*mVariance)(output) + mEpsilon);
 
                 for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
@@ -142,8 +142,8 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
         // Cumulative Moving Average (CMA)
         const double expAverageFactor = 1.0 / (1.0 + mNbPropagate);
 
-#pragma omp parallel for if (mNbOutputs > 16)
-        for (int output = 0; output < (int)mNbOutputs; ++output) {
+#pragma omp parallel for if (getNbOutputs() > 16)
+        for (int output = 0; output < (int)getNbOutputs(); ++output) {
             Float_T sum = 0.0;
 
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
@@ -181,7 +181,7 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 const Float_T var
                     = std::sqrt(mSavedVariance(output) + mEpsilon);
 
@@ -213,8 +213,8 @@ void N2D2::BatchNormCell_Frame::backPropagate()
     const float betaScale = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const float betaBias = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
 
-#pragma omp parallel for if (mNbOutputs > 16)
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+#pragma omp parallel for if (getNbOutputs() > 16)
+    for (int output = 0; output < (int)getNbOutputs(); ++output) {
         const Float_T var = std::sqrt(mSavedVariance(output) + mEpsilon);
 
         Float_T sumScale = 0.0;
@@ -259,7 +259,7 @@ void N2D2::BatchNormCell_Frame::backPropagate()
     }
 
     if (!mDiffOutputs.empty()) {
-        const unsigned int size = mInputs.dimB() * mNbOutputs;
+        const unsigned int size = mInputs.dimB() * getNbOutputs();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -267,7 +267,7 @@ void N2D2::BatchNormCell_Frame::backPropagate()
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 const bool isValid = mDiffOutputs.getTensor(output).isValid();
                 const Float_T var
                     = std::sqrt(mSavedVariance(output) + mEpsilon);

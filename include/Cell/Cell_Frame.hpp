@@ -51,14 +51,6 @@ public:
                unsigned int nbOutputs,
                const std::shared_ptr<Activation<Float_T> >& activation
                = std::shared_ptr<Activation<Float_T> >());
-    virtual unsigned int getNbChannels() const
-    {
-        return mNbChannels;
-    };
-    virtual bool isConnection(unsigned int channel, unsigned int output) const
-    {
-        return mMaps(output, channel);
-    };
 
     /**
      * Manage inputs, in particular the transmission input(i) = output(i-1)

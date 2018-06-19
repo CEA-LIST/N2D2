@@ -50,7 +50,7 @@ N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<Float_T> >()),
-      mDiffBias({1, 1, mNbOutputs, 1}),
+      mDiffBias({1, 1, getNbOutputs(), 1}),
       mConvDesc(subSampleX, subSampleY, strideX, strideY, paddingX, paddingY)
 {
     // ctor
@@ -62,12 +62,12 @@ void N2D2::ConvCell_Frame::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
-            mBias->resize({1, 1, mNbOutputs, 1});
+            mBias->resize({1, 1, getNbOutputs(), 1});
             mBiasFiller->apply((*mBias));
         }
         else {
             if (mBias->dimX() != 1 || mBias->dimY() != 1
-                || mBias->dimZ() != mNbOutputs || mBias->dimB() != 1)
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
                 throw std::runtime_error("ConvCell_Frame::initialize(): in "
                     "cell " + mName + ", wrong size for shared bias");
@@ -92,7 +92,7 @@ void N2D2::ConvCell_Frame::initialize()
             if (extWeights->dimX() != mKernelWidth
                 || extWeights->dimY() != mKernelHeight
                 || extWeights->dimZ() != mInputs[k].dimZ()
-                || extWeights->dimB() != mNbOutputs)
+                || extWeights->dimB() != getNbOutputs())
             {
                 std::stringstream errorStr;
                 errorStr << "ConvCell_Frame::initialize(): in cell "
@@ -102,7 +102,7 @@ void N2D2::ConvCell_Frame::initialize()
                     << extWeights->dimZ() << "x"
                     << extWeights->dimB() << ") and expected dim. ("
                     << mKernelWidth << "x" << mKernelHeight << "x"
-                    << mInputs[k].dimZ() << "x" << mNbOutputs << ")";
+                    << mInputs[k].dimZ() << "x" << getNbOutputs() << ")";
 
                 throw std::runtime_error(errorStr.str());
             }
@@ -111,12 +111,12 @@ void N2D2::ConvCell_Frame::initialize()
         }
         else {
             mSharedSynapses.push_back(new Tensor<Float_T>(
-                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
+                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()}));
             mWeightsFiller->apply(mSharedSynapses.back());
         }
 
         mDiffSharedSynapses.push_back(new Tensor<Float_T>(
-            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
+            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()}));
     }
 }
 

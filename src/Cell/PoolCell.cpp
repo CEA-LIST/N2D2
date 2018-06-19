@@ -45,22 +45,27 @@ N2D2::PoolCell::PoolCell(const std::string& name,
 
 unsigned long long int N2D2::PoolCell::getNbConnections() const
 {
+    unsigned long long int nbConnectionsPerConnection = 0;
+
+    for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
+        for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
+            const unsigned int sxMax
+                = std::min<size_t>(mInputsDims[0] - ox * mStrideX, mPoolWidth);
+            const unsigned int syMax
+                = std::min<size_t>(mInputsDims[1] - oy * mStrideY, mPoolHeight);
+
+            nbConnectionsPerConnection += sxMax * syMax;
+        }
+    }
+
     unsigned long long int nbConnections = 0;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
-        for (unsigned int oy = 0; oy < mOutputsHeight; ++oy) {
-            for (unsigned int ox = 0; ox < mOutputsWidth; ++ox) {
-                const unsigned int sxMax
-                    = std::min(mChannelsWidth - ox * mStrideX, mPoolWidth);
-                const unsigned int syMax
-                    = std::min(mChannelsHeight - oy * mStrideY, mPoolHeight);
-
-                for (unsigned int channel = 0; channel < getNbChannels();
-                     ++channel) {
-                    if (isConnection(channel, output))
-                        nbConnections += sxMax * syMax;
-                }
-            }
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < getNbChannels();
+             ++channel)
+        {
+            if (isConnection(channel, output))
+                nbConnections += nbConnectionsPerConnection;
         }
     }
 
@@ -93,12 +98,12 @@ void N2D2::PoolCell::writeMap(const std::string& fileName) const
     std::stringstream plotCmd;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             data << isConnection(channel, output) << " ";
             plotCmd << isConnection(channel, output) << " ";
         }
 
-        if (mNbOutputs == 1)
+        if (getNbOutputs() == 1)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -128,7 +133,7 @@ void N2D2::PoolCell::writeMap(const std::string& fileName) const
     }
 
     if (getNbChannels() == 1) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
+        for (unsigned int output = 0; output < getNbOutputs(); ++output)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -140,7 +145,7 @@ void N2D2::PoolCell::writeMap(const std::string& fileName) const
     std::stringstream xtics;
     xtics << "(";
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         if (output > 0)
             xtics << ", ";
 
@@ -165,10 +170,10 @@ void N2D2::PoolCell::getStats(Stats& stats) const
     stats.nbConnections += getNbConnections();
 }
 
-void N2D2::PoolCell::setOutputsSize()
+void N2D2::PoolCell::setOutputsDims()
 {
-    mOutputsWidth = (unsigned int)((mChannelsWidth + 2 * mPaddingX
+    mOutputsDims[0] = (unsigned int)((mInputsDims[0] + 2 * mPaddingX
         - mPoolWidth + mStrideX) / (double)mStrideX);
-    mOutputsHeight = (unsigned int)((mChannelsHeight + 2 * mPaddingY
+    mOutputsDims[1] = (unsigned int)((mInputsDims[1] + 2 * mPaddingY
         - mPoolHeight + mStrideY) / (double)mStrideY);
 }

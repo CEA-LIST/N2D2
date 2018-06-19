@@ -196,6 +196,7 @@ public:
     inline virtual void push_back(const Tensor<T>& frame);
     inline virtual void clear();
     inline void swap(Tensor<T>& tensor);
+    inline Tensor<T> clone() const;
     // Return type should be "reference" (not T&), in order to ensure it works
     // for std::vector<bool>, which is a special case...
     template <typename... Args> reference operator()(Args... args);
@@ -645,6 +646,15 @@ template <class T> void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
 
     assert((*mData).size() == size());
     assert((*tensor.mData).size() == tensor.size());
+}
+
+template <class T> N2D2::Tensor<T> N2D2::Tensor<T>::clone() const {
+    return Tensor<T>(mDims,
+                     std::make_shared<std::vector<T> >(begin(), end()),
+                     mValid,
+                     0,
+                     mSize,
+                     mSizeM1);
 }
 
 template <class T>

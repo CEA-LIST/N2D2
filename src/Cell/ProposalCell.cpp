@@ -38,7 +38,7 @@ N2D2::ProposalCell::ProposalCell(const std::string& name,
       mNMS_IoU_Threshold(this, "NMS_IoU_Threshold", 0.3),
       mScoreThreshold(this, "Score_Threshold", 0.0),
       mKeepMax(this, "KeepMaxCls", false),
-      mStimuliProvider(sp),      
+      mStimuliProvider(sp),
       mNbProposals(nbProposals),
       mScoreIndex(scoreIndex),
       mIoUIndex(IoUIndex),
@@ -57,8 +57,8 @@ void N2D2::ProposalCell::getStats(Stats& /*stats*/) const
 
 }
 
-void N2D2::ProposalCell::setOutputsSize()
+void N2D2::ProposalCell::setOutputsDims()
 {
-    mOutputsWidth = 1;
-    mOutputsHeight = 1;
+    mOutputsDims[0] = 1;
+    mOutputsDims[1] = 1;
 }

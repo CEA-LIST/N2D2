@@ -90,7 +90,7 @@ public:
     virtual ~AnchorCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     Parameter<double> mPositiveIoU;
     Parameter<double> mNegativeIoU;

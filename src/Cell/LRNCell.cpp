@@ -34,11 +34,10 @@ N2D2::LRNCell::LRNCell(const std::string& name, unsigned int nbOutputs)
 
 void N2D2::LRNCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
 }
 
-void N2D2::LRNCell::setOutputsSize()
+void N2D2::LRNCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth;
-    mOutputsHeight = mChannelsHeight;
+    mOutputsDims = mInputsDims;
 }

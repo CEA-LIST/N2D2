@@ -87,8 +87,8 @@ public:
     NodeOut*
     getOutput(unsigned int output, unsigned int ox, unsigned int oy) const
     {
-        return mOutputs.at(output * (mOutputsWidth * mOutputsHeight)
-                           + (ox + mOutputsWidth * oy));
+        return mOutputs.at(output * (mOutputsDims[0] * mOutputsDims[1])
+                           + (ox + mOutputsDims[0] * oy));
     }
     cv::Mat reconstructActivity(unsigned int output,
                                 Time_T start,

@@ -37,12 +37,11 @@ N2D2::FcCell::FcCell(const std::string& name, unsigned int nbOutputs)
 void N2D2::FcCell::logFreeParameters(const std::string& fileName,
                                      unsigned int output) const
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "FcCell::logFreeParameters(): output not within range.");
 
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
     Tensor<Float_T> weights({1, 1, channelsSize});
 
@@ -56,7 +55,7 @@ void N2D2::FcCell::logFreeParameters(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         std::ostringstream fileName;
         fileName << dirName << "/cell-" << output << ".dat";
 
@@ -67,8 +66,7 @@ void N2D2::FcCell::logFreeParameters(const std::string& dirName) const
 // TODO: handle mMaps
 unsigned long long int N2D2::FcCell::getNbSynapses() const
 {
-    return mNbOutputs * (getNbChannels() * getChannelsWidth()
-                         * getChannelsHeight() + !mNoBias);
+    return getNbOutputs() * (getInputsSize() + !mNoBias);
 }
 
 void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
@@ -88,10 +86,9 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
         throw std::runtime_error("Could not create synaptic file: "
                                  + weightsFile);
 
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel)
             weights << getWeight(output, channel) << " ";
 
@@ -105,7 +102,7 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
             throw std::runtime_error("Could not create synaptic file: "
                                       + biasesFile);
 
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
+        for (unsigned int output = 0; output < getNbOutputs(); ++output)
             biases << getBias(output) << "\n";
     }
 }
@@ -152,13 +149,12 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
 
     double weight;
 
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
     const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
 
     if (mWeightsExportFormat == OC) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                             ? outputsMap.find(output)->second : output;
 
@@ -183,7 +179,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
     }
     else if (mWeightsExportFormat == CO) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
 
                 const unsigned int outputRemap = (!outputsMap.empty())
                                 ? outputsMap.find(output)->second : output;
@@ -197,7 +193,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
         }
 
         if (!mNoBias) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 const unsigned int outputRemap = (!outputsMap.empty())
                         ? outputsMap.find(output)->second : output;
 
@@ -231,14 +227,13 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
 
 void N2D2::FcCell::logFreeParametersDistrib(const std::string& fileName) const
 {
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
     // Append all weights
     std::vector<double> weights;
-    weights.reserve(mNbOutputs * channelsSize);
+    weights.reserve(getNbOutputs() * channelsSize);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel)
             weights.push_back(getWeight(output, channel));
 
@@ -303,8 +298,7 @@ void N2D2::FcCell::writeMap(const std::string& fileName) const
         std::string cellName = "";
         unsigned int startChannel = 0;
 
-        for (unsigned int channel = 0; channel <
-       getNbChannels()*getChannelsWidth()*getChannelsHeight(); ++channel) {
+        for (unsigned int channel = 0; channel < getInputsSize(); ++channel) {
             NodeOut* const parent =
        dynamic_cast<NodeOut*>(mInputs[channel]->getParent());
             const std::string parentName = (parent != NULL) ?
@@ -334,11 +328,10 @@ void N2D2::FcCell::writeMap(const std::string& fileName) const
 
 void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
 {
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
-#pragma omp parallel for if (mNbOutputs > 32)
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+#pragma omp parallel for if (getNbOutputs() > 32)
+    for (int output = 0; output < (int)getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             double weight = getWeight(output, channel);
             weight = Utils::round((nbLevels - 1) * weight) / (nbLevels - 1);
@@ -358,13 +351,12 @@ void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
 std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange()
     const
 {
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
 
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             Float_T weight = getWeight(output, channel);
 
@@ -385,10 +377,9 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange()
 
 void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 {
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             double weight = getWeight(output, channel);
             weight
@@ -409,10 +400,9 @@ void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 void N2D2::FcCell::processFreeParameters(const std::function
                                          <double(const double&)>& func)
 {
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             double weight = getWeight(output, channel);
             weight = func(weight);
@@ -433,8 +423,8 @@ void N2D2::FcCell::getStats(Stats& stats) const
 {
     const unsigned int nbSynapses = getNbSynapses();
 
-    stats.nbNeurons += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNeurons += getOutputsSize();
+    stats.nbNodes += getOutputsSize();
     stats.nbSynapses += nbSynapses;
     stats.nbVirtualSynapses += nbSynapses;
     stats.nbConnections += nbSynapses;
@@ -466,7 +456,7 @@ std::map<unsigned int, unsigned int> N2D2::FcCell::outputsRemap() const
                 + (std::string)mOutputsRemap);
         }
 
-        for (int k = offset; k >= 0 && k < (int)mNbOutputs; k+= step) {
+        for (int k = offset; k >= 0 && k < (int)getNbOutputs(); k+= step) {
             outputRemap[k] = index;
             ++index;
         }

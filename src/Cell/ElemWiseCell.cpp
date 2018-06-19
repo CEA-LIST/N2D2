@@ -37,11 +37,10 @@ N2D2::ElemWiseCell::ElemWiseCell(const std::string& name,
 
 void N2D2::ElemWiseCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
 }
 
-void N2D2::ElemWiseCell::setOutputsSize()
+void N2D2::ElemWiseCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth;
-    mOutputsHeight = mChannelsHeight;
+    mOutputsDims = mInputsDims;
 }

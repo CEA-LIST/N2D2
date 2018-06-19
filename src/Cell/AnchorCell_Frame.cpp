@@ -148,9 +148,9 @@ void N2D2::AnchorCell_Frame::initialize()
                                         / (double)mOutputs.dimY());
 
         const double xOffset = mStimuliProvider.getSizeX() - 1
-                                - (mOutputsWidth - 1) * xRatio;
+                                - (mOutputsDims[0] - 1) * xRatio;
         const double yOffset = mStimuliProvider.getSizeY() - 1
-                                - (mOutputsHeight - 1) * yRatio;
+                                - (mOutputsDims[1] - 1) * yRatio;
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
@@ -162,8 +162,8 @@ void N2D2::AnchorCell_Frame::initialize()
     }
 
     mGT.resize(mOutputs.dimB());
-    mArgMaxIoU.resize({mOutputsWidth,
-                      mOutputsHeight,
+    mArgMaxIoU.resize({mOutputsDims[0],
+                      mOutputsDims[1],
                       mAnchors.size(),
                       mOutputs.dimB()});
 }
@@ -238,15 +238,15 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                     << " @ (" << xgt << "," << ygt << ")" << std::endl;
             }
 
-            cv::Mat imgIoUHsv(cv::Size(mOutputsWidth, mOutputsHeight),
+            cv::Mat imgIoUHsv(cv::Size(mOutputsDims[0], mOutputsDims[1]),
                                     CV_8UC3,
                                     cv::Scalar(0, 0, 0));
-            cv::Mat imgClsHsv(cv::Size(mOutputsWidth, mOutputsHeight),
+            cv::Mat imgClsHsv(cv::Size(mOutputsDims[0], mOutputsDims[1]),
                                     CV_8UC3,
                                     cv::Scalar(0, 0, 0));
 */
-            for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
-                for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
+            for (unsigned int ya = 0; ya < mOutputsDims[1]; ++ya) {
+                for (unsigned int xa = 0; xa < mOutputsDims[0]; ++xa) {
                     // Shifted anchors coordinates at (xa, ya)
                     const int xa0 = (int)(anchor.x0 + xa * xRatio);
                     const int ya0 = (int)(anchor.y0 + ya * yRatio);
@@ -424,8 +424,8 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                                   cv::Scalar(255, 0, 0));
                 }
 
-                for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
-                    for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
+                for (unsigned int ya = 0; ya < mOutputsDims[1]; ++ya) {
+                    for (unsigned int xa = 0; xa < mOutputsDims[0]; ++xa) {
                         const Float_T x = mOutputs(xa, ya,
                                                    k + 1 * nbAnchors, batchPos);
                         const Float_T y = mOutputs(xa, ya,
@@ -515,7 +515,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
                                     / (double)mOutputs.dimX());
     const double yRatio = std::ceil(mStimuliProvider.getSizeY()
                                     / (double)mOutputs.dimY());
-    const unsigned int nbLocations = mOutputsHeight * mOutputsWidth;
+    const unsigned int nbLocations = mOutputsDims[1] * mOutputsDims[0];
     const unsigned int miniBatchSize = mLossPositiveSample
                                         + mLossNegativeSample;
 
@@ -527,8 +527,8 @@ void N2D2::AnchorCell_Frame::backPropagate()
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             const AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors[k];
 
-            for (unsigned int ya = 0; ya < mOutputsHeight; ++ya) {
-                for (unsigned int xa = 0; xa < mOutputsWidth; ++xa) {
+            for (unsigned int ya = 0; ya < mOutputsDims[1]; ++ya) {
+                for (unsigned int xa = 0; xa < mOutputsDims[0]; ++xa) {
                     // Shifted anchors coordinates at (xa, ya)
                     const int xa0 = (int)(anchor.x0 + xa * xRatio);
                     const int ya0 = (int)(anchor.y0 + ya * yRatio);

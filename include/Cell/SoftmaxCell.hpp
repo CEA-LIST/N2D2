@@ -44,9 +44,9 @@ namespace N2D2 {
 class SoftmaxCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<SoftmaxCell>(const std::string&, 
-                                        unsigned int, 
-                                        bool, 
+        <std::shared_ptr<SoftmaxCell>(const std::string&,
+                                        unsigned int,
+                                        bool,
                                         unsigned int)>
     RegistryCreate_T;
 
@@ -76,7 +76,7 @@ public:
 protected:
     const bool mWithLoss;
     const unsigned int mGroupSize;
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 };
 }
 

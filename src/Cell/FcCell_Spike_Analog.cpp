@@ -51,9 +51,11 @@ void N2D2::FcCell_Spike_Analog::initialize()
 {
     FcCell_Spike::initialize();
 
-    mInputsActivationTime.resize(
-        {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
-    mInputsActivity.resize({mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+    std::vector<size_t> inputsDims = mInputsDims;
+    inputsDims.push_back(1);
+
+    mInputsActivationTime.resize(inputsDims, 0);
+    mInputsActivity.resize(inputsDims, 0);
 }
 
 void N2D2::FcCell_Spike_Analog::propagateSpike(NodeIn* origin,
@@ -70,7 +72,7 @@ void N2D2::FcCell_Spike_Analog::propagateSpike(NodeIn* origin,
     else
         ++mInputsActivity(area.x, area.y, channel, 0);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         const Time_T delay = static_cast<Synapse_Behavioral*>(
             mSynapses(area.x, area.y, channel, output))->delay;
 
@@ -145,8 +147,7 @@ void N2D2::FcCell_Spike_Analog::incomingSpike(NodeIn* origin,
         if (mEnableStdp) {
             // backward(mOutputs(output), timestamp, true);
 
-            const unsigned int channelsSize
-                = getNbChannels() * getChannelsWidth() * getChannelsHeight();
+            const unsigned int channelsSize = getInputsSize();
 
             for (unsigned int channel = 0; channel < channelsSize; ++channel) {
                 Synapse_Behavioral* synapse = static_cast
@@ -160,7 +161,7 @@ void N2D2::FcCell_Spike_Analog::incomingSpike(NodeIn* origin,
             }
 
             // Lateral inhibition
-            mOutputsIntegration.assign(mNbOutputs, 0.0);
+            mOutputsIntegration.assign(getNbOutputs(), 0.0);
 
             if (mInhibitRefractory > 0) {
                 std::replace_if(mOutputsRefractoryEnd.begin(),
@@ -206,10 +207,8 @@ void N2D2::FcCell_Spike_Analog::notify(Time_T timestamp, NotifyType notify)
     FcCell_Spike::notify(timestamp, notify);
 
     if (notify == Reset) {
-        mInputsActivationTime.assign(
-            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
-        mInputsActivity.assign(
-            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+        mInputsActivationTime.assign(mInputsActivationTime.dims(), 0);
+        mInputsActivity.assign(mInputsActivity.dims(), 0);
     }
 }
 

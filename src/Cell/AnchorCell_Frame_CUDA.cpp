@@ -158,9 +158,9 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
                                         / (double)mOutputs.dimY());
 
         const double xOffset = mStimuliProvider.getSizeX() - 1
-                                - (mOutputsWidth - 1) * xRatio;
+                                - (mOutputsDims[0] - 1) * xRatio;
         const double yOffset = mStimuliProvider.getSizeY() - 1
-                                - (mOutputsHeight - 1) * yRatio;
+                                - (mOutputsDims[1] - 1) * yRatio;
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
             AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors(k);
@@ -183,8 +183,8 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
 
     mNbLabels.resize({mOutputs.dimB(), 1, 1, 1}, 0);
 
-    mArgMaxIoU.resize({mOutputsWidth,
-                      mOutputsHeight,
+    mArgMaxIoU.resize({mOutputsDims[0],
+                      mOutputsDims[1],
                       mAnchors.size(),
                       mOutputs.dimB()});
     mMaxIoU.resize({mOutputs.dimB(), 1, 1, 1}, 0.0);

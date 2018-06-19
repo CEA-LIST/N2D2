@@ -62,7 +62,7 @@ public:
     virtual ~DropoutCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     /// The probability with which the value from input would be propagated
     /// through the dropout layer

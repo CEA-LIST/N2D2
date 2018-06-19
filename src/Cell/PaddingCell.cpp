@@ -22,13 +22,13 @@
 
 const char* N2D2::PaddingCell::Type = "Padding";
 
-N2D2::PaddingCell::PaddingCell(const std::string& name, 
+N2D2::PaddingCell::PaddingCell(const std::string& name,
                                unsigned int nbOutputs,
                                int topPad,
                                int botPad,
                                int leftPad,
                                int rightPad)
-    : Cell( name, 
+    : Cell( name,
             nbOutputs),
       mTopPad(topPad),
       mBotPad(botPad),
@@ -40,11 +40,11 @@ N2D2::PaddingCell::PaddingCell(const std::string& name,
 
 void N2D2::PaddingCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
 }
 
-void N2D2::PaddingCell::setOutputsSize()
+void N2D2::PaddingCell::setOutputsDims()
 {
-    mOutputsWidth = (mChannelsWidth + mLeftPad + mRightPad);
-    mOutputsHeight = (mChannelsHeight + mTopPad + mBotPad);
+    mOutputsDims[0] = (mInputsDims[0] + mLeftPad + mRightPad);
+    mOutputsDims[1] = (mInputsDims[1] + mTopPad + mBotPad);
 }

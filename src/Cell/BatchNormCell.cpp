@@ -67,7 +67,7 @@ void N2D2::BatchNormCell::exportFreeParameters(const std::string
         throw std::runtime_error("Could not create parameter file: "
                                  + variancesFile);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int oy = 0; oy < 1; ++oy) {
             for (unsigned int ox = 0; ox < 1; ++ox) {
                 scales << getScale(output, ox, oy) << "\n";
@@ -150,7 +150,7 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
     variances.precision(12);
     biases.precision(12);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int oy = 0; oy < 1; ++oy) {
             for (unsigned int ox = 0; ox < 1; ++ox) {
                 if (!(scales >> w))
@@ -184,7 +184,7 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
 
                 if (w < 0.0)
                     throw std::runtime_error(
-                        "Negative variance in parameter file: " 
+                        "Negative variance in parameter file: "
                         + variancesFile);
 
                 setVariance(output, ox, oy, w);
@@ -232,8 +232,7 @@ void N2D2::BatchNormCell::getStats(Stats& stats) const
     stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
 }
 
-void N2D2::BatchNormCell::setOutputsSize()
+void N2D2::BatchNormCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth;
-    mOutputsHeight = mChannelsHeight;
+    mOutputsDims = mInputsDims;
 }

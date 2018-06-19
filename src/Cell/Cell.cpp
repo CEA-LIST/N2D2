@@ -25,11 +25,11 @@ unsigned int N2D2::Cell::mIdCnt = 1;
 N2D2::Cell::Cell(const std::string& name, unsigned int nbOutputs)
     : mId(mIdCnt++),
       mName(name),
-      mChannelsWidth(0),
-      mChannelsHeight(0),
-      mNbOutputs(nbOutputs),
-      mOutputsWidth(1),
-      mOutputsHeight(1)
+      mOutputsDims(std::vector<size_t>({1U, 1U, nbOutputs})),
+      mFullMap(true),
+      mFullMapInitialized(false),
+      mUnitMap(true),
+      mUnitMapInitialized(false)
 {
     // ctor
 }
@@ -113,12 +113,86 @@ void N2D2::Cell::load(const std::string& dirName)
     loadFreeParameters(fileName.str());
 }
 
-void N2D2::Cell::setInputsSize(unsigned int width, unsigned int height)
+void N2D2::Cell::setInputsDims(std::initializer_list<size_t> dims)
 {
-    if (mChannelsWidth == 0 && mChannelsHeight == 0) {
-        mChannelsWidth = width;
-        mChannelsHeight = height;
-    } else if (mChannelsWidth != width || mChannelsHeight != height)
-        throw std::runtime_error("Cell::setInputsSize(): an input area is "
-                                 "already connected with a different size");
+    setInputsDims(std::vector<size_t>(dims));
+}
+
+void N2D2::Cell::setInputsDims(const std::vector<size_t>& dims)
+{
+    if (mInputsDims.empty())
+        mInputsDims = dims;
+    else if (dims.size() != mInputsDims.size()) {
+        std::stringstream msgStr;
+        msgStr << "Cell::setInputsDims(): trying to connect an input of"
+            " dimension " << dims.size() << " (" << dims << "), but another"
+            " input of dimension " << mInputsDims.size() << " (" << mInputsDims
+            << ") already exists!" << std::endl;
+        throw std::runtime_error(msgStr.str());
+    }
+    else {
+        for (unsigned int n = 0, size = dims.size() - 1; n < size; ++n) {
+            if (dims[n] != mInputsDims[n]) {
+                std::stringstream msgStr;
+                msgStr << "Cell::setInputsDims(): trying to connect an input of"
+                    " dims (" << dims << "), but another input already exists"
+                    " with dims (" << mInputsDims << ")" << std::endl;
+                throw std::runtime_error(msgStr.str());
+            }
+        }
+
+        mInputsDims.back() += dims.back();
+    }
+}
+
+bool N2D2::Cell::isFullMap() const
+{
+    if (!mFullMapInitialized) {
+        for (size_t output = 0,
+                    nbOutputs = mMaps.dimX(),
+                    nbChannels = mMaps.dimY();
+             output < nbOutputs;
+             ++output)
+        {
+            for (size_t channel = 0; channel < nbChannels; ++channel) {
+                if (!mMaps(output, channel)) {
+                    mFullMap = false;
+                    break;
+                }
+            }
+        }
+
+        mFullMapInitialized = true;
+    }
+
+    return mFullMap;
+}
+
+bool N2D2::Cell::isUnitMap() const
+{
+    if (!mUnitMapInitialized) {
+        for (size_t output = 0,
+                    nbOutputs = mMaps.dimX(),
+                    nbChannels = mMaps.dimY();
+             output < nbOutputs;
+             ++output)
+        {
+            if (nbChannels < nbOutputs) {
+                mUnitMap = false;
+                break;
+            }
+
+            for (size_t channel = 0; channel < nbChannels; ++channel) {
+                if ((channel != output && mMaps(output, channel))
+                    || (channel == output && !mMaps(output, channel))) {
+                    mUnitMap = false;
+                    break;
+                }
+            }
+        }
+
+        mUnitMapInitialized = true;
+    }
+
+    return mUnitMap;
 }

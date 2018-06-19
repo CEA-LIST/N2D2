@@ -41,7 +41,7 @@ namespace N2D2 {
 class PaddingCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<PaddingCell>(const std::string&, 
+        <std::shared_ptr<PaddingCell>(const std::string&,
                                       unsigned int,
                                       int,
                                       int,
@@ -56,19 +56,19 @@ public:
     }
     static const char* Type;
 
-    PaddingCell(const std::string& name, 
+    PaddingCell(const std::string& name,
                 unsigned int nbOutputs,
                 int topPad,
                 int botPad,
                 int leftPad,
                 int rightPad);
-    
+
     const char* getType() const
     {
         return Type;
     };
     unsigned long long int getNbConnections() const;
-    
+
     int getTopPad() const
     {
         return mTopPad;
@@ -86,13 +86,13 @@ public:
         return mRightPad;
     };
     void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
-    
+
     void getStats(Stats& stats) const;
     virtual ~PaddingCell() {};
 
 protected:
-    virtual void setOutputsSize();
-    
+    virtual void setOutputsDims();
+
     //void setTopPad (int pad) { mTopPad = pad; };
     //void setBotPad (int pad) { mBotPad = pad; };
     //void setLeftPad (int pad) { mLeftPad = pad; };
@@ -100,7 +100,7 @@ protected:
 
     //PaddingCell can be useful to implement asymetric padding///
     /*
-    Example for a padding set with 
+    Example for a padding set with
         Y axis padding: {mTopPad = 1; mBotPad = 2}
         X axis padding: {mLeftPad = 2; mRightPad = 3}
             00000000000000000000000

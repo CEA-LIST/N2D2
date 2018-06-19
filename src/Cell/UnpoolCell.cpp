@@ -45,27 +45,31 @@ N2D2::UnpoolCell::UnpoolCell(const std::string& name,
 
 unsigned long long int N2D2::UnpoolCell::getNbConnections() const
 {
+    unsigned long long int nbConnectionsPerConnection = 0;
+
+    for (unsigned int iy = 0; iy < mInputsDims[1]; ++iy) {
+        for (unsigned int ix = 0; ix < mInputsDims[0]; ++ix) {
+            const unsigned int sxMin = (unsigned int)std::max(
+                (int)mPaddingX - (int)(ix * mStrideX), 0);
+            const unsigned int syMin = (unsigned int)std::max(
+                (int)mPaddingY - (int)(iy * mStrideY), 0);
+            const unsigned int sxMax = Utils::clamp<int>(
+                mOutputsDims[0] + mPaddingX - ix * mStrideX, 0, mPoolWidth);
+            const unsigned int syMax = Utils::clamp
+                <int>(mOutputsDims[1] + mPaddingY - iy * mStrideY,
+                      0,
+                      mPoolHeight);
+
+            nbConnectionsPerConnection += (sxMax - sxMin) * (syMax - syMin);
+        }
+    }
+
     unsigned long long int nbConnections = 0;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int iy = 0; iy < mChannelsHeight; ++iy) {
-            for (unsigned int ix = 0; ix < mChannelsWidth; ++ix) {
-                const unsigned int sxMin = (unsigned int)std::max(
-                    (int)mPaddingX - (int)(ix * mStrideX), 0);
-                const unsigned int syMin = (unsigned int)std::max(
-                    (int)mPaddingY - (int)(iy * mStrideY), 0);
-                const unsigned int sxMax = Utils::clamp<int>(
-                    mOutputsWidth + mPaddingX - ix * mStrideX, 0, mPoolWidth);
-                const unsigned int syMax = Utils::clamp
-                    <int>(mOutputsHeight + mPaddingY - iy * mStrideY,
-                          0,
-                          mPoolHeight);
-
-                for (unsigned int output = 0; output < mNbOutputs; ++output) {
-                    if (isConnection(channel, output))
-                        nbConnections += (sxMax - sxMin) * (syMax - syMin);
-                }
-            }
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+            if (isConnection(channel, output))
+                nbConnections += nbConnectionsPerConnection;
         }
     }
 
@@ -98,12 +102,12 @@ void N2D2::UnpoolCell::writeMap(const std::string& fileName) const
     std::stringstream plotCmd;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             data << isConnection(channel, output) << " ";
             plotCmd << isConnection(channel, output) << " ";
         }
 
-        if (mNbOutputs == 1)
+        if (getNbOutputs() == 1)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -133,7 +137,7 @@ void N2D2::UnpoolCell::writeMap(const std::string& fileName) const
     }
 
     if (getNbChannels() == 1) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
+        for (unsigned int output = 0; output < getNbOutputs(); ++output)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -145,7 +149,7 @@ void N2D2::UnpoolCell::writeMap(const std::string& fileName) const
     std::stringstream xtics;
     xtics << "(";
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         if (output > 0)
             xtics << ", ";
 
@@ -170,10 +174,10 @@ void N2D2::UnpoolCell::getStats(Stats& stats) const
     stats.nbConnections += getNbConnections();
 }
 
-void N2D2::UnpoolCell::setOutputsSize()
+void N2D2::UnpoolCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth * mStrideX + mPoolWidth - 2 * mPaddingX
+    mOutputsDims[0] = mInputsDims[0] * mStrideX + mPoolWidth - 2 * mPaddingX
                     - mStrideX;
-    mOutputsHeight = mChannelsHeight * mStrideY + mPoolHeight - 2 * mPaddingY
+    mOutputsDims[1] = mInputsDims[1] * mStrideY + mPoolHeight - 2 * mPaddingY
                      - mStrideY;
 }

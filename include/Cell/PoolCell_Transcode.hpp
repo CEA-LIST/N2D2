@@ -77,8 +77,6 @@ public:
                                                     activation);
     }
 
-    inline unsigned int getNbChannels() const;
-    inline bool isConnection(unsigned int channel, unsigned int output) const;
     void addInput(StimuliProvider& sp,
                   unsigned int channel,
                   unsigned int x0,
@@ -108,22 +106,6 @@ protected:
 private:
     static Registrar<PoolCell> mRegistrar;
 };
-}
-
-template <class FRAME, class SPIKE>
-unsigned int N2D2::PoolCell_Transcode<FRAME, SPIKE>::getNbChannels() const
-{
-    return (mTranscodeMode == Frame) ? FRAME::getNbChannels()
-                                     : SPIKE::getNbChannels();
-}
-
-template <class FRAME, class SPIKE>
-bool N2D2::PoolCell_Transcode
-    <FRAME, SPIKE>::isConnection(unsigned int channel,
-                                 unsigned int output) const
-{
-    return (mTranscodeMode == Frame) ? FRAME::isConnection(channel, output)
-                                     : SPIKE::isConnection(channel, output);
 }
 
 template <class FRAME, class SPIKE>
@@ -186,7 +168,15 @@ void N2D2::PoolCell_Transcode
                              const std::vector<bool>& mapping)
 {
     FRAME::addInput(sp, channel, x0, y0, width, height, mapping);
+    const std::vector<size_t> inputsDims = FRAME::mInputsDims;
+    const Tensor<bool> maps = FRAME::mMaps.clone();
+
+    FRAME::mInputsDims.clear();
+    FRAME::mMaps.clear();
     SPIKE::addInput(sp, channel, x0, y0, width, height, mapping);
+
+    assert(inputsDims == SPIKE::mInputsDims);
+    assert(maps.data() == SPIKE::mMaps.data());
 }
 
 template <class FRAME, class SPIKE>
@@ -199,7 +189,15 @@ void N2D2::PoolCell_Transcode
                              const Matrix<bool>& mapping)
 {
     FRAME::addInput(sp, x0, y0, width, height, mapping);
+    const std::vector<size_t> inputsDims = FRAME::mInputsDims;
+    const Tensor<bool> maps = FRAME::mMaps.clone();
+
+    FRAME::mInputsDims.clear();
+    FRAME::mMaps.clear();
     SPIKE::addInput(sp, x0, y0, width, height, mapping);
+
+    assert(inputsDims == SPIKE::mInputsDims);
+    assert(maps.data() == SPIKE::mMaps.data());
 }
 
 template <class FRAME, class SPIKE>
@@ -207,7 +205,15 @@ void N2D2::PoolCell_Transcode
     <FRAME, SPIKE>::addInput(Cell* cell, const Matrix<bool>& mapping)
 {
     FRAME::addInput(cell, mapping);
+    const std::vector<size_t> inputsDims = FRAME::mInputsDims;
+    const Tensor<bool> maps = FRAME::mMaps.clone();
+
+    FRAME::mInputsDims.clear();
+    FRAME::mMaps.clear();
     SPIKE::addInput(cell, mapping);
+
+    assert(inputsDims == SPIKE::mInputsDims);
+    assert(maps.data() == SPIKE::mMaps.data());
 }
 
 template <class FRAME, class SPIKE>
@@ -218,7 +224,15 @@ void N2D2::PoolCell_Transcode<FRAME, SPIKE>::addInput(Cell* cell,
                                                       unsigned int height)
 {
     FRAME::addInput(cell, x0, y0, width, height);
+    const std::vector<size_t> inputsDims = FRAME::mInputsDims;
+    const Tensor<bool> maps = FRAME::mMaps.clone();
+
+    FRAME::mInputsDims.clear();
+    FRAME::mMaps.clear();
     SPIKE::addInput(cell, x0, y0, width, height);
+
+    assert(inputsDims == SPIKE::mInputsDims);
+    assert(maps.data() == SPIKE::mMaps.data());
 }
 
 template <class FRAME, class SPIKE>
@@ -239,20 +253,20 @@ void N2D2::PoolCell_Transcode
             "Could not save spike coding compare data file.");
 
     const unsigned int oxSize
-        = (unsigned int)((PoolCell::mChannelsWidth - PoolCell::mPoolWidth
+        = (unsigned int)((PoolCell::mInputsDims[0] - PoolCell::mPoolWidth
                           + PoolCell::mStrideX) / (double)PoolCell::mStrideX);
     const unsigned int oySize
-        = (unsigned int)((PoolCell::mChannelsHeight - PoolCell::mPoolHeight
+        = (unsigned int)((PoolCell::mInputsDims[1] - PoolCell::mPoolHeight
                           + PoolCell::mStrideY) / (double)PoolCell::mStrideY);
 
     const Tensor<Float_T>& outputs = FRAME::getOutputs();
-    std::vector<Float_T> minVal(PoolCell::mNbOutputs);
-    std::vector<Float_T> maxVal(PoolCell::mNbOutputs);
+    std::vector<Float_T> minVal(PoolCell::getNbOutputs());
+    std::vector<Float_T> maxVal(PoolCell::getNbOutputs());
 
     Float_T avgSignal = 0.0;
     int avgActivity = 0;
 
-    for (unsigned int output = 0; output < PoolCell::mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < PoolCell::getNbOutputs(); ++output) {
         minVal[output] = outputs(0, 0, output, 0);
         maxVal[output] = outputs(0, 0, output, 0);
 
@@ -300,7 +314,7 @@ void N2D2::PoolCell_Transcode
     gnuplot.setXrange(-0.5, oxSize - 0.5);
     gnuplot.setYrange(oySize - 0.5, -0.5);
 
-    for (unsigned int output = 0; output < PoolCell::mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < PoolCell::getNbOutputs(); ++output) {
         std::stringstream cbRangeStr, paletteStr;
         cbRangeStr << "cbrange [";
         paletteStr << "palette defined (";

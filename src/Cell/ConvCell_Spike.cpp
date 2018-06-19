@@ -60,18 +60,18 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
 void N2D2::ConvCell_Spike::initialize()
 {
     mSharedSynapses.resize(
-        {mKernelWidth, mKernelHeight, mNbChannels, mNbOutputs});
+        {mKernelWidth, mKernelHeight, getNbChannels(), getNbOutputs()});
 
     for (unsigned int index = 0, size = mSharedSynapses.size(); index < size;
          ++index)
         mSharedSynapses(index) = newSynapse();
 
     mOutputsLastIntegration.resize(
-        {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
+        {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, 0);
     mOutputsIntegration.resize(
-        {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0.0);
+        {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, 0.0);
     mOutputsRefractoryEnd.resize(
-        {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
+        {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, 0);
 }
 
 void N2D2::ConvCell_Spike::propagateSpike(NodeIn* origin,
@@ -81,11 +81,11 @@ void N2D2::ConvCell_Spike::propagateSpike(NodeIn* origin,
     const Area& area = origin->getArea();
     const unsigned int oxStride
         = mStrideX
-          * (unsigned int)((mChannelsWidth + 2 * mPaddingX - mKernelWidth
+          * (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
                             + mStrideX) / (double)mStrideX);
     const unsigned int oyStride
         = mStrideY
-          * (unsigned int)((mChannelsHeight + 2 * mPaddingY - mKernelHeight
+          * (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
                             + mStrideY) / (double)mStrideY);
     const unsigned int ixPad = area.x + mPaddingX;
     const unsigned int iyPad = area.y + mPaddingY;
@@ -106,7 +106,7 @@ void N2D2::ConvCell_Spike::propagateSpike(NodeIn* origin,
             const unsigned int ox = (ixPad - sx) / mStrideX;
             const unsigned int oy = (iyPad - sy) / mStrideY;
 
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(origin->getChannel(), output))
                     continue;
 
@@ -203,11 +203,11 @@ void N2D2::ConvCell_Spike::notify(Time_T timestamp, NotifyType notify)
             throw std::domain_error("mThreshold is <= 0.0");
     } else if (notify == Reset) {
         mOutputsLastIntegration.assign(
-            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, timestamp);
+            {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, timestamp);
         mOutputsIntegration.assign(
-            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0.0);
+            {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, 0.0);
         mOutputsRefractoryEnd.assign(
-            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
+            {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, 0);
     } else if (notify == Load)
         load(mNet.getLoadSavePath());
     else if (notify == Save)
@@ -219,7 +219,7 @@ cv::Mat N2D2::ConvCell_Spike::reconstructActivity(unsigned int output,
                                                   Time_T stop,
                                                   bool normalize) const
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "ConvCell_Spike::reconstructActivity(): output not within range.");
 
@@ -231,11 +231,11 @@ cv::Mat N2D2::ConvCell_Spike::reconstructActivity(unsigned int output,
          ++it)
         maxValue = std::max(maxValue, (*it)->getActivity(start, stop));
 
-    cv::Mat img(cv::Size(mOutputsWidth, mOutputsHeight), CV_8UC1, 0.0);
+    cv::Mat img(cv::Size(mOutputsDims[0], mOutputsDims[1]), CV_8UC1, 0.0);
 
     if (maxValue > 0) {
-        for (unsigned int y = 0; y < mOutputsHeight; ++y) {
-            for (unsigned int x = 0; x < mOutputsWidth; ++x)
+        for (unsigned int y = 0; y < mOutputsDims[1]; ++y) {
+            for (unsigned int x = 0; x < mOutputsDims[0]; ++x)
                 img.at<unsigned char>(y, x)
                     = 255.0 * (mOutputs(x, y, output, 0)->getActivity(
                                    start, stop) / (double)maxValue);
@@ -258,7 +258,7 @@ void N2D2::ConvCell_Spike::reconstructActivities(const std::string& dirName,
 {
     Utils::createDirectories(dirName);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         std::ostringstream fileName;
         fileName << dirName << "/cell-activity-" << output << ".jpg";
 
@@ -339,11 +339,11 @@ N2D2::Synapse::Stats N2D2::ConvCell_Spike::logStats(const std::string
 
     globalData.imbue(Utils::locale);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         globalData << "[Output #" << output << "]\n";
         std::unique_ptr<Synapse::Stats> statsOutput(dummy->newStats());
 
-        for (unsigned int channel = 0; channel < mNbChannels; ++channel) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
 
@@ -380,7 +380,7 @@ N2D2::Synapse::Stats N2D2::ConvCell_Spike::logStats(const std::string
             globalData << "\n";
         }
 
-        if (mNbChannels > 1) {
+        if (getNbChannels() > 1) {
             dummy->logStats(globalData, statsOutput.get());
             globalData << "\n";
         }

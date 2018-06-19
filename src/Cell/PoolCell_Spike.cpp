@@ -53,18 +53,21 @@ N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
 
 void N2D2::PoolCell_Spike::initialize()
 {
-    mInputsActivity.resize({mChannelsWidth, mChannelsHeight, mNbChannels, 1});
+    std::vector<size_t> inputsDims = mInputsDims;
+    inputsDims.push_back(1);
 
-    mInputMax.resize({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, -1);
-    mPoolActivity.resize({mOutputsWidth,
-                         mOutputsHeight,
-                         mNbOutputs,
-                         1},
+    mInputsActivity.resize(inputsDims);
+
+    std::vector<size_t> outputsDims = mOutputsDims;
+    outputsDims.push_back(1);
+
+    mInputMax.resize(outputsDims, -1);
+    mPoolActivity.resize(outputsDims,
                          (mPooling == Max) ? std::numeric_limits<int>::min()
                                            : 0);
-    mOutputsActivity.resize({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
+    mOutputsActivity.resize(outputsDims, 0);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             mPoolNbChannels[output] += isConnection(channel, output);
     }
@@ -83,10 +86,10 @@ void N2D2::PoolCell_Spike::propagateSpike(NodeIn* origin,
         ++mInputsActivity(area.x, area.y, channel, 0);
 
     const unsigned int oxStride
-        = mStrideX * (unsigned int)((mChannelsWidth - mPoolWidth + mStrideX)
+        = mStrideX * (unsigned int)((mInputsDims[0] - mPoolWidth + mStrideX)
                                     / (double)mStrideX);
     const unsigned int oyStride
-        = mStrideY * (unsigned int)((mChannelsHeight - mPoolHeight + mStrideY)
+        = mStrideY * (unsigned int)((mInputsDims[1] - mPoolHeight + mStrideY)
                                     / (double)mStrideY);
     const unsigned int sxMax = std::min<unsigned int>(mPoolWidth, area.x + 1);
     const unsigned int syMax = std::min<unsigned int>(mPoolHeight, area.y + 1);
@@ -106,7 +109,7 @@ void N2D2::PoolCell_Spike::propagateSpike(NodeIn* origin,
             const unsigned int ox = (area.x - sx) / mStrideX;
             const unsigned int oy = (area.y - sy) / mStrideY;
 
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(channel, output))
                     continue;
 
@@ -134,12 +137,12 @@ void N2D2::PoolCell_Spike::incomingSpike(NodeIn* origin,
                     // Ideal behavior
                     int maxActivity = std::numeric_limits<int>::min();
 
-                    const unsigned int sxMax = std::min(mChannelsWidth -
+                    const unsigned int sxMax = std::min(mInputsDims[0] -
            ox*mStrideX, mPoolWidth);
-                    const unsigned int syMax = std::min(mChannelsHeight -
+                    const unsigned int syMax = std::min(mInputsDims[1] -
            oy*mStrideY, mPoolHeight);
 
-                    for (unsigned int channel = 0; channel < mNbChannels;
+                    for (unsigned int channel = 0; channel < getNbChannels();
            ++channel) {
                         if (!isConnection(channel, output))
                             continue;
@@ -165,8 +168,8 @@ void N2D2::PoolCell_Spike::incomingSpike(NodeIn* origin,
                     }
         */
         // Approximated behavior
-        const unsigned int inputSize = mChannelsHeight * mChannelsWidth;
-        const unsigned int inputIdx = (area.x + mChannelsWidth * area.y)
+        const unsigned int inputSize = mInputsDims[1] * mInputsDims[0];
+        const unsigned int inputIdx = (area.x + mInputsDims[0] * area.y)
                                       + origin->getChannel() * inputSize;
 
         if (mInputsActivity(area.x, area.y, origin->getChannel(), 0)
@@ -220,18 +223,13 @@ void N2D2::PoolCell_Spike::incomingSpike(NodeIn* origin,
 void N2D2::PoolCell_Spike::notify(Time_T /*timestamp*/, NotifyType notify)
 {
     if (notify == Reset) {
-        mInputsActivity.assign(
-            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+        mInputsActivity.assign(mInputsActivity.dims(), 0);
 
-        mInputMax.assign({mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, -1);
-        mPoolActivity.assign({mOutputsWidth,
-                             mOutputsHeight,
-                             mNbOutputs,
-                             1},
+        mInputMax.assign(mInputMax.dims(), -1);
+        mPoolActivity.assign(mPoolActivity.dims(),
                              (mPooling == Max) ? std::numeric_limits<int>::min()
                                                : 0);
-        mOutputsActivity.assign(
-            {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0);
+        mOutputsActivity.assign(mOutputsActivity.dims(), 0);
     } else if (notify == Load)
         load(mNet.getLoadSavePath());
     else if (notify == Save)

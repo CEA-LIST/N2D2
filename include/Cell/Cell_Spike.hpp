@@ -31,14 +31,6 @@ class NodeOut;
 class Cell_Spike : public virtual Cell, public NetworkObserver {
 public:
     Cell_Spike(Network& net, const std::string& name, unsigned int nbOutputs);
-    virtual unsigned int getNbChannels() const
-    {
-        return mNbChannels;
-    };
-    virtual bool isConnection(unsigned int channel, unsigned int output) const
-    {
-        return mMaps(output, channel);
-    };
     virtual void addInput(StimuliProvider& sp,
                           unsigned int channel,
                           unsigned int x0,
@@ -86,11 +78,6 @@ protected:
     ParameterWithSpread<Time_T> mIncomingDelay;
 
     // Internal
-    // Number of input channels
-    unsigned int mNbChannels;
-    // Input-output mapping
-    Tensor<bool> mMaps;
-
     Network& mNet;
     // Forward
     std::vector<NodeIn*> mInputs;

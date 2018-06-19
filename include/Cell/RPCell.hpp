@@ -100,7 +100,7 @@ public:
     virtual ~RPCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     Parameter<double> mMinWidth;
     Parameter<double> mMinHeight;

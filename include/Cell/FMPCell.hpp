@@ -70,7 +70,7 @@ public:
     virtual ~FMPCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     /// If true, use overlapping regions, else use disjoint regions
     Parameter<bool> mOverlapping;

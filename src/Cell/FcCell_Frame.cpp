@@ -184,16 +184,16 @@ void N2D2::FcCell_Frame::backPropagate()
         }
 
         Tensor<Float_T>& diffSynapses = mDiffSynapses[k];
-        const unsigned int count2 = nbChannels * mNbOutputs;
+        const unsigned int count2 = nbChannels * getNbOutputs();
 
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count2 > 16)
 #else
-#pragma omp parallel for if (mNbOutputs > 4 && count2 > 16)
+#pragma omp parallel for if (getNbOutputs() > 4 && count2 > 16)
 #endif
-        for (int output = 0; output < (int)mNbOutputs; ++output) {
+        for (int output = 0; output < (int)getNbOutputs(); ++output) {
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 if (!(mDropConnect < 1.0)
                     || mDropConnectMask[k](channel, output)) {
@@ -218,8 +218,8 @@ void N2D2::FcCell_Frame::backPropagate()
     if (!mNoBias) {
         const float beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
 
-#pragma omp parallel for if (mNbOutputs > 16)
-        for (int output = 0; output < (int)mNbOutputs; ++output) {
+#pragma omp parallel for if (getNbOutputs() > 16)
+        for (int output = 0; output < (int)getNbOutputs(); ++output) {
             Float_T sum = 0.0;
 
             for (unsigned int batchPos = 0; batchPos < mInputs.dimB();

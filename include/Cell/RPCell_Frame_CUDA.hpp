@@ -68,7 +68,7 @@ public:
     virtual ~RPCell_Frame_CUDA() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     CudaTensor<int> mIndexI;
     CudaTensor<int> mSortedIndexI;

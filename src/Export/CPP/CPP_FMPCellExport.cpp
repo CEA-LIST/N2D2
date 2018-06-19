@@ -98,10 +98,8 @@ void N2D2::CPP_FMPCellExport::generateHeaderConnections(FMPCell& cell,
                                                                & header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
-    const Cell_Frame_Top* cellFrameTop = dynamic_cast<Cell_Frame_Top*>(&cell);
 
-    if (/*cellFrame != NULL && */ !cellFrameTop->isUnitMap()) {
-
+    if (!cell.isUnitMap()) {
         const std::string prefix = Utils::upperCase(identifier);
 
         header << "#define " << prefix << "_MAPPING_SIZE (" << prefix

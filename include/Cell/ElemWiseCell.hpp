@@ -98,7 +98,7 @@ public:
     virtual ~ElemWiseCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     // Operation type
     const Operation mOperation;

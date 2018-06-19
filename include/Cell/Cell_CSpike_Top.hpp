@@ -28,20 +28,13 @@
 namespace N2D2 {
 class Cell_CSpike_Top {
 public:
-    Cell_CSpike_Top() : mNbChannels(0)
+    Cell_CSpike_Top()
     {
     }
     virtual bool tick(Time_T timestamp) = 0;
     virtual void reset(Time_T timestamp) = 0;
     virtual Tensor<Float_T>& getOutputsActivity() = 0;
     virtual ~Cell_CSpike_Top() {};
-
-protected:
-    // Internal
-    // Number of input channels
-    unsigned int mNbChannels;
-    // Input-output mapping
-    Tensor<bool> mMaps;
 };
 }
 

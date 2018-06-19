@@ -181,7 +181,7 @@ public:
     virtual ~DeconvCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
     virtual void setWeight(unsigned int output,
                            unsigned int channel,
                            unsigned int sx,

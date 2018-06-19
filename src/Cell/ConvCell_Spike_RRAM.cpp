@@ -85,8 +85,10 @@ void N2D2::ConvCell_Spike_RRAM::initialize()
 {
     ConvCell_Spike::initialize();
 
-    mInputsActivationTime.resize(
-        {mChannelsWidth, mChannelsHeight, mNbChannels, 1});
+    std::vector<size_t> inputsDims = mInputsDims;
+    inputsDims.push_back(1);        // batch
+
+    mInputsActivationTime.resize(inputsDims);
 }
 
 void N2D2::ConvCell_Spike_RRAM::propagateSpike(NodeIn* origin,
@@ -100,11 +102,11 @@ void N2D2::ConvCell_Spike_RRAM::propagateSpike(NodeIn* origin,
 
     const unsigned int oxStride
         = mStrideX
-          * (unsigned int)((mChannelsWidth + 2 * mPaddingX - mKernelWidth
+          * (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
                             + mStrideX) / (double)mStrideX);
     const unsigned int oyStride
         = mStrideY
-          * (unsigned int)((mChannelsHeight + 2 * mPaddingY - mKernelHeight
+          * (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
                             + mStrideY) / (double)mStrideY);
     const unsigned int ixPad = area.x + mPaddingX;
     const unsigned int iyPad = area.y + mPaddingY;
@@ -125,7 +127,7 @@ void N2D2::ConvCell_Spike_RRAM::propagateSpike(NodeIn* origin,
             const unsigned int ox = (ixPad - sx) / mStrideX;
             const unsigned int oy = (iyPad - sy) / mStrideY;
 
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(channel, output))
                     continue;
 
@@ -244,11 +246,12 @@ void N2D2::ConvCell_Spike_RRAM::incomingSpike(NodeIn* origin,
             const unsigned int syMin = (unsigned int)std::max(
                 (int)mPaddingY - (int)(oy * mStrideY), 0);
             const unsigned int sxMax = Utils::clamp<int>(
-                mChannelsWidth + mPaddingX - ox * mStrideX, 0, mKernelWidth);
+                mInputsDims[0] + mPaddingX - ox * mStrideX, 0, mKernelWidth);
             const unsigned int syMax = Utils::clamp<int>(
-                mChannelsHeight + mPaddingY - oy * mStrideY, 0, mKernelHeight);
+                mInputsDims[1] + mPaddingY - oy * mStrideY, 0, mKernelHeight);
 
-            for (unsigned int channel = 0; channel < mNbChannels; ++channel) {
+            for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            {
                 if (!isConnection(channel, output))
                     continue;
 
@@ -274,7 +277,7 @@ void N2D2::ConvCell_Spike_RRAM::incomingSpike(NodeIn* origin,
 
             // Lateral inhibition
             mOutputsIntegration.assign(
-                {mOutputsWidth, mOutputsHeight, mNbOutputs, 1}, 0.0);
+                {mOutputsDims[0], mOutputsDims[1], getNbOutputs(), 1}, 0.0);
 
             if (mInhibitRefractory > 0) {
                 std::replace_if(mOutputsRefractoryEnd.begin(),
@@ -305,8 +308,7 @@ void N2D2::ConvCell_Spike_RRAM::notify(Time_T timestamp, NotifyType notify)
     ConvCell_Spike::notify(timestamp, notify);
 
     if (notify == Reset)
-        mInputsActivationTime.assign(
-            {mChannelsWidth, mChannelsHeight, mNbChannels, 1}, 0);
+        mInputsActivationTime.assign(mInputsActivationTime.dims(), 0);
 }
 
 N2D2::Synapse* N2D2::ConvCell_Spike_RRAM::newSynapse() const

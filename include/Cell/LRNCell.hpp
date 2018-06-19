@@ -76,7 +76,7 @@ public:
     virtual ~LRNCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     /// Normalization window width in elements
     Parameter<unsigned int> mN;

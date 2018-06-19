@@ -43,7 +43,7 @@ void N2D2::LRNCell_Frame::initialize()
 
 void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
 {
-    if (mN > mNbOutputs)
+    if (mN > getNbOutputs())
         throw std::runtime_error("LRNCell_Frame::propagate(): mN > nbOutputs "
                                  "doesn't match for local response "
                                  "normalization accross channels\n");
@@ -51,12 +51,12 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
     mInputs.synchronizeDToH();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
-#pragma omp parallel for collapse(2) if (mNbOutputs > 16)
+#pragma omp parallel for collapse(2) if (getNbOutputs() > 16)
 #else
-#pragma omp parallel for if (mInputs.dimB() > 4 && mNbOutputs > 16)
+#pragma omp parallel for if (mInputs.dimB() > 4 && getNbOutputs() > 16)
 #endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             int minChan = output - mN / 2;
 
             if (minChan < 0)
@@ -64,7 +64,7 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
 
             const unsigned int channelMin = std::max(0, minChan);
             const unsigned int channelMax
-                = std::min(mNbChannels - 1, output + mN / 2);
+                = std::min<size_t>(getNbChannels() - 1, output + mN / 2);
 
             for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {

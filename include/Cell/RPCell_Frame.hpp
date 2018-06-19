@@ -58,7 +58,7 @@ public:
     virtual ~RPCell_Frame() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
 private:
     static Registrar<RPCell> mRegistrar;

@@ -49,7 +49,7 @@ void N2D2::FcCell_Spike_PCM::propagateSpike(NodeIn* origin,
 {
     const Area& area = origin->getArea();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         const Time_T delay = static_cast<Synapse_PCM*>(
             mSynapses(area.x, area.y, origin->getChannel(), output))->delay;
 

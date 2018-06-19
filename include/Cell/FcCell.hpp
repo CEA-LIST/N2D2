@@ -139,7 +139,7 @@ public:
     virtual ~FcCell() {};
 
 protected:
-    virtual void setOutputsSize() {};
+    virtual void setOutputsDims() {};
     virtual void
     setWeight(unsigned int output, unsigned int channel, Float_T value) = 0;
     virtual void setBias(unsigned int output, Float_T value) = 0;

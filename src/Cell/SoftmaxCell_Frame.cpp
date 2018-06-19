@@ -43,7 +43,7 @@ void N2D2::SoftmaxCell_Frame::initialize()
     }
     if(mGroupSize > 0)
     {
-        if(mNbOutputs % mGroupSize)
+        if(getNbOutputs() % mGroupSize)
             throw std::domain_error("SoftmaxCell_Frame::initialize():"
                                     " the group size must be divisible by "
                                     "the number of outputs.");
@@ -54,13 +54,13 @@ void N2D2::SoftmaxCell_Frame::initialize()
 void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
 {
     mInputs.synchronizeDToH();
-    const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : mNbOutputs;
+    const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
 #pragma omp parallel for if (mInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        for (unsigned int oy = 0; oy < mOutputsHeight; ++oy) {
-            for (unsigned int ox = 0; ox < mOutputsWidth; ++ox) {
-                for(unsigned int step = 0; step < mNbOutputs/groupStride; ++step)
+        for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
+            for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
+                for(unsigned int step = 0; step < getNbOutputs()/groupStride; ++step)
                 {
                     const unsigned int stride = step*mGroupSize;
                     const unsigned int nbNeurons = stride + groupStride;
@@ -99,8 +99,8 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    const unsigned int size = mInputs.dimB() * mNbChannels;
-    const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : mNbOutputs;
+    const unsigned int size = mInputs.dimB() * getNbChannels();
+    const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -108,7 +108,8 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        for (unsigned int channel = 0; channel < mNbChannels; ++channel) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+        {
             const bool isValid = mDiffOutputs.getTensor(channel).isValid();
 
             for (unsigned int iy = 0; iy < mInputs[0].dimY(); ++iy) {
@@ -121,7 +122,7 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
                     } else {
                         Float_T gradient = 0.0;
 
-                        for(unsigned int step = 0; step < mNbOutputs/groupStride; ++step)
+                        for(unsigned int step = 0; step < getNbOutputs()/groupStride; ++step)
                         {
                             const unsigned int stride = step*mGroupSize;
                             const unsigned int nbNeurons = stride + groupStride;

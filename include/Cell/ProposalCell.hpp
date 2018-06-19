@@ -121,7 +121,7 @@ public:
     virtual ~ProposalCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     Parameter<double> mNMS_IoU_Threshold;
     Parameter<double> mScoreThreshold;

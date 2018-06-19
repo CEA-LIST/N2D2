@@ -358,18 +358,18 @@ void N2D2::RPCell_Frame::update()
     // Nothing to update
 }
 
-void N2D2::RPCell_Frame::setOutputsSize()
+void N2D2::RPCell_Frame::setOutputsDims()
 {
-    RPCell::setOutputsSize();
+    RPCell::setOutputsDims();
 
     if (mOutputs.empty()) {
-        mOutputs.resize({mOutputsWidth,
-                        mOutputsHeight,
-                        mNbOutputs,
+        mOutputs.resize({mOutputsDims[0],
+                        mOutputsDims[1],
+                        getNbOutputs(),
                         mNbProposals * mInputs.dimB()});
-        mDiffInputs.resize({mOutputsWidth,
-                           mOutputsHeight,
-                           mNbOutputs,
+        mDiffInputs.resize({mOutputsDims[0],
+                           mOutputsDims[1],
+                           getNbOutputs(),
                            mNbProposals * mInputs.dimB()});
     }
 }

@@ -88,22 +88,22 @@ void N2D2::CPP_LRNCellExport::generateHeaderFreeParameters(LRNCell
 
     header << "static WDATA_T " << prefix
            << "_ALPHA = ";
-    CellExport::generateFreeParameter( cell, 
-                                       cell.getLRNalpha(), 
+    CellExport::generateFreeParameter( cell,
+                                       cell.getLRNalpha(),
                                        header);
     header << ";\n";
 
     header << "static WDATA_T " << prefix
            << "_BETA = ";
-    CellExport::generateFreeParameter( cell, 
-                                       cell.getLRNbeta(), 
+    CellExport::generateFreeParameter( cell,
+                                       cell.getLRNbeta(),
                                        header);
     header << ";\n";
 
     header << "static WDATA_T " << prefix
            << "_K = ";
-    CellExport::generateFreeParameter( cell, 
-                                       cell.getLRNk(), 
+    CellExport::generateFreeParameter( cell,
+                                       cell.getLRNk(),
                                        header);
     header << ";\n";
 

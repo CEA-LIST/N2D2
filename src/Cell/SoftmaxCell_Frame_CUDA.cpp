@@ -46,7 +46,7 @@ void N2D2::SoftmaxCell_Frame_CUDA::initialize()
 
     if(mGroupSize > 0)
     {
-        if(mNbOutputs % mGroupSize)
+        if(getNbOutputs() % mGroupSize)
             throw std::domain_error("SoftmaxCell_Frame::initialize():"
                                     " the group size must be divisible by "
                                     "the number of outputs.");
@@ -74,7 +74,7 @@ void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
     const float beta = 0.0f;
     if(mGroupSize > 0)
     {
-        for(unsigned int step = 0; step < mNbOutputs; step += mGroupSize)
+        for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
             CHECK_CUDNN_STATUS(cudnnSoftmaxForward(CudaContext::cudnnHandle(),
                                                 CUDNN_SOFTMAX_ACCURATE,
                                                 CUDNN_SOFTMAX_MODE_CHANNEL,
@@ -143,7 +143,7 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
         const float beta = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
     if(mGroupSize > 0)
     {
-        for(unsigned int step = 0; step < mNbOutputs; step += mGroupSize)
+        for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
             CHECK_CUDNN_STATUS(
                 cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
                                     CUDNN_SOFTMAX_ACCURATE,

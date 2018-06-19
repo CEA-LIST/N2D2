@@ -34,12 +34,11 @@ N2D2::SoftmaxCell::SoftmaxCell(const std::string& name,
 
 void N2D2::SoftmaxCell::getStats(Stats& stats) const
 {
-    stats.nbNeurons += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNeurons += getOutputsSize();
+    stats.nbNodes += getOutputsSize();
 }
 
-void N2D2::SoftmaxCell::setOutputsSize()
+void N2D2::SoftmaxCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth;
-    mOutputsHeight = mChannelsHeight;
+    mOutputsDims = mInputsDims;
 }

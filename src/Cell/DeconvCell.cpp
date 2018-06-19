@@ -52,7 +52,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& fileName,
                                          unsigned int output,
                                          unsigned int channel) const
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "DeconvCell::logFreeParameters(): output not within range.");
 
@@ -80,7 +80,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& fileName,
 void N2D2::DeconvCell::logFreeParameters(const std::string& fileName,
                                          unsigned int output) const
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "DeconvCell::logFreeParameters(): output not within range.");
 
@@ -102,7 +102,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         std::ostringstream fileName;
         fileName << dirName << "/cell-" << output << ".dat";
 
@@ -111,12 +111,12 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& dirName) const
 
     std::stringstream termStr;
     termStr << "set term png size " << 50 * getNbChannels() << ","
-            << 50 * mNbOutputs << " enhanced";
+            << 50 * getNbOutputs() << " enhanced";
 
     Gnuplot multiplot;
     multiplot.saveToFile(dirName + ".dat");
     multiplot << termStr.str();
-    multiplot.setMultiplot(mNbOutputs, getNbChannels());
+    multiplot.setMultiplot(getNbOutputs(), getNbChannels());
     multiplot.set("lmargin 0.1");
     multiplot.set("tmargin 0.1");
     multiplot.set("rmargin 0.1");
@@ -127,7 +127,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& dirName) const
     multiplot.set("format y \"\"");
     multiplot.unset("colorbox");
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         std::ostringstream fileName;
         fileName << dirName << "/cell-" << output << ".dat";
 
@@ -139,7 +139,7 @@ unsigned long long int N2D2::DeconvCell::getNbSharedSynapses() const
 {
     unsigned long long int nbSharedSynapses = 0;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (isConnection(channel, output))
                 nbSharedSynapses += mKernelWidth * mKernelHeight;
@@ -147,7 +147,7 @@ unsigned long long int N2D2::DeconvCell::getNbSharedSynapses() const
     }
 
     if (!mNoBias)
-        nbSharedSynapses += mNbOutputs;
+        nbSharedSynapses += getNbOutputs();
 
     return nbSharedSynapses;
 }
@@ -157,18 +157,18 @@ unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
     unsigned long long int nbSynapsesPerConnection = 0;
 
 #pragma omp parallel for reduction(+:nbSynapsesPerConnection)
-    for (int iy = 0; iy < (int) mChannelsHeight; ++iy) {
+    for (int iy = 0; iy < (int) mInputsDims[1]; ++iy) {
         unsigned long long int nbSynapsesIx = 0;
 
-        for (unsigned int ix = 0; ix < mChannelsWidth; ++ix) {
+        for (unsigned int ix = 0; ix < mInputsDims[0]; ++ix) {
             const unsigned int sxMin = (unsigned int)std::max(
                 (int)mPaddingX - (int)(ix * mStrideX), 0);
             const unsigned int syMin = (unsigned int)std::max(
                 (int)mPaddingY - (int)(iy * mStrideY), 0);
             const unsigned int sxMax = Utils::clamp<int>(
-                mOutputsWidth + mPaddingX - ix * mStrideX, 0, mKernelWidth);
+                mOutputsDims[0] + mPaddingX - ix * mStrideX, 0, mKernelWidth);
             const unsigned int syMax = Utils::clamp
-                <int>(mOutputsHeight + mPaddingY - iy * mStrideY,
+                <int>(mOutputsDims[1] + mPaddingY - iy * mStrideY,
                       0,
                       mKernelHeight);
 
@@ -181,7 +181,7 @@ unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
     unsigned long long int nbVirtualSynapses = 0;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             if (isConnection(channel, output))
                 nbVirtualSynapses += nbSynapsesPerConnection;
         }
@@ -198,7 +198,7 @@ void N2D2::DeconvCell::setKernel(unsigned int output,
                                  const Matrix<double>& value,
                                  bool normalize)
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "DeconvCell::setKernel(): output not within range.");
 
@@ -259,7 +259,7 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
     const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
 
     if (mWeightsExportFormat == OCHW) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
@@ -290,7 +290,7 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
                 for (unsigned int channel = 0; channel < getNbChannels();
                     ++channel)
                 {
-                    for (unsigned int output = 0; output < mNbOutputs; ++output)
+                    for (unsigned int output = 0; output < getNbOutputs(); ++output)
                     {
                         const unsigned int outputRemap = (!outputsMap.empty())
                             ? outputsMap.find(output)->second : output;
@@ -322,7 +322,7 @@ void N2D2::DeconvCell::exportFreeParameters(const std::string& fileName) const
             throw std::runtime_error("Could not create synaptic file: "
                                       + biasesFile);
 
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
@@ -376,7 +376,7 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
     const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
 
     if (mWeightsExportFormat == OCHW) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
@@ -418,7 +418,7 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
                 for (unsigned int channel = 0; channel < getNbChannels();
                     ++channel)
                 {
-                    for (unsigned int output = 0; output < mNbOutputs; ++output)
+                    for (unsigned int output = 0; output < getNbOutputs(); ++output)
                     {
                         const unsigned int outputRemap = (!outputsMap.empty())
                             ? outputsMap.find(output)->second : output;
@@ -444,7 +444,7 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
         }
 
         if (!mNoBias) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 const unsigned int outputRemap = (!outputsMap.empty())
                     ? outputsMap.find(output)->second : output;
 
@@ -483,9 +483,9 @@ void N2D2::DeconvCell::logFreeParametersDistrib(const std::string
 {
     // Append all weights
     std::vector<double> weights;
-    weights.reserve(mNbOutputs * getNbChannels());
+    weights.reserve(getNbOutputs() * getNbChannels());
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -572,12 +572,12 @@ void N2D2::DeconvCell::writeMap(const std::string& fileName) const
     std::stringstream plotCmd;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             data << isConnection(channel, output) << " ";
             plotCmd << isConnection(channel, output) << " ";
         }
 
-        if (mNbOutputs == 1)
+        if (getNbOutputs() == 1)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -604,7 +604,7 @@ void N2D2::DeconvCell::writeMap(const std::string& fileName) const
     }
 
     if (getNbChannels() == 1) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
+        for (unsigned int output = 0; output < getNbOutputs(); ++output)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -616,7 +616,7 @@ void N2D2::DeconvCell::writeMap(const std::string& fileName) const
     std::stringstream xtics;
     xtics << "(";
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         if (output > 0)
             xtics << ", ";
 
@@ -637,8 +637,8 @@ void N2D2::DeconvCell::writeMap(const std::string& fileName) const
 
 void N2D2::DeconvCell::discretizeFreeParameters(unsigned int nbLevels)
 {
-#pragma omp parallel for if (mNbOutputs > 16)
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+#pragma omp parallel for if (getNbOutputs() > 16)
+    for (int output = 0; output < (int)getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -669,7 +669,7 @@ N2D2::DeconvCell::getFreeParametersRange() const
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
 
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+    for (int output = 0; output < (int)getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -697,7 +697,7 @@ N2D2::DeconvCell::getFreeParametersRange() const
 
 void N2D2::DeconvCell::randomizeFreeParameters(double stdDev)
 {
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -726,18 +726,18 @@ void N2D2::DeconvCell::getStats(Stats& stats) const
 {
     const unsigned long long int nbVirtualSynapses = getNbVirtualSynapses();
 
-    stats.nbNeurons += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNeurons += getOutputsSize();
+    stats.nbNodes += getOutputsSize();
     stats.nbSynapses += getNbSharedSynapses();
     stats.nbVirtualSynapses += nbVirtualSynapses;
     stats.nbConnections += nbVirtualSynapses;
 }
 
-void N2D2::DeconvCell::setOutputsSize()
+void N2D2::DeconvCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth * mStrideX + mKernelWidth - 2 * mPaddingX
+    mOutputsDims[0] = mInputsDims[0] * mStrideX + mKernelWidth - 2 * mPaddingX
                     - mStrideX;
-    mOutputsHeight = mChannelsHeight * mStrideY + mKernelHeight - 2 * mPaddingY
+    mOutputsDims[1] = mInputsDims[1] * mStrideY + mKernelHeight - 2 * mPaddingY
                      - mStrideY;
 }
 
@@ -768,7 +768,7 @@ std::map<unsigned int, unsigned int> N2D2::DeconvCell::outputsRemap() const
                 + (std::string)mOutputsRemap);
         }
 
-        for (int k = offset; k >= 0 && k < (int)mNbOutputs; k+= step) {
+        for (int k = offset; k >= 0 && k < (int)getNbOutputs(); k+= step) {
             outputRemap[k] = index;
             ++index;
         }

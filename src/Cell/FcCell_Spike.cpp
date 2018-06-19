@@ -44,16 +44,18 @@ N2D2::FcCell_Spike::FcCell_Spike(Network& net,
 
 void N2D2::FcCell_Spike::initialize()
 {
-    mSynapses.resize(
-        {mChannelsWidth, mChannelsHeight, mNbChannels, mOutputs.dimZ()});
+    std::vector<size_t> synapsesDims = mInputsDims;
+    synapsesDims.push_back(mOutputs.dimZ());
 
-    for (unsigned int index = 0; index < mSynapses.size(); ++index)
+    mSynapses.resize(synapsesDims);
+
+    for (size_t index = 0; index < mSynapses.size(); ++index)
         mSynapses(index) = newSynapse();
 
-    mOutputsLastIntegration.resize(mNbOutputs, 0);
-    mOutputsIntegration.resize(mNbOutputs, 0.0);
-    mOutputsRefractoryEnd.resize(mNbOutputs, 0);
-    mNbActivations.resize(mNbOutputs, 0);
+    mOutputsLastIntegration.resize(getNbOutputs(), 0);
+    mOutputsIntegration.resize(getNbOutputs(), 0.0);
+    mOutputsRefractoryEnd.resize(getNbOutputs(), 0);
+    mNbActivations.resize(getNbOutputs(), 0);
 }
 
 void N2D2::FcCell_Spike::propagateSpike(NodeIn* origin,
@@ -62,7 +64,7 @@ void N2D2::FcCell_Spike::propagateSpike(NodeIn* origin,
 {
     const Area& area = origin->getArea();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         const Time_T delay = static_cast<Synapse_Static*>(
             mSynapses(area.x, area.y, origin->getChannel(), output))->delay;
 
@@ -159,12 +161,15 @@ void N2D2::FcCell_Spike::notify(Time_T timestamp, NotifyType notify)
     if (notify == Initialize) {
         if (mThreshold <= 0.0)
             throw std::domain_error("mThreshold is <= 0.0");
-    } else if (notify == Reset) {
-        mOutputsLastIntegration.assign(mNbOutputs, timestamp);
-        mOutputsIntegration.assign(mNbOutputs, 0.0);
-        mOutputsRefractoryEnd.assign(mNbOutputs, 0);
-        mNbActivations.assign(mNbOutputs, 0);
-    } else if (notify == Load)
+    }
+    else if (notify == Reset) {
+        mOutputsLastIntegration.assign(mOutputsLastIntegration.size(),
+                                       timestamp);
+        mOutputsIntegration.assign(mOutputsIntegration.size(), 0.0);
+        mOutputsRefractoryEnd.assign(mOutputsRefractoryEnd.size(), 0);
+        mNbActivations.assign(mNbActivations.size(), 0);
+    }
+    else if (notify == Load)
         load(mNet.getLoadSavePath());
     else if (notify == Save)
         save(mNet.getLoadSavePath());
@@ -275,10 +280,9 @@ N2D2::Synapse::Stats N2D2::FcCell_Spike::logStats(const std::string
 
     globalData.imbue(Utils::locale);
 
-    const unsigned int channelsSize = getNbChannels() * getChannelsWidth()
-                                      * getChannelsHeight();
+    const unsigned int channelsSize = getInputsSize();
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         globalData << "[Output #" << output << "]\n";
         std::unique_ptr<Synapse::Stats> statsOutput(dummy->newStats());
 

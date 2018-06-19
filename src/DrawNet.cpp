@@ -38,8 +38,8 @@ void N2D2::DrawNet::draw(DeepNet& deepNet, const std::string& fileName)
         throw std::runtime_error("Could not save SVG network file.");
 
     // Pre-calculating
-    unsigned int nbUnidimOutputsMax = 1;
-    unsigned int nbBidimOutputsMax
+    size_t nbUnidimOutputsMax = 1;
+    size_t nbBidimOutputsMax
         = deepNet.getStimuliProvider()->getNbChannels();
     unsigned int svgWidth = 200;
 

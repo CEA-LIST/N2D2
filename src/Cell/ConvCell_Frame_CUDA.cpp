@@ -53,7 +53,7 @@ N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<CudaTensor<Float_T> >()),
-      mDiffBias({1, 1, mNbOutputs, 1}),
+      mDiffBias({1, 1, getNbOutputs(), 1}),
       mWorkspaceSize(0),
       mWorkspace(NULL),
       mSynchronized(false)
@@ -68,13 +68,13 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
-            mBias->resize({1, 1, mNbOutputs, 1});
+            mBias->resize({1, 1, getNbOutputs(), 1});
             mBiasFiller->apply((*mBias));
             mBias->synchronizeHToD();
         }
         else {
             if (mBias->dimX() != 1 || mBias->dimY() != 1
-                || mBias->dimZ() != mNbOutputs || mBias->dimB() != 1)
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
                 throw std::runtime_error("ConvCell_Frame_CUDA::initialize():"
                     " in cell " + mName + ", wrong size for shared bias");
@@ -124,7 +124,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             if (extWeights->dimX() != mKernelWidth
                 || extWeights->dimY() != mKernelHeight
                 || extWeights->dimZ() != mInputs[k].dimZ()
-                || extWeights->dimB() != mNbOutputs)
+                || extWeights->dimB() != getNbOutputs())
             {
                 std::stringstream errorStr;
                 errorStr << "ConvCell_Frame_CUDA::initialize(): in cell "
@@ -134,7 +134,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                     << extWeights->dimZ() << "x"
                     << extWeights->dimB() << ") and expected dim. ("
                     << mKernelWidth << "x" << mKernelHeight << "x"
-                    << mInputs[k].dimZ() << "x" << mNbOutputs << ")";
+                    << mInputs[k].dimZ() << "x" << getNbOutputs() << ")";
 
                 throw std::runtime_error(errorStr.str());
             }
@@ -143,12 +143,12 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         }
         else {
             mSharedSynapses.push_back(new CudaTensor<Float_T>(
-                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
+                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()}));
             mWeightsFiller->apply(mSharedSynapses.back());
 
             if (!isFullMap()) {
                 // Set the non-connected kernels coefficients to 0
-                for (unsigned int output = 0; output < mNbOutputs; ++output) {
+                for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                     for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                          ++channel) {
                         if (!isConnection(channel, output))
@@ -162,7 +162,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         }
 
         mDiffSharedSynapses.push_back(new CudaTensor<Float_T>(
-            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), mNbOutputs}));
+            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()}));
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
@@ -171,14 +171,14 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnSetFilter4dDescriptor(mFilterDesc.back(),
                                                       CudaContext::data_type,
                                                       CUDNN_TENSOR_NCHW,
-                                                      mNbOutputs,
+                                                      getNbOutputs(),
                                                       mInputs[k].dimZ(),
                                                       mKernelHeight,
                                                       mKernelWidth));
 #else
         CHECK_CUDNN_STATUS(cudnnSetFilter4dDescriptor(mFilterDesc.back(),
                                                       CudaContext::data_type,
-                                                      mNbOutputs,
+                                                      getNbOutputs(),
                                                       mInputs[k].dimZ(),
                                                       mKernelHeight,
                                                       mKernelWidth));
@@ -374,7 +374,7 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
             // Set the non-connected kernels diff to 0
             unsigned int offset = 0;
 
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                      ++channel) {
                     if (!isConnection(channel, output)) {

@@ -116,7 +116,7 @@ public:
     virtual ~BatchNormCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
     virtual void setScale(unsigned int channel,
                           unsigned int sx,
                           unsigned int sy,

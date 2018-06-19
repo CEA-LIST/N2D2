@@ -133,7 +133,7 @@ public:
     virtual ~PoolCell() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     // Pool width
     const unsigned int mPoolWidth;

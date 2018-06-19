@@ -30,12 +30,11 @@ N2D2::DropoutCell::DropoutCell(const std::string& name, unsigned int nbOutputs)
 
 void N2D2::DropoutCell::getStats(Stats& stats) const
 {
-    stats.nbNeurons += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNeurons += getOutputsSize();
+    stats.nbNodes += getOutputsSize();
 }
 
-void N2D2::DropoutCell::setOutputsSize()
+void N2D2::DropoutCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth;
-    mOutputsHeight = mChannelsHeight;
+    mOutputsDims = mInputsDims;
 }

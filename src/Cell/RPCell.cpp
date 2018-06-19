@@ -49,8 +49,8 @@ void N2D2::RPCell::getStats(Stats& /*stats*/) const
 
 }
 
-void N2D2::RPCell::setOutputsSize()
+void N2D2::RPCell::setOutputsDims()
 {
-    mOutputsWidth = 1;
-    mOutputsHeight = 1;
+    mOutputsDims[0] = 1;
+    mOutputsDims[1] = 1;
 }

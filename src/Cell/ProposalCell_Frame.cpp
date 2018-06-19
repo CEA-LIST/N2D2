@@ -169,7 +169,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 mOutputs(2, batchPos) = ROIs[n][proposal].w;
                 mOutputs(3, batchPos) = ROIs[n][proposal].h;
 
-                if(mNbOutputs == 5)
+                if(getNbOutputs() == 5)
                     mOutputs(4, batchPos) = maxCls[n][proposal];
 
             }
@@ -347,7 +347,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     mOutputs(2, batchPos) = ROIs[n][cls][i].w;
                     mOutputs(3, batchPos) = ROIs[n][cls][i].h;
 
-                    if(mNbOutputs > 4)
+                    if(getNbOutputs() > 4)
                     {
                         mOutputs(4, batchPos) = (float) cls;
 
@@ -386,7 +386,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                     mOutputs(1, batchPos) = 0.0;
                     mOutputs(2, batchPos) = 0.0;
                     mOutputs(3, batchPos) = 0.0;
-                    if(mNbOutputs > 4 )
+                    if(getNbOutputs() > 4 )
                         mOutputs(4, batchPos) = 0.0;
 
             }
@@ -406,18 +406,18 @@ void N2D2::ProposalCell_Frame::update()
     // Nothing to update
 }
 
-void N2D2::ProposalCell_Frame::setOutputsSize()
+void N2D2::ProposalCell_Frame::setOutputsDims()
 {
-    ProposalCell::setOutputsSize();
+    ProposalCell::setOutputsDims();
 
     if (mOutputs.empty()) {
-        mOutputs.resize({mOutputsWidth,
-                        mOutputsHeight,
-                        mNbOutputs,
+        mOutputs.resize({mOutputsDims[0],
+                        mOutputsDims[1],
+                        getNbOutputs(),
                         mInputs.dimB()});
-        mDiffInputs.resize({mOutputsWidth,
-                           mOutputsHeight,
-                           mNbOutputs,
+        mDiffInputs.resize({mOutputsDims[0],
+                           mOutputsDims[1],
+                           getNbOutputs(),
                            mInputs.dimB()});
     }
 }

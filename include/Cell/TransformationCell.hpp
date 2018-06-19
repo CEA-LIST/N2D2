@@ -68,7 +68,7 @@ public:
 protected:
     std::shared_ptr<Transformation> mTransformation;
 
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 };
 }
 

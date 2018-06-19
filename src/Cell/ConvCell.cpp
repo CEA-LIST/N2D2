@@ -56,7 +56,7 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
                                        unsigned int output,
                                        unsigned int channel) const
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "ConvCell::logFreeParameters(): output not within range.");
 
@@ -84,7 +84,7 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
 void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
                                        unsigned int output) const
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "ConvCell::logFreeParameters(): output not within range.");
 
@@ -106,7 +106,7 @@ void N2D2::ConvCell::logFreeParameters(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         std::ostringstream fileName;
         fileName << dirName << "/cell-" << output << ".dat";
 
@@ -115,12 +115,12 @@ void N2D2::ConvCell::logFreeParameters(const std::string& dirName) const
 
     std::stringstream termStr;
     termStr << "set term png size " << 50 * getNbChannels() << ","
-            << 50 * mNbOutputs << " enhanced";
+            << 50 * getNbOutputs() << " enhanced";
 
     Gnuplot multiplot;
     multiplot.saveToFile(dirName + ".dat");
     multiplot << termStr.str();
-    multiplot.setMultiplot(mNbOutputs, getNbChannels());
+    multiplot.setMultiplot(getNbOutputs(), getNbChannels());
     multiplot.set("lmargin 0.1");
     multiplot.set("tmargin 0.1");
     multiplot.set("rmargin 0.1");
@@ -131,7 +131,7 @@ void N2D2::ConvCell::logFreeParameters(const std::string& dirName) const
     multiplot.set("format y \"\"");
     multiplot.unset("colorbox");
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         std::ostringstream fileName;
         fileName << dirName << "/cell-" << output << ".dat";
 
@@ -143,7 +143,7 @@ unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
 {
     unsigned long long int nbSharedSynapses = 0;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (isConnection(channel, output))
                 nbSharedSynapses += mKernelWidth * mKernelHeight;
@@ -151,7 +151,7 @@ unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
     }
 
     if (!mNoBias)
-        nbSharedSynapses += mNbOutputs;
+        nbSharedSynapses += getNbOutputs();
 
     return nbSharedSynapses;
 }
@@ -159,10 +159,10 @@ unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
 unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
 {
     const unsigned int oxSize
-        = (unsigned int)((mChannelsWidth + 2 * mPaddingX - mKernelWidth
+        = (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
                           + mStrideX) / (double)mStrideX);
     const unsigned int oySize
-        = (unsigned int)((mChannelsHeight + 2 * mPaddingY - mKernelHeight
+        = (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
                           + mStrideY) / (double)mStrideY);
 
     unsigned long long int nbSynapsesPerConnection = 0;
@@ -177,11 +177,11 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
             const unsigned int syMin = (unsigned int)std::max(
                 (int)mPaddingY - (int)(oy * mStrideY), 0);
             const unsigned int sxMax = Utils::clamp
-                <int>(mChannelsWidth + mPaddingX - ox * mStrideX,
+                <int>(mInputsDims[0] + mPaddingX - ox * mStrideX,
                       0,
                       mKernelWidth);
             const unsigned int syMax = Utils::clamp
-                <int>(mChannelsHeight + mPaddingY - oy * mStrideY,
+                <int>(mInputsDims[1] + mPaddingY - oy * mStrideY,
                       0,
                       mKernelHeight);
 
@@ -193,7 +193,7 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
 
     unsigned long long int nbVirtualSynapses = 0;
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (isConnection(channel, output))
                 nbVirtualSynapses += nbSynapsesPerConnection;
@@ -211,7 +211,7 @@ void N2D2::ConvCell::setKernel(unsigned int output,
                                const Matrix<double>& value,
                                bool normalize)
 {
-    if (output >= mNbOutputs)
+    if (output >= getNbOutputs())
         throw std::domain_error(
             "ConvCell::setKernel(): output not within range.");
 
@@ -272,7 +272,7 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
     const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
 
     if (mWeightsExportFormat == OCHW) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
@@ -303,7 +303,7 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                 for (unsigned int channel = 0; channel < getNbChannels();
                     ++channel)
                 {
-                    for (unsigned int output = 0; output < mNbOutputs; ++output)
+                    for (unsigned int output = 0; output < getNbOutputs(); ++output)
                     {
                         const unsigned int outputRemap = (!outputsMap.empty())
                             ? outputsMap.find(output)->second : output;
@@ -335,7 +335,7 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
             throw std::runtime_error("Could not create synaptic file: "
                                       + biasesFile);
 
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
@@ -389,7 +389,7 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
     const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
 
     if (mWeightsExportFormat == OCHW) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
@@ -431,7 +431,7 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
                 for (unsigned int channel = 0; channel < getNbChannels();
                     ++channel)
                 {
-                    for (unsigned int output = 0; output < mNbOutputs; ++output)
+                    for (unsigned int output = 0; output < getNbOutputs(); ++output)
                     {
                         const unsigned int outputRemap = (!outputsMap.empty())
                             ? outputsMap.find(output)->second : output;
@@ -457,7 +457,7 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
         }
 
         if (!mNoBias) {
-            for (unsigned int output = 0; output < mNbOutputs; ++output) {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 const unsigned int outputRemap = (!outputsMap.empty())
                     ? outputsMap.find(output)->second : output;
 
@@ -495,9 +495,9 @@ void N2D2::ConvCell::logFreeParametersDistrib(const std::string& fileName) const
 {
     // Append all weights
     std::vector<double> weights;
-    weights.reserve(mNbOutputs * getNbChannels());
+    weights.reserve(getNbOutputs() * getNbChannels());
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -584,12 +584,12 @@ void N2D2::ConvCell::writeMap(const std::string& fileName) const
     std::stringstream plotCmd;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             data << isConnection(channel, output) << " ";
             plotCmd << isConnection(channel, output) << " ";
         }
 
-        if (mNbOutputs == 1)
+        if (getNbOutputs() == 1)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -616,7 +616,7 @@ void N2D2::ConvCell::writeMap(const std::string& fileName) const
     }
 
     if (getNbChannels() == 1) {
-        for (unsigned int output = 0; output < mNbOutputs; ++output)
+        for (unsigned int output = 0; output < getNbOutputs(); ++output)
             plotCmd << "0 ";
 
         plotCmd << "\n";
@@ -628,7 +628,7 @@ void N2D2::ConvCell::writeMap(const std::string& fileName) const
     std::stringstream xtics;
     xtics << "(";
 
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         if (output > 0)
             xtics << ", ";
 
@@ -649,8 +649,8 @@ void N2D2::ConvCell::writeMap(const std::string& fileName) const
 
 void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
 {
-#pragma omp parallel for if (mNbOutputs > 16)
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+#pragma omp parallel for if (getNbOutputs() > 16)
+    for (int output = 0; output < (int)getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -681,7 +681,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
 
-    for (int output = 0; output < (int)mNbOutputs; ++output) {
+    for (int output = 0; output < (int)getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -709,7 +709,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
 
 void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
 {
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -737,7 +737,7 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
 void N2D2::ConvCell::processFreeParameters(const std::function
                                            <double(const double&)>& func)
 {
-    for (unsigned int output = 0; output < mNbOutputs; ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (!isConnection(channel, output))
                 continue;
@@ -772,13 +772,13 @@ void N2D2::ConvCell::getStats(Stats& stats) const
     stats.nbConnections += nbVirtualSynapses;
 }
 
-void N2D2::ConvCell::setOutputsSize()
+void N2D2::ConvCell::setOutputsDims()
 {
-    mOutputsWidth = (unsigned int)std::ceil(
-        std::floor((mChannelsWidth + 2 * mPaddingX - mKernelWidth + mStrideX)
+    mOutputsDims[0] = (unsigned int)std::ceil(
+        std::floor((mInputsDims[0] + 2 * mPaddingX - mKernelWidth + mStrideX)
                    / (double)mStrideX) / (double)mSubSampleX);
-    mOutputsHeight = (unsigned int)std::ceil(
-        std::floor((mChannelsHeight + 2 * mPaddingY - mKernelHeight + mStrideY)
+    mOutputsDims[1] = (unsigned int)std::ceil(
+        std::floor((mInputsDims[1] + 2 * mPaddingY - mKernelHeight + mStrideY)
                    / (double)mStrideY) / (double)mSubSampleY);
 }
 
@@ -809,7 +809,7 @@ std::map<unsigned int, unsigned int> N2D2::ConvCell::outputsRemap() const
                 + (std::string)mOutputsRemap);
         }
 
-        for (int k = offset; k >= 0 && k < (int)mNbOutputs; k+= step) {
+        for (int k = offset; k >= 0 && k < (int)getNbOutputs(); k+= step) {
             outputRemap[k] = index;
             ++index;
         }

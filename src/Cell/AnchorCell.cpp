@@ -45,8 +45,7 @@ void N2D2::AnchorCell::getStats(Stats& /*stats*/) const
 
 }
 
-void N2D2::AnchorCell::setOutputsSize()
+void N2D2::AnchorCell::setOutputsDims()
 {
-    mOutputsWidth = mChannelsWidth;
-    mOutputsHeight = mChannelsHeight;
+    mOutputsDims = mInputsDims;
 }

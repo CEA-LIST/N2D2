@@ -94,7 +94,7 @@ public:
     virtual ~ProposalCell_Frame_CUDA() {};
 
 protected:
-    virtual void setOutputsSize();
+    virtual void setOutputsDims();
 
     CudaTensor<Float_T> mMeansCUDA;
     CudaTensor<Float_T> mStdCUDA;
