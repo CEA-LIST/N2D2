@@ -45,7 +45,7 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
     const unsigned int scoreIndex = iniConfig.getProperty
                                    <unsigned int>("ScoreIndex", 0);
     const unsigned int IoUIndex = iniConfig.getProperty
-                                   <unsigned int>("IoUIndex", 5);            
+                                   <unsigned int>("IoUIndex", 5);
     const bool withNMS = iniConfig.getProperty
                                    <bool>("ApplyNMS", false);
 
@@ -133,7 +133,8 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
             cell->addInput((*it).get(), x0, y0, width, height);
     }
 
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
 }

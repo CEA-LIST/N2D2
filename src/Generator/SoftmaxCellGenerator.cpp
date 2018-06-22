@@ -84,7 +84,8 @@ N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
             cell->addInput((*it).get(), x0, y0, width, height);
     }
 
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
 }

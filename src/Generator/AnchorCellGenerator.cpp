@@ -139,9 +139,8 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
     }
 
     std::cout << "  # Anchors: " << anchors.size() << std::endl;
-    std::cout << "  # Outputs size: " << cell->getOutputsWidth() << "x"
-              << cell->getOutputsHeight() << std::endl;
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
 }

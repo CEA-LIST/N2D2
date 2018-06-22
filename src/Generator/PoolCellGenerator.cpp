@@ -70,39 +70,38 @@ N2D2::PoolCellGenerator::generate(Network& network,
         strideDims = iniConfig.getProperty
                                 <std::vector<unsigned int> >("StrideDims");
     }
-    else if (iniConfig.isProperty("Stride"))
-        strideDims.resize(2,
+    else if (iniConfig.isProperty("Stride")) {
+        strideDims.resize(poolDims.size(),
                              iniConfig.getProperty<unsigned int>("Stride"));
+    }
     else {
         strideDims.push_back(iniConfig.getProperty
                                      <unsigned int>("StrideX", 1));
         strideDims.push_back(iniConfig.getProperty
                                      <unsigned int>("StrideY", 1));
-
-        if (iniConfig.isProperty("StrideZ")) {
-            strideDims.push_back(iniConfig.getProperty
-                                         <unsigned int>("StrideZ"));
-        }
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideZ", 1));
+        strideDims.resize(poolDims.size(), 1);
     }
 
     std::vector<unsigned int> paddingDims;
 
     if (iniConfig.isProperty("PaddingDims")) {
         paddingDims = iniConfig.getProperty
-        <std::vector<unsigned int> >("PaddingDims");
+                                <std::vector<unsigned int> >("PaddingDims");
     }
-    else if (iniConfig.isProperty("Padding"))
-        paddingDims.resize(2, iniConfig.getProperty<unsigned int>("Padding"));
+    else if (iniConfig.isProperty("Padding")) {
+        paddingDims.resize(poolDims.size(),
+                           iniConfig.getProperty<int unsigned>("Padding"));
+    }
     else {
         paddingDims.push_back(iniConfig.getProperty
-                              <unsigned int>("PaddingX", 0));
+                              <int unsigned>("PaddingX", 0));
         paddingDims.push_back(iniConfig.getProperty
-                              <unsigned int>("PaddingY", 0));
-
-        if (iniConfig.isProperty("PaddingZ")) {
-            paddingDims.push_back(iniConfig.getProperty
-                                  <unsigned int>("PaddingZ"));
-        }
+                              <int unsigned>("PaddingY", 0));
+        paddingDims.push_back(iniConfig.getProperty
+                              <int unsigned>("PaddingZ", 0));
+        paddingDims.resize(poolDims.size(), 0);
     }
 
     const PoolCell::Pooling pooling = iniConfig.getProperty
@@ -180,9 +179,8 @@ N2D2::PoolCellGenerator::generate(Network& network,
         }
     }
 
-    std::cout << "  # Outputs size: " << cell->getOutputsWidth() << "x"
-              << cell->getOutputsHeight() << std::endl;
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     Utils::createDirectories("map");
     cell->writeMap("map/" + section + "_map.dat");

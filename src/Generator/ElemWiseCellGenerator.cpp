@@ -109,7 +109,9 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
         else
             cell->addInput((*it).get());
     }
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
 }

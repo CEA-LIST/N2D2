@@ -54,7 +54,7 @@ N2D2::PaddingCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<PaddingCell> cell = Registrar
-        <PaddingCell>::create(model)(section, 
+        <PaddingCell>::create(model)(section,
                                      nbOutputs,
                                      topPad,
                                      botPad,
@@ -72,7 +72,7 @@ N2D2::PaddingCellGenerator::generate(Network& /*network*/,
 
     // Load configuration file (if exists)
     cell->loadParameters(section + ".cfg", true);
-    
+
     // Connect the cell to the parents
     for (std::vector<std::shared_ptr<Cell> >::const_iterator it
          = parents.begin(),
@@ -91,11 +91,9 @@ N2D2::PaddingCellGenerator::generate(Network& /*network*/,
                                      + iniConfig.getFileName());
         }
     }
-    
-    std::cout << "  # Outputs size: " << cell->getOutputsWidth() << "x"
-    << cell->getOutputsHeight() << std::endl;
 
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
 }

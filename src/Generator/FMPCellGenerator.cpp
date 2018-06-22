@@ -109,9 +109,8 @@ N2D2::FMPCellGenerator::generate(Network& network,
         }
     }
 
-    std::cout << "  # Outputs size: " << cell->getOutputsWidth() << "x"
-              << cell->getOutputsHeight() << std::endl;
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     Utils::createDirectories("map");
     cell->writeMap("map/" + section + "_map.dat");

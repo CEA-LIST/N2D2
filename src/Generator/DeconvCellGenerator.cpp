@@ -74,19 +74,18 @@ N2D2::DeconvCellGenerator::generate(Network& network,
         strideDims = iniConfig.getProperty
                                 <std::vector<unsigned int> >("StrideDims");
     }
-    else if (iniConfig.isProperty("Stride"))
-        strideDims.resize(2,
+    else if (iniConfig.isProperty("Stride")) {
+        strideDims.resize(kernelDims.size(),
                              iniConfig.getProperty<unsigned int>("Stride"));
+    }
     else {
         strideDims.push_back(iniConfig.getProperty
                                      <unsigned int>("StrideX", 1));
         strideDims.push_back(iniConfig.getProperty
                                      <unsigned int>("StrideY", 1));
-
-        if (iniConfig.isProperty("StrideZ")) {
-            strideDims.push_back(iniConfig.getProperty
-                                         <unsigned int>("StrideZ"));
-        }
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideZ", 1));
+        strideDims.resize(kernelDims.size(), 1);
     }
 
     std::vector<int> paddingDims;
@@ -94,15 +93,15 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     if (iniConfig.isProperty("PaddingDims")) {
         paddingDims = iniConfig.getProperty<std::vector<int> >("PaddingDims");
     }
-    else if (iniConfig.isProperty("Padding"))
-        paddingDims.resize(2, iniConfig.getProperty<int>("Padding"));
+    else if (iniConfig.isProperty("Padding")) {
+        paddingDims.resize(kernelDims.size(),
+                           iniConfig.getProperty<int>("Padding"));
+    }
     else {
         paddingDims.push_back(iniConfig.getProperty<int>("PaddingX", 0));
         paddingDims.push_back(iniConfig.getProperty<int>("PaddingY", 0));
-
-        if (iniConfig.isProperty("PaddingZ")) {
-            paddingDims.push_back(iniConfig.getProperty<int>("PaddingZ"));
-        }
+        paddingDims.push_back(iniConfig.getProperty<int>("PaddingZ", 0));
+        paddingDims.resize(kernelDims.size(), 0);
     }
 
     std::shared_ptr<Activation<Float_T> > activation
@@ -243,9 +242,8 @@ N2D2::DeconvCellGenerator::generate(Network& network,
               << std::endl;
     std::cout << "  # Virtual synapses: " << cell->getNbVirtualSynapses()
               << std::endl;
-    std::cout << "  # Outputs size: " << cell->getOutputsWidth() << "x"
-              << cell->getOutputsHeight() << std::endl;
-    std::cout << "  # Outputs: " << cell->getNbOutputs() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     Utils::createDirectories("map");
     cell->writeMap("map/" + section + "_map.dat");
