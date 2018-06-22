@@ -106,6 +106,19 @@ public:
         const std::string mVarName;
     };
 
+    class SetSection : public Section {
+    public:
+        SetSection(const std::string& varName)
+            : mVarName(varName)
+        {
+        }
+        void render(std::ostream& output,
+                    std::map<std::string, std::string>& params);
+
+    private:
+        const std::string mVarName;
+    };
+
     template <class T>
     void addParameter(const std::string& name, const T& value);
     template <class T>

@@ -210,6 +210,23 @@ void N2D2::TemplateParser::BlockSection::render(
     }
 }
 
+void N2D2::TemplateParser::SetSection::render(std::ostream& /*output*/,
+                                             std::map
+                                             <std::string, std::string>& params)
+{
+    std::ostringstream outputStr;
+
+    for (std::vector<Section*>::iterator it = mSections.begin(),
+                                         itEnd = mSections.end();
+         it != itEnd;
+         ++it)
+    {
+        (*it)->render(outputStr, params);
+    }
+
+    params[mVarName] = outputStr.str();
+}
+
 void N2D2::TemplateParser::render(std::ostream& output,
                                   const std::string& source)
 {
@@ -438,6 +455,25 @@ size_t N2D2::TemplateParser::processSection(const std::string& source,
                         + fileName);
 
                 startPos = controlEndPos + 2;
+            } else if (controlArgs[0] == "set") {
+                if (controlArgs.size() != 2)
+                    throw std::runtime_error("Bad set syntax control section");
+
+                const std::string setVarName = controlArgs[1];
+
+                SetSection* setSection = new SetSection(setVarName);
+                section->push_back(setSection);
+
+                startPos = processSection(source, controlEndPos + 2, setSection);
+            } else if (controlArgs[0] == "endset") {
+                if (controlArgs.size() > 1)
+                    throw std::runtime_error("Bad endset control section");
+
+                if (dynamic_cast<SetSection*>(section) == NULL)
+                    throw std::runtime_error(
+                        "endset while not in set conditional section!");
+
+                return controlEndPos + 2;
             } else
                 throw std::runtime_error("Unknown control section");
         }
