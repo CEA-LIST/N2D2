@@ -41,27 +41,68 @@ N2D2::PoolCellGenerator::generate(Network& network,
     std::cout << "Layer: " << section << " [Pool(" << model << ")]"
               << std::endl;
 
-    const unsigned int poolWidth = iniConfig.getProperty
-                                   <unsigned int>("PoolWidth");
-    const unsigned int poolHeight = iniConfig.getProperty
-                                    <unsigned int>("PoolHeight");
+    std::vector<unsigned int> poolDims;
+
+    if (iniConfig.isProperty("PoolDims")) {
+        poolDims = iniConfig.getProperty
+                                     <std::vector<unsigned int> >("PoolDims");
+    }
+    else if (iniConfig.isProperty("Pool"))
+        poolDims.resize(2, iniConfig.getProperty<unsigned int>("Pool"));
+    else {
+        poolDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("PoolWidth"));
+        poolDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("PoolHeight"));
+
+        if (iniConfig.isProperty("PoolDepth")) {
+            poolDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("PoolDepth"));
+        }
+    }
+
     const unsigned int nbChannels = iniConfig.getProperty
                                     <unsigned int>("NbChannels");
 
-    unsigned int strideX, strideY, paddingX, paddingY;
+    std::vector<unsigned int> strideDims;
 
-    if (iniConfig.isProperty("Stride"))
-        strideX = strideY = iniConfig.getProperty<unsigned int>("Stride");
+    if (iniConfig.isProperty("StrideDims")) {
+        strideDims = iniConfig.getProperty
+                                <std::vector<unsigned int> >("StrideDims");
+    }
+    else if (iniConfig.isProperty("Stride"))
+        strideDims.resize(2,
+                             iniConfig.getProperty<unsigned int>("Stride"));
     else {
-        strideX = iniConfig.getProperty<unsigned int>("StrideX", 1);
-        strideY = iniConfig.getProperty<unsigned int>("StrideY", 1);
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideX", 1));
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideY", 1));
+
+        if (iniConfig.isProperty("StrideZ")) {
+            strideDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("StrideZ"));
+        }
     }
 
-    if (iniConfig.isProperty("Padding"))
-        paddingX = paddingY = iniConfig.getProperty<unsigned int>("Padding");
+    std::vector<unsigned int> paddingDims;
+
+    if (iniConfig.isProperty("PaddingDims")) {
+        paddingDims = iniConfig.getProperty
+        <std::vector<unsigned int> >("PaddingDims");
+    }
+    else if (iniConfig.isProperty("Padding"))
+        paddingDims.resize(2, iniConfig.getProperty<unsigned int>("Padding"));
     else {
-        paddingX = iniConfig.getProperty<unsigned int>("PaddingX", 0);
-        paddingY = iniConfig.getProperty<unsigned int>("PaddingY", 0);
+        paddingDims.push_back(iniConfig.getProperty
+                              <unsigned int>("PaddingX", 0));
+        paddingDims.push_back(iniConfig.getProperty
+                              <unsigned int>("PaddingY", 0));
+
+        if (iniConfig.isProperty("PaddingZ")) {
+            paddingDims.push_back(iniConfig.getProperty
+                                  <unsigned int>("PaddingZ"));
+        }
     }
 
     const PoolCell::Pooling pooling = iniConfig.getProperty
@@ -75,13 +116,10 @@ N2D2::PoolCellGenerator::generate(Network& network,
     std::shared_ptr<PoolCell> cell = Registrar
         <PoolCell>::create(model)(network,
                                   section,
-                                  poolWidth,
-                                  poolHeight,
+                                  poolDims,
                                   nbChannels,
-                                  strideX,
-                                  strideY,
-                                  paddingX,
-                                  paddingY,
+                                  strideDims,
+                                  paddingDims,
                                   pooling,
                                   activation);
 

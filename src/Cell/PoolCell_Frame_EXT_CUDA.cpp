@@ -29,35 +29,44 @@ N2D2::PoolCell_Frame_EXT_CUDA::mRegistrar("Frame_EXT_CUDA",
 
 N2D2::PoolCell_Frame_EXT_CUDA::PoolCell_Frame_EXT_CUDA(
     const std::string& name,
-    unsigned int poolWidth,
-    unsigned int poolHeight,
+    const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
-    unsigned int strideX,
-    unsigned int strideY,
-    unsigned int paddingX,
-    unsigned int paddingY,
+    const std::vector<unsigned int>& strideDims,
+    const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
     const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       PoolCell(name,
-               poolWidth,
-               poolHeight,
+               poolDims,
                nbOutputs,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY,
+               strideDims,
+               paddingDims,
                pooling),
       Cell_Frame_CUDA(name, nbOutputs, activation),
       mPoolDesc(NULL)
 {
     // ctor
-    const PoolCell_Frame_Kernels::Descriptor poolDesc(poolWidth,
-                                                      poolHeight,
-                                                      strideX,
-                                                      strideY,
-                                                      paddingX,
-                                                      paddingY);
+    if (poolDims.size() != 2) {
+        throw std::domain_error("PoolCell_Frame_EXT_CUDA: only 2D pooling is"
+                                " supported");
+    }
+
+    if (strideDims.size() != poolDims.size()) {
+        throw std::domain_error("PoolCell_Frame_EXT_CUDA: the number of dimensions"
+                                " of stride must match the number of"
+                                " dimensions of the pooling.");
+    }
+
+    if (paddingDims.size() != poolDims.size()) {
+        throw std::domain_error("PoolCell_Frame_EXT_CUDA: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the pooling.");
+    }
+
+    const PoolCell_Frame_Kernels::Descriptor poolDesc(poolDims.size(),
+                                                      &poolDims[0],
+                                                      &strideDims[0],
+                                                      &paddingDims[0]);
 
     CHECK_CUDA_STATUS(cudaMalloc((void**)&mPoolDesc, sizeof(poolDesc)));
     CHECK_CUDA_STATUS(cudaMemcpy(mPoolDesc,

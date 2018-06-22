@@ -34,32 +34,23 @@ using namespace N2D2;
 class PoolCell_Frame_CUDA_Test : public PoolCell_Frame_CUDA {
 public:
     PoolCell_Frame_CUDA_Test(const std::string& name,
-                             unsigned int poolWidth,
-                             unsigned int poolHeight,
+                             const std::vector<unsigned int>& poolDims,
                              unsigned int nbOutputs,
-                             unsigned int strideX,
-                             unsigned int strideY,
-                             int paddingX,
-                             int paddingY,
+                             const std::vector<unsigned int>& strideDims,
+                             const std::vector<unsigned int>& paddingDims,
                              Pooling pooling)
         : Cell(name, nbOutputs),
           PoolCell(name,
-                   poolWidth,
-                   poolHeight,
+                   poolDims,
                    nbOutputs,
-                   strideX,
-                   strideY,
-                   paddingX,
-                   paddingY,
+                   strideDims,
+                   paddingDims,
                    pooling),
           PoolCell_Frame_CUDA(name,
-                              poolWidth,
-                              poolHeight,
+                              poolDims,
                               nbOutputs,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
+                              strideDims,
+                              paddingDims,
                               pooling) {};
 
     friend class UnitTest_PoolCell_Frame_CUDA_addInput__env;
@@ -75,7 +66,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int nbOutputs,
               unsigned int strideX,
               unsigned int strideY,
-              int paddingX,
+              unsigned int paddingX,
               unsigned int paddingY),
              std::make_tuple(3U, 3U, 1U, 1U, 1U, 0U, 0U),
              // 1
@@ -111,13 +102,10 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     PoolCell_Frame_CUDA pool1("pool1",
-                              poolWidth,
-                              poolHeight,
+                              std::vector<unsigned int>({poolWidth, poolHeight}),
                               nbOutputs,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
+                              std::vector<unsigned int>({strideX, strideY}),
+                              std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
     ASSERT_EQUALS(pool1.getName(), "pool1");
@@ -134,8 +122,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
-              int paddingX,
-              int paddingY,
+              unsigned int paddingX,
+              unsigned int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
              std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
@@ -177,13 +165,10 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     PoolCell_Frame_CUDA_Test pool1("pool1",
-                                   poolWidth,
-                                   poolHeight,
+                                   std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
+                                   std::vector<unsigned int>({strideX, strideY}),
+                                   std::vector<unsigned int>({paddingX, paddingY}),
                                    PoolCell::Max);
     pool1.addInput(env);
     pool1.initialize();
@@ -215,8 +200,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
-              int paddingX,
-              int paddingY,
+              unsigned int paddingX,
+              unsigned int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
              std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
@@ -257,15 +242,17 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     Network net;
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    PoolCell_Frame_CUDA_Test pool1("pool1", 4, 4, 1, 2, 2, 0, 0, PoolCell::Max);
+    PoolCell_Frame_CUDA_Test pool1("pool1",
+                                   std::vector<unsigned int>({4, 4}),
+                                   1,
+                                   std::vector<unsigned int>({2, 2}),
+                                   std::vector<unsigned int>({0, 0}),
+                                   PoolCell::Max);
     PoolCell_Frame_CUDA_Test pool2("pool2",
-                                   poolWidth,
-                                   poolHeight,
+                                   std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
+                                   std::vector<unsigned int>({strideX, strideY}),
+                                   std::vector<unsigned int>({paddingX, paddingY}),
                                    PoolCell::Max);
 
     pool1.addInput(env);
@@ -303,8 +290,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
-              int paddingX,
-              int paddingY,
+              unsigned int paddingX,
+              unsigned int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
              std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
@@ -346,13 +333,10 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     Network net;
 
     PoolCell_Frame_CUDA_Test pool1("pool1",
-                                   poolWidth,
-                                   poolHeight,
+                                   std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
+                                   std::vector<unsigned int>({strideX, strideY}),
+                                   std::vector<unsigned int>({paddingX, paddingY}),
                                    PoolCell::Max);
 
     MNIST_IDX_Database database;
@@ -392,9 +376,9 @@ TEST_DATASET(PoolCell_Frame_CUDA,
             for (unsigned int oy = 0; oy < pool1.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < pool1.getOutputsWidth(); ++ox) {
                     const unsigned int sxMin = (unsigned int)std::max(
-                        paddingX - (int)(ox * strideX), 0);
+                        (int)paddingX - (int)(ox * strideX), 0);
                     const unsigned int syMin = (unsigned int)std::max(
-                        paddingY - (int)(oy * strideY), 0);
+                        (int)paddingY - (int)(oy * strideY), 0);
                     const unsigned int sxMax = Utils::clamp
                         <int>(pool1.getChannelsWidth() + paddingX
                                 - ox * strideX,
@@ -406,8 +390,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                               0,
                               poolHeight);
 
-                    const int ix = (int)(ox * strideX) - paddingX;
-                    const int iy = (int)(oy * strideY) - paddingY;
+                    const int ix = (int)(ox * strideX) - (int)paddingX;
+                    const int iy = (int)(oy * strideY) - (int)paddingY;
 
                     // For each output, compute the pool value
                     Float_T poolValue = std::numeric_limits<Float_T>::lowest();
@@ -446,8 +430,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
               unsigned int poolHeight,
               unsigned int strideX,
               unsigned int strideY,
-              int paddingX,
-              int paddingY,
+              unsigned int paddingX,
+              unsigned int paddingY,
               unsigned int channelsWidth,
               unsigned int channelsHeight),
              std::make_tuple(3U, 3U, 1U, 1U, 0U, 0U, 24U, 24U),
@@ -489,13 +473,10 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     Network net;
 
     PoolCell_Frame_CUDA_Test pool1("pool1",
-                                   poolWidth,
-                                   poolHeight,
+                                   std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
+                                   std::vector<unsigned int>({strideX, strideY}),
+                                   std::vector<unsigned int>({paddingX, paddingY}),
                                    PoolCell::Max);
 
     MNIST_IDX_Database database;
@@ -541,9 +522,9 @@ TEST_DATASET(PoolCell_Frame_CUDA,
             for (unsigned int oy = 0; oy < pool1.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < pool1.getOutputsWidth(); ++ox) {
                     const unsigned int sxMin = (unsigned int)std::max(
-                        paddingX - (int)(ox * strideX), 0);
+                        (int)paddingX - (int)(ox * strideX), 0);
                     const unsigned int syMin = (unsigned int)std::max(
-                        paddingY - (int)(oy * strideY), 0);
+                        (int)paddingY - (int)(oy * strideY), 0);
                     const unsigned int sxMax = Utils::clamp
                         <int>(pool1.getChannelsWidth() + paddingX
                                 - ox * strideX,
@@ -555,8 +536,8 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                               0,
                               poolHeight);
 
-                    const int ix = (int)(ox * strideX) - paddingX;
-                    const int iy = (int)(oy * strideY) - paddingY;
+                    const int ix = (int)(ox * strideX) - (int)paddingX;
+                    const int iy = (int)(oy * strideY) - (int)paddingY;
 
                     // For each output, compute the pool value
                     Float_T poolValue = std::numeric_limits<Float_T>::lowest();

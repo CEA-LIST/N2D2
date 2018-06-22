@@ -64,13 +64,10 @@ public:
     typedef std::function
         <std::shared_ptr<PoolCell>(Network&,
                                    const std::string&,
+                                   const std::vector<unsigned int>&,
                                    unsigned int,
-                                   unsigned int,
-                                   unsigned int,
-                                   unsigned int,
-                                   unsigned int,
-                                   unsigned int,
-                                   unsigned int,
+                                   const std::vector<unsigned int>&,
+                                   const std::vector<unsigned int>&,
                                    Pooling,
                                    const std::shared_ptr<Activation<Float_T> >&
                                        activation)> RegistryCreate_T;
@@ -83,13 +80,12 @@ public:
     static const char* Type;
 
     PoolCell(const std::string& name,
-             unsigned int poolWidth,
-             unsigned int poolHeight,
+             const std::vector<unsigned int>& poolDims,
              unsigned int nbOutputs,
-             unsigned int strideX = 1,
-             unsigned int strideY = 1,
-             unsigned int paddingX = 0,
-             unsigned int paddingY = 0,
+             const std::vector<unsigned int>& strideDims
+                = std::vector<unsigned int>(2, 1U),
+             const std::vector<unsigned int>& paddingDims
+                = std::vector<unsigned int>(2, 0),
              Pooling pooling = Max);
     const char* getType() const
     {
@@ -98,27 +94,27 @@ public:
     unsigned long long int getNbConnections() const;
     unsigned int getPoolWidth() const
     {
-        return mPoolWidth;
+        return mPoolDims[0];
     };
     unsigned int getPoolHeight() const
     {
-        return mPoolHeight;
+        return mPoolDims[1];
     };
     unsigned int getStrideX() const
     {
-        return mStrideX;
+        return mStrideDims[0];
     };
     unsigned int getStrideY() const
     {
-        return mStrideY;
+        return mStrideDims[1];
     };
     int getPaddingX() const
     {
-        return mPaddingX;
+        return mPaddingDims[0];
     };
     int getPaddingY() const
     {
-        return mPaddingY;
+        return mPaddingDims[1];
     };
     Pooling getPooling() const
     {
@@ -135,18 +131,12 @@ public:
 protected:
     virtual void setOutputsDims();
 
-    // Pool width
-    const unsigned int mPoolWidth;
-    // Pool height
-    const unsigned int mPoolHeight;
-    // Horizontal stride for the pooling
-    const unsigned int mStrideX;
-    // Vertical stride for the pooling
-    const unsigned int mStrideY;
-    // Horizontal padding for the pooling
-    const unsigned int mPaddingX;
-    // Vertical padding for the pooling
-    const unsigned int mPaddingY;
+    // Pool dims
+    const std::vector<unsigned int> mPoolDims;
+    // Stride for the pooling
+    const std::vector<unsigned int> mStrideDims;
+    // Padding for the pooling
+    const std::vector<unsigned int> mPaddingDims;
     // Pooling type
     const Pooling mPooling;
 };

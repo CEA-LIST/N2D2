@@ -24,30 +24,44 @@ N2D2::Registrar<N2D2::UnpoolCell>
 N2D2::UnpoolCell_Frame::mRegistrar("Frame", N2D2::UnpoolCell_Frame::create);
 
 N2D2::UnpoolCell_Frame::UnpoolCell_Frame(const std::string& name,
-                                     unsigned int poolWidth,
-                                     unsigned int poolHeight,
-                                     unsigned int nbOutputs,
-                                     unsigned int strideX,
-                                     unsigned int strideY,
-                                     unsigned int paddingX,
-                                     unsigned int paddingY,
-                                     Pooling pooling,
-                                     const std::shared_ptr
-                                     <Activation<Float_T> >& activation)
+    const std::vector<unsigned int>& poolDims,
+    unsigned int nbOutputs,
+    const std::vector<unsigned int>& strideDims,
+    const std::vector<unsigned int>& paddingDims,
+    Pooling pooling,
+    const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       UnpoolCell(name,
-               poolWidth,
-               poolHeight,
+               poolDims,
                nbOutputs,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY,
+               strideDims,
+               paddingDims,
                pooling),
       Cell_Frame(name, nbOutputs, activation),
-      mPoolDesc(poolWidth, poolHeight, strideX, strideY, paddingX, paddingY)
+      mPoolDesc(poolDims.size(),
+                &poolDims[0],
+                &strideDims[0],
+                &paddingDims[0])
 {
     // ctor
+    assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);
+
+    if (poolDims.size() != 2) {
+        throw std::domain_error("UnpoolCell_Frame: only 2D pooling is"
+                                " supported");
+    }
+
+    if (strideDims.size() != poolDims.size()) {
+        throw std::domain_error("UnpoolCell_Frame: the number of dimensions"
+                                " of stride must match the number of"
+                                " dimensions of the pooling.");
+    }
+
+    if (paddingDims.size() != poolDims.size()) {
+        throw std::domain_error("UnpoolCell_Frame: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the pooling.");
+    }
 }
 
 void N2D2::UnpoolCell_Frame::initialize()

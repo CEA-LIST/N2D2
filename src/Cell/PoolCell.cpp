@@ -23,21 +23,15 @@
 const char* N2D2::PoolCell::Type = "Pool";
 
 N2D2::PoolCell::PoolCell(const std::string& name,
-                         unsigned int poolWidth,
-                         unsigned int poolHeight,
+                         const std::vector<unsigned int>& poolDims,
                          unsigned int nbOutputs,
-                         unsigned int strideX,
-                         unsigned int strideY,
-                         unsigned int paddingX,
-                         unsigned int paddingY,
+                         const std::vector<unsigned int>& strideDims,
+                         const std::vector<unsigned int>& paddingDims,
                          Pooling pooling)
     : Cell(name, nbOutputs),
-      mPoolWidth(poolWidth),
-      mPoolHeight(poolHeight),
-      mStrideX(strideX),
-      mStrideY(strideY),
-      mPaddingX(paddingX),
-      mPaddingY(paddingY),
+      mPoolDims(poolDims),
+      mStrideDims(strideDims),
+      mPaddingDims(paddingDims),
       mPooling(pooling)
 {
     // ctor
@@ -45,25 +39,40 @@ N2D2::PoolCell::PoolCell(const std::string& name,
 
 unsigned long long int N2D2::PoolCell::getNbConnections() const
 {
+    const size_t oSize = (!mOutputsDims.empty())
+        ? std::accumulate(mOutputsDims.begin(),
+                          mOutputsDims.begin() + mPoolDims.size(),
+                          1U, std::multiplies<size_t>())
+        : 0U;
+
     unsigned long long int nbConnectionsPerConnection = 0;
+    std::vector<size_t> oIndex(mPoolDims.size(), 0);
 
-    for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
-        for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
-            const unsigned int sxMax
-                = std::min<size_t>(mInputsDims[0] - ox * mStrideX, mPoolWidth);
-            const unsigned int syMax
-                = std::min<size_t>(mInputsDims[1] - oy * mStrideY, mPoolHeight);
+    for (size_t o = 0; o < oSize; ++o) {
+        unsigned long long int nbConnectionsO = 1;
+        bool stopIndex = false;
 
-            nbConnectionsPerConnection += sxMax * syMax;
+        for (int dim = mPoolDims.size() - 1; dim >= 0; --dim) {
+            if (!stopIndex) {
+                if (++oIndex[dim] < mOutputsDims[dim])
+                    stopIndex = true;
+                else
+                    oIndex[dim] = 0;
+            }
+
+            const unsigned int sMax = std::min<size_t>(mInputsDims[dim]
+                            - oIndex[dim] * mStrideDims[dim], mPoolDims[dim]);
+
+            nbConnectionsO *= sMax;
         }
+
+        nbConnectionsPerConnection += nbConnectionsO;
     }
 
     unsigned long long int nbConnections = 0;
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels();
-             ++channel)
-        {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (isConnection(channel, output))
                 nbConnections += nbConnectionsPerConnection;
         }
@@ -172,8 +181,21 @@ void N2D2::PoolCell::getStats(Stats& stats) const
 
 void N2D2::PoolCell::setOutputsDims()
 {
-    mOutputsDims[0] = (unsigned int)((mInputsDims[0] + 2 * mPaddingX
-        - mPoolWidth + mStrideX) / (double)mStrideX);
-    mOutputsDims[1] = (unsigned int)((mInputsDims[1] + 2 * mPaddingY
-        - mPoolHeight + mStrideY) / (double)mStrideY);
+    if (mPoolDims.size() != mInputsDims.size() - 1) {
+        std::stringstream msgStr;
+        msgStr << "PoolCell::setOutputsDims(): the number of dimensions of the"
+            " pooling (" << mPoolDims << ") must be equal to the number of"
+            " dimensions of the inputs (" << mInputsDims << ") minus one"
+            << std::endl;
+        throw std::runtime_error(msgStr.str());
+    }
+
+    // Keep the last dimension of mOutputsDims
+    mOutputsDims.resize(mInputsDims.size(), mOutputsDims.back());
+
+    for (unsigned int dim = 0; dim < mPoolDims.size(); ++dim) {
+        mOutputsDims[dim] = (unsigned int)((mInputsDims[dim]
+            + 2 * mPaddingDims[dim] - mPoolDims[dim] + mStrideDims[dim])
+                                           / (double)mStrideDims[dim]);
+    }
 }

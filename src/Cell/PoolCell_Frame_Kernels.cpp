@@ -41,20 +41,20 @@ void N2D2::PoolCell_Frame_Kernels::forwardAverage(const Float_T* alpha,
             for (unsigned int oy = 0; oy < outputs.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs.dimX(); ++ox) {
                     const unsigned int sxMin = (unsigned int)std::max(
-                        desc.paddingX - (int)(ox * desc.strideX), 0);
+                        desc.padding[0] - (int)(ox * desc.stride[0]), 0);
                     const unsigned int syMin = (unsigned int)std::max(
-                        desc.paddingY - (int)(oy * desc.strideY), 0);
+                        desc.padding[1] - (int)(oy * desc.stride[1]), 0);
                     const unsigned int sxMax = Utils::clamp
-                        <int>(inputs.dimX() + desc.paddingX - ox * desc.strideX,
+                        <int>(inputs.dimX() + desc.padding[0] - ox * desc.stride[0],
                               0,
-                              desc.poolWidth);
+                              desc.pool[0]);
                     const unsigned int syMax = Utils::clamp
-                        <int>(inputs.dimY() + desc.paddingY - oy * desc.strideY,
+                        <int>(inputs.dimY() + desc.padding[1] - oy * desc.stride[1],
                               0,
-                              desc.poolHeight);
+                              desc.pool[1]);
 
-                    const int ix = (int)(ox * desc.strideX) - desc.paddingX;
-                    const int iy = (int)(oy * desc.strideY) - desc.paddingY;
+                    const int ix = (int)(ox * desc.stride[0]) - desc.padding[0];
+                    const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
 
                     // For each output, compute the pool value
                     Float_T poolValue = 0.0;
@@ -76,7 +76,7 @@ void N2D2::PoolCell_Frame_Kernels::forwardAverage(const Float_T* alpha,
                         }
 
                         poolCount += (countIncludePadding)
-                            ? (desc.poolWidth * desc.poolHeight)
+                            ? (desc.pool[0] * desc.pool[1])
                             : (sxMax - sxMin)*(syMax - syMin);
                     }
 
@@ -112,20 +112,20 @@ void N2D2::PoolCell_Frame_Kernels::forwardMax(const Float_T* alpha,
             for (unsigned int oy = 0; oy < outputs.dimY(); ++oy) {
                 for (unsigned int ox = 0; ox < outputs.dimX(); ++ox) {
                     const unsigned int sxMin = (unsigned int)std::max(
-                        desc.paddingX - (int)(ox * desc.strideX), 0);
+                        desc.padding[0] - (int)(ox * desc.stride[0]), 0);
                     const unsigned int syMin = (unsigned int)std::max(
-                        desc.paddingY - (int)(oy * desc.strideY), 0);
+                        desc.padding[1] - (int)(oy * desc.stride[1]), 0);
                     const unsigned int sxMax = Utils::clamp
-                        <int>(inputs.dimX() + desc.paddingX - ox * desc.strideX,
+                        <int>(inputs.dimX() + desc.padding[0] - ox * desc.stride[0],
                               0,
-                              desc.poolWidth);
+                              desc.pool[0]);
                     const unsigned int syMax = Utils::clamp
-                        <int>(inputs.dimY() + desc.paddingY - oy * desc.strideY,
+                        <int>(inputs.dimY() + desc.padding[1] - oy * desc.stride[1],
                               0,
-                              desc.poolHeight);
+                              desc.pool[1]);
 
-                    const int ix = (int)(ox * desc.strideX) - desc.paddingX;
-                    const int iy = (int)(oy * desc.strideY) - desc.paddingY;
+                    const int ix = (int)(ox * desc.stride[0]) - desc.padding[0];
+                    const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
 
                     Float_T poolValue = 0.0;
 
@@ -201,8 +201,8 @@ void N2D2::PoolCell_Frame_Kernels::backwardAverage(const Float_T* alpha,
             " exclude padding not implemented");
     }
 
-    const unsigned int oxStride = desc.strideX * diffInputs.dimX();
-    const unsigned int oyStride = desc.strideY * diffInputs.dimY();
+    const unsigned int oxStride = desc.stride[0] * diffInputs.dimX();
+    const unsigned int oyStride = desc.stride[1] * diffInputs.dimY();
     const unsigned int size = diffOutputs.dimB() * diffOutputs.dimZ();
 
     std::vector<unsigned int> poolChannelsCount(diffInputs.dimZ(), 0);
@@ -224,33 +224,33 @@ void N2D2::PoolCell_Frame_Kernels::backwardAverage(const Float_T* alpha,
         {
             for (unsigned int iy = 0; iy < diffOutputs.dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < diffOutputs.dimX(); ++ix) {
-                    const unsigned int ixPad = ix + desc.paddingX;
-                    const unsigned int iyPad = iy + desc.paddingY;
+                    const unsigned int ixPad = ix + desc.padding[0];
+                    const unsigned int iyPad = iy + desc.padding[1];
                     const unsigned int sxMax
-                        = std::min(desc.poolWidth, ixPad + 1);
+                        = std::min(desc.pool[0], ixPad + 1);
                     const unsigned int syMax
-                        = std::min(desc.poolHeight, iyPad + 1);
+                        = std::min(desc.pool[1], iyPad + 1);
 
                     Float_T poolGradient = 0.0;
 
-                    for (unsigned int sy = iyPad % desc.strideY,
-                                      sx0 = ixPad % desc.strideX;
+                    for (unsigned int sy = iyPad % desc.stride[1],
+                                      sx0 = ixPad % desc.stride[0];
                          sy < syMax;
-                         sy += desc.strideY)
+                         sy += desc.stride[1])
                     {
                         if (iyPad >= oyStride + sy)
                             continue;
 
                         for (unsigned int sx = sx0; sx < sxMax;
-                             sx += desc.strideX)
+                             sx += desc.stride[0])
                         {
                             // Border conditions
                             if (ixPad >= oxStride + sx)
                                 continue;
 
                             // Output node coordinates
-                            const unsigned int ox = (ixPad - sx) / desc.strideX;
-                            const unsigned int oy = (iyPad - sy) / desc.strideY;
+                            const unsigned int ox = (ixPad - sx) / desc.stride[0];
+                            const unsigned int oy = (iyPad - sy) / desc.stride[1];
 
                             for (unsigned int output = 0;
                                  output < diffInputs.dimZ();
@@ -269,7 +269,7 @@ void N2D2::PoolCell_Frame_Kernels::backwardAverage(const Float_T* alpha,
                     }
 
                     const unsigned int poolCount
-                        = desc.poolWidth * desc.poolHeight;
+                        = desc.pool[0] * desc.pool[1];
 
                     diffOutputs(ix, iy, channel, batchPos)
                         = (*alpha) * (poolGradient / poolCount)
@@ -290,8 +290,8 @@ void N2D2::PoolCell_Frame_Kernels::backwardMax(const Float_T* alpha,
                                                const Tensor<ArgMax>& argMax,
                                                const Tensor<bool>& maps)
 {
-    const unsigned int oxStride = desc.strideX * diffInputs.dimX();
-    const unsigned int oyStride = desc.strideY * diffInputs.dimY();
+    const unsigned int oxStride = desc.stride[0] * diffInputs.dimX();
+    const unsigned int oyStride = desc.stride[1] * diffInputs.dimY();
     const unsigned int size = diffOutputs.dimB() * diffOutputs.dimZ();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -305,33 +305,33 @@ void N2D2::PoolCell_Frame_Kernels::backwardMax(const Float_T* alpha,
         {
             for (unsigned int iy = 0; iy < diffOutputs.dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < diffOutputs.dimX(); ++ix) {
-                    const unsigned int ixPad = ix + desc.paddingX;
-                    const unsigned int iyPad = iy + desc.paddingY;
+                    const unsigned int ixPad = ix + desc.padding[0];
+                    const unsigned int iyPad = iy + desc.padding[1];
                     const unsigned int sxMax
-                        = std::min(desc.poolWidth, ixPad + 1);
+                        = std::min(desc.pool[0], ixPad + 1);
                     const unsigned int syMax
-                        = std::min(desc.poolHeight, iyPad + 1);
+                        = std::min(desc.pool[1], iyPad + 1);
 
                     Float_T poolGradient = 0.0;
 
-                    for (unsigned int sy = iyPad % desc.strideY,
-                                      sx0 = ixPad % desc.strideX;
+                    for (unsigned int sy = iyPad % desc.stride[1],
+                                      sx0 = ixPad % desc.stride[0];
                          sy < syMax;
-                         sy += desc.strideY)
+                         sy += desc.stride[1])
                     {
                         if (iyPad >= oyStride + sy)
                             continue;
 
                         for (unsigned int sx = sx0; sx < sxMax;
-                             sx += desc.strideX)
+                             sx += desc.stride[0])
                         {
                             // Border conditions
                             if (ixPad >= oxStride + sx)
                                 continue;
 
                             // Output node coordinates
-                            const unsigned int ox = (ixPad - sx) / desc.strideX;
-                            const unsigned int oy = (iyPad - sy) / desc.strideY;
+                            const unsigned int ox = (ixPad - sx) / desc.stride[0];
+                            const unsigned int oy = (iyPad - sy) / desc.stride[1];
 
                             for (unsigned int output = 0;
                                  output < diffInputs.dimZ();

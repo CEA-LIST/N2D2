@@ -3358,24 +3358,43 @@ Convolutional layer.
  \hline
  Option [default value] & Description\\
  \hline\hline
-  \cellcolor{requiredcolor}\lstinline!KernelWidth! & Width of the kernel \\
-  \cellcolor{requiredcolor}\lstinline!KernelHeight! & Height of the kernel \\
+  \cellcolor{requiredcolor}\lstinline!KernelWidth! & Width of the kernels \\
+  \cellcolor{requiredcolor}\lstinline!KernelHeight! & Height of the kernels \\
+  \lstinline!KernelDepth! [] & Depth of the kernels (implies 3D kernels) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!Kernel! [] & Kernels size (implies 2D square kernels) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!KernelDims! [] & List of space-separated dimensions for N-D kernels \\
+  \hline
   \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \hline
   \lstinline!SubSampleX! [1] & X-axis subsampling factor of the output
   feature maps \\
   \lstinline!SubSampleY! [1] & Y-axis subsampling factor of the output
    feature maps \\
+  \lstinline!SubSampleZ! [] & Z-axis subsampling factor of the output
+   feature maps \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!SubSample! [1] & Subsampling factor of the output feature maps \\
-   & (mutually exclusive with \lstinline!SubSampleX!
-    and \lstinline!SubSampleY!) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!SubSampleDims! [] & List of space-separated subsampling dimensions for N-D kernels \\
+  \hline
   \lstinline!StrideX! [1] & X-axis stride of the kernels \\
   \lstinline!StrideY! [1] & Y-axis stride of the kernels \\
+  \lstinline!StrideZ! [] & Z-axis stride of the kernels \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!Stride! [1] & Stride of the kernels \\
-   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!StrideDims! [] & List of space-separated stride dimensions for N-D kernels \\
+  \hline
   \lstinline!PaddingX! [0] & X-axis input padding \\
   \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!PaddingZ! [] & Z-axis input padding \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!Padding! [0] & Input padding \\
-   & (mutually exclusive with \lstinline!PaddingX! and \lstinline!PaddingY!) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!PaddingDims! [] & List of space-separated padding dimensions for N-D kernels \\
+  \hline
   \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
@@ -3537,17 +3556,32 @@ Deconvolutionlayer.
  \hline
  Option [default value] & Description\\
  \hline\hline
-  \cellcolor{requiredcolor}\lstinline!KernelWidth! & Width of the kernel \\
-  \cellcolor{requiredcolor}\lstinline!KernelHeight! & Height of the kernel \\
+  \cellcolor{requiredcolor}\lstinline!KernelWidth! & Width of the kernels \\
+  \cellcolor{requiredcolor}\lstinline!KernelHeight! & Height of the kernels \\
+  \lstinline!KernelDepth! [] & Depth of the kernels (implies 3D kernels) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!Kernel! [] & Kernels size (implies 2D square kernels) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!KernelDims! [] & List of space-separated dimensions for N-D kernels \\
+  \hline
   \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \hline
   \lstinline!StrideX! [1] & X-axis stride of the kernels \\
   \lstinline!StrideY! [1] & Y-axis stride of the kernels \\
+  \lstinline!StrideZ! [] & Z-axis stride of the kernels \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!Stride! [1] & Stride of the kernels \\
-   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!StrideDims! [] & List of space-separated stride dimensions for N-D kernels \\
+  \hline
   \lstinline!PaddingX! [0] & X-axis input padding \\
   \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!PaddingZ! [] & Z-axis input padding \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!Padding! [0] & Input padding \\
-   & (mutually exclusive with \lstinline!PaddingX! and \lstinline!PaddingY!) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!PaddingDims! [] & List of space-separated padding dimensions for N-D kernels \\
+  \hline
   \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
@@ -3692,17 +3726,33 @@ The layer connectivity is the following:
  \hline\hline
   \cellcolor{requiredcolor}\lstinline!Pooling! & Type of pooling
   (\lstinline!Max! or \lstinline!Average!)\\
+  \hline
   \cellcolor{requiredcolor}\lstinline!PoolWidth! & Width of the pooling area \\
-  \cellcolor{requiredcolor}\lstinline!PoolHeight! & Height of the pooling
-area \\
+  \cellcolor{requiredcolor}\lstinline!PoolHeight! & Height of the pooling area \\
+  \lstinline!PoolDepth! [] & Depth of the pooling area (implies 3D pooling area) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!Pool! [] & Pooling area size (implies 2D square pooling area) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!PoolDims! [] & List of space-separated dimensions for N-D pooling area \\
+  \hline
   \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
-  \lstinline!StrideX! [1] & X-axis stride of the pooling areas \\
-  \lstinline!StrideY! [1] & Y-axis stride of the pooling areas \\
-  \lstinline!Stride! [1] & Stride of the pooling areas \\
-   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \hline
+  \lstinline!StrideX! [1] & X-axis stride of the pooling area \\
+  \lstinline!StrideY! [1] & Y-axis stride of the pooling area \\
+  \lstinline!StrideZ! [] & Z-axis stride of the pooling area \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!Stride! [1] & Stride of the pooling area \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!StrideDims! [] & List of space-separated stride dimensions for N-D pooling area \\
+  \hline
   \lstinline!PaddingX! [0] & X-axis input padding \\
   \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!PaddingZ! [] & Z-axis input padding \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!Padding! [0] & Input padding \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!PaddingDims! [] & List of space-separated padding dimensions for N-D pooling area \\
+  \hline
   \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
@@ -3779,20 +3829,36 @@ Unpooling layer.
  \hline\hline
   \cellcolor{requiredcolor}\lstinline!Pooling! & Type of pooling
   (\lstinline!Max! or \lstinline!Average!)\\
+  \hline
   \cellcolor{requiredcolor}\lstinline!PoolWidth! & Width of the pooling area \\
-  \cellcolor{requiredcolor}\lstinline!PoolHeight! & Height of the pooling
-area \\
+  \cellcolor{requiredcolor}\lstinline!PoolHeight! & Height of the pooling area \\
+  \lstinline!PoolDepth! [] & Depth of the pooling area (implies 3D pooling area) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!Pool! [] & Pooling area size (implies 2D square pooling area) \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \cellcolor{requiredcolor}\lstinline!PoolDims! [] & List of space-separated dimensions for N-D pooling area \\
+  \hline
   \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
   \cellcolor{requiredcolor}\lstinline!ArgMax! & Name of the associated pool
   layer for the argmax (the pool layer input and the unpool layer output
   dimension must match) \\
-  \lstinline!StrideX! [1] & X-axis stride of the pooling areas \\
-  \lstinline!StrideY! [1] & Y-axis stride of the pooling areas \\
-  \lstinline!Stride! [1] & Stride of the pooling areas \\
-   & (mutually exclusive with \lstinline!StrideX! and \lstinline!StrideY!) \\
+  \hline
+  \lstinline!StrideX! [1] & X-axis stride of the pooling area \\
+  \lstinline!StrideY! [1] & Y-axis stride of the pooling area \\
+  \lstinline!StrideZ! [] & Z-axis stride of the pooling area \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!Stride! [1] & Stride of the pooling area \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!StrideDims! [] & List of space-separated stride dimensions for N-D pooling area \\
+  \hline
   \lstinline!PaddingX! [0] & X-axis input padding \\
   \lstinline!PaddingY! [0] & Y-axis input padding \\
+  \lstinline!PaddingZ! [] & Z-axis input padding \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!Padding! [0] & Input padding \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!PaddingDims! [] & List of space-separated padding dimensions for N-D pooling area \\
+  \hline
   \lstinline!ActivationFunction! [\lstinline!Linear!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,

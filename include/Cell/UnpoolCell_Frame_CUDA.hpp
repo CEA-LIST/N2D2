@@ -34,39 +34,32 @@ class UnpoolCell_Frame_CUDA : public virtual UnpoolCell, public Cell_Frame_CUDA
 {
 public:
     UnpoolCell_Frame_CUDA(const std::string& name,
-                   unsigned int poolWidth,
-                   unsigned int poolHeight,
+                   const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
-                   unsigned int strideX = 1,
-                   unsigned int strideY = 1,
-                   unsigned int paddingX = 0,
-                   unsigned int paddingY = 0,
+                   const std::vector<unsigned int>& strideDims
+                      = std::vector<unsigned int>(2, 1U),
+                   const std::vector<unsigned int>& paddingDims
+                      = std::vector<unsigned int>(2, 0),
                    Pooling pooling = Max,
                    const std::shared_ptr<Activation<Float_T> >& activation
                    = std::shared_ptr<Activation<Float_T> >());
     static std::shared_ptr<UnpoolCell> create(Network& /*net*/,
-                                            const std::string& name,
-                                            unsigned int poolWidth,
-                                            unsigned int poolHeight,
-                                            unsigned int nbOutputs,
-                                            unsigned int strideX = 1,
-                                            unsigned int strideY = 1,
-                                            unsigned int paddingX = 0,
-                                            unsigned int paddingY = 0,
-                                            Pooling pooling = Max,
-                                            const std::shared_ptr
-                                            <Activation<Float_T> >& activation
-                                            = std::shared_ptr
-                                            <Activation<Float_T> >())
+        const std::string& name,
+        const std::vector<unsigned int>& poolDims,
+        unsigned int nbOutputs,
+        const std::vector<unsigned int>& strideDims
+            = std::vector<unsigned int>(2, 1U),
+        const std::vector<unsigned int>& paddingDims
+            = std::vector<unsigned int>(2, 0),
+        Pooling pooling = Max,
+        const std::shared_ptr<Activation<Float_T> >& activation
+            = std::shared_ptr<Activation<Float_T> >())
     {
         return std::make_shared<UnpoolCell_Frame_CUDA>(name,
-                                                       poolWidth,
-                                                       poolHeight,
+                                                       poolDims,
                                                        nbOutputs,
-                                                       strideX,
-                                                       strideY,
-                                                       paddingX,
-                                                       paddingY,
+                                                       strideDims,
+                                                       paddingDims,
                                                        pooling,
                                                        activation);
     }

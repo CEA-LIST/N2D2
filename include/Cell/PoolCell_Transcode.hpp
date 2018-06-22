@@ -40,39 +40,34 @@ public:
 
     PoolCell_Transcode(Network& net,
                        const std::string& name,
-                       unsigned int poolWidth,
-                       unsigned int poolHeight,
+                       const std::vector<unsigned int>& poolDims,
                        unsigned int nbOutputs,
-                       unsigned int strideX = 1,
-                       unsigned int strideY = 1,
-                       unsigned int paddingX = 0,
-                       unsigned int paddingY = 0,
+                       const std::vector<unsigned int>& strideDims
+                          = std::vector<unsigned int>(2, 1U),
+                       const std::vector<unsigned int>& paddingDims
+                          = std::vector<unsigned int>(2, 0),
                        PoolCell::Pooling pooling = PoolCell::Max,
                        const std::shared_ptr<Activation<Float_T> >& activation
                        = std::shared_ptr<Activation<Float_T> >());
     static std::shared_ptr<PoolCell>
     create(Network& net,
            const std::string& name,
-           unsigned int poolWidth,
-           unsigned int poolHeight,
+           const std::vector<unsigned int>& poolDims,
            unsigned int nbOutputs,
-           unsigned int strideX = 1,
-           unsigned int strideY = 1,
-           unsigned int paddingX = 0,
-           unsigned int paddingY = 0,
+           const std::vector<unsigned int>& strideDims
+              = std::vector<unsigned int>(2, 1U),
+           const std::vector<unsigned int>& paddingDims
+              = std::vector<unsigned int>(2, 0),
            PoolCell::Pooling pooling = PoolCell::Max,
            const std::shared_ptr<Activation<Float_T> >& activation
            = std::shared_ptr<Activation<Float_T> >())
     {
         return std::make_shared<PoolCell_Transcode>(net,
                                                     name,
-                                                    poolWidth,
-                                                    poolHeight,
+                                                    poolDims,
                                                     nbOutputs,
-                                                    strideX,
-                                                    strideY,
-                                                    paddingX,
-                                                    paddingY,
+                                                    strideDims,
+                                                    paddingDims,
                                                     pooling,
                                                     activation);
     }
@@ -111,46 +106,33 @@ private:
 template <class FRAME, class SPIKE>
 N2D2::PoolCell_Transcode
     <FRAME, SPIKE>::PoolCell_Transcode(Network& net,
-                                       const std::string& name,
-                                       unsigned int poolWidth,
-                                       unsigned int poolHeight,
-                                       unsigned int nbOutputs,
-                                       unsigned int strideX,
-                                       unsigned int strideY,
-                                       unsigned int paddingX,
-                                       unsigned int paddingY,
-                                       PoolCell::Pooling pooling,
-                                       const std::shared_ptr
-                                       <Activation<Float_T> >& activation)
+           const std::string& name,
+           const std::vector<unsigned int>& poolDims,
+           unsigned int nbOutputs,
+           const std::vector<unsigned int>& strideDims,
+           const std::vector<unsigned int>& paddingDims,
+           PoolCell::Pooling pooling,
+           const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       PoolCell(name,
-               poolWidth,
-               poolHeight,
+               poolDims,
                nbOutputs,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY,
+               strideDims,
+               paddingDims,
                pooling),
       FRAME(name,
-            poolWidth,
-            poolHeight,
+            poolDims,
             nbOutputs,
-            strideX,
-            strideY,
-            paddingX,
-            paddingY,
+            strideDims,
+            paddingDims,
             pooling,
             activation),
       SPIKE(net,
             name,
-            poolWidth,
-            poolHeight,
+            poolDims,
             nbOutputs,
-            strideX,
-            strideY,
-            paddingX,
-            paddingY,
+            strideDims,
+            paddingDims,
             pooling),
       mTranscodeMode(Frame)
 {
@@ -253,11 +235,11 @@ void N2D2::PoolCell_Transcode
             "Could not save spike coding compare data file.");
 
     const unsigned int oxSize
-        = (unsigned int)((PoolCell::mInputsDims[0] - PoolCell::mPoolWidth
-                          + PoolCell::mStrideX) / (double)PoolCell::mStrideX);
+        = (unsigned int)((PoolCell::mInputsDims[0] - PoolCell::mPoolDims[0]
+                          + PoolCell::mStrideDims[0]) / (double)PoolCell::mStrideDims[0]);
     const unsigned int oySize
-        = (unsigned int)((PoolCell::mInputsDims[1] - PoolCell::mPoolHeight
-                          + PoolCell::mStrideY) / (double)PoolCell::mStrideY);
+        = (unsigned int)((PoolCell::mInputsDims[1] - PoolCell::mPoolDims[1]
+                          + PoolCell::mStrideDims[1]) / (double)PoolCell::mStrideDims[1]);
 
     const Tensor<Float_T>& outputs = FRAME::getOutputs();
     std::vector<Float_T> minVal(PoolCell::getNbOutputs());

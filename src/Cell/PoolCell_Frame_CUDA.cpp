@@ -29,28 +29,36 @@ N2D2::PoolCell_Frame_CUDA::mRegistrar("Frame_CUDA",
 
 N2D2::PoolCell_Frame_CUDA::PoolCell_Frame_CUDA(
     const std::string& name,
-    unsigned int poolWidth,
-    unsigned int poolHeight,
+    const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
-    unsigned int strideX,
-    unsigned int strideY,
-    unsigned int paddingX,
-    unsigned int paddingY,
+    const std::vector<unsigned int>& strideDims,
+    const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
     const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       PoolCell(name,
-               poolWidth,
-               poolHeight,
+               poolDims,
                nbOutputs,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY,
+               strideDims,
+               paddingDims,
                pooling),
       Cell_Frame_CUDA(name, nbOutputs, activation)
 {
     // ctor
+    assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);
+
+    if (strideDims.size() != poolDims.size()) {
+        throw std::domain_error("PoolCell_Frame_CUDA: the number of dimensions"
+                                " of stride must match the number of"
+                                " dimensions of the pooling.");
+    }
+
+    if (paddingDims.size() != poolDims.size()) {
+        throw std::domain_error("PoolCell_Frame_CUDA: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the pooling.");
+    }
+
     CHECK_CUDNN_STATUS(cudnnCreatePoolingDescriptor(&mPoolingDesc));
 }
 
@@ -68,48 +76,59 @@ void N2D2::PoolCell_Frame_CUDA::initialize()
 
         mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
+        std::vector<int> dims(mOutputs.dims().begin(), mOutputs.dims().end());
+        dims[dims.size() - 2] = mInputs[k].dimZ();
+
+        std::vector<int> strides;
+        unsigned int stride = 1;
+
+        for (unsigned int dim = 0; dim < mOutputs.nbDims(); ++dim) {
+            strides.push_back(stride);
+
+            if (dim < mOutputs.nbDims() - 2)
+                stride *= mOutputs.dims()[dim];
+            else
+                stride *= mInputs.dimZ();
+        }
+
+        std::reverse(dims.begin(), dims.end());
+        std::reverse(strides.begin(), strides.end());
+
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
+        CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(
             mOutputDesc.back(),
             CudaContext::data_type,
-            mOutputs.dimB(),
-            mInputs[k].dimZ(),
-            mOutputs.dimY(),
-            mOutputs.dimX(),
-            mOutputs.dimX() * mOutputs.dimY() * mInputs.dimZ(),
-            mOutputs.dimX() * mOutputs.dimY(),
-            mOutputs.dimX(),
-            1));
+            mOutputs.nbDims(),
+            &dims[0],
+            &strides[0]));
     }
 
     const cudnnPoolingMode_t poolingMode
         = (mPooling == Max) ? CUDNN_POOLING_MAX
                             : CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
 
+    const std::vector<int> pools(mPoolDims.rbegin(), mPoolDims.rend());
+    const std::vector<int> paddings(mPaddingDims.rbegin(), mPaddingDims.rend());
+    const std::vector<int> strides(mStrideDims.rbegin(), mStrideDims.rend());
+
 #if CUDNN_VERSION >= 5000
-    CHECK_CUDNN_STATUS(cudnnSetPooling2dDescriptor(
+    CHECK_CUDNN_STATUS(cudnnSetPoolingNdDescriptor(
         mPoolingDesc,
         poolingMode,
         CUDNN_PROPAGATE_NAN,
         // CUDNN_NOT_PROPAGATE_NAN,
-        mPoolHeight,
-        mPoolWidth,
-        mPaddingY,
-        mPaddingX,
-        mStrideY, // BUG in cuDNN v3 (order of the last 2 arguments was
-        // inverted), resolved with cuDNN v5
-        mStrideX));
+        mPoolDims.size(),
+        &pools[0],
+        &paddings[0],
+        &strides[0]));
 #else
-    CHECK_CUDNN_STATUS(cudnnSetPooling2dDescriptor(
+    CHECK_CUDNN_STATUS(cudnnSetPoolingNdDescriptor(
         mPoolingDesc,
         poolingMode,
-        mPoolHeight,
-        mPoolWidth,
-        mPaddingY,
-        mPaddingX,
-        mStrideX, // BUG in cuDNN v3 (order of the last 2 arguments was
-        // inverted), resolved with cuDNN v5
-        mStrideY));
+        mPoolDims.size(),
+        &pools[0],
+        &paddings[0],
+        &strides[0]));
 #endif
 }
 

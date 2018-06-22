@@ -31,37 +31,32 @@ class PoolCell_Spike : public virtual PoolCell, public Cell_Spike {
 public:
     PoolCell_Spike(Network& net,
                    const std::string& name,
-                   unsigned int poolWidth,
-                   unsigned int poolHeight,
+                   const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
-                   unsigned int strideX = 1,
-                   unsigned int strideY = 1,
-                   unsigned int paddingX = 0,
-                   unsigned int paddingY = 0,
+                   const std::vector<unsigned int>& strideDims
+                      = std::vector<unsigned int>(2, 1U),
+                   const std::vector<unsigned int>& paddingDims
+                      = std::vector<unsigned int>(2, 0),
                    Pooling pooling = Max);
     static std::shared_ptr<PoolCell>
     create(Network& net,
            const std::string& name,
-           unsigned int poolWidth,
-           unsigned int poolHeight,
+           const std::vector<unsigned int>& poolDims,
            unsigned int nbOutputs,
-           unsigned int strideX = 1,
-           unsigned int strideY = 1,
-           unsigned int paddingX = 0,
-           unsigned int paddingY = 0,
+           const std::vector<unsigned int>& strideDims
+              = std::vector<unsigned int>(2, 1U),
+           const std::vector<unsigned int>& paddingDims
+              = std::vector<unsigned int>(2, 0),
            Pooling pooling = Max,
            const std::shared_ptr<Activation<Float_T> >& /*activation*/
            = std::shared_ptr<Activation<Float_T> >())
     {
         return std::make_shared<PoolCell_Spike>(net,
                                                 name,
-                                                poolWidth,
-                                                poolHeight,
+                                                poolDims,
                                                 nbOutputs,
-                                                strideX,
-                                                strideY,
-                                                paddingX,
-                                                paddingY,
+                                                strideDims,
+                                                paddingDims,
                                                 pooling);
     }
 

@@ -24,24 +24,18 @@ N2D2::Registrar<N2D2::PoolCell>
 N2D2::PoolCell_Spike::mRegistrar("Spike", N2D2::PoolCell_Spike::create);
 
 N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
-                                     const std::string& name,
-                                     unsigned int poolWidth,
-                                     unsigned int poolHeight,
-                                     unsigned int nbOutputs,
-                                     unsigned int strideX,
-                                     unsigned int strideY,
-                                     unsigned int paddingX,
-                                     unsigned int paddingY,
-                                     Pooling pooling)
+    const std::string& name,
+    const std::vector<unsigned int>& poolDims,
+    unsigned int nbOutputs,
+    const std::vector<unsigned int>& strideDims,
+    const std::vector<unsigned int>& paddingDims,
+    Pooling pooling)
     : Cell(name, nbOutputs),
       PoolCell(name,
-               poolWidth,
-               poolHeight,
+               poolDims,
                nbOutputs,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY,
+               strideDims,
+               paddingDims,
                pooling),
       Cell_Spike(net, name, nbOutputs),
       mPoolNbChannels(nbOutputs, 0)
@@ -49,6 +43,22 @@ N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
 // or loadParameters().
 {
     // ctor
+    if (poolDims.size() != 2) {
+        throw std::domain_error("PoolCell_Spike: only 2D pooling is"
+                                " supported");
+    }
+
+    if (strideDims.size() != poolDims.size()) {
+        throw std::domain_error("PoolCell_Spike: the number of dimensions"
+                                " of stride must match the number of"
+                                " dimensions of the pooling.");
+    }
+
+    if (paddingDims.size() != poolDims.size()) {
+        throw std::domain_error("PoolCell_Spike: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the pooling.");
+    }
 }
 
 void N2D2::PoolCell_Spike::initialize()
@@ -86,28 +96,28 @@ void N2D2::PoolCell_Spike::propagateSpike(NodeIn* origin,
         ++mInputsActivity(area.x, area.y, channel, 0);
 
     const unsigned int oxStride
-        = mStrideX * (unsigned int)((mInputsDims[0] - mPoolWidth + mStrideX)
-                                    / (double)mStrideX);
+        = mStrideDims[0] * (unsigned int)((mInputsDims[0] - mPoolDims[0] + mStrideDims[0])
+                                    / (double)mStrideDims[0]);
     const unsigned int oyStride
-        = mStrideY * (unsigned int)((mInputsDims[1] - mPoolHeight + mStrideY)
-                                    / (double)mStrideY);
-    const unsigned int sxMax = std::min<unsigned int>(mPoolWidth, area.x + 1);
-    const unsigned int syMax = std::min<unsigned int>(mPoolHeight, area.y + 1);
+        = mStrideDims[1] * (unsigned int)((mInputsDims[1] - mPoolDims[1] + mStrideDims[1])
+                                    / (double)mStrideDims[1]);
+    const unsigned int sxMax = std::min<unsigned int>(mPoolDims[0], area.x + 1);
+    const unsigned int syMax = std::min<unsigned int>(mPoolDims[1], area.y + 1);
 
-    for (unsigned int sy = area.y % mStrideY, sx0 = area.x % mStrideX;
+    for (unsigned int sy = area.y % mStrideDims[1], sx0 = area.x % mStrideDims[0];
          sy < syMax;
-         sy += mStrideY) {
+         sy += mStrideDims[1]) {
         if (area.y >= oyStride + sy)
             continue;
 
-        for (unsigned int sx = sx0; sx < sxMax; sx += mStrideX) {
+        for (unsigned int sx = sx0; sx < sxMax; sx += mStrideDims[0]) {
             // Border conditions
             if (area.x >= oxStride + sx)
                 continue;
 
             // Output node coordinates
-            const unsigned int ox = (area.x - sx) / mStrideX;
-            const unsigned int oy = (area.y - sy) / mStrideY;
+            const unsigned int ox = (area.x - sx) / mStrideDims[0];
+            const unsigned int oy = (area.y - sy) / mStrideDims[1];
 
             for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(channel, output))
@@ -138,9 +148,9 @@ void N2D2::PoolCell_Spike::incomingSpike(NodeIn* origin,
                     int maxActivity = std::numeric_limits<int>::min();
 
                     const unsigned int sxMax = std::min(mInputsDims[0] -
-           ox*mStrideX, mPoolWidth);
+           ox*mStrideDims[0], mPoolDims[0]);
                     const unsigned int syMax = std::min(mInputsDims[1] -
-           oy*mStrideY, mPoolHeight);
+           oy*mStrideDims[1], mPoolDims[1]);
 
                     for (unsigned int channel = 0; channel < getNbChannels();
            ++channel) {
@@ -149,8 +159,8 @@ void N2D2::PoolCell_Spike::incomingSpike(NodeIn* origin,
 
                         for (unsigned int sy = 0; sy < syMax; ++sy) {
                             for (unsigned int sx = 0; sx < sxMax; ++sx) {
-                                const unsigned int ix = ox*mStrideX + sx;
-                                const unsigned int iy = oy*mStrideY + sy;
+                                const unsigned int ix = ox*mStrideDims[0] + sx;
+                                const unsigned int iy = oy*mStrideDims[1] + sy;
 
                                 maxActivity = std::max(maxActivity,
            mInputsActivity[channel](iy,ix));
@@ -191,7 +201,7 @@ void N2D2::PoolCell_Spike::incomingSpike(NodeIn* origin,
     } break;
 
     case Average: {
-        const unsigned int poolSize = mPoolHeight * mPoolWidth
+        const unsigned int poolSize = mPoolDims[1] * mPoolDims[0]
                                       * mPoolNbChannels[output];
 
         if (negative)

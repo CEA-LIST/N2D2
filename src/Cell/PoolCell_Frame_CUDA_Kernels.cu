@@ -51,20 +51,20 @@ void cudaSPoolForwardAverage_kernel(const float alpha,
                  ox += blockDim.x)
             {
                 const unsigned int sxMin = (unsigned int)max(
-                    desc->paddingX - (int)(ox * desc->strideX), 0);
+                    desc->padding[0] - (int)(ox * desc->stride[0]), 0);
                 const unsigned int syMin = (unsigned int)max(
-                    desc->paddingY - (int)(oy * desc->strideY), 0);
+                    desc->padding[1] - (int)(oy * desc->stride[1]), 0);
                 const unsigned int sxMax = min(
-                    max(channelsWidth + desc->paddingX
-                                  - ox * desc->strideX, 0),
-                    desc->poolWidth);
+                    max(channelsWidth + desc->padding[0]
+                                  - ox * desc->stride[0], 0),
+                    desc->pool[0]);
                 const unsigned int syMax = min(
-                    max(channelsHeight + desc->paddingY
-                                  - oy * desc->strideY, 0),
-                    desc->poolHeight);
+                    max(channelsHeight + desc->padding[1]
+                                  - oy * desc->stride[1], 0),
+                    desc->pool[1]);
 
-                const int ix = (int)(ox * desc->strideX) - desc->paddingX;
-                const int iy = (int)(oy * desc->strideY) - desc->paddingY;
+                const int ix = (int)(ox * desc->stride[0]) - desc->padding[0];
+                const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
 
                 // For each output, compute the pool value
                 float poolValue = 0.0;
@@ -88,7 +88,7 @@ void cudaSPoolForwardAverage_kernel(const float alpha,
                     }
 
                     poolCount += (countIncludePadding)
-                        ? (desc->poolWidth * desc->poolHeight)
+                        ? (desc->pool[0] * desc->pool[1])
                         : (sxMax - sxMin)*(syMax - syMin);
                 }
 
@@ -142,20 +142,20 @@ void cudaSPoolForwardMax_kernel(const float alpha,
                  ox += blockDim.x)
             {
                 const unsigned int sxMin = (unsigned int)max(
-                    desc->paddingX - (int)(ox * desc->strideX), 0);
+                    desc->padding[0] - (int)(ox * desc->stride[0]), 0);
                 const unsigned int syMin = (unsigned int)max(
-                    desc->paddingY - (int)(oy * desc->strideY), 0);
+                    desc->padding[1] - (int)(oy * desc->stride[1]), 0);
                 const unsigned int sxMax = min(
-                    max(channelsWidth + desc->paddingX
-                                  - ox * desc->strideX, 0),
-                    desc->poolWidth);
+                    max(channelsWidth + desc->padding[0]
+                                  - ox * desc->stride[0], 0),
+                    desc->pool[0]);
                 const unsigned int syMax = min(
-                    max(channelsHeight + desc->paddingY
-                                  - oy * desc->strideY, 0),
-                    desc->poolHeight);
+                    max(channelsHeight + desc->padding[1]
+                                  - oy * desc->stride[1], 0),
+                    desc->pool[1]);
 
-                const int ix = (int)(ox * desc->strideX) - desc->paddingX;
-                const int iy = (int)(oy * desc->strideY) - desc->paddingY;
+                const int ix = (int)(ox * desc->stride[0]) - desc->padding[0];
+                const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
 
                 float poolValue = 0.0;
 
@@ -254,8 +254,8 @@ void cudaSPoolBackwardAverage_kernel(const float alpha,
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
 
-    const unsigned int oxStride = desc->strideX * outputsWidth;
-    const unsigned int oyStride = desc->strideY * outputsHeight;
+    const unsigned int oxStride = desc->stride[0] * outputsWidth;
+    const unsigned int oyStride = desc->stride[1] * outputsHeight;
 
     unsigned int* poolChannelsCount = new unsigned int[nbOutputs]();
 
@@ -274,31 +274,31 @@ void cudaSPoolBackwardAverage_kernel(const float alpha,
             for (unsigned int ix = threadIdx.x; ix < channelsWidth;
                 ix += blockDim.x)
             {
-                const unsigned int ixPad = ix + desc->paddingX;
-                const unsigned int iyPad = iy + desc->paddingY;
-                const unsigned int sxMax = min(desc->poolWidth, ixPad + 1);
-                const unsigned int syMax = min(desc->poolHeight, iyPad + 1);
+                const unsigned int ixPad = ix + desc->padding[0];
+                const unsigned int iyPad = iy + desc->padding[1];
+                const unsigned int sxMax = min(desc->pool[0], ixPad + 1);
+                const unsigned int syMax = min(desc->pool[1], iyPad + 1);
 
                 float poolGradient = 0.0;
 
-                for (unsigned int sy = iyPad % desc->strideY,
-                                  sx0 = ixPad % desc->strideX;
+                for (unsigned int sy = iyPad % desc->stride[1],
+                                  sx0 = ixPad % desc->stride[0];
                      sy < syMax;
-                     sy += desc->strideY)
+                     sy += desc->stride[1])
                 {
                     if (iyPad >= oyStride + sy)
                         continue;
 
                     for (unsigned int sx = sx0; sx < sxMax;
-                         sx += desc->strideX)
+                         sx += desc->stride[0])
                     {
                         // Border conditions
                         if (ixPad >= oxStride + sx)
                             continue;
 
                         // Output node coordinates
-                        const unsigned int ox = (ixPad - sx) / desc->strideX;
-                        const unsigned int oy = (iyPad - sy) / desc->strideY;
+                        const unsigned int ox = (ixPad - sx) / desc->stride[0];
+                        const unsigned int oy = (iyPad - sy) / desc->stride[1];
 
                         for (unsigned int output = 0; output < nbOutputs;
                             ++output)
@@ -318,7 +318,7 @@ void cudaSPoolBackwardAverage_kernel(const float alpha,
                 }
 
                 const unsigned int poolCount
-                    = desc->poolWidth * desc->poolHeight;
+                    = desc->pool[0] * desc->pool[1];
 
                 const unsigned int inputsIdx
                     = ix + (iy + channel * channelsHeight) * channelsWidth
@@ -361,8 +361,8 @@ void cudaSPoolBackwardMax_kernel(const float alpha,
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
 
-    const unsigned int oxStride = desc->strideX * outputsWidth;
-    const unsigned int oyStride = desc->strideY * outputsHeight;
+    const unsigned int oxStride = desc->stride[0] * outputsWidth;
+    const unsigned int oyStride = desc->stride[1] * outputsHeight;
 
     for (unsigned int channel = blockIdx.x; channel < nbChannels;
          channel += gridDim.x)
@@ -373,31 +373,31 @@ void cudaSPoolBackwardMax_kernel(const float alpha,
             for (unsigned int ix = threadIdx.x; ix < channelsWidth;
                 ix += blockDim.x)
             {
-                const unsigned int ixPad = ix + desc->paddingX;
-                const unsigned int iyPad = iy + desc->paddingY;
-                const unsigned int sxMax = min(desc->poolWidth, ixPad + 1);
-                const unsigned int syMax = min(desc->poolHeight, iyPad + 1);
+                const unsigned int ixPad = ix + desc->padding[0];
+                const unsigned int iyPad = iy + desc->padding[1];
+                const unsigned int sxMax = min(desc->pool[0], ixPad + 1);
+                const unsigned int syMax = min(desc->pool[1], iyPad + 1);
 
                 float poolGradient = 0.0;
 
-                for (unsigned int sy = iyPad % desc->strideY,
-                                  sx0 = ixPad % desc->strideX;
+                for (unsigned int sy = iyPad % desc->stride[1],
+                                  sx0 = ixPad % desc->stride[0];
                      sy < syMax;
-                     sy += desc->strideY)
+                     sy += desc->stride[1])
                 {
                     if (iyPad >= oyStride + sy)
                         continue;
 
                     for (unsigned int sx = sx0; sx < sxMax;
-                         sx += desc->strideX)
+                         sx += desc->stride[0])
                     {
                         // Border conditions
                         if (ixPad >= oxStride + sx)
                             continue;
 
                         // Output node coordinates
-                        const unsigned int ox = (ixPad - sx) / desc->strideX;
-                        const unsigned int oy = (iyPad - sy) / desc->strideY;
+                        const unsigned int ox = (ixPad - sx) / desc->stride[0];
+                        const unsigned int oy = (iyPad - sy) / desc->stride[1];
 
                         for (unsigned int output = 0; output < nbOutputs;
                             ++output)

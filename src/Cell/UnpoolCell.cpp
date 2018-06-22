@@ -23,21 +23,15 @@
 const char* N2D2::UnpoolCell::Type = "Unpool";
 
 N2D2::UnpoolCell::UnpoolCell(const std::string& name,
-                         unsigned int poolWidth,
-                         unsigned int poolHeight,
+                         const std::vector<unsigned int>& poolDims,
                          unsigned int nbOutputs,
-                         unsigned int strideX,
-                         unsigned int strideY,
-                         unsigned int paddingX,
-                         unsigned int paddingY,
+                         const std::vector<unsigned int>& strideDims,
+                         const std::vector<unsigned int>& paddingDims,
                          Pooling pooling)
     : Cell(name, nbOutputs),
-      mPoolWidth(poolWidth),
-      mPoolHeight(poolHeight),
-      mStrideX(strideX),
-      mStrideY(strideY),
-      mPaddingX(paddingX),
-      mPaddingY(paddingY),
+      mPoolDims(poolDims),
+      mStrideDims(strideDims),
+      mPaddingDims(paddingDims),
       mPooling(pooling)
 {
     // ctor
@@ -45,29 +39,46 @@ N2D2::UnpoolCell::UnpoolCell(const std::string& name,
 
 unsigned long long int N2D2::UnpoolCell::getNbConnections() const
 {
+    const size_t iSize = (!mInputsDims.empty())
+        ? std::accumulate(mInputsDims.begin(),
+                          mInputsDims.begin() + mPoolDims.size(),
+                          1U, std::multiplies<size_t>())
+        : 0U;
+
     unsigned long long int nbConnectionsPerConnection = 0;
+    std::vector<size_t> iIndex(mPoolDims.size(), 0);
 
-    for (unsigned int iy = 0; iy < mInputsDims[1]; ++iy) {
-        for (unsigned int ix = 0; ix < mInputsDims[0]; ++ix) {
-            const unsigned int sxMin = (unsigned int)std::max(
-                (int)mPaddingX - (int)(ix * mStrideX), 0);
-            const unsigned int syMin = (unsigned int)std::max(
-                (int)mPaddingY - (int)(iy * mStrideY), 0);
-            const unsigned int sxMax = Utils::clamp<int>(
-                mOutputsDims[0] + mPaddingX - ix * mStrideX, 0, mPoolWidth);
-            const unsigned int syMax = Utils::clamp
-                <int>(mOutputsDims[1] + mPaddingY - iy * mStrideY,
+    for (size_t i = 0; i < iSize; ++i) {
+        unsigned long long int nbSynapsesI = 1;
+        bool stopIndex = false;
+
+        for (int dim = mPoolDims.size() - 1; dim >= 0; --dim) {
+            if (!stopIndex) {
+                if (++iIndex[dim] < mInputsDims[dim])
+                    stopIndex = true;
+                else
+                    iIndex[dim] = 0;
+            }
+
+            const unsigned int sMin = (unsigned int)std::max(
+                (int)mPaddingDims[dim] - (int)(iIndex[dim] * mStrideDims[dim]),
+                0);
+            const unsigned int sMax = Utils::clamp
+                <int>(mOutputsDims[dim] + mPaddingDims[dim] - iIndex[dim]
+                                                            * mStrideDims[dim],
                       0,
-                      mPoolHeight);
+                      mPoolDims[dim]);
 
-            nbConnectionsPerConnection += (sxMax - sxMin) * (syMax - syMin);
+            nbSynapsesI *= (sMax - sMin);
         }
+
+        nbConnectionsPerConnection += nbSynapsesI;
     }
 
     unsigned long long int nbConnections = 0;
 
-    for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (isConnection(channel, output))
                 nbConnections += nbConnectionsPerConnection;
         }
@@ -170,14 +181,26 @@ void N2D2::UnpoolCell::writeMap(const std::string& fileName) const
 
 void N2D2::UnpoolCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
     stats.nbConnections += getNbConnections();
 }
 
 void N2D2::UnpoolCell::setOutputsDims()
 {
-    mOutputsDims[0] = mInputsDims[0] * mStrideX + mPoolWidth - 2 * mPaddingX
-                    - mStrideX;
-    mOutputsDims[1] = mInputsDims[1] * mStrideY + mPoolHeight - 2 * mPaddingY
-                     - mStrideY;
+    if (mPoolDims.size() != mInputsDims.size() - 1) {
+        std::stringstream msgStr;
+        msgStr << "UnpoolCell::setOutputsDims(): the number of dimensions of the"
+            " pooling (" << mPoolDims << ") must be equal to the number of"
+            " dimensions of the inputs (" << mInputsDims << ") minus one"
+            << std::endl;
+        throw std::runtime_error(msgStr.str());
+    }
+
+    // Keep the last dimension of mOutputsDims
+    mOutputsDims.resize(mInputsDims.size(), mOutputsDims.back());
+
+    for (unsigned int dim = 0; dim < mPoolDims.size(); ++dim) {
+        mOutputsDims[dim] = mInputsDims[dim] * mStrideDims[dim]
+            + mPoolDims[dim] - 2 * mPaddingDims[dim] - mStrideDims[dim];
+    }
 }

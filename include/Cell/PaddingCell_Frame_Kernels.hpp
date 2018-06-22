@@ -26,10 +26,10 @@
 namespace N2D2 {
 namespace PaddingCell_Frame_Kernels {
     struct Descriptor {
-        int leftPad;
-        int rightPad;
-        int topPad;
-        int botPad;
+        const int leftPad;
+        const int rightPad;
+        const int topPad;
+        const int botPad;
 
         Descriptor(int leftPad_,
                    int rightPad_,

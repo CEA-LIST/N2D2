@@ -21,29 +21,27 @@
 #ifndef N2D2_POOLCELL_FRAME_KERNELS_STRUCT_H
 #define N2D2_POOLCELL_FRAME_KERNELS_STRUCT_H
 
+#define POOL_KERNEL_MAX_DIMS 8
+
 namespace N2D2 {
 namespace PoolCell_Frame_Kernels {
     struct Descriptor {
-        unsigned int poolWidth;
-        unsigned int poolHeight;
-        unsigned int strideX;
-        unsigned int strideY;
-        int paddingX;
-        int paddingY;
+        const unsigned int nbDims;
+        unsigned int pool[POOL_KERNEL_MAX_DIMS];
+        unsigned int stride[POOL_KERNEL_MAX_DIMS];
+        int padding[POOL_KERNEL_MAX_DIMS];
 
-        Descriptor(unsigned int poolWidth_,
-                   unsigned int poolHeight_,
-                   unsigned int strideX_,
-                   unsigned int strideY_,
-                   int paddingX_,
-                   int paddingY_)
-            : poolWidth(poolWidth_),
-              poolHeight(poolHeight_),
-              strideX(strideX_),
-              strideY(strideY_),
-              paddingX(paddingX_),
-              paddingY(paddingY_)
+        Descriptor(unsigned int nbDims_,
+                   const unsigned int* pool_,
+                   const unsigned int* stride_,
+                   const unsigned int* padding_)
+            : nbDims(nbDims_)
         {
+            for (unsigned int dim = 0; dim < nbDims_; ++dim) {
+                pool[dim] = pool_[dim];
+                stride[dim] = stride_[dim];
+                padding[dim] = (int)padding_[dim];
+            }
         }
     };
 
