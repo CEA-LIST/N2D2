@@ -161,17 +161,12 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA conv1("conv1",
-                              1,
-                              1,
-                              nbOutputs,
-                              1,
-                              1,
-                              1,
-                              1,
-                              0,
-                              0,
-                              std::make_shared
-                              <TanhActivation_Frame<Float_T> >());
+        std::vector<unsigned int>({1, 1}),
+        nbOutputs,
+        std::vector<unsigned int>({1, 1}),
+        std::vector<unsigned int>({1, 1}),
+        std::vector<int>({0, 0}),
+        std::make_shared<TanhActivation_Frame<Float_T> >());
     ROIPoolingCell_Frame_CUDA_Test pool2("pool2",
                                     env,
                                     outputsWidth,

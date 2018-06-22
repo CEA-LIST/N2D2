@@ -34,37 +34,31 @@ class DeconvCell_Frame_CUDA : public virtual DeconvCell,
                               public Cell_Frame_CUDA {
 public:
     DeconvCell_Frame_CUDA(const std::string& name,
-                          unsigned int kernelWidth,
-                          unsigned int kernelHeight,
+                          const std::vector<unsigned int>& kernelDims,
                           unsigned int nbOutputs,
-                          unsigned int strideX = 1,
-                          unsigned int strideY = 1,
-                          int paddingX = 0,
-                          int paddingY = 0,
+                          const std::vector<unsigned int>& strideDims
+                              = std::vector<unsigned int>(2, 1U),
+                          const std::vector<int>& paddingDims
+                              = std::vector<int>(2, 0),
                           const std::shared_ptr
                           <Activation<Float_T> >& activation = std::make_shared
                           <TanhActivation_Frame_CUDA<Float_T> >());
     static std::shared_ptr<DeconvCell>
     create(Network& /*net*/,
            const std::string& name,
-           unsigned int kernelWidth,
-           unsigned int kernelHeight,
+           const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
-           unsigned int strideX = 1,
-           unsigned int strideY = 1,
-           int paddingX = 0,
-           int paddingY = 0,
+           const std::vector<unsigned int>& strideDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<int>& paddingDims = std::vector<int>(2, 0),
            const std::shared_ptr<Activation<Float_T> >& activation
            = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
     {
         return std::make_shared<DeconvCell_Frame_CUDA>(name,
-                                                       kernelWidth,
-                                                       kernelHeight,
+                                                       kernelDims,
                                                        nbOutputs,
-                                                       strideX,
-                                                       strideY,
-                                                       paddingX,
-                                                       paddingY,
+                                                       strideDims,
+                                                       paddingDims,
                                                        activation);
     }
 
@@ -72,10 +66,8 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Float_T getWeight(unsigned int output,
-                             unsigned int channel,
-                             unsigned int sx,
-                             unsigned int sy) const;
+    inline Tensor<Float_T> getWeight(unsigned int output,
+                                     unsigned int channel) const;
     inline Float_T getBias(unsigned int output) const;
     inline Interface<Float_T>* getWeights()
     {
@@ -110,9 +102,7 @@ public:
 protected:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          unsigned int sx,
-                          unsigned int sy,
-                          Float_T value);
+                          const Tensor<Float_T>& value);
     inline void setBias(unsigned int output, Float_T value);
 
     // Internal
@@ -143,25 +133,29 @@ private:
 
 void N2D2::DeconvCell_Frame_CUDA::setWeight(unsigned int output,
                                             unsigned int channel,
-                                            unsigned int sx,
-                                            unsigned int sy,
-                                            Float_T value)
+                                            const Tensor<Float_T>& value)
 {
-    mSharedSynapses(sx, sy, output, channel) = value;
+    unsigned int tensorChannel;
+    CudaTensor<Float_T>& sharedSynapses
+        = mSharedSynapses.getTensor(channel, &tensorChannel);
+    sharedSynapses[output][channel - tensorChannel] = value;
 
     if (!mSynchronized)
-        mSharedSynapses.synchronizeHToD(sx, sy, output, channel, 1);
+        sharedSynapses[output][channel - tensorChannel].synchronizeHToD();
 }
 
-N2D2::Float_T N2D2::DeconvCell_Frame_CUDA::getWeight(unsigned int output,
-                                                     unsigned int channel,
-                                                     unsigned int sx,
-                                                     unsigned int sy) const
+N2D2::Tensor<N2D2::Float_T> N2D2::DeconvCell_Frame_CUDA::getWeight(
+    unsigned int output,
+    unsigned int channel) const
 {
-    if (!mSynchronized)
-        mSharedSynapses.synchronizeDToH(sx, sy, output, channel, 1);
+    unsigned int tensorChannel;
+    const CudaTensor<Float_T>& sharedSynapses
+        = mSharedSynapses.getTensor(channel, &tensorChannel);
 
-    return mSharedSynapses(sx, sy, output, channel);
+    if (!mSynchronized)
+        sharedSynapses[output][channel - tensorChannel].synchronizeDToH();
+
+    return sharedSynapses[output][channel - tensorChannel];
 }
 
 void N2D2::DeconvCell_Frame_CUDA::setBias(unsigned int output, Float_T value)

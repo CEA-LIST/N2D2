@@ -166,7 +166,7 @@ void N2D2::PoolCell::writeMap(const std::string& fileName) const
 
 void N2D2::PoolCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
     stats.nbConnections += getNbConnections();
 }
 

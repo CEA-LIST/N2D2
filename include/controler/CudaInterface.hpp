@@ -68,7 +68,10 @@ public:
     virtual const CudaTensor<T>& back() const;
     virtual CudaTensor<T>& operator[](unsigned int t);
     virtual const CudaTensor<T>& operator[](unsigned int t) const;
-    virtual CudaTensor<T>& getTensor(unsigned int k);
+    virtual CudaTensor<T>& getTensor(unsigned int k,
+                                     unsigned int* offset = NULL);
+    virtual const CudaTensor<T>& getTensor(unsigned int k,
+                                           unsigned int* offset = NULL) const;
     ~CudaInterface() {};
 
 private:
@@ -179,11 +182,31 @@ operator[](unsigned int t) const
 
 template <class T, int STACKING_DIM>
 N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
-    unsigned int k)
+    unsigned int k,
+    unsigned int* offset)
 {
     assert(k < mDataOffset.size());
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
+
+    if (offset != NULL)
+        (*offset) = dataOffset.second;
+
+    return *static_cast<CudaTensor<T>*>(mData[dataOffset.first]);
+}
+
+template <class T, int STACKING_DIM>
+const N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
+    unsigned int k,
+    unsigned int* offset) const
+{
+    assert(k < mDataOffset.size());
+
+    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
+
+    if (offset != NULL)
+        (*offset) = dataOffset.second;
+
     return *static_cast<CudaTensor<T>*>(mData[dataOffset.first]);
 }
 

@@ -113,6 +113,8 @@ public:
              const T& value = T());
     Tensor(const std::vector<size_t>& dims,
              const T& value = T());
+    Tensor(const std::vector<unsigned int>& dims,
+             const T& value = T());
     template <typename InputIterator>
     Tensor(std::initializer_list<size_t> dims,
              InputIterator first,
@@ -321,6 +323,17 @@ template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
                             const T& value)
     : mDims(dims),
+      mData(std::make_shared<std::vector<T> >(computeSize(), value)),
+      mValid(std::make_shared<bool>(false)),
+      mDataOffset(0)
+{
+    // ctor
+}
+
+template <class T>
+N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
+                            const T& value)
+    : mDims(dims.begin(), dims.end()),
       mData(std::make_shared<std::vector<T> >(computeSize(), value)),
       mValid(std::make_shared<bool>(false)),
       mDataOffset(0)

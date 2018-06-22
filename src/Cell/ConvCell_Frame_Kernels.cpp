@@ -30,14 +30,14 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
                                            const Tensor<bool>& maps)
 {
     const unsigned int oxSize
-        = (unsigned int)((inputs.dimX() + 2 * desc.paddingX
-                          - sharedSynapses.dimX() + desc.strideX)
-                         / (double)desc.strideX);
+        = (unsigned int)((inputs.dimX() + 2 * desc.padding[0]
+                          - sharedSynapses.dimX() + desc.stride[0])
+                         / (double)desc.stride[0]);
     const unsigned int oySize
-        = (unsigned int)((inputs.dimY() + 2 * desc.paddingY
-                          - sharedSynapses.dimY() + desc.strideY)
-                         / (double)desc.strideY);
-    const bool subSample = (desc.subSampleX > 1 || desc.subSampleY > 1);
+        = (unsigned int)((inputs.dimY() + 2 * desc.padding[1]
+                          - sharedSynapses.dimY() + desc.stride[1])
+                         / (double)desc.stride[1]);
+    const bool subSample = (desc.subSample[0] > 1 || desc.subSample[1] > 1);
 
     if (subSample) {
         for (unsigned int index = 0; index < outputs.size(); ++index)
@@ -56,20 +56,20 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
             for (unsigned int oy = 0; oy < oySize; ++oy) {
                 for (unsigned int ox = 0; ox < oxSize; ++ox) {
                     const unsigned int sxMin = (unsigned int)std::max(
-                        desc.paddingX - (int)(ox * desc.strideX), 0);
+                        desc.padding[0] - (int)(ox * desc.stride[0]), 0);
                     const unsigned int syMin = (unsigned int)std::max(
-                        desc.paddingY - (int)(oy * desc.strideY), 0);
+                        desc.padding[1] - (int)(oy * desc.stride[1]), 0);
                     const unsigned int sxMax = Utils::clamp
-                        <int>(inputs.dimX() + desc.paddingX - ox * desc.strideX,
+                        <int>(inputs.dimX() + desc.padding[0] - ox * desc.stride[0],
                               0,
                               sharedSynapses.dimX());
                     const unsigned int syMax = Utils::clamp
-                        <int>(inputs.dimY() + desc.paddingY - oy * desc.strideY,
+                        <int>(inputs.dimY() + desc.padding[1] - oy * desc.stride[1],
                               0,
                               sharedSynapses.dimY());
 
-                    const int ix = (int)(ox * desc.strideX) - desc.paddingX;
-                    const int iy = (int)(oy * desc.strideY) - desc.paddingY;
+                    const int ix = (int)(ox * desc.stride[0]) - desc.padding[0];
+                    const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
 
                     // For each output, compute the weighted sum
                     Float_T weightedSum = 0.0;
@@ -119,8 +119,8 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
 
                     if (subSample) {
 #pragma omp critical
-                        outputs(ox / desc.subSampleX,
-                                oy / desc.subSampleY,
+                        outputs(ox / desc.subSample[0],
+                                oy / desc.subSample[1],
                                 output,
                                 batchPos) += (*alpha) * weightedSum;
                     } else
@@ -168,13 +168,13 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
                                                 const Tensor<bool>& maps)
 {
     const unsigned int oxStride
-        = desc.strideX * (unsigned int)((diffOutputs.dimX() + 2 * desc.paddingX
-                                         - sharedSynapses.dimX() + desc.strideX)
-                                        / (double)desc.strideX);
+        = desc.stride[0] * (unsigned int)((diffOutputs.dimX() + 2 * desc.padding[0]
+                                         - sharedSynapses.dimX() + desc.stride[0])
+                                        / (double)desc.stride[0]);
     const unsigned int oyStride
-        = desc.strideY * (unsigned int)((diffOutputs.dimY() + 2 * desc.paddingY
-                                         - sharedSynapses.dimY() + desc.strideY)
-                                        / (double)desc.strideY);
+        = desc.stride[1] * (unsigned int)((diffOutputs.dimY() + 2 * desc.padding[1]
+                                         - sharedSynapses.dimY() + desc.stride[1])
+                                        / (double)desc.stride[1]);
 
     const unsigned int size = diffOutputs.dimB() * diffOutputs.dimZ();
 
@@ -188,8 +188,8 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
              ++channel) {
             for (unsigned int iy = 0; iy < diffOutputs.dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < diffOutputs.dimX(); ++ix) {
-                    const unsigned int ixPad = ix + desc.paddingX;
-                    const unsigned int iyPad = iy + desc.paddingY;
+                    const unsigned int ixPad = ix + desc.padding[0];
+                    const unsigned int iyPad = iy + desc.padding[1];
                     const unsigned int sxMax
                         = std::min<unsigned int>(sharedSynapses.dimX(), ixPad + 1);
                     const unsigned int syMax
@@ -197,22 +197,22 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
 
                     Float_T gradient = 0.0;
 
-                    for (unsigned int sy = iyPad % desc.strideY,
-                                      sx0 = ixPad % desc.strideX;
+                    for (unsigned int sy = iyPad % desc.stride[1],
+                                      sx0 = ixPad % desc.stride[0];
                          sy < syMax;
-                         sy += desc.strideY) {
+                         sy += desc.stride[1]) {
                         if (iyPad >= oyStride + sy)
                             continue;
 
                         for (unsigned int sx = sx0; sx < sxMax;
-                             sx += desc.strideX) {
+                             sx += desc.stride[0]) {
                             // Border conditions
                             if (ixPad >= oxStride + sx)
                                 continue;
 
                             // Output node coordinates
-                            const unsigned int ox = (ixPad - sx) / desc.strideX;
-                            const unsigned int oy = (iyPad - sy) / desc.strideY;
+                            const unsigned int ox = (ixPad - sx) / desc.stride[0];
+                            const unsigned int oy = (iyPad - sy) / desc.stride[1];
 
                             for (unsigned int output = 0;
                                  output < diffInputs.dimZ();
@@ -222,8 +222,8 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
 
                                 gradient
                                     += sharedSynapses(sx, sy, channel, output)
-                                       * diffInputs(ox / desc.subSampleX,
-                                                    oy / desc.subSampleY,
+                                       * diffInputs(ox / desc.subSample[0],
+                                                    oy / desc.subSample[1],
                                                     output,
                                                     batchPos);
                             }
@@ -251,13 +251,13 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
                                                   const Tensor<bool>& maps)
 {
     const unsigned int oxSize
-        = (unsigned int)((inputs.dimX() + 2 * desc.paddingX
-                          - diffSharedSynapses.dimX() + desc.strideX)
-                         / (double)desc.strideX);
+        = (unsigned int)((inputs.dimX() + 2 * desc.padding[0]
+                          - diffSharedSynapses.dimX() + desc.stride[0])
+                         / (double)desc.stride[0]);
     const unsigned int oySize
-        = (unsigned int)((inputs.dimY() + 2 * desc.paddingY
-                          - diffSharedSynapses.dimY() + desc.strideY)
-                         / (double)desc.strideY);
+        = (unsigned int)((inputs.dimY() + 2 * desc.padding[1]
+                          - diffSharedSynapses.dimY() + desc.stride[1])
+                         / (double)desc.stride[1]);
 
     const unsigned int size = diffInputs.dimZ() * inputs.dimZ();
 
@@ -275,20 +275,20 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
                 for (unsigned int sx = 0; sx < diffSharedSynapses.dimX();
                      ++sx) {
                     const unsigned int oxMin = (unsigned int)std::max(
-                        (int)std::ceil((desc.paddingX - (int)sx)
-                                       / (double)desc.strideX),
+                        (int)std::ceil((desc.padding[0] - (int)sx)
+                                       / (double)desc.stride[0]),
                         0);
                     const unsigned int oyMin = (unsigned int)std::max(
-                        (int)std::ceil((desc.paddingY - (int)sy)
-                                       / (double)desc.strideY),
+                        (int)std::ceil((desc.padding[1] - (int)sy)
+                                       / (double)desc.stride[1]),
                         0);
                     const unsigned int oxMax = std::min(
-                        (unsigned int)std::ceil((inputs.dimX() + desc.paddingX
-                                                 - sx) / (double)desc.strideX),
+                        (unsigned int)std::ceil((inputs.dimX() + desc.padding[0]
+                                                 - sx) / (double)desc.stride[0]),
                         oxSize);
                     const unsigned int oyMax = std::min(
-                        (unsigned int)std::ceil((inputs.dimY() + desc.paddingY
-                                                 - sy) / (double)desc.strideY),
+                        (unsigned int)std::ceil((inputs.dimY() + desc.padding[1]
+                                                 - sy) / (double)desc.stride[1]),
                         oySize);
 
                     Float_T gradient = 0.0;
@@ -298,15 +298,15 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
                         for (unsigned int oy = oyMin; oy < oyMax; ++oy) {
                             for (unsigned int ox = oxMin; ox < oxMax; ++ox) {
                                 const unsigned int ix
-                                    = (int)(ox * desc.strideX + sx)
-                                      - desc.paddingX;
+                                    = (int)(ox * desc.stride[0] + sx)
+                                      - desc.padding[0];
                                 const unsigned int iy
-                                    = (int)(oy * desc.strideY + sy)
-                                      - desc.paddingY;
+                                    = (int)(oy * desc.stride[1] + sy)
+                                      - desc.padding[1];
 
                                 gradient += inputs(ix, iy, channel, batchPos)
-                                            * diffInputs(ox / desc.subSampleX,
-                                                         oy / desc.subSampleY,
+                                            * diffInputs(ox / desc.subSample[0],
+                                                         oy / desc.subSample[1],
                                                          output,
                                                          batchPos);
                             }

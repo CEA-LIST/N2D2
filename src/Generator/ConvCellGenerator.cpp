@@ -45,36 +45,85 @@ N2D2::ConvCellGenerator::generate(Network& network,
     std::cout << "Layer: " << section << " [Conv(" << model << ")]"
               << std::endl;
 
-    const unsigned int kernelWidth = iniConfig.getProperty
-                                     <unsigned int>("KernelWidth");
-    const unsigned int kernelHeight = iniConfig.getProperty
-                                      <unsigned int>("KernelHeight");
+    std::vector<unsigned int> kernelDims;
+
+    if (iniConfig.isProperty("KernelDims")) {
+        kernelDims = iniConfig.getProperty
+                                     <std::vector<unsigned int> >("KernelDims");
+    }
+    else if (iniConfig.isProperty("Kernel"))
+        kernelDims.resize(2, iniConfig.getProperty<unsigned int>("Kernel"));
+    else {
+        kernelDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("KernelWidth"));
+        kernelDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("KernelHeight"));
+
+        if (iniConfig.isProperty("KernelDepth")) {
+            kernelDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("KernelDepth"));
+        }
+    }
+
     const unsigned int nbChannels = iniConfig.getProperty
                                     <unsigned int>("NbChannels");
 
-    unsigned int subSampleX, subSampleY, strideX, strideY;
-    int paddingX, paddingY;
+    std::vector<unsigned int> subSampleDims;
 
-    if (iniConfig.isProperty("SubSample"))
-        subSampleX = subSampleY = iniConfig.getProperty
-                                  <unsigned int>("SubSample");
+    if (iniConfig.isProperty("SubSampleDims")) {
+        subSampleDims = iniConfig.getProperty
+                                <std::vector<unsigned int> >("SubSampleDims");
+    }
+    else if (iniConfig.isProperty("SubSample"))
+        subSampleDims.resize(2,
+                             iniConfig.getProperty<unsigned int>("SubSample"));
     else {
-        subSampleX = iniConfig.getProperty<unsigned int>("SubSampleX", 1);
-        subSampleY = iniConfig.getProperty<unsigned int>("SubSampleY", 1);
+        subSampleDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("SubSampleX", 1));
+        subSampleDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("SubSampleY", 1));
+
+        if (iniConfig.isProperty("SubSampleZ")) {
+            subSampleDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("SubSampleZ"));
+        }
     }
 
-    if (iniConfig.isProperty("Stride"))
-        strideX = strideY = iniConfig.getProperty<unsigned int>("Stride");
+    std::vector<unsigned int> strideDims;
+
+    if (iniConfig.isProperty("StrideDims")) {
+        strideDims = iniConfig.getProperty
+                                <std::vector<unsigned int> >("StrideDims");
+    }
+    else if (iniConfig.isProperty("Stride"))
+        strideDims.resize(2,
+                             iniConfig.getProperty<unsigned int>("Stride"));
     else {
-        strideX = iniConfig.getProperty<unsigned int>("StrideX", 1);
-        strideY = iniConfig.getProperty<unsigned int>("StrideY", 1);
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideX", 1));
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideY", 1));
+
+        if (iniConfig.isProperty("StrideZ")) {
+            strideDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("StrideZ"));
+        }
     }
 
-    if (iniConfig.isProperty("Padding"))
-        paddingX = paddingY = iniConfig.getProperty<int>("Padding");
+    std::vector<int> paddingDims;
+
+    if (iniConfig.isProperty("PaddingDims")) {
+        paddingDims = iniConfig.getProperty<std::vector<int> >("PaddingDims");
+    }
+    else if (iniConfig.isProperty("Padding"))
+        paddingDims.resize(2, iniConfig.getProperty<int>("Padding"));
     else {
-        paddingX = iniConfig.getProperty<int>("PaddingX", 0);
-        paddingY = iniConfig.getProperty<int>("PaddingY", 0);
+        paddingDims.push_back(iniConfig.getProperty<int>("PaddingX", 0));
+        paddingDims.push_back(iniConfig.getProperty<int>("PaddingY", 0));
+
+        if (iniConfig.isProperty("PaddingZ")) {
+            paddingDims.push_back(iniConfig.getProperty<int>("PaddingZ"));
+        }
     }
 
     std::shared_ptr<Activation<Float_T> > activation
@@ -89,15 +138,11 @@ N2D2::ConvCellGenerator::generate(Network& network,
     std::shared_ptr<ConvCell> cell = Registrar
         <ConvCell>::create(model)(network,
                                   section,
-                                  kernelWidth,
-                                  kernelHeight,
+                                  kernelDims,
                                   nbChannels,
-                                  subSampleX,
-                                  subSampleY,
-                                  strideX,
-                                  strideY,
-                                  paddingX,
-                                  paddingY,
+                                  subSampleDims,
+                                  strideDims,
+                                  paddingDims,
                                   activation);
 
     if (!cell) {

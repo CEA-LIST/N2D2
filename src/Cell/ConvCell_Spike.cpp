@@ -24,27 +24,19 @@ N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Spike::mRegistrar("Spike", N2D2::ConvCell_Spike::create);
 
 N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
-                                     const std::string& name,
-                                     unsigned int kernelWidth,
-                                     unsigned int kernelHeight,
-                                     unsigned int nbOutputs,
-                                     unsigned int subSampleX,
-                                     unsigned int subSampleY,
-                                     unsigned int strideX,
-                                     unsigned int strideY,
-                                     int paddingX,
-                                     int paddingY)
+                                 const std::string& name,
+                                 const std::vector<unsigned int>& kernelDims,
+                                 unsigned int nbOutputs,
+                                 const std::vector<unsigned int>& subSampleDims,
+                                 const std::vector<unsigned int>& strideDims,
+                                 const std::vector<int>& paddingDims)
     : Cell(name, nbOutputs),
       ConvCell(name,
-               kernelWidth,
-               kernelHeight,
+               kernelDims,
                nbOutputs,
-               subSampleX,
-               subSampleY,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY),
+               subSampleDims,
+               strideDims,
+               paddingDims),
       Cell_Spike(net, name, nbOutputs),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
@@ -55,12 +47,34 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
       mRefractory(this, "Refractory", 0 * TimeS)
 {
     // ctor
+    if (kernelDims.size() != 2) {
+        throw std::domain_error("ConvCell_Spike: only 2D convolution is"
+                                " supported");
+    }
+
+    if (subSampleDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Spike: the number of dimensions of"
+                                " subSample must match the number of dimensions"
+                                " of the kernel.");
+    }
+
+    if (strideDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Spike: the number of dimensions of"
+                                " stride must match the number of dimensions"
+                                " of the kernel.");
+    }
+
+    if (paddingDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Spike: the number of dimensions of"
+                                " passing must match the number of dimensions"
+                                " of the kernel.");
+    }
 }
 
 void N2D2::ConvCell_Spike::initialize()
 {
     mSharedSynapses.resize(
-        {mKernelWidth, mKernelHeight, getNbChannels(), getNbOutputs()});
+        {mKernelDims[0], mKernelDims[1], getNbChannels(), getNbOutputs()});
 
     for (unsigned int index = 0, size = mSharedSynapses.size(); index < size;
          ++index)
@@ -80,31 +94,31 @@ void N2D2::ConvCell_Spike::propagateSpike(NodeIn* origin,
 {
     const Area& area = origin->getArea();
     const unsigned int oxStride
-        = mStrideX
-          * (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
-                            + mStrideX) / (double)mStrideX);
+        = mStrideDims[0]
+          * (unsigned int)((mInputsDims[0] + 2 * mPaddingDims[0] - mKernelDims[0]
+                            + mStrideDims[0]) / (double)mStrideDims[0]);
     const unsigned int oyStride
-        = mStrideY
-          * (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
-                            + mStrideY) / (double)mStrideY);
-    const unsigned int ixPad = area.x + mPaddingX;
-    const unsigned int iyPad = area.y + mPaddingY;
-    const unsigned int sxMax = std::min(mKernelWidth, ixPad + 1);
-    const unsigned int syMax = std::min(mKernelHeight, iyPad + 1);
+        = mStrideDims[1]
+          * (unsigned int)((mInputsDims[1] + 2 * mPaddingDims[1] - mKernelDims[1]
+                            + mStrideDims[1]) / (double)mStrideDims[1]);
+    const unsigned int ixPad = area.x + mPaddingDims[0];
+    const unsigned int iyPad = area.y + mPaddingDims[1];
+    const unsigned int sxMax = std::min(mKernelDims[0], ixPad + 1);
+    const unsigned int syMax = std::min(mKernelDims[1], iyPad + 1);
 
-    for (unsigned int sy = iyPad % mStrideY, sx0 = ixPad % mStrideX; sy < syMax;
-         sy += mStrideY) {
+    for (unsigned int sy = iyPad % mStrideDims[1], sx0 = ixPad % mStrideDims[0]; sy < syMax;
+         sy += mStrideDims[1]) {
         if (iyPad >= oyStride + sy)
             continue;
 
-        for (unsigned int sx = sx0; sx < sxMax; sx += mStrideX) {
+        for (unsigned int sx = sx0; sx < sxMax; sx += mStrideDims[0]) {
             // Border conditions
             if (ixPad >= oxStride + sx)
                 continue;
 
             // Output node coordinates
-            const unsigned int ox = (ixPad - sx) / mStrideX;
-            const unsigned int oy = (iyPad - sy) / mStrideY;
+            const unsigned int ox = (ixPad - sx) / mStrideDims[0];
+            const unsigned int oy = (iyPad - sy) / mStrideDims[1];
 
             for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(origin->getChannel(), output))
@@ -139,12 +153,12 @@ void N2D2::ConvCell_Spike::incomingSpike(NodeIn* origin,
     bool negative;
     std::tie(output, ox, oy, negative) = unmaps(type);
 
-    const unsigned int subOx = ox / mSubSampleX;
-    const unsigned int subOy = oy / mSubSampleY;
+    const unsigned int subOx = ox / mSubSampleDims[0];
+    const unsigned int subOy = oy / mSubSampleDims[1];
 
     // Synapse coordinates
-    const unsigned int synX = area.x - ox * mStrideX + mPaddingX;
-    const unsigned int synY = area.y - oy * mStrideY + mPaddingY;
+    const unsigned int synX = area.x - ox * mStrideDims[0] + mPaddingDims[0];
+    const unsigned int synY = area.y - oy * mStrideDims[1] + mPaddingDims[1];
 
     // Neuron state variables
     Time_T& lastIntegration = mOutputsLastIntegration(subOx, subOy, output, 0);
@@ -360,8 +374,8 @@ N2D2::Synapse::Stats N2D2::ConvCell_Spike::logStats(const std::string
             globalData << "[Channel #" << channel << "]\n";
             std::unique_ptr<Synapse::Stats> statsKernel(dummy->newStats());
 
-            for (unsigned int x = 0; x < mKernelWidth; ++x) {
-                for (unsigned int y = 0; y < mKernelHeight; ++y) {
+            for (unsigned int x = 0; x < mKernelDims[0]; ++x) {
+                for (unsigned int y = 0; y < mKernelDims[1]; ++y) {
                     std::ostringstream suffixStr;
                     suffixStr << x << " " << y;
                     mSharedSynapses(x, y, channel, output)

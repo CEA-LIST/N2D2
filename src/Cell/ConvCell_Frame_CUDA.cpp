@@ -28,27 +28,19 @@ N2D2::ConvCell_Frame_CUDA::mRegistrar("Frame_CUDA",
 
 N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
     const std::string& name,
-    unsigned int kernelWidth,
-    unsigned int kernelHeight,
+    const std::vector<unsigned int>& kernelDims,
     unsigned int nbOutputs,
-    unsigned int subSampleX,
-    unsigned int subSampleY,
-    unsigned int strideX,
-    unsigned int strideY,
-    int paddingX,
-    int paddingY,
+    const std::vector<unsigned int>& subSampleDims,
+    const std::vector<unsigned int>& strideDims,
+    const std::vector<int>& paddingDims,
     const std::shared_ptr<Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       ConvCell(name,
-               kernelWidth,
-               kernelHeight,
+               kernelDims,
                nbOutputs,
-               subSampleX,
-               subSampleY,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY),
+               subSampleDims,
+               strideDims,
+               paddingDims),
       Cell_Frame_CUDA(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
@@ -58,6 +50,24 @@ N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
       mWorkspace(NULL),
       mSynchronized(false)
 {
+    if (subSampleDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
+                                " of subSample must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (strideDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
+                                " of stride must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (paddingDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
     mWeightsSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
     mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
 
@@ -82,26 +92,26 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         }
     }
 
+    const std::vector<int> strides(mStrideDims.rbegin(), mStrideDims.rend());
+    const std::vector<int> paddings(mPaddingDims.rbegin(), mPaddingDims.rend());
+    const std::vector<int> upscales(mKernelDims.size(), 1);
+
 #if CUDNN_VERSION >= 6000
     CHECK_CUDNN_STATUS(
-        cudnnSetConvolution2dDescriptor(mConvDesc,
-                                        mPaddingY,
-                                        mPaddingX,
-                                        mStrideY,
-                                        mStrideX,
-                                        1,
-                                        1,
+        cudnnSetConvolutionNdDescriptor(mConvDesc,
+                                        mKernelDims.size(),
+                                        &paddings[0],
+                                        &strides[0],
+                                        &upscales[0],
                                         CUDNN_CROSS_CORRELATION,
                                         CudaContext::data_type));
 #else
     CHECK_CUDNN_STATUS(
-        cudnnSetConvolution2dDescriptor(mConvDesc,
-                                        mPaddingY,
-                                        mPaddingX,
-                                        mStrideY,
-                                        mStrideX,
-                                        1,
-                                        1,
+        cudnnSetConvolutionNdDescriptor(mConvDesc,
+                                        mKernelDims.size(),
+                                        &paddings[0],
+                                        &strides[0],
+                                        &upscales[0],
                                         CUDNN_CROSS_CORRELATION));
 #endif
 
@@ -117,24 +127,22 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             std::pair<CudaInterface<Float_T>*, unsigned int> >::const_iterator
                 it = mExtSharedSynapses.find(k);
 
+        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
+        kernelDims.push_back(mInputs[k].dimZ());
+        kernelDims.push_back(getNbOutputs());
+
         if (it != mExtSharedSynapses.end()) {
             CudaTensor<Float_T>* extWeights
                 = &(*((*it).second.first))[(*it).second.second];
 
-            if (extWeights->dimX() != mKernelWidth
-                || extWeights->dimY() != mKernelHeight
-                || extWeights->dimZ() != mInputs[k].dimZ()
-                || extWeights->dimB() != getNbOutputs())
+            if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                            extWeights->dims().begin()))
             {
                 std::stringstream errorStr;
                 errorStr << "ConvCell_Frame_CUDA::initialize(): in cell "
                     << mName << ", mismatch between external weights dim. ("
-                    << extWeights->dimX() << "x"
-                    << extWeights->dimY() << "x"
-                    << extWeights->dimZ() << "x"
-                    << extWeights->dimB() << ") and expected dim. ("
-                    << mKernelWidth << "x" << mKernelHeight << "x"
-                    << mInputs[k].dimZ() << "x" << getNbOutputs() << ")";
+                    << extWeights->dims() << ") and expected dim. ("
+                    << kernelDims << ")";
 
                 throw std::runtime_error(errorStr.str());
             }
@@ -142,8 +150,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             mSharedSynapses.push_back(extWeights);
         }
         else {
-            mSharedSynapses.push_back(new CudaTensor<Float_T>(
-                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()}));
+            mSharedSynapses.push_back(new CudaTensor<Float_T>(kernelDims));
             mWeightsFiller->apply(mSharedSynapses.back());
 
             if (!isFullMap()) {
@@ -153,7 +160,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                          ++channel) {
                         if (!isConnection(channel, output))
                             mSharedSynapses.back()[output][channel] = Tensor
-                                <Float_T>({mKernelWidth, mKernelHeight}, 0.0);
+                                <Float_T>(mKernelDims, 0.0);
                     }
                 }
             }
@@ -161,27 +168,25 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             mSharedSynapses.back().synchronizeHToD();
         }
 
-        mDiffSharedSynapses.push_back(new CudaTensor<Float_T>(
-            {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()}));
+        mDiffSharedSynapses.push_back(new CudaTensor<Float_T>(kernelDims));
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
+        const std::vector<int> cudaKernelDims(kernelDims.rbegin(),
+                                              kernelDims.rend());
+
         CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&mFilterDesc.back()));
 #if CUDNN_VERSION >= 5000
-        CHECK_CUDNN_STATUS(cudnnSetFilter4dDescriptor(mFilterDesc.back(),
+        CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
                                                       CudaContext::data_type,
                                                       CUDNN_TENSOR_NCHW,
-                                                      getNbOutputs(),
-                                                      mInputs[k].dimZ(),
-                                                      mKernelHeight,
-                                                      mKernelWidth));
+                                                      cudaKernelDims.size(),
+                                                      &cudaKernelDims[0]));
 #else
-        CHECK_CUDNN_STATUS(cudnnSetFilter4dDescriptor(mFilterDesc.back(),
+        CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
                                                       CudaContext::data_type,
-                                                      getNbOutputs(),
-                                                      mInputs[k].dimZ(),
-                                                      mKernelHeight,
-                                                      mKernelWidth));
+                                                      cudaKernelDims.size(),
+                                                      &cudaKernelDims[0]));
 #endif
 
         mFwdAlgo.push_back(cudnnConvolutionFwdAlgo_t());
@@ -338,6 +343,11 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
     const float alpha = 1.0f;
     const Float_T alphaMask = 0.0f;
 
+    const unsigned int kernelSize = (!mKernelDims.empty())
+        ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                          1U, std::multiplies<unsigned int>())
+        : 0U;
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
@@ -380,13 +390,13 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
                     if (!isConnection(channel, output)) {
                         CHECK_CUBLAS_STATUS(cublasSscal(
                             CudaContext::cublasHandle(),
-                            mKernelWidth * mKernelHeight, // size of data
+                            kernelSize, // size of data
                             &alphaMask,
                             mDiffSharedSynapses[k].getDevicePtr() + offset,
                             1));
                     }
 
-                    offset += mKernelWidth * mKernelHeight;
+                    offset += kernelSize;
                 }
             }
         }

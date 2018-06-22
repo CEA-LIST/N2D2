@@ -60,6 +60,9 @@ public:
     inline void push_back(const std::vector<T>& vec);
     inline void push_back(const Tensor<T>& frame);
     inline void clear();
+    inline CudaTensor<T> operator[](size_t i);
+    inline const CudaTensor<T> operator[](size_t i) const;
+    CudaTensor<T>& operator=(const Tensor<T>& tensor);
 
     /** Synchronize Device To Host */
     void synchronizeDToH() const;
@@ -99,6 +102,14 @@ public:
     ~CudaTensor();
 
 protected:
+    CudaTensor(const std::vector<size_t>& dims,
+               const std::shared_ptr<std::vector<T> >& data,
+               const std::shared_ptr<bool>& valid,
+               size_t dataOffset,
+               size_t size,
+               size_t sizeM1,
+               T* dataDevice,
+               bool hostBased);
     void setCudnnTensor();
     template <typename U>
     void syncFill(typename std::enable_if<std::is_pod<U>::value, U>::type value);
@@ -107,11 +118,15 @@ protected:
 
     using Tensor<T>::mDims;
     using Tensor<T>::mData;
+    using Tensor<T>::mValid;
     using Tensor<T>::mDataOffset;
+    using Tensor<T>::mSize;
+    using Tensor<T>::mSizeM1;
 
     cudnnTensorDescriptor_t mTensor;
     T* mDataDevice;
-    bool mHostBased;
+    const bool mDataDeviceOwner;
+    const bool mHostBased;
 };
 }
 
@@ -119,6 +134,7 @@ template <typename T>
 N2D2::CudaTensor<T>::CudaTensor()
     : Tensor<T>(),
       mDataDevice(NULL),
+      mDataDeviceOwner(true),
       mHostBased(false)
 {
     // ctor
@@ -129,6 +145,7 @@ template <typename T>
 N2D2::CudaTensor<T>::CudaTensor(Tensor<T>* base)
     : Tensor<T>(*base),
       mDataDevice(NULL),
+      mDataDeviceOwner(true),
       mHostBased(true)
 {
     // ctor
@@ -142,6 +159,7 @@ N2D2::CudaTensor<T>::CudaTensor(const CudaTensor<T>& tensor)
                   tensor.begin(),
                   tensor.end()),
       mDataDevice(NULL),
+      mDataDeviceOwner(true),
       mHostBased(tensor.mHostBased)
 {
     // copy-ctor
@@ -153,6 +171,7 @@ template <typename T>
 N2D2::CudaTensor<T>::CudaTensor(std::initializer_list<size_t> dims)
     : Tensor<T>(dims),
       mDataDevice(NULL),
+      mDataDeviceOwner(true),
       mHostBased(false)
 {
     // ctor
@@ -164,7 +183,27 @@ template <typename T>
 N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims)
     : Tensor<T>(dims),
       mDataDevice(NULL),
+      mDataDeviceOwner(true),
       mHostBased(false)
+{
+    // ctor
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
+    setCudnnTensor();
+}
+
+template <class T>
+N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims,
+                                const std::shared_ptr<std::vector<T> >& data,
+                                const std::shared_ptr<bool>& valid,
+                                size_t dataOffset,
+                                size_t size,
+                                size_t sizeM1,
+                                T* dataDevice,
+                                bool hostBased)
+    : Tensor<T>(dims, data, valid, dataOffset, size, sizeM1),
+      mDataDevice(dataDevice),
+      mDataDeviceOwner(false),
+      mHostBased(hostBased)
 {
     // ctor
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
@@ -180,6 +219,7 @@ void N2D2::CudaTensor<T>::reserve(std::initializer_list<size_t> dims)
 template <typename T>
 void N2D2::CudaTensor<T>::reserve(const std::vector<size_t>& dims)
 {
+    assert(mDataDeviceOwner);
     Tensor<T>::reserve(dims);
 
     if (mDataDevice != NULL) {
@@ -201,6 +241,7 @@ template <typename T>
 void N2D2::CudaTensor<T>::resize(const std::vector<size_t>& dims,
                                  const T& value)
 {
+    assert(mDataDeviceOwner);
     Tensor<T>::resize(dims, value);
 
     if (mDataDevice != NULL) {
@@ -223,6 +264,7 @@ template <typename T>
 void N2D2::CudaTensor<T>::assign(const std::vector<size_t>& dims,
                                    const T& value)
 {
+    assert(mDataDeviceOwner);
     Tensor<T>::assign(dims, value);
 
     if (mDataDevice != NULL) {
@@ -280,7 +322,9 @@ void N2D2::CudaTensor<T>::setCudnnTensor() {
         std::reverse(dims.begin(), dims.end());
         std::reverse(strides.begin(), strides.end());
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size_ * sizeof(T)));
+        if (mDataDeviceOwner)
+            CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size_ * sizeof(T)));
+
         CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(mTensor,
                                                       CUDNN_DATA_FLOAT,
                                                       /*mDims.size(),*/
@@ -310,12 +354,42 @@ void N2D2::CudaTensor<T>::push_back(const Tensor<T>& frame)
 
 template <typename T> void N2D2::CudaTensor<T>::clear()
 {
+    assert(mDataDeviceOwner);
     Tensor<T>::clear();
 
     if (mDataDevice != NULL) {
         CHECK_CUDA_STATUS(cudaFree(mDataDevice));
         mDataDevice = NULL;
     }
+}
+
+template <class T>
+N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i)
+{
+    assert(mDims.size() > 1);
+    std::vector<size_t> newDims = mDims;
+    newDims.pop_back();
+    return CudaTensor<T>(newDims, mData, mValid, mDataOffset + i * mSizeM1,
+                mSizeM1, (newDims.back() > 0) ? mSizeM1 / newDims.back() : 0,
+                mDataDevice + i * mSizeM1, mHostBased);
+}
+
+template <class T>
+const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i) const
+{
+    assert(mDims.size() > 1);
+    std::vector<size_t> newDims = mDims;
+    newDims.pop_back();
+    return CudaTensor<T>(newDims, mData, mValid, mDataOffset + i * mSizeM1,
+                mSizeM1, (newDims.back() > 0) ? mSizeM1 / newDims.back() : 0,
+                mDataDevice + i * mSizeM1, mHostBased);
+}
+
+template <class T>
+N2D2::CudaTensor<T>& N2D2::CudaTensor<T>::operator=(const Tensor<T>& tensor)
+{
+    Tensor<T>::operator=(tensor);
+    return *this;
 }
 
 /**
@@ -411,8 +485,12 @@ template <typename T> void N2D2::CudaTensor<T>::synchronizeHToDBased() const
 
 template <typename T> N2D2::CudaTensor<T>::~CudaTensor()
 {
-    clear();
     CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mTensor));
+
+    if (mDataDeviceOwner && mDataDevice != NULL) {
+        CHECK_CUDA_STATUS(cudaFree(mDataDevice));
+        mDataDevice = NULL;
+    }
 }
 
 #endif // N2D2_CUDATENSOR_H

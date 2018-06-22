@@ -26,25 +26,16 @@
 namespace N2D2 {
 namespace ConvCell_Frame_Kernels {
     struct Descriptor {
-        unsigned int subSampleX;
-        unsigned int subSampleY;
-        unsigned int strideX;
-        unsigned int strideY;
-        int paddingX;
-        int paddingY;
+        std::vector<unsigned int> subSample;
+        std::vector<unsigned int> stride;
+        std::vector<int> padding;
 
-        Descriptor(unsigned int subSampleX_,
-                   unsigned int subSampleY_,
-                   unsigned int strideX_,
-                   unsigned int strideY_,
-                   int paddingX_,
-                   int paddingY_)
-            : subSampleX(subSampleX_),
-              subSampleY(subSampleY_),
-              strideX(strideX_),
-              strideY(strideY_),
-              paddingX(paddingX_),
-              paddingY(paddingY_)
+        Descriptor(const std::vector<unsigned int>& subSample_,
+                   const std::vector<unsigned int>& stride_,
+                   const std::vector<int>& padding_)
+            : subSample(subSample_),
+              stride(stride_),
+              padding(padding_)
         {
         }
     };

@@ -39,44 +39,36 @@ public:
 
     ConvCell_Transcode(Network& net,
                        const std::string& name,
-                       unsigned int kernelWidth,
-                       unsigned int kernelHeight,
+                       const std::vector<unsigned int>& kernelDims,
                        unsigned int nbOutputs,
-                       unsigned int subSampleX = 1,
-                       unsigned int subSampleY = 1,
-                       unsigned int strideX = 1,
-                       unsigned int strideY = 1,
-                       int paddingX = 0,
-                       int paddingY = 0,
+                       const std::vector<unsigned int>& subSampleDims
+                            = std::vector<unsigned int>(2, 1U),
+                       const std::vector<unsigned int>& strideDims
+                            = std::vector<unsigned int>(2, 1U),
+                       const std::vector<int>& paddingDims
+                            = std::vector<int>(2, 0),
                        const std::shared_ptr<Activation<Float_T> >& activation
                        = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<ConvCell> create(Network& net,
-                                            const std::string& name,
-                                            unsigned int kernelWidth,
-                                            unsigned int kernelHeight,
-                                            unsigned int nbOutputs,
-                                            unsigned int subSampleX = 1,
-                                            unsigned int subSampleY = 1,
-                                            unsigned int strideX = 1,
-                                            unsigned int strideY = 1,
-                                            int paddingX = 0,
-                                            int paddingY = 0,
-                                            const std::shared_ptr
-                                            <Activation<Float_T> >& activation
-                                            = std::make_shared
-                                            <TanhActivation_Frame<Float_T> >())
+           const std::string& name,
+           const std::vector<unsigned int>& kernelDims,
+           unsigned int nbOutputs,
+           const std::vector<unsigned int>& subSampleDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<unsigned int>& strideDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<int>& paddingDims
+                = std::vector<int>(2, 0),
+           const std::shared_ptr<Activation<Float_T> >& activation
+                = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
         return std::make_shared<ConvCell_Transcode>(net,
                                                     name,
-                                                    kernelWidth,
-                                                    kernelHeight,
+                                                    kernelDims,
                                                     nbOutputs,
-                                                    subSampleX,
-                                                    subSampleY,
-                                                    strideX,
-                                                    strideY,
-                                                    paddingX,
-                                                    paddingY,
+                                                    subSampleDims,
+                                                    strideDims,
+                                                    paddingDims,
                                                     activation);
     }
 
@@ -109,13 +101,9 @@ public:
 private:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          unsigned int sx,
-                          unsigned int sy,
-                          Float_T value);
-    inline Float_T getWeight(unsigned int output,
-                             unsigned int channel,
-                             unsigned int sx,
-                             unsigned int sy) const;
+                          const Tensor<Float_T>& value);
+    inline Tensor<Float_T> getWeight(unsigned int output,
+                                     unsigned int channel) const;
     inline void setBias(unsigned int output, Float_T value);
     inline Float_T getBias(unsigned int output) const;
 
@@ -129,24 +117,20 @@ private:
 template <class FRAME, class SPIKE>
 void N2D2::ConvCell_Transcode<FRAME, SPIKE>::setWeight(unsigned int output,
                                                        unsigned int channel,
-                                                       unsigned int sx,
-                                                       unsigned int sy,
-                                                       Float_T value)
+                                                const Tensor<Float_T>& value)
 {
-    FRAME::setWeight(output, channel, sx, sy, value);
-    SPIKE::setWeight(output, channel, sx, sy, value);
+    FRAME::setWeight(output, channel, value);
+    SPIKE::setWeight(output, channel, value);
 }
 
 template <class FRAME, class SPIKE>
-N2D2::Float_T N2D2::ConvCell_Transcode
+N2D2::Tensor<N2D2::Float_T> N2D2::ConvCell_Transcode
     <FRAME, SPIKE>::getWeight(unsigned int output,
-                              unsigned int channel,
-                              unsigned int sx,
-                              unsigned int sy) const
+                              unsigned int channel) const
 {
     return (mTranscodeMode == Frame)
-               ? FRAME::getWeight(output, channel, sx, sy)
-               : SPIKE::getWeight(output, channel, sx, sy);
+               ? FRAME::getWeight(output, channel)
+               : SPIKE::getWeight(output, channel);
 }
 
 template <class FRAME, class SPIKE>
@@ -168,51 +152,35 @@ N2D2::Float_T N2D2::ConvCell_Transcode
 template <class FRAME, class SPIKE>
 N2D2::ConvCell_Transcode
     <FRAME, SPIKE>::ConvCell_Transcode(Network& net,
-                                       const std::string& name,
-                                       unsigned int kernelWidth,
-                                       unsigned int kernelHeight,
-                                       unsigned int nbOutputs,
-                                       unsigned int subSampleX,
-                                       unsigned int subSampleY,
-                                       unsigned int strideX,
-                                       unsigned int strideY,
-                                       int paddingX,
-                                       int paddingY,
-                                       const std::shared_ptr
-                                       <Activation<Float_T> >& activation)
+                               const std::string& name,
+                               const std::vector<unsigned int>& kernelDims,
+                               unsigned int nbOutputs,
+                               const std::vector<unsigned int>& subSampleDims,
+                               const std::vector<unsigned int>& strideDims,
+                               const std::vector<int>& paddingDims,
+                               const std::shared_ptr
+                               <Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       ConvCell(name,
-               kernelWidth,
-               kernelHeight,
+               kernelDims,
                nbOutputs,
-               subSampleX,
-               subSampleY,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY),
+               subSampleDims,
+               strideDims,
+               paddingDims),
       FRAME(name,
-            kernelWidth,
-            kernelHeight,
+            kernelDims,
             nbOutputs,
-            subSampleX,
-            subSampleY,
-            strideX,
-            strideY,
-            paddingX,
-            paddingY,
+            subSampleDims,
+            strideDims,
+            paddingDims,
             activation),
       SPIKE(net,
             name,
-            kernelWidth,
-            kernelHeight,
+            kernelDims,
             nbOutputs,
-            subSampleX,
-            subSampleY,
-            strideX,
-            strideY,
-            paddingX,
-            paddingY),
+            subSampleDims,
+            strideDims,
+            paddingDims),
       mTranscodeMode(Frame)
 {
     // ctor
@@ -314,13 +282,13 @@ void N2D2::ConvCell_Transcode
             "Could not save spike coding compare data file.");
 
     const unsigned int oxSize
-        = (unsigned int)((ConvCell::mInputsDims[0] + 2 * ConvCell::mPaddingX
-                          - ConvCell::mKernelWidth + ConvCell::mStrideX)
-                         / (double)ConvCell::mStrideX);
+        = (unsigned int)((ConvCell::mInputsDims[0] + 2 * ConvCell::mPaddingDims[0]
+                          - ConvCell::mKernelDims[0] + ConvCell::mStrideDims[0])
+                         / (double)ConvCell::mStrideDims[0]);
     const unsigned int oySize
-        = (unsigned int)((ConvCell::mInputsDims[1] + 2 * ConvCell::mPaddingY
-                          - ConvCell::mKernelHeight + ConvCell::mStrideY)
-                         / (double)ConvCell::mStrideY);
+        = (unsigned int)((ConvCell::mInputsDims[1] + 2 * ConvCell::mPaddingDims[1]
+                          - ConvCell::mKernelDims[1] + ConvCell::mStrideDims[1])
+                         / (double)ConvCell::mStrideDims[1]);
 
     const Tensor<Float_T>& outputs = FRAME::getOutputs();
     std::vector<Float_T> minVal(ConvCell::getNbOutputs());

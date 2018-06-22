@@ -114,7 +114,9 @@ public:
     virtual const Tensor<T>& back() const;
     virtual Tensor<T>& operator[](unsigned int t);
     virtual const Tensor<T>& operator[](unsigned int t) const;
-    virtual Tensor<T>& getTensor(unsigned int k);
+    virtual Tensor<T>& getTensor(unsigned int k, unsigned int* offset = NULL);
+    virtual const Tensor<T>& getTensor(unsigned int k,
+                                       unsigned int* offset = NULL) const;
 
     /** Synchronize Device To Host */
     virtual void synchronizeDToH() const;
@@ -397,11 +399,31 @@ const N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::operator[](unsigned int
 }
 
 template <class T, int STACKING_DIM>
-N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(unsigned int k)
+N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(unsigned int k,
+                                                        unsigned int* offset)
 {
     assert(k < mDataOffset.size());
 
     const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
+
+    if (offset != NULL)
+        (*offset) = dataOffset.second;
+
+    return *(mData[dataOffset.first]);
+}
+
+template <class T, int STACKING_DIM>
+const N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(
+    unsigned int k,
+    unsigned int* offset) const
+{
+    assert(k < mDataOffset.size());
+
+    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
+
+    if (offset != NULL)
+        (*offset) = dataOffset.second;
+
     return *(mData[dataOffset.first]);
 }
 

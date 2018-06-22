@@ -29,41 +29,35 @@ class ConvCell_Spike_PCM : public ConvCell_Spike {
 public:
     ConvCell_Spike_PCM(Network& net,
                        const std::string& name,
-                       unsigned int kernelWidth,
-                       unsigned int kernelHeight,
+                       const std::vector<unsigned int>& kernelDims,
                        unsigned int nbOutputs,
-                       unsigned int subSampleX = 1,
-                       unsigned int subSampleY = 1,
-                       unsigned int strideX = 1,
-                       unsigned int strideY = 1,
-                       int paddingX = 0,
-                       int paddingY = 0);
+                       const std::vector<unsigned int>& subSampleDims
+                            = std::vector<unsigned int>(2, 1U),
+                       const std::vector<unsigned int>& strideDims
+                            = std::vector<unsigned int>(2, 1U),
+                       const std::vector<int>& paddingDims
+                            = std::vector<int>(2, 0));
     static std::shared_ptr<ConvCell>
     create(Network& net,
            const std::string& name,
-           unsigned int kernelWidth,
-           unsigned int kernelHeight,
+           const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
-           unsigned int subSampleX = 1,
-           unsigned int subSampleY = 1,
-           unsigned int strideX = 1,
-           unsigned int strideY = 1,
-           int paddingX = 0,
-           int paddingY = 0,
+           const std::vector<unsigned int>& subSampleDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<unsigned int>& strideDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<int>& paddingDims
+                = std::vector<int>(2, 0),
            const std::shared_ptr<Activation<Float_T> >& /*activation*/
            = std::shared_ptr<Activation<Float_T> >())
     {
         return std::make_shared<ConvCell_Spike_PCM>(net,
                                                     name,
-                                                    kernelWidth,
-                                                    kernelHeight,
+                                                    kernelDims,
                                                     nbOutputs,
-                                                    subSampleX,
-                                                    subSampleY,
-                                                    strideX,
-                                                    strideY,
-                                                    paddingX,
-                                                    paddingY);
+                                                    subSampleDims,
+                                                    strideDims,
+                                                    paddingDims);
     }
 
     void propagateSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);

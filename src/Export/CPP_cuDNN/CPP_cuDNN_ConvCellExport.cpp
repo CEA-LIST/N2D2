@@ -110,6 +110,8 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderWeights(ConvCell& cell,
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < cell.getNbChannels();
              ++channel) {
+            const Tensor<Float_T>& kernel = cell.getWeight(output, channel);
+
             for (unsigned int sy = 0; sy < cell.getKernelHeight(); ++sy) {
                 for (unsigned int sx = 0; sx < cell.getKernelWidth(); ++sx) {
                     if (output > 0 || channel > 0 || sy > 0 || sx > 0)
@@ -119,7 +121,7 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderWeights(ConvCell& cell,
                         header << "0";
                     else
                         CellExport::generateFreeParameter(
-                            cell, cell.getWeight(output, channel, sx, sy),
+                            cell, kernel(sx, sy),
                             header);
                 }
             }

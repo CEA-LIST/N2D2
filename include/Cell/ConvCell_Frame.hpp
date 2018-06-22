@@ -30,43 +30,34 @@ namespace N2D2 {
 class ConvCell_Frame : public virtual ConvCell, public Cell_Frame {
 public:
     ConvCell_Frame(const std::string& name,
-                   unsigned int kernelWidth,
-                   unsigned int kernelHeight,
+                   const std::vector<unsigned int>& kernelDims,
                    unsigned int nbOutputs,
-                   unsigned int subSampleX = 1,
-                   unsigned int subSampleY = 1,
-                   unsigned int strideX = 1,
-                   unsigned int strideY = 1,
-                   int paddingX = 0,
-                   int paddingY = 0,
+                   const std::vector<unsigned int>& subSampleDims
+                        = std::vector<unsigned int>(2, 1U),
+                   const std::vector<unsigned int>& strideDims
+                        = std::vector<unsigned int>(2, 1U),
+                   const std::vector<int>& paddingDims
+                        = std::vector<int>(2, 0),
                    const std::shared_ptr<Activation<Float_T> >& activation
-                   = std::make_shared<TanhActivation_Frame<Float_T> >());
+                        = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<ConvCell> create(Network& /*net*/,
-                                            const std::string& name,
-                                            unsigned int kernelWidth,
-                                            unsigned int kernelHeight,
-                                            unsigned int nbOutputs,
-                                            unsigned int subSampleX = 1,
-                                            unsigned int subSampleY = 1,
-                                            unsigned int strideX = 1,
-                                            unsigned int strideY = 1,
-                                            int paddingX = 0,
-                                            int paddingY = 0,
-                                            const std::shared_ptr
-                                            <Activation<Float_T> >& activation
-                                            = std::make_shared
-                                            <TanhActivation_Frame<Float_T> >())
+             const std::string& name,
+             const std::vector<unsigned int>& kernelDims,
+             unsigned int nbOutputs,
+             const std::vector<unsigned int>& subSampleDims
+                    = std::vector<unsigned int>(2, 1U),
+             const std::vector<unsigned int>& strideDims
+                    = std::vector<unsigned int>(2, 1U),
+             const std::vector<int>& paddingDims = std::vector<int>(2, 0),
+             const std::shared_ptr<Activation<Float_T> >& activation
+                    = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
         return std::make_shared<ConvCell_Frame>(name,
-                                                kernelWidth,
-                                                kernelHeight,
+                                                kernelDims,
                                                 nbOutputs,
-                                                subSampleX,
-                                                subSampleY,
-                                                strideX,
-                                                strideY,
-                                                paddingX,
-                                                paddingY,
+                                                subSampleDims,
+                                                strideDims,
+                                                paddingDims,
                                                 activation);
     }
 
@@ -74,12 +65,13 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Float_T getWeight(unsigned int output,
-                             unsigned int channel,
-                             unsigned int sx,
-                             unsigned int sy) const
+    inline Tensor<Float_T> getWeight(unsigned int output,
+                                     unsigned int channel) const
     {
-        return mSharedSynapses(sx, sy, channel, output);
+        unsigned int tensorChannel;
+        const Tensor<Float_T>& sharedSynapses
+            = mSharedSynapses.getTensor(channel, &tensorChannel);
+        return sharedSynapses[output][channel - tensorChannel];
     };
     inline Float_T getBias(unsigned int output) const
     {
@@ -109,11 +101,12 @@ public:
 protected:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          unsigned int sx,
-                          unsigned int sy,
-                          Float_T value)
+                          const Tensor<Float_T>& value)
     {
-        mSharedSynapses(sx, sy, channel, output) = value;
+        unsigned int tensorChannel;
+        Tensor<Float_T>& sharedSynapses
+            = mSharedSynapses.getTensor(channel, &tensorChannel);
+        sharedSynapses[output][channel - tensorChannel] = value;
     }
     inline void setBias(unsigned int output, Float_T value)
     {

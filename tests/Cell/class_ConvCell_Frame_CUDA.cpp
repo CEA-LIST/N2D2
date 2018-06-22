@@ -36,38 +36,26 @@ using namespace N2D2;
 class ConvCell_Frame_CUDA_Test : public ConvCell_Frame_CUDA {
 public:
     ConvCell_Frame_CUDA_Test(const std::string& name,
-                             unsigned int kernelWidth,
-                             unsigned int kernelHeight,
+                             const std::vector<unsigned int>& kernelDims,
                              unsigned int nbOutputs,
-                             unsigned int subSampleX,
-                             unsigned int subSampleY,
-                             unsigned int strideX,
-                             unsigned int strideY,
-                             unsigned int paddingX,
-                             unsigned int paddingY,
+                             const std::vector<unsigned int>& subSampleDims,
+                             const std::vector<unsigned int>& strideDims,
+                             const std::vector<int>& paddingDims,
                              const std::shared_ptr
                              <Activation<Float_T> >& activation)
         : Cell(name, nbOutputs),
           ConvCell(name,
-                   kernelWidth,
-                   kernelHeight,
+                   kernelDims,
                    nbOutputs,
-                   subSampleX,
-                   subSampleY,
-                   strideX,
-                   strideY,
-                   paddingX,
-                   paddingY),
+                   subSampleDims,
+                   strideDims,
+                   paddingDims),
           ConvCell_Frame_CUDA(name,
-                              kernelWidth,
-                              kernelHeight,
+                              kernelDims,
                               nbOutputs,
-                              subSampleX,
-                              subSampleY,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
+                              subSampleDims,
+                              strideDims,
+                              paddingDims,
                               activation) {};
 
     friend class UnitTest_ConvCell_Frame_CUDA_addInput__env;
@@ -122,17 +110,12 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     ConvCell_Frame_CUDA conv1("conv1",
-                              kernelWidth,
-                              kernelHeight,
-                              nbOutputs,
-                              subSampleX,
-                              subSampleY,
-                              strideX,
-                              strideY,
-                              paddingX,
-                              paddingY,
-                              std::make_shared
-                              <TanhActivation_Frame_CUDA<Float_T> >());
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
 
     ASSERT_EQUALS(conv1.getName(), "conv1");
     ASSERT_EQUALS(conv1.getKernelWidth(), kernelWidth);
@@ -193,17 +176,12 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA_Test conv1("conv1",
-                                   kernelWidth,
-                                   kernelHeight,
-                                   nbOutputs,
-                                   subSampleX,
-                                   subSampleY,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
-                                   std::make_shared
-                                   <TanhActivation_Frame_CUDA<Float_T> >());
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
     conv1.initialize();
@@ -289,29 +267,19 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA_Test conv1("conv1",
-                                   4,
-                                   4,
-                                   16,
-                                   1,
-                                   1,
-                                   2,
-                                   2,
-                                   0,
-                                   0,
-                                   std::make_shared
-                                   <TanhActivation_Frame_CUDA<Float_T> >());
+        std::vector<unsigned int>({4, 4}),
+        16,
+        std::vector<unsigned int>({1, 1}),
+        std::vector<unsigned int>({2, 2}),
+        std::vector<int>({0, 0}),
+        std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
     ConvCell_Frame_CUDA_Test conv2("conv2",
-                                   kernelWidth,
-                                   kernelHeight,
-                                   nbOutputs,
-                                   subSampleX,
-                                   subSampleY,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
-                                   std::make_shared
-                                   <TanhActivation_Frame_CUDA<Float_T> >());
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
 
     conv1.addInput(env);
     conv2.addInput(&conv1);
@@ -401,16 +369,12 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test conv1("conv1",
-                                   kernelWidth,
-                                   kernelHeight,
-                                   nbOutputs,
-                                   subSampleX,
-                                   subSampleY,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
-                                   std::shared_ptr<Activation<Float_T> >());
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::shared_ptr<Activation<Float_T> >());
     conv1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -444,15 +408,16 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < conv1.getNbChannels();
              ++channel) {
+            Tensor<Float_T> kernel({conv1.getKernelWidth(),
+                                   conv1.getKernelHeight()});
+
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    conv1.setWeight(output,
-                                    channel,
-                                    sx,
-                                    sy,
-                                    1.0 + channel + conv1.getNbChannels()
-                                                    * output);
+                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
+                                                    * output;
             }
+
+            conv1.setWeight(output, channel, kernel);
         }
     }
 
@@ -563,16 +528,12 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test conv1("conv1",
-                                   kernelWidth,
-                                   kernelHeight,
-                                   nbOutputs,
-                                   subSampleX,
-                                   subSampleY,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
-                                   std::shared_ptr<Activation<Float_T> >());
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::shared_ptr<Activation<Float_T> >());
     conv1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -610,15 +571,16 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < conv1.getNbChannels();
              ++channel) {
+            Tensor<Float_T> kernel({conv1.getKernelWidth(),
+                                   conv1.getKernelHeight()});
+
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    conv1.setWeight(output,
-                                    channel,
-                                    sx,
-                                    sy,
-                                    1.0 + channel + conv1.getNbChannels()
-                                                    * output);
+                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
+                                                    * output;
             }
+
+            conv1.setWeight(output, channel, kernel);
         }
     }
 
@@ -724,17 +686,12 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA_Test conv1("conv1",
-                                   kernelWidth,
-                                   kernelHeight,
-                                   nbOutputs,
-                                   subSampleX,
-                                   subSampleY,
-                                   strideX,
-                                   strideY,
-                                   paddingX,
-                                   paddingY,
-                                   std::make_shared
-                                   <TanhActivation_Frame_CUDA<Float_T> >());
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
     conv1.initialize();
@@ -742,21 +699,26 @@ TEST_DATASET(ConvCell_Frame_CUDA,
     for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < conv1.getNbChannels();
              ++channel) {
+            Tensor<Float_T> kernel({conv1.getKernelWidth(),
+                                   conv1.getKernelHeight()});
+
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    conv1.setWeight(
-                        output, channel, sx, sy, output + channel + sx + sy);
+                    kernel(sx, sy) = output + channel + sx + sy;
             }
+
+            conv1.setWeight(output, channel, kernel);
         }
     }
 
     for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < conv1.getNbChannels();
              ++channel) {
+            const Tensor<Float_T> kernel = conv1.getWeight(output, channel);
+
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy) {
-                    ASSERT_EQUALS(conv1.getWeight(output, channel, sx, sy),
-                                  output + channel + sx + sy);
+                    ASSERT_EQUALS(kernel(sx, sy), output + channel + sx + sy);
                 }
             }
         }

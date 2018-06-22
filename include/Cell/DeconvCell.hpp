@@ -52,13 +52,10 @@ public:
     typedef std::function<std::shared_ptr<DeconvCell>(
         Network&,
         const std::string&,
+        const std::vector<unsigned int>&,
         unsigned int,
-        unsigned int,
-        unsigned int,
-        unsigned int,
-        unsigned int,
-        int,
-        int,
+        const std::vector<unsigned int>&,
+        const std::vector<int>&,
         const std::shared_ptr<Activation<Float_T> >&)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -83,13 +80,11 @@ public:
     };
 
     DeconvCell(const std::string& name,
-               unsigned int kernelWidth,
-               unsigned int kernelHeight,
+               const std::vector<unsigned int>& kernelDims,
                unsigned int nbOutputs,
-               unsigned int strideX = 1,
-               unsigned int strideY = 1,
-               int paddingX = 0,
-               int paddingY = 0);
+               const std::vector<unsigned int>& strideDims
+                  = std::vector<unsigned int>(2, 1U),
+               const std::vector<int>& paddingDims = std::vector<int>(2, 0));
     const char* getType() const
     {
         return Type;
@@ -120,27 +115,27 @@ public:
     unsigned long long int getNbVirtualSynapses() const;
     unsigned int getKernelWidth() const
     {
-        return mKernelWidth;
+        return mKernelDims[0];
     };
     unsigned int getKernelHeight() const
     {
-        return mKernelHeight;
+        return mKernelDims[1];
     };
     unsigned int getStrideX() const
     {
-        return mStrideX;
+        return mStrideDims[0];
     };
     unsigned int getStrideY() const
     {
-        return mStrideY;
+        return mStrideDims[1];
     };
     int getPaddingX() const
     {
-        return mPaddingX;
+        return mPaddingDims[0];
     };
     int getPaddingY() const
     {
-        return mPaddingY;
+        return mPaddingDims[1];
     };
     std::shared_ptr<Solver<Float_T> > getWeightsSolver()
     {
@@ -150,10 +145,8 @@ public:
     {
         return mBiasSolver;
     };
-    virtual Float_T getWeight(unsigned int output,
-                              unsigned int channel,
-                              unsigned int sx,
-                              unsigned int sy) const = 0;
+    virtual Tensor<Float_T> getWeight(unsigned int output,
+                                      unsigned int channel) const = 0;
     virtual Float_T getBias(unsigned int output) const = 0;
     void setKernel(unsigned int output,
                    unsigned int channel,
@@ -184,9 +177,7 @@ protected:
     virtual void setOutputsDims();
     virtual void setWeight(unsigned int output,
                            unsigned int channel,
-                           unsigned int sx,
-                           unsigned int sy,
-                           Float_T value) = 0;
+                           const Tensor<Float_T>& value) = 0;
     virtual void setBias(unsigned int output, Float_T value) = 0;
     std::map<unsigned int, unsigned int> outputsRemap() const;
 
@@ -195,21 +186,15 @@ protected:
     /// If true, enable backpropogation
     Parameter<bool> mBackPropagate;
     Parameter<WeightsExportFormat> mWeightsExportFormat;
-    Parameter<bool> mWeightsExportTranspose;
+    Parameter<bool> mWeightsExportFlip;
     Parameter<std::string> mOutputsRemap;
 
-    // Kernel width
-    const unsigned int mKernelWidth;
-    // Kernel height
-    const unsigned int mKernelHeight;
-    // Horizontal stride for the convolution
-    const unsigned int mStrideX;
-    // Vertical stride for the convolution
-    const unsigned int mStrideY;
-    // Horizontal padding at left and at right
-    const int mPaddingX;
-    // Vertical padding at top and at bottom
-    const int mPaddingY;
+    // Kernel dims
+    const std::vector<unsigned int> mKernelDims;
+    // Stride for the convolution
+    const std::vector<unsigned int> mStrideDims;
+    // Padding for the convolution
+    const std::vector<int> mPaddingDims;
 
     std::shared_ptr<Filler<Float_T> > mWeightsFiller;
     std::shared_ptr<Filler<Float_T> > mBiasFiller;

@@ -25,38 +25,26 @@ N2D2::ConvCell_Spike_RRAM::mRegistrar("Spike_RRAM",
                                       N2D2::ConvCell_Spike_RRAM::create);
 
 N2D2::ConvCell_Spike_RRAM::ConvCell_Spike_RRAM(Network& net,
-                                               const std::string& name,
-                                               unsigned int kernelWidth,
-                                               unsigned int kernelHeight,
-                                               unsigned int nbOutputs,
-                                               unsigned int subSampleX,
-                                               unsigned int subSampleY,
-                                               unsigned int strideX,
-                                               unsigned int strideY,
-                                               int paddingX,
-                                               int paddingY)
+                                 const std::string& name,
+                                 const std::vector<unsigned int>& kernelDims,
+                                 unsigned int nbOutputs,
+                                 const std::vector<unsigned int>& subSampleDims,
+                                 const std::vector<unsigned int>& strideDims,
+                                 const std::vector<int>& paddingDims)
     : Cell(name, nbOutputs),
       ConvCell(name,
-               kernelWidth,
-               kernelHeight,
+               kernelDims,
                nbOutputs,
-               subSampleX,
-               subSampleY,
-               strideX,
-               strideY,
-               paddingX,
-               paddingY),
+               subSampleDims,
+               strideDims,
+               paddingDims),
       ConvCell_Spike(net,
                      name,
-                     kernelWidth,
-                     kernelHeight,
+                     kernelDims,
                      nbOutputs,
-                     subSampleX,
-                     subSampleY,
-                     strideX,
-                     strideY,
-                     paddingX,
-                     paddingY),
+                     subSampleDims,
+                     strideDims,
+                     paddingDims),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mWeightsMinMean(this, "WeightsMinMean", 1, 0.1),
@@ -101,31 +89,31 @@ void N2D2::ConvCell_Spike_RRAM::propagateSpike(NodeIn* origin,
     mInputsActivationTime(area.x, area.y, channel, 0) = timestamp;
 
     const unsigned int oxStride
-        = mStrideX
-          * (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
-                            + mStrideX) / (double)mStrideX);
+        = mStrideDims[0]
+          * (unsigned int)((mInputsDims[0] + 2 * mPaddingDims[0] - mKernelDims[0]
+                            + mStrideDims[0]) / (double)mStrideDims[0]);
     const unsigned int oyStride
-        = mStrideY
-          * (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
-                            + mStrideY) / (double)mStrideY);
-    const unsigned int ixPad = area.x + mPaddingX;
-    const unsigned int iyPad = area.y + mPaddingY;
-    const unsigned int sxMax = std::min(mKernelWidth, ixPad + 1);
-    const unsigned int syMax = std::min(mKernelHeight, iyPad + 1);
+        = mStrideDims[1]
+          * (unsigned int)((mInputsDims[1] + 2 * mPaddingDims[1] - mKernelDims[1]
+                            + mStrideDims[1]) / (double)mStrideDims[1]);
+    const unsigned int ixPad = area.x + mPaddingDims[0];
+    const unsigned int iyPad = area.y + mPaddingDims[1];
+    const unsigned int sxMax = std::min(mKernelDims[0], ixPad + 1);
+    const unsigned int syMax = std::min(mKernelDims[1], iyPad + 1);
 
-    for (unsigned int sy = iyPad % mStrideY, sx0 = ixPad % mStrideX; sy < syMax;
-         sy += mStrideY) {
+    for (unsigned int sy = iyPad % mStrideDims[1], sx0 = ixPad % mStrideDims[0]; sy < syMax;
+         sy += mStrideDims[1]) {
         if (iyPad >= oyStride + sy)
             continue;
 
-        for (unsigned int sx = sx0; sx < sxMax; sx += mStrideX) {
+        for (unsigned int sx = sx0; sx < sxMax; sx += mStrideDims[0]) {
             // Border conditions
             if (ixPad >= oxStride + sx)
                 continue;
 
             // Output node coordinates
-            const unsigned int ox = (ixPad - sx) / mStrideX;
-            const unsigned int oy = (iyPad - sy) / mStrideY;
+            const unsigned int ox = (ixPad - sx) / mStrideDims[0];
+            const unsigned int oy = (iyPad - sy) / mStrideDims[1];
 
             for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 if (!isConnection(channel, output))
@@ -156,13 +144,13 @@ void N2D2::ConvCell_Spike_RRAM::incomingSpike(NodeIn* origin,
     bool negative;
     std::tie(output, ox, oy, negative) = unmaps(type);
 
-    const unsigned int subOx = ox / mSubSampleX;
-    const unsigned int subOy = oy / mSubSampleY;
+    const unsigned int subOx = ox / mSubSampleDims[0];
+    const unsigned int subOy = oy / mSubSampleDims[1];
 
     // Synapse coordinates
     const Area& area = origin->getArea();
-    const unsigned int synX = area.x - ox * mStrideX + mPaddingX;
-    const unsigned int synY = area.y - oy * mStrideY + mPaddingY;
+    const unsigned int synX = area.x - ox * mStrideDims[0] + mPaddingDims[0];
+    const unsigned int synY = area.y - oy * mStrideDims[1] + mPaddingDims[1];
 
     // Neuron state variables
     Time_T& lastIntegration = mOutputsLastIntegration(subOx, subOy, output, 0);
@@ -242,13 +230,13 @@ void N2D2::ConvCell_Spike_RRAM::incomingSpike(NodeIn* origin,
 
         if (mEnableStdp) {
             const unsigned int sxMin = (unsigned int)std::max(
-                (int)mPaddingX - (int)(ox * mStrideX), 0);
+                (int)mPaddingDims[0] - (int)(ox * mStrideDims[0]), 0);
             const unsigned int syMin = (unsigned int)std::max(
-                (int)mPaddingY - (int)(oy * mStrideY), 0);
+                (int)mPaddingDims[1] - (int)(oy * mStrideDims[1]), 0);
             const unsigned int sxMax = Utils::clamp<int>(
-                mInputsDims[0] + mPaddingX - ox * mStrideX, 0, mKernelWidth);
+                mInputsDims[0] + mPaddingDims[0] - ox * mStrideDims[0], 0, mKernelDims[0]);
             const unsigned int syMax = Utils::clamp<int>(
-                mInputsDims[1] + mPaddingY - oy * mStrideY, 0, mKernelHeight);
+                mInputsDims[1] + mPaddingDims[1] - oy * mStrideDims[1], 0, mKernelDims[1]);
 
             for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             {
@@ -257,10 +245,10 @@ void N2D2::ConvCell_Spike_RRAM::incomingSpike(NodeIn* origin,
 
                 for (unsigned int sy = syMin; sy < syMax; ++sy) {
                     for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
-                        const unsigned int ix = (int)(ox * mStrideX + sx)
-                                                - (int)mPaddingX;
-                        const unsigned int iy = (int)(oy * mStrideY + sy)
-                                                - (int)mPaddingY;
+                        const unsigned int ix = (int)(ox * mStrideDims[0] + sx)
+                                                - (int)mPaddingDims[0];
+                        const unsigned int iy = (int)(oy * mStrideDims[1] + sy)
+                                                - (int)mPaddingDims[1];
 
                         const Time_T lastSpike
                             = mInputsActivationTime(ix, iy, channel, 0);

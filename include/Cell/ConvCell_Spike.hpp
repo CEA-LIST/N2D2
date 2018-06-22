@@ -33,41 +33,35 @@ class ConvCell_Spike : public virtual ConvCell, public Cell_Spike {
 public:
     ConvCell_Spike(Network& net,
                    const std::string& name,
-                   unsigned int kernelWidth,
-                   unsigned int kernelHeight,
+                   const std::vector<unsigned int>& kernelDims,
                    unsigned int nbOutputs,
-                   unsigned int subSampleX = 1,
-                   unsigned int subSampleY = 1,
-                   unsigned int strideX = 1,
-                   unsigned int strideY = 1,
-                   int paddingX = 0,
-                   int paddingY = 0);
+                   const std::vector<unsigned int>& subSampleDims
+                        = std::vector<unsigned int>(2, 1U),
+                   const std::vector<unsigned int>& strideDims
+                        = std::vector<unsigned int>(2, 1U),
+                   const std::vector<int>& paddingDims
+                        = std::vector<int>(2, 0));
     static std::shared_ptr<ConvCell>
     create(Network& net,
            const std::string& name,
-           unsigned int kernelWidth,
-           unsigned int kernelHeight,
+           const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
-           unsigned int subSampleX = 1,
-           unsigned int subSampleY = 1,
-           unsigned int strideX = 1,
-           unsigned int strideY = 1,
-           int paddingX = 0,
-           int paddingY = 0,
+           const std::vector<unsigned int>& subSampleDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<unsigned int>& strideDims
+                = std::vector<unsigned int>(2, 1U),
+           const std::vector<int>& paddingDims
+                = std::vector<int>(2, 0),
            const std::shared_ptr<Activation<Float_T> >& /*activation*/
            = std::shared_ptr<Activation<Float_T> >())
     {
         return std::make_shared<ConvCell_Spike>(net,
                                                 name,
-                                                kernelWidth,
-                                                kernelHeight,
+                                                kernelDims,
                                                 nbOutputs,
-                                                subSampleX,
-                                                subSampleY,
-                                                strideX,
-                                                strideY,
-                                                paddingX,
-                                                paddingY);
+                                                subSampleDims,
+                                                strideDims,
+                                                paddingDims);
     }
 
     virtual void initialize();
@@ -76,10 +70,8 @@ public:
     virtual void
     incomingSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);
     virtual void notify(Time_T timestamp, NotifyType notify);
-    inline Float_T getWeight(unsigned int output,
-                             unsigned int channel,
-                             unsigned int sx,
-                             unsigned int sy) const;
+    inline Tensor<Float_T> getWeight(unsigned int output,
+                                     unsigned int channel) const;
     inline Float_T getBias(unsigned int /*output*/) const
     {
         return 0.0;
@@ -108,9 +100,7 @@ protected:
     virtual Synapse* newSynapse() const;
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          unsigned int sx,
-                          unsigned int sy,
-                          Float_T value);
+                          const Tensor<Float_T>& value);
     inline void setBias(unsigned int /*output*/, Float_T /*value*/) {};
     inline EventType_T maps(unsigned int output,
                             unsigned int ox,
@@ -154,19 +144,25 @@ void addInput(Xcell& cell, ConvCell_Spike& convCell);
 
 void N2D2::ConvCell_Spike::setWeight(unsigned int output,
                                      unsigned int channel,
-                                     unsigned int sx,
-                                     unsigned int sy,
-                                     Float_T value)
+                                     const Tensor<Float_T>& value)
 {
-    mSharedSynapses(sx, sy, channel, output)->setRelativeWeight(value);
+    Tensor<Synapse*> sharedSynapses = mSharedSynapses[output][channel];
+    assert(value.dims() == sharedSynapses.dims());
+
+    for (size_t index = 0; index < value.size(); ++index)
+        sharedSynapses(index)->setRelativeWeight(value(index));
 }
 
-N2D2::Float_T N2D2::ConvCell_Spike::getWeight(unsigned int output,
-                                              unsigned int channel,
-                                              unsigned int sx,
-                                              unsigned int sy) const
+N2D2::Tensor<N2D2::Float_T> N2D2::ConvCell_Spike::getWeight(unsigned int output,
+                                                    unsigned int channel) const
 {
-    return mSharedSynapses(sx, sy, channel, output)->getRelativeWeight(true);
+    const Tensor<Synapse*>& sharedSynapses = mSharedSynapses[output][channel];
+    Tensor<Float_T> values(sharedSynapses.dims());
+
+    for (size_t index = 0; index < values.size(); ++index)
+        values(index) = sharedSynapses(index)->getRelativeWeight(true);
+
+    return values;
 }
 
 N2D2::EventType_T N2D2::ConvCell_Spike::maps(unsigned int output,

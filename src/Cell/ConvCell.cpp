@@ -23,29 +23,21 @@
 const char* N2D2::ConvCell::Type = "Conv";
 
 N2D2::ConvCell::ConvCell(const std::string& name,
-                         unsigned int kernelWidth,
-                         unsigned int kernelHeight,
+                         const std::vector<unsigned int>& kernelDims,
                          unsigned int nbOutputs,
-                         unsigned int subSampleX,
-                         unsigned int subSampleY,
-                         unsigned int strideX,
-                         unsigned int strideY,
-                         int paddingX,
-                         int paddingY)
+                         const std::vector<unsigned int>& subSampleDims,
+                         const std::vector<unsigned int>& strideDims,
+                         const std::vector<int>& paddingDims)
     : Cell(name, nbOutputs),
       mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OCHW),
-      mWeightsExportTranspose(this, "WeightsExportTranspose", false),
+      mWeightsExportFlip(this, "WeightsExportFlip", false),
       mOutputsRemap(this, "OutputsRemap", ""),
-      mKernelWidth(kernelWidth),
-      mKernelHeight(kernelHeight),
-      mSubSampleX(subSampleX),
-      mSubSampleY(subSampleY),
-      mStrideX(strideX),
-      mStrideY(strideY),
-      mPaddingX(paddingX),
-      mPaddingY(paddingY),
+      mKernelDims(kernelDims),
+      mSubSampleDims(subSampleDims),
+      mStrideDims(strideDims),
+      mPaddingDims(paddingDims),
       mWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
       mBiasFiller(new NormalFiller<Float_T>(0.0, 0.05))
 {
@@ -71,14 +63,7 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
         return;
     }
 
-    Tensor<Float_T> weights({mKernelWidth, mKernelHeight});
-
-    for (unsigned int y = 0; y < mKernelHeight; ++y) {
-        for (unsigned int x = 0; x < mKernelWidth; ++x)
-            weights(x, y) = getWeight(output, channel, x, y);
-    }
-
-    StimuliProvider::logData(fileName, weights);
+    StimuliProvider::logData(fileName, getWeight(output, channel));
 }
 
 void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
@@ -88,15 +73,12 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
         throw std::domain_error(
             "ConvCell::logFreeParameters(): output not within range.");
 
-    Tensor<Float_T> weights({mKernelWidth, mKernelHeight, getNbChannels()});
+    Tensor<Float_T> weights;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        for (unsigned int y = 0; y < mKernelHeight; ++y) {
-            for (unsigned int x = 0; x < mKernelWidth; ++x)
-                weights(x, y, channel) = (isConnection(channel, output))
-                                             ? getWeight(output, channel, x, y)
-                                             : 0.0;
-        }
+        weights.push_back((isConnection(channel, output))
+                                     ? getWeight(output, channel)
+                                     : Tensor<Float_T>(mKernelDims, 0.0));
     }
 
     StimuliProvider::logData(fileName, weights);
@@ -141,12 +123,17 @@ void N2D2::ConvCell::logFreeParameters(const std::string& dirName) const
 
 unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
 {
+    const unsigned int kernelSize = (!mKernelDims.empty())
+        ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                          1U, std::multiplies<unsigned int>())
+        : 0U;
+
     unsigned long long int nbSharedSynapses = 0;
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
             if (isConnection(channel, output))
-                nbSharedSynapses += mKernelWidth * mKernelHeight;
+                nbSharedSynapses += kernelSize;
         }
     }
 
@@ -158,37 +145,47 @@ unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
 
 unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
 {
-    const unsigned int oxSize
-        = (unsigned int)((mInputsDims[0] + 2 * mPaddingX - mKernelWidth
-                          + mStrideX) / (double)mStrideX);
-    const unsigned int oySize
-        = (unsigned int)((mInputsDims[1] + 2 * mPaddingY - mKernelHeight
-                          + mStrideY) / (double)mStrideY);
+    std::vector<size_t> oSizes;
+
+    for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        oSizes.push_back((unsigned int)((mInputsDims[dim]
+                            + 2 * mPaddingDims[dim] - mKernelDims[dim]
+                            + mStrideDims[dim]) / (double)mStrideDims[dim]));
+    }
+
+    const size_t oSize = (!oSizes.empty())
+        ? std::accumulate(oSizes.begin(), oSizes.end(),
+                          1U, std::multiplies<size_t>())
+        : 0U;
 
     unsigned long long int nbSynapsesPerConnection = 0;
+    std::vector<size_t> oIndex(oSizes.size(), 0);
 
-#pragma omp parallel for reduction(+:nbSynapsesPerConnection)
-    for (int oy = 0; oy < (int)oySize; ++oy) {
-        unsigned long long int nbSynapsesOx = 0;
+    for (size_t o = 0; o < oSize; ++o) {
+        unsigned long long int nbSynapsesO = 1;
+        bool stopIndex = false;
 
-        for (unsigned int ox = 0; ox < oxSize; ++ox) {
-            const unsigned int sxMin = (unsigned int)std::max(
-                (int)mPaddingX - (int)(ox * mStrideX), 0);
-            const unsigned int syMin = (unsigned int)std::max(
-                (int)mPaddingY - (int)(oy * mStrideY), 0);
-            const unsigned int sxMax = Utils::clamp
-                <int>(mInputsDims[0] + mPaddingX - ox * mStrideX,
+        for (int dim = oSizes.size() - 1; dim >= 0; --dim) {
+            if (!stopIndex) {
+                if (++oIndex[dim] < oSizes[dim])
+                    stopIndex = true;
+                else
+                    oIndex[dim] = 0;
+            }
+
+            const unsigned int sMin = (unsigned int)std::max(
+                (int)mPaddingDims[dim] - (int)(oIndex[dim] * mStrideDims[dim]),
+                0);
+            const unsigned int sMax = Utils::clamp
+                <int>(mInputsDims[dim] + mPaddingDims[dim] - oIndex[dim]
+                                                            * mStrideDims[dim],
                       0,
-                      mKernelWidth);
-            const unsigned int syMax = Utils::clamp
-                <int>(mInputsDims[1] + mPaddingY - oy * mStrideY,
-                      0,
-                      mKernelHeight);
+                      mKernelDims[dim]);
 
-            nbSynapsesOx += (sxMax - sxMin) * (syMax - syMin);
+            nbSynapsesO *= (sMax - sMin);
         }
 
-        nbSynapsesPerConnection += nbSynapsesOx;
+        nbSynapsesPerConnection += nbSynapsesO;
     }
 
     unsigned long long int nbVirtualSynapses = 0;
@@ -219,8 +216,12 @@ void N2D2::ConvCell::setKernel(unsigned int output,
         throw std::domain_error(
             "ConvCell::setKernel(): channel not within range.");
 
-    if (value.cols() != mKernelWidth || value.rows() != mKernelHeight)
+    if (mKernelDims.size() != 2
+        || value.cols() != mKernelDims[0]
+        || value.rows() != mKernelDims[1])
+    {
         throw std::runtime_error("ConvCell::setKernel(): wrong kernel size");
+    }
 
     if (!isConnection(channel, output))
         throw std::domain_error(
@@ -241,15 +242,17 @@ void N2D2::ConvCell::setKernel(unsigned int output,
         }
     }
 
-    for (unsigned int y = 0; y < mKernelHeight; ++y) {
-        for (unsigned int x = 0; x < mKernelWidth; ++x) {
-            const double relWeight = (normalize) ? 2.0
-                                                   * (value(y, x) - valueMin)
-                                                   / (valueMax - valueMin) - 1.0
-                                                 : value(y, x);
-            setWeight(output, channel, x, y, relWeight);
+    Tensor<Float_T> kernel(mKernelDims);
+
+    for (unsigned int y = 0; y < mKernelDims[1]; ++y) {
+        for (unsigned int x = 0; x < mKernelDims[0]; ++x) {
+            kernel(x, y) = (normalize) ? 2.0 * (value(y, x) - valueMin)
+                                                / (valueMax - valueMin) - 1.0
+                                       : value(y, x);
         }
     }
+
+    setWeight(output, channel, kernel);
 }
 
 void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
@@ -281,16 +284,16 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                 if (!isConnection(channel, outputRemap))
                     continue;
 
-                for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                    for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                        const Float_T weight = (mWeightsExportTranspose)
-                            ? getWeight(outputRemap, channel,
-                                        mKernelWidth - sx - 1,
-                                        mKernelHeight - sy - 1)
-                            : getWeight(outputRemap, channel, sx, sy);
+                const Tensor<Float_T>& kernel = getWeight(outputRemap, channel);
 
-                        weights << weight << " ";
-                    }
+                for (unsigned int index = 0, size = kernel.size(); index < size;
+                    ++index)
+                {
+                    const Float_T weight = (mWeightsExportFlip)
+                        ? kernel(size - 1 - index)
+                        : kernel(index);
+
+                    weights << weight << " ";
                 }
             }
 
@@ -298,31 +301,35 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
         }
     }
     else if (mWeightsExportFormat == HWCO) {
-        for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-            for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                for (unsigned int channel = 0; channel < getNbChannels();
-                    ++channel)
+        const unsigned int kernelSize = (!mKernelDims.empty())
+            ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                              1U, std::multiplies<unsigned int>())
+            : 0U;
+
+        for (unsigned int index = 0; index < kernelSize; ++index) {
+            for (unsigned int channel = 0; channel < getNbChannels();
+                ++channel)
+            {
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
                 {
-                    for (unsigned int output = 0; output < getNbOutputs(); ++output)
-                    {
-                        const unsigned int outputRemap = (!outputsMap.empty())
-                            ? outputsMap.find(output)->second : output;
+                    const unsigned int outputRemap = (!outputsMap.empty())
+                        ? outputsMap.find(output)->second : output;
 
-                        if (!isConnection(channel, outputRemap))
-                            continue;
+                    if (!isConnection(channel, outputRemap))
+                        continue;
 
-                        const Float_T weight = (mWeightsExportTranspose)
-                            ? getWeight(outputRemap, channel,
-                                        mKernelWidth - sx - 1,
-                                        mKernelHeight - sy - 1)
-                            : getWeight(outputRemap, channel, sx, sy);
+                    const Tensor<Float_T>& kernel = getWeight(outputRemap,
+                                                              channel);
 
-                        weights << weight << " ";
-                    }
+                    const Float_T weight = (mWeightsExportFlip)
+                        ? kernel(kernelSize - 1 - index)
+                        : kernel(index);
+
+                    weights << weight << " ";
                 }
-
-                weights << "\n";
             }
+
+            weights << "\n";
         }
     }
     else
@@ -398,22 +405,23 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
                 if (!isConnection(channel, outputRemap))
                     continue;
 
-                for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                    for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                        if (!(weights >> weight))
-                            throw std::runtime_error(
-                                "Error while reading synaptic file: "
-                                + weightsFile);
+                Tensor<Float_T> kernel(mKernelDims);
 
-                        if (mWeightsExportTranspose) {
-                            setWeight(outputRemap, channel,
-                                      mKernelWidth - sx - 1,
-                                      mKernelHeight - sy - 1, weight);
-                        }
-                        else
-                            setWeight(outputRemap, channel, sx, sy, weight);
-                    }
+                for (unsigned int index = 0, size = kernel.size(); index < size;
+                    ++index)
+                {
+                    if (!(weights >> weight))
+                        throw std::runtime_error(
+                            "Error while reading synaptic file: "
+                            + weightsFile);
+
+                    if (mWeightsExportFlip)
+                        kernel(size - 1 - index) = weight;
+                    else
+                        kernel(index) = weight;
                 }
+
+                setWeight(outputRemap, channel, kernel);
             }
 
             if (!mNoBias) {
@@ -426,33 +434,50 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
         }
     }
     else if (mWeightsExportFormat == HWCO) {
-        for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-            for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                for (unsigned int channel = 0; channel < getNbChannels();
-                    ++channel)
+        std::vector<size_t> kernelsDims(mKernelDims.begin(), mKernelDims.end());
+        kernelsDims.push_back(getNbChannels());
+        kernelsDims.push_back(getNbOutputs());
+
+        Tensor<Float_T> kernels(kernelsDims);
+
+        const unsigned int kernelSize = (!mKernelDims.empty())
+            ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                              1U, std::multiplies<unsigned int>())
+            : 0U;
+
+        for (unsigned int index = 0; index < kernelSize; ++index) {
+            for (unsigned int channel = 0; channel < getNbChannels();
+                ++channel)
+            {
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
                 {
-                    for (unsigned int output = 0; output < getNbOutputs(); ++output)
-                    {
-                        const unsigned int outputRemap = (!outputsMap.empty())
-                            ? outputsMap.find(output)->second : output;
+                    const unsigned int outputRemap = (!outputsMap.empty())
+                        ? outputsMap.find(output)->second : output;
 
-                        if (!isConnection(channel, outputRemap))
-                            continue;
+                    if (!isConnection(channel, outputRemap))
+                        continue;
 
-                        if (!(weights >> weight))
-                            throw std::runtime_error(
-                                "Error while reading synaptic file: "
-                                + weightsFile);
+                    if (!(weights >> weight))
+                        throw std::runtime_error(
+                            "Error while reading synaptic file: "
+                            + weightsFile);
 
-                        if (mWeightsExportTranspose) {
-                            setWeight(outputRemap, channel,
-                                      mKernelWidth - sx - 1,
-                                      mKernelHeight - sy - 1, weight);
-                        }
-                        else
-                            setWeight(outputRemap, channel, sx, sy, weight);
+                    if (mWeightsExportFlip) {
+                        kernels[outputRemap][channel](kernelSize - 1 - index)
+                                                                    = weight;
                     }
+                    else
+                        kernels[outputRemap][channel](index) = weight;
                 }
+            }
+        }
+
+        for (unsigned int channel = 0; channel < getNbChannels();
+            ++channel)
+        {
+            for (unsigned int output = 0; output < getNbOutputs(); ++output)
+            {
+                setWeight(output, channel, kernels[output][channel]);
             }
         }
 
@@ -502,10 +527,8 @@ void N2D2::ConvCell::logFreeParametersDistrib(const std::string& fileName) const
             if (!isConnection(channel, output))
                 continue;
 
-            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                for (unsigned int sx = 0; sx < mKernelWidth; ++sx)
-                    weights.push_back(getWeight(output, channel, sx, sy));
-            }
+            const Tensor<Float_T>& kernel = getWeight(output, channel);
+            weights.insert(weights.end(), kernel.begin(), kernel.end());
         }
 
         if (!mNoBias)
@@ -655,14 +678,11 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
             if (!isConnection(channel, output))
                 continue;
 
-            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                    double weight = getWeight(output, channel, sx, sy);
-                    weight = Utils::round((nbLevels - 1) * weight)
-                             / (nbLevels - 1);
+            Tensor<Float_T> kernel = getWeight(output, channel);
 
-                    setWeight(output, channel, sx, sy, weight);
-                }
+            for (unsigned int index = 0; index < kernel.size(); ++index) {
+                kernel(index) = Utils::round((nbLevels - 1) * kernel(index))
+                         / (nbLevels - 1);
             }
         }
 
@@ -686,13 +706,13 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
             if (!isConnection(channel, output))
                 continue;
 
-            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                    Float_T weight = getWeight(output, channel, sx, sy);
+            const Tensor<Float_T>& kernel = getWeight(output, channel);
 
-                    if (weight < wMin)  wMin = weight;
-                    if (weight > wMax)  wMax = weight;
-                }
+            for (unsigned int index = 0; index < kernel.size(); ++index) {
+                const Float_T weight = kernel(index);
+
+                if (weight < wMin)  wMin = weight;
+                if (weight > wMax)  wMax = weight;
             }
         }
 
@@ -714,14 +734,11 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
             if (!isConnection(channel, output))
                 continue;
 
-            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                    double weight = getWeight(output, channel, sx, sy);
-                    weight = Utils::clamp(
-                        Random::randNormal(weight, stdDev), -1.0, 1.0);
+            Tensor<Float_T> kernel = getWeight(output, channel);
 
-                    setWeight(output, channel, sx, sy, weight);
-                }
+            for (unsigned int index = 0; index < kernel.size(); ++index) {
+                kernel(index) = Utils::clamp(
+                    Random::randNormal(kernel(index), stdDev), -1.0, 1.0);
             }
         }
 
@@ -742,14 +759,10 @@ void N2D2::ConvCell::processFreeParameters(const std::function
             if (!isConnection(channel, output))
                 continue;
 
-            for (unsigned int sy = 0; sy < mKernelHeight; ++sy) {
-                for (unsigned int sx = 0; sx < mKernelWidth; ++sx) {
-                    double weight = getWeight(output, channel, sx, sy);
-                    weight = func(weight);
+            Tensor<Float_T> kernel = getWeight(output, channel);
 
-                    setWeight(output, channel, sx, sy, weight);
-                }
-            }
+            for (unsigned int index = 0; index < kernel.size(); ++index)
+                kernel(index) = func(kernel(index));
         }
 
         if (!mNoBias) {
@@ -765,8 +778,8 @@ void N2D2::ConvCell::getStats(Stats& stats) const
 {
     const unsigned long long int nbVirtualSynapses = getNbVirtualSynapses();
 
-    stats.nbNeurons += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNeurons += getOutputsSize();
+    stats.nbNodes += getOutputsSize();
     stats.nbSynapses += getNbSharedSynapses();
     stats.nbVirtualSynapses += nbVirtualSynapses;
     stats.nbConnections += nbVirtualSynapses;
@@ -774,12 +787,25 @@ void N2D2::ConvCell::getStats(Stats& stats) const
 
 void N2D2::ConvCell::setOutputsDims()
 {
-    mOutputsDims[0] = (unsigned int)std::ceil(
-        std::floor((mInputsDims[0] + 2 * mPaddingX - mKernelWidth + mStrideX)
-                   / (double)mStrideX) / (double)mSubSampleX);
-    mOutputsDims[1] = (unsigned int)std::ceil(
-        std::floor((mInputsDims[1] + 2 * mPaddingY - mKernelHeight + mStrideY)
-                   / (double)mStrideY) / (double)mSubSampleY);
+    if (mKernelDims.size() != mInputsDims.size() - 1) {
+        std::stringstream msgStr;
+        msgStr << "ConvCell::setOutputsDims(): the number of dimensions of the"
+            " kernel (" << mKernelDims << ") must be equal to the number of"
+            " dimensions of the inputs (" << mInputsDims << ") minus one"
+            << std::endl;
+        throw std::runtime_error(msgStr.str());
+    }
+
+    // Keep the last dimension of mOutputsDims
+    mOutputsDims.resize(mInputsDims.size(), mOutputsDims.back());
+
+    for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        mOutputsDims[dim] = (unsigned int)std::ceil(
+            std::floor((mInputsDims[dim] + 2 * mPaddingDims[dim]
+                        - mKernelDims[dim] + mStrideDims[dim])
+                               / (double)mStrideDims[dim])
+                                    / (double)mSubSampleDims[dim]);
+    }
 }
 
 std::map<unsigned int, unsigned int> N2D2::ConvCell::outputsRemap() const

@@ -45,28 +45,64 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     std::cout << "Layer: " << section << " [Deconv(" << model << ")]"
               << std::endl;
 
-    const unsigned int kernelWidth = iniConfig.getProperty
-                                     <unsigned int>("KernelWidth");
-    const unsigned int kernelHeight = iniConfig.getProperty
-                                      <unsigned int>("KernelHeight");
+    std::vector<unsigned int> kernelDims;
+
+    if (iniConfig.isProperty("KernelDims")) {
+        kernelDims = iniConfig.getProperty
+                                     <std::vector<unsigned int> >("KernelDims");
+    }
+    else if (iniConfig.isProperty("Kernel"))
+        kernelDims.resize(2, iniConfig.getProperty<unsigned int>("Kernel"));
+    else {
+        kernelDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("KernelWidth"));
+        kernelDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("KernelHeight"));
+
+        if (iniConfig.isProperty("KernelDepth")) {
+            kernelDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("KernelDepth"));
+        }
+    }
+
     const unsigned int nbChannels = iniConfig.getProperty
                                     <unsigned int>("NbChannels");
 
-    unsigned int strideX, strideY;
-    int paddingX, paddingY;
+    std::vector<unsigned int> strideDims;
 
-    if (iniConfig.isProperty("Stride"))
-        strideX = strideY = iniConfig.getProperty<unsigned int>("Stride");
+    if (iniConfig.isProperty("StrideDims")) {
+        strideDims = iniConfig.getProperty
+                                <std::vector<unsigned int> >("StrideDims");
+    }
+    else if (iniConfig.isProperty("Stride"))
+        strideDims.resize(2,
+                             iniConfig.getProperty<unsigned int>("Stride"));
     else {
-        strideX = iniConfig.getProperty<unsigned int>("StrideX", 1);
-        strideY = iniConfig.getProperty<unsigned int>("StrideY", 1);
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideX", 1));
+        strideDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("StrideY", 1));
+
+        if (iniConfig.isProperty("StrideZ")) {
+            strideDims.push_back(iniConfig.getProperty
+                                         <unsigned int>("StrideZ"));
+        }
     }
 
-    if (iniConfig.isProperty("Padding"))
-        paddingX = paddingY = iniConfig.getProperty<int>("Padding");
+    std::vector<int> paddingDims;
+
+    if (iniConfig.isProperty("PaddingDims")) {
+        paddingDims = iniConfig.getProperty<std::vector<int> >("PaddingDims");
+    }
+    else if (iniConfig.isProperty("Padding"))
+        paddingDims.resize(2, iniConfig.getProperty<int>("Padding"));
     else {
-        paddingX = iniConfig.getProperty<int>("PaddingX", 0);
-        paddingY = iniConfig.getProperty<int>("PaddingY", 0);
+        paddingDims.push_back(iniConfig.getProperty<int>("PaddingX", 0));
+        paddingDims.push_back(iniConfig.getProperty<int>("PaddingY", 0));
+
+        if (iniConfig.isProperty("PaddingZ")) {
+            paddingDims.push_back(iniConfig.getProperty<int>("PaddingZ"));
+        }
     }
 
     std::shared_ptr<Activation<Float_T> > activation
@@ -81,13 +117,10 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     std::shared_ptr<DeconvCell> cell = Registrar
         <DeconvCell>::create(model)(network,
                                     section,
-                                    kernelWidth,
-                                    kernelHeight,
+                                    kernelDims,
                                     nbChannels,
-                                    strideX,
-                                    strideY,
-                                    paddingX,
-                                    paddingY,
+                                    strideDims,
+                                    paddingDims,
                                     activation);
 
     if (!cell) {

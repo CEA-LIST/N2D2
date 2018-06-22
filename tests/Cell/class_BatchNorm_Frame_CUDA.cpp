@@ -124,15 +124,11 @@ TEST_DATASET(BatchNormCell_Frame_CUDA,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     ConvCell_Frame_CUDA conv1("conv1",
-                              3,
-                              3,
+                              std::vector<unsigned int>({3, 3}),
                               nbOutputs,
-                              1,
-                              1,
-                              1,
-                              1,
-                              0,
-                              0,
+                              std::vector<unsigned int>({1, 1}),
+                              std::vector<unsigned int>({1, 1}),
+                              std::vector<int>({0, 0}),
                               std::make_shared
                               <TanhActivation_Frame_CUDA<Float_T> >());
     BatchNormCell_Frame_CUDA_Test bn1(

@@ -24,32 +24,43 @@ N2D2::Registrar<N2D2::DeconvCell>
 N2D2::DeconvCell_Frame::mRegistrar("Frame", N2D2::DeconvCell_Frame::create);
 
 N2D2::DeconvCell_Frame::DeconvCell_Frame(const std::string& name,
-                                         unsigned int kernelWidth,
-                                         unsigned int kernelHeight,
-                                         unsigned int nbOutputs,
-                                         unsigned int strideX,
-                                         unsigned int strideY,
-                                         int paddingX,
-                                         int paddingY,
-                                         const std::shared_ptr
+                                 const std::vector<unsigned int>& kernelDims,
+                                 unsigned int nbOutputs,
+                                 const std::vector<unsigned int>& strideDims,
+                                 const std::vector<int>& paddingDims,
+                                 const std::shared_ptr
                                          <Activation<Float_T> >& activation)
     : Cell(name, nbOutputs),
       DeconvCell(name,
-                 kernelWidth,
-                 kernelHeight,
+                 kernelDims,
                  nbOutputs,
-                 strideX,
-                 strideY,
-                 paddingX,
-                 paddingY),
+                 strideDims,
+                 paddingDims),
       Cell_Frame(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<Float_T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
-      mConvDesc(1, 1, strideX, strideY, paddingX, paddingY)
+      mConvDesc(std::vector<unsigned int>({1, 1}), strideDims, paddingDims)
 {
     // ctor
+    if (kernelDims.size() != 2) {
+        throw std::domain_error("DeconvCell_Frame: only 2D convolution is"
+                                " supported");
+    }
+
+    if (strideDims.size() != kernelDims.size()) {
+        throw std::domain_error("DeconvCell_Frame: the number of dimensions"
+                                " of stride must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (paddingDims.size() != kernelDims.size()) {
+        throw std::domain_error("DeconvCell_Frame: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
     mWeightsSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
     mBiasSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
 }
@@ -83,24 +94,22 @@ void N2D2::DeconvCell_Frame::initialize()
             std::pair<Interface<Float_T>*, unsigned int> >::const_iterator
                 it = mExtSharedSynapses.find(k);
 
+        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
+        kernelDims.push_back(getNbOutputs());
+        kernelDims.push_back(mInputs[k].dimZ());
+
         if (it != mExtSharedSynapses.end()) {
             Tensor<Float_T>* extWeights
                 = &(*((*it).second.first))[(*it).second.second];
 
-            if (extWeights->dimX() != mKernelWidth
-                || extWeights->dimY() != mKernelHeight
-                || extWeights->dimZ() != getNbOutputs()
-                || extWeights->dimB() != mInputs[k].dimZ())
+            if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                            extWeights->dims().begin()))
             {
                 std::stringstream errorStr;
                 errorStr << "DeconvCell_Frame::initialize(): in cell "
                     << mName << ", mismatch between external weights dim. ("
-                    << extWeights->dimX() << "x"
-                    << extWeights->dimY() << "x"
-                    << extWeights->dimZ() << "x"
-                    << extWeights->dimB() << ") and expected dim. ("
-                    << mKernelWidth << "x" << mKernelHeight << "x"
-                    << getNbOutputs() << "x" << mInputs[k].dimZ() << ")";
+                    << extWeights->dims() << ") and expected dim. ("
+                    << kernelDims << ")";
 
                 throw std::runtime_error(errorStr.str());
             }
@@ -109,18 +118,20 @@ void N2D2::DeconvCell_Frame::initialize()
         }
         else {
             // Weight filler expect dimZ as input and dimB as output
-            Tensor<Float_T>* sharedSynapses = new Tensor<Float_T>(
-                {mKernelWidth, mKernelHeight, mInputs[k].dimZ(), getNbOutputs()});
+            std::vector<size_t> fillerKernelDims(kernelDims);
+            std::swap(fillerKernelDims.back(),
+                      fillerKernelDims[kernelDims.size() - 2]);
+
+            Tensor<Float_T>* sharedSynapses
+                = new Tensor<Float_T>(fillerKernelDims);
             mWeightsFiller->apply(*sharedSynapses);
             // Inverse dimZ and dimB for Deconv
-            sharedSynapses->resize(
-                {mKernelWidth, mKernelHeight, getNbOutputs(), mInputs[k].dimZ()});
+            sharedSynapses->reshape(kernelDims);
 
             mSharedSynapses.push_back(sharedSynapses);
         }
 
-        mDiffSharedSynapses.push_back(new Tensor<Float_T>(
-            {mKernelWidth, mKernelHeight, getNbOutputs(), mInputs[k].dimZ()}));
+        mDiffSharedSynapses.push_back(new Tensor<Float_T>(kernelDims));
     }
 }
 

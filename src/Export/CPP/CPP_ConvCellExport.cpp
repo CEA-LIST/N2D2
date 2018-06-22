@@ -198,6 +198,7 @@ N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
 {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
                                                         cell.getName()));
+    const Tensor<Float_T>& kernel = cell.getWeight(output, channel);
 
     header << "{\n";
 
@@ -211,8 +212,7 @@ N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
             if (sx > 0)
                 header << ", ";
 
-            CellExport::generateFreeParameter(
-                cell, cell.getWeight(output, channel, sx, sy), header);
+            CellExport::generateFreeParameter(cell, kernel(sx, sy), header);
         }
 
         header << "}";
