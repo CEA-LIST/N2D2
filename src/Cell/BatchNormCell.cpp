@@ -229,7 +229,7 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
 
 void N2D2::BatchNormCell::getStats(Stats& stats) const
 {
-    stats.nbNodes += getNbOutputs() * getOutputsWidth() * getOutputsHeight();
+    stats.nbNodes += getOutputsSize();
 }
 
 void N2D2::BatchNormCell::setOutputsDims()

@@ -117,14 +117,8 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
          ++it) {
         if (!(*it))
             cell->addInput(sp, 0, 0, sp.getSizeX(), sp.getSizeY());
-        else if ((*it)->getOutputsWidth() > 1 || (*it)->getOutputsHeight() > 1)
+        else
             cell->addInput((*it).get());
-        else {
-            throw std::runtime_error("2D input expected for a BatchNormCell (\""
-                                     + section + "\"), \"" + (*it)->getName()
-                                     + "\" is not, in configuration file: "
-                                     + iniConfig.getFileName());
-        }
     }
 
     std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;

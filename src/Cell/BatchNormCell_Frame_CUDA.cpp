@@ -63,71 +63,86 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
         derivedBnDesc, mInputs[0].getCudnnTensorDesc(), mMode));
 
     cudnnDataType_t dataType;
-    int n, c, h, w;
-    int nStride, cStride, hStride, wStride;
+    const unsigned int nbDimsRequested = 5;
+    std::vector<int> dims(nbDimsRequested);
+    std::vector<int> strides(nbDimsRequested);
+    int nbDims;
 
-    CHECK_CUDNN_STATUS(cudnnGetTensor4dDescriptor(derivedBnDesc,
+    CHECK_CUDNN_STATUS(cudnnGetTensorNdDescriptor(derivedBnDesc,
+                                                  nbDimsRequested,
                                                   &dataType,
-                                                  &n,
-                                                  &c,
-                                                  &h,
-                                                  &w,
-                                                  &nStride,
-                                                  &cStride,
-                                                  &hStride,
-                                                  &wStride));
+                                                  &nbDims,
+                                                  &dims[0],
+                                                  &strides[0]));
+
+    dims.resize(nbDims);
+    strides.resize(nbDims);
 
     CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(derivedBnDesc));
 
+    const std::vector<size_t> requiredDims(dims.rbegin(), dims.rend());
+
     if (mScale->empty())
-        mScale->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 1.0);
+        mScale->resize(requiredDims, 1.0);
     else {
-        if ((int)mScale->dimX() != w || (int)mScale->dimY() != h
-            || (int)mScale->dimZ() != c || (int)mScale->dimB() != n)
-        {
-            throw std::runtime_error("BatchNormCell_Frame_CUDA::initialize():"
-                " in cell " + mName + ", wrong size for shared scale");
+        if (mScale->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+                " in cell " + mName + ", wrong size for shared scale, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mScale->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
     if (mBias->empty())
-        mBias->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 0.0);
+        mBias->resize(requiredDims, 0.0);
     else {
-        if ((int)mBias->dimX() != w || (int)mBias->dimY() != h
-            || (int)mBias->dimZ() != c || (int)mBias->dimB() != n)
-        {
-            throw std::runtime_error("BatchNormCell_Frame_CUDA::initialize():"
-                " in cell " + mName + ", wrong size for shared bias");
+        if (mBias->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+                " in cell " + mName + ", wrong size for shared bias, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mBias->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
     if (mMean->empty())
-        mMean->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 0.0);
+        mMean->resize(requiredDims, 0.0);
     else {
-        if ((int)mMean->dimX() != w || (int)mMean->dimY() != h
-            || (int)mMean->dimZ() != c || (int)mMean->dimB() != n)
-        {
-            throw std::runtime_error("BatchNormCell_Frame_CUDA::initialize():"
-                " in cell " + mName + ", wrong size for shared mean");
+        if (mMean->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+                " in cell " + mName + ", wrong size for shared mean, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mMean->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
     if (mVariance->empty())
-        mVariance->resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n}, 0.0);
+        mVariance->resize(requiredDims, 0.0);
     else {
-        if ((int)mVariance->dimX() != w || (int)mVariance->dimY() != h
-            || (int)mVariance->dimZ() != c || (int)mVariance->dimB() != n)
-        {
-            throw std::runtime_error("BatchNormCell_Frame_CUDA::initialize():"
-                " in cell " + mName + ", wrong size for shared variance");
+        if (mVariance->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+                " in cell " + mName + ", wrong size for shared variance, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mVariance->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
-    mSavedMean.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
-    mSavedVariance.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
+    mSavedMean.resize(requiredDims);
+    mSavedVariance.resize(requiredDims);
 
-    mDiffScale.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
-    mDiffBias.resize({(size_t)w, (size_t)h, (size_t)c, (size_t)n});
+    mDiffScale.resize(requiredDims);
+    mDiffBias.resize(requiredDims);
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)

@@ -58,57 +58,72 @@ void N2D2::BatchNormCell_Frame::initialize()
 
     Tensor<Float_T>* input = *mInputs.begin();
 
+    std::vector<size_t> requiredDims(input->nbDims(), 1);
+    requiredDims[input->nbDims() - 2] = input->dimZ();
+
     if (mScale->empty())
-        mScale->resize({1, 1, input->dimZ(), 1}, 1.0);
+        mScale->resize(requiredDims, 1.0);
     else {
-        if (mScale->dimX() != 1 || mScale->dimY() != 1
-            || mScale->dimZ() != input->dimZ() || mScale->dimB() != 1)
-        {
-            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
-                "cell " + mName + ", wrong size for shared scale");
+        if (mScale->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame::initialize():"
+                " in cell " + mName + ", wrong size for shared scale, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mScale->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
     if (mBias->empty())
-        mBias->resize({1, 1, input->dimZ(), 1}, 0.0);
+        mBias->resize(requiredDims, 0.0);
     else {
-        if (mBias->dimX() != 1 || mBias->dimY() != 1
-            || mBias->dimZ() != input->dimZ() || mBias->dimB() != 1)
-        {
-            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
-                "cell " + mName + ", wrong size for shared bias");
+        if (mBias->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame::initialize():"
+                " in cell " + mName + ", wrong size for shared bias, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mBias->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
     if (mMean->empty())
-        mMean->resize({1, 1, input->dimZ(), 1}, 0.0);
+        mMean->resize(requiredDims, 0.0);
     else {
-        if (mMean->dimX() != 1 || mMean->dimY() != 1
-            || mMean->dimZ() != input->dimZ() || mMean->dimB() != 1)
-        {
-            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
-                "cell " + mName + ", wrong size for shared mean");
+        if (mMean->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame::initialize():"
+                " in cell " + mName + ", wrong size for shared mean, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mMean->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
     if (mVariance->empty())
-        mVariance->resize({1, 1, input->dimZ(), 1}, 0.0);
+        mVariance->resize(requiredDims, 0.0);
     else {
-        if (mVariance->dimX() != 1 || mVariance->dimY() != 1
-            || mVariance->dimZ() != input->dimZ() || mVariance->dimB() != 1)
-        {
-            throw std::runtime_error("BatchNormCell_Frame::initialize(): in "
-                "cell " + mName + ", wrong size for shared variance");
+        if (mVariance->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame::initialize():"
+                " in cell " + mName + ", wrong size for shared variance, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mVariance->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
         }
     }
 
-    mSavedMean.resize({1, 1, input->dimZ(), 1});
-    mSavedVariance.resize({1, 1, input->dimZ(), 1});
+    mSavedMean.resize(requiredDims);
+    mSavedVariance.resize(requiredDims);
 
-    mDiffScale.resize({1, 1, input->dimZ(), 1});
-    mDiffBias.resize({1, 1, input->dimZ(), 1});
-    mDiffSavedMean.resize({1, 1, input->dimZ(), 1});
-    mDiffSavedVariance.resize({1, 1, input->dimZ(), 1});
+    mDiffScale.resize(requiredDims);
+    mDiffBias.resize(requiredDims);
+    mDiffSavedMean.resize(requiredDims);
+    mDiffSavedVariance.resize(requiredDims);
 }
 
 void N2D2::BatchNormCell_Frame::propagate(bool inference)
