@@ -67,15 +67,16 @@ void N2D2::BatchNormCell::exportFreeParameters(const std::string
         throw std::runtime_error("Could not create parameter file: "
                                  + variancesFile);
 
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int oy = 0; oy < 1; ++oy) {
-            for (unsigned int ox = 0; ox < 1; ++ox) {
-                scales << getScale(output, ox, oy) << "\n";
-                biases << getBias(output, ox, oy) << "\n";
-                means << getMean(output, ox, oy) << "\n";
-                variances << getVariance(output, ox, oy) << "\n";
-            }
-        }
+    const std::shared_ptr<Tensor<Float_T> >& scale = getScales();
+    const std::shared_ptr<Tensor<Float_T> >& bias = getBiases();
+    const std::shared_ptr<Tensor<Float_T> >& mean = getMeans();
+    const std::shared_ptr<Tensor<Float_T> >& variance = getVariances();
+
+    for (size_t index = 0; index < scale->size(); ++index) {
+        scales << (*scale)(index) << "\n";
+        biases << (*bias)(index) << "\n";
+        means << (*mean)(index) << "\n";
+        variances << (*variance)(index) << "\n";
     }
 }
 
@@ -150,46 +151,47 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
     variances.precision(12);
     biases.precision(12);
 
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int oy = 0; oy < 1; ++oy) {
-            for (unsigned int ox = 0; ox < 1; ++ox) {
-                if (!(scales >> w))
-                {
-                    if(!ignoreNotExists)
-                        throw std::runtime_error(
-                            "Error while reading scale in parameter file: "
-                            + scalesFile);
-                }
-                else
-                    setScale(output, ox, oy, w);
+    std::shared_ptr<Tensor<Float_T> > scale = getScales();
+    std::shared_ptr<Tensor<Float_T> > bias = getBiases();
+    std::shared_ptr<Tensor<Float_T> > mean = getMeans();
+    std::shared_ptr<Tensor<Float_T> > variance = getVariances();
 
-                if (!(biases >> w))
-                    throw std::runtime_error(
-                        "Error while reading bias in parameter file: "
-                        + biasesFile);
-
-                setBias(output, ox, oy, w);
-
-                if (!(means >> w))
-                    throw std::runtime_error(
-                        "Error while reading mean in parameter file: "
-                        + meansFile);
-
-                setMean(output, ox, oy, w);
-
-                if (!(variances >> w))
-                    throw std::runtime_error(
-                        "Error while reading variance in parameter file: "
-                        + variancesFile);
-
-                if (w < 0.0)
-                    throw std::runtime_error(
-                        "Negative variance in parameter file: "
-                        + variancesFile);
-
-                setVariance(output, ox, oy, w);
-            }
+    for (size_t index = 0; index < scale->size(); ++index) {
+        if (!(scales >> w))
+        {
+            if(!ignoreNotExists)
+                throw std::runtime_error(
+                    "Error while reading scale in parameter file: "
+                    + scalesFile);
         }
+        else
+            (*scale)(index) = w;
+
+        if (!(biases >> w))
+            throw std::runtime_error(
+                "Error while reading bias in parameter file: "
+                + biasesFile);
+
+        (*bias)(index) = w;
+
+        if (!(means >> w))
+            throw std::runtime_error(
+                "Error while reading mean in parameter file: "
+                + meansFile);
+
+        (*mean)(index) = w;
+
+        if (!(variances >> w))
+            throw std::runtime_error(
+                "Error while reading variance in parameter file: "
+                + variancesFile);
+
+        if (w < 0.0)
+            throw std::runtime_error(
+                "Negative variance in parameter file: "
+                + variancesFile);
+
+        (*variance)(index) = w;
     }
 
     // Discard trailing whitespaces

@@ -60,13 +60,13 @@ TEST(BatchNormCell_Frame, setScales)
     bn1.initialize();
     bn2.initialize();
 
-    ASSERT_EQUALS(bn1.getScale(0, 0, 0), 1.0);
-    ASSERT_EQUALS(bn2.getScale(0, 0, 0), 1.0);
+    ASSERT_EQUALS(bn1.getScale(0), 1.0);
+    ASSERT_EQUALS(bn2.getScale(0), 1.0);
 
-    bn1.setScale(0, 0, 0, 2.0);
+    bn1.setScale(0, 2.0);
 
-    ASSERT_EQUALS(bn1.getScale(0, 0, 0), 2.0);
-    ASSERT_EQUALS(bn2.getScale(0, 0, 0), 2.0);
+    ASSERT_EQUALS(bn1.getScale(0), 2.0);
+    ASSERT_EQUALS(bn2.getScale(0), 2.0);
 }
 
 TEST_DATASET(BatchNormCell_Frame,

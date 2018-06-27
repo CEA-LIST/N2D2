@@ -57,30 +57,26 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Float_T
-    getScale(unsigned int channel, unsigned int sx, unsigned int sy) const;
-    inline Float_T
-    getBias(unsigned int channel, unsigned int sx, unsigned int sy) const;
-    inline Float_T
-    getMean(unsigned int channel, unsigned int sx, unsigned int sy) const;
-    inline Float_T
-    getVariance(unsigned int channel, unsigned int sx, unsigned int sy) const;
-    inline std::shared_ptr<Tensor<Float_T> > getScales()
+    inline Float_T getScale(unsigned int index) const;
+    inline Float_T getBias(unsigned int index) const;
+    inline Float_T getMean(unsigned int index) const;
+    inline Float_T getVariance(unsigned int index) const;
+    inline std::shared_ptr<Tensor<Float_T> > getScales() const
     {
         return mScale;
     };
     void setScales(const std::shared_ptr<Tensor<Float_T> >& scales);
-    inline std::shared_ptr<Tensor<Float_T> > getBiases()
+    inline std::shared_ptr<Tensor<Float_T> > getBiases() const
     {
         return mBias;
     };
     void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases);
-    inline std::shared_ptr<Tensor<Float_T> > getMeans()
+    inline std::shared_ptr<Tensor<Float_T> > getMeans() const
     {
         return mMean;
     };
     void setMeans(const std::shared_ptr<Tensor<Float_T> >& means);
-    inline std::shared_ptr<Tensor<Float_T> > getVariances()
+    inline std::shared_ptr<Tensor<Float_T> > getVariances() const
     {
         return mVariance;
     };
@@ -95,22 +91,10 @@ public:
     virtual ~BatchNormCell_Frame_CUDA();
 
 protected:
-    inline void setScale(unsigned int channel,
-                         unsigned int sx,
-                         unsigned int sy,
-                         Float_T value);
-    inline void setBias(unsigned int channel,
-                        unsigned int sx,
-                        unsigned int sy,
-                        Float_T value);
-    inline void setMean(unsigned int channel,
-                        unsigned int sx,
-                        unsigned int sy,
-                        Float_T value);
-    inline void setVariance(unsigned int channel,
-                            unsigned int sx,
-                            unsigned int sy,
-                            Float_T value);
+    inline void setScale(unsigned int index, Float_T value);
+    inline void setBias(unsigned int index, Float_T value);
+    inline void setMean(unsigned int index, Float_T value);
+    inline void setVariance(unsigned int index, Float_T value);
 
     cudnnBatchNormMode_t mMode;
     unsigned int mNbPropagate;
@@ -129,88 +113,73 @@ private:
 };
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setScale(unsigned int channel,
-                                              unsigned int sx,
-                                              unsigned int sy,
+void N2D2::BatchNormCell_Frame_CUDA::setScale(unsigned int index,
                                               Float_T value)
 {
-    (*mScale)(sx, sy, channel, 0) = value;
+    (*mScale)(index) = value;
 
     if (!mSynchronized)
-        mScale->synchronizeHToD(sx, sy, channel, 0, 1);
+        mScale->synchronizeHToD(index, 1);
 }
 
-N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getScale(unsigned int channel,
-                                                       unsigned int sx,
-                                                       unsigned int sy) const
+N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getScale(unsigned int index) const
 {
     if (!mSynchronized)
-        mScale->synchronizeDToH(sx, sy, channel, 0, 1);
+        mScale->synchronizeDToH(index, 1);
 
-    return (*mScale)(sx, sy, channel, 0);
+    return (*mScale)(index);
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setBias(unsigned int channel,
-                                             unsigned int sx,
-                                             unsigned int sy,
+void N2D2::BatchNormCell_Frame_CUDA::setBias(unsigned int index,
                                              Float_T value)
 {
-    (*mBias)(sx, sy, channel, 0) = value;
+    (*mBias)(index) = value;
 
     if (!mSynchronized)
-        mBias->synchronizeHToD(sx, sy, channel, 0, 1);
+        mBias->synchronizeHToD(index, 1);
 }
 
-N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getBias(unsigned int channel,
-                                                      unsigned int sx,
-                                                      unsigned int sy) const
+N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getBias(unsigned int index) const
 {
     if (!mSynchronized)
-        mBias->synchronizeDToH(sx, sy, channel, 0, 1);
+        mBias->synchronizeDToH(index, 1);
 
-    return (*mBias)(sx, sy, channel, 0);
+    return (*mBias)(index);
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setMean(unsigned int channel,
-                                             unsigned int sx,
-                                             unsigned int sy,
+void N2D2::BatchNormCell_Frame_CUDA::setMean(unsigned int index,
                                              Float_T value)
 {
-    (*mMean)(sx, sy, channel, 0) = value;
+    (*mMean)(index) = value;
 
     if (!mSynchronized)
-        mMean->synchronizeHToD(sx, sy, channel, 0, 1);
+        mMean->synchronizeHToD(index, 1);
 }
 
-N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getMean(unsigned int channel,
-                                                      unsigned int sx,
-                                                      unsigned int sy) const
+N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getMean(unsigned int index) const
 {
     if (!mSynchronized)
-        mMean->synchronizeDToH(sx, sy, channel, 0, 1);
+        mMean->synchronizeDToH(index, 1);
 
-    return (*mMean)(sx, sy, channel, 0);
+    return (*mMean)(index);
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setVariance(unsigned int channel,
-                                                 unsigned int sx,
-                                                 unsigned int sy,
+void N2D2::BatchNormCell_Frame_CUDA::setVariance(unsigned int index,
                                                  Float_T value)
 {
-    (*mVariance)(sx, sy, channel, 0) = value;
+    (*mVariance)(index) = value;
 
     if (!mSynchronized)
-        mVariance->synchronizeHToD(sx, sy, channel, 0, 1);
+        mVariance->synchronizeHToD(index, 1);
 }
 
-N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getVariance(unsigned int channel,
-                                                          unsigned int sx,
-                                                          unsigned int sy) const
+N2D2::Float_T N2D2::BatchNormCell_Frame_CUDA::getVariance(unsigned int index)
+    const
 {
     if (!mSynchronized)
-        mVariance->synchronizeDToH(sx, sy, channel, 0, 1);
+        mVariance->synchronizeDToH(index, 1);
 
-    return (*mVariance)(sx, sy, channel, 0);
+    return (*mVariance)(index);
 }
 
 #endif // N2D2_BATCHNORMCELL_FRAME_CUDA_H

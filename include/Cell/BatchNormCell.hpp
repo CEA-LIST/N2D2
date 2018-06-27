@@ -76,34 +76,29 @@ public:
     {
         return mBiasSolver;
     };
-    virtual Float_T
-    getScale(unsigned int channel, unsigned int sx, unsigned int sy) const = 0;
-    virtual Float_T
-    getBias(unsigned int channel, unsigned int sx, unsigned int sy) const = 0;
-    virtual Float_T
-    getMean(unsigned int channel, unsigned int sx, unsigned int sy) const = 0;
-    virtual Float_T getVariance(unsigned int channel,
-                                unsigned int sx,
-                                unsigned int sy) const = 0;
-    virtual std::shared_ptr<Tensor<Float_T> > getScales()
+    virtual Float_T getScale(unsigned int index) const = 0;
+    virtual Float_T getBias(unsigned int index) const = 0;
+    virtual Float_T getMean(unsigned int index) const = 0;
+    virtual Float_T getVariance(unsigned int index) const = 0;
+    virtual std::shared_ptr<Tensor<Float_T> > getScales() const
     {
         return std::shared_ptr<Tensor<Float_T> >();
     };
     virtual void setScales(const std::shared_ptr<Tensor<Float_T> >&
                            /*scales*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getBiases()
+    virtual std::shared_ptr<Tensor<Float_T> > getBiases() const
     {
         return std::shared_ptr<Tensor<Float_T> >();
     };
     virtual void setBiases(const std::shared_ptr<Tensor<Float_T> >&
                            /*biases*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getMeans()
+    virtual std::shared_ptr<Tensor<Float_T> > getMeans() const
     {
         return std::shared_ptr<Tensor<Float_T> >();
     };
     virtual void setMeans(const std::shared_ptr<Tensor<Float_T> >&
                           /*means*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getVariances()
+    virtual std::shared_ptr<Tensor<Float_T> > getVariances() const
     {
         return std::shared_ptr<Tensor<Float_T> >();
     };
@@ -117,22 +112,10 @@ public:
 
 protected:
     virtual void setOutputsDims();
-    virtual void setScale(unsigned int channel,
-                          unsigned int sx,
-                          unsigned int sy,
-                          Float_T value) = 0;
-    virtual void setBias(unsigned int channel,
-                         unsigned int sx,
-                         unsigned int sy,
-                         Float_T value) = 0;
-    virtual void setMean(unsigned int channel,
-                         unsigned int sx,
-                         unsigned int sy,
-                         Float_T value) = 0;
-    virtual void setVariance(unsigned int channel,
-                             unsigned int sx,
-                             unsigned int sy,
-                             Float_T value) = 0;
+    virtual void setScale(unsigned int index, Float_T value) = 0;
+    virtual void setBias(unsigned int index, Float_T value) = 0;
+    virtual void setMean(unsigned int index, Float_T value) = 0;
+    virtual void setVariance(unsigned int index, Float_T value) = 0;
 
     /// Epsilon value used in the batch normalization formula
     Parameter<double> mEpsilon;

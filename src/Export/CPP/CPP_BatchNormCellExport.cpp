@@ -121,7 +121,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderBias(BatchNormCell& cell,
         if (output > 0)
             header << ", ";
         CellExport::generateFreeParameter(
-            cell, cell.getBias(output, 0, 0), header);
+            cell, cell.getBias(output), header);
     }
     header << "};\n";
 }
@@ -140,7 +140,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
         if (output > 0)
             header << ", ";
         CellExport::generateFreeParameter(
-            cell, (double)cell.getVariance(output, 0, 0), header);
+            cell, (double)cell.getVariance(output), header);
     }
     header << "};\n\n";
 }
@@ -158,7 +158,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
         if (output > 0)
             header << ", ";
         CellExport::generateFreeParameter(
-            cell, (double)cell.getMean(output, 0, 0), header);
+            cell, (double)cell.getMean(output), header);
     }
     header << "};\n\n";
 }
@@ -176,7 +176,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderScale(BatchNormCell& cell,
         if (output > 0)
             header << ", ";
         CellExport::generateFreeParameter(
-            cell, (double)cell.getScale(output, 0, 0), header);
+            cell, (double)cell.getScale(output), header);
     }
 
     header << "};\n\n";
