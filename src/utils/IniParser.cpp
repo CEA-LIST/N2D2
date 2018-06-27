@@ -36,7 +36,7 @@ void N2D2::IniParser::load(const std::string& fileName)
     load(data);
 }
 
-void N2D2::IniParser::load(std::istream& data)
+void N2D2::IniParser::load(std::istream& data, const std::string& parentSection)
 {
     std::string line;
     std::string preLine;
@@ -100,7 +100,7 @@ void N2D2::IniParser::load(std::istream& data)
 
             // Check for templated sub INI
             const std::vector<std::string> sectionSplit
-                = Utils::split(section, "@");
+                = Utils::split(section, "@", true);
 
             if (sectionSplit.size() == 2) {
                 section = sectionSplit[0];
@@ -125,6 +125,11 @@ void N2D2::IniParser::load(std::istream& data)
             mIniSections.push_back(section);
             mIniData.push_back(std::map
                                <std::string, std::pair<std::string, bool> >());
+
+            if (!parentSection.empty()) {
+                mIniData.back()["$PARENT_SECTION_NAME"]
+                    = std::make_pair(parentSection, true);
+            }
 
             continue;
         }
@@ -167,8 +172,11 @@ void N2D2::IniParser::load(std::istream& data)
         // Debug
         // std::cout << "[" << mCurrentSection << "] \"" << property << "\" =
         // \"" << value << "\"" << std::endl;
+        const bool defaultIgnore = (!property.empty()
+                                    && *(property.begin()) == '$');
+        mIniData[mCurrentSection][property] = std::make_pair(value,
+                                                             defaultIgnore);
 
-        mIniData[mCurrentSection][property] = std::make_pair(value, false);
         // if posEq is string::npos, posEq + 1 overflows and value = line. This
         // is very problematic if the parameter is a string,
         // that's why an exception is thrown if posEq = string::npos
@@ -517,7 +525,7 @@ IniParser::getSectionsWithProperty(const std::string& name,
 }
 }
 
-std::string N2D2::IniParser::getPropertyValue(const std::string& value) const
+std::string N2D2::IniParser::getPropertyValue(std::string value) const
 {
     // Value is actually identical to another property value in the INI file
     if (!value.empty() && *(value.begin()) == '[') {
@@ -551,14 +559,99 @@ std::string N2D2::IniParser::getPropertyValue(const std::string& value) const
         }
     }
 
+    // Replace variables
+    size_t startPos = 0;
+
+    while ((startPos = value.find("${", startPos)) != std::string::npos) {
+        size_t endPos = value.find("}", startPos + 2);
+
+        if (endPos == std::string::npos)
+            return value;
+
+        const std::string varName = "$"
+            + value.substr(startPos + 2, endPos - startPos - 2);
+        std::string varValue = "";
+
+        if (varName == "$SECTION_NAME")
+            varValue = mIniSections[mCurrentSection];
+        else if (varName == "$PREV_SECTION_NAME") {
+            if (mCurrentSection > 0) {
+                const std::map
+                    <std::string, std::pair<std::string, bool> >::const_iterator
+                        itVarParent = mIniData[mCurrentSection]
+                                                .find("$PARENT_SECTION_NAME");
+
+                if (itVarParent != mIniData[mCurrentSection].end()
+                    && (*itVarParent).second.first
+                        == mIniSections[mCurrentSection - 1])
+                {
+                    // If previous section is the parent section, ignore it
+                    // and get the section before
+                    varValue = mIniSections[mCurrentSection - 2];
+                }
+                else
+                    varValue = mIniSections[mCurrentSection - 1];
+            }
+        }
+        else {
+            const std::map
+                <std::string, std::pair<std::string, bool> >::const_iterator
+                    itVar = mIniData[mCurrentSection].find(varName);
+
+            if (itVar != mIniData[mCurrentSection].end())
+                varValue = getPropertyValue((*itVar).second.first);
+            else {
+                const std::map
+                    <std::string, std::pair<std::string, bool> >::const_iterator
+                        itVarGlobal = mIniData.begin()->find(varName);
+
+                if (itVarGlobal != mIniData.begin()->end())
+                    varValue = getPropertyValue((*itVarGlobal).second.first);
+            }
+        }
+
+        value.replace(startPos, endPos - startPos + 1, varValue);
+    }
+
+    startPos = 0;
+
+    while ((startPos = value.find("$(", startPos)) != std::string::npos) {
+        size_t endPos = value.find(")", startPos + 2);
+
+        if (endPos == std::string::npos)
+            return value;
+
+        const std::string cmdName
+            = value.substr(startPos + 2, endPos - startPos - 2);
+
+        std::stringstream cmdNameStr;
+#ifdef WIN32
+        cmdNameStr << "set /a " << cmdName;
+#else
+        cmdNameStr << "echo " << Utils::quoted(cmdName) << " | bc";
+#endif
+        std::string cmdValue = Utils::exec(cmdNameStr.str());
+
+        // Left trim & right trim
+        cmdValue.erase(cmdValue.begin(),
+            std::find_if(cmdValue.begin(), cmdValue.end(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace))));
+        cmdValue.erase(std::find_if(cmdValue.rbegin(), cmdValue.rend(),
+                       std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+                       cmdValue.end());
+
+        value.replace(startPos, endPos - startPos + 1, cmdValue);
+    }
+
     return value;
 }
 
 void N2D2::IniParser::loadTplIni(const std::string& tplIni) {
+    const std::string sectionName = mIniSections[mCurrentSection];
+
     // Process templated sub INI
     TemplateParser parser;
-    parser.addParameter("SECTION_NAME",
-                        mIniSections[mCurrentSection]);
+    parser.addParameter("SECTION_NAME", sectionName);
     parser.addParameter("SECTION_FILE_NAME", tplIni);
 
     for (std::map
@@ -568,14 +661,14 @@ void N2D2::IniParser::loadTplIni(const std::string& tplIni) {
          it != itEnd;
          ++it)
     {
-        parser.addParameter((*it).first, (*it).second.first);
+        parser.addParameter((*it).first, getPropertyValue((*it).second.first));
     }
 
     mCurrentSection = 0;
 
     const std::string parentFileName = mFileName;
     std::istringstream str(parser.renderFile(tplIni));
-    load(str);
+    load(str, sectionName);
     mFileName = parentFileName;
 }
 

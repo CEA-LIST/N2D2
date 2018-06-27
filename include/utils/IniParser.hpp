@@ -53,7 +53,7 @@ public:
      *
      * @param data              Input stream
     */
-    void load(std::istream& data);
+    void load(std::istream& data, const std::string& parentSection = "");
 
     /**
      * Check if a section exists.
@@ -214,7 +214,7 @@ public:
     virtual ~IniParser();
 
 private:
-    std::string getPropertyValue(const std::string& value) const;
+    std::string getPropertyValue(std::string value) const;
     void loadTplIni(const std::string& tplIni);
 
     std::string mFileName;
@@ -238,10 +238,13 @@ template <class T> T N2D2::IniParser::getProperty(const std::string& name)
     std::stringstream strVal(getPropertyValue((*it).second.first));
     strVal.imbue(Utils::locale);
 
-    if (!(Utils::signChecked<T>(strVal) >> value) || !strVal.eof())
+    if (!(Utils::signChecked<T>(strVal) >> value) || !strVal.eof()) {
         throw std::runtime_error("Unreadable property: " + name
                                  + " in section ["
-                                 + mIniSections[mCurrentSection] + "]");
+                                 + mIniSections[mCurrentSection] + "]: type "
+                                 + typeid(T).name() + " is expected, but value "
+                                 "\"" + strVal.str() + "\" was provided.");
+    }
 
     (*it).second.second = true;
 
@@ -260,10 +263,13 @@ T N2D2::IniParser::getProperty(const std::string& name, const T& defaultValue)
         std::stringstream strVal(getPropertyValue((*it).second.first));
         strVal.imbue(Utils::locale);
 
-        if (!(Utils::signChecked<T>(strVal) >> value) || !strVal.eof())
+        if (!(Utils::signChecked<T>(strVal) >> value) || !strVal.eof()) {
             throw std::runtime_error("Unreadable property: " + name
-                                     + " in section ["
-                                     + mIniSections[mCurrentSection] + "]");
+                                 + " in section ["
+                                 + mIniSections[mCurrentSection] + "]: type "
+                                 + typeid(T).name() + " is expected, but value "
+                                 "\"" + strVal.str() + "\" was provided.");
+        }
 
         (*it).second.second = true;
     }

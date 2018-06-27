@@ -432,7 +432,6 @@ std::string N2D2::Utils::expandEnvVars(std::string str)
         str.replace(startPos,
                     endPos - startPos + 1,
                     (varValue != NULL) ? varValue : "");
-        startPos = endPos + 1;
     }
 
     return str;
@@ -473,6 +472,27 @@ bool N2D2::Utils::createDirectories(const std::string& dirName)
     }
 
     return (status == 0);
+}
+
+std::string N2D2::Utils::exec(const std::string& cmd) {
+#ifdef WIN32
+    std::shared_ptr<FILE> pipe(_popen(cmd.c_str(), "r"), _pclose);
+#else
+    std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
+#endif
+
+    if (!pipe)
+        throw std::runtime_error("Utils::exec(): popen() failed!");
+
+    std::string result;
+    std::array<char, 128> buffer;
+
+    while (!feof(pipe.get())) {
+        if (fgets(buffer.data(), 128, pipe.get()) != NULL)
+            result += buffer.data();
+    }
+
+    return result;
 }
 
 bool N2D2::Utils::isAbsolutePath(const std::string& path) {
