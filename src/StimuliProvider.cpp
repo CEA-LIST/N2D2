@@ -493,7 +493,8 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
                                  ? Tensor<Float_T>(rawData)
                                  : Tensor<Float_T>();
 
-    if (data.nbDims() < mSize.size()) {
+    if (data.nbDims() < mSize.size()
+            && mChannelsTransformations.empty()) {
         // rawChannelsData[0] can be 2D or 3D
         std::vector<size_t> dataSize(data.dims());
         dataSize.resize(mSize.size(), 1);
