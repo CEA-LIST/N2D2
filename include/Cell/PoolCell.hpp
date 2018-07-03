@@ -112,11 +112,11 @@ public:
     {
         return mStrideY;
     };
-    unsigned int getPaddingX() const
+    int getPaddingX() const
     {
         return mPaddingX;
     };
-    unsigned int getPaddingY() const
+    int getPaddingY() const
     {
         return mPaddingY;
     };
