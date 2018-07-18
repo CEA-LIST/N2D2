@@ -124,9 +124,12 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
         if (mPooling == Max) {
             cudaSPoolBackwardMax(alpha,
-                                 mInputs[k].getDevicePtr(),
+                                 input->getDevicePtr(),
                                  mInputs[k].dimZ(),
                                  mInputs[k].dimY(),
                                  mInputs[k].dimX(),
@@ -142,7 +145,7 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool /*inference*/)
         }
         else {
             cudaSPoolBackwardAverage(alpha,
-                                     mInputs[k].getDevicePtr(),
+                                     input->getDevicePtr(),
                                      mInputs[k].dimZ(),
                                      mInputs[k].dimY(),
                                      mInputs[k].dimX(),
@@ -174,6 +177,11 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+            = (mDiffOutputs[k].isValid())
+                ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
+                : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
         if (mPooling == Max) {
             cudaSPoolForwardMax(alpha,
                                 mDiffInputs.getDevicePtr(),
@@ -183,7 +191,7 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
                                 mDiffInputs.dimB(),
                                 mPoolDesc,
                                 beta,
-                                mDiffOutputs[k].getDevicePtr(),
+                                diffOutput->getDevicePtr(),
                                 mDiffOutputs[k].dimZ(),
                                 mDiffOutputs[k].dimY(),
                                 mDiffOutputs[k].dimX(),
@@ -200,7 +208,7 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
                                     mDiffInputs.dimB(),
                                     mPoolDesc,
                                     beta,
-                                    mDiffOutputs[k].getDevicePtr(),
+                                    diffOutput->getDevicePtr(),
                                     mDiffOutputs[k].dimZ(),
                                     mDiffOutputs[k].dimY(),
                                     mDiffOutputs[k].dimX(),
@@ -208,6 +216,7 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
                                     mInputMap[k]);
         }
 
+        mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
     }
 
@@ -220,7 +229,7 @@ void N2D2::UnpoolCell_Frame_CUDA::update()
 
 void N2D2::UnpoolCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

@@ -106,11 +106,11 @@ protected:
        mDiffOutputs <--------|    |<-------- *mDiffInputs
     */
 
-    CudaInterface<Float_T> mInputs;
+    CudaInterface<> mInputs;
     CudaTensor<Float_T> mOutputs;
 
     CudaTensor<Float_T> mDiffInputs;
-    CudaInterface<Float_T> mDiffOutputs;
+    CudaInterface<> mDiffOutputs;
 
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;

@@ -35,6 +35,12 @@ N2D2::LRNCell_Frame::LRNCell_Frame(const std::string& name,
 
 void N2D2::LRNCell_Frame::initialize()
 {
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("LRNCell_Frame::initialize():"
+                                " the number of output channels must be equal "
+                                "to the sum of inputs channels.");
+    }
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for LRNCell " + mName);
@@ -50,43 +56,59 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
 
     mInputs.synchronizeDToH();
 
+    float beta = 0.0f;
+
+    unsigned int offset = 0;
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (k > 0)
+            beta = 1.0;
+
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (getNbOutputs() > 16)
 #else
 #pragma omp parallel for if (mInputs.dimB() > 4 && getNbOutputs() > 16)
 #endif
-    for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-            int minChan = output - mN / 2;
+        for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+            for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
+                const unsigned int output = channel + offset;
 
-            if (minChan < 0)
-                minChan = 0;
+                const unsigned int channelMin
+                    = std::max<int>(0, channel - mN / 2);
+                const unsigned int channelMax
+                    = std::min<size_t>(input.dimZ() - 1, channel + mN / 2);
 
-            const unsigned int channelMin = std::max(0, minChan);
-            const unsigned int channelMax
-                = std::min<size_t>(getNbChannels() - 1, output + mN / 2);
+                for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                    for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
+                        // For each input channel, accumulate the value
+                        Float_T accAccrossChannels = 0;
 
-            for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
-                    // For each input channel, accumulate the value
-                    Float_T accAccrossChannels = 0;
+                        for (unsigned int accChannel = channelMin;
+                            accChannel < channelMax; ++accChannel)
+                        {
+                            accAccrossChannels
+                                += input(ox, oy, accChannel, batchPos);
+                        }
 
-                    for (unsigned int channel = channelMin;
-                         channel < channelMax;
-                         ++channel)
-                        accAccrossChannels += mInputs(ox, oy, output, batchPos);
-
-                    // Compute the output signal
-                    mOutputs(ox, oy, output, batchPos)
-                        = normAccrossChannel(mInputs(ox, oy, output, batchPos),
-                                             accAccrossChannels,
-                                             mAlpha,
-                                             mBeta,
-                                             mK);
+                        // Compute the output signal
+                        mOutputs(ox, oy, output, batchPos)
+                            = normAccrossChannel(input(ox, oy, channel, batchPos),
+                                                 accAccrossChannels,
+                                                 mAlpha,
+                                                 mBeta,
+                                                 mK)
+                            + beta * mOutputs(ox, oy, output, batchPos);
+                    }
                 }
             }
         }
+
+        offset += input.dimZ();
     }
+
+    mDiffInputs.clearValid();
 }
 
 void N2D2::LRNCell_Frame::backPropagate()
@@ -97,8 +119,14 @@ void N2D2::LRNCell_Frame::backPropagate()
 
 void N2D2::LRNCell_Frame::update()
 {
-    if (!mDiffOutputs.empty())
-        mDiffOutputs.fill(0.0);
+    for (unsigned int k = 0, size = mDiffOutputs.size(); k < size; ++k) {
+        Tensor<Float_T> diffOutput
+            = tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
+        diffOutput.fill(0.0);
+
+        mDiffOutputs[k] = diffOutput;
+    }
 }
 
 float N2D2::LRNCell_Frame::normAccrossChannel(

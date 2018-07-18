@@ -44,8 +44,10 @@ void N2D2::TransformationCell_Frame_CUDA::propagate(bool /*inference*/)
     if (mInputs.size() > 1)
         throw std::runtime_error("TransformationCell can only have one input");
 
+    const Tensor<Float_T>& input0 = tensor_cast<Float_T>(mInputs[0]);
+
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos)
-        mOutputs[batchPos] = mTransformation->apply(mInputs[0][batchPos]);
+        mOutputs[batchPos] = mTransformation->apply(input0[batchPos]);
 
     mOutputs.synchronizeHToD();
 }

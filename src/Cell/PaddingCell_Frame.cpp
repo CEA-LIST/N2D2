@@ -31,7 +31,7 @@ N2D2::PaddingCell_Frame::PaddingCell_Frame(const std::string& name,
                                             int leftPad,
                                             int rightPad)
     : Cell(name, nbOutputs),
-      PaddingCell(name, 
+      PaddingCell(name,
                   nbOutputs,
                   topPad,
                   botPad,
@@ -55,7 +55,7 @@ void N2D2::PaddingCell_Frame::initialize()
         if(inputX != mInputs[k].dimX())
             throw std::domain_error("PaddingCell_Frame::initialize():"
                             " Input layers must have the same width dimension for layer " + k);
-    
+
         if(inputY != mInputs[k].dimY())
             throw std::domain_error("PaddingCell_Frame::initialize():"
                             " Input layers must have the same height dimension for layer " + k);
@@ -68,7 +68,7 @@ void N2D2::PaddingCell_Frame::initialize()
         throw std::domain_error("PaddingCell_Frame::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
-    }   
+    }
 }
 
 void N2D2::PaddingCell_Frame::propagate(bool /*inference*/)
@@ -78,8 +78,9 @@ void N2D2::PaddingCell_Frame::propagate(bool /*inference*/)
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
 
-        PaddingCell_Frame_Kernels::forward( mInputs[k],
+        PaddingCell_Frame_Kernels::forward( input,
                                             mPaddingDesc,
                                             mInputs[k].dimZ(),
                                             0,
@@ -102,23 +103,26 @@ void N2D2::PaddingCell_Frame::backPropagate()
 
     unsigned int offset = 0;
 
-    PaddingCell_Frame_Kernels::Descriptor 
+    PaddingCell_Frame_Kernels::Descriptor
             backwardPaddingDesc(-mPaddingDesc.leftPad,
                                 -mPaddingDesc.rightPad,
                                 -mPaddingDesc.topPad,
                                 -mPaddingDesc.botPad);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        Tensor<Float_T> diffOutput
+            = tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
         PaddingCell_Frame_Kernels::forward( mDiffInputs,
                                             backwardPaddingDesc,
                                             mDiffOutputs[k].dimZ(),
                                             offset,
                                             0,
-                                            mDiffOutputs[k]);
+                                            diffOutput);
 
         offset += mDiffOutputs[k].dimZ();
 
+        mDiffOutputs[k] = diffOutput;
         mDiffOutputs[k].setValid();
     }
 
@@ -132,7 +136,7 @@ void N2D2::PaddingCell_Frame::update()
 
 void N2D2::PaddingCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

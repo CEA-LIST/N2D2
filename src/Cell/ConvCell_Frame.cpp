@@ -144,8 +144,10 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0;
 
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+
         ConvCell_Frame_Kernels::forward(&alpha,
-                                        mInputs[k],
+                                        input,
                                         mSharedSynapses[k],
                                         mConvDesc,
                                         &beta,
@@ -174,8 +176,10 @@ void N2D2::ConvCell_Frame::backPropagate()
         const Float_T beta = (mWeightsSolvers[k]->isNewIteration())
             ? 0.0f : 1.0f;
 
+        const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
+
         ConvCell_Frame_Kernels::backwardFilter(&alpha,
-                                               mInputs[k],
+                                               input,
                                                mDiffInputs,
                                                mConvDesc,
                                                &beta,
@@ -199,16 +203,22 @@ void N2D2::ConvCell_Frame::backPropagate()
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
+            Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
+                ? tensor_cast<Float_T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
             ConvCell_Frame_Kernels::backwardData(&alpha,
                                                  mSharedSynapses[k],
                                                  mDiffInputs,
                                                  mConvDesc,
                                                  &beta,
-                                                 mDiffOutputs[k],
+                                                 diffOutput,
                                                  mMaps.rows(offset,
                                                             mInputs[k].dimZ()));
 
             offset += mInputs[k].dimZ();
+
+            mDiffOutputs[k] = diffOutput;
             mDiffOutputs[k].setValid();
         }
 
@@ -235,7 +245,7 @@ void N2D2::ConvCell_Frame::setWeights(unsigned int k,
 
 void N2D2::ConvCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

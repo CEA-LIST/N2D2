@@ -252,14 +252,19 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
     mMaxIoU.synchronizeHToD();
     mAnchors.synchronizeHToD();
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > inputCls
+        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+    std::shared_ptr<CudaDeviceTensor<Float_T> > inputCoords
+        = (mInputs.size() > 1)
+            ? cuda_device_tensor_cast<Float_T>(mInputs[1])
+            : inputCls;
+
     cudaSAnchorPropagate(mStimuliProvider.getSizeX(),
                          mStimuliProvider.getSizeY(),
                          mFlip,
                          inference,
-                         mInputs[0].getDevicePtr(),
-                         (mInputs.size() > 1)
-                            ? mInputs[1].getDevicePtr()
-                            : mInputs[0].getDevicePtr(),
+                         inputCls->getDevicePtr(),
+                         inputCoords->getDevicePtr(),
                          (mInputs.size() > 1)
                             ? 0
                             : mScoresCls,

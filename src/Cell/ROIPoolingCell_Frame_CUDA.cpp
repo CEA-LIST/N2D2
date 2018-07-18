@@ -92,17 +92,21 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
     float beta = 0.0f;
 
     unsigned int outputOffset = 0;
-    unsigned int kFeatureMap = 1;
 
-    for (unsigned int k = kFeatureMap, size = mInputs.size(); k < size; ++k) {
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+
+    for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
         if (mPooling == Max) {
             cudaSROIPoolingForwardMax(alpha,
-                                      mInputs[0].getDevicePtr(),
+                                      input0->getDevicePtr(),
                                       mInputs[0].dimB(),
                                       mStimuliProvider.getSizeY(),
                                       mStimuliProvider.getSizeX(),
-                                      mInputs[k].getDevicePtr(),
+                                      input->getDevicePtr(),
                                       mInputs[k].dimZ(),
                                       mInputs[k].dimY(),
                                       mInputs[k].dimX(),
@@ -117,11 +121,11 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
         }
         else if (mPooling == Average) {
             cudaSROIPoolingForwardAverage(alpha,
-                                          mInputs[0].getDevicePtr(),
+                                          input0->getDevicePtr(),
                                           mInputs[0].dimB(),
                                           mStimuliProvider.getSizeY(),
                                           mStimuliProvider.getSizeX(),
-                                          mInputs[k].getDevicePtr(),
+                                          input->getDevicePtr(),
                                           mInputs[k].dimZ(),
                                           mInputs[k].dimY(),
                                           mInputs[k].dimX(),
@@ -149,11 +153,11 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
             }
 
             cudaSROIPoolingForwardBilinear(alpha,
-                                                mInputs[kFeatureMap-1].getDevicePtr(),
-                                                mInputs[kFeatureMap-1].dimB(),
+                                                input0->getDevicePtr(),
+                                                mInputs[0].dimB(),
                                                 mStimuliProvider.getSizeY(),
                                                 mStimuliProvider.getSizeX(),
-                                                mInputs[k].getDevicePtr(),
+                                                input->getDevicePtr(),
                                                 mInputs[k].dimZ(),
                                                 mInputs[k].dimY(),
                                                 mInputs[k].dimX(),
@@ -197,16 +201,23 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
 
     unsigned int outputOffset = 0;
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
+
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+            = (mDiffOutputs[k].isValid())
+                ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
+                : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
         if (!mDiffOutputs[k].isValid()) {
-            mDiffOutputs[k].fill(0.0);
-            mDiffOutputs[k].synchronizeHToD();
+            diffOutput->fill(0.0);
             mDiffOutputs[k].setValid();
         }
 
         if (mPooling == Max) {
             cudaSROIPoolingBackwardMax(alpha,
-                                       mInputs[0].getDevicePtr(),
+                                       input0->getDevicePtr(),
                                        mInputs[0].dimB(),
                                        mStimuliProvider.getSizeY(),
                                        mStimuliProvider.getSizeX(),
@@ -217,7 +228,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                        mOutputs.dimB(),
                                        outputOffset,
                                        beta,
-                                       mDiffOutputs[k].getDevicePtr(),
+                                       diffOutput->getDevicePtr(),
                                        mDiffOutputs[k].dimZ(),
                                        mDiffOutputs[k].dimY(),
                                        mDiffOutputs[k].dimX(),
@@ -225,7 +236,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
         }
         else if (mPooling == Average) {
             cudaSROIPoolingBackwardAverage(alpha,
-                                           mInputs[0].getDevicePtr(),
+                                           input0->getDevicePtr(),
                                            mInputs[0].dimB(),
                                            mStimuliProvider.getSizeY(),
                                            mStimuliProvider.getSizeX(),
@@ -236,7 +247,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                            mOutputs.dimB(),
                                            outputOffset,
                                            beta,
-                                           mDiffOutputs[k].getDevicePtr(),
+                                           diffOutput->getDevicePtr(),
                                            mDiffOutputs[k].dimZ(),
                                            mDiffOutputs[k].dimY(),
                                            mDiffOutputs[k].dimX());
@@ -249,6 +260,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
         }
 
         outputOffset += mInputs[k].dimZ();
+
+        mDiffOutputs[k].deviceTensor() = *diffOutput;
     }
 
     mDiffOutputs.synchronizeDToHBased();
@@ -262,7 +275,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::update()
 void N2D2::ROIPoolingCell_Frame_CUDA::checkGradient(double epsilon,
                                                     double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
 
     mInputs[0].setValid();
     gc.initialize(mInputs,

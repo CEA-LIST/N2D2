@@ -204,6 +204,26 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
     const dim3 nbThread = {32, 1 , 1};
     const dim3 nbBlocks = {blockSize, 1 , inputBatch};
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input1
+        = cuda_device_tensor_cast<Float_T>(mInputs[1]);
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input2
+        = cuda_device_tensor_cast<Float_T>(mInputs[2]);
+
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input3
+        = (mMaxParts > 0 || mMaxTemplates > 0)
+            ? cuda_device_tensor_cast<Float_T>(mInputs[3])
+            : std::shared_ptr<CudaDeviceTensor<Float_T> >();
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input4
+        = (mMaxParts > 0)
+            ? cuda_device_tensor_cast<Float_T>(mInputs[4])
+            : std::shared_ptr<CudaDeviceTensor<Float_T> >();
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input5
+        = (mMaxParts > 0 && mMaxTemplates > 0)
+            ? cuda_device_tensor_cast<Float_T>(mInputs[5])
+            : std::shared_ptr<CudaDeviceTensor<Float_T> >();
+
     cudaSNormalizeROIs( mInputs[0].dimX(),
                         mInputs[0].dimY(),
                         mNbProposals,
@@ -221,15 +241,15 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         mStdCUDA.getDevicePtr(),
                         mNumPartsPerClass.getDevicePtr(),
                         mNumTemplatesPerClass.getDevicePtr(),
-                        mInputs[0].getDevicePtr(),
-                        mInputs[1].getDevicePtr(),
-                        mInputs[2].getDevicePtr(),
-                        (mMaxParts > 0 || mMaxTemplates > 0)  ? mInputs[3].getDevicePtr()
-                        : mInputs[2].getDevicePtr(),
-                        mMaxParts > 0 ? mInputs[4].getDevicePtr()
-                        : mInputs[2].getDevicePtr(),
-                        (mMaxParts > 0 && mMaxTemplates > 0) ? mInputs[5].getDevicePtr()
-                        : mInputs[2].getDevicePtr(),
+                        input0->getDevicePtr(),
+                        input1->getDevicePtr(),
+                        input2->getDevicePtr(),
+                        (mMaxParts > 0 || mMaxTemplates > 0)  ? input3->getDevicePtr()
+                        : input2->getDevicePtr(),
+                        (mMaxParts > 0) ? input4->getDevicePtr()
+                        : input2->getDevicePtr(),
+                        (mMaxParts > 0 && mMaxTemplates > 0) ? input5->getDevicePtr()
+                        : input2->getDevicePtr(),
                         mNormalizeROIs.getDevicePtr(),
                         mMaxCls.getDevicePtr(),
                         mPartsPrediction.getDevicePtr(),

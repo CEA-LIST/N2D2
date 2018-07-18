@@ -135,4 +135,133 @@ TEST(Tensor4d, clear)
     ASSERT_TRUE(A.empty());
 }
 
+TEST(Tensor4d, tensor_cast_double_to_float)
+{
+    Tensor<double> A({2, 3, 4, 5}, 1.0);
+
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 1. First cast double to float
+    Tensor<float> B = tensor_cast<float>(A);
+    // Data from A was converted to B
+    ASSERT_EQUALS(B.dims(), A.dims());
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    // Changes in B won't affect A
+    B(1, 1, 1, 1) = 2.0;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 2. Cast in the same type (double to double)
+    Tensor<double> C = tensor_cast<double>(A);
+    // C shares the same data as A
+    ASSERT_EQUALS(C.dims(), A.dims());
+    C(1, 1, 1, 1) = 4.0;
+    ASSERT_EQUALS(A(1, 1, 1, 1), 4.0);
+
+    // 3. Second cast double to float
+    // Since A was already casted to double with B, B2 shares the same data as B
+    // In this case, no new allocation is made
+    Tensor<float> B2 = tensor_cast_nocopy<float>(A);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 2.0);
+
+    // 4. Third cast double to float with copy
+    Tensor<float> B3 = tensor_cast<float>(A);
+    // Since B, B2 and B3 share the same data, they are now all in sync. with A
+    ASSERT_EQUALS(B3(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B3(1, 1, 1, 1), 4.0);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 4.0);
+    ASSERT_EQUALS(B(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B(1, 1, 1, 1), 4.0);
+
+    // 5. Copy B back to A with automatic conversion
+    B(1, 1, 1, 1) = 8.0;
+    A = B;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 8.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 8.0);
+}
+
+TEST(Tensor4d, tensor_cast_float_to_double)
+{
+    Tensor<float> A({2, 3, 4, 5}, 1.0);
+
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 1. First cast float to double
+    Tensor<double> B = tensor_cast<double>(A);
+    // Data from A was converted to B
+    ASSERT_EQUALS(B.dims(), A.dims());
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    // Changes in B won't affect A
+    B(1, 1, 1, 1) = 2.0;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 2. Cast in the same type (float to float)
+    Tensor<float> C = tensor_cast<float>(A);
+    // C shares the same data as A
+    ASSERT_EQUALS(C.dims(), A.dims());
+    C(1, 1, 1, 1) = 4.0;
+    ASSERT_EQUALS(A(1, 1, 1, 1), 4.0);
+
+    // 3. Second cast float to double
+    // Since A was already casted to float with B, B2 shares the same data as B
+    // In this case, no new allocation is made
+    Tensor<double> B2 = tensor_cast_nocopy<double>(A);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 2.0);
+
+    // 4. Third cast float to double with copy
+    Tensor<double> B3 = tensor_cast<double>(A);
+    // Since B, B2 and B3 share the same data, they are now all in sync. with A
+    ASSERT_EQUALS(B3(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B3(1, 1, 1, 1), 4.0);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 4.0);
+    ASSERT_EQUALS(B(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B(1, 1, 1, 1), 4.0);
+}
+
+TEST(Tensor4d, tensor_cast_float_to_int)
+{
+    Tensor<float> A({2, 3, 4, 5}, 1.0);
+
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 1. First cast float to int
+    Tensor<int> B = tensor_cast<int>(A);
+    // Data from A was converted to B
+    ASSERT_EQUALS(B.dims(), A.dims());
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1);
+    // Changes in B won't affect A
+    B(1, 1, 1, 1) = 2;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 2. Cast in the same type (float to float)
+    Tensor<float> C = tensor_cast<float>(A);
+    // C shares the same data as A
+    ASSERT_EQUALS(C.dims(), A.dims());
+    C(1, 1, 1, 1) = 4.0;
+    ASSERT_EQUALS(A(1, 1, 1, 1), 4.0);
+
+    // 3. Second cast float to int
+    // Since A was already casted to float with B, B2 shares the same data as B
+    // In this case, no new allocation is made
+    Tensor<int> B2 = tensor_cast_nocopy<int>(A);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 2);
+
+    // 4. Third cast float to int with copy
+    Tensor<int> B3 = tensor_cast<int>(A);
+    // Since B, B2 and B3 share the same data, they are now all in sync. with A
+    ASSERT_EQUALS(B3(0, 0, 0, 0), 1);
+    ASSERT_EQUALS(B3(1, 1, 1, 1), 4);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 4);
+    ASSERT_EQUALS(B(0, 0, 0, 0), 1);
+    ASSERT_EQUALS(B(1, 1, 1, 1), 4);
+}
+
 RUN_TESTS()

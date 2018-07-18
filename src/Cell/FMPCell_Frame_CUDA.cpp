@@ -61,9 +61,17 @@ void N2D2::FMPCell_Frame_CUDA::propagate(bool /*inference*/)
     mGridX.synchronizeHToD();
     mGridY.synchronizeHToD();
 
-    cudaSFMPPropagate(mInputs[0].getDevicePtr(),
+    const float alpha = 1.0f;
+    float beta = 0.0f;
+
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+
+    cudaSFMPPropagate(alpha,
+                      input0->getDevicePtr(),
                       mGridX.getDevicePtr(),
                       mGridY.getDevicePtr(),
+                      beta,
                       mOutputs.getDevicePtr(),
                       getNbChannels(),
                       mInputs[0].dimX(),

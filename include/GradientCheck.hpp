@@ -26,22 +26,26 @@
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
+template <class T>
 class GradientCheck {
 public:
     typedef std::function<void(bool)> PropagateType;
     typedef std::function<void(void)> BackPropagateType;
 
     GradientCheck(double epsilon = 1.0e-4, double maxError = 1.0e-6);
-    void initialize(Interface<Float_T>& inputs,
-                    Tensor<Float_T>& outputs,
-                    Tensor<Float_T>& diffInputs,
+    void initialize(Interface<>& inputs,
+                    Tensor<T>& outputs,
+                    Tensor<T>& diffInputs,
                     PropagateType propagate,
                     BackPropagateType backPropagate,
                     bool avoidDiscontinuity = false);
-
+    template <class U>
     void check(const std::string& tensorName,
-               Tensor<Float_T>& inputs,
-               Tensor<Float_T>& diffOutputs);
+               Tensor<U>& inputs,
+               Tensor<U>& diffOutputs);
+    void check(const std::string& tensorName,
+               BaseTensor& inputs,
+               BaseTensor& diffOutputs);
     virtual ~GradientCheck();
 
 private:
@@ -50,8 +54,8 @@ private:
     double mEpsilon;
     double mMaxError;
 
-    Tensor<Float_T>* mOutputs;
-    Tensor<Float_T>* mDiffInputs;
+    Tensor<T>* mOutputs;
+    Tensor<T>* mDiffInputs;
     PropagateType mPropagate;
 };
 }

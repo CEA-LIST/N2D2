@@ -88,15 +88,16 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
     const float alpha = 1.0f;
     float beta = 0.0f;
 
-    const Tensor<Float_T>& proposals = mInputs[0];
+    const Tensor<Float_T>& proposals = tensor_cast<Float_T>(mInputs[0]);
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
 
         const double xRatio = std::ceil(mStimuliProvider.getSizeX()
-                                        / (double)mInputs[k].dimX());
+                                        / (double)input.dimX());
         const double yRatio = std::ceil(mStimuliProvider.getSizeY()
-                                        / (double)mInputs[k].dimY());
+                                        / (double)input.dimY());
 
         if (mPooling == Max) {
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -106,7 +107,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 #endif
             for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
             {
-                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                for (unsigned int channel = 0; channel < input.dimZ();
                     ++channel)
                 {
                     const Tensor<Float_T>& proposal = proposals[batchPos];
@@ -129,10 +130,10 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                         h+= y;
                         y = 0;
                     }
-                    if (x + w > (int)mInputs[k].dimX())
-                        w = mInputs[k].dimX() - x;
-                    if (y + h > (int)mInputs[k].dimY())
-                        h = mInputs[k].dimY() - y;
+                    if (x + w > (int)input.dimX())
+                        w = input.dimX() - x;
+                    if (y + h > (int)input.dimY())
+                        h = input.dimY() - y;
 
                     const Float_T poolWidth = w / mOutputs.dimX();
                     const Float_T poolHeight = h / mOutputs.dimY();
@@ -161,7 +162,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             for (unsigned int sy = syMin; sy < syMax; ++sy) {
                                 for (unsigned int sx = sxMin; sx < sxMax; ++sx)
                                 {
-                                    const Float_T value = mInputs[k](sx,
+                                    const Float_T value = input(sx,
                                                             sy,
                                                             channel,
                                                             inputBatch);
@@ -199,7 +200,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 #endif
             for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
             {
-                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                for (unsigned int channel = 0; channel < input.dimZ();
                     ++channel)
                 {
                     const Tensor<Float_T>& proposal = proposals[batchPos];
@@ -219,10 +220,10 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                         h+= y;
                         y = 0;
                     }
-                    if (x + w > (int)mInputs[k].dimX())
-                        w = mInputs[k].dimX() - x;
-                    if (y + h > (int)mInputs[k].dimY())
-                        h = mInputs[k].dimY() - y;
+                    if (x + w > (int)input.dimX())
+                        w = input.dimX() - x;
+                    if (y + h > (int)input.dimY())
+                        h = input.dimY() - y;
 
                     const Float_T poolWidth = w / mOutputs.dimX();
                     const Float_T poolHeight = h / mOutputs.dimY();
@@ -245,7 +246,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             for (unsigned int sy = syMin; sy < syMax; ++sy) {
                                 for (unsigned int sx = sxMin; sx < sxMax; ++sx)
                                 {
-                                    poolValue += mInputs[k](sx,
+                                    poolValue += input(sx,
                                                             sy,
                                                             channel,
                                                             inputBatch);
@@ -271,9 +272,9 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 
             if (mFlip) {
                 xOffset = (mStimuliProvider.getSizeX() - 1) / xRatio
-                            - (mInputs[k].dimX() - 1);
+                            - (input.dimX() - 1);
                 yOffset = (mStimuliProvider.getSizeY() - 1) / yRatio
-                            - (mInputs[k].dimY() - 1);
+                            - (input.dimY() - 1);
             }
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -283,7 +284,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 #endif
             for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
             {
-                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                for (unsigned int channel = 0; channel < input.dimZ();
                     ++channel)
                 {
                     const Tensor<Float_T>& proposal = proposals[batchPos];
@@ -303,10 +304,10 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                         h+= y;
                         y = 0;
                     }
-                    if (x + w > (int)mInputs[k].dimX())
-                        w = mInputs[k].dimX() - x;
-                    if (y + h > (int)mInputs[k].dimY())
-                        h = mInputs[k].dimY() - y;
+                    if (x + w > (int)input.dimX())
+                        w = input.dimX() - x;
+                    if (y + h > (int)input.dimY())
+                        h = input.dimY() - y;
 
                     Float_T xPoolRatio, yPoolRatio;
 
@@ -325,9 +326,9 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
 
                             if (mPooling == BilinearTF) {
                                 sx = std::min<Float_T>(x + ox * xPoolRatio,
-                                    mInputs[k].dimX() - 1);
+                                    input.dimX() - 1);
                                 sy = std::min<Float_T>(y + oy * yPoolRatio,
-                                    mInputs[k].dimY() - 1);
+                                    input.dimY() - 1);
                             }
                             else {
                                 // -0.5 + (ox + 0.5) and not ox because the
@@ -345,24 +346,24 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
                             const Float_T dy = sy - sy0;
 
                             const bool invalid = mIgnorePad ?
-                                    (((sx0 + 1 < mInputs[k].dimX() )
-                                        && (sy0 + 1 < mInputs[k].dimY() ))  ?
+                                    (((sx0 + 1 < input.dimX() )
+                                        && (sy0 + 1 < input.dimY() ))  ?
                                         false : true) : false;
 
 
                             const Float_T i00 = (!invalid) ?
-                                    mInputs[k](sx0, sy0, channel, inputBatch)
+                                    input(sx0, sy0, channel, inputBatch)
                                     : 0.0;
 
-                            const Float_T i10 = (sx0 + 1 < mInputs[k].dimX()) && (!invalid) ?
-                                        mInputs[k](sx0 + 1, sy0, channel, inputBatch)
+                            const Float_T i10 = (sx0 + 1 < input.dimX()) && (!invalid) ?
+                                        input(sx0 + 1, sy0, channel, inputBatch)
                                         : 0.0;
-                            const Float_T i01 = (sy0 + 1 < mInputs[k].dimY()) && (!invalid) ?
-                                        mInputs[k](sx0, sy0 + 1, channel, inputBatch)
+                            const Float_T i01 = (sy0 + 1 < input.dimY()) && (!invalid) ?
+                                        input(sx0, sy0 + 1, channel, inputBatch)
                                         : 0.0;
-                            const Float_T i11 = (sx0 + 1 < mInputs[k].dimX() && sy0 + 1
-                                                    < mInputs[k].dimY()) && (!invalid) ?
-                                                mInputs[k](sx0 + 1, sy0 + 1, channel, inputBatch)
+                            const Float_T i11 = (sx0 + 1 < input.dimX() && sy0 + 1
+                                                    < input.dimY()) && (!invalid) ?
+                                                input(sx0 + 1, sy0 + 1, channel, inputBatch)
                                                 : 0.0;
 
                             const Float_T value
@@ -381,7 +382,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
             }
         }
 
-        outputOffset += mInputs[k].dimZ();
+        outputOffset += input.dimZ();
     }
 
     Cell_Frame::propagate();
@@ -397,14 +398,18 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
 
     const Float_T alpha = 1.0;
 
-    const Tensor<Float_T>& proposals = mInputs[0];
+    const Tensor<Float_T>& proposals = tensor_cast_nocopy<Float_T>(mInputs[0]);
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 1, size = mInputs.size(); k < size; ++k) {
         //const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
+        Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
+            ? tensor_cast<Float_T>(mDiffOutputs[k])
+            : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
         if (!mDiffOutputs[k].isValid()) {
-            mDiffOutputs[k].fill(0.0);
+            diffOutput.fill(0.0);
             mDiffOutputs[k].setValid();
         }
 
@@ -486,7 +491,7 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
                                     && inputMax.valid)
                                 {
                                     #pragma omp atomic
-                                    mDiffOutputs[k](ix, iy, channel, inputBatch)
+                                    diffOutput(ix, iy, channel, inputBatch)
                                         += alpha * mDiffInputs(ox, oy,
                                             outputOffset + channel, batchPos);
                                 }
@@ -507,6 +512,7 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
                                      "propagation is implemented");
         }
 
+        mDiffOutputs[k] = diffOutput;
         //mDiffOutputs[k].setValid();
 
         outputOffset += mDiffOutputs[k].dimZ();
@@ -522,7 +528,7 @@ void N2D2::ROIPoolingCell_Frame::update()
 
 void N2D2::ROIPoolingCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
 
     mInputs[0].setValid();
     gc.initialize(mInputs,

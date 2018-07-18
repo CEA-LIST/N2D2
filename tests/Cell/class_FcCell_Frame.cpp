@@ -498,10 +498,14 @@ TEST_DATASET(FcCell_Frame,
 
     Float_T sum = 0.0;
 
-    for (unsigned int channel = 0; channel < fc1.getNbChannels(); ++channel) {
-        for (unsigned int y = 0; y < fc1.getChannelsHeight(); ++y) {
-            for (unsigned int x = 0; x < fc1.getChannelsWidth(); ++x)
-                sum += fc1.mInputs(x, y, channel, 0);
+    for (unsigned int k = 0; k < fc1.mInputs.size(); ++k) {
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(fc1.mInputs[k]);
+
+        for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
+            for (unsigned int y = 0; y < fc1.getChannelsHeight(); ++y) {
+                for (unsigned int x = 0; x < fc1.getChannelsWidth(); ++x)
+                    sum += input(x, y, channel, 0);
+            }
         }
     }
 

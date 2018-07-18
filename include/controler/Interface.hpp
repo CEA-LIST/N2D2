@@ -49,17 +49,64 @@ struct make_indices< 0 >
   typedef indices<> type;
 };
 
+template <typename SELF, int STACKING_DIM, typename T>
+class TypedInterface {
+public:
+    typedef typename Tensor<T>::reference reference;
+    typedef typename Tensor<T>::const_reference const_reference;
+
+    inline void fill(const T& value);
+    // Return type should be "reference" (not T&), in order to ensure it works
+    // for std::vector<bool>, which is a special case...
+    template <typename... Args> reference operator()(Args... args);
+    template <typename... Args> const_reference operator()(Args... args) const;
+    template <typename... Args> reference at(Args... args);
+    template <typename... Args> const_reference at(Args... args) const;
+
+protected:
+    size_t getOffset(unsigned int dim, size_t i) const;
+    template <typename... Args, size_t... Ns>
+    reference translateIndexes(unsigned int tensorOffset, indices<Ns...>, Args... args);
+    template <typename... Args, size_t... Ns>
+    reference translateIndexesAt(unsigned int tensorOffset, indices<Ns...>,
+                         Args... args);
+    template <typename... Args, size_t... Ns>
+    const_reference translateIndexes(unsigned int tensorOffset, indices<Ns...>, Args... args)
+        const;
+    template <typename... Args, size_t... Ns>
+    const_reference translateIndexesAt(unsigned int tensorOffset, indices<Ns...>,
+                         Args... args) const;
+
+private:
+    SELF* self() { return static_cast<SELF*>(this); };
+    const SELF* self() const { return static_cast<const SELF*>(this); };
+};
+
+template <typename SELF, int STACKING_DIM>
+class TypedInterface<SELF, STACKING_DIM, void> {
+
+};
+
+template <class T>
+struct tensor_t {
+    typedef Tensor<T> type;
+};
+
+template <>
+struct tensor_t<void> {
+    typedef BaseTensor type;
+};
+
 /**
  * @class   Interface
  * @brief   Merge virtually several Tensor4d through an unified data interface.
 */
-template <class T, int STACKING_DIM = -2>
-class Interface {
+template <class T = void, int STACKING_DIM = -2>
+class Interface : public TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T> {
 public:
-    typedef typename std::vector<Tensor<T>*>::iterator iterator;
-    typedef typename std::vector<Tensor<T>*>::const_iterator const_iterator;
-    typedef typename std::vector<T>::reference reference;
-    typedef typename std::vector<T>::const_reference const_reference;
+    typedef typename tensor_t<T>::type tensor_type;
+    typedef typename std::vector<tensor_type*>::iterator iterator;
+    typedef typename std::vector<tensor_type*>::const_iterator const_iterator;
 
     Interface(std::initializer_list<bool> matchingDim
                 = std::initializer_list<bool>({true, true, false, true}));
@@ -101,21 +148,15 @@ public:
     {
         return mData.end();
     }
-    inline void fill(const T& value);
-    inline virtual void push_back(Tensor<T>* tensor);
+    inline virtual void push_back(tensor_type* tensor);
     inline void clear();
-    // Return type should be "reference" (not T&), in order to ensure it works
-    // for std::vector<bool>, which is a special case...
-    template <typename... Args> reference operator()(Args... args);
-    template <typename... Args> const_reference operator()(Args... args) const;
-    template <typename... Args> reference at(Args... args);
-    template <typename... Args> const_reference at(Args... args) const;
-    virtual Tensor<T>& back();
-    virtual const Tensor<T>& back() const;
-    virtual Tensor<T>& operator[](unsigned int t);
-    virtual const Tensor<T>& operator[](unsigned int t) const;
-    virtual Tensor<T>& getTensor(unsigned int k, unsigned int* offset = NULL);
-    virtual const Tensor<T>& getTensor(unsigned int k,
+
+    virtual tensor_type& back();
+    virtual const tensor_type& back() const;
+    virtual tensor_type& operator[](unsigned int t);
+    virtual const tensor_type& operator[](unsigned int t) const;
+    virtual tensor_type& getTensor(unsigned int k, unsigned int* offset = NULL);
+    virtual const tensor_type& getTensor(unsigned int k,
                                        unsigned int* offset = NULL) const;
 
     /** Synchronize Device To Host */
@@ -131,28 +172,18 @@ public:
     virtual ~Interface() {};
 
 protected:
-    size_t getOffset(unsigned int dim, size_t i) const;
-    template <typename R, typename... Args, size_t... Ns>
-    R translateIndexes(unsigned int tensorOffset, indices<Ns...>, Args... args);
-    template <typename R, typename... Args, size_t... Ns>
-    R translateIndexesAt(unsigned int tensorOffset, indices<Ns...>,
-                         Args... args);
-    template <typename R, typename... Args, size_t... Ns>
-    R translateIndexes(unsigned int tensorOffset, indices<Ns...>, Args... args)
-        const;
-    template <typename R, typename... Args, size_t... Ns>
-    R translateIndexesAt(unsigned int tensorOffset, indices<Ns...>,
+    template <typename... Args, size_t... Ns>
+    void translateIndexesSynchronizeDToH(unsigned int tensorOffset, indices<Ns...>,
                          Args... args) const;
-    template <typename R, typename... Args, size_t... Ns>
-    R translateIndexesSynchronizeDToH(unsigned int tensorOffset, indices<Ns...>,
-                         Args... args) const;
-    template <typename R, typename... Args, size_t... Ns>
-    R translateIndexesSynchronizeHToD(unsigned int tensorOffset, indices<Ns...>,
+    template <typename... Args, size_t... Ns>
+    void translateIndexesSynchronizeHToD(unsigned int tensorOffset, indices<Ns...>,
                          Args... args) const;
 
     std::vector<bool> mMatchingDim;
-    std::vector<Tensor<T>*> mData;
+    std::vector<tensor_type*> mData;
     std::vector<std::pair<unsigned int, unsigned int> > mDataOffset;
+
+    friend class TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T>;
 };
 }
 
@@ -169,7 +200,7 @@ unsigned int N2D2::Interface<T, STACKING_DIM>::dataSize() const
 {
     unsigned int size = 0;
 
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
                                                             itEnd = mData.end();
          it != itEnd;
          ++it)
@@ -178,22 +209,29 @@ unsigned int N2D2::Interface<T, STACKING_DIM>::dataSize() const
     return size;
 }
 
-template <class T, int STACKING_DIM>
-void N2D2::Interface<T, STACKING_DIM>::fill(const T& value)
+template <typename SELF, int STACKING_DIM, typename T>
+void N2D2::TypedInterface<SELF, STACKING_DIM, T>::fill(const T& value)
 {
-    for (typename std::vector<Tensor<T>*>::iterator it = mData.begin(),
-                                                      itEnd = mData.end();
-         it != itEnd;
-         ++it)
-        (*it)->fill(value);
+    for (auto it = self()->mData.begin(), itEnd = self()->mData.end();
+        it != itEnd; ++it)
+    {
+        Tensor<T>* tensor = dynamic_cast<Tensor<T>*>(*it);
+
+        if (tensor != NULL)
+            tensor->fill(value);
+        else {
+            throw std::runtime_error("Interface::fill(): "
+                            "incompatible tensor data type");
+        }
+    }
 }
 
 template <class T, int STACKING_DIM>
-void N2D2::Interface<T, STACKING_DIM>::push_back(Tensor<T>* tensor)
+void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor)
 {
     if (!mData.empty()) {
         if (tensor->nbDims() != mData.back()->nbDims()) {
-            throw std::runtime_error("Interface<T>::push_back(): "
+            throw std::runtime_error("Interface::push_back(): "
                             "tensor must have the same number of dimensions");
         }
 
@@ -204,7 +242,7 @@ void N2D2::Interface<T, STACKING_DIM>::push_back(Tensor<T>* tensor)
                 && dim < mMatchingDim.size() && mMatchingDim[dim]
                 && tensor->dims()[dim] != mData.back()->dims()[dim])
             {
-                throw std::runtime_error("Interface<T>::push_back(): "
+                throw std::runtime_error("Interface::push_back(): "
                                          "tensor dimension must match");
             }
         }
@@ -228,178 +266,178 @@ void N2D2::Interface<T, STACKING_DIM>::clear()
     mDataOffset.clear();
 }
 
-template <class T, int STACKING_DIM>
-size_t N2D2::Interface<T, STACKING_DIM>::getOffset(unsigned int dim, size_t i) const {
+template <typename SELF, int STACKING_DIM, typename T>
+size_t N2D2::TypedInterface<SELF, STACKING_DIM, T>::getOffset(unsigned int dim, size_t i) const {
     if ((STACKING_DIM >= 0 && dim == (unsigned int)STACKING_DIM)
         || (STACKING_DIM < 0
-            && mData.back()->nbDims() - dim == -STACKING_DIM))
+            && self()->mData.back()->nbDims() - dim == -STACKING_DIM))
     {
-        const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset[i];
+        const std::pair<unsigned int, unsigned int>& dataOffset = self()->mDataOffset[i];
         return (i - dataOffset.second);
     }
     else
         return i;
 }
 
-template <class T, int STACKING_DIM>
-template <typename R, typename... Args, size_t... Ns>
-R N2D2::Interface<T, STACKING_DIM>::translateIndexes(unsigned int tensorOffset,
+template <typename SELF, int STACKING_DIM, typename T>
+template <typename... Args, size_t... Ns>
+typename N2D2::Tensor<T>::reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::translateIndexes(unsigned int tensorOffset,
                                        indices<Ns...>,
                                        Args... args)
 {
-    return (*mData[tensorOffset])(getOffset(Ns, args)...);
+    return (*static_cast<Tensor<T>*>(self()->mData[tensorOffset]))(getOffset(Ns, args)...);
 }
 
-template <class T, int STACKING_DIM>
-template <typename R, typename... Args, size_t... Ns>
-R N2D2::Interface<T, STACKING_DIM>::translateIndexes(unsigned int tensorOffset,
+template <typename SELF, int STACKING_DIM, typename T>
+template <typename... Args, size_t... Ns>
+typename N2D2::Tensor<T>::const_reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::translateIndexes(unsigned int tensorOffset,
                                        indices<Ns...>,
                                        Args... args) const
 {
-    return (*mData[tensorOffset])(getOffset(Ns, args)...);
+    return (*static_cast<Tensor<T>*>(self()->mData[tensorOffset]))(getOffset(Ns, args)...);
 }
 
-template <class T, int STACKING_DIM>
-template <typename R, typename... Args, size_t... Ns>
-R N2D2::Interface<T, STACKING_DIM>::translateIndexesAt(unsigned int tensorOffset,
+template <typename SELF, int STACKING_DIM, typename T>
+template <typename... Args, size_t... Ns>
+typename N2D2::Tensor<T>::reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::translateIndexesAt(unsigned int tensorOffset,
                                          indices<Ns...>,
                                          Args... args)
 {
-    return (*mData[tensorOffset]).at(getOffset(Ns, args)...);
+    return (*static_cast<Tensor<T>*>(self()->mData[tensorOffset])).at(getOffset(Ns, args)...);
 }
 
-template <class T, int STACKING_DIM>
-template <typename R, typename... Args, size_t... Ns>
-R N2D2::Interface<T, STACKING_DIM>::translateIndexesAt(unsigned int tensorOffset,
+template <typename SELF, int STACKING_DIM, typename T>
+template <typename... Args, size_t... Ns>
+typename N2D2::Tensor<T>::const_reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::translateIndexesAt(unsigned int tensorOffset,
                                          indices<Ns...>,
                                          Args... args) const
 {
-    return (*mData[tensorOffset]).at(getOffset(Ns, args)...);
+    return (*static_cast<Tensor<T>*>(self()->mData[tensorOffset])).at(getOffset(Ns, args)...);
 }
 
 template <class T, int STACKING_DIM>
-template <typename R, typename... Args, size_t... Ns>
-R N2D2::Interface<T, STACKING_DIM>::translateIndexesSynchronizeDToH(unsigned int tensorOffset,
+template <typename... Args, size_t... Ns>
+void N2D2::Interface<T, STACKING_DIM>::translateIndexesSynchronizeDToH(unsigned int tensorOffset,
                                          indices<Ns...>,
                                          Args... args) const
 {
-    return (*mData[tensorOffset]).synchronizeDToH(getOffset(Ns, args)...);
+    return (*mData[tensorOffset]).synchronizeDToH(this->getOffset(Ns, args)...);
 }
 
 template <class T, int STACKING_DIM>
-template <typename R, typename... Args, size_t... Ns>
-R N2D2::Interface<T, STACKING_DIM>::translateIndexesSynchronizeHToD(unsigned int tensorOffset,
+template <typename... Args, size_t... Ns>
+void N2D2::Interface<T, STACKING_DIM>::translateIndexesSynchronizeHToD(unsigned int tensorOffset,
                                          indices<Ns...>,
                                          Args... args) const
 {
-    return (*mData[tensorOffset]).synchronizeHToD(getOffset(Ns, args)...);
+    return (*mData[tensorOffset]).synchronizeHToD(this->getOffset(Ns, args)...);
 }
 
-template <class T, int STACKING_DIM>
+template <typename SELF, int STACKING_DIM, typename T>
 template <typename... Args>
-typename N2D2::Interface<T, STACKING_DIM>::reference N2D2::Interface<T, STACKING_DIM>::
+typename N2D2::TypedInterface<SELF, STACKING_DIM, T>::reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::
 operator()(Args... args)
 {
-    assert(!mData.empty());
-    assert(sizeof...(args) == (*mData.back()).nbDims());
+    assert(!self()->mData.empty());
+    assert(sizeof...(args) == (*self()->mData.back()).nbDims());
 
     const unsigned int stackingDim = (STACKING_DIM >= 0)
-        ? STACKING_DIM : (*mData.back()).nbDims() + STACKING_DIM;
+        ? STACKING_DIM : (*self()->mData.back()).nbDims() + STACKING_DIM;
     const std::vector<size_t> indexes = {static_cast<size_t>(args)...};
     const std::pair<unsigned int, unsigned int>& dataOffset
-        = mDataOffset[indexes[stackingDim]];
+        = self()->mDataOffset[indexes[stackingDim]];
 
-    return translateIndexes<typename N2D2::Interface<T, STACKING_DIM>::reference>(
+    return translateIndexes(
                                 dataOffset.first,
                                 typename make_indices<sizeof...(Args)>::type(),
                                 args...);
 }
 
-template <class T, int STACKING_DIM>
+template <typename SELF, int STACKING_DIM, typename T>
 template <typename... Args>
-typename N2D2::Interface<T, STACKING_DIM>::const_reference N2D2::Interface<T, STACKING_DIM>::
+typename N2D2::TypedInterface<SELF, STACKING_DIM, T>::const_reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::
 operator()(Args... args) const
 {
-    assert(!mData.empty());
-    assert(sizeof...(args) == (*mData.back()).nbDims());
+    assert(!self()->mData.empty());
+    assert(sizeof...(args) == (*self()->mData.back()).nbDims());
 
     const unsigned int stackingDim = (STACKING_DIM >= 0)
-        ? STACKING_DIM : (*mData.back()).nbDims() + STACKING_DIM;
+        ? STACKING_DIM : (*self()->mData.back()).nbDims() + STACKING_DIM;
     const std::vector<size_t> indexes = {static_cast<size_t>(args)...};
     const std::pair<unsigned int, unsigned int>& dataOffset
-        = mDataOffset[indexes[stackingDim]];
+        = self()->mDataOffset[indexes[stackingDim]];
 
-    return translateIndexes<typename N2D2::Interface<T, STACKING_DIM>::const_reference>(
+    return translateIndexes(
                                 dataOffset.first,
                                 typename make_indices<sizeof...(Args)>::type(),
                                 args...);
 }
 
-template <class T, int STACKING_DIM>
+template <typename SELF, int STACKING_DIM, typename T>
 template <typename... Args>
-typename N2D2::Interface<T, STACKING_DIM>::reference N2D2::Interface<T, STACKING_DIM>::at(Args... args)
+typename N2D2::TypedInterface<SELF, STACKING_DIM, T>::reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::at(Args... args)
 {
-    if (mData.empty() || sizeof...(args) != (*mData.back()).nbDims())
+    if (self()->mData.empty() || sizeof...(args) != (*self()->mData.back()).nbDims())
         throw std::runtime_error("Argument count must match tensor dimension");
 
     const unsigned int stackingDim = (STACKING_DIM >= 0)
-        ? STACKING_DIM : (*mData.back()).nbDims() + STACKING_DIM;
+        ? STACKING_DIM : (*self()->mData.back()).nbDims() + STACKING_DIM;
     const std::vector<size_t> indexes = {static_cast<size_t>(args)...};
     const std::pair<unsigned int, unsigned int>& dataOffset
-        = mDataOffset[indexes[stackingDim]];
+        = self()->mDataOffset[indexes[stackingDim]];
 
-    return translateIndexesAt<typename N2D2::Interface<T, STACKING_DIM>::reference>(
+    return translateIndexesAt(
                                   dataOffset.first,
                                   typename make_indices<sizeof...(Args)>::type(),
                                   args...);
 }
 
-template <class T, int STACKING_DIM>
+template <typename SELF, int STACKING_DIM, typename T>
 template <typename... Args>
-typename N2D2::Interface<T, STACKING_DIM>::const_reference N2D2::Interface<T, STACKING_DIM>::
+typename N2D2::TypedInterface<SELF, STACKING_DIM, T>::const_reference N2D2::TypedInterface<SELF, STACKING_DIM, T>::
     at(Args... args) const
 {
-    if (mData.empty() || sizeof...(args) != (*mData.back()).nbDims())
+    if (self()->mData.empty() || sizeof...(args) != (*self()->mData.back()).nbDims())
         throw std::runtime_error("Argument count must match tensor dimension");
 
     const unsigned int stackingDim = (STACKING_DIM >= 0)
-        ? STACKING_DIM : (*mData.back()).nbDims() + STACKING_DIM;
+        ? STACKING_DIM : (*self()->mData.back()).nbDims() + STACKING_DIM;
     const std::vector<size_t> indexes = {static_cast<size_t>(args)...};
     const std::pair<unsigned int, unsigned int>& dataOffset
-        = mDataOffset[indexes[stackingDim]];
+        = self()->mDataOffset[indexes[stackingDim]];
 
-    return translateIndexesAt<typename N2D2::Interface<T, STACKING_DIM>::const_reference>(
+    return translateIndexesAt(
                                   dataOffset.first,
                                   typename make_indices<sizeof...(Args)>::type(),
                                   args...);
 }
 
 template <class T, int STACKING_DIM>
-N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::back()
+typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::back()
 {
     return *(mData.back());
 }
 
 template <class T, int STACKING_DIM>
-const N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::back() const
+const typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::back() const
 {
     return *(mData.back());
 }
 
 template <class T, int STACKING_DIM>
-N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::operator[](unsigned int t)
+typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::operator[](unsigned int t)
 {
     return *(mData.at(t));
 }
 
 template <class T, int STACKING_DIM>
-const N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::operator[](unsigned int t) const
+const typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::operator[](unsigned int t) const
 {
     return *(mData.at(t));
 }
 
 template <class T, int STACKING_DIM>
-N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(unsigned int k,
+typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::getTensor(unsigned int k,
                                                         unsigned int* offset)
 {
     assert(k < mDataOffset.size());
@@ -413,7 +451,7 @@ N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(unsigned int k,
 }
 
 template <class T, int STACKING_DIM>
-const N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(
+const typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::getTensor(
     unsigned int k,
     unsigned int* offset) const
 {
@@ -430,7 +468,7 @@ const N2D2::Tensor<T>& N2D2::Interface<T, STACKING_DIM>::getTensor(
 template <class T, int STACKING_DIM>
 void N2D2::Interface<T, STACKING_DIM>::synchronizeDToH() const
 {
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
                                                             itEnd = mData.end();
          it != itEnd;
          ++it)
@@ -450,7 +488,7 @@ void N2D2::Interface<T, STACKING_DIM>::synchronizeDToH(Args... args) const
     const std::pair<unsigned int, unsigned int>& dataOffset
         = mDataOffset[indexes[stackingDim]];
 
-    return translateIndexesSynchronizeDToH<void>(
+    translateIndexesSynchronizeDToH(
                                 dataOffset.first,
                                 typename make_indices<sizeof...(Args)>::type(),
                                 args...);
@@ -459,7 +497,7 @@ void N2D2::Interface<T, STACKING_DIM>::synchronizeDToH(Args... args) const
 template <class T, int STACKING_DIM>
 void N2D2::Interface<T, STACKING_DIM>::synchronizeHToD() const
 {
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
                                                             itEnd = mData.end();
          it != itEnd;
          ++it)
@@ -479,7 +517,7 @@ void N2D2::Interface<T, STACKING_DIM>::synchronizeHToD(Args... args) const
     const std::pair<unsigned int, unsigned int>& dataOffset
         = mDataOffset[indexes[stackingDim]];
 
-    return translateIndexesSynchronizeHToD<void>(
+    translateIndexesSynchronizeHToD(
                                 dataOffset.first,
                                 typename make_indices<sizeof...(Args)>::type(),
                                 args...);
@@ -488,7 +526,7 @@ void N2D2::Interface<T, STACKING_DIM>::synchronizeHToD(Args... args) const
 template <class T, int STACKING_DIM>
 void N2D2::Interface<T, STACKING_DIM>::setValid()
 {
-    for (typename std::vector<Tensor<T>*>::iterator it = mData.begin(),
+    for (typename std::vector<tensor_type*>::iterator it = mData.begin(),
                                                       itEnd = mData.end();
          it != itEnd;
          ++it)
@@ -498,7 +536,7 @@ void N2D2::Interface<T, STACKING_DIM>::setValid()
 template <class T, int STACKING_DIM>
 void N2D2::Interface<T, STACKING_DIM>::clearValid()
 {
-    for (typename std::vector<Tensor<T>*>::iterator it = mData.begin(),
+    for (typename std::vector<tensor_type*>::iterator it = mData.begin(),
                                                       itEnd = mData.end();
          it != itEnd;
          ++it)

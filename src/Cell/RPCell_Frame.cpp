@@ -44,6 +44,8 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
+    const Tensor<Float_T>& input0 = tensor_cast<Float_T>(mInputs[0]);
+
 #pragma omp parallel for if (mInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         // Collect all ROIs in the "ROIs" vector
@@ -53,15 +55,15 @@ void N2D2::RPCell_Frame::propagate(bool inference)
         for (unsigned int k = 0; k < mNbAnchors; ++k) {
             for (unsigned int y = 0; y < mInputs[0].dimY(); ++y) {
                 for (unsigned int x = 0; x < mInputs[0].dimX(); ++x) {
-                    const Float_T value = mInputs(x,
+                    const Float_T value = input0(x,
                                                   y,
                                                   k + mScoreIndex * mNbAnchors,
                                                   batchPos);
-                    const Float_T w = mInputs(x,
+                    const Float_T w = input0(x,
                                               y,
                                               k + 3 * mNbAnchors,
                                               batchPos);
-                    const Float_T h = mInputs(x,
+                    const Float_T h = input0(x,
                                               y,
                                               k + 4 * mNbAnchors,
                                               batchPos);
@@ -107,19 +109,19 @@ void N2D2::RPCell_Frame::propagate(bool inference)
             for (int i = 0; i < (int)ROIs.size(); ++i) {
                 const Tensor<int>::Index& ROIMax = ROIs[i].first;
 
-                const Float_T x0 = mInputs(ROIMax[0],
+                const Float_T x0 = input0(ROIMax[0],
                                            ROIMax[1],
                                            ROIMax[2] + 1 * mNbAnchors,
                                            ROIMax[3]);
-                const Float_T y0 = mInputs(ROIMax[0],
+                const Float_T y0 = input0(ROIMax[0],
                                            ROIMax[1],
                                            ROIMax[2] + 2 * mNbAnchors,
                                            ROIMax[3]);
-                const Float_T w0 = mInputs(ROIMax[0],
+                const Float_T w0 = input0(ROIMax[0],
                                            ROIMax[1],
                                            ROIMax[2] + 3 * mNbAnchors,
                                            ROIMax[3]);
-                const Float_T h0 = mInputs(ROIMax[0],
+                const Float_T h0 = input0(ROIMax[0],
                                            ROIMax[1],
                                            ROIMax[2] + 4 * mNbAnchors,
                                            ROIMax[3]);
@@ -127,19 +129,19 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 for (unsigned int j = i + 1; j < ROIs.size(); ++j) {
                     const Tensor<int>::Index& ROI = ROIs[j].first;
 
-                    const Float_T x = mInputs(ROI[0],
+                    const Float_T x = input0(ROI[0],
                                               ROI[1],
                                               ROI[2] + 1 * mNbAnchors,
                                               ROI[3]);
-                    const Float_T y = mInputs(ROI[0],
+                    const Float_T y = input0(ROI[0],
                                               ROI[1],
                                               ROI[2] + 2 * mNbAnchors,
                                               ROI[3]);
-                    const Float_T w = mInputs(ROI[0],
+                    const Float_T w = input0(ROI[0],
                                               ROI[1],
                                               ROI[2] + 3 * mNbAnchors,
                                               ROI[3]);
-                    const Float_T h = mInputs(ROI[0],
+                    const Float_T h = input0(ROI[0],
                                               ROI[1],
                                               ROI[2] + 4 * mNbAnchors,
                                               ROI[3]);
@@ -199,22 +201,22 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 }
                 else {
                     mOutputs(0, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first[0],
+                        = input0(ROIs[i].first[0],
                                   ROIs[i].first[1],
                                   ROIs[i].first[2] + 1 * mNbAnchors,
                                   ROIs[i].first[3]);
                     mOutputs(1, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first[0],
+                        = input0(ROIs[i].first[0],
                                   ROIs[i].first[1],
                                   ROIs[i].first[2] + 2 * mNbAnchors,
                                   ROIs[i].first[3]);
                     mOutputs(2, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first[0],
+                        = input0(ROIs[i].first[0],
                                   ROIs[i].first[1],
                                   ROIs[i].first[2] + 3 * mNbAnchors,
                                   ROIs[i].first[3]);
                     mOutputs(3, n + batchPos * mNbProposals)
-                        = mInputs(ROIs[i].first[0],
+                        = input0(ROIs[i].first[0],
                                   ROIs[i].first[1],
                                   ROIs[i].first[2] + 4 * mNbAnchors,
                                   ROIs[i].first[3]);
@@ -265,7 +267,7 @@ void N2D2::RPCell_Frame::propagate(bool inference)
 
             for (unsigned int i = 0, size = ROIs.size(); i < size; ++i) {
                 const Tensor<int>::Index& ROI = ROIs[i].first;
-                const Float_T IoU = mInputs(ROI[0],
+                const Float_T IoU = input0(ROI[0],
                                             ROI[1],
                                             ROI[2] + mIoUIndex * mNbAnchors,
                                             ROI[3]);
@@ -319,22 +321,22 @@ void N2D2::RPCell_Frame::propagate(bool inference)
                 const unsigned int idx = Random::randUniform(0, IoU.size() - 1);
 
                 mOutputs(0, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx][0],
+                    = input0(IoU[idx][0],
                               IoU[idx][1],
                               IoU[idx][2] + 1 * mNbAnchors,
                               batchPos);
                 mOutputs(1, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx][0],
+                    = input0(IoU[idx][0],
                               IoU[idx][1],
                               IoU[idx][2] + 2 * mNbAnchors,
                               batchPos);
                 mOutputs(2, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx][0],
+                    = input0(IoU[idx][0],
                               IoU[idx][1],
                               IoU[idx][2] + 3 * mNbAnchors,
                               batchPos);
                 mOutputs(3, n + batchPos * mNbProposals)
-                    = mInputs(IoU[idx][0],
+                    = input0(IoU[idx][0],
                               IoU[idx][1],
                               IoU[idx][2] + 4 * mNbAnchors,
                               batchPos);

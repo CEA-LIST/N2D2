@@ -70,33 +70,39 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
 
     mInputs.synchronizeDToH();
 
+    std::vector<Tensor<Float_T> > inputs;
+
+    for (unsigned int k = 0; k < nbInputs; ++k)
+        inputs.push_back(tensor_cast<Float_T>(mInputs[k]));
+
     if (mOperation == Sum) {
         for (unsigned int n = 0; n < nbElems; ++n) {
-            mOutputs(n) = mWeights[0] * mInputs[0](n)
+            mOutputs(n) = mWeights[0] * inputs[0](n)
                             + mShifts[0];
 
-            for (unsigned int k = 1; k < nbInputs; ++k)
-                mOutputs(n) += mWeights[k] * mInputs[k](n)
+            for (unsigned int k = 1; k < nbInputs; ++k) {
+                mOutputs(n) += mWeights[k] * inputs[k](n)
                                 + mShifts[k];
+            }
         }
     }
     else if (mOperation == AbsSum) {
         for (unsigned int n = 0; n < nbElems; ++n) {
-            mOutputs(n) = mWeights[0] * std::abs(mInputs[0](n));
+            mOutputs(n) = mWeights[0] * std::abs(inputs[0](n));
 
             for (unsigned int k = 1; k < nbInputs; ++k)
-                mOutputs(n) += mWeights[k] * std::abs(mInputs[k](n));
+                mOutputs(n) += mWeights[k] * std::abs(inputs[k](n));
         }
     }
     else if (mOperation == EuclideanSum) {
         for (unsigned int n = 0; n < nbElems; ++n) {
             mInterTerm(n) = (mWeights[0] * mWeights[0])
-                * (mInputs[0](n) * mInputs[0](n))
+                * (inputs[0](n) * inputs[0](n))
                 + (mShifts[0]*mShifts[0]);
 
             for (unsigned int k = 1; k < nbInputs; ++k) {
                 mInterTerm(n) += (mWeights[k] * mWeights[k])
-                    * (mInputs[k](n) * mInputs[k](n))
+                    * (inputs[k](n) * inputs[k](n))
                     + (mShifts[k]*mShifts[k]);
             }
 
@@ -106,20 +112,20 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
     }
     else if (mOperation == Prod) {
         for (unsigned int n = 0; n < nbElems; ++n) {
-            mOutputs(n) = mInputs[0](n);
+            mOutputs(n) = inputs[0](n);
 
             for (unsigned int k = 1; k < nbInputs; ++k)
-                mOutputs(n) *= mInputs[k](n);
+                mOutputs(n) *= inputs[k](n);
         }
     }
     else if (mOperation == Max) {
         for (unsigned int n = 0; n < nbElems; ++n) {
-            Float_T maxVal = mInputs[0](n);
+            Float_T maxVal = inputs[0](n);
             unsigned int argMax = 0;
 
             for (unsigned int k = 1; k < nbInputs; ++k) {
-                if (mInputs[k](n) > maxVal) {
-                    maxVal = mInputs[k](n);
+                if (inputs[k](n) > maxVal) {
+                    maxVal = inputs[k](n);
                     argMax = k;
                 }
             }
@@ -147,31 +153,39 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
 
     Cell_Frame::backPropagate();
 
+    std::vector<Tensor<Float_T> > inputs;
+
+    for (unsigned int k = 0; k < nbInputs; ++k)
+        inputs.push_back(tensor_cast_nocopy<Float_T>(mInputs[k]));
+
     #pragma omp parallel for
     for (int k = 0; k < (int)nbInputs; ++k) {
-        Tensor<Float_T>& diffOutputs = mDiffOutputs[k];
-        const float beta = (diffOutputs.isValid()) ? 1.0f : 0.0f;
+        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+
+        Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
+            ? tensor_cast<Float_T>(mDiffOutputs[k])
+            : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
         if (mOperation == Sum) {
             for (unsigned int n = 0; n < nbElems; ++n) {
-                diffOutputs(n) = mWeights[k] * mDiffInputs(n)
-                                    + beta * diffOutputs(n);
+                diffOutput(n) = mWeights[k] * mDiffInputs(n)
+                                    + beta * diffOutput(n);
             }
         }
         else if (mOperation == AbsSum) {
             for (unsigned int n = 0; n < nbElems; ++n) {
-                const Float_T sign = (mInputs[k](n) >= 0.0) ? 1.0 : -1.0;
-                diffOutputs(n) = mWeights[k] * sign * mDiffInputs(n)
-                                    + beta * diffOutputs(n);
+                const Float_T sign = (inputs[k](n) >= 0.0) ? 1.0 : -1.0;
+                diffOutput(n) = mWeights[k] * sign * mDiffInputs(n)
+                                    + beta * diffOutput(n);
             }
         }
         else if (mOperation == EuclideanSum) {
             for (unsigned int n = 0; n < nbElems; ++n) {
-                diffOutputs(n) = (mInterTerm(n) != 0.0)
+                diffOutput(n) = (mInterTerm(n) != 0.0)
                     ? (mWeights[k] * mWeights[k])
-                        * (mInputs[k](n) / mInterTerm(n))
-                        * mDiffInputs(n) + beta * diffOutputs(n)
-                    : beta * diffOutputs(n);
+                        * (inputs[k](n) / mInterTerm(n))
+                        * mDiffInputs(n) + beta * diffOutput(n)
+                    : beta * diffOutput(n);
             }
         }
         else if (mOperation == Prod) {
@@ -180,18 +194,18 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
 
                 for (unsigned int i = 0; i < nbInputs; ++i) {
                     if (i != (unsigned int)k)
-                        prodTerm *= mInputs[i](n);
+                        prodTerm *= inputs[i](n);
                 }
 
-                diffOutputs(n) = prodTerm * mDiffInputs(n)
-                                    + beta * diffOutputs(n);
+                diffOutput(n) = prodTerm * mDiffInputs(n)
+                                    + beta * diffOutput(n);
             }
         }
         else if (mOperation == Max) {
             for (unsigned int n = 0; n < nbElems; ++n) {
-                diffOutputs(n) = (mArgMax(n) == (unsigned int)k)
-                    ? (mDiffInputs(n) + beta * diffOutputs(n))
-                    : beta * diffOutputs(n);
+                diffOutput(n) = (mArgMax(n) == (unsigned int)k)
+                    ? (mDiffInputs(n) + beta * diffOutput(n))
+                    : beta * diffOutput(n);
             }
         }
         else {
@@ -199,7 +213,8 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
                                      "unknown operation type.");
         }
 
-        diffOutputs.setValid();
+        mDiffOutputs[k] = diffOutput;
+        mDiffOutputs[k].setValid();
     }
 
     mDiffOutputs.synchronizeHToD();
@@ -211,7 +226,7 @@ void N2D2::ElemWiseCell_Frame::update()
 
 void N2D2::ElemWiseCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

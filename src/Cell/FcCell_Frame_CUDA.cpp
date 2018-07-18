@@ -89,6 +89,9 @@ void N2D2::FcCell_Frame_CUDA::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0f;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
         // Computes mOutputs = alpha*mSynapses'*mInputs + beta*mOutputs
         CHECK_CUBLAS_STATUS(cublasSgemm(
             CudaContext::cublasHandle(),
@@ -100,7 +103,7 @@ void N2D2::FcCell_Frame_CUDA::propagate(bool /*inference*/)
             &alpha,
             mSynapses[k].getDevicePtr(),
             inputSize,
-            mInputs[k].getDevicePtr(),
+            input->getDevicePtr(),
             inputSize,
             &beta,
             mOutputs.getDevicePtr(),
@@ -142,6 +145,9 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
                                        * mInputs[k].dimZ();
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
+
         // mDiffSynapses.getDevicePtr() = mInputs.getDevicePtr *
         // mDiffInputs.getDevicePtr*
         CHECK_CUBLAS_STATUS(cublasSgemm(CudaContext::cublasHandle(),
@@ -151,7 +157,7 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
                                         mOutputs.dimZ(),
                                         mInputs.dimB(),
                                         &alpha,
-                                        mInputs[k].getDevicePtr(),
+                                        input->getDevicePtr(),
                                         inputSize,
                                         mDiffInputs.getDevicePtr(),
                                         mOutputs.dimZ(),
@@ -185,6 +191,11 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
                                                 * mDiffOutputs[k].dimY()
                                                 * mDiffOutputs[k].dimZ();
 
+            std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+                = (mDiffOutputs[k].isValid())
+                    ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
+                    : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
             // mDiffOutputs.getDevicePtr = mSynapses.getDevicePtr() *
             // mDiffInputs.getDevicePtr
             CHECK_CUBLAS_STATUS(cublasSgemm(CudaContext::cublasHandle(),
@@ -199,9 +210,10 @@ void N2D2::FcCell_Frame_CUDA::backPropagate()
                                             mDiffInputs.getDevicePtr(),
                                             mOutputs.dimZ(),
                                             &betaData,
-                                            mDiffOutputs[k].getDevicePtr(),
+                                            diffOutput->getDevicePtr(),
                                             diffOutputSize));
 
+            mDiffOutputs[k].deviceTensor() = *diffOutput;
             mDiffOutputs[k].setValid();
         }
 
@@ -221,7 +233,7 @@ void N2D2::FcCell_Frame_CUDA::update()
 
 void N2D2::FcCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

@@ -59,17 +59,19 @@ void N2D2::DropoutCell_Frame::propagate(bool inference)
 
     if (inference) {
         if (mInputs.size() == 1)
-            std::copy(mInputs[0].begin(), mInputs[0].end(), mOutputs.begin());
+            mOutputs = mInputs[0];
         else {
             for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+                const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+
                 unsigned int outputOffset = offset;
                 unsigned int inputOffset = 0;
 
                 for (unsigned int batchPos = 0; batchPos < mInputs.dimB();
                     ++batchPos)
                 {
-                    std::copy(mInputs[k].begin() + inputOffset,
-                              mInputs[k].begin() + inputOffset
+                    std::copy(input.begin() + inputOffset,
+                              input.begin() + inputOffset
                                 + (mInputs[k].size() / mInputs.dimB()),
                               mOutputs.begin() + outputOffset);
 
@@ -84,6 +86,8 @@ void N2D2::DropoutCell_Frame::propagate(bool inference)
         }
     } else {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+
             unsigned int outputOffset = offset;
             unsigned int inputOffset = 0;
 
@@ -99,7 +103,7 @@ void N2D2::DropoutCell_Frame::propagate(bool inference)
 
                     mMask(outputIndex) = Random::randBernoulli(1.0 - mDropout);
                     mOutputs(outputIndex) = (mMask(outputIndex))
-                        ? mInputs[k](index + inputOffset)
+                        ? input(index + inputOffset)
                         : 0.0;
                 }
 
@@ -128,6 +132,9 @@ void N2D2::DropoutCell_Frame::backPropagate()
             throw std::runtime_error(
                 "Cannot blend gradient from a Dropout cell");
 
+        Tensor<Float_T> diffOutput
+            = tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
         unsigned int outputOffset = offset;
         unsigned int inputOffset = 0;
 
@@ -140,7 +147,7 @@ void N2D2::DropoutCell_Frame::backPropagate()
                  ++index)
             {
                 const unsigned int outputIndex = index + outputOffset;
-                mDiffOutputs[k](index + inputOffset) = (mMask(outputIndex))
+                diffOutput(index + inputOffset) = (mMask(outputIndex))
                     ? mDiffInputs(outputIndex)
                     : 0.0;
             }
@@ -152,6 +159,8 @@ void N2D2::DropoutCell_Frame::backPropagate()
         }
 
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+
+        mDiffOutputs[k] = diffOutput;
         mDiffOutputs[k].setValid();
     }
 

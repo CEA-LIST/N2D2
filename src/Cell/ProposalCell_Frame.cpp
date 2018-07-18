@@ -91,6 +91,10 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
     const Float_T normY = 1.0 / (mStimuliProvider.getSizeY() - 1) ;
     const unsigned int inputBatch = mOutputs.dimB()/mNbProposals;
 
+    const Tensor<Float_T>& input0 = tensor_cast<Float_T>(mInputs[0]);
+    const Tensor<Float_T>& input1 = tensor_cast<Float_T>(mInputs[1]);
+    const Tensor<Float_T>& input2 = tensor_cast<Float_T>(mInputs[2]);
+
     if(mKeepMax)
     {
         std::vector< std::vector<BBox_T> > ROIs;
@@ -107,19 +111,19 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 unsigned int cls = mScoreIndex;
                 for(unsigned int i = mScoreIndex + 1; i < mNbClass; ++i)
                 {
-                    if(mInputs[2](i, batchPos) > mInputs[2](cls, batchPos))
+                    if(input2(i, batchPos) > input2(cls, batchPos))
                         cls = i;
                 }
                 maxCls[n].push_back(cls);
-                const Float_T xbbRef = mInputs[0](0, batchPos)*normX;
-                const Float_T ybbRef = mInputs[0](1, batchPos)*normY;
-                const Float_T wbbRef = mInputs[0](2, batchPos)*normX;
-                const Float_T hbbRef = mInputs[0](3, batchPos)*normY;
+                const Float_T xbbRef = input0(0, batchPos)*normX;
+                const Float_T ybbRef = input0(1, batchPos)*normY;
+                const Float_T wbbRef = input0(2, batchPos)*normX;
+                const Float_T hbbRef = input0(3, batchPos)*normY;
 
-                const Float_T xbbEst = mInputs[1](0 + cls*4, batchPos)*mStdFactor[0] + mMeanFactor[0];
-                const Float_T ybbEst = mInputs[1](1 + cls*4, batchPos)*mStdFactor[1] + mMeanFactor[1];
-                const Float_T wbbEst = mInputs[1](2 + cls*4, batchPos)*mStdFactor[2] + mMeanFactor[2];
-                const Float_T hbbEst = mInputs[1](3 + cls*4, batchPos)*mStdFactor[3] + mMeanFactor[3];
+                const Float_T xbbEst = input1(0 + cls*4, batchPos)*mStdFactor[0] + mMeanFactor[0];
+                const Float_T ybbEst = input1(1 + cls*4, batchPos)*mStdFactor[1] + mMeanFactor[1];
+                const Float_T wbbEst = input1(2 + cls*4, batchPos)*mStdFactor[2] + mMeanFactor[2];
+                const Float_T hbbEst = input1(3 + cls*4, batchPos)*mStdFactor[3] + mMeanFactor[3];
 
                 Float_T x = xbbEst*wbbRef + xbbRef + wbbRef/2.0
                                 - (wbbRef/2.0)*std::exp(wbbEst);
@@ -147,7 +151,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 x /= normX;
                 y /= normY;
 
-                if( mInputs[2](cls, batchPos) >= mScoreThreshold )
+                if( input2(cls, batchPos) >= mScoreThreshold )
                 {
                     ROIs[n][proposal] = BBox_T(x,y,w,h);
                 }
@@ -177,6 +181,13 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
     }
     else
     {
+        const Tensor<Float_T>& input3
+            = (mInputs.size() > 3) ? tensor_cast<Float_T>(mInputs[3])
+                                   : Tensor<Float_T>();
+        const Tensor<Float_T>& input4
+            = (mInputs.size() > 4) ? tensor_cast<Float_T>(mInputs[4])
+                                   : Tensor<Float_T>();
+
         std::vector< std::vector< std::vector<BBox_T> > > ROIs;
         ROIs.resize(inputBatch);
         for(unsigned int n = 0; n < inputBatch; ++n)
@@ -194,16 +205,16 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                 {
                     const unsigned int batchPos = proposal + n*mNbProposals;
 
-                    const Float_T xbbRef = mInputs[0](0, batchPos)*normX;
-                    const Float_T ybbRef = mInputs[0](1, batchPos)*normY;
-                    const Float_T wbbRef = mInputs[0](2, batchPos)*normX;
-                    const Float_T hbbRef = mInputs[0](3, batchPos)*normY;
+                    const Float_T xbbRef = input0(0, batchPos)*normX;
+                    const Float_T ybbRef = input0(1, batchPos)*normY;
+                    const Float_T wbbRef = input0(2, batchPos)*normX;
+                    const Float_T hbbRef = input0(3, batchPos)*normY;
 
-                    const Float_T xbbEst = mInputs[1](0 + cls*4, batchPos)*mStdFactor[0] + mMeanFactor[0];
-                    const Float_T ybbEst = mInputs[1](1 + cls*4, batchPos)*mStdFactor[1] + mMeanFactor[1];
-                    const Float_T wbbEst = mInputs[1](2 + cls*4, batchPos)*mStdFactor[2] + mMeanFactor[2];
-                    const Float_T hbbEst = mInputs[1](3 + cls*4, batchPos)*mStdFactor[3] + mMeanFactor[3];
-                    const Float_T scoreEstimated = mInputs[2](cls, batchPos);
+                    const Float_T xbbEst = input1(0 + cls*4, batchPos)*mStdFactor[0] + mMeanFactor[0];
+                    const Float_T ybbEst = input1(1 + cls*4, batchPos)*mStdFactor[1] + mMeanFactor[1];
+                    const Float_T wbbEst = input1(2 + cls*4, batchPos)*mStdFactor[2] + mMeanFactor[2];
+                    const Float_T hbbEst = input1(3 + cls*4, batchPos)*mStdFactor[3] + mMeanFactor[3];
+                    const Float_T scoreEstimated = input2(cls, batchPos);
 
 
                     Float_T x = xbbEst*wbbRef + xbbRef + wbbRef/2.0
@@ -246,8 +257,8 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                                 const unsigned int partIdx = partsIdx + part*2;
                                 //const unsigned int partIdx = partsIdx + part;
 
-                                const Float_T partY = mInputs[3](0 + partIdx, batchPos);
-                                const Float_T partX = mInputs[3](1 + partIdx, batchPos);
+                                const Float_T partY = input3(0 + partIdx, batchPos);
+                                const Float_T partX = input3(1 + partIdx, batchPos);
 
                                 mPartsPrediction(0, part, cls, batchPos)
                                                 = ((partY + 0.5) * hbbRef + ybbRef) / normY;
@@ -262,11 +273,11 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
                                 const unsigned int tplIdx = templatesIdx + tpl*3;
 
                                 mTemplatesPrediction(0, tpl, cls, batchPos)
-                                    = std::exp(mInputs[4](0 + tplIdx, batchPos));
+                                    = std::exp(input4(0 + tplIdx, batchPos));
                                 mTemplatesPrediction(1, tpl, cls, batchPos)
-                                    = std::exp(mInputs[4](1 + tplIdx, batchPos));
+                                    = std::exp(input4(1 + tplIdx, batchPos));
                                 mTemplatesPrediction(2, tpl, cls, batchPos)
-                                    = std::exp(mInputs[4](2 + tplIdx, batchPos));
+                                    = std::exp(input4(2 + tplIdx, batchPos));
                             }
                         }
                     }

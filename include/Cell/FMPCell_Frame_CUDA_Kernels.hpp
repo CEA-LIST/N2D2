@@ -28,9 +28,11 @@
 #include "CudaUtils.hpp"
 
 namespace N2D2 {
-void cudaSFMPPropagate(float* inputs,
+void cudaSFMPPropagate(const float alpha,
+                       float* inputs,
                        unsigned int* gridX,
                        unsigned int* gridY,
+                       const float beta,
                        float* outputs,
                        unsigned int nbChannels,
                        unsigned int channelsHeight,

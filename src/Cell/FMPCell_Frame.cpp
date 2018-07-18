@@ -70,6 +70,8 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
 
     const unsigned int size = mInputs.dimB() * getNbOutputs();
 
+    const Tensor<Float_T>& input0 = tensor_cast<Float_T>(mInputs[0]);
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
@@ -107,18 +109,18 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
                         }
 
                         if (ox == mOutputs.dimX() - 1)
-                            ixStop = mInputs[0].dimX() - 1;
+                            ixStop = input0.dimX() - 1;
 
                         if (oy == mOutputs.dimY() - 1)
-                            iyStop = mInputs[0].dimY() - 1;
+                            iyStop = input0.dimY() - 1;
 
                         for (unsigned int iy = iyStart; iy <= iyStop; ++iy) {
                             for (unsigned int ix = ixStart; ix <= ixStop;
                                  ++ix) {
-                                if (mInputs(ix, iy, channel, batchPos)
+                                if (input0(ix, iy, channel, batchPos)
                                     > poolValue) {
                                     poolValue
-                                        = mInputs(ix, iy, channel, batchPos);
+                                        = input0(ix, iy, channel, batchPos);
 
                                     channelMax = channel;
                                     ixMax = ix;
@@ -159,6 +161,10 @@ void N2D2::FMPCell_Frame::backPropagate()
 
     const unsigned int size = mInputs.dimB() * getNbChannels();
 
+    Tensor<Float_T> diffOutput0 = (mDiffOutputs[0].isValid())
+        ? tensor_cast<Float_T>(mDiffOutputs[0])
+        : tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
@@ -167,7 +173,7 @@ void N2D2::FMPCell_Frame::backPropagate()
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
         {
-            const bool isValid = mDiffOutputs.getTensor(channel).isValid();
+            const bool isValid = mDiffOutputs[0].isValid();
 
             for (unsigned int iy = 0; iy < mInputs[0].dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < mInputs[0].dimX(); ++ix) {
@@ -185,14 +191,15 @@ void N2D2::FMPCell_Frame::backPropagate()
                         gradient += mDiffInputs(*it, batchPos);
                     }
 
-                    mDiffOutputs(ix, iy, channel, batchPos)
+                    diffOutput0(ix, iy, channel, batchPos)
                         = gradient + isValid
-                                     * mDiffOutputs(ix, iy, channel, batchPos);
+                                     * diffOutput0(ix, iy, channel, batchPos);
                 }
             }
         }
     }
 
+    mDiffOutputs[0] = diffOutput0;
     mDiffOutputs.setValid();
     mDiffOutputs.synchronizeHToD();
 }
@@ -203,7 +210,7 @@ void N2D2::FMPCell_Frame::update()
 
 void N2D2::FMPCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

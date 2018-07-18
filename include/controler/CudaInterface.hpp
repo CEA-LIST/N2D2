@@ -32,25 +32,37 @@
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
+template <class T>
+struct cuda_tensor_t {
+    typedef CudaTensor<T> type;
+};
+
+template <>
+struct cuda_tensor_t<void> {
+    typedef CudaBaseTensor type;
+};
+
 /**
  * @class   CudaInterface
  * @brief   Merge virtually several Tensor4d through an unified data interface.
 */
-template <class T, int STACKING_DIM = -2>
+template <class T = void, int STACKING_DIM = -2>
 class CudaInterface : public Interface<T, STACKING_DIM> {
 public:
-    using Interface<T>::push_back;
+    typedef typename cuda_tensor_t<T>::type cuda_tensor_type;
+
+    using Interface<T, STACKING_DIM>::push_back;
 
     CudaInterface();
 
-    void push_back(Tensor<T>* tensor);
+    template <class U> void push_back(Tensor<U>* tensor);
 
     /**
     * Add a CudaTensor to the interface
     *
     * @param tensor   tensor to add to the interface.
     */
-    void push_back(CudaTensor<T>* tensor);
+    void push_back(cuda_tensor_type* tensor);
 
     /** Synchronize Device To Host-based data  */
     void synchronizeDToHBased() const;
@@ -64,124 +76,113 @@ public:
     /** Synchronize Host data To Device-based */
     void synchronizeHToDBased() const;
 
-    virtual CudaTensor<T>& back();
-    virtual const CudaTensor<T>& back() const;
-    virtual CudaTensor<T>& operator[](unsigned int t);
-    virtual const CudaTensor<T>& operator[](unsigned int t) const;
-    virtual CudaTensor<T>& getTensor(unsigned int k,
+    virtual cuda_tensor_type& back();
+    virtual const cuda_tensor_type& back() const;
+    virtual cuda_tensor_type& operator[](unsigned int t);
+    virtual const cuda_tensor_type& operator[](unsigned int t) const;
+    virtual cuda_tensor_type& getTensor(unsigned int k,
                                      unsigned int* offset = NULL);
-    virtual const CudaTensor<T>& getTensor(unsigned int k,
+    virtual const cuda_tensor_type& getTensor(unsigned int k,
                                            unsigned int* offset = NULL) const;
     ~CudaInterface() {};
 
 private:
-    using Interface<T>::mMatchingDim;
-    using Interface<T>::mData;
-    using Interface<T>::mDataOffset;
+    using Interface<T, STACKING_DIM>::mMatchingDim;
+    using Interface<T, STACKING_DIM>::mData;
+    using Interface<T, STACKING_DIM>::mDataOffset;
 };
 }
 
 template <class T, int STACKING_DIM>
-N2D2::CudaInterface<T, STACKING_DIM>::CudaInterface() : Interface<T>()
+N2D2::CudaInterface<T, STACKING_DIM>::CudaInterface()
+    : Interface<T, STACKING_DIM>()
 {
-    // if (sizeof(T) != sizeof(float))
-    //    throw std::runtime_error("Types must match");
+
 }
 
 template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::push_back(Tensor<T>* tensor)
+template <class U>
+void N2D2::CudaInterface<T, STACKING_DIM>::push_back(Tensor<U>* tensor)
 {
-    CudaTensor<T>* cudaTensor = dynamic_cast<CudaTensor<T>*>(tensor);
+    CudaTensor<U>* cudaTensor = dynamic_cast<CudaTensor<U>*>(tensor);
 
     if (cudaTensor != NULL)
-        Interface<T>::push_back(tensor);
+        Interface<T, STACKING_DIM>::push_back(tensor);
     else
-        Interface<T>::push_back(new CudaTensor<T>(tensor));
+        Interface<T, STACKING_DIM>::push_back(new CudaTensor<U>(*tensor));
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::push_back(
-    CudaTensor<T>* tensor)
+    cuda_tensor_type* tensor)
 {
-    Interface<T>::push_back(tensor);
+    Interface<T, STACKING_DIM>::push_back(tensor);
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeDToHBased() const
 {
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
-                                                            itEnd = mData.end();
-         it != itEnd;
-         ++it)
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
     {
-        static_cast<CudaTensor<T>*>(*it)->synchronizeDToHBased();
+        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeDToHBased();
     }
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeHBasedToD() const
 {
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
-                                                            itEnd = mData.end();
-         it != itEnd;
-         ++it)
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
     {
-        static_cast<CudaTensor<T>*>(*it)->synchronizeHBasedToD();
+        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeHBasedToD();
     }
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeDBasedToH() const
 {
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
-                                                            itEnd = mData.end();
-         it != itEnd;
-         ++it)
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
     {
-        static_cast<CudaTensor<T>*>(*it)->synchronizeDBasedToH();
+        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeDBasedToH();
     }
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeHToDBased() const
 {
-    for (typename std::vector<Tensor<T>*>::const_iterator it = mData.begin(),
-                                                            itEnd = mData.end();
-         it != itEnd;
-         ++it)
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
     {
-        static_cast<CudaTensor<T>*>(*it)->synchronizeHToDBased();
+        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeHToDBased();
     }
 }
 
 template <class T, int STACKING_DIM>
-N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::back()
+typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::back()
 {
-    return *static_cast<CudaTensor<T>*>(mData.back());
+    return *dynamic_cast<cuda_tensor_type*>(mData.back());
 }
 
 template <class T, int STACKING_DIM>
-const N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::back() const
+const typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::back() const
 {
-    return *static_cast<CudaTensor<T>*>(mData.back());
+    return *dynamic_cast<cuda_tensor_type*>(mData.back());
 }
 
 template <class T, int STACKING_DIM>
-N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::operator[](
+typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::operator[](
     unsigned int t)
 {
-    return *static_cast<CudaTensor<T>*>(mData.at(t));
+    return *dynamic_cast<cuda_tensor_type*>(mData.at(t));
 }
 
 template <class T, int STACKING_DIM>
-const N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::
+const typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::
 operator[](unsigned int t) const
 {
-    return *static_cast<CudaTensor<T>*>(mData.at(t));
+    return *dynamic_cast<cuda_tensor_type*>(mData.at(t));
 }
 
 template <class T, int STACKING_DIM>
-N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
+typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
     unsigned int k,
     unsigned int* offset)
 {
@@ -192,11 +193,11 @@ N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
     if (offset != NULL)
         (*offset) = dataOffset.second;
 
-    return *static_cast<CudaTensor<T>*>(mData[dataOffset.first]);
+    return *dynamic_cast<cuda_tensor_type*>(mData[dataOffset.first]);
 }
 
 template <class T, int STACKING_DIM>
-const N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
+const typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
     unsigned int k,
     unsigned int* offset) const
 {
@@ -207,7 +208,7 @@ const N2D2::CudaTensor<T>& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
     if (offset != NULL)
         (*offset) = dataOffset.second;
 
-    return *static_cast<CudaTensor<T>*>(mData[dataOffset.first]);
+    return *dynamic_cast<cuda_tensor_type*>(mData[dataOffset.first]);
 }
 
 #endif // N2D2_CUDAINTERFACE_H

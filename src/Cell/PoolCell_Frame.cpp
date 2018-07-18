@@ -90,9 +90,11 @@ void N2D2::PoolCell_Frame::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0;
 
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+
         if (mPooling == Max) {
             PoolCell_Frame_Kernels::forwardMax(&alpha,
-                                               mInputs[k],
+                                               input,
                                                mPoolDesc,
                                                &beta,
                                                mOutputs,
@@ -103,7 +105,7 @@ void N2D2::PoolCell_Frame::propagate(bool /*inference*/)
         }
         else {
             PoolCell_Frame_Kernels::forwardAverage(&alpha,
-                                                   mInputs[k],
+                                                   input,
                                                    mPoolDesc,
                                                    &beta,
                                                    mOutputs,
@@ -133,12 +135,16 @@ void N2D2::PoolCell_Frame::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
+        Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
+            ? tensor_cast<Float_T>(mDiffOutputs[k])
+            : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
         if (mPooling == Max) {
             PoolCell_Frame_Kernels::backwardMax(&alpha,
                                                 mDiffInputs,
                                                 mPoolDesc,
                                                 &beta,
-                                                mDiffOutputs[k],
+                                                diffOutput,
                                                 mArgMax[k],
                                                 mMaps.rows(offset,
                                                            mInputs[k].dimZ()));
@@ -148,13 +154,15 @@ void N2D2::PoolCell_Frame::backPropagate()
                                                     mDiffInputs,
                                                     mPoolDesc,
                                                     &beta,
-                                                    mDiffOutputs[k],
+                                                    diffOutput,
                                                     true,
                                                     mMaps.rows(offset,
                                                           mInputs[k].dimZ()));
         }
 
         offset += mInputs[k].dimZ();
+
+        mDiffOutputs[k] = diffOutput;
         mDiffOutputs[k].setValid();
     }
 
@@ -167,7 +175,7 @@ void N2D2::PoolCell_Frame::update()
 
 void N2D2::PoolCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

@@ -35,6 +35,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <map>
 
 #ifdef OPENCV_USE_OLD_HEADERS       //  before OpenCV 2.2.0
     #include "cv.h"
@@ -55,7 +56,36 @@
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
-template <class T> class Tensor {
+template <class T> class Tensor;
+
+/**
+ * BaseDataTensor is a simple polymorphic wrapper around std::vector
+ * Its purpose is to be able to store a pointer to any type of std::vector.
+ * It is used for storing casted tensor data, in mDataTensors:
+ * mutable std::map<const std::type_info*,
+ *            std::shared_ptr<BaseDataTensor> > mDataTensors;
+*/
+class BaseDataTensor {
+public:
+    virtual ~BaseDataTensor() {};
+};
+
+/**
+ * DataTensor<T> is a simple wrapper around std::vector<T>, which inherit from
+ * BaseDataTensor
+*/
+template <class T>
+class DataTensor : public BaseDataTensor {
+public:
+    DataTensor(const std::vector<T>& data) : mData(data) {}
+    std::vector<T>& operator()() { return mData; }
+    virtual ~DataTensor() {};
+
+protected:
+    std::vector<T> mData;
+};
+
+class BaseTensor {
 public:
     struct Index {
         std::vector<size_t> index;
@@ -103,30 +133,9 @@ public:
         }
     };
 
-    typedef typename std::vector<T>::iterator iterator;
-    typedef typename std::vector<T>::const_iterator const_iterator;
-    typedef typename std::vector<T>::reference reference;
-    typedef typename std::vector<T>::const_reference const_reference;
-
-    Tensor();
-    Tensor(std::initializer_list<size_t> dims,
-             const T& value = T());
-    Tensor(const std::vector<size_t>& dims,
-             const T& value = T());
-    Tensor(const std::vector<unsigned int>& dims,
-             const T& value = T());
-    template <typename InputIterator>
-    Tensor(std::initializer_list<size_t> dims,
-             InputIterator first,
-             InputIterator last);
-    template <typename InputIterator>
-    Tensor(const std::vector<size_t>& dims,
-             InputIterator first,
-             InputIterator last);
-    Tensor(const cv::Mat& mat);
     bool empty() const
     {
-        return (*mData).empty();
+        return (mSize == 0);
     }
     size_t dimX() const
     {
@@ -164,26 +173,149 @@ public:
     {
         return mSize;
     }
+
+    inline virtual void reserve(std::initializer_list<size_t> dims);
+    virtual void reserve(const std::vector<size_t>& dims) = 0;
+    inline virtual void reshape(std::initializer_list<size_t> dims);
+    inline virtual void reshape(const std::vector<size_t>& dims);
+    virtual void clear() = 0;
+
+    /** Synchronize Device To Host */
+    virtual void synchronizeDToH() const {};
+    virtual void synchronizeDToH(
+        std::initializer_list<size_t> /*indexAndLength*/) const {};
+    virtual void synchronizeDToH(const Index& /*index*/, size_t /*length*/)
+        const {};
+    // This is just a helper that call virtual
+    // synchronizeDToH(std::initializer_list):
+    template <typename... Args> void synchronizeDToH(Args... args) const;
+
+    /** Synchronize Host To Device */
+    virtual void synchronizeHToD() const {};
+    virtual void synchronizeHToD(
+        std::initializer_list<size_t> /*indexAndLength*/) const {};
+    virtual void synchronizeHToD(const Index& /*index*/, size_t /*length*/)
+        const {};
+    // This is just a helper that call virtual
+    // synchronizeHToD(std::initializer_list):
+    template <typename... Args> void synchronizeHToD(Args... args) const;
+
+    virtual BaseTensor& operator=(const BaseTensor& base) = 0;
+
+    size_t nbDims() const
+    {
+        return mDims.size();
+    };
+    const std::vector<size_t>& dims() const
+    {
+        return mDims;
+    };
+    bool isValid() const
+    {
+        return (*mValid);
+    };
+    void setValid()
+    {
+        (*mValid) = true;
+    };
+    void clearValid()
+    {
+        (*mValid) = false;
+    };
+    virtual const std::type_info* getType() const = 0;
+    virtual ~BaseTensor() {};
+
+protected:
+    BaseTensor(const std::vector<size_t>& dims = std::vector<size_t>(),
+               const std::shared_ptr<bool>& valid
+                    = std::make_shared<bool>(false),
+               size_t size = 0,
+               size_t sizeM1 = 0)
+        : mDims(dims),
+          mValid(valid),
+          mSize(size),
+          mSizeM1(sizeM1) {}
+    size_t computeSize()
+    {
+        mSizeM1 = (!mDims.empty()) ? std::accumulate(mDims.begin(),
+                                               --mDims.end(),
+                                               1U,
+                                               std::multiplies<size_t>()) : 0U;
+        mSize = (!mDims.empty()) ? mSizeM1 * mDims.back() : 0U;
+        return mSize;
+    }
+
+    inline size_t getOffset(unsigned int dim, size_t i) const;
+    template <typename... Args>
+    size_t getOffset(unsigned int dim, size_t i, Args... args) const;
+    inline size_t getOffsetAt(unsigned int dim, size_t i) const;
+    template <typename... Args>
+    size_t getOffsetAt(unsigned int dim, size_t i, Args... args) const;
+
+    std::vector<size_t> mDims;
+    const std::shared_ptr<bool> mValid;
+
+    // Cached data
+    size_t mSize;
+    size_t mSizeM1;
+
+    mutable std::map<const std::type_info*,
+             std::shared_ptr<BaseDataTensor> > mDataTensors;
+
+    template <class U> friend
+        typename std::enable_if<std::is_assignable<U&,float>::value
+            || std::is_assignable<U&,double>::value, Tensor<U> >::type
+            tensor_cast(const BaseTensor& base);
+    template <class U> friend
+        typename std::enable_if<!std::is_assignable<U&,float>::value
+            && !std::is_assignable<U&,double>::value, Tensor<U> >::type
+            tensor_cast(const BaseTensor& base);
+    template <class U>
+    friend Tensor<U> tensor_cast_nocopy(const BaseTensor& base);
+};
+
+template <class T> class Tensor : public virtual BaseTensor {
+public:
+    typedef typename std::vector<T>::iterator iterator;
+    typedef typename std::vector<T>::const_iterator const_iterator;
+    typedef typename std::vector<T>::reference reference;
+    typedef typename std::vector<T>::const_reference const_reference;
+
+    using BaseTensor::reserve;
+
+    Tensor();
+    Tensor(std::initializer_list<size_t> dims,
+             const T& value = T());
+    Tensor(const std::vector<size_t>& dims,
+             const T& value = T());
+    Tensor(const std::vector<unsigned int>& dims,
+             const T& value = T());
+    template <typename InputIterator>
+    Tensor(std::initializer_list<size_t> dims,
+             InputIterator first,
+             InputIterator last);
+    template <typename InputIterator>
+    Tensor(const std::vector<size_t>& dims,
+             InputIterator first,
+             InputIterator last);
+    Tensor(const cv::Mat& mat);
     iterator begin()
     {
-        return (*mData).begin() + mDataOffset;
+        return (*mData)().begin() + mDataOffset;
     }
     const_iterator begin() const
     {
-        return (*mData).begin() + mDataOffset;
+        return (*mData)().begin() + mDataOffset;
     }
     iterator end()
     {
-        return (*mData).begin() + mDataOffset + size();
+        return (*mData)().begin() + mDataOffset + size();
     }
     const_iterator end() const
     {
-        return (*mData).begin() + mDataOffset + size();
+        return (*mData)().begin() + mDataOffset + size();
     }
-    inline virtual void reserve(std::initializer_list<size_t> dims);
     inline virtual void reserve(const std::vector<size_t>& dims);
-    inline virtual void reshape(std::initializer_list<size_t> dims);
-    inline virtual void reshape(const std::vector<size_t>& dims);
     inline virtual void resize(std::initializer_list<size_t> dims,
                                const T& value = T());
     inline virtual void resize(const std::vector<size_t>& dims,
@@ -211,99 +343,226 @@ public:
     inline const Tensor<T> operator[](size_t i) const;
     inline Tensor<T> rows(size_t j0, size_t nb);
     inline const Tensor<T> rows(size_t j0, size_t nb) const;
+    BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
+    template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);
 
-    /** Synchronize Device To Host */
-    virtual void synchronizeDToH() const {};
-    virtual void synchronizeDToH(
-        std::initializer_list<size_t> /*indexAndLength*/) const {};
-    // This is just a helper that call virtual
-    // synchronizeDToH(std::initializer_list):
-    template <typename... Args> void synchronizeDToH(Args... args) const;
-
-    /** Synchronize Host To Device */
-    virtual void synchronizeHToD() const {};
-    virtual void synchronizeHToD(
-        std::initializer_list<size_t> /*indexAndLength*/) const {};
-    // This is just a helper that call virtual
-    // synchronizeHToD(std::initializer_list):
-    template <typename... Args> void synchronizeHToD(Args... args) const;
-
-    size_t nbDims() const
-    {
-        return mDims.size();
-    };
-    const std::vector<size_t>& dims() const
-    {
-        return mDims;
-    };
     inline operator cv::Mat() const;
     inline std::vector<T>& data()
     {
-        return (*mData);
+        return (*mData)();
     };
     inline const std::vector<T>& data() const
     {
-        return (*mData);
+        return (*mData)();
     };
-    bool isValid() const
+    const std::type_info* getType() const
     {
-        return (*mValid);
-    };
-    void setValid()
-    {
-        (*mValid) = true;
-    };
-    void clearValid()
-    {
-        (*mValid) = false;
+        return &typeid(T);
     };
     virtual ~Tensor() {};
 
 protected:
     Tensor(const std::vector<size_t>& dims,
-             const std::shared_ptr<std::vector<T> >& data,
+             const std::shared_ptr<DataTensor<T> >& data,
              const std::shared_ptr<bool>& valid,
              size_t dataOffset,
              size_t size,
              size_t sizeM1);
-    size_t computeSize()
-    {
-        mSizeM1 = (!mDims.empty()) ? std::accumulate(mDims.begin(),
-                                               --mDims.end(),
-                                               1U,
-                                               std::multiplies<size_t>()) : 0U;
-        mSize = (!mDims.empty()) ? mSizeM1 * mDims.back() : 0U;
-        return mSize;
-    }
     template <class CV_T>
     static void convert(const cv::Mat& mat, std::vector<T>& data);
 
-    size_t getOffset(unsigned int dim, size_t i) const;
-    template <typename... Args>
-    size_t getOffset(unsigned int dim, size_t i, Args... args) const;
-    size_t getOffsetAt(unsigned int dim, size_t i) const;
-    template <typename... Args>
-    size_t getOffsetAt(unsigned int dim, size_t i, Args... args) const;
-
-    std::vector<size_t> mDims;
-    const std::shared_ptr<std::vector<T> > mData;
-    const std::shared_ptr<bool> mValid;
+    const std::shared_ptr<DataTensor<T> > mData;
     const size_t mDataOffset;
 
-    // Cached data
-    size_t mSize;
-    size_t mSizeM1;
+    template <class U> friend
+        typename std::enable_if<std::is_assignable<U&,float>::value
+            || std::is_assignable<U&,double>::value, Tensor<U> >::type
+            tensor_cast(const BaseTensor& base);
+    template <class U> friend
+        typename std::enable_if<!std::is_assignable<U&,float>::value
+            && !std::is_assignable<U&,double>::value, Tensor<U> >::type
+            tensor_cast(const BaseTensor& base);
+    template <class U>
+    friend Tensor<U> tensor_cast_nocopy(const BaseTensor& base);
+
+    // Needed for Tensor<T>& operator=(const Tensor<U>& tensor)
+    template <class U> friend class Tensor;
 };
+
+template <class T>
+typename std::enable_if<std::is_assignable<T&,float>::value
+                     || std::is_assignable<T&,double>::value, Tensor<T> >::type
+tensor_cast(const BaseTensor& base)
+{
+    if (base.getType() == &typeid(T))
+        return dynamic_cast<const Tensor<T>&>(base);
+
+    std::map<const std::type_info*, std::shared_ptr<BaseDataTensor> >
+        ::const_iterator it = base.mDataTensors.find(&typeid(T));
+    std::shared_ptr<DataTensor<T> > dataTensor;
+
+    if (it != base.mDataTensors.end())
+        dataTensor = std::static_pointer_cast<DataTensor<T> >((*it).second);
+    else {
+        dataTensor
+            = std::make_shared<DataTensor<T> >(std::vector<T>(base.mSize));
+        base.mDataTensors[&typeid(T)] = dataTensor;
+    }
+
+    if (base.getType() == &typeid(float)) {
+        const Tensor<float>& tensor
+            = dynamic_cast<const Tensor<float>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(double)) {
+        const Tensor<double>& tensor
+            = dynamic_cast<const Tensor<double>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else {
+        throw std::runtime_error("tensor_cast(): "
+                                 "tensor type not supported!");
+    }
+
+    return Tensor<T>(
+        base.mDims,
+        dataTensor,
+        base.mValid,
+        0,
+        base.mSize,
+        base.mSizeM1);
+}
+
+template <class T>
+typename std::enable_if<!std::is_assignable<T&,float>::value
+                     && !std::is_assignable<T&,double>::value, Tensor<T> >::type
+tensor_cast(const BaseTensor& base)
+{
+    if (base.getType() == &typeid(T))
+        return dynamic_cast<const Tensor<T>&>(base);
+
+    throw std::runtime_error("tensor_cast(): "
+                             "tensor type not supported (not assignable)!");
+}
+
+template <class T>
+Tensor<T> tensor_cast_nocopy(const BaseTensor& base)
+{
+    if (base.getType() == &typeid(T))
+        return dynamic_cast<const Tensor<T>&>(base);
+
+    std::map<const std::type_info*, std::shared_ptr<BaseDataTensor> >
+        ::const_iterator it = base.mDataTensors.find(&typeid(T));
+    std::shared_ptr<DataTensor<T> > dataTensor;
+
+    if (it != base.mDataTensors.end())
+        dataTensor = std::static_pointer_cast<DataTensor<T> >((*it).second);
+    else {
+        dataTensor
+            = std::make_shared<DataTensor<T> >(std::vector<T>(base.mSize));
+        base.mDataTensors[&typeid(T)] = dataTensor;
+    }
+
+    return Tensor<T>(
+        base.mDims,
+        dataTensor,
+        base.mValid,
+        0,
+        base.mSize,
+        base.mSizeM1);
+}
+}
+
+void N2D2::BaseTensor::reserve(std::initializer_list<size_t> dims)
+{
+    reserve(std::vector<size_t>(dims));
+}
+
+void N2D2::BaseTensor::reshape(std::initializer_list<size_t> dims)
+{
+    reshape(std::vector<size_t>(dims));
+}
+
+void N2D2::BaseTensor::reshape(const std::vector<size_t>& dims)
+{
+    const size_t oldSize = size();
+    const std::vector<size_t> oldDims = mDims;
+    mDims = dims;
+    const size_t newSize = computeSize();
+
+    if (newSize != oldSize) {
+        std::stringstream errorStr;
+        errorStr << "Tensor<T>::reshape(): new size (" << mDims << " = "
+            << newSize << ") does not match current size (" << oldDims << " = "
+            << oldSize << ")" << std::endl;
+
+        throw std::runtime_error(errorStr.str());
+    }
+}
+
+template <typename... Args>
+void N2D2::BaseTensor::synchronizeHToD(Args... args) const
+{
+    assert(sizeof...(args) == mDims.size() + 1 || sizeof...(args) == 2);
+    synchronizeHToD({static_cast<size_t>(args)...});
+}
+
+template <typename... Args>
+void N2D2::BaseTensor::synchronizeDToH(Args... args) const
+{
+    assert(sizeof...(args) == mDims.size() + 1 || sizeof...(args) == 2);
+    synchronizeDToH({static_cast<size_t>(args)...});
+}
+
+size_t N2D2::BaseTensor::getOffset(unsigned int dim, size_t i) const
+{
+    (void) dim; // discard warning about unused parameter
+    assert(mDims.size() > dim);
+    assert(i < mDims[dim]);
+    return i;
+}
+
+template <typename... Args>
+size_t N2D2::BaseTensor::getOffset(unsigned int dim,
+                                    size_t i,
+                                    Args... args) const
+{
+    assert(mDims.size() > dim);
+    assert(i < mDims[dim]);
+    return i + mDims[dim] * getOffset(dim + 1, args...);
+}
+
+size_t N2D2::BaseTensor::getOffsetAt(unsigned int dim, size_t i) const
+{
+    assert(mDims.size() > dim);
+
+    if (i >= mDims[dim])
+        throw std::runtime_error("Out of range!");
+
+    return i;
+}
+
+template <typename... Args>
+size_t N2D2::BaseTensor::getOffsetAt(unsigned int dim,
+                                    size_t i,
+                                    Args... args) const
+{
+    assert(mDims.size() > dim);
+
+    if (i >= mDims[dim])
+        throw std::runtime_error("Out of range!");
+
+    return i + mDims[dim] * getOffset(dim + 1, args...);
 }
 
 template <class T>
 N2D2::Tensor<T>::Tensor()
-    : mData(std::make_shared<std::vector<T> >()),
-      mValid(std::make_shared<bool>(false)),
-      mDataOffset(0),
-      mSize(0),
-      mSizeM1(0)
+    : BaseTensor(),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>())),
+      mDataOffset(0)
 {
     // ctor
 }
@@ -311,9 +570,9 @@ N2D2::Tensor<T>::Tensor()
 template <class T>
 N2D2::Tensor<T>::Tensor(std::initializer_list<size_t> dims,
                             const T& value)
-    : mDims(dims),
-      mData(std::make_shared<std::vector<T> >(computeSize(), value)),
-      mValid(std::make_shared<bool>(false)),
+    : BaseTensor(dims),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>(computeSize(),
+                                                            value))),
       mDataOffset(0)
 {
     // ctor
@@ -322,9 +581,9 @@ N2D2::Tensor<T>::Tensor(std::initializer_list<size_t> dims,
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
                             const T& value)
-    : mDims(dims),
-      mData(std::make_shared<std::vector<T> >(computeSize(), value)),
-      mValid(std::make_shared<bool>(false)),
+    : BaseTensor(dims),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>(computeSize(),
+                                                            value))),
       mDataOffset(0)
 {
     // ctor
@@ -333,9 +592,9 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
                             const T& value)
-    : mDims(dims.begin(), dims.end()),
-      mData(std::make_shared<std::vector<T> >(computeSize(), value)),
-      mValid(std::make_shared<bool>(false)),
+    : BaseTensor(std::vector<size_t>(dims.begin(), dims.end())),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>(computeSize(),
+                                                            value))),
       mDataOffset(0)
 {
     // ctor
@@ -346,13 +605,12 @@ template <typename InputIterator>
 N2D2::Tensor<T>::Tensor(std::initializer_list<size_t> dims,
                             InputIterator first,
                             InputIterator last)
-    : mDims(dims),
-      mData(std::make_shared<std::vector<T> >(first, last)),
-      mValid(std::make_shared<bool>(false)),
+    : BaseTensor(dims),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>(first, last))),
       mDataOffset(0)
 {
     // ctor
-    if (computeSize() != (*mData).size())
+    if (computeSize() != (*mData)().size())
         throw std::runtime_error("Invalid size.");
 }
 
@@ -361,37 +619,33 @@ template <typename InputIterator>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
                             InputIterator first,
                             InputIterator last)
-    : mDims(dims),
-      mData(std::make_shared<std::vector<T> >(first, last)),
-      mValid(std::make_shared<bool>(false)),
+    : BaseTensor(dims),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>(first, last))),
       mDataOffset(0)
 {
     // ctor
-    if (computeSize() != (*mData).size())
+    if (computeSize() != (*mData)().size())
         throw std::runtime_error("Invalid size.");
 }
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
-                        const std::shared_ptr<std::vector<T> >& data,
+                        const std::shared_ptr<DataTensor<T> >& data,
                         const std::shared_ptr<bool>& valid,
                         size_t dataOffset,
                         size_t size,
                         size_t sizeM1)
-    : mDims(dims),
+    : BaseTensor(dims, valid, size, sizeM1),
       mData(data),
-      mValid(valid),
-      mDataOffset(dataOffset),
-      mSize(size),
-      mSizeM1(sizeM1)
+      mDataOffset(dataOffset)
 {
     // ctor
 }
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
-    : mData(std::make_shared<std::vector<T> >()),
-      mValid(std::make_shared<bool>(true)),
+    : BaseTensor(std::vector<size_t>(), std::make_shared<bool>(true)),
+      mData(std::make_shared<DataTensor<T> >(std::vector<T>())),
       mDataOffset(0)
 {
     // ctor
@@ -413,25 +667,25 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
     {
         switch ((*itChannel).depth()) {
         case CV_8U:
-            convert<unsigned char>(*itChannel, *mData);
+            convert<unsigned char>(*itChannel, (*mData)());
             break;
         case CV_8S:
-            convert<char>(*itChannel, *mData);
+            convert<char>(*itChannel, (*mData)());
             break;
         case CV_16U:
-            convert<unsigned short>(*itChannel, *mData);
+            convert<unsigned short>(*itChannel, (*mData)());
             break;
         case CV_16S:
-            convert<short>(*itChannel, *mData);
+            convert<short>(*itChannel, (*mData)());
             break;
         case CV_32S:
-            convert<int>(*itChannel, *mData);
+            convert<int>(*itChannel, (*mData)());
             break;
         case CV_32F:
-            convert<float>(*itChannel, *mData);
+            convert<float>(*itChannel, (*mData)());
             break;
         case CV_64F:
-            convert<double>(*itChannel, *mData);
+            convert<double>(*itChannel, (*mData)());
             break;
         default:
             throw std::runtime_error(
@@ -439,8 +693,8 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
         }
     }
 
-    assert((*mData).size() == mat.rows * mat.cols * mat.channels());
-    assert((*mData).size() == size());
+    assert((*mData)().size() == mat.rows * mat.cols * mat.channels());
+    assert((*mData)().size() == size());
 }
 
 template <class T>
@@ -470,42 +724,12 @@ void N2D2::Tensor<T>::convert(const cv::Mat& mat, std::vector<T>& data)
 }
 
 template <class T>
-void N2D2::Tensor<T>::reserve(std::initializer_list<size_t> dims)
-{
-    reserve(std::vector<size_t>(dims));
-}
-
-template <class T>
 void N2D2::Tensor<T>::reserve(const std::vector<size_t>& dims)
 {
     assert(mData.unique());
 
     mDims = dims;
-    (*mData).reserve(computeSize());
-}
-
-template <class T>
-void N2D2::Tensor<T>::reshape(std::initializer_list<size_t> dims)
-{
-    reshape(std::vector<size_t>(dims));
-}
-
-template <class T>
-void N2D2::Tensor<T>::reshape(const std::vector<size_t>& dims)
-{
-    const size_t oldSize = size();
-    const std::vector<size_t> oldDims = mDims;
-    mDims = dims;
-    const size_t newSize = computeSize();
-
-    if (newSize != oldSize) {
-        std::stringstream errorStr;
-        errorStr << "Tensor<T>::reshape(): new size (" << mDims << " = "
-            << newSize << ") does not match current size (" << oldDims << " = "
-            << oldSize << ")" << std::endl;
-
-        throw std::runtime_error(errorStr.str());
-    }
+    (*mData)().reserve(computeSize());
 }
 
 template <class T>
@@ -522,7 +746,7 @@ void N2D2::Tensor<T>::resize(const std::vector<size_t>& dims,
     assert(mData.unique());
 
     mDims = dims;
-    (*mData).resize(computeSize(), value);
+    (*mData)().resize(computeSize(), value);
 }
 
 template <class T>
@@ -539,13 +763,13 @@ void N2D2::Tensor<T>::assign(const std::vector<size_t>& dims,
     assert(mData.unique());
 
     mDims = dims;
-    (*mData).assign(computeSize(), value);
+    (*mData)().assign(computeSize(), value);
 }
 
 template <typename T> void N2D2::Tensor<T>::fill(const T& value)
 {
-    std::fill((*mData).begin() + mDataOffset,
-              (*mData).begin() + mDataOffset + size(), value);
+    std::fill((*mData)().begin() + mDataOffset,
+              (*mData)().begin() + mDataOffset + size(), value);
 }
 
 template <class T> void N2D2::Tensor<T>::push_back(const T& value)
@@ -567,7 +791,7 @@ template <class T> void N2D2::Tensor<T>::push_back(const T& value)
 
     ++mDims.back();
     computeSize();
-    (*mData).push_back(value);
+    (*mData)().push_back(value);
 }
 
 template <class T> void N2D2::Tensor<T>::push_back(const std::vector<T>& vec)
@@ -600,7 +824,7 @@ template <class T> void N2D2::Tensor<T>::push_back(const std::vector<T>& vec)
 
     ++mDims.back();
     computeSize();
-    (*mData).insert((*mData).end(), vec.begin(), vec.end());
+    (*mData)().insert((*mData)().end(), vec.begin(), vec.end());
 }
 
 template <class T> void N2D2::Tensor<T>::push_back(const Tensor<T>& frame)
@@ -637,7 +861,7 @@ template <class T> void N2D2::Tensor<T>::push_back(const Tensor<T>& frame)
 
     ++mDims.back();
     computeSize();
-    (*mData).insert((*mData).end(), frame.begin(), frame.end());
+    (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
 }
 
 template <class T> void N2D2::Tensor<T>::clear()
@@ -647,47 +871,28 @@ template <class T> void N2D2::Tensor<T>::clear()
     mDims.clear();
     mSize = 0;
     mSizeM1 = 0;
-    (*mData).clear();
+    (*mData)().clear();
 }
 
 template <class T> void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
 {
     std::swap(mDims, tensor.mDims);
-    (*mData).swap((*tensor.mData));
+    (*mData)().swap((*tensor.mData)());
     std::swap(mSize, tensor.mSize);
     std::swap(mSizeM1, tensor.mSizeM1);
 
-    assert((*mData).size() == size());
-    assert((*tensor.mData).size() == tensor.size());
+    assert((*mData)().size() == size());
+    assert((*tensor.mData)().size() == tensor.size());
 }
 
 template <class T> N2D2::Tensor<T> N2D2::Tensor<T>::clone() const {
     return Tensor<T>(mDims,
-                     std::make_shared<std::vector<T> >(begin(), end()),
+                     std::make_shared<DataTensor<T> >(
+                                                std::vector<T>(begin(), end())),
                      mValid,
                      0,
                      mSize,
                      mSizeM1);
-}
-
-template <class T>
-size_t N2D2::Tensor<T>::getOffset(unsigned int dim, size_t i) const
-{
-    (void) dim; // discard warning about unused parameter
-    assert(mDims.size() > dim);
-    assert(i < mDims[dim]);
-    return i;
-}
-
-template <class T>
-template <typename... Args>
-size_t N2D2::Tensor<T>::getOffset(unsigned int dim,
-                                    size_t i,
-                                    Args... args) const
-{
-    assert(mDims.size() > dim);
-    assert(i < mDims[dim]);
-    return i + mDims[dim] * getOffset(dim + 1, args...);
 }
 
 template <class T>
@@ -698,18 +903,18 @@ operator()(Args... args)
     if (sizeof...(args) == 1) {
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
         assert(i[0] < size());
-        return (*mData)[mDataOffset + i[0]];
+        return (*mData)()[mDataOffset + i[0]];
     }
     else if (sizeof...(args) == 2) {
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
         assert(mDims.size() > 1);
         assert(i[0] < mSizeM1);
         assert(i[1] < mDims.back());
-        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+        return (*mData)()[mDataOffset + i[0] + mSizeM1 * i[1]];
     }
     else {
         assert(sizeof...(args) == mDims.size());
-        return (*mData)[mDataOffset + getOffset(0U, args...)];
+        return (*mData)()[mDataOffset + getOffset(0U, args...)];
     }
 }
 
@@ -721,18 +926,18 @@ operator()(Args... args) const
     if (sizeof...(args) == 1) {
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
         assert(i[0] < size());
-        return (*mData)[mDataOffset + i[0]];
+        return (*mData)()[mDataOffset + i[0]];
     }
     else if (sizeof...(args) == 2) {
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
         assert(mDims.size() > 1);
         assert(i[0] < mSizeM1);
         assert(i[1] < mDims.back());
-        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+        return (*mData)()[mDataOffset + i[0] + mSizeM1 * i[1]];
     }
     else {
         assert(sizeof...(args) == mDims.size());
-        return (*mData)[mDataOffset + getOffset(0U, args...)];
+        return (*mData)()[mDataOffset + getOffset(0U, args...)];
     }
 }
 
@@ -749,7 +954,7 @@ operator()(const Index& index)
         offset = index[dim] + mDims[dim] * offset;
     }
 
-    return (*mData)[mDataOffset + offset];
+    return (*mData)()[mDataOffset + offset];
 }
 
 template <class T>
@@ -765,32 +970,7 @@ operator()(const Index& index) const
         offset = index[dim] + mDims[dim] * offset;
     }
 
-    return (*mData)[mDataOffset + offset];
-}
-
-template <class T>
-size_t N2D2::Tensor<T>::getOffsetAt(unsigned int dim, size_t i) const
-{
-    assert(mDims.size() > dim);
-
-    if (i >= mDims[dim])
-        throw std::runtime_error("Out of range!");
-
-    return i;
-}
-
-template <class T>
-template <typename... Args>
-size_t N2D2::Tensor<T>::getOffsetAt(unsigned int dim,
-                                    size_t i,
-                                    Args... args) const
-{
-    assert(mDims.size() > dim);
-
-    if (i >= mDims[dim])
-        throw std::runtime_error("Out of range!");
-
-    return i + mDims[dim] * getOffset(dim + 1, args...);
+    return (*mData)()[mDataOffset + offset];
 }
 
 template <class T>
@@ -803,7 +983,7 @@ typename N2D2::Tensor<T>::reference N2D2::Tensor<T>::at(Args... args)
         if (i[0] >= size())
             throw std::runtime_error("Tensor<T>::at(): Out of range!");
 
-        return (*mData)[mDataOffset + i[0]];
+        return (*mData)()[mDataOffset + i[0]];
     }
     else if (sizeof...(args) == 2) {
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
@@ -823,14 +1003,14 @@ typename N2D2::Tensor<T>::reference N2D2::Tensor<T>::at(Args... args)
         if (i[1] >= mDims.back())
             throw std::runtime_error("Tensor<T>::at(): Out of range!");
 
-        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+        return (*mData)()[mDataOffset + i[0] + mSizeM1 * i[1]];
     }
     else {
         if (sizeof...(args) != mDims.size())
             throw std::runtime_error("Tensor<T>::at(): Argument count must "
                                      "match tensor dimension");
 
-        return (*mData)[mDataOffset + getOffset(0U, args...)];
+        return (*mData)()[mDataOffset + getOffset(0U, args...)];
     }
 }
 
@@ -845,7 +1025,7 @@ typename N2D2::Tensor<T>::const_reference N2D2::Tensor<T>::at(Args... args)
         if (i[0] >= size())
             throw std::runtime_error("Tensor<T>::at(): Out of range!");
 
-        return (*mData)[mDataOffset + i[0]];
+        return (*mData)()[mDataOffset + i[0]];
     }
     else if (sizeof...(args) == 2) {
         const size_t i[sizeof...(args)] = {static_cast<size_t>(args)...};
@@ -865,14 +1045,14 @@ typename N2D2::Tensor<T>::const_reference N2D2::Tensor<T>::at(Args... args)
         if (i[1] >= mDims.back())
             throw std::runtime_error("Tensor<T>::at(): Out of range!");
 
-        return (*mData)[mDataOffset + i[0] + mSizeM1 * i[1]];
+        return (*mData)()[mDataOffset + i[0] + mSizeM1 * i[1]];
     }
     else {
         if (sizeof...(args) != mDims.size())
             throw std::runtime_error("Tensor<T>::at(): Argument count must "
                                      "match tensor dimension");
 
-        return (*mData)[mDataOffset + getOffset(0U, args...)];
+        return (*mData)()[mDataOffset + getOffset(0U, args...)];
     }
 }
 
@@ -923,19 +1103,23 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
 }
 
 template <class T>
-template <typename... Args>
-void N2D2::Tensor<T>::synchronizeHToD(Args... args) const
+N2D2::BaseTensor& N2D2::Tensor<T>::operator=(const BaseTensor& base)
 {
-    assert(sizeof...(args) == mDims.size() + 1 || sizeof...(args) == 2);
-    synchronizeHToD({static_cast<size_t>(args)...});
-}
+    assert(mDims.size() == base.nbDims());
 
-template <class T>
-template <typename... Args>
-void N2D2::Tensor<T>::synchronizeDToH(Args... args) const
-{
-    assert(sizeof...(args) == mDims.size() + 1 || sizeof...(args) == 2);
-    synchronizeDToH({static_cast<size_t>(args)...});
+    for (unsigned int dim = 0; dim < mDims.size(); ++dim) {
+        assert(mDims[dim] == base.dims()[dim]);
+    }
+
+    const Tensor<T>& tensor = tensor_cast<T>(base);
+
+    if (tensor.mData != mData || tensor.mDataOffset != mDataOffset) {
+        // Actual copy only if data is different
+        std::copy(tensor.begin(), tensor.end(),
+                  (*mData)().begin() + mDataOffset);
+    }
+
+    return *this;
 }
 
 template <class T>
@@ -947,7 +1131,36 @@ N2D2::Tensor<T>& N2D2::Tensor<T>::operator=(const Tensor<T>& tensor)
         assert(mDims[dim] == tensor.dims()[dim]);
     }
 
-    std::copy(tensor.begin(), tensor.end(), (*mData).begin() + mDataOffset);
+    if (tensor.mData != mData || tensor.mDataOffset != mDataOffset) {
+        // Actual copy only if data is different
+        std::copy(tensor.begin(), tensor.end(),
+                  (*mData)().begin() + mDataOffset);
+    }
+
+    return *this;
+}
+
+template <class T>
+template <class U>
+N2D2::Tensor<T>& N2D2::Tensor<T>::operator=(const Tensor<U>& tensor)
+{
+    assert(mDims.size() == tensor.nbDims());
+
+    for (unsigned int dim = 0; dim < mDims.size(); ++dim) {
+        assert(mDims[dim] == tensor.dims()[dim]);
+    }
+
+    // No need to cast here, std::copy() can work with two different types,
+    // as long as type U is assignable to T&.
+
+    if ((void*)tensor.mData.get() != (void*)mData.get()
+        || tensor.mDataOffset != mDataOffset)
+    {
+        // Actual copy only if data is different
+        std::copy(tensor.begin(), tensor.end(),
+                  (*mData)().begin() + mDataOffset);
+    }
+
     return *this;
 }
 
@@ -1078,7 +1291,7 @@ template <class T> N2D2::Tensor<T>::operator cv::Mat() const
                              (mDims.size() > 0) ? 1 : 0),
                        (int)((mDims.size() > 0) ? mDims[0] : 0),
                        type,
-                       &((*mData)[mDataOffset]));
+                       &((*mData)()[mDataOffset]));
     }
     else if (mDims.size() == 3) {
         std::vector<cv::Mat> channels;
@@ -1087,7 +1300,7 @@ template <class T> N2D2::Tensor<T>::operator cv::Mat() const
             channels.push_back(cv::Mat((int)mDims[1],
                                        (int)mDims[0],
                                        type,
-                                       &((*mData)[mDataOffset
+                                       &((*mData)()[mDataOffset
                                             + k * mDims[0] * mDims[1]])));
         }
 

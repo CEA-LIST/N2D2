@@ -79,13 +79,16 @@ void N2D2::LRNCell_Frame_CUDA::propagate(bool /*inference*/)
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
         CHECK_CUDNN_STATUS(
             cudnnLRNCrossChannelForward(CudaContext::cudnnHandle(),
                                         mLRNDesc,
                                         CUDNN_LRN_CROSS_CHANNEL_DIM1,
                                         &alpha,
-                                        mInputs[k].getCudnnTensorDesc(),
-                                        mInputs[k].getDevicePtr(),
+                                        input->getCudnnTensorDesc(),
+                                        input->getDevicePtr(),
                                         &beta,
                                         mOutputDesc[k],
                                         mOutputs.getDevicePtr() + offset));
@@ -108,6 +111,13 @@ void N2D2::LRNCell_Frame_CUDA::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+            = (mDiffOutputs[k].isValid())
+                ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
+                : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
         CHECK_CUDNN_STATUS(cudnnLRNCrossChannelBackward(
             CudaContext::cudnnHandle(),
             mLRNDesc,
@@ -117,13 +127,15 @@ void N2D2::LRNCell_Frame_CUDA::backPropagate()
             mOutputs.getDevicePtr() + offset,
             mOutputDesc[k],
             mDiffInputs.getDevicePtr() + offset,
-            mInputs[k].getCudnnTensorDesc(),
-            mInputs[k].getDevicePtr(),
+            input->getCudnnTensorDesc(),
+            input->getDevicePtr(),
             &beta,
-            mDiffOutputs[k].getCudnnTensorDesc(),
-            mDiffOutputs[k].getDevicePtr()));
+            diffOutput->getCudnnTensorDesc(),
+            diffOutput->getDevicePtr()));
 
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+
+        mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
     }
 

@@ -36,11 +36,17 @@ N2D2::SoftmaxCell_Frame::SoftmaxCell_Frame(const std::string& name,
 
 void N2D2::SoftmaxCell_Frame::initialize()
 {
+    if (mInputs.size() > 1)
+        throw std::domain_error("SoftmaxCell_Frame::initialize(): inputs "
+                                "concatenation is not supported.");
+/*
     if (mInputs.dimZ() != mOutputs.dimZ()) {
         throw std::domain_error("SoftmaxCell_Frame::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
+*/
+
     if(mGroupSize > 0)
     {
         if(getNbOutputs() % mGroupSize)
@@ -56,6 +62,8 @@ void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
     mInputs.synchronizeDToH();
     const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
+    const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[0]);
+
 #pragma omp parallel for if (mInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
@@ -65,22 +73,22 @@ void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
                     const unsigned int stride = step*mGroupSize;
                     const unsigned int nbNeurons = stride + groupStride;
 
-                    Float_T maxVal = mInputs(ox, oy, stride, batchPos);
+                    Float_T maxVal = input(ox, oy, stride, batchPos);
 
                     for (unsigned int output = stride + 1; output < nbNeurons; ++output)
                         maxVal
-                            = std::max(maxVal, mInputs(ox, oy, output, batchPos));
+                            = std::max(maxVal, input(ox, oy, output, batchPos));
 
                     // double required for large number of channels
                     double sum = 0.0;
 
                     for (unsigned int output = stride; output < nbNeurons; ++output)
-                        sum += std::exp(mInputs(ox, oy, output, batchPos) - maxVal);
+                        sum += std::exp(input(ox, oy, output, batchPos) - maxVal);
 
                     if (sum > 0.0) {
                         for (unsigned int output = stride; output < nbNeurons; ++output)
                             mOutputs(ox, oy, output, batchPos)
-                                = std::exp(mInputs(ox, oy, output, batchPos)
+                                = std::exp(input(ox, oy, output, batchPos)
                                         - maxVal) / sum;
                     } else {
                         for (unsigned int output = stride; output < nbNeurons; ++output)
@@ -102,6 +110,12 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     const unsigned int size = mInputs.dimB() * getNbChannels();
     const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
+    const Float_T beta = (mDiffOutputs[0].isValid()) ? 1.0 : 0.0;
+
+    Tensor<Float_T> diffOutput = (mDiffOutputs[0].isValid())
+        ? tensor_cast<Float_T>(mDiffOutputs[0])
+        : tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
@@ -110,15 +124,13 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
         {
-            const bool isValid = mDiffOutputs.getTensor(channel).isValid();
-
             for (unsigned int iy = 0; iy < mInputs[0].dimY(); ++iy) {
                 for (unsigned int ix = 0; ix < mInputs[0].dimX(); ++ix) {
                     if (mWithLoss) {
-                        mDiffOutputs(ix, iy, channel, batchPos)
+                        diffOutput(ix, iy, channel, batchPos)
                             = mDiffInputs(ix, iy, channel, batchPos)
-                              + isValid
-                                * mDiffOutputs(ix, iy, channel, batchPos);
+                              + beta
+                                * diffOutput(ix, iy, channel, batchPos);
                     } else {
                         Float_T gradient = 0.0;
 
@@ -135,16 +147,17 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
                                             * mDiffInputs(ix, iy, output, batchPos);
                             }
                         }
-                        mDiffOutputs(ix, iy, channel, batchPos)
+                        diffOutput(ix, iy, channel, batchPos)
                             = gradient
-                              + isValid
-                                * mDiffOutputs(ix, iy, channel, batchPos);
+                              + beta
+                                * diffOutput(ix, iy, channel, batchPos);
                     }
                 }
             }
         }
     }
 
+    mDiffOutputs[0] = diffOutput;
     mDiffOutputs.setValid();
     mDiffOutputs.synchronizeHToD();
 }
@@ -155,7 +168,7 @@ void N2D2::SoftmaxCell_Frame::update()
 
 void N2D2::SoftmaxCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

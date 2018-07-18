@@ -84,13 +84,16 @@ void N2D2::RPCell_Frame_CUDA::propagate(bool inference)
     if(mPre_NMS_TopN > 0 && mPre_NMS_TopN < outputMaxSize)
         sortedSize = mPre_NMS_TopN;
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+
     /**Reorder i,j,k,b index and create the map vector to allow a fast gpu sorting using thrust**/
     cudaSSplitIndexes(  mInputs[0].dimX(),
                         mInputs[0].dimY(),
                         mNbAnchors,
                         mInputs[0].dimB(),
                         nbBlocks,
-                        mInputs[0].getDevicePtr(),
+                        input0->getDevicePtr(),
                         mValues.getDevicePtr(),
                         mIndexI.getDevicePtr(),
                         mIndexJ.getDevicePtr(),
@@ -159,7 +162,7 @@ void N2D2::RPCell_Frame_CUDA::propagate(bool inference)
                     mInputs[0].dimY(),
                     mNbAnchors,
                     1,
-                    mInputs[0].getDevicePtr(),
+                    input0->getDevicePtr(),
                     inputOffset,
                     mSortedIndexI.getDevicePtr(),
                     mSortedIndexJ.getDevicePtr(),
@@ -213,7 +216,7 @@ void N2D2::RPCell_Frame_CUDA::propagate(bool inference)
                         mInputs[0].dimY(),
                         mNbAnchors,
                         mInputs[0].dimB(),
-                        mInputs[0].getDevicePtr(),
+                        input0->getDevicePtr(),
                         mSortedIndexI.getDevicePtr(),
                         mSortedIndexJ.getDevicePtr(),
                         mSortedIndexK.getDevicePtr(),

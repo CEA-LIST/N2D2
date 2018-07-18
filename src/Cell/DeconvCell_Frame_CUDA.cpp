@@ -295,14 +295,17 @@ void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0f;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(
             cudnnConvolutionBackwardData(CudaContext::cudnnHandle(),
                                          &alpha,
                                          mFilterDesc[k],
                                          mSharedSynapses[k].getDevicePtr(),
-                                         mInputs[k].getCudnnTensorDesc(),
-                                         mInputs[k].getDevicePtr(),
+                                         input->getCudnnTensorDesc(),
+                                         input->getDevicePtr(),
                                          mConvDesc,
                                          mBwdDataAlgo[k],
                                          mWorkspace,
@@ -316,8 +319,8 @@ void N2D2::DeconvCell_Frame_CUDA::propagate(bool /*inference*/)
                                          &alpha,
                                          mFilterDesc[k],
                                          mSharedSynapses[k].getDevicePtr(),
-                                         mInputs[k].getCudnnTensorDesc(),
-                                         mInputs[k].getDevicePtr(),
+                                         input->getCudnnTensorDesc(),
+                                         input->getDevicePtr(),
                                          mConvDesc,
                                          &beta,
                                          mOutputs.getCudnnTensorDesc(),
@@ -369,14 +372,17 @@ void N2D2::DeconvCell_Frame_CUDA::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
+
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(cudnnConvolutionBackwardFilter(
             CudaContext::cudnnHandle(),
             &alpha,
             mDiffInputs.getCudnnTensorDesc(),
             mDiffInputs.getDevicePtr(),
-            mInputs[k].getCudnnTensorDesc(),
-            mInputs[k].getDevicePtr(),
+            input->getCudnnTensorDesc(),
+            input->getDevicePtr(),
             mConvDesc,
             mBwdFilterAlgo[k],
             mWorkspace,
@@ -390,8 +396,8 @@ void N2D2::DeconvCell_Frame_CUDA::backPropagate()
             &alpha,
             mDiffInputs.getCudnnTensorDesc(),
             mDiffInputs.getDevicePtr(),
-            mInputs[k].getCudnnTensorDesc(),
-            mInputs[k].getDevicePtr(),
+            input->getCudnnTensorDesc(),
+            input->getDevicePtr(),
             mConvDesc,
             &beta,
             mFilterDesc[k],
@@ -438,6 +444,11 @@ void N2D2::DeconvCell_Frame_CUDA::backPropagate()
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
+            std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+                = (mDiffOutputs[k].isValid())
+                    ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
+                    : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
             CHECK_CUDNN_STATUS(
                 cudnnConvolutionForward(CudaContext::cudnnHandle(),
                                         &alpha,
@@ -450,9 +461,10 @@ void N2D2::DeconvCell_Frame_CUDA::backPropagate()
                                         mWorkspace,
                                         mWorkspaceSize,
                                         &beta,
-                                        mDiffOutputs[k].getCudnnTensorDesc(),
-                                        mDiffOutputs[k].getDevicePtr()));
+                                        diffOutput->getCudnnTensorDesc(),
+                                        diffOutput->getDevicePtr()));
 
+            mDiffOutputs[k].deviceTensor() = *diffOutput;
             mDiffOutputs[k].setValid();
         }
 
@@ -501,7 +513,7 @@ void N2D2::DeconvCell_Frame_CUDA::setBiases(
 
 void N2D2::DeconvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

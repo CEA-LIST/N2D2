@@ -35,3 +35,18 @@ template void N2D2::thrust_fill<long long int>(long long int* devData, size_t si
 template void N2D2::thrust_fill<unsigned int>(unsigned int* devData, size_t size, unsigned int value);
 template void N2D2::thrust_fill<unsigned long long int>(unsigned long long int* devData, size_t size, unsigned long long int value);
 
+template <>
+void N2D2::thrust_copy(double* srcData, float* dstData, size_t size)
+{
+    thrust::device_ptr<double> thrustSrcPtr(srcData);
+    thrust::device_ptr<float> thrustDstPtr(dstData);
+    thrust::copy(thrustSrcPtr, thrustSrcPtr + size, thrustDstPtr);
+}
+
+template <>
+void N2D2::thrust_copy(float* srcData, double* dstData, size_t size)
+{
+    thrust::device_ptr<float> thrustSrcPtr(srcData);
+    thrust::device_ptr<double> thrustDstPtr(dstData);
+    thrust::copy(thrustSrcPtr, thrustSrcPtr + size, thrustDstPtr);
+}

@@ -86,9 +86,9 @@ void N2D2::FcCell_Frame::propagate(bool inference)
         }
 
         const Tensor<Float_T>& synapses = mSynapses[k];
-        const Tensor<Float_T>& inputs = mInputs[k];
-        const unsigned int inputSize = inputs.dimX() * inputs.dimY()
-                                        * inputs.dimZ();
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const unsigned int inputSize = input.dimX() * input.dimY()
+                                        * input.dimZ();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count > 16)
@@ -105,7 +105,7 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                         ++channel)
                     {
                         if (mDropConnectMask[k](channel, output))
-                            weightedSum += inputs(channel, batchPos)
+                            weightedSum += input(channel, batchPos)
                                            * synapses(channel, output);
                     }
                 } else {
@@ -113,8 +113,8 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                     // (otherwise it can lead to different result because of
                     // limited machine precision)
                     weightedSum = std::inner_product(
-                                    inputs.begin() + batchPos * inputSize,
-                                    inputs.begin() + (batchPos + 1) * inputSize,
+                                    input.begin() + batchPos * inputSize,
+                                    input.begin() + (batchPos + 1) * inputSize,
                                     synapses[output].begin(),
                                     weightedSum);
                 }
@@ -137,12 +137,15 @@ void N2D2::FcCell_Frame::backPropagate()
                                     * mOutputs.dimZ();
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const Tensor<Float_T>& input = mInputs[k];
+        const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
         const unsigned int nbChannels = input.size() / input.dimB();
 
         if (!mDiffOutputs.empty() && mBackPropagate) {
-            Tensor<Float_T>& diffOutputs = mDiffOutputs[k];
-            const Float_T beta = (diffOutputs.isValid()) ? 1.0 : 0.0;
+            const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
+
+            Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
+                ? tensor_cast<Float_T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
             const Tensor<Float_T>& synapses = mSynapses[k];
             const unsigned int count = mInputs.dimB() * nbChannels;
@@ -175,12 +178,13 @@ void N2D2::FcCell_Frame::backPropagate()
                         }
                     }
 
-                    diffOutputs(channel, batchPos) = gradient
-                        + beta * diffOutputs(channel, batchPos);
+                    diffOutput(channel, batchPos) = gradient
+                        + beta * diffOutput(channel, batchPos);
                 }
             }
 
-            diffOutputs.setValid();
+            mDiffOutputs[k] = diffOutput;
+            mDiffOutputs[k].setValid();
         }
 
         Tensor<Float_T>& diffSynapses = mDiffSynapses[k];
@@ -245,7 +249,7 @@ void N2D2::FcCell_Frame::update()
 
 void N2D2::FcCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

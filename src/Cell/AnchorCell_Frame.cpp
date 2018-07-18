@@ -172,6 +172,12 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
+    const Tensor<Float_T>& inputsCls = tensor_cast<Float_T>(mInputs[0]);
+    const Tensor<Float_T>& inputsCoords = (mInputs.size() > 1)
+        ? tensor_cast<Float_T>(mInputs[1]) : inputsCls;
+    const unsigned int coordsOffset = (mInputs.size() > 1)
+        ? 0 : mScoresCls;
+
     const unsigned int nbAnchors = mAnchors.size();
     const double xRatio = std::ceil(mStimuliProvider.getSizeX()
                                     / (double)mOutputs.dimX());
@@ -275,17 +281,17 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                         || inference)
                     {
                         // Score
-                        const Float_T cls = mInputs(xa, ya, k, batchPos);
+                        const Float_T cls = inputsCls(xa, ya, k, batchPos);
 
                         // Parameterized coordinates
-                        const Float_T txbb = mInputs(xa, ya,
-                            k + mScoresCls * nbAnchors, batchPos);
-                        const Float_T tybb = mInputs(xa, ya,
-                            k + (mScoresCls + 1) * nbAnchors, batchPos);
-                        const Float_T twbb = mInputs(xa, ya,
-                            k + (mScoresCls + 2) * nbAnchors, batchPos);
-                        const Float_T thbb = mInputs(xa, ya,
-                            k + (mScoresCls + 3) * nbAnchors, batchPos);
+                        const Float_T txbb = inputsCoords(xa, ya,
+                            k + coordsOffset * nbAnchors, batchPos);
+                        const Float_T tybb = inputsCoords(xa, ya,
+                            k + (coordsOffset + 1) * nbAnchors, batchPos);
+                        const Float_T twbb = inputsCoords(xa, ya,
+                            k + (coordsOffset + 2) * nbAnchors, batchPos);
+                        const Float_T thbb = inputsCoords(xa, ya,
+                            k + (coordsOffset + 3) * nbAnchors, batchPos);
 
                         // Predicted box center coordinates
                         const Float_T xbbc = ((mFlip) ? -txbb : txbb) * wa
@@ -519,6 +525,17 @@ void N2D2::AnchorCell_Frame::backPropagate()
     const unsigned int miniBatchSize = mLossPositiveSample
                                         + mLossNegativeSample;
 
+    const Tensor<Float_T>& inputsCls = tensor_cast_nocopy<Float_T>(mInputs[0]);
+    const Tensor<Float_T>& inputsCoords = (mInputs.size() > 1)
+        ? tensor_cast_nocopy<Float_T>(mInputs[1]) : inputsCls;
+
+    Tensor<Float_T> diffOutputsCls
+        = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+    Tensor<Float_T> diffOutputsCoords = (mDiffOutputs.size() > 1)
+        ? tensor_cast_nocopy<Float_T>(mDiffOutputs[1]) : diffOutputsCls;
+    const unsigned int coordsOffset = (mDiffOutputs.size() > 1)
+        ? 0 : mScoresCls;
+
 #pragma omp parallel for if (mDiffInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mDiffInputs.dimB(); ++batchPos) {
         std::vector<Tensor<int>::Index> positive;
@@ -556,19 +573,19 @@ void N2D2::AnchorCell_Frame::backPropagate()
                         }
                     }
 
-                    mDiffOutputs(xa, ya, k, batchPos) = 0.0;
+                    diffOutputsCls(xa, ya, k, batchPos) = 0.0;
 
                     if (mScoresCls > 1)
-                        mDiffOutputs(xa, ya, k + nbAnchors, batchPos) = 0.0;
+                        diffOutputsCls(xa, ya, k + nbAnchors, batchPos) = 0.0;
 
-                    mDiffOutputs(xa, ya,
-                        k + mScoresCls * nbAnchors, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya,
-                        k + (mScoresCls + 1) * nbAnchors, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya,
-                        k + (mScoresCls + 2) * nbAnchors, batchPos) = 0.0;
-                    mDiffOutputs(xa, ya,
-                        k + (mScoresCls + 3) * nbAnchors, batchPos) = 0.0;
+                    diffOutputsCoords(xa, ya,
+                        k + coordsOffset * nbAnchors, batchPos) = 0.0;
+                    diffOutputsCoords(xa, ya,
+                        k + (coordsOffset + 1) * nbAnchors, batchPos) = 0.0;
+                    diffOutputsCoords(xa, ya,
+                        k + (coordsOffset + 2) * nbAnchors, batchPos) = 0.0;
+                    diffOutputsCoords(xa, ya,
+                        k + (coordsOffset + 3) * nbAnchors, batchPos) = 0.0;
                 }
             }
         }
@@ -599,12 +616,13 @@ void N2D2::AnchorCell_Frame::backPropagate()
             const unsigned int ya = anchorIndex[idx][1];
             const unsigned int k = anchorIndex[idx][2];
 
-            mDiffOutputs(xa, ya, k, batchPos)
-                = (isPositive - mInputs(xa, ya, k, batchPos)) / miniBatchSize;
+            diffOutputsCls(xa, ya, k, batchPos)
+                = (isPositive - inputsCls(xa, ya, k, batchPos)) / miniBatchSize;
 
             if (mScoresCls > 1) {
-                mDiffOutputs(xa, ya, k + nbAnchors, batchPos)
-                    = ((!isPositive) - mInputs(xa, ya, k + nbAnchors, batchPos))
+                diffOutputsCls(xa, ya, k + nbAnchors, batchPos)
+                    = ((!isPositive) - inputsCls(xa, ya, k + nbAnchors,
+                                                 batchPos))
                         / miniBatchSize;
             }
 
@@ -644,29 +662,38 @@ void N2D2::AnchorCell_Frame::backPropagate()
                 const Float_T thgt = std::log(gt.h / ha);
 
                 // Parameterized coordinates
-                const Float_T tx = mInputs(xa, ya,
-                    k + mScoresCls * nbAnchors, batchPos);
-                const Float_T ty = mInputs(xa, ya,
-                    k + (mScoresCls + 1) * nbAnchors, batchPos);
-                const Float_T tw = mInputs(xa, ya,
-                    k + (mScoresCls + 2) * nbAnchors, batchPos);
-                const Float_T th = mInputs(xa, ya,
-                    k + (mScoresCls + 3) * nbAnchors, batchPos);
+                const Float_T tx = inputsCoords(xa, ya,
+                    k + coordsOffset * nbAnchors, batchPos);
+                const Float_T ty = inputsCoords(xa, ya,
+                    k + (coordsOffset + 1) * nbAnchors, batchPos);
+                const Float_T tw = inputsCoords(xa, ya,
+                    k + (coordsOffset + 2) * nbAnchors, batchPos);
+                const Float_T th = inputsCoords(xa, ya,
+                    k + (coordsOffset + 3) * nbAnchors, batchPos);
 
                 // Smooth L1 loss
-                mDiffOutputs(xa, ya, k + mScoresCls * nbAnchors, batchPos)
+                diffOutputsCoords(xa, ya, k + coordsOffset * nbAnchors,
+                                  batchPos)
                    = mLossLambda * smoothL1(txgt, tx) / nbLocations;
-                mDiffOutputs(xa, ya, k + (mScoresCls + 1) * nbAnchors, batchPos)
+                diffOutputsCoords(xa, ya, k + (coordsOffset + 1) * nbAnchors,
+                                  batchPos)
                    = mLossLambda * smoothL1(tygt, ty) / nbLocations;
-                mDiffOutputs(xa, ya, k + (mScoresCls + 2) * nbAnchors, batchPos)
+                diffOutputsCoords(xa, ya, k + (coordsOffset + 2) * nbAnchors,
+                                  batchPos)
                    = mLossLambda * smoothL1(twgt, tw) / nbLocations;
-                mDiffOutputs(xa, ya, k + (mScoresCls + 3) * nbAnchors, batchPos)
+                diffOutputsCoords(xa, ya, k + (coordsOffset + 3) * nbAnchors,
+                                  batchPos)
                    = mLossLambda * smoothL1(thgt, th) / nbLocations;
             }
 
             anchorIndex.erase(anchorIndex.begin() + idx);
         }
     }
+
+    mDiffOutputs[0] = diffOutputsCls;
+
+    if (mDiffOutputs.size() > 1)
+        mDiffOutputs[1] = diffOutputsCoords;
 
     mDiffOutputs.setValid();
     mDiffOutputs.synchronizeHToD();

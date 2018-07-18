@@ -20,32 +20,32 @@
 
 #include "GradientCheck.hpp"
 
-N2D2::GradientCheck::GradientCheck(double epsilon, double maxError)
+template <class T>
+N2D2::GradientCheck<T>::GradientCheck(double epsilon, double maxError)
     : mEpsilon(epsilon), mMaxError(maxError)
 {
     // ctor
 }
 
-void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
-                                     Tensor<Float_T>& outputs,
-                                     Tensor<Float_T>& diffInputs,
-                                     PropagateType propagate,
-                                     BackPropagateType backPropagate,
-                                     bool avoidDiscontinuity)
+template <class T>
+void N2D2::GradientCheck<T>::initialize(Interface<>& inputs,
+                                        Tensor<T>& outputs,
+                                        Tensor<T>& diffInputs,
+                                        PropagateType propagate,
+                                        BackPropagateType backPropagate,
+                                        bool avoidDiscontinuity)
 {
     mOutputs = &outputs;
     mDiffInputs = &diffInputs;
     mPropagate = propagate;
 
     // Initialize input values
-    for (std::vector<Tensor<Float_T>*>::iterator itTensor = inputs.begin(),
-                                                   itTensorEnd = inputs.end();
-         itTensor != itTensorEnd;
-         ++itTensor)
+    for (Interface<>::iterator itTensor = inputs.begin(),
+        itTensorEnd = inputs.end(); itTensor != itTensorEnd; ++itTensor)
     {
-        Tensor<Float_T>* input = (*itTensor);
+        Tensor<T> input = tensor_cast_nocopy<T>(*(*itTensor));
 
-        if (input->isValid()) {
+        if ((*itTensor)->isValid()) {
             std::cout << "GradientCheck::initialize(): do not initialize valid"
                 " input #" << (itTensor - inputs.begin()) << std::endl;
             continue;
@@ -55,15 +55,15 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
             // This special case is for MAX pooling.
             // Each value must be at least one mEpsilon appart, to avoid
             // changing the MAX during numerical gradient computation.
-            std::set<Float_T> values;
+            std::set<T> values;
 
-            if (input->size() > (unsigned int)(1.0 / mEpsilon)) {
+            if ((*itTensor)->size() > (unsigned int)(1.0 / mEpsilon)) {
                 throw std::runtime_error("GradientCheck::initialize():"
                     " avoidDiscontinuity not possible");
             }
 
-            for (unsigned int index = 0; index < input->size(); ++index) {
-                Float_T value;
+            for (unsigned int index = 0; index < (*itTensor)->size(); ++index) {
+                T value;
 
                 do {
                     value = ((int)Random::randUniform(-1.0 / mEpsilon,
@@ -72,16 +72,17 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
                 }
                 while (values.find(value) != values.end());
 
-                (*input)(index) = value;
+                input(index) = value;
                 values.insert(value);
             }
         }
         else {
-            for (unsigned int index = 0; index < input->size(); ++index)
-                (*input)(index) = Random::randUniform(-1.0, 1.0);
+            for (unsigned int index = 0; index < (*itTensor)->size(); ++index)
+                input(index) = Random::randUniform(-1.0, 1.0);
         }
 
-        input->synchronizeHToD();
+        *(*itTensor) = input;
+        (*itTensor)->synchronizeHToD();
     }
 
     propagate(false);
@@ -95,9 +96,11 @@ void N2D2::GradientCheck::initialize(Interface<Float_T>& inputs,
     backPropagate();
 }
 
-void N2D2::GradientCheck::check(const std::string& tensorName,
-                                Tensor<Float_T>& tensor,
-                                Tensor<Float_T>& diffTensor)
+template <class T>
+template <class U>
+void N2D2::GradientCheck<T>::check(const std::string& tensorName,
+                                   Tensor<U>& tensor,
+                                   Tensor<U>& diffTensor)
 {
     double cumulativeError = 0.0;
     unsigned int nbGradients = 0;
@@ -109,7 +112,7 @@ void N2D2::GradientCheck::check(const std::string& tensorName,
         for (unsigned int z = 0; z < tensor.dimZ(); ++z) {
             for (unsigned int y = 0; y < tensor.dimY(); ++y) {
                 for (unsigned int x = 0; x < tensor.dimX(); ++x) {
-                    const Float_T value = tensor(x, y, z, b);
+                    const U value = tensor(x, y, z, b);
 
                     // Compute approx. gradient
                     tensor(x, y, z, b) = value + mEpsilon / 2.0;
@@ -128,7 +131,7 @@ void N2D2::GradientCheck::check(const std::string& tensorName,
                     tensor(x, y, z, b) = value;
                     tensor.synchronizeHToD(x, y, z, b, 1);
 
-                    const Float_T gradient = -diffTensor(x, y, z, b);
+                    const U gradient = -diffTensor(x, y, z, b);
                     const double error = std::fabs(gradient - approxGradient);
 
                     cumulativeError += error;
@@ -162,12 +165,35 @@ void N2D2::GradientCheck::check(const std::string& tensorName,
               << ")" << std::endl;
 }
 
-N2D2::GradientCheck::~GradientCheck()
+template <class T>
+void N2D2::GradientCheck<T>::check(const std::string& tensorName,
+                                   BaseTensor& tensor,
+                                   BaseTensor& diffTensor)
+{
+    assert(tensor.getType() == diffTensor.getType());
+
+    if (tensor.getType() == &typeid(float)) {
+        check(tensorName,
+              dynamic_cast<Tensor<float>&>(tensor),
+              dynamic_cast<Tensor<float>&>(diffTensor));
+    }
+    else if (tensor.getType() == &typeid(double)) {
+        check(tensorName,
+              dynamic_cast<Tensor<double>&>(tensor),
+              dynamic_cast<Tensor<double>&>(diffTensor));
+    }
+    else
+        throw std::runtime_error("GradientCheck::check(): type not supported");
+}
+
+template <class T>
+N2D2::GradientCheck<T>::~GradientCheck()
 {
     mDiffInputs->fill(0.0);
 }
 
-double N2D2::GradientCheck::cost() const
+template <class T>
+double N2D2::GradientCheck<T>::cost() const
 {
     mOutputs->synchronizeDToH();
     const int outputSize = mOutputs->size();
@@ -181,4 +207,9 @@ double N2D2::GradientCheck::cost() const
     }
 
     return (1.0 / 2.0) * cost;
+}
+
+namespace N2D2 {
+    template class GradientCheck<float>;
+    template class GradientCheck<double>;
 }

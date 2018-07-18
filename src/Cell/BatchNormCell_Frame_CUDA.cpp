@@ -152,14 +152,17 @@ void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+
     if (inference) {
         CHECK_CUDNN_STATUS(cudnnBatchNormalizationForwardInference(
             CudaContext::cudnnHandle(),
             mMode,
             &alpha,
             &beta,
-            mInputs[0].getCudnnTensorDesc(),
-            mInputs[0].getDevicePtr(),
+            input0->getCudnnTensorDesc(),
+            input0->getDevicePtr(),
             mOutputs.getCudnnTensorDesc(),
             mOutputs.getDevicePtr(),
             mScale->getCudnnTensorDesc(),
@@ -177,8 +180,8 @@ void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
             mMode,
             &alpha,
             &beta,
-            mInputs[0].getCudnnTensorDesc(),
-            mInputs[0].getDevicePtr(),
+            input0->getCudnnTensorDesc(),
+            input0->getDevicePtr(),
             mOutputs.getCudnnTensorDesc(),
             mOutputs.getDevicePtr(),
             mScale->getCudnnTensorDesc(),
@@ -209,6 +212,13 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
     const float beta = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const float betaData = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
+    std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput0
+        = (mDiffOutputs[0].isValid())
+            ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[0])
+            : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+
     CHECK_CUDNN_STATUS(
         cudnnBatchNormalizationBackward(CudaContext::cudnnHandle(),
                                         mMode,
@@ -216,12 +226,12 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
                                         &betaData,
                                         &alpha,
                                         &beta,
-                                        mInputs[0].getCudnnTensorDesc(),
-                                        mInputs[0].getDevicePtr(),
+                                        input0->getCudnnTensorDesc(),
+                                        input0->getDevicePtr(),
                                         mOutputs.getCudnnTensorDesc(),
                                         mDiffInputs.getDevicePtr(),
-                                        mDiffOutputs[0].getCudnnTensorDesc(),
-                                        mDiffOutputs[0].getDevicePtr(),
+                                        diffOutput0->getCudnnTensorDesc(),
+                                        diffOutput0->getDevicePtr(),
                                         mScale->getCudnnTensorDesc(),
                                         mScale->getDevicePtr(),
                                         mDiffScale.getDevicePtr(),
@@ -230,6 +240,7 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
                                         mSavedMean.getDevicePtr(),
                                         mSavedVariance.getDevicePtr()));
 
+    mDiffOutputs[0].deviceTensor() = *diffOutput0;
     mDiffOutputs[0].setValid();
     mDiffOutputs.synchronizeDToHBased();
 }
@@ -299,7 +310,7 @@ void N2D2::BatchNormCell_Frame_CUDA::setVariances(
 void N2D2::BatchNormCell_Frame_CUDA::checkGradient(double epsilon,
                                                    double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

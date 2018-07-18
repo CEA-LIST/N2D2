@@ -212,6 +212,140 @@ TEST_DATASET(CudaTensor4d,
     }
 }
 
+TEST(CudaTensor4d, cuda_tensor_cast_double_to_float)
+{
+    CudaTensor<double> A({2, 3, 4, 5});
+    A.fill(1.0);
+
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 1. First cast double to float
+    CudaTensor<float> B = cuda_tensor_cast<float>(A);
+    // Data from A was converted to B
+    ASSERT_EQUALS(B.dims(), A.dims());
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    // Changes in B won't affect A
+    B(1, 1, 1, 1) = 2.0;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    // 2. Cast in the same type (double to double)
+    CudaTensor<double> C = cuda_tensor_cast<double>(A);
+    // C shares the same data as A
+    ASSERT_EQUALS(C.dims(), A.dims());
+    C(1, 1, 1, 1) = 4.0;
+    ASSERT_EQUALS(A(1, 1, 1, 1), 4.0);
+
+    // 3. Second cast double to float
+    // Since A was already casted to double with B, B2 shares the same data as B
+    // In this case, no new allocation is made
+    CudaTensor<float> B2 = cuda_tensor_cast_nocopy<float>(A);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 2.0);
+
+    // 4. Third cast double to float with copy
+    CudaTensor<float> B3 = cuda_tensor_cast<float>(A);
+    // Since B, B2 and B3 share the same data, they are now all in sync. with A
+    ASSERT_EQUALS(B3(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B3(1, 1, 1, 1), 4.0);
+    ASSERT_EQUALS(B2(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B2(1, 1, 1, 1), 4.0);
+    ASSERT_EQUALS(B(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B(1, 1, 1, 1), 4.0);
+}
+
+TEST(CudaTensor4d, cuda_device_tensor_cast_double_to_float)
+{
+    CudaTensor<double> A({2, 3, 4, 5});
+    A.fill(1.0);
+
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+    A.synchronizeHToD();
+
+    std::shared_ptr<CudaDeviceTensor<float> > devB
+        = cuda_device_tensor_cast<float>(A);
+
+    Tensor<float> B(A.dims(), 0.0);
+    CHECK_CUDA_STATUS(cudaMemcpy(&(B.data())[0],
+                                 devB->getDevicePtr(),
+                                 A.size() * sizeof(float),
+                                 cudaMemcpyDeviceToHost));
+
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    B(1, 1, 1, 1) = 2.0;
+
+    CHECK_CUDA_STATUS(cudaMemcpy(devB->getDevicePtr(),
+                                 &(B.data())[0],
+                                 A.size() * sizeof(float),
+                                 cudaMemcpyHostToDevice));
+
+    A.synchronizeDToH();
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    std::shared_ptr<CudaDeviceTensor<float> > devC
+        = cuda_device_tensor_cast_nocopy<float>(A);
+
+    CHECK_CUDA_STATUS(cudaMemcpy(&(B.data())[0],
+                                 devB->getDevicePtr(),
+                                 A.size() * sizeof(float),
+                                 cudaMemcpyDeviceToHost));
+
+    ASSERT_EQUALS(B(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+
+    A.deviceTensor() = *devB;
+    A.synchronizeDToH();
+
+    ASSERT_EQUALS(A(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 2.0);
+}
+
+TEST(CudaTensor4d, cuda_device_tensor_cast_float_to_double)
+{
+    CudaTensor<float> A({2, 3, 4, 5});
+    A.fill(1.0);
+
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+    A.synchronizeHToD();
+
+    std::shared_ptr<CudaDeviceTensor<double> > devB
+        = cuda_device_tensor_cast<double>(A);
+
+    Tensor<double> B(A.dims(), 0.0);
+    CHECK_CUDA_STATUS(cudaMemcpy(&(B.data())[0],
+                                 devB->getDevicePtr(),
+                                 A.size() * sizeof(double),
+                                 cudaMemcpyDeviceToHost));
+
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    B(1, 1, 1, 1) = 2.0;
+
+    CHECK_CUDA_STATUS(cudaMemcpy(devB->getDevicePtr(),
+                                 &(B.data())[0],
+                                 A.size() * sizeof(double),
+                                 cudaMemcpyHostToDevice));
+
+    A.synchronizeDToH();
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+
+    std::shared_ptr<CudaDeviceTensor<double> > devC
+        = cuda_device_tensor_cast_nocopy<double>(A);
+
+    CHECK_CUDA_STATUS(cudaMemcpy(&(B.data())[0],
+                                 devB->getDevicePtr(),
+                                 A.size() * sizeof(double),
+                                 cudaMemcpyDeviceToHost));
+
+    ASSERT_EQUALS(B(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+
+    A.deviceTensor() = *devB;
+    A.synchronizeDToH();
+
+    ASSERT_EQUALS(A(0, 0, 0, 0), 1.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 2.0);
+}
+
 RUN_TESTS()
 
 #else

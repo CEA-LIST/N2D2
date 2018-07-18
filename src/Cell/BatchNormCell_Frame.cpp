@@ -56,10 +56,8 @@ void N2D2::BatchNormCell_Frame::initialize()
     if (mEpsilon == 0.0)
         mEpsilon = 1.0e-5; // Same as CUDNN_BN_MIN_EPSILON
 
-    Tensor<Float_T>* input = *mInputs.begin();
-
-    std::vector<size_t> requiredDims(input->nbDims(), 1);
-    requiredDims[input->nbDims() - 2] = input->dimZ();
+    std::vector<size_t> requiredDims(mInputs[0].nbDims(), 1);
+    requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
 
     if (mScale->empty())
         mScale->resize(requiredDims, 1.0);
@@ -128,91 +126,105 @@ void N2D2::BatchNormCell_Frame::initialize()
 
 void N2D2::BatchNormCell_Frame::propagate(bool inference)
 {
-    const unsigned int size = mInputs.dimB() * getNbOutputs();
+    unsigned int outputOffset = 0;
 
-    if (inference) {
+    for (unsigned int k = 0, kSize = mInputs.size(); k < kSize; ++k) {
+        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const unsigned int size = mInputs.dimB() * input.dimZ();
+
+        if (inference) {
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
-        for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                const Float_T var = std::sqrt((*mVariance)(output) + mEpsilon);
+            for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+                for (unsigned int channel = 0; channel < input.dimZ();
+                    ++channel)
+                {
+                    const unsigned int output = outputOffset + channel;
+                    const Float_T var = std::sqrt((*mVariance)(output)
+                                                  + mEpsilon);
 
-                for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
-                        const Float_T normalized
-                            = (mInputs(ox, oy, output, batchPos)
-                               - (*mMean)(output)) / var;
-                        mOutputs(ox, oy, output, batchPos)
-                            = (*mScale)(output) * normalized + (*mBias)(output);
+                    for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                        for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
+                            const Float_T normalized
+                                = (input(ox, oy, channel, batchPos)
+                                   - (*mMean)(output)) / var;
+                            mOutputs(ox, oy, output, batchPos)
+                                = (*mScale)(output) * normalized
+                                    + (*mBias)(output);
+                        }
                     }
                 }
             }
-        }
-    } else {
-        const unsigned int size = mInputs[0].dimX() * mInputs[0].dimY()
-                                  * mInputs.dimB();
-        // Cumulative Moving Average (CMA)
-        const double expAverageFactor = 1.0 / (1.0 + mNbPropagate);
+        } else {
+            const unsigned int size = input.dimX() * input.dimY()
+                                      * mInputs.dimB();
+            // Cumulative Moving Average (CMA)
+            const double expAverageFactor = 1.0 / (1.0 + mNbPropagate);
 
-#pragma omp parallel for if (getNbOutputs() > 16)
-        for (int output = 0; output < (int)getNbOutputs(); ++output) {
-            Float_T sum = 0.0;
+#pragma omp parallel for if (input.dimZ() > 16)
+            for (int channel = 0; channel < (int)input.dimZ(); ++channel) {
+                const unsigned int output = outputOffset + channel;
+                Float_T sum = 0.0;
 
-            for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-                for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox)
-                        sum += mInputs(ox, oy, output, batchPos);
-                }
-            }
-
-            mSavedMean(output) = sum / (Float_T)size;
-
-            sum = 0.0;
-
-            for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-                for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
-                        const Float_T zeroed = mInputs(ox, oy, output, batchPos)
-                                               - mSavedMean(output);
-                        sum += zeroed * zeroed;
+                for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+                    for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                        for (unsigned int ox = 0; ox < input.dimX(); ++ox)
+                            sum += input(ox, oy, channel, batchPos);
                     }
                 }
+
+                mSavedMean(output) = sum / (Float_T)size;
+
+                sum = 0.0;
+
+                for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+                    for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                        for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
+                            const Float_T zeroed = input(ox, oy, channel, batchPos)
+                                                   - mSavedMean(output);
+                            sum += zeroed * zeroed;
+                        }
+                    }
+                }
+
+                mSavedVariance(output) = sum / (Float_T)size;
+
+                (*mMean)(output) = mSavedMean(output) * expAverageFactor
+                                + (*mMean)(output) * (1.0 - expAverageFactor);
+                (*mVariance)(output) = mSavedVariance(output) * expAverageFactor
+                                    + (*mVariance)(output) * (1.0 - expAverageFactor);
             }
-
-            mSavedVariance(output) = sum / (Float_T)size;
-
-            (*mMean)(output) = mSavedMean(output) * expAverageFactor
-                            + (*mMean)(output) * (1.0 - expAverageFactor);
-            (*mVariance)(output) = mSavedVariance(output) * expAverageFactor
-                                + (*mVariance)(output) * (1.0 - expAverageFactor);
-        }
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
-        for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                const Float_T var
-                    = std::sqrt(mSavedVariance(output) + mEpsilon);
+            for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+                for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
+                    const unsigned int output = outputOffset + channel;
+                    const Float_T var
+                        = std::sqrt(mSavedVariance(output) + mEpsilon);
 
-                for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
-                        const Float_T normalized
-                            = (mInputs(ox, oy, output, batchPos)
-                               - mSavedMean(output)) / var;
-                        mOutputs(ox, oy, output, batchPos)
-                            = (*mScale)(output) * normalized + (*mBias)(output);
+                    for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                        for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
+                            const Float_T normalized
+                                = (input(ox, oy, channel, batchPos)
+                                   - mSavedMean(output)) / var;
+                            mOutputs(ox, oy, output, batchPos)
+                                = (*mScale)(output) * normalized + (*mBias)(output);
+                        }
                     }
                 }
             }
+
+            ++mNbPropagate;
         }
 
-        ++mNbPropagate;
+        outputOffset += input.dimZ();
     }
 
     Cell_Frame::propagate();
@@ -223,91 +235,108 @@ void N2D2::BatchNormCell_Frame::backPropagate()
 {
     Cell_Frame::backPropagate();
 
-    const unsigned int size = mInputs[0].dimX() * mInputs[0].dimY()
-                              * mInputs.dimB();
     const float betaScale = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const float betaBias = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+    unsigned int outputOffset = 0;
 
-#pragma omp parallel for if (getNbOutputs() > 16)
-    for (int output = 0; output < (int)getNbOutputs(); ++output) {
-        const Float_T var = std::sqrt(mSavedVariance(output) + mEpsilon);
+    for (unsigned int k = 0, kSize = mInputs.size(); k < kSize; ++k) {
+        const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
+        const unsigned int size = input.dimX() * input.dimY() * mInputs.dimB();
 
-        Float_T sumScale = 0.0;
-        Float_T sumBias = 0.0;
-        Float_T sumMean1 = 0.0;
-        Float_T sumMean2 = 0.0;
-        Float_T sumVariance = 0.0;
+#pragma omp parallel for if (input.dimZ() > 16)
+        for (int channel = 0; channel < (int)input.dimZ(); ++channel) {
+            const unsigned int output = outputOffset + channel;
+            const Float_T var = std::sqrt(mSavedVariance(output) + mEpsilon);
 
-        for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
-                    const Float_T normalized
-                        = (mInputs(ox, oy, output, batchPos)
-                           - mSavedMean(output)) / var;
-                    const Float_T diffNormalized
-                        = mDiffInputs(ox, oy, output, batchPos)
-                          * (*mScale)(output);
+            Float_T sumScale = 0.0;
+            Float_T sumBias = 0.0;
+            Float_T sumMean1 = 0.0;
+            Float_T sumMean2 = 0.0;
+            Float_T sumVariance = 0.0;
 
-                    sumScale += mDiffInputs(ox, oy, output, batchPos)
-                                * normalized;
-                    sumBias += mDiffInputs(ox, oy, output, batchPos);
+            for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+                for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                    for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
+                        const Float_T normalized
+                            = (input(ox, oy, channel, batchPos)
+                               - mSavedMean(output)) / var;
+                        const Float_T diffNormalized
+                            = mDiffInputs(ox, oy, output, batchPos)
+                              * (*mScale)(output);
 
-                    sumMean1 += diffNormalized;
-                    sumMean2 += -2.0 * (mInputs(ox, oy, output, batchPos)
-                                        - mSavedMean(output));
-                    sumVariance += diffNormalized
-                                   * (mInputs(ox, oy, output, batchPos)
-                                      - mSavedMean(output));
+                        sumScale += mDiffInputs(ox, oy, output, batchPos)
+                                    * normalized;
+                        sumBias += mDiffInputs(ox, oy, output, batchPos);
+
+                        sumMean1 += diffNormalized;
+                        sumMean2 += -2.0 * (input(ox, oy, channel, batchPos)
+                                            - mSavedMean(output));
+                        sumVariance += diffNormalized
+                                       * (input(ox, oy, channel, batchPos)
+                                          - mSavedMean(output));
+                    }
                 }
             }
+
+            mDiffSavedVariance(output)
+                = sumVariance * (-1.0 / 2.0)
+                  * std::pow(mSavedVariance(output) + mEpsilon, -3.0 / 2.0);
+            mDiffSavedMean(output) = sumMean1 * (-1.0 / var)
+                                     + mDiffSavedVariance(output) * sumMean2
+                                       / (Float_T)size;
+
+            mDiffScale(output) = sumScale + betaScale * mDiffScale(output);
+            mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
         }
 
-        mDiffSavedVariance(output)
-            = sumVariance * (-1.0 / 2.0)
-              * std::pow(mSavedVariance(output) + mEpsilon, -3.0 / 2.0);
-        mDiffSavedMean(output) = sumMean1 * (-1.0 / var)
-                                 + mDiffSavedVariance(output) * sumMean2
-                                   / (Float_T)size;
-
-        mDiffScale(output) = sumScale + betaScale * mDiffScale(output);
-        mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
-    }
-
-    if (!mDiffOutputs.empty()) {
-        const unsigned int size = mInputs.dimB() * getNbOutputs();
+        if (!mDiffOutputs.empty()) {
+            const unsigned int size = mInputs.dimB() * getNbOutputs();
+            const bool isValid = mDiffOutputs[k].isValid();
+            Tensor<Float_T> diffOutput = (isValid)
+                ? tensor_cast<Float_T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
 #pragma omp parallel for if (mInputs.dimB() > 4 && size > 16)
 #endif
-        for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                const bool isValid = mDiffOutputs.getTensor(output).isValid();
-                const Float_T var
-                    = std::sqrt(mSavedVariance(output) + mEpsilon);
+            for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+                for (unsigned int channel = 0; channel < input.dimZ();
+                    ++channel)
+                {
+                    const unsigned int output = outputOffset + channel;
+                    const Float_T var
+                        = std::sqrt(mSavedVariance(output) + mEpsilon);
 
-                for (unsigned int oy = 0; oy < mInputs[0].dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < mInputs[0].dimX(); ++ox) {
-                        const Float_T diffNormalized
-                            = mDiffInputs(ox, oy, output, batchPos)
-                              * (*mScale)(output);
-                        const Float_T gradient
-                            = diffNormalized / var
-                              + mDiffSavedVariance(output) * 2.0
-                                * (mInputs(ox, oy, output, batchPos)
-                                   - mSavedMean(output)) / (Float_T)size
-                              + mDiffSavedMean(output) / (Float_T)size;
+                    for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
+                        for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
+                            const Float_T diffNormalized
+                                = mDiffInputs(ox, oy, output, batchPos)
+                                  * (*mScale)(output);
+                            const Float_T gradient
+                                = diffNormalized / var
+                                  + mDiffSavedVariance(output) * 2.0
+                                    * (input(ox, oy, channel, batchPos)
+                                       - mSavedMean(output)) / (Float_T)size
+                                  + mDiffSavedMean(output) / (Float_T)size;
 
-                        mDiffOutputs(ox, oy, output, batchPos)
-                            = gradient
-                              + isValid
-                                * mDiffOutputs(ox, oy, output, batchPos);
+                            diffOutput(ox, oy, channel, batchPos)
+                                = gradient
+                                  + isValid
+                                    * diffOutput(ox, oy, channel, batchPos);
+                        }
                     }
                 }
             }
+
+            mDiffOutputs[k] = diffOutput;
         }
 
+        outputOffset += input.dimZ();
+    }
+
+    if (!mDiffOutputs.empty()) {
         mDiffOutputs.setValid();
         mDiffOutputs.synchronizeHToD();
     }
@@ -325,7 +354,7 @@ void N2D2::BatchNormCell_Frame::update()
 
 void N2D2::BatchNormCell_Frame::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

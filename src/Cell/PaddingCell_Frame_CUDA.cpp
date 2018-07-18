@@ -34,7 +34,7 @@ N2D2::PaddingCell_Frame_CUDA::PaddingCell_Frame_CUDA(const std::string& name,
                                                     int leftPad,
                                                     int rightPad)
     : Cell(name, nbOutputs),
-      PaddingCell(name, 
+      PaddingCell(name,
                   nbOutputs,
                   topPad,
                   botPad,
@@ -55,7 +55,7 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
         if(inputX != mInputs[k].dimX())
             throw std::domain_error("PaddingCell_Frame_CUDA::initialize():"
                             " Input layers must have the same width dimension for layer " + k);
-    
+
         if(inputY != mInputs[k].dimY())
             throw std::domain_error("PaddingCell_Frame_CUDA::initialize():"
                             " Input layers must have the same height dimension for layer " + k);
@@ -80,6 +80,8 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
 
     for(unsigned int k = 0; k < mInputs.size(); ++k)
     {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
 
         cudaSPadding(mOutputs.dimX(),
                     mOutputs.dimY(),
@@ -91,7 +93,7 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
                     mRightPad,
                     mTopPad,
                     mBotPad,
-                    mInputs[k].getDevicePtr(),
+                    input->getDevicePtr(),
                     mOutputs.getDevicePtr() + outputOffset);
 
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
@@ -113,6 +115,8 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
 
     for(unsigned int k = 0; k < mInputs.size(); ++k)
     {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+            = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
         cudaSPadding(mDiffOutputs[k].dimX(),
                     mDiffOutputs[k].dimY(),
@@ -125,13 +129,14 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
                     -mTopPad,
                     -mBotPad,
                     mDiffInputs.getDevicePtr() + outputOffset,
-                    mDiffOutputs[k].getDevicePtr());
+                    diffOutput->getDevicePtr());
 
         outputOffset += mDiffOutputs[k].dimZ()
                             *mDiffInputs.dimX()
                             *mDiffInputs.dimY()
                             *mDiffInputs.dimB();
 
+        mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
     }
 
@@ -145,7 +150,7 @@ void N2D2::PaddingCell_Frame_CUDA::update()
 
 void N2D2::PaddingCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck gc(epsilon, maxError);
+    GradientCheck<Float_T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,

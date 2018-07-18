@@ -330,16 +330,19 @@ void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels,
     if (signals & In) {
         mInputs.synchronizeDToH();
 
-        for (std::vector<Tensor<Float_T>*>::iterator itTensor = mInputs.begin(),
-                                                       itTensorEnd = mInputs.end();
+        for (Interface<>::iterator itTensor = mInputs.begin(),
+                                   itTensorEnd = mInputs.end();
              itTensor != itTensorEnd;
-             ++itTensor) {
-            Tensor<Float_T>* input = (*itTensor);
+             ++itTensor)
+        {
+            Tensor<Float_T> input = tensor_cast<Float_T>(*(*itTensor));
 
             //#pragma omp parallel for
-            for (int index = 0; index < (int)input->size(); ++index)
-                (*input)(index) = Utils::round((nbLevels - 1) * (*input)(index))
+            for (int index = 0; index < (int)input.size(); ++index)
+                input(index) = Utils::round((nbLevels - 1) * input(index))
                                   / (nbLevels - 1);
+
+            *(*itTensor) = input;
         }
 
         mInputs.synchronizeHToD();

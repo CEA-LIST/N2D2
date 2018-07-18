@@ -20,9 +20,11 @@
 
 #include "Cell/FMPCell_Frame_CUDA_Kernels.hpp"
 
-__global__ void cudaSFMPPropagate_kernel(float* inputs,
+__global__ void cudaSFMPPropagate_kernel(const float alpha,
+                                         float* inputs,
                                          unsigned int* gridX,
                                          unsigned int* gridY,
+                                         const float beta,
                                          float* outputs,
                                          unsigned int nbChannels,
                                          unsigned int channelsHeight,
@@ -87,7 +89,14 @@ __global__ void cudaSFMPPropagate_kernel(float* inputs,
                 // Compute the output signal
                 const unsigned int outputsIdx
                     = ox + (oy + output * outputsHeight) * outputsWidth;
-                outputs[outputsIdx + batchOutputOffset] = poolValue;
+
+                if (beta != 0.0f) {
+                    outputs[outputsIdx + batchOutputOffset]
+                        = alpha * poolValue
+                          + beta * outputs[outputsIdx + batchOutputOffset];
+                }
+                else
+                    outputs[outputsIdx + batchOutputOffset] = alpha * poolValue;
             }
         }
     }
@@ -101,9 +110,11 @@ static unsigned int nextDivisor(unsigned int target, unsigned int value)
     return v;
 }
 
-void N2D2::cudaSFMPPropagate(float* inputs,
+void N2D2::cudaSFMPPropagate(const float alpha,
+                             float* inputs,
                              unsigned int* gridX,
                              unsigned int* gridY,
+                             const float beta,
                              float* outputs,
                              unsigned int nbChannels,
                              unsigned int channelsHeight,
@@ -130,9 +141,11 @@ void N2D2::cudaSFMPPropagate(float* inputs,
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
     cudaSFMPPropagate_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (inputs,
+        (alpha,
+           inputs,
            gridX,
            gridY,
+           beta,
            outputs,
            nbChannels,
            channelsHeight,

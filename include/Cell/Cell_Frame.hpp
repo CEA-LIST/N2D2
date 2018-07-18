@@ -111,12 +111,12 @@ public:
 protected:
     // Internal
     // Forward
-    Interface<Float_T> mInputs;
+    Interface<> mInputs;
     Tensor<Float_T> mOutputs;
 
     // Backward
     Tensor<Float_T> mDiffInputs;
-    Interface<Float_T> mDiffOutputs;
+    Interface<> mDiffOutputs;
 };
 }
 

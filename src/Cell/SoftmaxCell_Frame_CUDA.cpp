@@ -72,6 +72,10 @@ void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
 
     const float alpha = 1.0f;
     const float beta = 0.0f;
+
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
+        = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
+
     if(mGroupSize > 0)
     {
         for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
@@ -80,7 +84,7 @@ void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
                                                 CUDNN_SOFTMAX_MODE_CHANNEL,
                                                 &alpha,
                                                 mGroupTensor,
-                                                mInputs[0].getDevicePtr() + step,
+                                                input0->getDevicePtr() + step,
                                                 &beta,
                                                 mGroupTensor,
                                                 mOutputs.getDevicePtr() + step));
@@ -93,8 +97,8 @@ void N2D2::SoftmaxCell_Frame_CUDA::propagate(bool /*inference*/)
                                             CUDNN_SOFTMAX_ACCURATE,
                                             CUDNN_SOFTMAX_MODE_CHANNEL,
                                             &alpha,
-                                            mInputs[0].getCudnnTensorDesc(),
-                                            mInputs[0].getDevicePtr(),
+                                            input0->getCudnnTensorDesc(),
+                                            input0->getDevicePtr(),
                                             &beta,
                                             mOutputs.getCudnnTensorDesc(),
                                             mOutputs.getDevicePtr()));
@@ -109,6 +113,11 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
 
     const float alpha = 1.0f;
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput0
+        = (mDiffOutputs[0].isValid())
+            ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[0])
+            : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+
     if (mWithLoss) {
         if (mDiffOutputs[0].isValid()) {
             CHECK_CUBLAS_STATUS(
@@ -117,11 +126,11 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
                             &alpha,
                             mDiffInputs.getDevicePtr(),
                             1,
-                            mDiffOutputs[0].getDevicePtr(),
+                            diffOutput0->getDevicePtr(),
                             1));
         } else {
             CHECK_CUDA_STATUS(
-                cudaMemcpy(mDiffOutputs[0].getDevicePtr(),
+                cudaMemcpy(diffOutput0->getDevicePtr(),
                            mDiffInputs.getDevicePtr(),
                            mDiffOutputs[0].size() * sizeof(Float_T),
                            cudaMemcpyDeviceToDevice));
@@ -139,40 +148,43 @@ void N2D2::SoftmaxCell_Frame_CUDA::backPropagate()
                             1) );
                     }
         */
-    } else {
+    }
+    else {
         const float beta = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
-    if(mGroupSize > 0)
-    {
-        for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
+
+        if(mGroupSize > 0) {
+            for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
+                CHECK_CUDNN_STATUS(
+                    cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
+                                        CUDNN_SOFTMAX_ACCURATE,
+                                        CUDNN_SOFTMAX_MODE_CHANNEL,
+                                        &alpha,
+                                        mGroupTensor,
+                                        mOutputs.getDevicePtr() + step,
+                                        mGroupTensor,
+                                        mDiffInputs.getDevicePtr() + step,
+                                        &beta,
+                                        mGroupTensor,
+                                        diffOutput0->getDevicePtr() + step));
+
+        }
+        else {
             CHECK_CUDNN_STATUS(
                 cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
-                                    CUDNN_SOFTMAX_ACCURATE,
-                                    CUDNN_SOFTMAX_MODE_CHANNEL,
-                                    &alpha,
-                                    mGroupTensor,
-                                    mOutputs.getDevicePtr() + step,
-                                    mGroupTensor,
-                                    mDiffInputs.getDevicePtr() + step,
-                                    &beta,
-                                    mGroupTensor,
-                                    mDiffOutputs[0].getDevicePtr() + step));
-
-    }
-    else
-        CHECK_CUDNN_STATUS(
-            cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
-                                 CUDNN_SOFTMAX_ACCURATE,
-                                 CUDNN_SOFTMAX_MODE_CHANNEL,
-                                 &alpha,
-                                 mOutputs.getCudnnTensorDesc(),
-                                 mOutputs.getDevicePtr(),
-                                 mDiffInputs.getCudnnTensorDesc(),
-                                 mDiffInputs.getDevicePtr(),
-                                 &beta,
-                                 mDiffOutputs[0].getCudnnTensorDesc(),
-                                 mDiffOutputs[0].getDevicePtr()));
+                                     CUDNN_SOFTMAX_ACCURATE,
+                                     CUDNN_SOFTMAX_MODE_CHANNEL,
+                                     &alpha,
+                                     mOutputs.getCudnnTensorDesc(),
+                                     mOutputs.getDevicePtr(),
+                                     mDiffInputs.getCudnnTensorDesc(),
+                                     mDiffInputs.getDevicePtr(),
+                                     &beta,
+                                     diffOutput0->getCudnnTensorDesc(),
+                                     diffOutput0->getDevicePtr()));
+        }
     }
 
+    mDiffOutputs[0].deviceTensor() = *diffOutput0;
     mDiffOutputs[0].setValid();
     mDiffOutputs.synchronizeDToHBased();
 }
