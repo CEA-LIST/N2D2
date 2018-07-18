@@ -27,7 +27,7 @@
 namespace N2D2 {
 template <class T> class Filler : public Parameterizable {
 public:
-    virtual void apply(Tensor<T>& data) = 0;
+    virtual void apply(Tensor<T>& data, bool restrictPositive=false) = 0;
     virtual ~Filler() {};
 };
 }

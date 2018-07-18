@@ -28,7 +28,7 @@ namespace N2D2 {
 template <class T> class NormalFiller : public Filler<T> {
 public:
     NormalFiller(double mean = 0.0, double stdDev = 1.0);
-    void apply(Tensor<T>& data);
+    void apply(Tensor<T>& data, bool restrictPositive=false);
     virtual ~NormalFiller() {};
 
 private:
@@ -44,12 +44,16 @@ N2D2::NormalFiller<T>::NormalFiller(double mean, double stdDev)
     // ctor
 }
 
-template <class T> void N2D2::NormalFiller<T>::apply(Tensor<T>& data)
+template <class T> void N2D2::NormalFiller<T>::apply(Tensor<T>& data,
+                                                     bool restrictPositive)
 {
     for (typename Tensor<T>::iterator it = data.begin(), itEnd = data.end();
          it != itEnd;
-         ++it)
+         ++it){
         (*it) = Random::randNormal(mMean, mStdDev);
+        if (restrictPositive)
+            (*it) = (*it) < 0 ? 0 : (*it);
+    }
 }
 
 #endif // N2D2_NORMALFILLER_H

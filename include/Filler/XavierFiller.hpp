@@ -39,7 +39,7 @@ public:
 
     XavierFiller(VarianceNorm varianceNorm = FanIn,
                  Distribution distribution = Uniform);
-    void apply(Tensor<T>& data);
+    void apply(Tensor<T>& data, bool restrictPositive=false);
     virtual ~XavierFiller() {};
 
 private:
@@ -71,7 +71,8 @@ N2D2::XavierFiller
     // ctor
 }
 
-template <class T> void N2D2::XavierFiller<T>::apply(Tensor<T>& data)
+template <class T> void N2D2::XavierFiller<T>::apply(Tensor<T>& data,
+                                                     bool restrictPositive)
 {
     const unsigned int fanIn = data.size() / data.dimB();
     const unsigned int fanOut = data.size() / data.dimZ();
@@ -89,14 +90,20 @@ template <class T> void N2D2::XavierFiller<T>::apply(Tensor<T>& data)
         for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
              it != itEnd;
-             ++it)
-            (*it) = Random::randUniform(-scale, scale);
+             ++it){
+                (*it) = Random::randUniform(-scale, scale);
+                if (restrictPositive)
+                    (*it) = (*it) < 0 ? 0 : (*it);
+        }
     } else {
         for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
              it != itEnd;
-             ++it)
-            (*it) = Random::randNormal(0.0, 1.0 / n);
+             ++it) {
+                (*it) = Random::randNormal(0.0, 1.0 / n);
+                if (restrictPositive)
+                    (*it) = (*it) < 0 ? 0 : (*it);
+        }
     }
 }
 

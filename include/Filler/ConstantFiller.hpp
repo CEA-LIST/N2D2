@@ -28,7 +28,7 @@ namespace N2D2 {
 template <class T> class ConstantFiller : public Filler<T> {
 public:
     ConstantFiller(T value = 0.0);
-    void apply(Tensor<T>& data);
+    void apply(Tensor<T>& data, bool restrictPositive=false);
     virtual ~ConstantFiller() {};
 
 private:
@@ -43,12 +43,16 @@ N2D2::ConstantFiller<T>::ConstantFiller(T value)
     // ctor
 }
 
-template <class T> void N2D2::ConstantFiller<T>::apply(Tensor<T>& data)
+template <class T> void N2D2::ConstantFiller<T>::apply(Tensor<T>& data,
+                                                       bool restrictPositive)
 {
     for (typename Tensor<T>::iterator it = data.begin(), itEnd = data.end();
          it != itEnd;
-         ++it)
+         ++it) {
         (*it) = mValue;
+        if (restrictPositive)
+            (*it) = (*it) < 0 ? 0 : (*it);
+    }
 }
 
 #endif // N2D2_CONSTANTFILLER_H
