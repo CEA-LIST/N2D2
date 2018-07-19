@@ -38,9 +38,6 @@ if installPath == "":
     installPath = N2D2_DATA
 
 data = {
-    "http://kitti.is.tue.mpg.de/kitti/data_road.zip" : "KITTI",
-    "http://kitti.is.tue.mpg.de/kitti/data_tracking_label_2.zip" : "KITTI",
-    "http://kitti.is.tue.mpg.de/kitti/data_tracking_image_2.zip" : "KITTI",
     "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz": "mnist",
     "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz": "mnist",
     "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz": "mnist",

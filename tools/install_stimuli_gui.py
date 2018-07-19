@@ -34,14 +34,6 @@ else:
         + "/n2d2_data")
 
 data = {
-    "KITTI road" : ["KITTI",5,"http://kitti.is.tue.mpg.de/kitti/data_road.zip"],
-
-    "KITTI segmentation" : ["KITTI",15800, "http://kitti.is.tue.mpg.de/kitti/data_tracking_image_2.zip",\
-        "http://kitti.is.tue.mpg.de/kitti/data_tracking_label_2.zip"],
-
-    "KITTI object" : ["KITTI_OBJECT",12600, " http://kitti.is.tue.mpg.de/kitti/data_object_image_2.zip",\
-        " http://kitti.is.tue.mpg.de/kitti/data_object_label_2.zip"],
-
     "MNIST" : ["mnist",110, "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",\
         "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",\
         "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",\

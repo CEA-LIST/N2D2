@@ -1817,7 +1817,13 @@ ILSVRC2012 database \citep{ILSVRC15}.
 
 \paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!KITTI_Database!}{KITTI\_Database}}
-KITTI Database.
+The KITTI Database provide ROI which can be use for autonomous driving and environment perception.
+The database provide 8 labeled different classes. Utilization of the KITTI
+Database is under licensing conditions and request an email registration. To install it you have to
+follow this link:
+\url{http://www.cvlibs.net/datasets/kitti/eval_tracking.php} and download the left color images (15 GB) and 
+the trainling labels of tracking data set (9 MB). Extract the downloaded archives in your 
+\lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_DATA/KITTI! folder.
 
 \begin{center}
  \begin{tabular}{| p{5cm} | p{10cm} | }
@@ -1834,8 +1840,36 @@ KITTI Database.
 \paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!KITTI_Road_Database!}
 {KITTI_Road\_Database}}
-KITTI Road Database.
 The KITTI Road Database provide ROI which can be used to road segmentation.
+The dataset provide 1 labeled class (road) on 289 training images. The 290 test images are not labeled.
+ Utilization of the KITTI Road Database
+is under licensing conditions and request an email registration. To install it you have to follow this link: 
+\url{http://www.cvlibs.net/datasets/kitti/eval_road.php}
+and download the "base kit" of (0.5 GB) with left color images, calibration and training labels. Extract
+the downloaded archive in your \lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_DATA/KITTI! folder.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}
+  \lstinline!Learn! [0.8] & Fraction of images used for the learning \\
+  \lstinline!Validation! [0.2] & Fraction of images used for the validation \\
+ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!KITTI_Object_Database!}
+{KITTI_Object\_Database}}
+The KITTI Object Database provide ROI which can be use for autonomous driving and environment perception.
+The database provide 8 labeled different classes on 7481 training images. The 7518 test images are not labeled.
+The whole database provide 80256 labeled objects. Utilization of the KITTI Object Database is under licensing conditions and request an email registration.
+To install it you have to follow this link: 
+\url{http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark}
+and download the "lef color images" (12 GB) and the training labels of object data set (5 MB). Extract
+the downloaded archives in your \lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_DATA/KITTI_Object! folder.
 
 \begin{center}
  \begin{tabular}{| p{5cm} | p{10cm} | }
