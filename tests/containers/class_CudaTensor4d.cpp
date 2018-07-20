@@ -214,6 +214,8 @@ TEST_DATASET(CudaTensor4d,
 
 TEST(CudaTensor4d, cuda_tensor_cast_double_to_float)
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor<double> A({2, 3, 4, 5});
     A.fill(1.0);
 
@@ -256,6 +258,8 @@ TEST(CudaTensor4d, cuda_tensor_cast_double_to_float)
 
 TEST(CudaTensor4d, cuda_device_tensor_cast_double_to_float)
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor<double> A({2, 3, 4, 5});
     A.fill(1.0);
 
@@ -302,6 +306,8 @@ TEST(CudaTensor4d, cuda_device_tensor_cast_double_to_float)
 
 TEST(CudaTensor4d, cuda_device_tensor_cast_float_to_double)
 {
+    REQUIRED(UnitTest::CudaDeviceExists());
+
     CudaTensor<float> A({2, 3, 4, 5});
     A.fill(1.0);
 
