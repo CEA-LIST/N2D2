@@ -45,6 +45,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <array>
 
 #ifdef WIN32
 #include <direct.h>
