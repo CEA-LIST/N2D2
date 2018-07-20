@@ -96,7 +96,6 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
     const std::vector<int> paddings(mPaddingDims.rbegin(), mPaddingDims.rend());
     const std::vector<int> upscales(mKernelDims.size(), 1);
 
-#if CUDNN_VERSION >= 6000
     CHECK_CUDNN_STATUS(
         cudnnSetConvolutionNdDescriptor(mConvDesc,
                                         mKernelDims.size(),
@@ -105,15 +104,6 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                                         &upscales[0],
                                         CUDNN_CROSS_CORRELATION,
                                         CudaContext::data_type));
-#else
-    CHECK_CUDNN_STATUS(
-        cudnnSetConvolutionNdDescriptor(mConvDesc,
-                                        mKernelDims.size(),
-                                        &paddings[0],
-                                        &strides[0],
-                                        &upscales[0],
-                                        CUDNN_CROSS_CORRELATION));
-#endif
 
     size_t workspaceSize = 0;
 
