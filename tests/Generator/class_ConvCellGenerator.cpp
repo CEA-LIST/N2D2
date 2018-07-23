@@ -53,8 +53,8 @@ TEST(ConvCellGenerator, ConvCellGenerator)
     ASSERT_EQUALS(convCell->getNbOutputs(), 16U);
     ASSERT_EQUALS(convCell->getOutputsWidth(), 11U);
     ASSERT_EQUALS(convCell->getOutputsHeight(), 11U);
-    ASSERT_EQUALS(convCell->getPaddingX(), 0U);
-    ASSERT_EQUALS(convCell->getPaddingY(), 0U);
+    ASSERT_EQUALS(convCell->getPaddingX(), 0);
+    ASSERT_EQUALS(convCell->getPaddingY(), 0);
     ASSERT_EQUALS(convCell->getStrideX(), 2U);
     ASSERT_EQUALS(convCell->getStrideY(), 2U);
 }
@@ -129,8 +129,8 @@ TEST_DATASET(ConvCellGenerator,
         ASSERT_EQUALS(convCell1->getNbOutputs(), 16U);
         ASSERT_EQUALS(convCell1->getOutputsWidth(), 11U);
         ASSERT_EQUALS(convCell1->getOutputsHeight(), 11U);
-        ASSERT_EQUALS(convCell1->getPaddingX(), 0U);
-        ASSERT_EQUALS(convCell1->getPaddingY(), 0U);
+        ASSERT_EQUALS(convCell1->getPaddingX(), 0);
+        ASSERT_EQUALS(convCell1->getPaddingY(), 0);
         ASSERT_EQUALS(convCell1->getStrideX(), 2U);
         ASSERT_EQUALS(convCell1->getStrideY(), 2U);
 
@@ -140,8 +140,8 @@ TEST_DATASET(ConvCellGenerator,
         ASSERT_EQUALS(convCell2->getNbOutputs(), 24U);
         ASSERT_EQUALS(convCell2->getOutputsWidth(), 4U);
         ASSERT_EQUALS(convCell2->getOutputsHeight(), 4U);
-        ASSERT_EQUALS(convCell2->getPaddingX(), 0U);
-        ASSERT_EQUALS(convCell2->getPaddingY(), 0U);
+        ASSERT_EQUALS(convCell2->getPaddingX(), 0);
+        ASSERT_EQUALS(convCell2->getPaddingY(), 0);
         ASSERT_EQUALS(convCell2->getStrideX(), 2U);
         ASSERT_EQUALS(convCell2->getStrideY(), 2U);
 
