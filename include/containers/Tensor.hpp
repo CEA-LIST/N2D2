@@ -263,12 +263,12 @@ protected:
              std::shared_ptr<BaseDataTensor> > mDataTensors;
 
     template <class U> friend
-        typename std::enable_if<std::is_assignable<U&,float>::value
-            || std::is_assignable<U&,double>::value, Tensor<U> >::type
+        typename std::enable_if<std::is_convertible<float,U>::value
+            || std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U> friend
-        typename std::enable_if<!std::is_assignable<U&,float>::value
-            && !std::is_assignable<U&,double>::value, Tensor<U> >::type
+        typename std::enable_if<!std::is_convertible<float,U>::value
+            && !std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U>
     friend Tensor<U> tensor_cast_nocopy(const BaseTensor& base);
@@ -376,12 +376,12 @@ protected:
     const size_t mDataOffset;
 
     template <class U> friend
-        typename std::enable_if<std::is_assignable<U&,float>::value
-            || std::is_assignable<U&,double>::value, Tensor<U> >::type
+        typename std::enable_if<std::is_convertible<float,U>::value
+            || std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U> friend
-        typename std::enable_if<!std::is_assignable<U&,float>::value
-            && !std::is_assignable<U&,double>::value, Tensor<U> >::type
+        typename std::enable_if<!std::is_convertible<float,U>::value
+            && !std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U>
     friend Tensor<U> tensor_cast_nocopy(const BaseTensor& base);
@@ -391,8 +391,8 @@ protected:
 };
 
 template <class T>
-typename std::enable_if<std::is_assignable<T&,float>::value
-                     || std::is_assignable<T&,double>::value, Tensor<T> >::type
+typename std::enable_if<std::is_convertible<float,T>::value
+                     || std::is_convertible<double,T>::value, Tensor<T> >::type
 tensor_cast(const BaseTensor& base)
 {
     if (base.getType() == &typeid(T))
@@ -437,8 +437,8 @@ tensor_cast(const BaseTensor& base)
 }
 
 template <class T>
-typename std::enable_if<!std::is_assignable<T&,float>::value
-                     && !std::is_assignable<T&,double>::value, Tensor<T> >::type
+typename std::enable_if<!std::is_convertible<float,T>::value
+                     && !std::is_convertible<double,T>::value, Tensor<T> >::type
 tensor_cast(const BaseTensor& base)
 {
     if (base.getType() == &typeid(T))
@@ -507,14 +507,16 @@ template <typename... Args>
 void N2D2::BaseTensor::synchronizeHToD(Args... args) const
 {
     assert(sizeof...(args) == mDims.size() + 1 || sizeof...(args) == 2);
-    synchronizeHToD({static_cast<size_t>(args)...});
+    synchronizeHToD(std::initializer_list<size_t>(
+                                            {static_cast<size_t>(args)...}));
 }
 
 template <typename... Args>
 void N2D2::BaseTensor::synchronizeDToH(Args... args) const
 {
     assert(sizeof...(args) == mDims.size() + 1 || sizeof...(args) == 2);
-    synchronizeDToH({static_cast<size_t>(args)...});
+    synchronizeDToH(std::initializer_list<size_t>(
+                                            {static_cast<size_t>(args)...}));
 }
 
 size_t N2D2::BaseTensor::getOffset(unsigned int dim, size_t i) const
