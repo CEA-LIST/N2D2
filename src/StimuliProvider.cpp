@@ -779,6 +779,488 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     }
 }
 
+// This implementation plots grey level matrices. Only used in spiking version  
+void N2D2::StimuliProvider::logData(const std::string& fileName,
+                                    Tensor<Float_T> data,
+                                    const double minValue,
+                                    const double maxValue)
+{
+    if (data.dims().size() == 2)
+        data.reshape({data.dimX(), data.dimY(), 1});
+    else if (data.dims().size() == 3
+             && (data.dimX() == 1 && data.dimY() == 1 && data.dimZ() > 1))
+    {
+        data.reshape({data.dimZ(), 1, 1});
+    }
+    else if (data.dims().size() > 3) {
+        throw std::runtime_error("Could not log Tensor of dimension > 3");
+    }
+
+    std::ofstream dataFile(fileName.c_str());
+
+    if (!dataFile.good())
+        throw std::runtime_error("Could not create data log file: " + fileName);
+
+    std::vector<Float_T> minVal(data.dimZ(), data(0));
+    std::vector<Float_T> maxVal(data.dimZ(), data(0));
+
+    unsigned int dimX = data.dimX();
+    unsigned int dimY = data.dimY();
+
+    for (unsigned int z = 0; z < data.dimZ(); ++z) {
+        const Tensor<Float_T> channel = data[z];
+
+        if (dimX > 1 && dimY > 1) {
+            // 2D data
+            for (unsigned int y = 0; y < dimY; ++y) {
+                for (unsigned int x = 0; x < dimX; ++x) {
+                    minVal[z] = std::min(minVal[z], channel(x, y));
+                    maxVal[z] = std::max(maxVal[z], channel(x, y));
+
+                    dataFile << channel(x, y) << " ";
+                }
+
+                dataFile << "\n";
+            }
+        } else {
+            // 1D data
+            const unsigned int size = dimX * dimY;
+            dimX = dimY = std::ceil(std::sqrt((double)size));
+            unsigned int index = 0;
+
+            for (unsigned int y = 0; y < dimY; ++y) {
+                for (unsigned int x = 0; x < dimX; ++x) {
+                    if (index < size) {
+                        minVal[z] = std::min(minVal[z], channel(index));
+                        maxVal[z] = std::max(maxVal[z], channel(index));
+
+                        dataFile << channel(index) << " ";
+                        ++index;
+                    } else
+                        dataFile << "0 ";
+                }
+
+                dataFile << "\n";
+            }
+        }
+
+        dataFile << "\n";
+    }
+
+    dataFile.close();
+
+    Gnuplot gnuplot(fileName + ".gnu");
+    gnuplot.set("grid").set("key off");
+    gnuplot.set("size ratio 1");
+    gnuplot.setXrange(-0.5, dimX - 0.5);
+    gnuplot.setYrange(-0.5, dimY - 0.5, "reverse");
+
+    gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
+    gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
+
+    const std::string dirName = Utils::fileBaseName(fileName);
+    const std::string baseName = Utils::baseName(dirName);
+
+    if (data.dimZ() > 1)
+        Utils::createDirectories(dirName);
+
+    for (unsigned int z = 0; z < data.dimZ(); ++z) {
+        std::stringstream cbRangeStr, paletteStr;
+        cbRangeStr << "cbrange [";
+        paletteStr << "palette defined (";
+
+         if (minValue < 0.0) {
+            cbRangeStr << minValue;
+            paletteStr << minValue << " \"black\", ";
+        } else
+            cbRangeStr << 0.0;
+
+        cbRangeStr << ":";
+        paletteStr << "0 \"grey\"";
+
+        if (maxValue > 0.0 || !(minValue < 0)) {
+            cbRangeStr << maxValue;
+            paletteStr << ", " << maxValue << " \"white\"";
+        } else
+            cbRangeStr << 0.0;
+
+        cbRangeStr << "]";
+        paletteStr << ")";
+
+        gnuplot.set(paletteStr.str());
+        gnuplot.set(cbRangeStr.str());
+
+        if (data.dimZ() > 1) {
+            std::stringstream channelName;
+            channelName << dirName << "/" << baseName << "[" << z << "]."
+                        << Utils::fileExtension(fileName);
+            gnuplot.saveToFile(channelName.str());
+
+            std::stringstream plotCmd;
+            plotCmd << "index " << z << " matrix with image";
+            gnuplot.plot(fileName, plotCmd.str());
+        } else {
+            gnuplot.saveToFile(fileName);
+            gnuplot.plot(fileName, "matrix with image");
+        }
+    }
+
+    gnuplot.close();
+
+    if (data.dimZ() > 1) {
+        const unsigned int size = std::ceil(std::sqrt((double)data.dimZ()));
+
+        std::stringstream termStr;
+        termStr << "if (!exists(\"multiplot\")) set term png size "
+                << 100 * size << "," << 100 * size << " enhanced";
+
+        Gnuplot multiplot;
+        multiplot.saveToFile(fileName + ".dat");
+        multiplot << termStr.str();
+        multiplot.setMultiplot(size, size);
+        multiplot.set("lmargin 0.1");
+        multiplot.set("tmargin 0.1");
+        multiplot.set("rmargin 0.1");
+        multiplot.set("bmargin 0.1");
+        multiplot.unset("xtics");
+        multiplot.unset("ytics");
+        multiplot.set("format x \"\"");
+        multiplot.set("format y \"\"");
+        multiplot.unset("colorbox");
+        multiplot.readCmd(fileName + ".gnu");
+    }
+}
+
+
+void N2D2::StimuliProvider::logDataMatrix(const std::string& fileName,
+                                    const Tensor<Float_T>& data,
+                                    const double minValue,
+                                    const double maxValue)
+{
+    std::ofstream dataFile(fileName.c_str());
+
+    if (!dataFile.good())
+        throw std::runtime_error("Could not create data log file: " + fileName);
+
+    std::vector<Float_T> minVal(data.dimZ(), data(0));
+    std::vector<Float_T> maxVal(data.dimZ(), data(0));
+
+    unsigned int dimX = data.dimX();
+    unsigned int dimY = data.dimY();
+
+    for (unsigned int z = 0; z < data.dimZ(); ++z) {
+        const Tensor<Float_T> channel = data[z];
+
+        if (dimX > 1 && dimY > 1) {
+            // 2D data
+            for (unsigned int y = 0; y < dimY; ++y) {
+                for (unsigned int x = 0; x < dimX; ++x) {
+                    minVal[z] = std::min(minVal[z], channel(x, y));
+                    maxVal[z] = std::max(maxVal[z], channel(x, y));
+
+                    dataFile << channel(x, y) << " ";
+                }
+
+                dataFile << "\n";
+            }
+        }
+        else {
+            throw std::runtime_error("StimuliProvider::logDataMatrix: "
+                                     "dimension should be bigger than 1");
+        }
+
+        dataFile << "\n";
+    }
+
+
+    dataFile.close();
+
+    Gnuplot gnuplot(fileName + ".gnu");
+    gnuplot.set("grid").set("key off");
+    gnuplot.set("size ratio 1");
+    gnuplot.setXrange(-0.5, dimX - 0.5);
+    gnuplot.setYrange(-0.5, dimY - 0.5, "reverse");
+
+    gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
+    gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
+
+    const std::string dirName = Utils::fileBaseName(fileName);
+    const std::string baseName = Utils::baseName(dirName);
+
+    if (data.dimZ() > 1)
+        Utils::createDirectories(dirName);
+
+    for (unsigned int z = 0; z < data.dimZ(); ++z) {
+        std::stringstream cbRangeStr, paletteStr;
+        cbRangeStr << "cbrange ["; //<< minValue << ":" << maxValue << "]";
+        paletteStr << "palette defined ("; //<< minValue << "" << ")";
+
+        if (minValue < 0.0) {
+            cbRangeStr << minValue;
+            paletteStr << minValue << " \"black\", ";
+        } else
+            cbRangeStr << 0.0;
+
+        cbRangeStr << ":";
+        paletteStr << "0 \"grey\"";
+
+        if (maxValue > 0.0 || !(minValue < 0)) {
+            cbRangeStr << maxValue;
+            paletteStr << ", " << maxValue << " \"white\"";
+        } else
+            cbRangeStr << 0.0;
+
+        cbRangeStr << "]";
+        paletteStr << ")";
+
+        gnuplot.set(paletteStr.str());
+        gnuplot.set(cbRangeStr.str());
+
+        if (data.dimZ() > 1) {
+            std::stringstream channelName;
+            channelName << dirName << "/" << baseName << "[" << z << "]."
+                        << Utils::fileExtension(fileName);
+            gnuplot.saveToFile(channelName.str());
+
+            std::stringstream plotCmd;
+            plotCmd << "index " << z << " matrix with image";
+            gnuplot.plot(fileName, plotCmd.str());
+
+        }
+        else {
+            gnuplot.saveToFile(fileName);
+            gnuplot.plot(fileName, "matrix with image");
+        }
+    }
+
+    gnuplot.close();
+
+    if (data.dimZ() > 1) {
+        const unsigned int size = std::ceil(std::sqrt((double)data.dimZ()));
+
+        std::stringstream termStr;
+        termStr << "if (!exists(\"multiplot\")) set term png size "
+                << 100 * size << "," << 100 * size << " enhanced";
+
+        Gnuplot multiplot;
+        multiplot.saveToFile(fileName + ".dat");
+        multiplot << termStr.str();
+        multiplot.setMultiplot(size, size);
+        multiplot.set("lmargin 0.1");
+        multiplot.set("tmargin 0.1");
+        multiplot.set("rmargin 0.1");
+        multiplot.set("bmargin 0.1");
+        multiplot.unset("xtics");
+        multiplot.unset("ytics");
+        multiplot.set("format x \"\"");
+        multiplot.set("format y \"\"");
+        multiplot.unset("colorbox");
+        multiplot.readCmd(fileName + ".gnu");
+    }
+}
+
+
+// Required for IF class with colours
+// Not reimplemented yet
+/*
+void N2D2::StimuliProvider::logRgbData(const std::string& fileName,
+                                    const Tensor4d<Float_T>& data)
+{
+    Gnuplot plotFilter(fileName + "-filters.gnu");
+    plotFilter.set("grid").set("key off");
+    plotFilter.set("size ratio 1");
+    plotFilter.setXrange(-0.5, data.dimX() - 0.5);
+    plotFilter.setYrange(data.dimY() - 0.5, -0.5);
+    /// WARNING: Bug in gnuplot 5 makes 'reverse' useless
+    //plotFilter.setYrange(-0.5, data.dimY() - 0.5, "reverse");
+    plotFilter << "if (!exists(\"multiplot\")) set xtics out nomirror";
+    plotFilter << "if (!exists(\"multiplot\")) set ytics out nomirror";
+
+    for (unsigned int ftr=0; ftr<data.dimB(); ++ftr){
+        //std::ofstream dataFile(fileName.c_str());
+        //if (!dataFile.good())
+        //    throw std::runtime_error("Could not create data log file: " + fileName);
+
+        //unsigned colors[] = {"red", "green", "blue"};
+
+        std::stringstream fileNameFilter;
+        fileNameFilter << fileName << "-" << ftr;
+        std::string file = fileNameFilter.str();
+
+        const std::string dirName = Utils::fileBaseName(file);
+        const std::string baseName = Utils::baseName(dirName);
+
+        if (data.dimZ() > 1)
+            Utils::createDirectories(dirName);
+
+        unsigned int dimX = data.dimX();
+        unsigned int dimY = data.dimY();
+
+        Gnuplot gnuplot(file + ".gnu");
+        gnuplot.set("grid").set("key off");
+        gnuplot.set("size ratio 1");
+        gnuplot.setXrange(-0.5, dimX - 0.5);
+        gnuplot.setYrange(dimY - 0.5, -0.5);
+        /// WARNING: Bug in gnuplot 5 makes 'reverse' useless
+        //gnuplot.setYrange(-0.5, dimY - 0.5, "reverse");
+
+        gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
+        gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
+
+        // Gnuplot object for filter plot
+        //Gnuplot plotFilter(fileName + "-filters.gnu");
+        //plotFilter.set("grid").set("key off");
+        //plotFilter.set("size ratio 1");
+        //plotFilter.setXrange(-0.5, dimX - 0.5);
+        //plotFilter.setYrange(-0.5, dimY - 0.5, "reverse");
+
+        //plotFilter << "if (!exists(\"multiplot\")) set xtics out nomirror";
+        //plotFilter << "if (!exists(\"multiplot\")) set ytics out nomirror";
+
+        for (unsigned int z = 0; z < data.dimZ(); ++z) {
+
+            std::stringstream channelName;
+            channelName << dirName << "/" << baseName << "[" << z << "]" << ".dat";
+            std::ofstream rgbChannelData(channelName.str());
+            if (!rgbChannelData.good())
+                throw std::runtime_error("Could not create data log file: "
+                                    + channelName.str());
+
+            // Generate rgb data for each channel and save in file
+            for (unsigned int y = 0; y < dimY; ++y) {
+               for (unsigned int x = 0; x < dimX; ++x) {
+                    rgbChannelData << x << " " << y << " ";
+                    const Tensor2d<Float_T> channel = data[ftr][z];
+                    for (unsigned int k=0; k<3; ++k){
+                        if (z == k){
+                            rgbChannelData << (int) channel(x, y) << " ";
+                        }
+                        else {
+                            rgbChannelData << "0" << " ";
+                        }
+                    }
+                    rgbChannelData << "\n";
+                }
+            }
+            rgbChannelData.close();
+
+            // Add output command to plot file
+            gnuplot.saveToFile(channelName.str());
+
+            // Add plot command to plot file
+            std::stringstream plotCmd;
+            plotCmd << " using 1:2:3:4:5 with rgbimage";
+            gnuplot.plot(channelName.str(), plotCmd.str());
+        }
+
+        //gnuplot.close();
+
+        //std::string colors[] = {"red", "green", "blue"};
+
+        std::stringstream rgbFileName;
+        rgbFileName << dirName << "/" << baseName << "-rgb.dat";
+        std::ofstream rgbDataFile(rgbFileName.str());
+        if (!rgbDataFile.good())
+            throw std::runtime_error("Could not create data log file: "
+                                    + rgbFileName.str());
+
+        // rgb data
+        for (unsigned int y = 0; y < dimY; ++y) {
+            for (unsigned int x = 0; x < dimX; ++x) {
+                rgbDataFile << x << " " << y << " ";
+                for (unsigned int z = 0; z < data.dimZ(); ++z) {
+                    const Tensor2d<Float_T> channel = data[ftr][z];
+                    rgbDataFile << (int) channel(x, y) << " ";
+                }
+                rgbDataFile << "\n";
+            }
+        }
+
+        //std::stringstream gnuName;
+        //gnuName << dirName << "/" << baseName << "-rgb.gnu";
+        //Gnuplot rgbPlot(gnuName.str());
+        //rgbPlot.set("grid").set("key off");
+        //rgbPlot.set("size ratio 1");
+        //rgbPlot.setXrange(-0.5, dimX - 0.5);
+        //rgbPlot.setYrange(-0.5, dimY - 0.5, "reverse");
+
+        //rgbPlot << "if (!exists(\"multiplot\")) set xtics out nomirror";
+        //rgbPlot << "if (!exists(\"multiplot\")) set ytics out nomirror";
+
+        std::stringstream channelName;
+        channelName << dirName << "/" << baseName << "-rgb.dat";
+        gnuplot.saveToFile(channelName.str());
+        plotFilter.saveToFile(channelName.str());
+
+        std::stringstream plotCmd;
+        plotCmd << "using 1:2:3:4:5 with rgbimage";
+        std::stringstream rgbImageName;
+        rgbImageName << channelName.str();
+        gnuplot.plot(rgbImageName.str(), plotCmd.str());
+        plotFilter.plot(rgbImageName.str(), plotCmd.str());
+
+        gnuplot.close();
+        //plotFilter.close();
+
+
+        // Make 4x4 multiplots
+        const unsigned int size = std::ceil(std::sqrt((double)data.dimZ()));
+
+        std::stringstream termStr;
+        termStr << "if (!exists(\"multiplot\")) set term png size "
+                << 100 * size << "," << 100 * size << " enhanced";
+
+        // This opens the gnu file again, and executes the plots there again
+        // with the multiplot variables
+        Gnuplot multiplot;
+        multiplot.saveToFile(file + ".dat");
+        multiplot << termStr.str();
+        multiplot.setMultiplot(size, size);
+        multiplot.set("lmargin 0.1");
+        multiplot.set("tmargin 0.1");
+        multiplot.set("rmargin 0.1");
+        multiplot.set("bmargin 0.1");
+        multiplot.unset("xtics");
+        multiplot.unset("ytics");
+        multiplot.set("format x \"\"");
+        multiplot.set("format y \"\"");
+        multiplot.unset("colorbox");
+        multiplot.readCmd(file + ".gnu");
+        multiplot.close();
+    }
+
+    plotFilter.close();
+
+    // Plot all filters in multiplot
+    const unsigned int size = std::ceil(std::sqrt((double)data.dimB()));
+
+    std::stringstream termStr;
+    termStr << "if (!exists(\"multiplot\")) set term png size "
+            << 100 * size << "," << 100 * size << " enhanced";
+
+    // This opens the gnu file again, and executes the plots there again
+    // with the multiplot variables
+
+    Gnuplot filterMultiplot;
+    filterMultiplot.saveToFile(fileName + "-filters.dat");
+    filterMultiplot << termStr.str();
+    filterMultiplot.setMultiplot(size, size);
+    filterMultiplot.set("lmargin 0.1");
+    filterMultiplot.set("tmargin 0.1");
+    filterMultiplot.set("rmargin 0.1");
+    filterMultiplot.set("bmargin 0.1");
+    filterMultiplot.unset("xtics");
+    filterMultiplot.unset("ytics");
+    filterMultiplot.set("format x \"\"");
+    filterMultiplot.set("format y \"\"");
+    filterMultiplot.unset("colorbox");
+    filterMultiplot.readCmd(fileName + "-filters.gnu");
+    filterMultiplot.close();
+
+
+}
+*/
+
 std::vector<cv::Mat> N2D2::StimuliProvider::loadDataCache(const std::string
                                                           & fileName) const
 {

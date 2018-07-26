@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Johannes THIELE (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -234,15 +235,54 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
             }
 
             // Monitor for the cell
+            // Try different casts to find out Cell type
             std::shared_ptr<Cell_Spike> cellSpike = std::dynamic_pointer_cast
                 <Cell_Spike>(cell);
 
+            std::shared_ptr<Cell_CSpike> cellCSpike = std::dynamic_pointer_cast
+                <Cell_CSpike>(cell);
+#ifdef CUDA
+            std::shared_ptr<Cell_CSpike_CUDA> cellCSpike_CUDA = std::dynamic_pointer_cast
+                <Cell_CSpike_CUDA>(cell);
+#endif
             if (cellSpike) {
                 std::shared_ptr<Monitor> monitor(new Monitor(network));
                 monitor->add(cellSpike->getOutputs());
 
                 deepNet->addMonitor((*it), monitor);
+
             }
+            else if (cellCSpike){
+                std::shared_ptr<CMonitor> monitor(new CMonitor(network));
+                monitor->add(cell.get());
+                deepNet->addCMonitor((*it), monitor);
+            }
+#ifdef CUDA
+            else if (cellCSpike_CUDA){
+                std::cout << "try CMonitor_CUDA initialization " <<  std::endl;
+                //std::cout << "Add Monitor: " << *it << std::endl;
+                std::shared_ptr<CMonitor> monitor(new CMonitor_CUDA(network));
+                //if (!monitor) {
+                //    std::cout << "Monitor Pointer empty" << std::endl;
+                //    exit(0);
+                //}
+                //monitor->add(cellCSpike_CUDA->getOutputs());
+                monitor->add(cell.get());
+
+                deepNet->addCMonitor((*it), monitor);
+
+                /*std::shared_ptr<CMonitor> sleepMonitor(new CMonitor_CUDA(network));
+                //sleepMonitor->add(cellCSpike_CUDA->getOutputs());
+                sleepMonitor->add(cell.get());
+
+                deepNet->addCMonitor((*it), sleepMonitor, true);*/
+            }
+#endif
+            else {
+                std::cout << "Warning: No monitor could be added to Cell: " +
+                    cell->getName() << std::endl;
+            }
+
         }
     }
 
@@ -269,15 +309,48 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     }
 
     // Monitor for the environment
-    std::shared_ptr<Environment> env = std::dynamic_pointer_cast
-        <Environment>(deepNet->getStimuliProvider());
 
-    if (env) {
+    std::shared_ptr<Environment> env = std::dynamic_pointer_cast<Environment>
+        (deepNet->getStimuliProvider());
+
+    std::shared_ptr<CEnvironment> Cenv = std::dynamic_pointer_cast<CEnvironment>
+        (deepNet->getStimuliProvider());
+
+    if (Cenv) {
+#ifdef CUDA
+        std::shared_ptr<CMonitor> cmonitor(new CMonitor_CUDA(network));
+        cmonitor->add(*Cenv);
+
+        deepNet->addCMonitor("env", cmonitor);
+
+        /*std::shared_ptr<CMonitor> sleepMonitor(new CMonitor(network));
+        sleepMonitor->add(*Cenv);
+
+        deepNet->addCMonitor("env", sleepMonitor, true);*/
+#else
+        std::shared_ptr<CMonitor> cmonitor(new CMonitor(network));
+        cmonitor->add(*Cenv);
+
+        deepNet->addCMonitor("env", cmonitor);
+
+        /*std::shared_ptr<CMonitor> sleepMonitor(new CMonitor(network));
+        sleepMonitor->add(*Cenv);
+
+        deepNet->addCMonitor("env", sleepMonitor, true);*/
+#endif
+    }
+
+    else if (env) {
         std::shared_ptr<Monitor> monitor(new Monitor(network));
         monitor->add(env->getNodes());
 
         deepNet->addMonitor("env", monitor);
     }
+    else {
+	 std::runtime_error(
+	"DeepNetGenerator::generate: Cast of environment failed. No Monitors added");
+    }
+
 
     // Check that the properties of the latest section are valid
     iniConfig.currentSection();

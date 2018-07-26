@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2013 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -369,6 +370,19 @@ void N2D2::DeepNet::addMonitor(const std::string& name,
     mMonitors.insert(std::make_pair(name, monitor));
 }
 
+void N2D2::DeepNet::addCMonitor(const std::string& name,
+                                const std::shared_ptr<CMonitor>& monitor)
+{
+    const std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+        = mCMonitors.find(name);
+
+    if (it != mCMonitors.end())
+        throw std::runtime_error("CMonitor for layer " + name
+                                 + " already exists");
+
+    mCMonitors.insert(std::make_pair(name, monitor));
+}
+
 std::vector<std::pair<std::string, unsigned int> >
 N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
 {
@@ -393,6 +407,30 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
             (*itMonitor).second->update(update);
             activity.push_back(std::make_pair(
                 (*itCell), (*itMonitor).second->getTotalActivity()));
+
+        }
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell) {
+
+            std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator
+            itMonitor = mCMonitors.find(*itCell);
+
+            if (itMonitor ==  mCMonitors.end())
+                continue;
+
+            (*itMonitor).second->clearMostActive();
+
+            (*itMonitor).second->update(start, stop);
+
+            activity.push_back(std::make_pair(
+                (*itCell), (*itMonitor).second->getTotalBatchActivity()));
+
+            if(!log) {
+                (*itMonitor).second->clearActivity();
+            }
+
         }
     }
 
@@ -408,6 +446,19 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
                                         true);
 
             (*it).second->clearActivity();
+        }
+
+        for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+             = mCMonitors.begin(),
+             itEnd = mCMonitors.end();
+             it != itEnd;
+             ++it) {
+            (*it).second->logActivity("activity_batchElem_0_" + (*it).first + ".dat", 0, true, start, stop);
+            (*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",
+                                        true);
+
+            (*it).second->clearActivity();
+
         }
 
         for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
@@ -465,6 +516,18 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
                                            + ".syntxt");
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
                                                + ".distrib.dat");
+/*
+#ifdef CUDA
+        std::shared_ptr<FcCell_CSpike_Dynapse_CUDA> cellCSpike =
+            std::dynamic_pointer_cast<FcCell_CSpike_Dynapse_CUDA>((*it).second);
+        if (cellCSpike != nullptr) {
+            cellCSpike->exportRecFreeParameters(dirName + "/" + (*it).first
+                                           + "-rec.syntxt");
+            cellCSpike->exportTopDownFreeParameters(dirName + "/" + (*it).first
+                                           + "-TopDown.syntxt");
+        }
+#endif
+*/
     }
 }
 
@@ -492,9 +555,43 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          = mCells.begin(),
          itEnd = mCells.end();
          it != itEnd;
-         ++it)
+         ++it){
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
                                            + ".syntxt", ignoreNotExists);
+    }
+/*
+#ifdef CUDA
+        std::shared_ptr<FcCell_CSpike_Dynapse_CUDA> cellCSpike =
+            std::dynamic_pointer_cast<FcCell_CSpike_Dynapse_CUDA>((*it).second);
+        if (cellCSpike != nullptr) {
+            cellCSpike->importRecFreeParameters(dirName + "/" + (*it).first
+                                           + "-rec.syntxt");
+            cellCSpike->importTopDownFreeParameters(dirName + "/" + (*it).first
+                                           + "-TopDown.syntxt");
+        }
+#endif
+*/
+}
+
+
+/* This implementation loads only those weights from
+the directory which are explicitly specified */
+void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
+                                                const std::string& weightName) {
+    bool weightsFound = false;
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator
+    it = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it) {
+        if (weightName.compare((*it).first) == 0) {
+            (*it).second->importFreeParameters(dirName + "/"
+                                                + (*it).first + ".syntxt");
+            std::cout << "Weight " << (*it).first
+            << " successfully imported" << std::endl;
+            weightsFound = true;
+        }
+    }
+    if (!weightsFound)
+        std::cout << "Warning: weight file " << weightName
+        << " was not found!" << std::endl;
 }
 
 std::shared_ptr<N2D2::Monitor> N2D2::DeepNet::getMonitor(const std::string
@@ -505,6 +602,19 @@ std::shared_ptr<N2D2::Monitor> N2D2::DeepNet::getMonitor(const std::string
 
     if (it == mMonitors.end())
         throw std::runtime_error("Monitor for layer " + name
+                                 + " does not exist");
+
+    return (*it).second;
+}
+
+std::shared_ptr<N2D2::CMonitor> N2D2::DeepNet::getCMonitor(const std::string
+                                                         & name) const
+{
+    const std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+        = mCMonitors.find(name);
+
+    if (it == mCMonitors.end())
+        throw std::runtime_error("CMonitor for layer " + name
                                  + " does not exist");
 
     return (*it).second;
@@ -557,7 +667,7 @@ void N2D2::DeepNet::getStats(Cell::Stats& stats) const
         (*it).second->getStats(stats);
 }
 
-void N2D2::DeepNet::clearAll()
+void N2D2::DeepNet::clearAll(unsigned int nbTimesteps)
 {
     for (std::map<std::string, std::shared_ptr<Monitor> >::const_iterator it
          = mMonitors.begin(),
@@ -566,6 +676,13 @@ void N2D2::DeepNet::clearAll()
          ++it) {
         (*it).second->clearAll();
     }
+    for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+         = mCMonitors.begin(),
+         itEnd = mCMonitors.end();
+         it != itEnd;
+         ++it) {
+        (*it).second->clearAll(nbTimesteps);
+    }
 }
 
 void N2D2::DeepNet::clearActivity()
@@ -573,6 +690,13 @@ void N2D2::DeepNet::clearActivity()
     for (std::map<std::string, std::shared_ptr<Monitor> >::const_iterator it
          = mMonitors.begin(),
          itEnd = mMonitors.end();
+         it != itEnd;
+         ++it) {
+        (*it).second->clearActivity();
+    }
+    for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+         = mCMonitors.begin(),
+         itEnd = mCMonitors.end();
          it != itEnd;
          ++it) {
         (*it).second->clearActivity();
@@ -588,6 +712,13 @@ void N2D2::DeepNet::clearFiringRate()
          ++it) {
         (*it).second->clearFiringRate();
     }
+    for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+         = mCMonitors.begin(),
+         itEnd = mCMonitors.end();
+         it != itEnd;
+         ++it) {
+        (*it).second->clearFiringRate();
+    }
 }
 
 void N2D2::DeepNet::clearSuccess()
@@ -595,6 +726,13 @@ void N2D2::DeepNet::clearSuccess()
     for (std::map<std::string, std::shared_ptr<Monitor> >::const_iterator it
          = mMonitors.begin(),
          itEnd = mMonitors.end();
+         it != itEnd;
+         ++it) {
+        (*it).second->clearSuccess();
+    }
+    for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
+         = mCMonitors.begin(),
+         itEnd = mCMonitors.end();
          it != itEnd;
          ++it) {
         (*it).second->clearSuccess();
@@ -1159,6 +1297,32 @@ void N2D2::DeepNet::logFreeParameters(const std::string& dirName) const
     }
 }
 
+#ifdef CUDA
+void N2D2::DeepNet::logCalculationMetrics(const std::string& dirName) const
+{
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin() + 1,
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it) {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell) {
+            const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            std::shared_ptr<FcCell_CSpike_BP_CUDA> cellSpike =
+                std::dynamic_pointer_cast<FcCell_CSpike_BP_CUDA>(cell);
+            if (!cellSpike)
+                throw std::runtime_error("DeepNet::logCalculationMetrics(): Cast failed");
+            Utils::createDirectories(dirName);
+            std::ostringstream fileName;
+            fileName << dirName << "/" << *itCell << "-metrics.dat";
+            cellSpike->logCalculationMetrics(fileName.str());
+        }
+    }
+}
+#endif
+
 void N2D2::DeepNet::logStats(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
@@ -1589,6 +1753,7 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
 
             if (itMonitor == mMonitors.end())
                 continue;
+	    //TODO: Implement this for CMonitor
 
             const unsigned int firingRate
                 = (*itMonitor).second->getTotalFiringRate();
@@ -1872,7 +2037,10 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
     }
 }
 
-void N2D2::DeepNet::cTicks(Time_T start, Time_T stop, Time_T timestep)
+void N2D2::DeepNet::cTicks(Time_T start,
+                           Time_T stop,
+                           Time_T timestep,
+                           bool record)
 {
     const unsigned int nbLayers = mLayers.size();
 
@@ -1880,7 +2048,21 @@ void N2D2::DeepNet::cTicks(Time_T start, Time_T stop, Time_T timestep)
         <CEnvironment>(mStimuliProvider);
 
     if (!cEnv)
-        throw std::runtime_error("DeepNet::cTicks(): require a CEnvironment.");
+        throw std::runtime_error("DeepNet::cTicks(): requires a CEnvironment.");
+
+    if (stop < start){
+        throw std::runtime_error("DeepNet::cTicks(): stop < start");
+    }
+
+    if ((stop-start)%timestep != 0){
+        throw std::runtime_error("DeepNet::cTicks(): stop-start not multiple "
+        "of timestep");
+    }
+    unsigned int nbTimesteps = (stop-start)/timestep+1;
+    if (nbTimesteps > std::numeric_limits<unsigned int>::max()) {
+        throw std::runtime_error("DeepNet::cTicks(): nbTimesteps overflow!");
+    }
+
 
     for (Time_T t = start; t <= stop; t += timestep) {
         cEnv->tick(t, start, stop);
@@ -1903,8 +2085,62 @@ void N2D2::DeepNet::cTicks(Time_T start, Time_T stop, Time_T timestep)
                     return;
             }
         }
+
+        if (record) {
+
+            for (std::vector<std::vector<std::string> >::const_iterator it
+            = mLayers.begin(),
+            itBegin = mLayers.begin(),
+            itEnd = mLayers.end();
+            it != itEnd;
+            ++it) {
+                for (std::vector<std::string>::const_iterator
+                    itCell = (*it).begin(),
+                    itCellEnd = (*it).end();
+                itCell != itCellEnd;
+                ++itCell) {
+                    const std::map
+                        <std::string, std::shared_ptr<CMonitor> >::const_iterator
+                    itMonitor = mCMonitors.find(*itCell);
+
+                    if (itMonitor == mCMonitors.end()){
+
+                        continue;
+                    }
+
+                    (*itMonitor).second->initialize(nbTimesteps,
+                            mStimuliProvider->getDatabase().getNbLabels());
+
+
+                    (*itMonitor).second->tick(t);
+                }
+            }
+        }
     }
+
+//TODO: Remove as soon as FcCell_CSpike_IF_CUDA is refactored (and BP removed)
+/*
+#ifdef CUDA
+    for (unsigned int l = 1; l < nbLayers; ++l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell) {
+            std::shared_ptr<FcCell_CSpike_IF_CUDA> cellCSpike
+                = std::dynamic_pointer_cast
+                <FcCell_CSpike_IF_CUDA>(mCells[(*itCell)]);
+
+            if (cellCSpike){
+                cellCSpike->backProp();
+            }
+        }
+    }
+#endif
+*/
+
 }
+
 
 void N2D2::DeepNet::cTargetsProcess(Database::StimuliSet set)
 {
@@ -1942,6 +2178,43 @@ void N2D2::DeepNet::cReset(Time_T timestamp)
         cellCSpike->reset(timestamp);
     }
 }
+
+//TODO: implement also for BP class
+/*
+void N2D2::DeepNet::cDecayLearningRates(double decayStep)
+{
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(),
+         itEnd = mCells.end();
+         it != itEnd;
+         ++it) {
+        std::shared_ptr<FcCell_CSpike_IF_CUDA> cellCSpike = std::dynamic_pointer_cast
+            <FcCell_CSpike_IF_CUDA>((*it).second);
+
+        if (cellCSpike){
+            cellCSpike->decayLearningRate(decayStep);
+        }
+    }
+}
+*/
+
+#ifdef CUDA
+void N2D2::DeepNet::cDropoutRescaling(bool on)
+{
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(),
+         itEnd = mCells.end();
+         it != itEnd;
+         ++it) {
+        std::shared_ptr<FcCell_CSpike_BP_CUDA> cellCSpike = std::dynamic_pointer_cast
+            <FcCell_CSpike_BP_CUDA>((*it).second);
+
+        if (cellCSpike){
+            cellCSpike->dropoutRescaling(on);
+        }
+    }
+}
+#endif
 
 void N2D2::DeepNet::log(const std::string& baseName,
                         Database::StimuliSet set) const

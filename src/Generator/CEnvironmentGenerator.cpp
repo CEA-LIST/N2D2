@@ -25,7 +25,8 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
 {
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
-
+    const bool cudaSpike = iniConfig.getProperty
+                                  <bool>("SpikeCUDA", false);
     std::vector<size_t> size;
 
     if (iniConfig.isProperty("Size"))
@@ -42,16 +43,57 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
 
     const unsigned int batchSize = iniConfig.getProperty
                                    <unsigned int>("BatchSize", 1U);
+    const unsigned int nbSubStimuli = iniConfig.getProperty
+                                   <unsigned int>("NbSubStimuli", 1U);
     const bool compositeStimuli = iniConfig.getProperty
                                   <bool>("CompositeStimuli", false);
     const std::string cachePath = iniConfig.getProperty
                                   <std::string>("CachePath", "");
+    const bool readStream = iniConfig.getProperty
+                                  <bool>("ReadStream", false);
+
+    if (cudaSpike) {
+#ifndef CUDA
+        std::cout << Utils::cwarning << "Warning: to use CUDA spike generation "
+        << "N2D2 must be compiled with CUDA enabled.\n";
+        std::cout << "*** Using standard cenv instead "
+            << Utils::cdef << std::endl;
+#else
+
+        std::shared_ptr<CEnvironment_CUDA> cEnv(new CEnvironment_CUDA(
+            database, size, batchSize, nbSubStimuli, compositeStimuli));
+
+
+        cEnv->setCachePath(cachePath);
+
+        if (readStream){
+            iniConfig.setProperty("_EpochSize", 1);
+        }
+        else {
+            iniConfig.setProperty("_EpochSize", database.getNbStimuli(Database::Learn));
+        }
+
+        const std::string configSection = iniConfig.getProperty
+                                          <std::string>("ConfigSection", "");
+
+        if (!configSection.empty())
+            cEnv->setParameters(iniConfig.getSection(configSection));
+
+        generateSubSections(cEnv, iniConfig, section);
+        return cEnv;
+#endif
+    }
 
     std::shared_ptr<CEnvironment> cEnv(new CEnvironment(
-        database, size, batchSize, compositeStimuli));
+        database, size, batchSize, nbSubStimuli, compositeStimuli));
     cEnv->setCachePath(cachePath);
 
-    iniConfig.setProperty("_EpochSize", database.getNbStimuli(Database::Learn));
+    if (readStream){
+        iniConfig.setProperty("_EpochSize", 1);
+    }
+    else {
+        iniConfig.setProperty("_EpochSize", database.getNbStimuli(Database::Learn));
+    }
 
     const std::string configSection = iniConfig.getProperty
                                       <std::string>("ConfigSection", "");

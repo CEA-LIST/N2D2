@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+    Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
+                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -18,24 +19,25 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_CENVIRONMENTGENERATOR_H
-#define N2D2_CENVIRONMENTGENERATOR_H
+#ifndef N2D2_RELATIONAL_DATABASE_H
+#define N2D2_RELATIONAL_DATABASE_H
 
-#include "CEnvironment.hpp"
-#include "Generator/StimuliProviderGenerator.hpp"
-#include "utils/IniParser.hpp"
-
-#ifdef CUDA
-#include "CEnvironment_CUDA.hpp"
-#endif
+#include "Database/Database.hpp"
 
 namespace N2D2 {
-class CEnvironmentGenerator : public StimuliProviderGenerator {
+class Relational_Database : public Database {
 public:
-    static std::shared_ptr<CEnvironment> generate(Database& database,
-                                                  IniParser& iniConfig,
-                                                  const std::string& section);
+    Relational_Database(double validation = 0.0);
+    virtual void load(const std::string& dataPath,
+                      const std::string& labelPath = "",
+                      bool /*extractROIs*/ = false);
+    std::vector<std::pair<std::vector<double>, double>> loadRelationSample(
+                                                 double* triple = nullptr);
+    virtual ~Relational_Database() {};
+
+protected:
+    double mValidation;
 };
 }
 
-#endif // N2D2_CENVIRONMENTGENERATOR_H
+#endif // N2D2_RELATIONAL_DATABASE_H

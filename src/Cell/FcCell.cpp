@@ -29,6 +29,8 @@ N2D2::FcCell::FcCell(const std::string& name, unsigned int nbOutputs)
       mWeightsExportFormat(this, "WeightsExportFormat", OC),
       mOutputsRemap(this, "OutputsRemap", ""),
       mWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
+      mTopDownWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
+      mRecWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
       mBiasFiller(new NormalFiller<Float_T>(0.0, 0.05))
 {
     // ctor

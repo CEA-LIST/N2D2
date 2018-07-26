@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+		            Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -29,7 +30,11 @@
 
 #include "Database/Database.hpp"
 #include "Transformation/CompositeTransformation.hpp"
+#ifdef CUDA
+#include "containers/CudaTensor.hpp"
+#else
 #include "containers/Tensor.hpp"
+#endif
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
@@ -140,6 +145,15 @@ public:
     /// mData and mLabelsData
     void readRandomBatch(Database::StimuliSet set);
 
+//TODO: Required for spiking neural network batch parallelization
+/*
+    /// Read a whole random batch from the StimuliSet @p set, apply all the
+    /// transformations and put the results in
+    /// mData and mLabelsData. Save the IDs of the stimuli
+    void readRandomBatch(Database::StimuliSet set,
+                            std::vector<Database::StimulusID>& Ids);
+*/
+
     /// Read a single random stimulus from the StimuliSet @p set, apply all the
     /// transformations and put the results at batch
     /// position @p batchPos in mData and mLabelsData
@@ -152,10 +166,19 @@ public:
     /// mData and mLabelsData
     void readBatch(Database::StimuliSet set, unsigned int startIndex);
 
+//TODO: Required for spiking neural network batch parallelization
+/*
+    /// Read a whole batch from the StimuliSet @p set, apply all the
+    /// transformations and put the results in
+    /// mData and mLabelsData. Save the IDs of the stimuli
+    void readBatch(Database::StimuliSet set, unsigned int startIndex,
+                             std::vector<Database::StimulusID>& Ids);
+*/
+
     /// Read the stimulus with StimulusID @p id, apply all the transformations
     /// and put the results at batch
     /// position @p batchPos in mData and mLabelsData
-    void readStimulus(Database::StimulusID id,
+    virtual void readStimulus(Database::StimulusID id,
                       Database::StimuliSet set,
                       unsigned int batchPos = 0);
 
@@ -268,6 +291,17 @@ public:
 
     static void logData(const std::string& fileName,
                         Tensor<Float_T> data);
+    static void logData(const std::string& fileName,
+                        Tensor<Float_T> data,
+                        const double minValue,
+                        const double maxValue);
+    static void logDataMatrix(const std::string& fileName,
+                        const Tensor<Float_T>& data,
+                        const double minValue,
+                        const double maxValue);
+    //static void logRgbData(const std::string& fileName,
+    //                    const Tensor4d<Float_T>& data);
+
 
 protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
@@ -289,7 +323,12 @@ protected:
     std::vector<int> mBatch;
     std::vector<int> mFutureBatch;
     /// Tensor (x, y, channel, batch)
+#ifdef CUDA
+    // If CUDA activated use CudaTensor to enable CUDA spike generation
+    CudaTensor<Float_T> mData;
+#else
     Tensor<Float_T> mData;
+#endif
     Tensor<Float_T> mFutureData;
     /// Tensor (x, y, channel, batch)
     Tensor<int> mLabelsData;

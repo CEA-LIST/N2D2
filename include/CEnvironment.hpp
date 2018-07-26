@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+    Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
+                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -33,32 +34,133 @@
 #include "utils/Parameterizable.hpp"
 #include "utils/Random.hpp"
 #include "utils/Utils.hpp"
+#include "Aer.hpp"
+#include "AerEvent.hpp"
+#include "Database/AER_Database.hpp"
+#ifdef CUDA
+#include "controler/CudaInterface.hpp"
+#else
+#include "controler/Interface.hpp"
+#endif
 
 namespace N2D2 {
 class CEnvironment : public StimuliProvider, public SpikeGenerator {
 public:
+    // Make other implementation of readStimulus accessible
+    using StimuliProvider::readStimulus;
     CEnvironment(Database& database,
                  const std::vector<size_t>& size,
                  unsigned int batchSize = 1,
+                 unsigned int nbSubStimuli = 1,
                  bool compositeStimuli = false);
-    virtual void addChannel(const CompositeTransformation& transformation);
-    void tick(Time_T timestamp, Time_T start, Time_T stop);
-    void reset(Time_T timestamp);
-    Tensor<char>& getTickData()
+    void addChannel(const CompositeTransformation& transformation,
+                    unsigned int subIdx=0);
+    virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
+
+    virtual void readStimulus(Database::StimulusID id,
+                      Database::StimuliSet set,
+                      unsigned int batchPos = 0);
+
+    virtual void readAerStimulus(Database::StimuliSet set,
+                         Database::StimulusID id,
+                        Time_T start,
+                        Time_T stop,
+                        unsigned int repetitions,
+                        unsigned int partialStimulus);
+
+    virtual void readAerStimulus(Database::StimuliSet set,
+                        Database::StimulusID id,
+                        Time_T start,
+                        Time_T stop,
+                        unsigned int repetitions,
+                        unsigned int partialStimulus,
+                        std::vector<Database::StimulusID>& Ids);
+
+    virtual void readRandomAerStimulus(Database::StimuliSet set,
+                                Time_T start,
+                                Time_T stop,
+                                unsigned int repetitions,
+                                unsigned int partialStimulus,
+                                std::vector<Database::StimulusID>& Ids);
+
+    virtual void readAerStream(std::string dataPath,
+                        Time_T start,
+                        Time_T stop,
+                        unsigned int repetitions);
+
+    virtual void readAerStream(Time_T start,
+                            Time_T stop,
+                            unsigned int repetitions);
+
+    /*
+    void readRelationalStimulus(bool test=false, Float_T constantInput=0);
+
+    Tensor4d<Float_T> makeInputIdentity(unsigned int subStimulus,
+                                        double scalingFactor);
+    void produceConstantInput(Float_T constantInput);
+    void produceRandomInput(Float_T mean, Float_T dev);
+    double getRelationalTarget(unsigned int subStimulus)
+    {
+        return mRelationalTargets[subStimulus];
+    };
+    */
+
+    virtual void reset(Time_T timestamp);
+    virtual Tensor<char>& getTickData(unsigned int subIdx)
+    {
+        return mTickData[subIdx];
+    };
+    virtual const Tensor<char>& getTickData(unsigned int subIdx) const
+    {
+        return mTickData[subIdx];
+    };
+    virtual Interface<char>& getTickData()
     {
         return mTickData;
     };
-    const Tensor<char>& getTickData() const
+    virtual Tensor<char>& getTickOutputs()
     {
-        return mTickData;
+        return mTickOutputs;
+    };
+    bool isAerMode()
+    {
+        return mReadAerData;
     };
     virtual ~CEnvironment();
 
 protected:
     /// For each scale, tensor (x, y, channel, batch)
     bool mInitialized;
-    Tensor<char> mTickData;
-    Tensor<std::pair<Time_T, char> > mNextEvent;
+
+    std::vector<AerReadEvent> mAerData;
+
+#ifdef CUDA
+    // If CUDA activated use CudaTensor to enable CUDA spike generation
+    CudaInterface<Float_T> mRelationalData;
+#else
+    Interface<Float_T> mRelationalData;
+#endif
+
+    std::vector<double> mRelationalTargets;
+
+#ifdef CUDA
+    CudaInterface<char> mTickData;
+    CudaTensor<char> mTickOutputs;
+#else
+    Interface<char> mTickData;
+    Tensor<char> mTickOutputs;
+#endif
+    Interface<std::pair<Time_T, char> > mNextEvent;
+
+    // With this iterator we avoid to iterate over all events in every tick
+    std::vector<AerReadEvent>::iterator mEventIterator;
+    Time_T mNextAerEventTime;
+
+
+    Parameter<bool> mReadAerData;
+    Parameter<std::string> mStreamPath;
+    unsigned int mNbSubStimuli;
+
 };
 }
 

@@ -30,6 +30,7 @@ N2D2::TanhActivation_Frame_CUDA
                                 "Frame_CUDA",
                                 "Transcode_CUDA",
                                 "CSpike_CUDA",
+                                "CSpike_BP_CUDA",
                                 NULL);
 
 template <>

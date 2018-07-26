@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2013 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Johannes THIELE (johannes.thieler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -30,6 +31,7 @@
 #include "Generator/DatabaseGenerator.hpp"
 #include "Generator/EnvironmentGenerator.hpp"
 #include "Monitor.hpp"
+#include "CMonitor.hpp"
 #include "Network.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Utils.hpp"
@@ -56,6 +58,11 @@
 #ifdef CUDA
 #include "CudaUtils.hpp"
 #include "Cell/Cell_Frame_CUDA.hpp"
+#include "CMonitor_CUDA.hpp"
+#include "Cell/Cell_CSpike_CUDA.hpp"
+//#include "Cell/FcCell_CSpike_IF_CUDA.hpp"
+//#include "Cell/FcCell_CSpike_Dynapse_CUDA.hpp"
+#include "Cell/FcCell_CSpike_BP_CUDA.hpp"
 #endif
 
 namespace N2D2 {
@@ -108,6 +115,8 @@ public:
     void addTarget(const std::shared_ptr<Target>& cell);
     void addMonitor(const std::string& name,
                     const std::shared_ptr<Monitor>& monitor);
+    void addCMonitor(const std::string& name,
+                    const std::shared_ptr<CMonitor>& monitor);
     std::vector<std::pair<std::string, unsigned int> >
     update(bool log, Time_T start, Time_T stop = 0, bool update = true);
     void saveNetworkParameters() const;
@@ -116,15 +125,20 @@ public:
     void exportNetworkSolverParameters(const std::string& dirName) const;
     void importNetworkFreeParameters(const std::string& dirName,
                                      bool ignoreNotExists = false);
+    void importNetworkFreeParameters(const std::string& dirName, const std::string& weightName);
     void importNetworkSolverParameters(const std::string& dirName);
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void initialize();
     void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
-    void cTicks(Time_T start, Time_T stop, Time_T timestep);
+    void cTicks(Time_T start, Time_T stop, Time_T timestep, bool record=false);
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
+    //void cDecayLearningRates(double decayStep);
+#ifdef CUDA
+    void cDropoutRescaling(bool on=false);
+#endif
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
     void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeOutputsRange(const std::map
@@ -179,6 +193,7 @@ public:
         return mCells;
     };
     std::shared_ptr<Monitor> getMonitor(const std::string& name) const;
+    std::shared_ptr<CMonitor> getCMonitor(const std::string& name) const;
     const std::vector<std::vector<std::string> >& getLayers() const
     {
         return mLayers;
@@ -202,7 +217,7 @@ public:
     void getStats(Cell::Stats& stats) const;
 
     // Clear
-    void clearAll();
+    void clearAll(unsigned int nbTimesteps = 0);
     void clearActivity();
     void clearFiringRate();
     void clearSuccess();
@@ -214,6 +229,9 @@ public:
     void logDiffInputs(const std::string& dirName,
                        unsigned int batchPos = 0) const;
     void logFreeParameters(const std::string& dirName) const;
+#ifdef CUDA
+    void logCalculationMetrics(const std::string& dirName) const;
+#endif
     void logStats(const std::string& dirName) const;
     void logSpikeStats(const std::string& dirName,
                        unsigned int nbPatterns) const;
@@ -254,6 +272,7 @@ private:
     std::map<std::string, std::shared_ptr<Cell> > mCells;
     std::vector<std::shared_ptr<Target> > mTargets;
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
+    std::map<std::string, std::shared_ptr<CMonitor> > mCMonitors;
     std::vector<std::vector<std::string> > mLayers;
     std::multimap<std::string, std::string> mParentLayers;
     bool mFreeParametersDiscretized;
