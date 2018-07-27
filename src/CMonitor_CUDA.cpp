@@ -27,12 +27,35 @@
 
 
 N2D2::CMonitor_CUDA::CMonitor_CUDA(Network& net)
-    : CMonitor(net)
+    : CMonitor(net),
+    mCudaInput(true)
 
 {
     // ctor
 }
 
+void N2D2::CMonitor_CUDA::add(StimuliProvider& sp)
+{
+    CEnvironment* cenvCSpike = dynamic_cast<CEnvironment*>(&sp);
+
+    if (!cenvCSpike) {
+          throw std::runtime_error(
+            "CMonitor::add(): CMonitor models require CEnvironment");
+    }
+
+    mInputs.push_back<char>(&(cenvCSpike->getTickOutputs()));
+    mInputs.back().setValid();
+
+
+    // This is necessary to make CMonitor_CUDA compatible
+    // with a non-Cuda CEnvironment
+    CEnvironment_CUDA* cenv_cuda = dynamic_cast<CEnvironment_CUDA*>(&sp);
+
+    if (!cenv_cuda) {
+        mCudaInput = false;
+    }
+
+}
 
 
 void N2D2::CMonitor_CUDA::add(Cell* cell)
@@ -41,12 +64,12 @@ void N2D2::CMonitor_CUDA::add(Cell* cell)
     Cell_CSpike_CUDA* cellCSpike_CUDA = dynamic_cast<Cell_CSpike_CUDA*>(cell);
 
     if (cellCSpike_CUDA) {
-        mInputs.push_back(&(cellCSpike_CUDA->getOutputs()));
+        mInputs.push_back<char>(&(cellCSpike_CUDA->getOutputs()));
 
     }
     else {
          throw std::runtime_error("Error: CMonitor_CUDA could not add Cell."
-            " Note: Cell has to be a CUDA type.");
+            " Note: Cell has to be a CSpike and CUDA type.");
     }
     mInputs.back().setValid();
 }
@@ -115,10 +138,9 @@ void N2D2::CMonitor_CUDA::initialize(unsigned int nbTimesteps,
 
 bool N2D2::CMonitor_CUDA::tick(Time_T timestamp)
 {
-
-    //if (mInputs[0].isValid()){
-    //    mInputs[0].synchronizeHToD();
-    //}
+    if (!mCudaInput){
+        mInputs[0].synchronizeHToD();
+    }
     cudaUpdateActivity(mInputs[0].getDevicePtr(),
                         mActivity[mRelTimeIndex].getDevicePtr(),
                         mFiringRate.getDevicePtr(),

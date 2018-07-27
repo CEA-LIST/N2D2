@@ -323,12 +323,8 @@ protected:
     std::vector<int> mBatch;
     std::vector<int> mFutureBatch;
     /// Tensor (x, y, channel, batch)
-#ifdef CUDA
-    // If CUDA activated use CudaTensor to enable CUDA spike generation
-    CudaTensor<Float_T> mData;
-#else
+
     Tensor<Float_T> mData;
-#endif
     Tensor<Float_T> mFutureData;
     /// Tensor (x, y, channel, batch)
     Tensor<int> mLabelsData;

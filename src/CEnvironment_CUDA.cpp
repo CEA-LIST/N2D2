@@ -97,7 +97,6 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
         mInitialized = true;
     }
 
-
     for (unsigned int k=0; k<mRelationalData.size(); k++){
         cudaGenerateSpikes(mRelationalData[k].getDevicePtr(),
                             mTickData[k].getDevicePtr(),

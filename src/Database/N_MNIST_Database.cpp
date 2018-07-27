@@ -93,7 +93,7 @@ std::vector<N2D2::AerReadEvent> N2D2::N_MNIST_Database::loadAerStimulusData(
     }
 
     std::string filename = mStimuli[mStimuliSets(set)[index]].name;
-    std::cout << filename << std::endl;
+    //std::cout << filename << std::endl;
 
 
     std::vector<AerReadEvent> stimu;

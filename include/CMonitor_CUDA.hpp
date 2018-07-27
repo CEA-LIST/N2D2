@@ -25,6 +25,7 @@
 
 
 #include "CMonitor.hpp"
+#include "CEnvironment_CUDA.hpp"
 #include "CMonitor_CUDA_kernels.hpp"
 #include "Cell/Cell_CSpike_CUDA.hpp"
 
@@ -42,6 +43,7 @@ namespace N2D2 {
 class CMonitor_CUDA: public CMonitor {
 public:
     CMonitor_CUDA(Network& net);
+    virtual void add(StimuliProvider& sp);
     virtual void add(Cell* cell);
     virtual void initialize(unsigned int nbTimesteps,
                             unsigned int nbClasses=0);
@@ -57,6 +59,8 @@ protected:
 
     unsigned int mDeviceMaxThreads;
     unsigned int mDeviceWarpSize;
+
+    bool mCudaInput;
 
 };
 }

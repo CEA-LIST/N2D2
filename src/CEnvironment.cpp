@@ -100,6 +100,7 @@ void N2D2::CEnvironment::addChannel(const CompositeTransformation
 
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
+
     if (!mReadAerData) {
 
         SpikeGenerator::checkParameters();
@@ -111,7 +112,7 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                 mTickData[k].assign(mRelationalData[k].dims(), 0);
 
                 mNextEvent[k].assign(mRelationalData[k].dims(),
-                                  std::make_pair(start, 0));
+                                    std::make_pair(start, 0));
 
                 for (unsigned int idx = 0, size = mRelationalData[k].size();
                 idx < size; ++idx){
@@ -218,7 +219,8 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
     }
     StimuliProvider::readStimulus(id, set, batchPos);
     mRelationalData.clear();
-    mRelationalData.push_back(&mData);
+    mRelationalData.push_back<Float_T>(&mData);
+
 }
 
 

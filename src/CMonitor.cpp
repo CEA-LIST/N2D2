@@ -45,10 +45,8 @@ void N2D2::CMonitor::add(StimuliProvider& sp)
           throw std::runtime_error(
             "CMonitor::add(): CMonitor models require CEnvironment");
     }
-    //std::cout << "add Stimuli Provider CMonitor"<< std::endl;
 
     mInputs.push_back(&(cenvCSpike->getTickOutputs()));
-    //std::cout << "mInputsSizeX: " << mInputs[0].dimX() << std::endl;
     mInputs.back().setValid();
 
 }
@@ -62,8 +60,8 @@ void N2D2::CMonitor::add(Cell* cell)
         mInputs.push_back(&(cellCSpike->getOutputs()));
     }
     else {
-        std::cout << "Warning: Monitor could not add Cell" << std::endl;
-        exit(0);
+        throw std::runtime_error(
+            "CMonitor::add(): CMonitor requires Cell_CSpike");
     }
     mInputs.back().setValid();
 }

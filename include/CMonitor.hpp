@@ -58,7 +58,7 @@ namespace N2D2 {
 class CMonitor {
 public:
     CMonitor(Network& net);
-    void add(StimuliProvider& sp);
+    virtual void add(StimuliProvider& sp);
     virtual void add(Cell* cell);
 
     virtual void initialize(unsigned int nbTimesteps, unsigned int nbClasses=0);
