@@ -99,7 +99,7 @@ struct tensor_t<void> {
 
 /**
  * @class   Interface
- * @brief   Merge virtually several Tensor4d through an unified data interface.
+ * @brief   Merge virtually several Tensor through an unified data interface.
 */
 template <class T = void, int STACKING_DIM = -2>
 class Interface : public TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T> {

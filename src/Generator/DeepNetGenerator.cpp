@@ -259,23 +259,13 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
             }
 #ifdef CUDA
             else if (cellCSpike_CUDA){
-                std::cout << "try CMonitor_CUDA initialization " <<  std::endl;
-                //std::cout << "Add Monitor: " << *it << std::endl;
+
                 std::shared_ptr<CMonitor> monitor(new CMonitor_CUDA(network));
-                //if (!monitor) {
-                //    std::cout << "Monitor Pointer empty" << std::endl;
-                //    exit(0);
-                //}
-                //monitor->add(cellCSpike_CUDA->getOutputs());
+
                 monitor->add(cell.get());
 
                 deepNet->addCMonitor((*it), monitor);
 
-                /*std::shared_ptr<CMonitor> sleepMonitor(new CMonitor_CUDA(network));
-                //sleepMonitor->add(cellCSpike_CUDA->getOutputs());
-                sleepMonitor->add(cell.get());
-
-                deepNet->addCMonitor((*it), sleepMonitor, true);*/
             }
 #endif
             else {
@@ -323,20 +313,12 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
 
         deepNet->addCMonitor("env", cmonitor);
 
-        /*std::shared_ptr<CMonitor> sleepMonitor(new CMonitor(network));
-        sleepMonitor->add(*Cenv);
-
-        deepNet->addCMonitor("env", sleepMonitor, true);*/
 #else
         std::shared_ptr<CMonitor> cmonitor(new CMonitor(network));
         cmonitor->add(*Cenv);
 
         deepNet->addCMonitor("env", cmonitor);
 
-        /*std::shared_ptr<CMonitor> sleepMonitor(new CMonitor(network));
-        sleepMonitor->add(*Cenv);
-
-        deepNet->addCMonitor("env", sleepMonitor, true);*/
 #endif
     }
 

@@ -44,14 +44,14 @@ struct cuda_tensor_t<void> {
 
 /**
  * @class   CudaInterface
- * @brief   Merge virtually several Tensor4d through an unified data interface.
+ * @brief   Merge virtually several Tensor through an unified data interface.
 */
 template <class T = void, int STACKING_DIM = -2>
 class CudaInterface : public Interface<T, STACKING_DIM> {
 public:
     typedef typename cuda_tensor_t<T>::type cuda_tensor_type;
 
-    using Interface<T, STACKING_DIM>::push_back;
+    //using Interface<T, STACKING_DIM>::push_back;
 
     CudaInterface();
 

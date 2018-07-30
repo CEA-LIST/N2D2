@@ -219,7 +219,7 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
     }
     StimuliProvider::readStimulus(id, set, batchPos);
     mRelationalData.clear();
-    mRelationalData.push_back<Float_T>(&mData);
+    mRelationalData.push_back(&mData);
 
 }
 
