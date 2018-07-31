@@ -40,7 +40,9 @@ void cudaSPadding(unsigned int outputSizeX,
                         int paddingTop,
                         int paddingBot,
                         const float* input,
-                        float* outputs);
+                        float* outputs,
+                        const dim3 blocksPerGrid,
+                        const dim3 threadsPerBlock);
 }
 
 #endif // N2D2_PADDINGCELL_FRAME_CUDA_KERNELS_H

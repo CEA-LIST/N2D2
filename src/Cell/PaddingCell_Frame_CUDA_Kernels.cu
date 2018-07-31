@@ -81,23 +81,10 @@ void N2D2::cudaSPadding(unsigned int outputSizeX,
                         int paddingTop,
                         int paddingBot,
                         const float* input,
-                        float* outputs)
+                        float* outputs,
+                        const dim3 blocksPerGrid,
+                        const dim3 threadsPerBlock)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputSizeX * outputSizeY < maxSize)
-                                       ? outputSizeX * outputSizeY
-                                       : maxSize;
-    const unsigned int reqWidth = (unsigned int) ceil((float) groupSize / (float) outputSizeX);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {outputNbChannels, 1, batchSize};
-    const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
 
     cudaSPadding_kernel<<<blocksPerGrid, threadsPerBlock>>>( outputSizeX,
                                                             outputSizeY, 

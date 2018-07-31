@@ -69,7 +69,27 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, 0);
 
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (mOutputs.dimX() * mOutputs.dimY() < maxSize)
+                                       ? mOutputs.dimX() * mOutputs.dimY()
+                                       : maxSize;
+    const unsigned int reqWidth = (unsigned int) ceilf((float) groupSize / (float) mOutputs.dimX());
+
+    const unsigned int groupWidth = std::min(prefMultiple, reqWidth);
+
+    for(unsigned int i = 0; i < mInputs.size(); ++i)
+    {
+        dim3 block_size = {(unsigned int)mInputs[i].dimZ(), 1, (unsigned int)mOutputs.dimB()};
+        dim3 thread_size = {groupWidth, groupSize / groupWidth, 1};
+
+        GPU_THREAD_GRID.push_back(thread_size);
+        GPU_BLOCK_GRID.push_back(block_size);
+    }
 }
 
 void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
@@ -94,7 +114,9 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
                     mTopPad,
                     mBotPad,
                     input->getDevicePtr(),
-                    mOutputs.getDevicePtr() + outputOffset);
+                    mOutputs.getDevicePtr() + outputOffset,
+                    GPU_BLOCK_GRID[k],
+                    GPU_THREAD_GRID[k]);
 
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
     }
@@ -129,7 +151,9 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
                     -mTopPad,
                     -mBotPad,
                     mDiffInputs.getDevicePtr() + outputOffset,
-                    diffOutput->getDevicePtr());
+                    diffOutput->getDevicePtr(),
+                    GPU_BLOCK_GRID[k],
+                    GPU_THREAD_GRID[k]);
 
         outputOffset += mDiffOutputs[k].dimZ()
                             *mDiffInputs.dimX()

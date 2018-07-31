@@ -71,7 +71,8 @@ public:
     virtual ~PaddingCell_Frame_CUDA();
 
 protected:
-
+    std::vector<dim3> GPU_BLOCK_GRID;
+    std::vector<dim3> GPU_THREAD_GRID;
 private:
     static Registrar<PaddingCell> mRegistrar;
 };
