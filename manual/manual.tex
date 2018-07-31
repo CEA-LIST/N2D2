@@ -3230,7 +3230,7 @@ $1.7159 \times (2.0/3.0)$.
 
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!Anchor!}{Anchor}}
-Anchor layer for Faster R-CNN.
+Anchor layer for Faster R-CNN or Single Shot Detector.
 
 \begin{center}
  \begin{longtable}{| p{5cm} | p{10cm} | }
@@ -3246,6 +3246,10 @@ Anchor layer for Faster R-CNN.
   \lstinline!ScoresCls! & Number of classes per anchor. Must be 1 (if the scores
   input uses logistic regression) or 2 (if the scores input is a two-class
   softmax layer) \\
+  \lstinline!FeatureMapWidth! [\lstinline!StimuliProvider.Width!] & Reference width use
+  to scale anchors coordinate.\\
+  \lstinline!FeatureMapHeight! [\lstinline!StimuliProvider.Height!] & Reference height use
+  to scale anchors coordinate.\\
  \hline
 \end{longtable}
 \end{center}
@@ -4356,6 +4360,36 @@ Padding layer.
 \end{center}
 
 The padding layer allow to insert asymmetric padding for each layer axes. \\
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Resize!}{Resize}}
+Resize layer can be applied to change dimension of features maps or of stimuli provider.
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output feature maps \\
+  \cellcolor{requiredcolor}\lstinline!OutputHeight! & Output height dimension \\
+  \cellcolor{requiredcolor}\lstinline!OutputWidth! & Output width dimension \\
+  \cellcolor{requiredcolor}\lstinline!Mode! & Resize interpolation mode. Can be,
+  \lstinline!Bilinear! or \lstinline!BilinearTF! (TensorFlow implementation)\\
+  \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!AlignCorners! [True] & \emph{all Frame} & Corner alignement mode if \lstinline!BilinearTF! is used as interpolation mode \\
+ \hline
+\end{longtable}
+\end{center}
 
 
 \subsubsection{\texorpdfstring{%%
