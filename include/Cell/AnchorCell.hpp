@@ -97,6 +97,8 @@ protected:
     Parameter<double> mLossLambda;
     Parameter<unsigned int> mLossPositiveSample;
     Parameter<unsigned int> mLossNegativeSample;
+    Parameter<unsigned int> mFeatureMapWidth;
+    Parameter<unsigned int> mFeatureMapHeight;
     Parameter<bool> mFlip;
 
     StimuliProvider& mStimuliProvider;

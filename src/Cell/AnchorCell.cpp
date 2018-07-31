@@ -33,6 +33,8 @@ N2D2::AnchorCell::AnchorCell(
       mLossLambda(this, "LossLambda", 10.0),
       mLossPositiveSample(this, "LossPositiveSample", 128U),
       mLossNegativeSample(this, "LossNegativeSample", 128U),
+      mFeatureMapWidth(this, "FeatureMapWidth", 0U),
+      mFeatureMapHeight(this, "FeatureMapHeight", 0U),
       mFlip(this, "Flip", false),
       mStimuliProvider(sp),
       mScoresCls(scoresCls)
@@ -47,5 +49,6 @@ void N2D2::AnchorCell::getStats(Stats& /*stats*/) const
 
 void N2D2::AnchorCell::setOutputsDims()
 {
-    mOutputsDims = mInputsDims;
+    mOutputsDims[0] = mInputsDims[0];
+    mOutputsDims[1] = mInputsDims[1];
 }

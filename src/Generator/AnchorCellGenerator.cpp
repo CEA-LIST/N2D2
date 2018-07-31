@@ -75,6 +75,36 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
         nextProperty.str(std::string());
         nextProperty << "Anchor[" << nextAnchor << "]";
     }
+    
+    nextProperty.str(std::string());
+    nextProperty << "AnchorBBOX[" << nextAnchor << "]";
+
+    while (iniConfig.isProperty(nextProperty.str())) {
+        std::stringstream anchorValues(
+            iniConfig.getProperty<std::string>(nextProperty.str()));
+
+        float x0;
+        float y0;
+        float w;
+        float h;
+
+        if (!(anchorValues >> x0) || !(anchorValues >> y0)
+                || !(anchorValues >> w) || !(anchorValues >> h)) {
+            throw std::runtime_error(
+                "Unreadable anchor in section [" + section
+                + "] in network configuration file: "
+                + iniConfig.getFileName());
+        }
+
+        anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
+                                                           y0,
+                                                           w,
+                                                           h));
+
+        ++nextAnchor;
+        nextProperty.str(std::string());
+        nextProperty << "AnchorBBOX[" << nextAnchor << "]";
+    }
 
     // Second method: specify a base root area and a list of ratios and scales
     // Both methods can be used simultaneously
@@ -99,7 +129,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
     }
 
     const unsigned int scoresCls = iniConfig.getProperty
-                                     <unsigned int>("ScoresCls", 1);
+                                     <unsigned int>("ScoresCls", 0);
 
     // Cell construction
     std::shared_ptr<AnchorCell> cell = Registrar

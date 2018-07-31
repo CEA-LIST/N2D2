@@ -41,6 +41,8 @@ __device__ static float atomicMax(float* address, float val)
 __global__ void cudaSAnchorPropagate_kernel(
     unsigned int stimuliSizeX,
     unsigned int stimuliSizeY,
+    unsigned int featureMapX,
+    unsigned int featureMapY,
     bool flip,
     bool inference,
     float* inputsCls,
@@ -69,8 +71,11 @@ __global__ void cudaSAnchorPropagate_kernel(
                                         * outputsHeight * outputsWidth;
 
 
-    const float xRatio = ceil(stimuliSizeX / (float)outputsWidth);
-    const float yRatio = ceil(stimuliSizeY / (float)outputsHeight);
+    const float xRatio = ceil(featureMapX / (float)outputsWidth);
+    const float yRatio = ceil(featureMapY / (float)outputsHeight);
+    const float xOutputRatio = stimuliSizeX / (float) featureMapX;
+    const float yOutputRatio = stimuliSizeY / (float) featureMapY;
+
     float globalMaxIoU = 0.0;
     
     for (unsigned int k = blockIdx.x; k < nbAnchors;
@@ -88,12 +93,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                 const int ya0 = (int)(anchors[k].y0 + ya * yRatio);
                 const int xa1 = (int)(anchors[k].x1 + xa * xRatio);
                 const int ya1 = (int)(anchors[k].y1 + ya * yRatio);
-/*
-                const int xa0 = (int)(anchors[k*4 + 0] + xa * xRatio);
-                const int ya0 = (int)(anchors[k*4 + 1] + ya * yRatio);
-                const int xa1 = (int)(anchors[k*4 + 2] + xa * xRatio);
-                const int ya1 = (int)(anchors[k*4 + 3] + ya * yRatio);
-*/
+
                 const int wa = xa1 - xa0;
                 const int ha = ya1 - ya0;
 
@@ -119,7 +119,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                  * the fully convolutional RPN  to  the  entire  image."
                 */
 
-                if ((xa0 >= 0 && ya0 >= 0 && xa1 < (int)stimuliSizeX && ya1 < (int)stimuliSizeY) || inference)
+                if ((xa0 >= 0 && ya0 >= 0 && xa1 < (int)featureMapX && ya1 < (int)featureMapY) || inference)
                 {
 
                     // Score
@@ -166,10 +166,10 @@ __global__ void cudaSAnchorPropagate_kernel(
                             hbb+= ybb;
                             ybb = 0.0;
                         }
-                        if (xbb + wbb > stimuliSizeX - 1)
-                            wbb = stimuliSizeX - 1 - xbb;
-                        if (ybb + hbb > stimuliSizeY - 1)
-                            hbb = stimuliSizeY - 1 - ybb;
+                        if (xbb + wbb > featureMapX - 1)
+                            wbb = featureMapX - 1 - xbb;
+                        if (ybb + hbb > featureMapY - 1)
+                            hbb = featureMapY - 1 - ybb;
                     }
 
                     // For inference, compute IoU on predicted boxes
@@ -188,7 +188,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                     float maxIoU_ = 0.0;
                     int argMaxIoU_ = -1;
 
-
+                    /*
                     for (unsigned int l = 0; l < nbLabels[blockIdx.z]; ++l) {
                         // Ground Truth box coordinates
                         const N2D2::AnchorCell_Frame_Kernels::BBox_T& gt
@@ -216,7 +216,13 @@ __global__ void cudaSAnchorPropagate_kernel(
                         }
                         
                     }
-
+                    */
+                    //Rescale Bounding Box if Feature MAP size is different than stimuli size
+                    xbb *=  xOutputRatio;
+                    wbb *=  xOutputRatio;
+                    ybb *=  yOutputRatio;
+                    hbb *=  yOutputRatio;
+                    
                     outputs[addrBase] = cls;
                     outputs[addrBase + 1 * nbAnchors * addrStep] = xbb;
                     outputs[addrBase + 2 * nbAnchors * addrStep] = ybb;
@@ -257,6 +263,8 @@ static unsigned int nextDivisor(unsigned int target, unsigned int value)
 void N2D2::cudaSAnchorPropagate(
     unsigned int stimuliSizeX,
     unsigned int stimuliSizeY,
+    unsigned int featureMapX,
+    unsigned int featureMapY,
     bool flip,
     bool inference,
     float* inputsCls,
@@ -273,8 +281,11 @@ void N2D2::cudaSAnchorPropagate(
     unsigned int outputsWidth,
     unsigned int batchSize,
     unsigned int nbTotalCls,
-    unsigned int nbInputs)
+    unsigned int nbInputs,
+    const dim3 blocksPerGrid,
+    const dim3 threadsPerBlock)
 {
+/*
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
 
@@ -289,10 +300,12 @@ void N2D2::cudaSAnchorPropagate(
 
     const dim3 blocksPerGrid = {nbAnchors, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaSAnchorPropagate_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+*/
+    cudaSAnchorPropagate_kernel<<<blocksPerGrid, threadsPerBlock>>>
         (stimuliSizeX,
            stimuliSizeY,
+           featureMapX,
+           featureMapY,
            flip,
            inference,
            inputsCls,

@@ -135,31 +135,29 @@ N2D2::AnchorCell_Frame_CUDA::getAnchorArgMaxIoU(const Tensor<int>::Index& index)
 
 void N2D2::AnchorCell_Frame_CUDA::initialize()
 {
+    if(mFeatureMapWidth == 0)
+        mFeatureMapWidth = mStimuliProvider.getSizeX();
+
+    if(mFeatureMapHeight == 0)
+        mFeatureMapHeight = mStimuliProvider.getSizeY();
+
     const unsigned int nbAnchors = mAnchors.size();
 
-    if (mInputs.dimZ() != (mScoresCls + 4) * nbAnchors) {
+    if (mInputs.dimZ() != (mScoresCls + 5) * nbAnchors) {
         throw std::domain_error("AnchorCell_Frame_CUDA::initialize():"
                                 " the number of input channels must be equal to"
                                 " (scoresCls + 4) times the number of"
                                 " anchors.");
     }
 
-    if (mInputs.size() > 1 && mInputs[0].dimZ() != mScoresCls * nbAnchors) {
-        throw std::domain_error("AnchorCell_Frame_CUDA::initialize():"
-                                " the first input number of channels must be"
-                                " equal to scoresCls times the number of"
-                                " anchors.");
-    }
-
     if (mFlip) {
-        const double xRatio = std::ceil(mStimuliProvider.getSizeX()
-                                        / (double)mOutputs.dimX());
-        const double yRatio = std::ceil(mStimuliProvider.getSizeY()
-                                        / (double)mOutputs.dimY());
-
-        const double xOffset = mStimuliProvider.getSizeX() - 1
+        const double xRatio = std::ceil(mFeatureMapWidth
+                                        / (double)mOutputsDims[0]);
+        const double yRatio = std::ceil(mFeatureMapHeight
+                                        / (double)mOutputsDims[1]);
+        const double xOffset = mFeatureMapWidth - 1
                                 - (mOutputsDims[0] - 1) * xRatio;
-        const double yOffset = mStimuliProvider.getSizeY() - 1
+        const double yOffset = mFeatureMapHeight - 1
                                 - (mOutputsDims[1] - 1) * yRatio;
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
@@ -172,7 +170,7 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
     }
 
     mGT.resize(mOutputs.dimB());
-
+/*
     CHECK_CUDA_STATUS(
         cudaMalloc(&mCudaGT, mOutputs.dimB() * sizeof(*mCudaGT)));
 
@@ -180,7 +178,7 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
         CHECK_CUDA_STATUS(
             cudaMalloc(&mCudaGT + batchPos, mNbLabelsMax * sizeof(**mCudaGT)));
     }
-
+*/
     mNbLabels.resize({mOutputs.dimB(), 1, 1, 1}, 0);
 
     mArgMaxIoU.resize({mOutputsDims[0],
@@ -188,6 +186,26 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
                       mAnchors.size(),
                       mOutputs.dimB()});
     mMaxIoU.resize({mOutputs.dimB(), 1, 1, 1}, 0.0);
+
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, 0);
+
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (mOutputsDims[0] * mOutputsDims[1] < maxSize)
+                                       ? mOutputsDims[0] * mOutputsDims[1]
+                                       : maxSize;
+    const unsigned int reqWidth = (unsigned int) ceilf((float) groupSize / (float) mOutputsDims[0]);
+
+    const unsigned int groupWidth = std::min(prefMultiple, reqWidth);
+
+    dim3 block_size = {(unsigned int)mAnchors.size(), 1, (unsigned int)mOutputs.dimB()};
+    dim3 thread_size = {groupWidth, groupSize / groupWidth, 1};
+
+    GPU_THREAD_GRID.push_back(thread_size);
+    GPU_BLOCK_GRID.push_back(block_size);
+    
 }
 
 void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
@@ -230,21 +248,22 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                 labelRect.height+= labelRect.tl().y;
                 labelRect.y = 0;
             }
-            if (labelRect.br().x > (int)mStimuliProvider.getSizeX())
-                labelRect.width = mStimuliProvider.getSizeX() - labelRect.x;
-            if (labelRect.br().y > (int)mStimuliProvider.getSizeY())
-                labelRect.height = mStimuliProvider.getSizeY() - labelRect.y;
+            if (labelRect.br().x > (int)mFeatureMapWidth)
+                labelRect.width = mFeatureMapWidth - labelRect.x;
+            if (labelRect.br().y > (int)mFeatureMapHeight)
+                labelRect.height = mFeatureMapHeight - labelRect.y;
 
             GT[l] = AnchorCell_Frame_Kernels::BBox_T(labelRect.tl().x,
                                                      labelRect.tl().y,
                                                      labelRect.width,
                                                      labelRect.height);
         }
-
+        /*
         CHECK_CUDA_STATUS(cudaMemcpy(&mCudaGT[batchPos],
                                      &GT,
                                      labelROIs.size() * sizeof(**mCudaGT),
                                      cudaMemcpyHostToDevice));
+        */
     }
 
     mNbLabels.synchronizeHToD();
@@ -261,13 +280,13 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
 
     cudaSAnchorPropagate(mStimuliProvider.getSizeX(),
                          mStimuliProvider.getSizeY(),
+                         mFeatureMapWidth,
+                         mFeatureMapHeight,
                          mFlip,
                          inference,
                          inputCls->getDevicePtr(),
                          inputCoords->getDevicePtr(),
-                         (mInputs.size() > 1)
-                            ? 0
-                            : mScoresCls,
+                         mScoresCls,
                          mAnchors.getDevicePtr(),
                          mCudaGT,
                          mNbLabels.getDevicePtr(),
@@ -275,11 +294,13 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                          mArgMaxIoU.getDevicePtr(),
                          mMaxIoU.getDevicePtr(),
                          mAnchors.size(),
-                         mOutputs.dimY(),
-                         mOutputs.dimX(),
+                         mOutputsDims[1],
+                         mOutputsDims[0],
                          mInputs.dimB(),
-                         mScoresCls,
-                         mInputs.size());
+                         mScoresCls + 1,
+                         mInputs.size(),
+                         GPU_BLOCK_GRID[0],
+                         GPU_THREAD_GRID[0]);
     mOutputs.synchronizeDToH();
 
     Cell_Frame_CUDA::propagate();

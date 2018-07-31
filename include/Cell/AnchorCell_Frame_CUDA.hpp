@@ -76,6 +76,8 @@ protected:
     CudaTensor<unsigned int> mNbLabels;
     CudaTensor<int> mArgMaxIoU;
     CudaTensor<Float_T> mMaxIoU;
+    std::vector<dim3> GPU_BLOCK_GRID;
+    std::vector<dim3> GPU_THREAD_GRID;
 
 private:
     static Registrar<AnchorCell> mRegistrar;

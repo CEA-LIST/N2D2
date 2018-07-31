@@ -33,6 +33,8 @@ namespace N2D2 {
 void cudaSAnchorPropagate(
     unsigned int stimuliSizeX,
     unsigned int stimuliSizeY,
+    unsigned int featureMapX,
+    unsigned int featureMapY,
     bool flip,
     bool inference,
     float* inputsCls,
@@ -49,7 +51,9 @@ void cudaSAnchorPropagate(
     unsigned int outputsWidth,
     unsigned int batchSize,
     unsigned int nbTotalCls,
-    unsigned int nbInputs);
+    unsigned int nbInputs,
+    const dim3 blocksPerGrid,
+    const dim3 threadsPerBlock);
 }
 
 #endif // N2D2_ANCHORCELL_FRAME_CUDA_KERNELS_H

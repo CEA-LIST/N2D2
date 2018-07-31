@@ -126,26 +126,24 @@ N2D2::AnchorCell_Frame::getAnchorArgMaxIoU(const Tensor<int>::Index& index)
 void N2D2::AnchorCell_Frame::initialize()
 {
     const unsigned int nbAnchors = mAnchors.size();
+    if(mFeatureMapWidth == 0)
+        mFeatureMapWidth = mStimuliProvider.getSizeX();
 
-    if (mInputs.dimZ() != (mScoresCls + 4) * nbAnchors) {
+    if(mFeatureMapHeight == 0)
+        mFeatureMapHeight = mStimuliProvider.getSizeY();
+
+    if (mInputs.dimZ() != (mScoresCls + 5) * nbAnchors) {
         throw std::domain_error("AnchorCell_Frame::initialize():"
                                 " the number of input channels must be equal to"
-                                " (scoresCls + 4) times the number of"
-                                " anchors.");
-    }
-
-    if (mInputs.size() > 1 && mInputs[0].dimZ() != mScoresCls * nbAnchors) {
-        throw std::domain_error("AnchorCell_Frame::initialize():"
-                                " the first input number of channels must be"
-                                " equal to scoresCls times the number of"
+                                " (scoresCls + 5) times the number of"
                                 " anchors.");
     }
 
     if (mFlip) {
         const double xRatio = std::ceil(mStimuliProvider.getSizeX()
-                                        / (double)mOutputs.dimX());
+                                        / (double)mOutputsDims[0]);
         const double yRatio = std::ceil(mStimuliProvider.getSizeY()
-                                        / (double)mOutputs.dimY());
+                                        / (double)mOutputsDims[1]);
 
         const double xOffset = mStimuliProvider.getSizeX() - 1
                                 - (mOutputsDims[0] - 1) * xRatio;
@@ -179,10 +177,15 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
         ? 0 : mScoresCls;
 
     const unsigned int nbAnchors = mAnchors.size();
-    const double xRatio = std::ceil(mStimuliProvider.getSizeX()
-                                    / (double)mOutputs.dimX());
-    const double yRatio = std::ceil(mStimuliProvider.getSizeY()
-                                    / (double)mOutputs.dimY());
+    const double xRatio = std::ceil(mFeatureMapWidth
+                                    / (double)mOutputsDims[0]);
+    const double yRatio = std::ceil(mFeatureMapHeight
+                                    / (double)mOutputsDims[1]);
+
+    const float xOutputRatio = mStimuliProvider.getSizeX() 
+                                    / (float) mFeatureMapWidth;
+    const float yOutputRatio = mStimuliProvider.getSizeY() 
+                                    / (float) mFeatureMapHeight;
 
 #pragma omp parallel for if (mOutputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
@@ -276,8 +279,8 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                     */
                     if ((xa0 >= 0
                         && ya0 >= 0
-                        && xa1 < (int)mStimuliProvider.getSizeX()
-                        && ya1 < (int)mStimuliProvider.getSizeY())
+                        && xa1 < (int)mFeatureMapWidth
+                        && ya1 < (int)mFeatureMapHeight)
                         || inference)
                     {
                         // Score
@@ -318,10 +321,10 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                                 hbb+= ybb;
                                 ybb = 0.0;
                             }
-                            if (xbb + wbb > mStimuliProvider.getSizeX() - 1)
-                                wbb = mStimuliProvider.getSizeX() - 1 - xbb;
-                            if (ybb + hbb > mStimuliProvider.getSizeY() - 1)
-                                hbb = mStimuliProvider.getSizeY() - 1 - ybb;
+                            if (xbb + wbb > mFeatureMapWidth - 1)
+                                wbb = mFeatureMapWidth - 1 - xbb;
+                            if (ybb + hbb > mFeatureMapHeight - 1)
+                                hbb = mFeatureMapHeight - 1 - ybb;
                         }
 
                         // For inference, compute IoU on predicted boxes
@@ -368,13 +371,18 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                             }
                         }
 
+                        //Rescale Bounding Box if Feature MAP size is different than stimuli size
+                        xbb *=  xOutputRatio;
+                        wbb *=  xOutputRatio;
+                        ybb *=  yOutputRatio;
+                        hbb *=  yOutputRatio;
+
                         mOutputs(xa, ya, k, batchPos) = cls;
                         mOutputs(xa, ya, k + 1 * nbAnchors, batchPos) = xbb;
                         mOutputs(xa, ya, k + 2 * nbAnchors, batchPos) = ybb;
                         mOutputs(xa, ya, k + 3 * nbAnchors, batchPos) = wbb;
                         mOutputs(xa, ya, k + 4 * nbAnchors, batchPos) = hbb;
                         mOutputs(xa, ya, k + 5 * nbAnchors, batchPos) = maxIoU;
-
                         mArgMaxIoU(xa, ya, k, batchPos) = argMaxIoU;
                         mMaxIoU[batchPos] = std::max(mMaxIoU[batchPos], maxIoU);
 /*
@@ -518,9 +526,9 @@ void N2D2::AnchorCell_Frame::backPropagate()
 {
     const unsigned int nbAnchors = mAnchors.size();
     const double xRatio = std::ceil(mStimuliProvider.getSizeX()
-                                    / (double)mOutputs.dimX());
+                                    / (double)mOutputsDims[0]);
     const double yRatio = std::ceil(mStimuliProvider.getSizeY()
-                                    / (double)mOutputs.dimY());
+                                    / (double)mOutputsDims[1]);
     const unsigned int nbLocations = mOutputsDims[1] * mOutputsDims[0];
     const unsigned int miniBatchSize = mLossPositiveSample
                                         + mLossNegativeSample;
@@ -575,7 +583,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
                     diffOutputsCls(xa, ya, k, batchPos) = 0.0;
 
-                    if (mScoresCls > 1)
+                    if (mScoresCls > 0)
                         diffOutputsCls(xa, ya, k + nbAnchors, batchPos) = 0.0;
 
                     diffOutputsCoords(xa, ya,
@@ -616,13 +624,12 @@ void N2D2::AnchorCell_Frame::backPropagate()
             const unsigned int ya = anchorIndex[idx][1];
             const unsigned int k = anchorIndex[idx][2];
 
-            diffOutputsCls(xa, ya, k, batchPos)
-                = (isPositive - inputsCls(xa, ya, k, batchPos)) / miniBatchSize;
+             diffOutputsCls(xa, ya, k, batchPos)
+                 = (isPositive - inputsCls(xa, ya, k, batchPos)) / miniBatchSize;
 
-            if (mScoresCls > 1) {
-                diffOutputsCls(xa, ya, k + nbAnchors, batchPos)
-                    = ((!isPositive) - inputsCls(xa, ya, k + nbAnchors,
-                                                 batchPos))
+            if (coordsOffset > 0) {
+                diffOutputsCoords(xa, ya, k + nbAnchors, batchPos)
+                    = ((!isPositive) - inputsCoords(xa, ya, k + nbAnchors, batchPos))
                         / miniBatchSize;
             }
 
