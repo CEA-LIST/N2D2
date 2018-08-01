@@ -23,53 +23,54 @@
 #include "Activation/SoftplusActivation_Frame_CUDA.hpp"
 
 template <>
-N2D2::Registrar<N2D2::SoftplusActivation<N2D2::Float_T> >
-N2D2::SoftplusActivation_Frame_CUDA
-    <N2D2::Float_T>::mRegistrar(N2D2::SoftplusActivation_Frame_CUDA
-                                <N2D2::Float_T>::create,
-                                "Frame_CUDA",
-                                "Transcode_CUDA",
-                                "CSpike_CUDA",
-                                "CSpike_BP_CUDA",
-                                NULL);
+N2D2::Registrar<N2D2::SoftplusActivation>
+N2D2::SoftplusActivation_Frame_CUDA<float>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::SoftplusActivation_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::SoftplusActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SoftplusActivation>
+N2D2::SoftplusActivation_Frame_CUDA<double>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::SoftplusActivation_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::SoftplusActivation>::Type<double>());
 
 namespace N2D2 {
 template <>
-void SoftplusActivation_Frame_CUDA<float>::propagate(Tensor<float>* data)
+void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
 {
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-    cudaSSoftplus_propagate(cudaData->getDevicePtr(), cudaData->size());
+    cudaSSoftplus_propagate(data.getDevicePtr(), data.size());
 }
 
 template <>
-void SoftplusActivation_Frame_CUDA<double>::propagate(Tensor<double>* data)
+void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data)
 {
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-    cudaDSoftplus_propagate(cudaData->getDevicePtr(), cudaData->size());
-}
-
-template <>
-void SoftplusActivation_Frame_CUDA
-    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData)
-{
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-    CudaTensor<float>* cudaDiffData = static_cast
-        <CudaTensor<float>*>(diffData);
-    cudaSSoftplus_backPropagate(cudaData->getDevicePtr(),
-                                cudaDiffData->getDevicePtr(),
-                                cudaData->size());
+    cudaDSoftplus_propagate(data.getDevicePtr(), data.size());
 }
 
 template <>
 void SoftplusActivation_Frame_CUDA
-    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData)
+    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData)
 {
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-    CudaTensor<double>* cudaDiffData = static_cast
-        <CudaTensor<double>*>(diffData);
-    cudaDSoftplus_backPropagate(cudaData->getDevicePtr(),
-                                cudaDiffData->getDevicePtr(),
-                                cudaData->size());
+    cudaSSoftplus_backPropagate(data.getDevicePtr(),
+                                diffData.getDevicePtr(),
+                                data.size());
+}
+
+template <>
+void SoftplusActivation_Frame_CUDA
+    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData)
+{
+    cudaDSoftplus_backPropagate(data.getDevicePtr(),
+                                diffData.getDevicePtr(),
+                                data.size());
 }
 }
 

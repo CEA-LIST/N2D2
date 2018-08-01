@@ -41,37 +41,42 @@ namespace ConvCell_Frame_Kernels {
     };
 
     // Forward
-    void forward(const Float_T* alpha,
-                 const Tensor<Float_T>& inputs,
-                 const Tensor<Float_T>& sharedSynapses,
+    template <class T>
+    void forward(const T* alpha,
+                 const Tensor<T>& inputs,
+                 const Tensor<T>& sharedSynapses,
                  const Descriptor& desc,
-                 const Float_T* beta,
-                 Tensor<Float_T>& outputs,
+                 const T* beta,
+                 Tensor<T>& outputs,
                  const Tensor<bool>& maps = Tensor<bool>());
-    void forwardBias(const Float_T* alpha,
-                     const Tensor<Float_T>& bias,
-                     const Float_T* beta,
-                     Tensor<Float_T>& outputs);
+    template <class T>
+    void forwardBias(const T* alpha,
+                     const Tensor<T>& bias,
+                     const T* beta,
+                     Tensor<T>& outputs);
 
     // Backward
-    void backwardData(const Float_T* alpha,
-                      const Tensor<Float_T>& sharedSynapses,
-                      const Tensor<Float_T>& diffInputs,
+    template <class T>
+    void backwardData(const T* alpha,
+                      const Tensor<T>& sharedSynapses,
+                      const Tensor<T>& diffInputs,
                       const Descriptor& desc,
-                      const Float_T* beta,
-                      Tensor<Float_T>& diffOutputs,
+                      const T* beta,
+                      Tensor<T>& diffOutputs,
                       const Tensor<bool>& maps = Tensor<bool>());
-    void backwardFilter(const Float_T* alpha,
-                        const Tensor<Float_T>& inputs,
-                        const Tensor<Float_T>& diffInputs,
+    template <class T>
+    void backwardFilter(const T* alpha,
+                        const Tensor<T>& inputs,
+                        const Tensor<T>& diffInputs,
                         const Descriptor& desc,
-                        const Float_T* beta,
-                        Tensor<Float_T>& diffSharedSynapses,
+                        const T* beta,
+                        Tensor<T>& diffSharedSynapses,
                         const Tensor<bool>& maps = Tensor<bool>());
-    void backwardBias(const Float_T* alpha,
-                      const Tensor<Float_T>& diffInputs,
-                      const Float_T* beta,
-                      Tensor<Float_T>& diffBias);
+    template <class T>
+    void backwardBias(const T* alpha,
+                      const Tensor<T>& diffInputs,
+                      const T* beta,
+                      Tensor<T>& diffBias);
 }
 }
 

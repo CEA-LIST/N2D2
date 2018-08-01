@@ -37,18 +37,24 @@ N2D2::FcCellGenerator::generate(Network& network,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
 
     std::cout << "Layer: " << section << " [Fc(" << model << ")]" << std::endl;
 
-    std::shared_ptr<Activation<Float_T> > activation
+    std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
             iniConfig,
             section,
             model,
+            dataType,
             "ActivationFunction",
-            Registrar<TanhActivation<Float_T> >::create(model)());
+            (dataType == Float32)
+                ? Registrar<TanhActivation>::create<float>(model)()
+                : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
     std::shared_ptr<FcCell> cell = Registrar
@@ -61,22 +67,22 @@ N2D2::FcCellGenerator::generate(Network& network,
     }
 
     // Set configuration parameters defined in the INI file
-    std::shared_ptr<Solver<Float_T> > solvers
-        = SolverGenerator::generate(iniConfig, section, model, "Solvers");
+    std::shared_ptr<Solver> solvers
+        = SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
 
     if (solvers) {
         cell->setBiasSolver(solvers);
         cell->setWeightsSolver(solvers->clone());
     }
 
-    std::shared_ptr<Solver<Float_T> > biasSolver
-        = SolverGenerator::generate(iniConfig, section, model, "BiasSolver");
+    std::shared_ptr<Solver> biasSolver
+        = SolverGenerator::generate(iniConfig, section, model, dataType, "BiasSolver");
 
     if (biasSolver)
         cell->setBiasSolver(biasSolver);
 
-    std::shared_ptr<Solver<Float_T> > weightsSolver
-        = SolverGenerator::generate(iniConfig, section, model, "WeightsSolver");
+    std::shared_ptr<Solver> weightsSolver
+        = SolverGenerator::generate(iniConfig, section, model, dataType, "WeightsSolver");
 
     if (weightsSolver)
         cell->setWeightsSolver(weightsSolver);
@@ -102,11 +108,11 @@ N2D2::FcCellGenerator::generate(Network& network,
     // Set fillers
     if (iniConfig.isProperty("WeightsFiller"))
         cell->setWeightsFiller(
-            FillerGenerator::generate(iniConfig, section, "WeightsFiller"));
+            FillerGenerator::generate(iniConfig, section, "WeightsFiller", dataType));
 
     if (iniConfig.isProperty("BiasFiller"))
         cell->setBiasFiller(
-            FillerGenerator::generate(iniConfig, section, "BiasFiller"));
+            FillerGenerator::generate(iniConfig, section, "BiasFiller", dataType));
 
     const unsigned int x0 = iniConfig.getProperty
                             <unsigned int>("InputOffsetX", 0);

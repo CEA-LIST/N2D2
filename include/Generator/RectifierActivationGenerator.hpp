@@ -27,10 +27,11 @@
 namespace N2D2 {
 class RectifierActivationGenerator : public ActivationGenerator {
 public:
-    static std::shared_ptr<RectifierActivation<Float_T> >
+    static std::shared_ptr<RectifierActivation>
     generate(IniParser& iniConfig,
              const std::string& section,
              const std::string& model,
+             const DataType& dataType,
              const std::string& name);
 
 private:

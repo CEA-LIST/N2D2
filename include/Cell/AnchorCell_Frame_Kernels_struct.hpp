@@ -48,6 +48,7 @@ namespace AnchorCell_Frame_Kernels {
             OriginalFlipped
         };
 
+        Anchor() {}
         Anchor(float x0_,
                float y0_,
                float width_,

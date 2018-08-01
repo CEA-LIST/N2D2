@@ -23,14 +23,18 @@
 N2D2::Registrar<N2D2::SolverGenerator>
 N2D2::SGDSolverGenerator::mRegistrar("SGD", N2D2::SGDSolverGenerator::generate);
 
-std::shared_ptr<N2D2::SGDSolver<N2D2::Float_T> >
+std::shared_ptr<N2D2::SGDSolver>
 N2D2::SGDSolverGenerator::generate(IniParser& iniConfig,
                                    const std::string& section,
                                    const std::string& model,
+                                   const DataType& dataType,
                                    const std::string& name)
 {
-    std::shared_ptr<SGDSolver<Float_T> > solver = Registrar
-        <SGDSolver<Float_T> >::create(model)();
+    std::shared_ptr<SGDSolver> solver
+        = (dataType == Float32)
+            ? Registrar<SGDSolver>::create<float>(model)()
+            : Registrar<SGDSolver>::create<double>(model)();
+
     solver->setPrefixedParameters(iniConfig.getSection(section), name + ".");
     return solver;
 }

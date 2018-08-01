@@ -20,12 +20,18 @@
 
 #include "Generator/FillerGenerator.hpp"
 
-std::shared_ptr<N2D2::Filler<N2D2::Float_T> > N2D2::FillerGenerator::generate(
-    IniParser& iniConfig, const std::string& section, const std::string& name)
+std::shared_ptr<N2D2::Filler> N2D2::FillerGenerator::generate(
+    IniParser& iniConfig,
+    const std::string& section,
+    const std::string& name,
+    const DataType& dataType)
 {
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
     const std::string type = iniConfig.getProperty<std::string>(name);
-    return Registrar<FillerGenerator>::create(type)(iniConfig, section, name);
+    return Registrar<FillerGenerator>::create(type)(iniConfig,
+                                                    section,
+                                                    name,
+                                                    dataType);
 }

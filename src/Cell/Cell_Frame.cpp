@@ -20,16 +20,18 @@
 
 #include "Cell/Cell_Frame.hpp"
 
-N2D2::Cell_Frame::Cell_Frame(const std::string& name,
+template <class T>
+N2D2::Cell_Frame<T>::Cell_Frame(const std::string& name,
                              unsigned int nbOutputs,
                              const std::shared_ptr
-                             <Activation<Float_T> >& activation)
+                             <Activation>& activation)
     : Cell(name, nbOutputs), Cell_Frame_Top(activation)
 {
     // ctor
 }
 
-void N2D2::Cell_Frame::addInput(StimuliProvider& /*sp*/,
+template <class T>
+void N2D2::Cell_Frame<T>::addInput(StimuliProvider& /*sp*/,
                                 unsigned int /*channel*/,
                                 unsigned int /*x0*/,
                                 unsigned int /*y0*/,
@@ -37,11 +39,12 @@ void N2D2::Cell_Frame::addInput(StimuliProvider& /*sp*/,
                                 unsigned int /*height*/,
                                 const std::vector<bool>& /*mapping*/)
 {
-    throw std::runtime_error("Cell_Frame::addInput(): adding a single "
+    throw std::runtime_error("Cell_Frame<T>::addInput(): adding a single "
                              "environment channel as input is not supported");
 }
 
-void N2D2::Cell_Frame::addInput(StimuliProvider& sp,
+template <class T>
+void N2D2::Cell_Frame<T>::addInput(StimuliProvider& sp,
                                 unsigned int x0,
                                 unsigned int y0,
                                 unsigned int width,
@@ -54,7 +57,7 @@ void N2D2::Cell_Frame::addInput(StimuliProvider& sp,
         height = sp.getSizeY() - y0;
 
     if (x0 > 0 || y0 > 0 || width < sp.getSizeX() || height < sp.getSizeY())
-        throw std::runtime_error("Cell_Frame::addInput(): adding a cropped "
+        throw std::runtime_error("Cell_Frame<T>::addInput(): adding a cropped "
                                  "environment channel map as input is not "
                                  "supported");
 
@@ -74,7 +77,7 @@ void N2D2::Cell_Frame::addInput(StimuliProvider& sp,
 
     // Define input-output connections
     if (!mapping.empty() && mapping.rows() != sp.getNbChannels())
-        throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
+        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
 
@@ -90,7 +93,8 @@ void N2D2::Cell_Frame::addInput(StimuliProvider& sp,
     }
 }
 
-void N2D2::Cell_Frame::addInput(Cell* cell, const Matrix<bool>& mapping)
+template <class T>
+void N2D2::Cell_Frame<T>::addInput(Cell* cell, const Matrix<bool>& mapping)
 {
     // Define input-output sizes
     setInputsDims(cell->getOutputsDims());
@@ -103,7 +107,7 @@ void N2D2::Cell_Frame::addInput(Cell* cell, const Matrix<bool>& mapping)
     }
     else {
         throw std::runtime_error(
-            "Cell_Frame::addInput(): cannot mix Spike and Frame models");
+            "Cell_Frame<T>::addInput(): cannot mix Spike and Frame models");
     }
 
     setOutputsDims();
@@ -120,7 +124,7 @@ void N2D2::Cell_Frame::addInput(Cell* cell, const Matrix<bool>& mapping)
     const unsigned int cellNbOutputs = cell->getNbOutputs();
 
     if (!mapping.empty() && mapping.rows() != cellNbOutputs)
-        throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
+        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
 
@@ -135,7 +139,8 @@ void N2D2::Cell_Frame::addInput(Cell* cell, const Matrix<bool>& mapping)
     }
 }
 
-void N2D2::Cell_Frame::addInput(Cell* cell,
+template <class T>
+void N2D2::Cell_Frame<T>::addInput(Cell* cell,
                                 unsigned int x0,
                                 unsigned int y0,
                                 unsigned int width,
@@ -148,14 +153,15 @@ void N2D2::Cell_Frame::addInput(Cell* cell,
 
     if (x0 > 0 || y0 > 0 || width < cell->getOutputsWidth()
         || height < cell->getOutputsHeight())
-        throw std::runtime_error("Cell_Frame::addInput(): adding a cropped "
+        throw std::runtime_error("Cell_Frame<T>::addInput(): adding a cropped "
                                  "output map as input is not supported");
 
-    Cell_Frame::addInput(cell);
+    Cell_Frame<T>::addInput(cell);
 }
 
-void N2D2::Cell_Frame::addInput(Tensor<Float_T>& inputs,
-                                Tensor<Float_T>& diffOutputs)
+template <class T>
+void N2D2::Cell_Frame<T>::addInput(BaseTensor& inputs,
+                                BaseTensor& diffOutputs)
 {
     // Define input-output sizes
     std::vector<size_t> inputsDims = inputs.dims();
@@ -180,19 +186,22 @@ void N2D2::Cell_Frame::addInput(Tensor<Float_T>& inputs,
     mMaps.resize({getNbOutputs(), getNbChannels()}, true);
 }
 
-void N2D2::Cell_Frame::propagate(bool /*inference*/)
+template <class T>
+void N2D2::Cell_Frame<T>::propagate(bool /*inference*/)
 {
     if (mActivation)
-        mActivation->propagate(&mOutputs);
+        mActivation->propagate(mOutputs);
 }
 
-void N2D2::Cell_Frame::backPropagate()
+template <class T>
+void N2D2::Cell_Frame<T>::backPropagate()
 {
     if (mActivation)
-        mActivation->backPropagate(&mOutputs, &mDiffInputs);
+        mActivation->backPropagate(mOutputs, mDiffInputs);
 }
 
-void N2D2::Cell_Frame::setOutputTarget(const Tensor<int>& targets,
+template <class T>
+void N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets,
                                        double targetVal,
                                        double defaultVal)
 {
@@ -231,17 +240,18 @@ void N2D2::Cell_Frame::setOutputTarget(const Tensor<int>& targets,
     }
 }
 
-void N2D2::Cell_Frame::setOutputTargets(const Tensor<int>& targets,
+template <class T>
+void N2D2::Cell_Frame<T>::setOutputTargets(const Tensor<int>& targets,
                                         double targetVal,
                                         double defaultVal)
 {
     if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame::setOutputTargets(): target and "
+        throw std::domain_error("Cell_Frame<T>::setOutputTargets(): target and "
                                 "output batch sizes don't match.");
 
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
         throw std::domain_error(
-            "Cell_Frame::setOutputTargets(): wrong target matrix size.");
+            "Cell_Frame<T>::setOutputTargets(): wrong target matrix size.");
 
     for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
         const Tensor<int> target = targets[batchPos][0];
@@ -255,7 +265,7 @@ void N2D2::Cell_Frame::setOutputTargets(const Tensor<int>& targets,
                     if ((getNbOutputs() > 1 && target(ox, oy) >= (int)getNbOutputs())
                         || (getNbOutputs() == 1
                             && (target(ox, oy) < 0 || target(ox, oy) > 1))) {
-                        throw std::domain_error("Cell_Frame::setOutputTargets()"
+                        throw std::domain_error("Cell_Frame<T>::setOutputTargets()"
                                                 ": output target out of "
                                                 "range.");
                     }
@@ -287,44 +297,58 @@ void N2D2::Cell_Frame::setOutputTargets(const Tensor<int>& targets,
     }
 }
 
-void N2D2::Cell_Frame::setOutputTargets(const Tensor<Float_T>& targets)
+template <class T>
+void N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
 {
-    if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame::setOutputTargets(): target and "
+    if (baseTargets.dimB() != mOutputs.dimB())
+        throw std::domain_error("Cell_Frame<T>::setOutputTargets(): target and "
                                 "output batch sizes don't match.");
 
-    if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1]
-        || targets.dimZ() != getNbOutputs())
+    if (baseTargets.dimX() != mOutputsDims[0]
+        || baseTargets.dimY() != mOutputsDims[1]
+        || baseTargets.dimZ() != getNbOutputs())
+    {
         throw std::domain_error(
-            "Cell_Frame::setOutputTargets(): wrong target matrix size.");
+            "Cell_Frame<T>::setOutputTargets(): wrong target matrix size.");
+    }
+
+    const Tensor<T>& targets = tensor_cast<T>(baseTargets);
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index)
         mDiffInputs(index) = targets(index) - mOutputs(index);
 }
 
-void N2D2::Cell_Frame::setOutputErrors(const Tensor<Float_T>& errors)
+template <class T>
+void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
 {
-    if (errors.dimB() != mOutputs.dimB())
+    if (baseErrors.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
                                 "and output batch sizes don't match.");
 
-    if (errors.dimX() != mOutputsDims[0] || errors.dimY() != mOutputsDims[1]
-        || errors.dimZ() != getNbOutputs())
+    if (baseErrors.dimX() != mOutputsDims[0]
+        || baseErrors.dimY() != mOutputsDims[1]
+        || baseErrors.dimZ() != getNbOutputs())
+    {
         throw std::domain_error(
             "Cell_Frame_CUDA::setOutputErrors(): wrong target matrix size.");
+    }
+
+    const Tensor<T>& errors = tensor_cast<T>(baseErrors);
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index)
         mDiffInputs(index) = errors(index);
 }
 
-unsigned int N2D2::Cell_Frame::getMaxOutput(unsigned int batchPos) const
+template <class T>
+unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
 {
-    const Tensor<Float_T> output = mOutputs[batchPos];
+    const Tensor<T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
 }
 
-void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels,
+template <class T>
+void N2D2::Cell_Frame<T>::discretizeSignals(unsigned int nbLevels,
                                          const Signals& signals)
 {
     if (signals & In) {
@@ -335,7 +359,7 @@ void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels,
              itTensor != itTensorEnd;
              ++itTensor)
         {
-            Tensor<Float_T> input = tensor_cast<Float_T>(*(*itTensor));
+            Tensor<T> input = tensor_cast<T>(*(*itTensor));
 
             //#pragma omp parallel for
             for (int index = 0; index < (int)input.size(); ++index)
@@ -354,4 +378,9 @@ void N2D2::Cell_Frame::discretizeSignals(unsigned int nbLevels,
             mOutputs(index) = Utils::round((nbLevels - 1) * mOutputs(index))
                               / (nbLevels - 1);
     }
+}
+
+namespace N2D2 {
+    template class Cell_Frame<float>;
+    template class Cell_Frame<double>;
 }

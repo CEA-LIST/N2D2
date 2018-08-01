@@ -29,7 +29,7 @@ N2D2::UnpoolCell_Frame::UnpoolCell_Frame(const std::string& name,
     const std::vector<unsigned int>& strideDims,
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       UnpoolCell(name,
                poolDims,

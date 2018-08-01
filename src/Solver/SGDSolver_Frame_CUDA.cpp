@@ -23,57 +23,62 @@
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 
 template <>
-N2D2::Registrar<N2D2::SGDSolver<N2D2::Float_T> > N2D2::SGDSolver_Frame_CUDA
-    <N2D2::Float_T>::mRegistrar(N2D2::SGDSolver_Frame_CUDA
-                                <N2D2::Float_T>::create,
-                                "Frame_CUDA",
-                                "Transcode_CUDA",
-                                NULL);
+N2D2::Registrar<N2D2::SGDSolver>
+N2D2::SGDSolver_Frame_CUDA<float>::mRegistrar(
+    {"Frame_CUDA",
+     "Transcode_CUDA"},
+    N2D2::SGDSolver_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::SGDSolver>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SGDSolver>
+N2D2::SGDSolver_Frame_CUDA<double>::mRegistrar(
+    {"Frame_CUDA",
+     "Transcode_CUDA"},
+    N2D2::SGDSolver_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::SGDSolver>::Type<double>());
 
 namespace N2D2 {
 template <>
-void SGDSolver_Frame_CUDA<float>::update(Tensor<float>* data,
-                                         Tensor<float>* diffData,
+void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
+                                         CudaTensor<float>& diffData,
                                          unsigned int batchSize)
 {
-    const float rate = SGDSolver<float>::getLearningRate(batchSize);
+    const float rate = SGDSolver::getLearningRate(batchSize);
 
     if (rate == 0.0)
         return;
 
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-    CudaTensor<float>* cudaDiffData = static_cast
-        <CudaTensor<float>*>(diffData);
-
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(data->dims());
+        mContinuousData.resize(data.dims());
         CHECK_CUDA_STATUS(cudaMemcpy(mContinuousData.getDevicePtr(),
-                                     cudaData->getDevicePtr(),
-                                     cudaData->size() * sizeof(float),
+                                     data.getDevicePtr(),
+                                     data.size() * sizeof(float),
                                      cudaMemcpyDeviceToDevice));
     }
 
-    CudaTensor<float>* cudaContinuousData
-        = (mQuantizationLevels > 0) ? &mContinuousData : cudaData;
+    CudaTensor<float>& cudaContinuousData
+        = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     // Normalize in function of the iteration size
     const float rateDiff = rate / (batchSize * (float)mIterationSize);
-    float momentum = mMomentum;
-    float decay = mDecay;
-    float unit = 1.0f;
 
-    if (momentum == 0.0f && decay == 0.0f) {
+    if (mMomentum == 0.0 && mDecay == 0.0) {
         // data = data + diffData*rate
         CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
-                                        diffData->size(), // size of data
+                                        diffData.size(), // size of data
                                         &rateDiff,
-                                        cudaDiffData->getDevicePtr(),
+                                        diffData.getDevicePtr(),
                                         1,
-                                        cudaContinuousData->getDevicePtr(),
+                                        cudaContinuousData.getDevicePtr(),
                                         1));
     } else {
+        const float momentum = mMomentum;
+        const float decay = mDecay;
+        const float unit = 1.0f;
+
         if (mMomentumData.empty()) {
-            mMomentumData.resize(data->dims());
+            mMomentumData.resize(data.dims());
             mMomentumData.fill(0.0);
             mMomentumData.synchronizeHToD();
         }
@@ -87,20 +92,20 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor<float>* data,
 
         // mMomentumData = mMomentumData + diffData*rate
         CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
-                                        diffData->size(),
+                                        diffData.size(),
                                         &rateDiff,
-                                        cudaDiffData->getDevicePtr(),
+                                        diffData.getDevicePtr(),
                                         1,
                                         mMomentumData.getDevicePtr(),
                                         1));
 
         if (decay != 0.0f) {
-            float alpha = -decay * rate;
+            const float alpha = -decay * rate;
             // mMomentumData = mMomentumData - decay*rate*data
             CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
-                                            data->size(),
+                                            data.size(),
                                             &alpha,
-                                            cudaContinuousData->getDevicePtr(),
+                                            cudaContinuousData.getDevicePtr(),
                                             1,
                                             mMomentumData.getDevicePtr(),
                                             1));
@@ -112,63 +117,60 @@ void SGDSolver_Frame_CUDA<float>::update(Tensor<float>* data,
                                         &unit,
                                         mMomentumData.getDevicePtr(),
                                         1,
-                                        cudaContinuousData->getDevicePtr(),
+                                        cudaContinuousData.getDevicePtr(),
                                         1));
     }
 
     if (mClamping)
-        cudaSclamp(cudaContinuousData->getDevicePtr(), data->size(), -1.0, 1.0);
+        cudaSclamp(cudaContinuousData.getDevicePtr(), data.size(), -1.0, 1.0);
 
     if (mQuantizationLevels > 0)
-        cudaSquantize(cudaData->getDevicePtr(),
-                      cudaContinuousData->getDevicePtr(),
-                      data->size(),
+        cudaSquantize(data.getDevicePtr(),
+                      cudaContinuousData.getDevicePtr(),
+                      data.size(),
                       mQuantizationLevels);
 }
 
 template <>
-void SGDSolver_Frame_CUDA<double>::update(Tensor<double>* data,
-                                          Tensor<double>* diffData,
+void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
+                                          CudaTensor<double>& diffData,
                                           unsigned int batchSize)
 {
-    const double rate = SGDSolver<double>::getLearningRate(batchSize);
+    const double rate = SGDSolver::getLearningRate(batchSize);
 
     if (rate == 0.0)
         return;
 
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-    CudaTensor<double>* cudaDiffData = static_cast
-        <CudaTensor<double>*>(diffData);
-
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(data->dims());
+        mContinuousData.resize(data.dims());
         CHECK_CUDA_STATUS(cudaMemcpy(mContinuousData.getDevicePtr(),
-                                     cudaData->getDevicePtr(),
-                                     cudaData->size() * sizeof(double),
+                                     data.getDevicePtr(),
+                                     data.size() * sizeof(double),
                                      cudaMemcpyDeviceToDevice));
     }
 
-    CudaTensor<double>* cudaContinuousData
-        = (mQuantizationLevels > 0) ? &mContinuousData : cudaData;
+    CudaTensor<double>& cudaContinuousData
+        = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     // Normalize in function of the iteration size
     const double rateDiff = rate / (batchSize * (double)mIterationSize);
-    double momentum = mMomentum;
-    double decay = mDecay;
-    double unit = 1.0;
 
-    if (momentum == 0.0 && decay == 0.0) {
+    if (mMomentum == 0.0 && mDecay == 0.0) {
         // data = data + diffData*rate
         CHECK_CUBLAS_STATUS(cublasDaxpy(CudaContext::cublasHandle(),
-                                        diffData->size(), // size of data
+                                        diffData.size(), // size of data
                                         &rateDiff,
-                                        cudaDiffData->getDevicePtr(),
+                                        diffData.getDevicePtr(),
                                         1,
-                                        cudaContinuousData->getDevicePtr(),
+                                        cudaContinuousData.getDevicePtr(),
                                         1));
     } else {
+        const double momentum = mMomentum;
+        const double decay = mDecay;
+        const double unit = 1.0;
+
         if (mMomentumData.empty()) {
-            mMomentumData.resize(data->dims());
+            mMomentumData.resize(data.dims());
             mMomentumData.fill(0.0);
             mMomentumData.synchronizeHToD();
         }
@@ -182,20 +184,20 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor<double>* data,
 
         // mMomentumData = mMomentumData + diffData*rate
         CHECK_CUBLAS_STATUS(cublasDaxpy(CudaContext::cublasHandle(),
-                                        diffData->size(),
+                                        diffData.size(),
                                         &rateDiff,
-                                        cudaDiffData->getDevicePtr(),
+                                        diffData.getDevicePtr(),
                                         1,
                                         mMomentumData.getDevicePtr(),
                                         1));
 
         if (decay != 0.0) {
-            double alpha = -decay * rate;
+            const double alpha = -decay * rate;
             // mMomentumData = mMomentumData - decay*rate*data
             CHECK_CUBLAS_STATUS(cublasDaxpy(CudaContext::cublasHandle(),
-                                            data->size(),
+                                            data.size(),
                                             &alpha,
-                                            cudaContinuousData->getDevicePtr(),
+                                            cudaContinuousData.getDevicePtr(),
                                             1,
                                             mMomentumData.getDevicePtr(),
                                             1));
@@ -207,86 +209,19 @@ void SGDSolver_Frame_CUDA<double>::update(Tensor<double>* data,
                                         &unit,
                                         mMomentumData.getDevicePtr(),
                                         1,
-                                        cudaContinuousData->getDevicePtr(),
+                                        cudaContinuousData.getDevicePtr(),
                                         1));
     }
 
     if (mClamping)
-        cudaDclamp(cudaContinuousData->getDevicePtr(), data->size(), -1.0, 1.0);
+        cudaDclamp(cudaContinuousData.getDevicePtr(), data.size(), -1.0, 1.0);
 
     if (mQuantizationLevels > 0)
-        cudaDquantize(cudaData->getDevicePtr(),
-                      cudaContinuousData->getDevicePtr(),
-                      data->size(),
+        cudaDquantize(data.getDevicePtr(),
+                      cudaContinuousData.getDevicePtr(),
+                      data.size(),
                       mQuantizationLevels);
 }
-
-template <>
-void SGDSolver_Frame_CUDA
-    <float>::exportFreeParameters(const std::string& fileName) const
-{
-    float momentum = mMomentum;
-
-    if (momentum != 0.0 && mMomentumData.size() > 0) {
-        std::ofstream syn(fileName);
-
-        if (!syn.good())
-            throw std::runtime_error("Could not create synaptic file : "
-                                     + fileName);
-
-        mMomentumData.synchronizeDToH();
-
-        for (std::vector<float>::const_iterator it = mMomentumData.begin();
-             it != mMomentumData.end();
-             ++it) {
-            syn << (*it) << " ";
-            syn << "\n";
-        }
-
-        if (!syn.good())
-            throw std::runtime_error("Error writing synaptic file: "
-                                     + fileName);
-    }
-}
-
-template <>
-void SGDSolver_Frame_CUDA
-    <double>::exportFreeParameters(const std::string& fileName) const
-{
-    double momentum = mMomentum;
-
-    if (momentum != 0.0) {
-        std::ofstream syn(fileName.c_str());
-
-        if (!syn.good())
-            throw std::runtime_error("Could not create synaptic file : "
-                                     + fileName);
-
-        mMomentumData.synchronizeDToH();
-
-        for (std::vector<double>::const_iterator it = mMomentumData.begin();
-             it != mMomentumData.end();
-             ++it)
-            syn << (*it) << " ";
-
-        if (!syn.good())
-            throw std::runtime_error("Error writing synaptic file: "
-                                     + fileName);
-    }
-}
-/*
-    template <>
-    void SGDSolver_Frame_CUDA<float>::importFreeParameters(const std::string&
-   fileName, bool ignoreNotExists) {
-
-    }
-
-    template <>
-    void SGDSolver_Frame_CUDA<double>::importFreeParameters(const std::string&
-   fileName, bool ignoreNotExists) {
-
-    }
-    */
 }
 
 #endif

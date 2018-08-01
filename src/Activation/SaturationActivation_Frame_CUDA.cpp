@@ -23,61 +23,62 @@
 #include "Activation/SaturationActivation_Frame_CUDA.hpp"
 
 template <>
-N2D2::Registrar<N2D2::SaturationActivation<N2D2::Float_T> >
-N2D2::SaturationActivation_Frame_CUDA
-    <N2D2::Float_T>::mRegistrar(N2D2::SaturationActivation_Frame_CUDA
-                                <N2D2::Float_T>::create,
-                                "Frame_CUDA",
-                                "Transcode_CUDA",
-                                "CSpike_CUDA",
-                                "CSpike_BP_CUDA",
-                                NULL);
+N2D2::Registrar<N2D2::SaturationActivation>
+N2D2::SaturationActivation_Frame_CUDA<float>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::SaturationActivation_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::SaturationActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SaturationActivation>
+N2D2::SaturationActivation_Frame_CUDA<double>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::SaturationActivation_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::SaturationActivation>::Type<double>());
 
 namespace N2D2 {
 template <>
-void SaturationActivation_Frame_CUDA<float>::propagate(Tensor<float>* data)
+void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
 {
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-    cudaSSaturation_propagate(cudaData->getDevicePtr(),
-                              cudaData->size(),
+    cudaSSaturation_propagate(data.getDevicePtr(),
+                              data.size(),
                               (int)mShifting,
                               (double)mThreshold);
 }
 
 template <>
-void SaturationActivation_Frame_CUDA<double>::propagate(Tensor<double>* data)
+void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data)
 {
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-    cudaDSaturation_propagate(cudaData->getDevicePtr(),
-                              cudaData->size(),
+    cudaDSaturation_propagate(data.getDevicePtr(),
+                              data.size(),
                               (int)mShifting,
                               (double)mThreshold);
 }
 
 template <>
 void SaturationActivation_Frame_CUDA
-    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData)
+    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData)
 {
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-    CudaTensor<float>* cudaDiffData = static_cast
-        <CudaTensor<float>*>(diffData);
-    cudaSSaturation_backPropagate(cudaData->getDevicePtr(),
-                                  cudaDiffData->getDevicePtr(),
-                                  cudaData->size(),
+    cudaSSaturation_backPropagate(data.getDevicePtr(),
+                                  diffData.getDevicePtr(),
+                                  data.size(),
                                   (int)mShifting,
                                   (double)mThreshold);
 }
 
 template <>
 void SaturationActivation_Frame_CUDA
-    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData)
+    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData)
 {
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-    CudaTensor<double>* cudaDiffData = static_cast
-        <CudaTensor<double>*>(diffData);
-    cudaDSaturation_backPropagate(cudaData->getDevicePtr(),
-                                  cudaDiffData->getDevicePtr(),
-                                  cudaData->size(),
+    cudaDSaturation_backPropagate(data.getDevicePtr(),
+                                  diffData.getDevicePtr(),
+                                  data.size(),
                                   (int)mShifting,
                                   (double)mThreshold);
 }

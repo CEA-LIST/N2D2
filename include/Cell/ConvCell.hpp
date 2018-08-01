@@ -72,7 +72,7 @@ public:
         const std::vector<unsigned int>&,
         const std::vector<unsigned int>&,
         const std::vector<int>&,
-        const std::shared_ptr<Activation<Float_T> >&)> RegistryCreate_T;
+        const std::shared_ptr<Activation>&)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -107,19 +107,19 @@ public:
     {
         return Type;
     };
-    void setWeightsFiller(const std::shared_ptr<Filler<Float_T> >& filler)
+    void setWeightsFiller(const std::shared_ptr<Filler>& filler)
     {
         mWeightsFiller = filler;
     };
-    void setBiasFiller(const std::shared_ptr<Filler<Float_T> >& filler)
+    void setBiasFiller(const std::shared_ptr<Filler>& filler)
     {
         mBiasFiller = filler;
     };
-    void setWeightsSolver(const std::shared_ptr<Solver<Float_T> >& solver)
+    void setWeightsSolver(const std::shared_ptr<Solver>& solver)
     {
         mWeightsSolver = solver;
     };
-    void setBiasSolver(const std::shared_ptr<Solver<Float_T> >& solver)
+    void setBiasSolver(const std::shared_ptr<Solver>& solver)
     {
         mBiasSolver = solver;
     };
@@ -163,30 +163,31 @@ public:
     {
         return mPaddingDims[1];
     };
-    std::shared_ptr<Solver<Float_T> > getWeightsSolver()
+    std::shared_ptr<Solver> getWeightsSolver()
     {
         return mWeightsSolver;
     };
-    std::shared_ptr<Solver<Float_T> > getBiasSolver()
+    std::shared_ptr<Solver> getBiasSolver()
     {
         return mBiasSolver;
     };
-    virtual Tensor<Float_T> getWeight(unsigned int output,
-                                      unsigned int channel) const = 0;
-    virtual Float_T getBias(unsigned int output) const = 0;
+    virtual void getWeight(unsigned int output,
+                                      unsigned int channel,
+                                      BaseTensor& value) const = 0;
+    virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
     void setKernel(unsigned int output,
                    unsigned int channel,
                    const Matrix<double>& value,
                    bool normalize);
-    virtual Interface<Float_T>* getWeights() { return NULL; };
+    virtual Interface<> getWeights() { return Interface<>(); };
     virtual void setWeights(unsigned int /*k*/,
-                    Interface<Float_T>* /*weights*/,
+                    Interface<> /*weights*/,
                     unsigned int /*offset*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getBiases()
+    virtual std::shared_ptr<BaseTensor> getBiases()
     {
-        return std::shared_ptr<Tensor<Float_T> >();
+        return std::shared_ptr<BaseTensor>();
     };
-    virtual void setBiases(const std::shared_ptr<Tensor<Float_T> >&
+    virtual void setBiases(const std::shared_ptr<BaseTensor>&
                            /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
@@ -205,8 +206,8 @@ protected:
     virtual void setOutputsDims();
     virtual void setWeight(unsigned int output,
                            unsigned int channel,
-                           const Tensor<Float_T>& value) = 0;
-    virtual void setBias(unsigned int output, Float_T value) = 0;
+                           const BaseTensor& value) = 0;
+    virtual void setBias(unsigned int output, const BaseTensor& value) = 0;
     std::map<unsigned int, unsigned int> outputsRemap() const;
 
     /// If true, the output neurons don't have bias
@@ -226,10 +227,10 @@ protected:
     // Padding for the convolution
     const std::vector<int> mPaddingDims;
 
-    std::shared_ptr<Filler<Float_T> > mWeightsFiller;
-    std::shared_ptr<Filler<Float_T> > mBiasFiller;
-    std::shared_ptr<Solver<Float_T> > mWeightsSolver;
-    std::shared_ptr<Solver<Float_T> > mBiasSolver;
+    std::shared_ptr<Filler> mWeightsFiller;
+    std::shared_ptr<Filler> mBiasFiller;
+    std::shared_ptr<Solver> mWeightsSolver;
+    std::shared_ptr<Solver> mBiasSolver;
 };
 }
 

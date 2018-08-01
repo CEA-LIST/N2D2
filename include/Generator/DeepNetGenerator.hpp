@@ -22,6 +22,7 @@
 #define N2D2_DEEPNETGENERATOR_H
 
 #include "DeepNet.hpp"
+#include "Generator/Generator.hpp"
 #include "Generator/CEnvironmentGenerator.hpp"
 #include "Generator/CellGenerator.hpp"
 #include "Generator/EnvironmentGenerator.hpp"

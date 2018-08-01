@@ -34,9 +34,9 @@ public:
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
-                                          <Activation<Float_T> >& /*activation*/
+                                          <Activation>& /*activation*/
                                           = std::shared_ptr
-                                          <Activation<Float_T> >())
+                                          <Activation>())
     {
         return std::make_shared<FcCell_Spike_PCM>(net, name, nbOutputs);
     }

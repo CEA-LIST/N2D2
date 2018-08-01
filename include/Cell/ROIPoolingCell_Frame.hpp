@@ -30,7 +30,7 @@
 #include "ROIPoolingCell.hpp"
 
 namespace N2D2 {
-class ROIPoolingCell_Frame : public virtual ROIPoolingCell, public Cell_Frame {
+class ROIPoolingCell_Frame : public virtual ROIPoolingCell, public Cell_Frame<Float_T> {
 public:
     ROIPoolingCell_Frame(const std::string& name,
                          StimuliProvider& sp,

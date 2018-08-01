@@ -30,21 +30,23 @@
 
 namespace N2D2 {
 template <class T>
-class RectifierActivation_Frame_CUDA : public RectifierActivation<T> {
+class RectifierActivation_Frame_CUDA : public RectifierActivation {
 public:
-    static std::shared_ptr<RectifierActivation<T> > create()
+    static std::shared_ptr<RectifierActivation> create()
     {
         return std::make_shared<RectifierActivation_Frame_CUDA<T> >();
     }
 
     RectifierActivation_Frame_CUDA();
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    inline virtual void propagate(BaseTensor& data);
+    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    void propagate(CudaTensor<T>& data);
+    void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
     virtual ~RectifierActivation_Frame_CUDA();
 
-    using RectifierActivation<T>::mLeakSlope;
-    using RectifierActivation<T>::mShifting;
-    using RectifierActivation<T>::mClipping;
+    using RectifierActivation::mLeakSlope;
+    using RectifierActivation::mShifting;
+    using RectifierActivation::mClipping;
 
 protected:
 #if CUDNN_VERSION >= 5000
@@ -54,13 +56,13 @@ protected:
 #endif
 
 private:
-    static Registrar<RectifierActivation<T> > mRegistrar;
+    static Registrar<RectifierActivation > mRegistrar;
 };
 }
 
 template <class T>
 N2D2::RectifierActivation_Frame_CUDA<T>::RectifierActivation_Frame_CUDA():
-    RectifierActivation<T>()
+    RectifierActivation()
 {
 #if CUDNN_VERSION >= 5000
     CHECK_CUDNN_STATUS(cudnnCreateActivationDescriptor(&mActivationDesc));
@@ -71,18 +73,30 @@ N2D2::RectifierActivation_Frame_CUDA<T>::RectifierActivation_Frame_CUDA():
 #endif
 }
 
+template <class T>
+void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(BaseTensor& data) {
+    propagate(dynamic_cast<CudaTensor<T>&>(data));
+}
+
+template <class T>
+void N2D2::RectifierActivation_Frame_CUDA<T>::backPropagate(BaseTensor& data,
+                                                        BaseTensor& diffData) {
+    backPropagate(dynamic_cast<CudaTensor<T>&>(data),
+                  dynamic_cast<CudaTensor<T>&>(diffData));
+}
+
 namespace N2D2 {
 template <>
-void RectifierActivation_Frame_CUDA<float>::propagate(Tensor<float>* data);
+void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data);
 template <>
 void RectifierActivation_Frame_CUDA
-    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData);
+    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData);
 
 template <>
-void RectifierActivation_Frame_CUDA<double>::propagate(Tensor<double>* data);
+void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data);
 template <>
 void RectifierActivation_Frame_CUDA
-    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData);
+    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData);
 }
 
 template <class T>

@@ -24,6 +24,7 @@
 #include "Solver/Solver.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
+#include "Generator/Generator.hpp"
 
 #ifdef WIN32
 // For static library
@@ -36,9 +37,10 @@ namespace N2D2 {
 class SolverGenerator {
 public:
     typedef std::function
-        <std::shared_ptr<Solver<Float_T> >(IniParser& iniConfig,
+        <std::shared_ptr<Solver>(IniParser& iniConfig,
                                            const std::string& section,
                                            const std::string& model,
+                                           const DataType& dataType,
                                            const std::string& name)>
     RegistryCreate_T;
 
@@ -48,13 +50,14 @@ public:
         return rMap;
     }
 
-    static std::shared_ptr<Solver<Float_T> >
+    static std::shared_ptr<Solver>
     generate(IniParser& iniConfig,
              const std::string& section,
              const std::string& model,
+             const DataType& dataType,
              const std::string& name,
-             const std::shared_ptr<Solver<Float_T> >& defaultSolver
-             = std::shared_ptr<Solver<Float_T> >());
+             const std::shared_ptr<Solver>& defaultSolver
+             = std::shared_ptr<Solver>());
 };
 }
 

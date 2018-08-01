@@ -21,7 +21,7 @@
 #include "DataFile/WavDataFile.hpp"
 
 N2D2::Registrar<N2D2::DataFile>
-N2D2::WavDataFile::mRegistrar(N2D2::WavDataFile::create, "wav", NULL);
+N2D2::WavDataFile::mRegistrar({"wav"}, N2D2::WavDataFile::create);
 
 cv::Mat N2D2::WavDataFile::read(const std::string& fileName)
 {

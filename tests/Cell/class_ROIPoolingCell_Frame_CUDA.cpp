@@ -160,7 +160,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     Network net;
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA conv1("conv1",
+    ConvCell_Frame_CUDA<Float_T> conv1("conv1",
         std::vector<unsigned int>({1, 1}),
         nbOutputs,
         std::vector<unsigned int>({1, 1}),
@@ -273,7 +273,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
 
     pool1.propagate();
 
-    const Tensor<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < nbProposals; ++batch) {
         const unsigned int poolWidth = Utils::round(proposals(2, batch)

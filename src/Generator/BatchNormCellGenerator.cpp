@@ -22,7 +22,7 @@
 
 N2D2::Registrar<N2D2::CellGenerator> N2D2::BatchNormCellGenerator::mRegistrar(
     BatchNormCell::Type, N2D2::BatchNormCellGenerator::generate);
-N2D2::RegistrarCustom<N2D2::CellGenerator,
+N2D2::Registrar<N2D2::CellGenerator,
 N2D2::CellGenerator::RegistryPostCreate_T>
 N2D2::BatchNormCellGenerator::mRegistrarPost(BatchNormCell::Type
     + std::string("+"), N2D2::BatchNormCellGenerator::postGenerate);
@@ -40,19 +40,25 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
 
     std::cout << "Layer: " << section << " [BatchNorm(" << model << ")]"
               << std::endl;
 
-    std::shared_ptr<Activation<Float_T> > activation
+    std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
             iniConfig,
             section,
             model,
+            dataType,
             "ActivationFunction",
-            Registrar<TanhActivation<Float_T> >::create(model)());
+            (dataType == Float32)
+                ? Registrar<TanhActivation>::create<float>(model)()
+                : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
     std::shared_ptr<BatchNormCell> cell = Registrar
@@ -65,22 +71,22 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
     }
 
     // Set configuration parameters defined in the INI file
-    std::shared_ptr<Solver<Float_T> > solvers
-        = SolverGenerator::generate(iniConfig, section, model, "Solvers");
+    std::shared_ptr<Solver> solvers
+        = SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
 
     if (solvers) {
         cell->setScaleSolver(solvers);
         cell->setBiasSolver(solvers->clone());
     }
 
-    std::shared_ptr<Solver<Float_T> > scaleSolver
-        = SolverGenerator::generate(iniConfig, section, model, "ScaleSolver");
+    std::shared_ptr<Solver> scaleSolver
+        = SolverGenerator::generate(iniConfig, section, model, dataType, "ScaleSolver");
 
     if (scaleSolver)
         cell->setScaleSolver(scaleSolver);
 
-    std::shared_ptr<Solver<Float_T> > biasSolver
-        = SolverGenerator::generate(iniConfig, section, model, "BiasSolver");
+    std::shared_ptr<Solver> biasSolver
+        = SolverGenerator::generate(iniConfig, section, model, dataType, "BiasSolver");
 
     if (biasSolver)
         cell->setBiasSolver(biasSolver);

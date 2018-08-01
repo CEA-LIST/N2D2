@@ -30,16 +30,16 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-class BatchNormCell_Frame : public virtual BatchNormCell, public Cell_Frame {
+class BatchNormCell_Frame : public virtual BatchNormCell, public Cell_Frame<Float_T> {
 public:
     BatchNormCell_Frame(const std::string& name,
                         unsigned int nbOutputs,
-                        const std::shared_ptr<Activation<Float_T> >& activation
+                        const std::shared_ptr<Activation>& activation
                         = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<BatchNormCell>
     create(const std::string& name,
            unsigned int nbOutputs,
-           const std::shared_ptr<Activation<Float_T> >& activation
+           const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
         return std::make_shared

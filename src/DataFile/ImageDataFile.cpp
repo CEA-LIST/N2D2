@@ -21,8 +21,7 @@
 #include "DataFile/ImageDataFile.hpp"
 
 N2D2::Registrar<N2D2::DataFile>
-N2D2::ImageDataFile::mRegistrar(N2D2::ImageDataFile::create,
-                                // Windows bitmaps
+N2D2::ImageDataFile::mRegistrar({// Windows bitmaps
                                 "bmp",
                                 "dib",
                                 // JPEG files
@@ -42,8 +41,8 @@ N2D2::ImageDataFile::mRegistrar(N2D2::ImageDataFile::create,
                                 "ras",
                                 // TIFF files
                                 "tiff",
-                                "tif",
-                                NULL);
+                                "tif"},
+                                N2D2::ImageDataFile::create);
 
 cv::Mat N2D2::ImageDataFile::read(const std::string& fileName)
 {

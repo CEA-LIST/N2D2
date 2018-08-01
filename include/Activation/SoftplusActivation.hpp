@@ -36,10 +36,10 @@
 #endif
 
 namespace N2D2 {
-template <class T> class SoftplusActivation : public Activation<T> {
+class SoftplusActivation : public Activation {
 public:
     typedef std::function
-        <std::shared_ptr<SoftplusActivation<T> >()> RegistryCreate_T;
+        <std::shared_ptr<SoftplusActivation>()> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -55,7 +55,5 @@ public:
     virtual ~SoftplusActivation() {};
 };
 }
-
-template <class T> const char* N2D2::SoftplusActivation<T>::Type = "Softplus";
 
 #endif // N2D2_SOFTPLUSACTIVATION_H

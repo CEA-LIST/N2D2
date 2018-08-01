@@ -43,8 +43,8 @@ TEST(MappingGenerator, MappingGenerator)
 
     Network net;
     Environment env(net, EmptyDatabase, {24, 24, 1});
-    const std::shared_ptr<ConvCell_Frame> conv1(
-        new ConvCell_Frame("conv1", std::vector<unsigned int>({4, 4}), 10));
+    const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
+        new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
 
     Matrix<bool> mapping
         = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2");
@@ -91,8 +91,8 @@ TEST(MappingGenerator, MappingGenerator_bis)
 
     Network net;
     Environment env(net, EmptyDatabase, {24, 24, 1});
-    const std::shared_ptr<ConvCell_Frame> conv1(
-        new ConvCell_Frame("conv1", std::vector<unsigned int>({4, 4}), 10));
+    const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
+        new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
 
     Matrix<bool> mapping
         = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2");
@@ -128,8 +128,8 @@ TEST(MappingGenerator, MappingGenerator_ter)
 
     Network net;
     Environment env(net, EmptyDatabase, {24, 24, 1});
-    const std::shared_ptr<ConvCell_Frame> conv1(
-        new ConvCell_Frame("conv1", std::vector<unsigned int>({4, 4}), 10));
+    const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
+        new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
 
     Matrix<bool> mapping
         = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2");

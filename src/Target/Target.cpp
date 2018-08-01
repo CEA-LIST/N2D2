@@ -354,7 +354,7 @@ void N2D2::Target::process(Database::StimuliSet set)
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
         const Tensor<Float_T>& values
-            = (targetCell) ? targetCell->getOutputs()
+            = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
                            : targetCellCSpike->getOutputsActivity();
 
 #pragma omp parallel for if (mTargets.dimB() > 4)
@@ -530,7 +530,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
             // Retrieve estimated labels
             const Tensor<Float_T>& values
-                = (targetCell) ? targetCell->getOutputs()
+                = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
                                : targetCellCSpike->getOutputsActivity();
             const std::string imgFile
                 = mStimuliProvider->getDatabase().getStimulusName(id);
@@ -757,7 +757,7 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
         = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
     const Tensor<Float_T>& value
-        = (targetCell) ? targetCell->getOutputs()[batchPos]
+        = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())[batchPos]
                        : targetCellCSpike->getOutputsActivity()[batchPos];
 
     if (x1 >= value.dimX() || y1 >= value.dimY())

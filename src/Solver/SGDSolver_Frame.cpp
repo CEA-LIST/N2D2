@@ -21,8 +21,17 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 template <>
-N2D2::Registrar<N2D2::SGDSolver<N2D2::Float_T> > N2D2::SGDSolver_Frame
-    <N2D2::Float_T>::mRegistrar(N2D2::SGDSolver_Frame<N2D2::Float_T>::create,
-                                "Frame",
-                                "Transcode",
-                                NULL);
+N2D2::Registrar<N2D2::SGDSolver>
+N2D2::SGDSolver_Frame<float>::mRegistrar(
+    {"Frame",
+     "Transcode"},
+    N2D2::SGDSolver_Frame<float>::create,
+    N2D2::Registrar<N2D2::SGDSolver>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SGDSolver>
+N2D2::SGDSolver_Frame<double>::mRegistrar(
+    {"Frame",
+     "Transcode"},
+    N2D2::SGDSolver_Frame<double>::create,
+    N2D2::Registrar<N2D2::SGDSolver>::Type<double>());

@@ -27,7 +27,7 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-class DeconvCell_Frame : public virtual DeconvCell, public Cell_Frame {
+class DeconvCell_Frame : public virtual DeconvCell, public Cell_Frame<Float_T> {
 public:
     DeconvCell_Frame(const std::string& name,
                      const std::vector<unsigned int>& kernelDims,
@@ -36,7 +36,7 @@ public:
                           = std::vector<unsigned int>(2, 1U),
                      const std::vector<int>& paddingDims
                         = std::vector<int>(2, 0),
-                       const std::shared_ptr<Activation<Float_T> >& activation
+                       const std::shared_ptr<Activation>& activation
                      = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<DeconvCell>
     create(Network& /*net*/,
@@ -46,7 +46,7 @@ public:
            const std::vector<unsigned int>& strideDims
                   = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims = std::vector<int>(2, 0),
-           const std::shared_ptr<Activation<Float_T> >& activation
+           const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
         return std::make_shared<DeconvCell_Frame>(name,
@@ -111,7 +111,7 @@ protected:
     };
 
     // Internal
-    std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
+    std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     Interface<Float_T> mSharedSynapses;
     std::map<unsigned int,
         std::pair<Interface<Float_T>*, unsigned int> > mExtSharedSynapses;

@@ -29,7 +29,7 @@
 #include "ProposalCell.hpp"
 
 namespace N2D2 {
-class ProposalCell_Frame : public virtual ProposalCell, public Cell_Frame {
+class ProposalCell_Frame : public virtual ProposalCell, public Cell_Frame<Float_T> {
 public:
     struct BBox_T {
         float x;

@@ -29,16 +29,17 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-template <class T> class SGDSolver_Frame_CUDA : public SGDSolver<T> {
+template <class T> class SGDSolver_Frame_CUDA : public SGDSolver {
 public:
-    static std::shared_ptr<SGDSolver<T> > create()
+    static std::shared_ptr<SGDSolver> create()
     {
         return std::make_shared<SGDSolver_Frame_CUDA<T> >();
     }
 
     SGDSolver_Frame_CUDA();
-    void
-    update(Tensor<T>* data, Tensor<T>* diffData, unsigned int batchSize);
+    void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
+    void update(CudaTensor<T>& data, CudaTensor<T>& diffData,
+                unsigned int batchSize);
     void exportFreeParameters(const std::string& fileName) const;
 
     std::shared_ptr<SGDSolver_Frame_CUDA<T> > clone() const
@@ -51,18 +52,18 @@ protected:
     // inline void setMomentum(unsigned int output, unsigned int channel,
     // unsigned int sx, unsigned int sy, float value);
 
-    using SGDSolver<T>::mLearningRate;
-    using SGDSolver<T>::mMomentum;
-    using SGDSolver<T>::mDecay;
-    using SGDSolver<T>::mPower;
-    using SGDSolver<T>::mIterationSize;
-    using SGDSolver<T>::mMaxIterations;
-    using SGDSolver<T>::mLearningRatePolicy;
-    using SGDSolver<T>::mLearningRateStepSize;
-    using SGDSolver<T>::mLearningRateDecay;
-    using SGDSolver<T>::mClamping;
-    using SGDSolver<T>::mIterationPass;
-    using SGDSolver<T>::mNbIterations;
+    using SGDSolver::mLearningRate;
+    using SGDSolver::mMomentum;
+    using SGDSolver::mDecay;
+    using SGDSolver::mPower;
+    using SGDSolver::mIterationSize;
+    using SGDSolver::mMaxIterations;
+    using SGDSolver::mLearningRatePolicy;
+    using SGDSolver::mLearningRateStepSize;
+    using SGDSolver::mLearningRateDecay;
+    using SGDSolver::mClamping;
+    using SGDSolver::mIterationPass;
+    using SGDSolver::mNbIterations;
 
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
@@ -76,36 +77,64 @@ private:
         return new SGDSolver_Frame_CUDA<T>(*this);
     }
 
-    static Registrar<SGDSolver<T> > mRegistrar;
+    static Registrar<SGDSolver> mRegistrar;
 };
 }
 
 template <class T>
 N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA()
-    : SGDSolver<T>::SGDSolver(),
+    : SGDSolver::SGDSolver(),
       mQuantizationLevels(this, "QuantizationLevels", 0U)
 {
     // ctor
 }
 
+template <class T>
+void N2D2::SGDSolver_Frame_CUDA<T>::update(BaseTensor& data,
+                                           BaseTensor& diffData,
+                                           unsigned int batchSize)
+{
+    update(dynamic_cast<CudaTensor<T>&>(data),
+           dynamic_cast<CudaTensor<T>&>(diffData),
+           batchSize);
+}
+
+template <class T>
+void N2D2::SGDSolver_Frame_CUDA<T>::exportFreeParameters(
+    const std::string& fileName) const
+{
+    if (mMomentum != 0.0 && mMomentumData.size() > 0) {
+        std::ofstream syn(fileName);
+
+        if (!syn.good())
+            throw std::runtime_error("Could not create synaptic file : "
+                                     + fileName);
+
+        mMomentumData.synchronizeDToH();
+
+        for (typename std::vector<T>::const_iterator it = mMomentumData.begin();
+             it != mMomentumData.end();
+             ++it) {
+            syn << (*it) << " ";
+            syn << "\n";
+        }
+
+        if (!syn.good())
+            throw std::runtime_error("Error writing synaptic file: "
+                                     + fileName);
+    }
+}
+
 namespace N2D2 {
 template <>
-void SGDSolver_Frame_CUDA<float>::update(Tensor<float>* data,
-                                         Tensor<float>* diffData,
+void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
+                                         CudaTensor<float>& diffData,
                                          unsigned int batchSize);
 
 template <>
-void SGDSolver_Frame_CUDA<double>::update(Tensor<double>* data,
-                                          Tensor<double>* diffData,
+void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
+                                          CudaTensor<double>& diffData,
                                           unsigned int batchSize);
-
-template <>
-void SGDSolver_Frame_CUDA
-    <float>::exportFreeParameters(const std::string& fileName) const;
-
-template <>
-void SGDSolver_Frame_CUDA
-    <double>::exportFreeParameters(const std::string& fileName) const;
 }
 
 #endif // N2D2_SGDSOLVER_FRAME_CUDA_H

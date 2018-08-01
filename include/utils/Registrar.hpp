@@ -37,69 +37,11 @@ public:
     }
 };
 
-typedef std::map<std::string, BaseCommand*> RegistryMap_T;
-
-template <typename C> struct Registrar {
-    struct Command : public BaseCommand {
-        typename C::RegistryCreate_T mFunc;
-        Command(typename C::RegistryCreate_T func) : mFunc(func)
-        {
-        }
-    };
-
-    Registrar(const std::string& key, typename C::RegistryCreate_T func)
-    {
-        if (C::registry().find(key) != C::registry().end())
-            throw std::runtime_error("Registrar \"" + key
-                                     + "\" already exists");
-
-        C::registry().insert(std::make_pair(key, new Command(func)));
-    }
-
-    Registrar(typename C::RegistryCreate_T func, const char* key, ...)
-    {
-        va_list args;
-        va_start(args, key);
-
-        while (key != NULL) {
-            if (C::registry().find(key) != C::registry().end())
-                throw std::runtime_error("Registrar \"" + std::string(key)
-                                         + "\" already exists");
-
-            C::registry().insert(std::make_pair(key, new Command(func)));
-
-            key = va_arg(args, const char*);
-        }
-
-        va_end(args);
-    }
-
-    static bool exists(const std::string& key)
-    {
-        return (C::registry().find(key) != C::registry().end());
-    }
-
-    static typename C::RegistryCreate_T create(const std::string& key)
-    {
-        const RegistryMap_T::const_iterator it = C::registry().find(key);
-
-        if (it == C::registry().end()) {
-            // throw std::runtime_error("Invalid registrar key \"" + key +
-            // "\"");
-            std::cout << "Invalid registrar key \"" << key << "\"" << std::endl;
-#ifdef WIN32
-            return nullptr; // Required by Visual C++
-#else
-            return NULL; // but nullptr is not supported on GCC 4.4
-#endif
-        }
-
-        return static_cast<Command*>(it->second)->mFunc;
-    }
-};
+typedef std::map<std::string,
+                 std::map<const std::type_info*, BaseCommand*> > RegistryMap_T;
 
 template <typename C, typename F = typename C::RegistryCreate_T>
-struct RegistrarCustom {
+struct Registrar {
     struct Command : public BaseCommand {
         F mFunc;
         Command(F func) : mFunc(func)
@@ -107,31 +49,52 @@ struct RegistrarCustom {
         }
     };
 
-    RegistrarCustom(const std::string& key, F func)
+    template <class T>
+    struct Type {};
+
+    template <class T = void>
+    Registrar(const std::string& key,
+              F func,
+              const Type<T>& /*type*/ = Type<T>())
     {
-        if (C::registry().find(key) != C::registry().end())
+        RegistryMap_T::iterator it;
+        bool newInsert;
+        std::tie(it, std::ignore)
+            = C::registry().insert(std::make_pair(key,
+                        std::map<const std::type_info*, BaseCommand*>()));
+        std::tie(std::ignore, newInsert)
+            = (*it).second.insert(std::make_pair(&typeid(T),
+                                                 new Command(func)));
+
+        if (!newInsert) {
             throw std::runtime_error("Registrar \"" + key
                                      + "\" already exists");
-
-        C::registry().insert(std::make_pair(key, new Command(func)));
+        }
     }
 
-    RegistrarCustom(F func, const char* key, ...)
+    template <class T = void>
+    Registrar(std::initializer_list<std::string> keys,
+              F func,
+              const Type<T>& /*type*/ = Type<T>())
     {
-        va_list args;
-        va_start(args, key);
+        for (std::initializer_list<std::string>::const_iterator
+            keyIt = keys.begin(), keyItEnd = keys.end(); keyIt != keyItEnd;
+            ++keyIt)
+        {
+            RegistryMap_T::iterator it;
+            bool newInsert;
+            std::tie(it, std::ignore)
+                = C::registry().insert(std::make_pair(*keyIt,
+                            std::map<const std::type_info*, BaseCommand*>()));
+            std::tie(std::ignore, newInsert)
+                = (*it).second.insert(std::make_pair(&typeid(T),
+                                                     new Command(func)));
 
-        while (key != NULL) {
-            if (C::registry().find(key) != C::registry().end())
-                throw std::runtime_error("Registrar \"" + std::string(key)
+            if (!newInsert) {
+                throw std::runtime_error("Registrar \"" + (*keyIt)
                                          + "\" already exists");
-
-            C::registry().insert(std::make_pair(key, new Command(func)));
-
-            key = va_arg(args, const char*);
+            }
         }
-
-        va_end(args);
     }
 
     static bool exists(const std::string& key)
@@ -139,6 +102,18 @@ struct RegistrarCustom {
         return (C::registry().find(key) != C::registry().end());
     }
 
+    template <class T = void>
+    static bool exists(const std::string& key)
+    {
+        const RegistryMap_T::const_iterator it = C::registry().find(key);
+
+        if (it == C::registry().end())
+            return false;
+
+        return (it->second.find(&typeid(T)) != it->second.end());
+    }
+
+    template <class T = void>
     static F create(const std::string& key)
     {
         const RegistryMap_T::const_iterator it = C::registry().find(key);
@@ -154,7 +129,20 @@ struct RegistrarCustom {
 #endif
         }
 
-        return static_cast<Command*>(it->second)->mFunc;
+        const std::map<const std::type_info*, BaseCommand*>::const_iterator
+            itType = it->second.find(&typeid(T));
+
+        if (itType == it->second.end()) {
+            std::cout << "Invalid registrar key type (" << typeid(T).name()
+                << ") for key \"" << key << "\"" << std::endl;
+#ifdef WIN32
+            return nullptr; // Required by Visual C++
+#else
+            return NULL; // but nullptr is not supported on GCC 4.4
+#endif
+        }
+
+        return static_cast<Command*>(itType->second)->mFunc;
     }
 };
 }

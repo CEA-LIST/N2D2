@@ -25,10 +25,10 @@
 #include "utils/Random.hpp"
 
 namespace N2D2 {
-template <class T> class UniformFiller : public Filler<T> {
+template <class T> class UniformFiller : public Filler {
 public:
     UniformFiller(T min = 0.0, T max = 1.0);
-    void apply(Tensor<T>& data, bool restrictPositive=false);
+    void apply(BaseTensor& data, bool restrictPositive=false);
     virtual ~UniformFiller() {};
 
 private:
@@ -44,9 +44,11 @@ N2D2::UniformFiller<T>::UniformFiller(T min, T max)
     // ctor
 }
 
-template <class T> void N2D2::UniformFiller<T>::apply(Tensor<T>& data,
+template <class T> void N2D2::UniformFiller<T>::apply(BaseTensor& baseData,
                                                       bool restrictPositive)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+
     for (typename Tensor<T>::iterator it = data.begin(), itEnd = data.end();
          it != itEnd;
          ++it) {

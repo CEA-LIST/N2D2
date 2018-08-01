@@ -36,10 +36,10 @@
 #endif
 
 namespace N2D2 {
-template <class T> class RectifierActivation : public Activation<T> {
+class RectifierActivation : public Activation {
 public:
     typedef std::function
-        <std::shared_ptr<RectifierActivation<T> >()> RegistryCreate_T;
+        <std::shared_ptr<RectifierActivation>()> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -55,7 +55,7 @@ public:
     };
     virtual ~RectifierActivation() {};
 
-    using Activation<T>::mShifting;
+    using Activation::mShifting;
 
 protected:
     /// Leak slope
@@ -63,16 +63,6 @@ protected:
     /// Clipping
     Parameter<double> mClipping;
 };
-}
-
-template <class T> const char* N2D2::RectifierActivation<T>::Type = "Rectifier";
-
-template <class T>
-N2D2::RectifierActivation<T>::RectifierActivation()
-    : mLeakSlope(this, "LeakSlope", 0.0),
-      mClipping(this, "Clipping", 0.0)
-{
-    // ctor
 }
 
 #endif // N2D2_RECTIFIERACTIVATION_H

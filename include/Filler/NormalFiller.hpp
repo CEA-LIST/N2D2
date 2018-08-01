@@ -25,10 +25,10 @@
 #include "utils/Random.hpp"
 
 namespace N2D2 {
-template <class T> class NormalFiller : public Filler<T> {
+template <class T> class NormalFiller : public Filler {
 public:
     NormalFiller(double mean = 0.0, double stdDev = 1.0);
-    void apply(Tensor<T>& data, bool restrictPositive=false);
+    void apply(BaseTensor& data, bool restrictPositive=false);
     virtual ~NormalFiller() {};
 
 private:
@@ -44,9 +44,11 @@ N2D2::NormalFiller<T>::NormalFiller(double mean, double stdDev)
     // ctor
 }
 
-template <class T> void N2D2::NormalFiller<T>::apply(Tensor<T>& data,
+template <class T> void N2D2::NormalFiller<T>::apply(BaseTensor& baseData,
                                                      bool restrictPositive)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+
     for (typename Tensor<T>::iterator it = data.begin(), itEnd = data.end();
          it != itEnd;
          ++it){

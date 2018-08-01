@@ -31,7 +31,7 @@
 
 namespace N2D2 {
 class DropoutCell_Frame : public virtual DropoutCell,
-                               public Cell_Frame {
+                               public Cell_Frame<Float_T> {
 public:
     DropoutCell_Frame(const std::string& name, unsigned int nbOutputs);
     static std::shared_ptr<DropoutCell> create(const std::string& name,

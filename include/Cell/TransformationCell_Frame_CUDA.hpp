@@ -35,7 +35,7 @@
 
 namespace N2D2 {
 class TransformationCell_Frame_CUDA : public virtual TransformationCell,
-                                      public Cell_Frame_CUDA {
+                                      public Cell_Frame_CUDA<Float_T> {
 public:
     TransformationCell_Frame_CUDA(const std::string& name,
                                   unsigned int nbOutputs,

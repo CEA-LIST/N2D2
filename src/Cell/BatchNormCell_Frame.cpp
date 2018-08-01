@@ -27,7 +27,7 @@ N2D2::BatchNormCell_Frame::mRegistrar("Frame",
 N2D2::BatchNormCell_Frame::BatchNormCell_Frame(
     const std::string& name,
     unsigned int nbOutputs,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
       Cell_Frame(name, nbOutputs, activation),
@@ -348,8 +348,8 @@ void N2D2::BatchNormCell_Frame::update()
     assert(mBias->size() == mDiffBias.size());
     assert(mScale->size() == mBias->size());
 
-    mScaleSolver->update(&(*mScale), &mDiffScale, mInputs.dimB());
-    mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
+    mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+    mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
 void N2D2::BatchNormCell_Frame::checkGradient(double epsilon, double maxError)

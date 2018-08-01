@@ -69,7 +69,7 @@ public:
         <std::shared_ptr<FcCell>(Network&,
                                  const std::string&,
                                  unsigned int,
-                                 const std::shared_ptr<Activation<Float_T> >&)>
+                                 const std::shared_ptr<Activation>&)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -94,27 +94,27 @@ public:
     {
         return Type;
     };
-    void setWeightsFiller(const std::shared_ptr<Filler<Float_T> >& filler)
+    void setWeightsFiller(const std::shared_ptr<Filler>& filler)
     {
         mWeightsFiller = filler;
     };
-    void setRecWeightsFiller(const std::shared_ptr<Filler<Float_T> >& filler)
+    void setRecWeightsFiller(const std::shared_ptr<Filler>& filler)
     {
         mRecWeightsFiller = filler;
     };
-    void setTopDownWeightsFiller(const std::shared_ptr<Filler<Float_T> >& filler)
+    void setTopDownWeightsFiller(const std::shared_ptr<Filler>& filler)
     {
         mTopDownWeightsFiller = filler;
     };
-    void setBiasFiller(const std::shared_ptr<Filler<Float_T> >& filler)
+    void setBiasFiller(const std::shared_ptr<Filler>& filler)
     {
         mBiasFiller = filler;
     };
-    void setWeightsSolver(const std::shared_ptr<Solver<Float_T> >& solver)
+    void setWeightsSolver(const std::shared_ptr<Solver>& solver)
     {
         mWeightsSolver = solver;
     };
-    void setBiasSolver(const std::shared_ptr<Solver<Float_T> >& solver)
+    void setBiasSolver(const std::shared_ptr<Solver>& solver)
     {
         mBiasSolver = solver;
     };
@@ -122,11 +122,11 @@ public:
                                    unsigned int output) const;
     virtual void logFreeParameters(const std::string& dirName) const;
     unsigned long long int getNbSynapses() const;
-    std::shared_ptr<Solver<Float_T> > getWeightsSolver()
+    std::shared_ptr<Solver> getWeightsSolver()
     {
         return mWeightsSolver;
     };
-    std::shared_ptr<Solver<Float_T> > getBiasSolver()
+    std::shared_ptr<Solver> getBiasSolver()
     {
         return mBiasSolver;
     };
@@ -160,12 +160,12 @@ protected:
     Parameter<WeightsExportFormat> mWeightsExportFormat;
     Parameter<std::string> mOutputsRemap;
 
-    std::shared_ptr<Filler<Float_T> > mWeightsFiller;
-    std::shared_ptr<Filler<Float_T> > mTopDownWeightsFiller;
-    std::shared_ptr<Filler<Float_T> > mRecWeightsFiller;
-    std::shared_ptr<Filler<Float_T> > mBiasFiller;
-    std::shared_ptr<Solver<Float_T> > mWeightsSolver;
-    std::shared_ptr<Solver<Float_T> > mBiasSolver;
+    std::shared_ptr<Filler> mWeightsFiller;
+    std::shared_ptr<Filler> mTopDownWeightsFiller;
+    std::shared_ptr<Filler> mRecWeightsFiller;
+    std::shared_ptr<Filler> mBiasFiller;
+    std::shared_ptr<Solver> mWeightsSolver;
+    std::shared_ptr<Solver> mBiasSolver;
 };
 }
 namespace {

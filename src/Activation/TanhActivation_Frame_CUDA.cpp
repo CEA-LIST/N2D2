@@ -23,72 +23,23 @@
 #include "Activation/TanhActivation_Frame_CUDA.hpp"
 
 template <>
-N2D2::Registrar<N2D2::TanhActivation<N2D2::Float_T> >
-N2D2::TanhActivation_Frame_CUDA
-    <N2D2::Float_T>::mRegistrar(N2D2::TanhActivation_Frame_CUDA
-                                <N2D2::Float_T>::create,
-                                "Frame_CUDA",
-                                "Transcode_CUDA",
-                                "CSpike_CUDA",
-                                "CSpike_BP_CUDA",
-                                NULL);
+N2D2::Registrar<N2D2::TanhActivation>
+N2D2::TanhActivation_Frame_CUDA<float>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::TanhActivation_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::TanhActivation>::Type<float>());
 
 template <>
-void N2D2::TanhActivation_Frame_CUDA<float>::propagate(Tensor<float>* data)
-{
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-
-    if (mAlpha != 1.0) {
-        const float alpha = mAlpha;
-
-        // data = data*mAlpha
-        CHECK_CUBLAS_STATUS(cublasSscal(CudaContext::cublasHandle(),
-                                        cudaData->size(),
-                                        &alpha,
-                                        cudaData->getDevicePtr(),
-                                        1));
-    }
-
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
-
-    CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
-                                              mActivationDesc,
-                                              &alpha,
-                                              cudaData->getCudnnTensorDesc(),
-                                              cudaData->getDevicePtr(),
-                                              &beta,
-                                              cudaData->getCudnnTensorDesc(),
-                                              cudaData->getDevicePtr()));
-}
-
-template <>
-void N2D2::TanhActivation_Frame_CUDA<double>::propagate(Tensor<double>* data)
-{
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-
-    if (mAlpha != 1.0) {
-        const double alpha = mAlpha;
-
-        // data = data*mAlpha
-        CHECK_CUBLAS_STATUS(cublasDscal(CudaContext::cublasHandle(),
-                                        cudaData->size(),
-                                        &alpha,
-                                        cudaData->getDevicePtr(),
-                                        1));
-    }
-
-    const double alpha = 1.0f;
-    const double beta = 0.0f;
-
-    CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
-                                              mActivationDesc,
-                                              &alpha,
-                                              cudaData->getCudnnTensorDesc(),
-                                              cudaData->getDevicePtr(),
-                                              &beta,
-                                              cudaData->getCudnnTensorDesc(),
-                                              cudaData->getDevicePtr()));
-}
+N2D2::Registrar<N2D2::TanhActivation>
+N2D2::TanhActivation_Frame_CUDA<double>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::TanhActivation_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::TanhActivation>::Type<double>());
 
 #endif

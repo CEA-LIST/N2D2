@@ -30,45 +30,59 @@
 
 namespace N2D2 {
 template <class T>
-class SaturationActivation_Frame_CUDA : public SaturationActivation<T> {
+class SaturationActivation_Frame_CUDA : public SaturationActivation {
 public:
-    static std::shared_ptr<SaturationActivation<T> > create()
+    static std::shared_ptr<SaturationActivation> create()
     {
         return std::make_shared<SaturationActivation_Frame_CUDA<T> >();
     }
 
     SaturationActivation_Frame_CUDA();
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    inline virtual void propagate(BaseTensor& data);
+    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    void propagate(CudaTensor<T>& data);
+    void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
     virtual ~SaturationActivation_Frame_CUDA() {};
 
-    using SaturationActivation<T>::mShifting;
-    using SaturationActivation<T>::mThreshold;
+    using SaturationActivation::mShifting;
+    using SaturationActivation::mThreshold;
 
 private:
-    static Registrar<SaturationActivation<T> > mRegistrar;
+    static Registrar<SaturationActivation> mRegistrar;
 };
 }
 
 template <class T>
 N2D2::SaturationActivation_Frame_CUDA<T>::SaturationActivation_Frame_CUDA()
-    : SaturationActivation<T>()
+    : SaturationActivation()
 {
     // ctor
 }
 
+template <class T>
+void N2D2::SaturationActivation_Frame_CUDA<T>::propagate(BaseTensor& data) {
+    propagate(dynamic_cast<CudaTensor<T>&>(data));
+}
+
+template <class T>
+void N2D2::SaturationActivation_Frame_CUDA<T>::backPropagate(BaseTensor& data,
+                                                        BaseTensor& diffData) {
+    backPropagate(dynamic_cast<CudaTensor<T>&>(data),
+                  dynamic_cast<CudaTensor<T>&>(diffData));
+}
+
 namespace N2D2 {
 template <>
-void SaturationActivation_Frame_CUDA<float>::propagate(Tensor<float>* data);
+void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data);
 template <>
 void SaturationActivation_Frame_CUDA
-    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData);
+    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData);
 
 template <>
-void SaturationActivation_Frame_CUDA<double>::propagate(Tensor<double>* data);
+void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data);
 template <>
 void SaturationActivation_Frame_CUDA
-    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData);
+    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData);
 }
 
 #endif // N2D2_SATURATIONACTIVATION_FRAME_CUDA_H

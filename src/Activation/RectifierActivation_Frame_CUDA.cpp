@@ -23,22 +23,29 @@
 #include "Activation/RectifierActivation_Frame_CUDA.hpp"
 
 template <>
-N2D2::Registrar<N2D2::RectifierActivation<N2D2::Float_T> >
-N2D2::RectifierActivation_Frame_CUDA
-    <N2D2::Float_T>::mRegistrar(N2D2::RectifierActivation_Frame_CUDA
-                                <N2D2::Float_T>::create,
-                                "Frame_CUDA",
-                                "Transcode_CUDA",
-                                "CSpike_CUDA",
-                                "CSpike_BP_CUDA",
-                                NULL);
+N2D2::Registrar<N2D2::RectifierActivation>
+N2D2::RectifierActivation_Frame_CUDA<float>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::RectifierActivation_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::RectifierActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::RectifierActivation>
+N2D2::RectifierActivation_Frame_CUDA<double>::mRegistrar(
+    { "Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA" },
+    N2D2::RectifierActivation_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::RectifierActivation>::Type<double>());
 
 namespace N2D2 {
 template <>
-void RectifierActivation_Frame_CUDA<float>::propagate(Tensor<float>* data)
+void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
 {
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-
     if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
@@ -47,24 +54,22 @@ void RectifierActivation_Frame_CUDA<float>::propagate(Tensor<float>* data)
             cudnnActivationForward(CudaContext::cudnnHandle(),
                                    mActivationDesc,
                                    &alpha,
-                                   cudaData->getCudnnTensorDesc(),
-                                   cudaData->getDevicePtr(),
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr(),
                                    &beta,
-                                   cudaData->getCudnnTensorDesc(),
-                                   cudaData->getDevicePtr()));
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr()));
     }
     else {
         cudaSRectifier_propagate(
-            cudaData->getDevicePtr(), cudaData->size(),
+            data.getDevicePtr(), data.size(),
             (double)mLeakSlope, (int)mShifting, (double)mClipping);
     }
 }
 
 template <>
-void RectifierActivation_Frame_CUDA<double>::propagate(Tensor<double>* data)
+void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data)
 {
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-
     if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const double alpha = 1.0f;
         const double beta = 0.0f;
@@ -73,27 +78,24 @@ void RectifierActivation_Frame_CUDA<double>::propagate(Tensor<double>* data)
             cudnnActivationForward(CudaContext::cudnnHandle(),
                                    mActivationDesc,
                                    &alpha,
-                                   cudaData->getCudnnTensorDesc(),
-                                   cudaData->getDevicePtr(),
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr(),
                                    &beta,
-                                   cudaData->getCudnnTensorDesc(),
-                                   cudaData->getDevicePtr()));
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr()));
     }
     else {
         cudaDRectifier_propagate(
-            cudaData->getDevicePtr(), cudaData->size(),
+            data.getDevicePtr(), data.size(),
             (double)mLeakSlope, (int)mShifting, (double)mClipping);
     }
 }
 
 template <>
-void RectifierActivation_Frame_CUDA
-    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData)
+void RectifierActivation_Frame_CUDA<float>::backPropagate(
+    CudaTensor<float>& data,
+    CudaTensor<float>& diffData)
 {
-    CudaTensor<float>* cudaData = static_cast<CudaTensor<float>*>(data);
-    CudaTensor<float>* cudaDiffData = static_cast
-        <CudaTensor<float>*>(diffData);
-
     if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
@@ -102,20 +104,20 @@ void RectifierActivation_Frame_CUDA
             cudnnActivationBackward(CudaContext::cudnnHandle(),
                                     mActivationDesc,
                                     &alpha,
-                                    cudaData->getCudnnTensorDesc(),
-                                    cudaData->getDevicePtr(),
-                                    cudaDiffData->getCudnnTensorDesc(),
-                                    cudaDiffData->getDevicePtr(),
-                                    cudaData->getCudnnTensorDesc(),
-                                    cudaData->getDevicePtr(),
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr(),
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
                                     &beta,
-                                    cudaDiffData->getCudnnTensorDesc(),
-                                    cudaDiffData->getDevicePtr()));
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr()));
     }
     else {
-        cudaSRectifier_backPropagate(cudaData->getDevicePtr(),
-                                     cudaDiffData->getDevicePtr(),
-                                     cudaData->size(),
+        cudaSRectifier_backPropagate(data.getDevicePtr(),
+                                     diffData.getDevicePtr(),
+                                     data.size(),
                                      (double)mLeakSlope,
                                      (int)mShifting,
                                      (double)mClipping);
@@ -123,13 +125,10 @@ void RectifierActivation_Frame_CUDA
 }
 
 template <>
-void RectifierActivation_Frame_CUDA
-    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData)
+void RectifierActivation_Frame_CUDA<double>::backPropagate(
+    CudaTensor<double>& data,
+    CudaTensor<double>& diffData)
 {
-    CudaTensor<double>* cudaData = static_cast<CudaTensor<double>*>(data);
-    CudaTensor<double>* cudaDiffData = static_cast
-        <CudaTensor<double>*>(diffData);
-
     if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
         const double alpha = 1.0f;
         const double beta = 0.0f;
@@ -138,20 +137,20 @@ void RectifierActivation_Frame_CUDA
             cudnnActivationBackward(CudaContext::cudnnHandle(),
                                     mActivationDesc,
                                     &alpha,
-                                    cudaData->getCudnnTensorDesc(),
-                                    cudaData->getDevicePtr(),
-                                    cudaDiffData->getCudnnTensorDesc(),
-                                    cudaDiffData->getDevicePtr(),
-                                    cudaData->getCudnnTensorDesc(),
-                                    cudaData->getDevicePtr(),
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr(),
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
                                     &beta,
-                                    cudaDiffData->getCudnnTensorDesc(),
-                                    cudaDiffData->getDevicePtr()));
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr()));
     }
     else {
-        cudaDRectifier_backPropagate(cudaData->getDevicePtr(),
-                                     cudaDiffData->getDevicePtr(),
-                                     cudaData->size(),
+        cudaDRectifier_backPropagate(data.getDevicePtr(),
+                                     diffData.getDevicePtr(),
+                                     data.size(),
                                      (double)mLeakSlope,
                                      (int)mShifting,
                                      (double)mClipping);

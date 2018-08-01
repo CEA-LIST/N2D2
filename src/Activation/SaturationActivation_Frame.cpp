@@ -21,15 +21,27 @@
 #include "Activation/SaturationActivation_Frame.hpp"
 
 template <>
-N2D2::Registrar<N2D2::SaturationActivation<N2D2::Float_T> >
-N2D2::SaturationActivation_Frame
-    <N2D2::Float_T>::mRegistrar(N2D2::SaturationActivation_Frame
-                                <N2D2::Float_T>::create,
-                                "Frame",
-                                "Transcode",
-                                "Spike",
-                                "Spike_Analog",
-                                "Spike_PCM",
-                                "Spike_RRAM",
-                                "CSpike",
-                                NULL);
+N2D2::Registrar<N2D2::SaturationActivation>
+N2D2::SaturationActivation_Frame<float>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::SaturationActivation_Frame<float>::create,
+    N2D2::Registrar<N2D2::SaturationActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SaturationActivation>
+N2D2::SaturationActivation_Frame<double>::mRegistrar(
+    { "Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike" },
+    N2D2::SaturationActivation_Frame<double>::create,
+    N2D2::Registrar<N2D2::SaturationActivation>::Type<double>());

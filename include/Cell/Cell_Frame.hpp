@@ -37,6 +37,7 @@
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
+template <class T>
 class Cell_Frame : public virtual Cell, public Cell_Frame_Top {
 public:
     /**
@@ -49,8 +50,8 @@ public:
     */
     Cell_Frame(const std::string& name,
                unsigned int nbOutputs,
-               const std::shared_ptr<Activation<Float_T> >& activation
-               = std::shared_ptr<Activation<Float_T> >());
+               const std::shared_ptr<Activation>& activation
+               = std::shared_ptr<Activation>());
 
     /**
      * Manage inputs, in particular the transmission input(i) = output(i-1)
@@ -76,8 +77,8 @@ public:
                           unsigned int y0,
                           unsigned int width = 0,
                           unsigned int height = 0);
-    virtual void addInput(Tensor<Float_T>& inputs,
-                          Tensor<Float_T>& diffOutputs);
+    virtual void addInput(BaseTensor& inputs,
+                          BaseTensor& diffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void setOutputTarget(const Tensor<int>& targets,
@@ -86,21 +87,21 @@ public:
     virtual void setOutputTargets(const Tensor<int>& targets,
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0);
-    virtual void setOutputTargets(const Tensor<Float_T>& targets);
-    virtual void setOutputErrors(const Tensor<Float_T>& errors);
-    virtual Tensor<Float_T>& getOutputs()
+    virtual void setOutputTargets(const BaseTensor& targets);
+    virtual void setOutputErrors(const BaseTensor& errors);
+    virtual BaseTensor& getOutputs()
     {
         return mOutputs;
     }
-    virtual const Tensor<Float_T>& getOutputs() const
+    virtual const BaseTensor& getOutputs() const
     {
         return mOutputs;
     }
-    virtual Tensor<Float_T>& getDiffInputs()
+    virtual BaseTensor& getDiffInputs()
     {
         return mDiffInputs;
     }
-    virtual const Tensor<Float_T>& getDiffInputs() const
+    virtual const BaseTensor& getDiffInputs() const
     {
         return mDiffInputs;
     }
@@ -112,10 +113,10 @@ protected:
     // Internal
     // Forward
     Interface<> mInputs;
-    Tensor<Float_T> mOutputs;
+    Tensor<T> mOutputs;
 
     // Backward
-    Tensor<Float_T> mDiffInputs;
+    Tensor<T> mDiffInputs;
     Interface<> mDiffOutputs;
 };
 }

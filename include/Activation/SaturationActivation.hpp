@@ -36,10 +36,10 @@
 #endif
 
 namespace N2D2 {
-template <class T> class SaturationActivation : public Activation<T> {
+class SaturationActivation : public Activation {
 public:
     typedef std::function
-        <std::shared_ptr<SaturationActivation<T> >()> RegistryCreate_T;
+        <std::shared_ptr<SaturationActivation>()> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -55,22 +55,12 @@ public:
     };
     virtual ~SaturationActivation() {};
 
-    using Activation<T>::mShifting;
+    using Activation::mShifting;
 
 protected:
     /// Threshold
     Parameter<double> mThreshold;
 };
-}
-
-template <class T>
-const char* N2D2::SaturationActivation<T>::Type = "Saturation";
-
-template <class T>
-N2D2::SaturationActivation<T>::SaturationActivation()
-    : mThreshold(this, "Threshold", 1.0)
-{
-    // ctor
 }
 
 #endif // N2D2_SATURATIONACTIVATION_H

@@ -33,7 +33,7 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
     Operation operation,
     const std::vector<Float_T>& weights,
     const std::vector<Float_T>& shifts,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       ElemWiseCell(name,
                nbOutputs,

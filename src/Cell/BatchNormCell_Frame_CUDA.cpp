@@ -30,7 +30,7 @@ N2D2::Registrar<N2D2::BatchNormCell> N2D2::BatchNormCell_Frame_CUDA::mRegistrar(
 N2D2::BatchNormCell_Frame_CUDA::BatchNormCell_Frame_CUDA(
     const std::string& name,
     unsigned int nbOutputs,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
       Cell_Frame_CUDA(name, nbOutputs, activation),
@@ -247,8 +247,8 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
 
 void N2D2::BatchNormCell_Frame_CUDA::update()
 {
-    mScaleSolver->update(&(*mScale), &mDiffScale, mInputs.dimB());
-    mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
+    mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+    mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
 void N2D2::BatchNormCell_Frame_CUDA::setScales(

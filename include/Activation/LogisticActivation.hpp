@@ -38,10 +38,10 @@
 namespace N2D2 {
 extern bool LogisticActivationDisabled;     // declaration in Frame cpp file
 
-template <class T> class LogisticActivation : public Activation<T> {
+class LogisticActivation : public Activation {
 public:
     typedef std::function
-        <std::shared_ptr<LogisticActivation<T> >(bool)> RegistryCreate_T;
+        <std::shared_ptr<LogisticActivation>(bool)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -61,17 +61,6 @@ public:
 protected:
     const bool mWithLoss;
 };
-}
-
-template <class T> const char* N2D2::LogisticActivation<T>::Type = "Logistic";
-template <class T>
-const char* N2D2::LogisticActivation<T>::TypeWithLoss = "LogisticWithLoss";
-
-template <class T>
-N2D2::LogisticActivation<T>::LogisticActivation(bool withLoss)
-    : mWithLoss(withLoss)
-{
-    // ctor
 }
 
 #endif // N2D2_LOGISTICACTIVATION_H

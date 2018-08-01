@@ -30,21 +30,21 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class FMPCell_Frame_CUDA : public virtual FMPCell, public Cell_Frame_CUDA {
+class FMPCell_Frame_CUDA : public virtual FMPCell, public Cell_Frame_CUDA<Float_T> {
 public:
     FMPCell_Frame_CUDA(const std::string& name,
                        double scalingRatio,
                        unsigned int nbOutputs,
-                       const std::shared_ptr<Activation<Float_T> >& activation
-                       = std::shared_ptr<Activation<Float_T> >());
+                       const std::shared_ptr<Activation>& activation
+                       = std::shared_ptr<Activation>());
     static std::shared_ptr<FMPCell> create(Network& /*net*/,
                                            const std::string& name,
                                            double scalingRatio,
                                            unsigned int nbOutputs,
                                            const std::shared_ptr
-                                           <Activation<Float_T> >& activation
+                                           <Activation>& activation
                                            = std::shared_ptr
-                                           <Activation<Float_T> >())
+                                           <Activation>())
     {
         return std::make_shared
             <FMPCell_Frame_CUDA>(name, scalingRatio, nbOutputs, activation);

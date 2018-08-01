@@ -29,7 +29,7 @@
 #include "SoftmaxCell.hpp"
 
 namespace N2D2 {
-class SoftmaxCell_Frame : public virtual SoftmaxCell, public Cell_Frame {
+class SoftmaxCell_Frame : public virtual SoftmaxCell, public Cell_Frame<Float_T> {
 public:
     SoftmaxCell_Frame(const std::string& name,
                       unsigned int nbOutputs,

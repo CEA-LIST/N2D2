@@ -47,7 +47,7 @@ public:
     typedef std::function<std::shared_ptr<BatchNormCell>(
         const std::string&,
         unsigned int,
-        const std::shared_ptr<Activation<Float_T> >&)> RegistryCreate_T;
+        const std::shared_ptr<Activation>&)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -60,19 +60,19 @@ public:
     {
         return Type;
     };
-    void setScaleSolver(const std::shared_ptr<Solver<Float_T> >& solver)
+    void setScaleSolver(const std::shared_ptr<Solver>& solver)
     {
         mScaleSolver = solver;
     };
-    void setBiasSolver(const std::shared_ptr<Solver<Float_T> >& solver)
+    void setBiasSolver(const std::shared_ptr<Solver>& solver)
     {
         mBiasSolver = solver;
     };
-    std::shared_ptr<Solver<Float_T> > getScaleSolver()
+    std::shared_ptr<Solver> getScaleSolver()
     {
         return mScaleSolver;
     };
-    std::shared_ptr<Solver<Float_T> > getBiasSolver()
+    std::shared_ptr<Solver> getBiasSolver()
     {
         return mBiasSolver;
     };
@@ -120,8 +120,8 @@ protected:
     /// Epsilon value used in the batch normalization formula
     Parameter<double> mEpsilon;
 
-    std::shared_ptr<Solver<Float_T> > mScaleSolver;
-    std::shared_ptr<Solver<Float_T> > mBiasSolver;
+    std::shared_ptr<Solver> mScaleSolver;
+    std::shared_ptr<Solver> mBiasSolver;
 };
 }
 

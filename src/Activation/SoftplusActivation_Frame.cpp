@@ -21,15 +21,27 @@
 #include "Activation/SoftplusActivation_Frame.hpp"
 
 template <>
-N2D2::Registrar<N2D2::SoftplusActivation<N2D2::Float_T> >
-N2D2::SoftplusActivation_Frame
-    <N2D2::Float_T>::mRegistrar(N2D2::SoftplusActivation_Frame
-                                <N2D2::Float_T>::create,
-                                "Frame",
-                                "Transcode",
-                                "Spike",
-                                "Spike_Analog",
-                                "Spike_PCM",
-                                "Spike_RRAM",
-                                "CSpike",
-                                NULL);
+N2D2::Registrar<N2D2::SoftplusActivation>
+N2D2::SoftplusActivation_Frame<float>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::SoftplusActivation_Frame<float>::create,
+    N2D2::Registrar<N2D2::SoftplusActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SoftplusActivation>
+N2D2::SoftplusActivation_Frame<double>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::SoftplusActivation_Frame<double>::create,
+    N2D2::Registrar<N2D2::SoftplusActivation>::Type<double>());

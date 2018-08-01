@@ -53,7 +53,7 @@ void N2D2::TargetBBox::initialize()
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const Tensor<Float_T>& values = targetCell->getOutputs();
+    const BaseTensor& values = targetCell->getOutputs();
 
     if (values.dimZ() != 4 && values.dimZ() != 5) {
         //throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
@@ -77,7 +77,8 @@ void N2D2::TargetBBox::process(Database::StimuliSet /*set*/)
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();
     const int nbBBoxMax = (int)mTargets.dimB()/batch.size();
-    const Tensor<Float_T>& values = targetCell->getOutputs();
+    const Tensor<Float_T>& values
+        = tensor_cast<Float_T>(targetCell->getOutputs());
 
     mBatchDetectedBBox.assign(mTargets.dimB(), std::vector<DetectedBBox>());
 

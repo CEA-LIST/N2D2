@@ -29,7 +29,7 @@
 #include "AnchorCell.hpp"
 
 namespace N2D2 {
-class AnchorCell_Frame : public virtual AnchorCell, public Cell_Frame {
+class AnchorCell_Frame : public virtual AnchorCell, public Cell_Frame<Float_T> {
 public:
     AnchorCell_Frame(const std::string& name,
                  StimuliProvider& sp,

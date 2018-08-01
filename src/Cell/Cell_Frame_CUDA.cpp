@@ -23,16 +23,18 @@
 
 #include "Cell/Cell_Frame_CUDA.hpp"
 
-N2D2::Cell_Frame_CUDA::Cell_Frame_CUDA(const std::string& name,
+template <class T>
+N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const std::string& name,
                                        unsigned int nbOutputs,
                                        const std::shared_ptr
-                                       <Activation<Float_T> >& activation)
+                                       <Activation>& activation)
     : Cell(name, nbOutputs), Cell_Frame_Top(activation)
 {
     // ctor
 }
 
-void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& /*sp*/,
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& /*sp*/,
                                      unsigned int /*channel*/,
                                      unsigned int /*x0*/,
                                      unsigned int /*y0*/,
@@ -40,11 +42,12 @@ void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& /*sp*/,
                                      unsigned int /*height*/,
                                      const std::vector<bool>& /*mapping*/)
 {
-    throw std::runtime_error("Cell_Frame_CUDA::addInput(): adding a single "
+    throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): adding a single "
                              "environment channel as input is not supported");
 }
 
-void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& sp,
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
                                      unsigned int x0,
                                      unsigned int y0,
                                      unsigned int width,
@@ -57,7 +60,7 @@ void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& sp,
         height = sp.getSizeY() - y0;
 
     if (x0 > 0 || y0 > 0 || width < sp.getSizeX() || height < sp.getSizeY())
-        throw std::runtime_error("Cell_Frame_CUDA::addInput(): adding a "
+        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): adding a "
                                  "cropped environment channel map as input is "
                                  "not supported");
 
@@ -77,7 +80,7 @@ void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& sp,
 
     // Define input-output connections
     if (!mapping.empty() && mapping.rows() != sp.getNbChannels()) {
-        throw std::runtime_error("Cell_Frame_CUDA::addInput(): number of "
+        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): number of "
                                  "mapping rows must be equal to the number of "
                                  "input"
                                  " channels");
@@ -94,7 +97,8 @@ void N2D2::Cell_Frame_CUDA::addInput(StimuliProvider& sp,
     }
 }
 
-void N2D2::Cell_Frame_CUDA::addInput(Cell* cell, const Matrix<bool>& mapping)
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addInput(Cell* cell, const Matrix<bool>& mapping)
 {
     // Define input-output sizes
     setInputsDims(cell->getOutputsDims());
@@ -139,7 +143,8 @@ void N2D2::Cell_Frame_CUDA::addInput(Cell* cell, const Matrix<bool>& mapping)
     }
 }
 
-void N2D2::Cell_Frame_CUDA::addInput(Cell* cell,
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addInput(Cell* cell,
                                      unsigned int x0,
                                      unsigned int y0,
                                      unsigned int width,
@@ -152,15 +157,16 @@ void N2D2::Cell_Frame_CUDA::addInput(Cell* cell,
 
     if (x0 > 0 || y0 > 0 || width < cell->getOutputsWidth()
         || height < cell->getOutputsHeight())
-        throw std::runtime_error("Cell_Frame_CUDA::addInput(): adding a "
+        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): adding a "
                                  "cropped output map as input is not "
                                  "supported");
 
-    Cell_Frame_CUDA::addInput(cell);
+    Cell_Frame_CUDA<T>::addInput(cell);
 }
 
-void N2D2::Cell_Frame_CUDA::addInput(Tensor<Float_T>& inputs,
-                                     Tensor<Float_T>& diffOutputs)
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
+                                     BaseTensor& diffOutputs)
 {
     // Define input-output sizes
     std::vector<size_t> inputsDims = inputs.dims();
@@ -185,28 +191,31 @@ void N2D2::Cell_Frame_CUDA::addInput(Tensor<Float_T>& inputs,
     mMaps.resize({getNbOutputs(), getNbChannels()}, true);
 }
 
-void N2D2::Cell_Frame_CUDA::propagate(bool /*inference*/)
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::propagate(bool /*inference*/)
 {
     if (mActivation)
-        mActivation->propagate(&mOutputs);
+        mActivation->propagate(mOutputs);
 }
 
-void N2D2::Cell_Frame_CUDA::backPropagate()
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::backPropagate()
 {
     if (mActivation)
-        mActivation->backPropagate(&mOutputs, &mDiffInputs);
+        mActivation->backPropagate(mOutputs, mDiffInputs);
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputTarget(const Tensor<int>& targets,
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets,
                                             double targetVal,
                                             double defaultVal)
 {
     if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): target "
+        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): target "
                                 "and output batch sizes don't match.");
 
     if (targets.size() / targets.dimB() != 1)
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): require "
+        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): require "
                                 "one target per batch.");
 
     mOutputs.synchronizeDToH();
@@ -218,7 +227,7 @@ void N2D2::Cell_Frame_CUDA::setOutputTarget(const Tensor<int>& targets,
             if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
                 || (outputSize == 1 && (targets(0, batchPos) < 0
                                         || targets(0, batchPos) > 1))) {
-                throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): "
+                throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): "
                                         "target not within output range.");
             }
         }
@@ -240,17 +249,18 @@ void N2D2::Cell_Frame_CUDA::setOutputTarget(const Tensor<int>& targets,
     mDiffInputs.synchronizeHToD();
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<int>& targets,
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
                                              double targetVal,
                                              double defaultVal)
 {
     if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
+        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
                                 "and output batch sizes don't match.");
 
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
         throw std::domain_error(
-            "Cell_Frame_CUDA::setOutputTargets(): wrong target matrix size.");
+            "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target matrix size.");
 
     mOutputs.synchronizeDToH();
 
@@ -266,7 +276,7 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<int>& targets,
                     if ((getNbOutputs() > 1 && target(ox, oy) >= (int)getNbOutputs())
                         || (getNbOutputs() == 1
                             && (target(ox, oy) < 0 || target(ox, oy) > 1))) {
-                        throw std::domain_error("Cell_Frame_CUDA::"
+                        throw std::domain_error("Cell_Frame_CUDA<T>::"
                                                 "setOutputTargets(): output "
                                                 "target out of range.");
                     }
@@ -300,18 +310,24 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<int>& targets,
     mDiffInputs.synchronizeHToD();
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<Float_T>& targets)
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
 {
-    if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
+    if (baseTargets.dimB() != mOutputs.dimB())
+        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
                                 "and output batch sizes don't match.");
 
-    if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1]
-        || targets.dimZ() != getNbOutputs())
+    if (baseTargets.dimX() != mOutputsDims[0]
+        || baseTargets.dimY() != mOutputsDims[1]
+        || baseTargets.dimZ() != getNbOutputs())
+    {
         throw std::domain_error(
-            "Cell_Frame_CUDA::setOutputTargets(): wrong target matrix size.");
+            "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target matrix size.");
+    }
 
     mOutputs.synchronizeDToH();
+
+    const Tensor<T>& targets = tensor_cast<T>(baseTargets);
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index)
         mDiffInputs(index) = targets(index) - mOutputs(index);
@@ -319,16 +335,22 @@ void N2D2::Cell_Frame_CUDA::setOutputTargets(const Tensor<Float_T>& targets)
     mDiffInputs.synchronizeHToD();
 }
 
-void N2D2::Cell_Frame_CUDA::setOutputErrors(const Tensor<Float_T>& errors)
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
 {
-    if (errors.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
+    if (baseErrors.dimB() != mOutputs.dimB())
+        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
                                 "and output batch sizes don't match.");
 
-    if (errors.dimX() != mOutputsDims[0] || errors.dimY() != mOutputsDims[1]
-        || errors.dimZ() != getNbOutputs())
+    if (baseErrors.dimX() != mOutputsDims[0]
+        || baseErrors.dimY() != mOutputsDims[1]
+        || baseErrors.dimZ() != getNbOutputs())
+    {
         throw std::domain_error(
-            "Cell_Frame_CUDA::setOutputErrors(): wrong target matrix size.");
+            "Cell_Frame_CUDA<T>::setOutputErrors(): wrong target matrix size.");
+    }
+
+    const Tensor<T>& errors = tensor_cast<T>(baseErrors);
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index)
         mDiffInputs(index) = errors(index);
@@ -336,45 +358,52 @@ void N2D2::Cell_Frame_CUDA::setOutputErrors(const Tensor<Float_T>& errors)
     mDiffInputs.synchronizeHToD();
 }
 
-N2D2::CudaTensor<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs()
+template <class T>
+N2D2::CudaBaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs()
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
 }
 
-const N2D2::CudaTensor<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getOutputs() const
+template <class T>
+const N2D2::CudaBaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs() const
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
 }
 
-N2D2::CudaTensor<N2D2::Float_T>& N2D2::Cell_Frame_CUDA::getDiffInputs()
+template <class T>
+N2D2::CudaBaseTensor& N2D2::Cell_Frame_CUDA<T>::getDiffInputs()
 {
     mDiffInputs.synchronizeDToH();
     return mDiffInputs;
 }
 
-const N2D2::CudaTensor<N2D2::Float_T>&
-N2D2::Cell_Frame_CUDA::getDiffInputs() const
+template <class T>
+const N2D2::CudaBaseTensor&
+N2D2::Cell_Frame_CUDA<T>::getDiffInputs() const
 {
     mDiffInputs.synchronizeDToH();
     return mDiffInputs;
 }
 
-unsigned int N2D2::Cell_Frame_CUDA::getMaxOutput(unsigned int batchPos) const
+template <class T>
+unsigned int N2D2::Cell_Frame_CUDA<T>::getMaxOutput(unsigned int batchPos) const
 {
     mOutputs.synchronizeDToH();
-    const Tensor<Float_T> output = mOutputs[batchPos];
+    const Tensor<T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
 }
 
-N2D2::Cell_Frame_CUDA::~Cell_Frame_CUDA()
+template <class T>
+N2D2::Cell_Frame_CUDA<T>::~Cell_Frame_CUDA()
 {
     // dtor
 }
 
-void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels,
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::discretizeSignals(unsigned int nbLevels,
                                               const Signals& signals)
 {
     if (signals & In) {
@@ -383,7 +412,7 @@ void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels,
         for (CudaInterface<>::iterator itTensor = mInputs.begin(),
             itTensorEnd = mInputs.end(); itTensor != itTensorEnd; ++itTensor)
         {
-            Tensor<Float_T> input = tensor_cast<Float_T>(*(*itTensor));
+            Tensor<T> input = tensor_cast<T>(*(*itTensor));
 
             //#pragma omp parallel for
             for (int index = 0; index < (int)input.size(); ++index)
@@ -406,6 +435,11 @@ void N2D2::Cell_Frame_CUDA::discretizeSignals(unsigned int nbLevels,
 
         mOutputs.synchronizeHToD();
     }
+}
+
+namespace N2D2 {
+    template class Cell_Frame_CUDA<float>;
+    template class Cell_Frame_CUDA<double>;
 }
 
 #endif

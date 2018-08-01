@@ -33,7 +33,7 @@
 
 using namespace N2D2;
 
-class ConvCell_Frame_CUDA_Test : public ConvCell_Frame_CUDA {
+class ConvCell_Frame_CUDA_Test : public ConvCell_Frame_CUDA<Float_T> {
 public:
     ConvCell_Frame_CUDA_Test(const std::string& name,
                              const std::vector<unsigned int>& kernelDims,
@@ -42,7 +42,7 @@ public:
                              const std::vector<unsigned int>& strideDims,
                              const std::vector<int>& paddingDims,
                              const std::shared_ptr
-                             <Activation<Float_T> >& activation)
+                             <Activation>& activation)
         : Cell(name, nbOutputs),
           ConvCell(name,
                    kernelDims,
@@ -109,7 +109,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    ConvCell_Frame_CUDA conv1("conv1",
+    ConvCell_Frame_CUDA<Float_T> conv1("conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -374,7 +374,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
-        std::shared_ptr<Activation<Float_T> >());
+        std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -426,7 +426,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
 #endif
     conv1.propagate();
 
-    const Tensor<Float_T>& out = conv1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(conv1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -533,7 +533,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
-        std::shared_ptr<Activation<Float_T> >());
+        std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -590,7 +590,7 @@ TEST_DATASET(ConvCell_Frame_CUDA,
 #endif
     conv1.propagate();
 
-    const Tensor<Float_T>& out = conv1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(conv1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -713,8 +713,10 @@ TEST_DATASET(ConvCell_Frame_CUDA,
 
     for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < conv1.getNbChannels();
-             ++channel) {
-            const Tensor<Float_T> kernel = conv1.getWeight(output, channel);
+             ++channel)
+        {
+            Tensor<Float_T> kernel;
+            conv1.getWeight(output, channel, kernel);
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy) {

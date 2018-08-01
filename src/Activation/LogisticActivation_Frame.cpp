@@ -21,17 +21,29 @@
 #include "Activation/LogisticActivation_Frame.hpp"
 
 template <>
-N2D2::Registrar<N2D2::LogisticActivation<N2D2::Float_T> >
-N2D2::LogisticActivation_Frame
-    <N2D2::Float_T>::mRegistrar(N2D2::LogisticActivation_Frame
-                                <N2D2::Float_T>::create,
-                                "Frame",
-                                "Transcode",
-                                "Spike",
-                                "Spike_Analog",
-                                "Spike_PCM",
-                                "Spike_RRAM",
-                                "CSpike",
-                                NULL);
+N2D2::Registrar<N2D2::LogisticActivation>
+N2D2::LogisticActivation_Frame<float>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::LogisticActivation_Frame<float>::create,
+    N2D2::Registrar<N2D2::LogisticActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::LogisticActivation>
+N2D2::LogisticActivation_Frame<double>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::LogisticActivation_Frame<double>::create,
+    N2D2::Registrar<N2D2::LogisticActivation>::Type<double>());
 
 bool N2D2::LogisticActivationDisabled = false;

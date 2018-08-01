@@ -23,7 +23,7 @@
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::UnpoolCellGenerator::mRegistrar(UnpoolCell::Type,
                                       N2D2::UnpoolCellGenerator::generate);
-N2D2::RegistrarCustom<N2D2::CellGenerator,
+N2D2::Registrar<N2D2::CellGenerator,
 N2D2::CellGenerator::RegistryPostCreate_T>
 N2D2::UnpoolCellGenerator::mRegistrarPost(UnpoolCell::Type + std::string("+"),
                                       N2D2::UnpoolCellGenerator::postGenerate);
@@ -41,6 +41,8 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
 
     std::cout << "Layer: " << section << " [Unpool(" << model << ")]"
               << std::endl;
@@ -111,9 +113,9 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
     const UnpoolCell::Pooling pooling = iniConfig.getProperty
                                       <UnpoolCell::Pooling>("Pooling");
 
-    std::shared_ptr<Activation<Float_T> > activation
+    std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
-            iniConfig, section, model, "ActivationFunction");
+            iniConfig, section, model, dataType, "ActivationFunction");
 
     // Cell construction
     std::shared_ptr<UnpoolCell> cell = Registrar

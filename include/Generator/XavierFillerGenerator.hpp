@@ -27,10 +27,11 @@
 namespace N2D2 {
 class XavierFillerGenerator : public FillerGenerator {
 public:
-    static std::shared_ptr<XavierFiller<Float_T> >
+    static std::shared_ptr<Filler>
     generate(IniParser& iniConfig,
              const std::string& section,
-             const std::string& name);
+             const std::string& name,
+             const DataType& dataType);
 
 private:
     static Registrar<FillerGenerator> mRegistrar;

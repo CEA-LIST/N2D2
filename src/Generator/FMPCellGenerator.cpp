@@ -37,6 +37,8 @@ N2D2::FMPCellGenerator::generate(Network& network,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
 
     std::cout << "Layer: " << section << " [FMP(" << model << ")]" << std::endl;
 
@@ -44,9 +46,9 @@ N2D2::FMPCellGenerator::generate(Network& network,
                                     <unsigned int>("NbChannels");
     const double scalingRatio = iniConfig.getProperty<double>("ScalingRatio");
 
-    std::shared_ptr<Activation<Float_T> > activation
+    std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
-            iniConfig, section, model, "ActivationFunction");
+            iniConfig, section, model, dataType, "ActivationFunction");
 
     // Cell construction
     std::shared_ptr<FMPCell> cell = Registrar<FMPCell>::create(model)(

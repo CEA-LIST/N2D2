@@ -23,13 +23,22 @@
 N2D2::Registrar<N2D2::FillerGenerator> N2D2::UniformFillerGenerator::mRegistrar(
     "UniformFiller", N2D2::UniformFillerGenerator::generate);
 
-std::shared_ptr<N2D2::UniformFiller<N2D2::Float_T> >
+std::shared_ptr<N2D2::Filler>
 N2D2::UniformFillerGenerator::generate(IniParser& iniConfig,
                                        const std::string& /*section*/,
-                                       const std::string& name)
+                                       const std::string& name,
+                                       const DataType& dataType)
 {
-    const double min = iniConfig.getProperty<double>(name + ".Min", 0.0);
-    const double max = iniConfig.getProperty<double>(name + ".Max", 1.0);
+    if (dataType == Float32) {
+        const float min = iniConfig.getProperty<float>(name + ".Min", 0.0f);
+        const float max = iniConfig.getProperty<float>(name + ".Max", 1.0f);
 
-    return std::make_shared<UniformFiller<Float_T> >(min, max);
+        return std::make_shared<UniformFiller<float> >(min, max);
+    }
+    else {
+        const double min = iniConfig.getProperty<double>(name + ".Min", 0.0);
+        const double max = iniConfig.getProperty<double>(name + ".Max", 1.0);
+
+        return std::make_shared<UniformFiller<double> >(min, max);
+    }
 }

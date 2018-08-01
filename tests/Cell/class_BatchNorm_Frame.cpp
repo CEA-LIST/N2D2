@@ -33,7 +33,7 @@ public:
     BatchNormCell_Frame_Test(const std::string& name,
                              unsigned int nbOutputs,
                              const std::shared_ptr
-                             <Activation<Float_T> >& activation)
+                             <Activation>& activation)
         : Cell(name, nbOutputs),
           BatchNormCell(name, nbOutputs),
           BatchNormCell_Frame(name, nbOutputs, activation) {};
@@ -49,9 +49,9 @@ TEST(BatchNormCell_Frame, setScales)
     Environment env(net, EmptyDatabase, {10, 10, 1});
 
     BatchNormCell_Frame_Test bn1(
-        "bn1", 1, std::shared_ptr<Activation<Float_T> >());
+        "bn1", 1, std::shared_ptr<Activation>());
     BatchNormCell_Frame_Test bn2(
-        "bn2", 1, std::shared_ptr<Activation<Float_T> >());
+        "bn2", 1, std::shared_ptr<Activation>());
 
     bn1.addInput(env);
     bn2.addInput(env);
@@ -80,7 +80,7 @@ TEST_DATASET(BatchNormCell_Frame,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     BatchNormCell_Frame_Test bn1(
-        "bn1", 1, std::shared_ptr<Activation<Float_T> >());
+        "bn1", 1, std::shared_ptr<Activation>());
     bn1.addInput(env);
     bn1.initialize();
 
@@ -111,7 +111,7 @@ TEST_DATASET(BatchNormCell_Frame,
     Network net;
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame conv1("conv1",
+    ConvCell_Frame<Float_T> conv1("conv1",
                          std::vector<unsigned int>({3, 3}),
                          nbOutputs,
                          std::vector<unsigned int>({1, 1}),
@@ -120,7 +120,7 @@ TEST_DATASET(BatchNormCell_Frame,
                          std::make_shared<TanhActivation_Frame<Float_T> >());
 
     BatchNormCell_Frame_Test bn1(
-        "bn1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "bn1", nbOutputs, std::shared_ptr<Activation>());
 
     conv1.addInput(env);
     bn1.addInput(&conv1);

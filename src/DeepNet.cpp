@@ -1092,7 +1092,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             if (!cellFrame)
                 continue;
 
-            const std::shared_ptr<Activation<Float_T> > activation
+            const std::shared_ptr<Activation> activation
                 = cellFrame->getActivation();
             const std::string activationType = (activation)
                 ? activation->getType() : "Linear";
@@ -1174,7 +1174,7 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             if (!cellFrame)
                 continue;
 
-            const std::shared_ptr<Activation<Float_T> >& activation
+            const std::shared_ptr<Activation>& activation
                 = cellFrame->getActivation();
             const std::string activationType = (activation)
                 ? activation->getType() : "Linear";
@@ -1198,14 +1198,29 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
                 if (activationType == "Linear") {
 #ifdef CUDA
-                    if (std::dynamic_pointer_cast<Cell_Frame_CUDA>(cell)) {
+                    if (std::dynamic_pointer_cast
+                        <Cell_Frame_CUDA<float> >(cell))
+                    {
                         cellFrame->setActivation(std::make_shared
-                            <SaturationActivation_Frame_CUDA<Float_T> >());
+                            <SaturationActivation_Frame_CUDA<float> >());
+                    }
+                    else if (std::dynamic_pointer_cast
+                        <Cell_Frame_CUDA<double> >(cell))
+                    {
+                        cellFrame->setActivation(std::make_shared
+                            <SaturationActivation_Frame_CUDA<double> >());
                     }
                     else {
 #endif
-                        cellFrame->setActivation(std::make_shared
-                            <SaturationActivation_Frame<Float_T> >());
+                        if (std::dynamic_pointer_cast<Cell_Frame<float> >(cell))
+                        {
+                            cellFrame->setActivation(std::make_shared
+                                <SaturationActivation_Frame<float> >());
+                        }
+                        else {
+                            cellFrame->setActivation(std::make_shared
+                                <SaturationActivation_Frame<double> >());
+                        }
 #ifdef CUDA
                     }
 #endif
@@ -1251,8 +1266,8 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
              ++itCell) {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
             const Tensor<Float_T> outputs
-                = std::dynamic_pointer_cast
-                  <Cell_Frame_Top>(cell)->getOutputs()[batchPos];
+                = tensor_cast<Float_T>(std::dynamic_pointer_cast
+                  <Cell_Frame_Top>(cell)->getOutputs())[batchPos];
 
             StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
                                      outputs);
@@ -1275,8 +1290,8 @@ void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
              ++itCell) {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
             const Tensor<Float_T> diffInputs
-                = std::dynamic_pointer_cast
-                  <Cell_Frame_Top>(cell)->getDiffInputs()[batchPos];
+                = tensor_cast<Float_T>(std::dynamic_pointer_cast
+                  <Cell_Frame_Top>(cell)->getDiffInputs())[batchPos];
 
             StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
                                      diffInputs);
@@ -2363,8 +2378,8 @@ N2D2::DeepNet::reportOutputsRange(std::map
         {
             const Tensor<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
-                      ? std::dynamic_pointer_cast<Cell_Frame_Top>(
-                            (*mCells.find(*itCell)).second)->getOutputs()
+                      ? tensor_cast<Float_T>(std::dynamic_pointer_cast<Cell_Frame_Top>(
+                            (*mCells.find(*itCell)).second)->getOutputs())
                       : mStimuliProvider->getData();
 
             const std::map<std::string, RangeStats>::iterator itRange
@@ -2389,8 +2404,8 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
             {
                 const Tensor<Float_T>& outputs
                     = (mCells.find(*itCell) != mCells.end())
-                          ? std::dynamic_pointer_cast<Cell_Frame_Top>(
-                                (*mCells.find(*itCell)).second)->getOutputs()
+                          ? tensor_cast<Float_T>(std::dynamic_pointer_cast<Cell_Frame_Top>(
+                                (*mCells.find(*itCell)).second)->getOutputs())
                           : mStimuliProvider->getData();
 
                 const Float_T maxVal = *std::max_element(outputs.begin(),
@@ -2410,8 +2425,8 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
         {
             const Tensor<Float_T>& outputs
                 = (mCells.find(*itCell) != mCells.end())
-                      ? std::dynamic_pointer_cast<Cell_Frame_Top>(
-                            (*mCells.find(*itCell)).second)->getOutputs()
+                      ? tensor_cast<Float_T>(std::dynamic_pointer_cast<Cell_Frame_Top>(
+                            (*mCells.find(*itCell)).second)->getOutputs())
                       : mStimuliProvider->getData();
 
             const Float_T maxVal = *std::max_element(outputs.begin(),

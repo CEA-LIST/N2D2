@@ -37,9 +37,7 @@ N2D2::ConvCell::ConvCell(const std::string& name,
       mKernelDims(kernelDims),
       mSubSampleDims(subSampleDims),
       mStrideDims(strideDims),
-      mPaddingDims(paddingDims),
-      mWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
-      mBiasFiller(new NormalFiller<Float_T>(0.0, 0.05))
+      mPaddingDims(paddingDims)
 {
     // ctor
 }
@@ -63,7 +61,9 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
         return;
     }
 
-    StimuliProvider::logData(fileName, getWeight(output, channel));
+    Tensor<Float_T> kernel;
+    getWeight(output, channel, kernel);
+    StimuliProvider::logData(fileName, kernel);
 }
 
 void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
@@ -76,9 +76,14 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
     Tensor<Float_T> weights;
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        weights.push_back((isConnection(channel, output))
-                                     ? getWeight(output, channel)
-                                     : Tensor<Float_T>(mKernelDims, 0.0));
+        Tensor<Float_T> kernel;
+
+        if (isConnection(channel, output))
+            getWeight(output, channel, kernel);
+        else
+            kernel = Tensor<Float_T>(mKernelDims, 0.0);
+
+        weights.push_back(kernel);
     }
 
     StimuliProvider::logData(fileName, weights);
@@ -284,7 +289,8 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                 if (!isConnection(channel, outputRemap))
                     continue;
 
-                const Tensor<Float_T>& kernel = getWeight(outputRemap, channel);
+                Tensor<Float_T> kernel;
+                getWeight(outputRemap, channel, kernel);
 
                 for (unsigned int index = 0, size = kernel.size(); index < size;
                     ++index)
@@ -318,8 +324,8 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                     if (!isConnection(channel, outputRemap))
                         continue;
 
-                    const Tensor<Float_T>& kernel = getWeight(outputRemap,
-                                                              channel);
+                    Tensor<Float_T> kernel;
+                    getWeight(outputRemap, channel, kernel);
 
                     const Float_T weight = (mWeightsExportFlip)
                         ? kernel(kernelSize - 1 - index)
@@ -346,7 +352,9 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
             const unsigned int outputRemap = (!outputsMap.empty())
                 ? outputsMap.find(output)->second : output;
 
-            biases << getBias(outputRemap) << "\n";
+            Tensor<Float_T> bias;
+            getBias(outputRemap, bias);
+            biases << bias(0) << "\n";
         }
     }
 }
@@ -429,7 +437,8 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
                     throw std::runtime_error("Error while reading synaptic "
                                              "file: " + biasesFile);
 
-                setBias(outputRemap, weight);
+                Tensor<Float_T> bias({1}, weight);
+                setBias(outputRemap, bias);
             }
         }
     }
@@ -490,7 +499,8 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
                     throw std::runtime_error("Error while reading "
                                              "synaptic file: " + biasesFile);
 
-                setBias(outputRemap, weight);
+                Tensor<Float_T> bias({1}, weight);
+                setBias(outputRemap, bias);
             }
         }
     }
@@ -527,12 +537,16 @@ void N2D2::ConvCell::logFreeParametersDistrib(const std::string& fileName) const
             if (!isConnection(channel, output))
                 continue;
 
-            const Tensor<Float_T>& kernel = getWeight(output, channel);
+            Tensor<double> kernel;
+            getWeight(output, channel, kernel);
             weights.insert(weights.end(), kernel.begin(), kernel.end());
         }
 
-        if (!mNoBias)
-            weights.push_back(getBias(output));
+        if (!mNoBias) {
+            Tensor<double> bias;
+            getBias(output, bias);
+            weights.push_back(bias(0));
+        }
     }
 
     std::sort(weights.begin(), weights.end());
@@ -678,7 +692,8 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
             if (!isConnection(channel, output))
                 continue;
 
-            Tensor<Float_T> kernel = getWeight(output, channel);
+            Tensor<Float_T> kernel;
+            getWeight(output, channel, kernel);
 
             for (unsigned int index = 0; index < kernel.size(); ++index) {
                 kernel(index) = Utils::round((nbLevels - 1) * kernel(index))
@@ -687,8 +702,9 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
         }
 
         if (!mNoBias) {
-            double bias = getBias(output);
-            bias = Utils::round((nbLevels - 1) * bias) / (nbLevels - 1);
+            Tensor<Float_T> bias;
+            getBias(output, bias);
+            bias(0) = Utils::round((nbLevels - 1) * bias(0)) / (nbLevels - 1);
 
             setBias(output, bias);
         }
@@ -706,7 +722,8 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
             if (!isConnection(channel, output))
                 continue;
 
-            const Tensor<Float_T>& kernel = getWeight(output, channel);
+            Tensor<Float_T> kernel;
+            getWeight(output, channel, kernel);
 
             for (unsigned int index = 0; index < kernel.size(); ++index) {
                 const Float_T weight = kernel(index);
@@ -717,10 +734,11 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
         }
 
         if (!mNoBias) {
-            Float_T bias = getBias(output);
+            Tensor<Float_T> bias;
+            getBias(output, bias);
 
-            if (bias < wMin)  wMin = bias;
-            if (bias > wMax)  wMax = bias;
+            if (bias(0) < wMin)  wMin = bias(0);
+            if (bias(0) > wMax)  wMax = bias(0);
         }
     }
 
@@ -734,7 +752,8 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
             if (!isConnection(channel, output))
                 continue;
 
-            Tensor<Float_T> kernel = getWeight(output, channel);
+            Tensor<Float_T> kernel;
+            getWeight(output, channel, kernel);
 
             for (unsigned int index = 0; index < kernel.size(); ++index) {
                 kernel(index) = Utils::clamp(
@@ -743,8 +762,10 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
         }
 
         if (!mNoBias) {
-            double bias = getBias(output);
-            bias = Utils::clamp(Random::randNormal(bias, stdDev), -1.0, 1.0);
+            Tensor<Float_T> bias;
+            getBias(output, bias);
+            bias(0) = Utils::clamp(Random::randNormal(bias(0), stdDev),
+                                   -1.0, 1.0);
 
             setBias(output, bias);
         }
@@ -759,15 +780,17 @@ void N2D2::ConvCell::processFreeParameters(const std::function
             if (!isConnection(channel, output))
                 continue;
 
-            Tensor<Float_T> kernel = getWeight(output, channel);
+            Tensor<Float_T> kernel;
+            getWeight(output, channel, kernel);
 
             for (unsigned int index = 0; index < kernel.size(); ++index)
                 kernel(index) = func(kernel(index));
         }
 
         if (!mNoBias) {
-            double bias = getBias(output);
-            bias = func(bias);
+            Tensor<Float_T> bias;
+            getBias(output, bias);
+            bias(0) = func(bias(0));
 
             setBias(output, bias);
         }

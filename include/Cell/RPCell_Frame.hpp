@@ -29,7 +29,7 @@
 #include "RPCell.hpp"
 
 namespace N2D2 {
-class RPCell_Frame : public virtual RPCell, public Cell_Frame {
+class RPCell_Frame : public virtual RPCell, public Cell_Frame<Float_T> {
 public:
     RPCell_Frame(const std::string& name,
                  unsigned int nbAnchors,

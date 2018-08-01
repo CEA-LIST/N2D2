@@ -20,13 +20,14 @@
 
 #include "Cell/ConvCell_Frame_Kernels.hpp"
 
-void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
-                                           const Tensor<Float_T>& inputs,
+template <class T>
+void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
+                                           const Tensor<T>& inputs,
                                            const Tensor
-                                           <Float_T>& sharedSynapses,
+                                           <T>& sharedSynapses,
                                            const Descriptor& desc,
-                                           const Float_T* beta,
-                                           Tensor<Float_T>& outputs,
+                                           const T* beta,
+                                           Tensor<T>& outputs,
                                            const Tensor<bool>& maps)
 {
     const unsigned int oxSize
@@ -72,7 +73,7 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
                     const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
 
                     // For each output, compute the weighted sum
-                    Float_T weightedSum = 0.0;
+                    T weightedSum(0.0);
 
                     for (unsigned int channel = 0; channel < inputs.dimZ();
                          ++channel) {
@@ -133,10 +134,11 @@ void N2D2::ConvCell_Frame_Kernels::forward(const Float_T* alpha,
     }
 }
 
-void N2D2::ConvCell_Frame_Kernels::forwardBias(const Float_T* alpha,
-                                               const Tensor<Float_T>& bias,
-                                               const Float_T* beta,
-                                               Tensor<Float_T>& outputs)
+template <class T>
+void N2D2::ConvCell_Frame_Kernels::forwardBias(const T* alpha,
+                                               const Tensor<T>& bias,
+                                               const T* beta,
+                                               Tensor<T>& outputs)
 {
     const unsigned int size = outputs.dimB() * outputs.dimZ();
 
@@ -157,14 +159,15 @@ void N2D2::ConvCell_Frame_Kernels::forwardBias(const Float_T* alpha,
     }
 }
 
-void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
+template <class T>
+void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                                                 const Tensor
-                                                <Float_T>& sharedSynapses,
+                                                <T>& sharedSynapses,
                                                 const Tensor
-                                                <Float_T>& diffInputs,
+                                                <T>& diffInputs,
                                                 const Descriptor& desc,
-                                                const Float_T* beta,
-                                                Tensor<Float_T>& diffOutputs,
+                                                const T* beta,
+                                                Tensor<T>& diffOutputs,
                                                 const Tensor<bool>& maps)
 {
     const unsigned int oxStride
@@ -195,7 +198,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
                     const unsigned int syMax
                         = std::min<unsigned int>(sharedSynapses.dimY(), iyPad + 1);
 
-                    Float_T gradient = 0.0;
+                    T gradient(0.0);
 
                     for (unsigned int sy = iyPad % desc.stride[1],
                                       sx0 = ixPad % desc.stride[0];
@@ -239,15 +242,16 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const Float_T* alpha,
     }
 }
 
-void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
+template <class T>
+void N2D2::ConvCell_Frame_Kernels::backwardFilter(const T* alpha,
                                                   const Tensor
-                                                  <Float_T>& inputs,
+                                                  <T>& inputs,
                                                   const Tensor
-                                                  <Float_T>& diffInputs,
+                                                  <T>& diffInputs,
                                                   const Descriptor& desc,
-                                                  const Float_T* beta,
+                                                  const T* beta,
                                                   Tensor
-                                                  <Float_T>& diffSharedSynapses,
+                                                  <T>& diffSharedSynapses,
                                                   const Tensor<bool>& maps)
 {
     const unsigned int oxSize
@@ -291,7 +295,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
                                                  - sy) / (double)desc.stride[1]),
                         oySize);
 
-                    Float_T gradient = 0.0;
+                    T gradient(0.0);
 
                     for (unsigned int batchPos = 0; batchPos < inputs.dimB();
                          ++batchPos) {
@@ -323,15 +327,16 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const Float_T* alpha,
     }
 }
 
-void N2D2::ConvCell_Frame_Kernels::backwardBias(const Float_T* alpha,
+template <class T>
+void N2D2::ConvCell_Frame_Kernels::backwardBias(const T* alpha,
                                                 const Tensor
-                                                <Float_T>& diffInputs,
-                                                const Float_T* beta,
-                                                Tensor<Float_T>& diffBias)
+                                                <T>& diffInputs,
+                                                const T* beta,
+                                                Tensor<T>& diffBias)
 {
 #pragma omp parallel for if (diffBias.dimZ() > 16)
     for (int output = 0; output < (int)diffBias.dimZ(); ++output) {
-        Float_T sum = 0.0;
+        T sum(0.0);
 
         for (unsigned int batchPos = 0; batchPos < diffInputs.dimB();
              ++batchPos) {
@@ -343,4 +348,83 @@ void N2D2::ConvCell_Frame_Kernels::backwardBias(const Float_T* alpha,
 
         diffBias(output) = (*alpha) * sum + (*beta) * diffBias(output);
     }
+}
+
+namespace N2D2 {
+    template void ConvCell_Frame_Kernels::forward<float>(const float* alpha,
+                                           const Tensor<float>& inputs,
+                                           const Tensor
+                                           <float>& sharedSynapses,
+                                           const Descriptor& desc,
+                                           const float* beta,
+                                           Tensor<float>& outputs,
+                                           const Tensor<bool>& maps);
+    template void ConvCell_Frame_Kernels::forward<double>(const double* alpha,
+                                           const Tensor<double>& inputs,
+                                           const Tensor
+                                           <double>& sharedSynapses,
+                                           const Descriptor& desc,
+                                           const double* beta,
+                                           Tensor<double>& outputs,
+                                           const Tensor<bool>& maps);
+
+    template void ConvCell_Frame_Kernels::forwardBias<float>(const float* alpha,
+                                               const Tensor<float>& bias,
+                                               const float* beta,
+                                               Tensor<float>& outputs);
+    template void ConvCell_Frame_Kernels::forwardBias<double>(const double* alpha,
+                                               const Tensor<double>& bias,
+                                               const double* beta,
+                                               Tensor<double>& outputs);
+
+    template void ConvCell_Frame_Kernels::backwardData<float>(const float* alpha,
+                                                const Tensor
+                                                <float>& sharedSynapses,
+                                                const Tensor
+                                                <float>& diffInputs,
+                                                const Descriptor& desc,
+                                                const float* beta,
+                                                Tensor<float>& diffOutputs,
+                                                const Tensor<bool>& maps);
+    template void ConvCell_Frame_Kernels::backwardData<double>(const double* alpha,
+                                                const Tensor
+                                                <double>& sharedSynapses,
+                                                const Tensor
+                                                <double>& diffInputs,
+                                                const Descriptor& desc,
+                                                const double* beta,
+                                                Tensor<double>& diffOutputs,
+                                                const Tensor<bool>& maps);
+
+    template void ConvCell_Frame_Kernels::backwardFilter<float>(const float* alpha,
+                                                  const Tensor
+                                                  <float>& inputs,
+                                                  const Tensor
+                                                  <float>& diffInputs,
+                                                  const Descriptor& desc,
+                                                  const float* beta,
+                                                  Tensor
+                                                  <float>& diffSharedSynapses,
+                                                  const Tensor<bool>& maps);
+    template void ConvCell_Frame_Kernels::backwardFilter<double>(const double* alpha,
+                                                  const Tensor
+                                                  <double>& inputs,
+                                                  const Tensor
+                                                  <double>& diffInputs,
+                                                  const Descriptor& desc,
+                                                  const double* beta,
+                                                  Tensor
+                                                  <double>& diffSharedSynapses,
+                                                  const Tensor<bool>& maps);
+
+    template void ConvCell_Frame_Kernels::backwardBias<float>(const float* alpha,
+                                                const Tensor
+                                                <float>& diffInputs,
+                                                const float* beta,
+                                                Tensor<float>& diffBias);
+    template void ConvCell_Frame_Kernels::backwardBias<double>(const double* alpha,
+                                                const Tensor
+                                                <double>& diffInputs,
+                                                const double* beta,
+                                                Tensor<double>& diffBias);
 }

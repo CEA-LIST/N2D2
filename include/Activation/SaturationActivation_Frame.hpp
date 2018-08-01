@@ -25,64 +25,73 @@
 
 namespace N2D2 {
 template <class T>
-class SaturationActivation_Frame : public SaturationActivation<T> {
+class SaturationActivation_Frame : public SaturationActivation {
 public:
-    static std::shared_ptr<SaturationActivation<T> > create()
+    static std::shared_ptr<SaturationActivation> create()
     {
         return std::make_shared<SaturationActivation_Frame<T> >();
     }
 
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    virtual void propagate(BaseTensor& data);
+    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~SaturationActivation_Frame() {};
 
-    using SaturationActivation<T>::mShifting;
-    using SaturationActivation<T>::mThreshold;
+    using SaturationActivation::mShifting;
+    using SaturationActivation::mThreshold;
 
 private:
-    static Registrar<SaturationActivation<T> > mRegistrar;
+    static Registrar<SaturationActivation> mRegistrar;
 };
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame<T>::propagate(Tensor<T>* data)
+void N2D2::SaturationActivation_Frame<T>::propagate(BaseTensor& baseData)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+
     if (mShifting > 0) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) /= (1 << mShifting);
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index)
+            data(index) /= (1 << mShifting);
     }
     else if (mShifting < 0) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) *= (1 << (-mShifting));
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index)
+            data(index) *= (1 << (-mShifting));
     }
 
-#pragma omp parallel for if (data->size() > 1024)
-    for (int index = 0; index < (int)data->size(); ++index)
-        (*data)(index) = Utils::clamp<T>((*data)(index),
-                                         -mThreshold, mThreshold);
+    const T threshold(mThreshold);
+
+#pragma omp parallel for if (data.size() > 1024)
+    for (int index = 0; index < (int)data.size(); ++index)
+        data(index) = Utils::clamp<T>(data(index),
+                                         -threshold, threshold);
 }
 
 template <class T>
 void N2D2::SaturationActivation_Frame
-    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
+    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
     if (mShifting > 0) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*diffData)(index) /= (1 << mShifting);
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index)
+            diffData(index) /= (1 << mShifting);
     }
     else if (mShifting < 0) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*diffData)(index) *= (1 << (-mShifting));
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index)
+            diffData(index) *= (1 << (-mShifting));
     }
 
-#pragma omp parallel for if (data->size() > 1024)
-    for (int index = 0; index < (int)diffData->size(); ++index)
-        (*diffData)(index)
-            *= ((*data)(index) > -mThreshold && (*data)(index) < mThreshold)
+    const T threshold(mThreshold);
+
+#pragma omp parallel for if (data.size() > 1024)
+    for (int index = 0; index < (int)diffData.size(); ++index)
+        diffData(index)
+            *= (data(index) > -threshold && data(index) < threshold)
                     ? 1.0f : 0.0f;
 }
 

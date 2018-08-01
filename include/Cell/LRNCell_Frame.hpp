@@ -25,7 +25,7 @@
 #include "LRNCell.hpp"
 
 namespace N2D2 {
-class LRNCell_Frame : public virtual LRNCell, public Cell_Frame {
+class LRNCell_Frame : public virtual LRNCell, public Cell_Frame<Float_T> {
 public:
     LRNCell_Frame(const std::string& name, unsigned int nbOutputs);
     static std::shared_ptr<LRNCell> create(const std::string& name,

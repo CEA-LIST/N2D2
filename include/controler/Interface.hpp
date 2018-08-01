@@ -108,6 +108,7 @@ public:
     typedef typename std::vector<tensor_type*>::iterator iterator;
     typedef typename std::vector<tensor_type*>::const_iterator const_iterator;
 
+    template <class U> Interface(const Interface<U, STACKING_DIM>& interface);
     Interface(std::initializer_list<bool> matchingDim
                 = std::initializer_list<bool>({true, true, false, true}));
     void matchingDims(std::initializer_list<bool> matchingDims_)
@@ -184,7 +185,31 @@ protected:
     std::vector<std::pair<unsigned int, unsigned int> > mDataOffset;
 
     friend class TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T>;
+    template <class, int> friend class Interface;
 };
+}
+
+template <class T, int STACKING_DIM>
+template <class U>
+N2D2::Interface<T, STACKING_DIM>::Interface(
+    const Interface<U, STACKING_DIM>& interface)
+    : mMatchingDim(interface.mMatchingDim),
+      mDataOffset(interface.mDataOffset)
+{
+    // copy-ctor
+    for (typename Interface<U, STACKING_DIM>::const_iterator
+        it = interface.begin(), itEnd = interface.end();
+        it != itEnd; ++it)
+    {
+        tensor_type* tensor = dynamic_cast<tensor_type*>(*it);
+
+        if (tensor == NULL) {
+            throw std::runtime_error("Interface::Interface(): "
+                            "incompatible tensor data type");
+        }
+
+        mData.push_back(tensor);
+    }
 }
 
 template <class T, int STACKING_DIM>

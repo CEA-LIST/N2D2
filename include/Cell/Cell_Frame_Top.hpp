@@ -43,13 +43,13 @@ public:
         InOut = 3   // = In | Out
     };
 
-    Cell_Frame_Top(const std::shared_ptr<Activation<Float_T> >& activation
-                   = std::shared_ptr<Activation<Float_T> >())
+    Cell_Frame_Top(const std::shared_ptr<Activation>& activation
+                   = std::shared_ptr<Activation>())
         : mActivation(activation)
     {
     }
-    virtual void addInput(Tensor<Float_T>& inputs,
-                          Tensor<Float_T>& diffOutputs) = 0;
+    virtual void addInput(BaseTensor& inputs,
+                          BaseTensor& diffOutputs) = 0;
     virtual void propagate(bool inference = false) = 0;
     virtual void backPropagate() = 0;
     virtual void update() = 0;
@@ -62,25 +62,25 @@ public:
     virtual void setOutputTargets(const Tensor<int>& targets,
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0) = 0;
-    virtual void setOutputTargets(const Tensor<Float_T>& targets) = 0;
-    virtual void setOutputErrors(const Tensor<Float_T>& errors) = 0;
-    virtual Tensor<Float_T>& getOutputs() = 0;
-    virtual const Tensor<Float_T>& getOutputs() const = 0;
-    virtual Tensor<Float_T>& getDiffInputs() = 0;
-    virtual const Tensor<Float_T>& getDiffInputs() const = 0;
+    virtual void setOutputTargets(const BaseTensor& targets) = 0;
+    virtual void setOutputErrors(const BaseTensor& errors) = 0;
+    virtual BaseTensor& getOutputs() = 0;
+    virtual const BaseTensor& getOutputs() const = 0;
+    virtual BaseTensor& getDiffInputs() = 0;
+    virtual const BaseTensor& getDiffInputs() const = 0;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const = 0;
-    const std::shared_ptr<Activation<Float_T> >& getActivation() const
+    const std::shared_ptr<Activation>& getActivation() const
     {
         return mActivation;
     };
-    void setActivation(const std::shared_ptr<Activation<Float_T> >& activation)
+    void setActivation(const std::shared_ptr<Activation>& activation)
     {
         mActivation = activation;
     };
     virtual ~Cell_Frame_Top() {};
 
 protected:
-    std::shared_ptr<Activation<Float_T> > mActivation;
+    std::shared_ptr<Activation> mActivation;
 };
 }
 

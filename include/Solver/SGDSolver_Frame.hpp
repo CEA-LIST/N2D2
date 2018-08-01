@@ -24,16 +24,15 @@
 #include "Solver/SGDSolver.hpp"
 
 namespace N2D2 {
-template <class T> class SGDSolver_Frame : public SGDSolver<T> {
+template <class T> class SGDSolver_Frame : public SGDSolver {
 public:
-    static std::shared_ptr<SGDSolver<T> > create()
+    static std::shared_ptr<SGDSolver> create()
     {
         return std::make_shared<SGDSolver_Frame<T> >();
     }
 
     SGDSolver_Frame();
-    void
-    update(Tensor<T>* data, Tensor<T>* diffData, unsigned int batchSize);
+    void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
     void exportFreeParameters(const std::string& fileName) const;
     std::shared_ptr<SGDSolver_Frame<T> > clone() const
     {
@@ -42,18 +41,18 @@ public:
     virtual ~SGDSolver_Frame() {};
 
 protected:
-    using SGDSolver<T>::mLearningRate;
-    using SGDSolver<T>::mMomentum;
-    using SGDSolver<T>::mDecay;
-    using SGDSolver<T>::mPower;
-    using SGDSolver<T>::mIterationSize;
-    using SGDSolver<T>::mMaxIterations;
-    using SGDSolver<T>::mLearningRatePolicy;
-    using SGDSolver<T>::mLearningRateStepSize;
-    using SGDSolver<T>::mLearningRateDecay;
-    using SGDSolver<T>::mClamping;
-    using SGDSolver<T>::mIterationPass;
-    using SGDSolver<T>::mNbIterations;
+    using SGDSolver::mLearningRate;
+    using SGDSolver::mMomentum;
+    using SGDSolver::mDecay;
+    using SGDSolver::mPower;
+    using SGDSolver::mIterationSize;
+    using SGDSolver::mMaxIterations;
+    using SGDSolver::mLearningRatePolicy;
+    using SGDSolver::mLearningRateStepSize;
+    using SGDSolver::mLearningRateDecay;
+    using SGDSolver::mClamping;
+    using SGDSolver::mIterationPass;
+    using SGDSolver::mNbIterations;
 
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
@@ -67,58 +66,61 @@ private:
         return new SGDSolver_Frame<T>(*this);
     }
 
-    static Registrar<SGDSolver<T> > mRegistrar;
+    static Registrar<SGDSolver> mRegistrar;
 };
 }
 
 template <class T>
 N2D2::SGDSolver_Frame<T>::SGDSolver_Frame()
-    : SGDSolver<T>::SGDSolver(),
+    : SGDSolver::SGDSolver(),
       mQuantizationLevels(this, "QuantizationLevels", 0U)
 {
     // ctor
 }
 
 template <class T>
-void N2D2::SGDSolver_Frame<T>::update(Tensor<T>* data,
-                                      Tensor<T>* diffData,
+void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
+                                      BaseTensor& baseDiffData,
                                       unsigned int batchSize)
 {
-    const T rate = SGDSolver<T>::getLearningRate(batchSize);
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
+    const T rate(SGDSolver::getLearningRate(batchSize));
 
     if (rate == 0.0)
         return;
 
     if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(data->dims());
-        std::copy((*data).begin(), (*data).end(), mContinuousData.begin());
+        mContinuousData.resize(data.dims());
+        std::copy(data.begin(), data.end(), mContinuousData.begin());
     }
 
-    Tensor<T>* continuousData
-        = (mQuantizationLevels > 0) ? &mContinuousData : data;
+    Tensor<T>& continuousData
+        = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     // Normalize in function of the iteration size
-    const T rateDiff = rate / (batchSize * (T)mIterationSize);
-    const T momentum = mMomentum;
-    const T decay = mDecay;
+    const T rateDiff(rate / (batchSize * (T)mIterationSize));
 
-    if (momentum == 0.0f && decay == 0.0f) {
+    if (mMomentum == 0.0 && mDecay == 0.0) {
         // if outside the loop for better performance
         if (mClamping) {
             //#pragma omp parallel for
-            for (int index = 0; index < (int)data->size(); ++index) {
-                (*continuousData)(index) = Utils::clamp<T>(
-                    (*continuousData)(index)
-                        + rateDiff * (*diffData)(index), -1.0, 1.0);
+            for (int index = 0; index < (int)data.size(); ++index) {
+                continuousData(index) = Utils::clamp<T>(
+                    continuousData(index)
+                        + rateDiff * diffData(index), T(-1.0), T(1.0));
             }
         } else {
             //#pragma omp parallel for
-            for (int index = 0; index < (int)data->size(); ++index)
-                (*continuousData)(index) += rateDiff * (*diffData)(index);
+            for (int index = 0; index < (int)data.size(); ++index)
+                continuousData(index) += rateDiff * diffData(index);
         }
     } else {
+        const T momentum(mMomentum);
+
         if (mMomentumData.empty())
-            mMomentumData.resize(data->dims(), 0.0);
+            mMomentumData.resize(data.dims(), T(0.0));
 
 #pragma omp parallel for if (mMomentumData.size() > 1024)
         for (int index = 0; index < (int)mMomentumData.size(); ++index) {
@@ -126,50 +128,49 @@ void N2D2::SGDSolver_Frame<T>::update(Tensor<T>* data,
             mMomentumData(index) *= momentum;
 
             // mMomentumData = mMomentumData + diffData*mWeightsLearningRate
-            mMomentumData(index) += rateDiff * (*diffData)(index);
+            mMomentumData(index) += rateDiff * diffData(index);
 
-            if (decay != 0.0f) {
+            if (mDecay != 0.0) {
+                const T decay(mDecay);
                 const T alpha = -decay * rate;
 
                 // mMomentumData = mMomentumData - decay*rate*data
-                mMomentumData(index) += alpha * (*continuousData)(index);
+                mMomentumData(index) += alpha * continuousData(index);
             }
 
             // data = data + mMomentumData
             if (mClamping)
-                (*continuousData)(index) = Utils::clamp
-                    <T>((*continuousData)(index) + mMomentumData(index),
-                        -1.0, 1.0);
+                continuousData(index) = Utils::clamp
+                    <T>(continuousData(index) + mMomentumData(index),
+                        T(-1.0), T(1.0));
             else
-                (*continuousData)(index) += mMomentumData(index);
+                continuousData(index) += mMomentumData(index);
         }
     }
 
     if (mQuantizationLevels > 0) {
         //#pragma omp parallel for
-        for (int index = 0; index < (int)data->size(); ++index) {
-            (*data)(index) = (mQuantizationLevels > 1)
+        for (int index = 0; index < (int)data.size(); ++index) {
+            data(index) = (mQuantizationLevels > 1)
                ? (int)Utils::round((mQuantizationLevels - 1)
-                 * (*continuousData)(index)) / (float)(mQuantizationLevels - 1)
-               : (((*continuousData)(index) >= 0) ? 1 : -1);
+                 * continuousData(index)) / (T)(mQuantizationLevels - 1)
+               : ((continuousData(index) >= 0) ? 1 : -1);
         }
     }
 }
 
 template <class T>
-void N2D2::SGDSolver_Frame
-    <T>::exportFreeParameters(const std::string& fileName) const
+void N2D2::SGDSolver_Frame<T>::exportFreeParameters(const std::string& fileName)
+    const
 {
-    float momentum = mMomentum;
-
-    if (momentum != 0.0) {
+    if (mMomentum != 0.0) {
         std::ofstream syn(fileName.c_str());
 
         if (!syn.good())
             throw std::runtime_error("Could not create synaptic file : "
                                      + fileName);
 
-        for (std::vector<float>::const_iterator it = mMomentumData.begin();
+        for (typename std::vector<T>::const_iterator it = mMomentumData.begin();
              it != mMomentumData.end();
              ++it)
             syn << (*it) << " ";

@@ -36,10 +36,10 @@
 #endif
 
 namespace N2D2 {
-template <class T> class TanhActivation : public Activation<T> {
+class TanhActivation : public Activation {
 public:
     typedef std::function
-        <std::shared_ptr<TanhActivation<T> >()> RegistryCreate_T;
+        <std::shared_ptr<TanhActivation>()> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -68,18 +68,6 @@ protected:
     /// Alpha
     Parameter<double> mAlpha;
 };
-}
-
-template <class T> const char* N2D2::TanhActivation<T>::Type = "Tanh";
-
-template <class T>
-const double N2D2::TanhActivation<T>::AlphaLeCun = 1.7159 * (2.0 / 3.0);
-
-template <class T>
-N2D2::TanhActivation<T>::TanhActivation()
-    : mAlpha(this, "Alpha", 1.0)
-{
-    // ctor
 }
 
 #endif // N2D2_TANHACTIVATION_H

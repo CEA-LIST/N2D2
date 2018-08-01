@@ -24,11 +24,15 @@ N2D2::Registrar<N2D2::ActivationGenerator>
 N2D2::SaturationActivationGenerator::mRegistrar(
     "Saturation", N2D2::SaturationActivationGenerator::generate);
 
-std::shared_ptr<N2D2::SaturationActivation<N2D2::Float_T> >
-N2D2::SaturationActivationGenerator::generate(IniParser& /*iniConfig*/,
-                                              const std::string& /*section*/,
-                                              const std::string& model,
-                                              const std::string& /*name*/)
+std::shared_ptr<N2D2::SaturationActivation>
+N2D2::SaturationActivationGenerator::generate(
+    IniParser& /*iniConfig*/,
+    const std::string& /*section*/,
+    const std::string& model,
+    const DataType& dataType,
+    const std::string& /*name*/)
 {
-    return Registrar<SaturationActivation<Float_T> >::create(model)();
+    return (dataType == Float32)
+            ? Registrar<SaturationActivation>::create<float>(model)()
+            : Registrar<SaturationActivation>::create<double>(model)();
 }

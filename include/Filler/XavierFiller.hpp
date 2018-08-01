@@ -25,7 +25,7 @@
 #include "utils/Random.hpp"
 
 namespace N2D2 {
-template <class T> class XavierFiller : public Filler<T> {
+template <class T> class XavierFiller : public Filler {
 public:
     enum VarianceNorm {
         FanIn,
@@ -39,7 +39,7 @@ public:
 
     XavierFiller(VarianceNorm varianceNorm = FanIn,
                  Distribution distribution = Uniform);
-    void apply(Tensor<T>& data, bool restrictPositive=false);
+    void apply(BaseTensor& data, bool restrictPositive=false);
     virtual ~XavierFiller() {};
 
 private:
@@ -71,21 +71,23 @@ N2D2::XavierFiller
     // ctor
 }
 
-template <class T> void N2D2::XavierFiller<T>::apply(Tensor<T>& data,
+template <class T> void N2D2::XavierFiller<T>::apply(BaseTensor& baseData,
                                                      bool restrictPositive)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+
     const unsigned int fanIn = data.size() / data.dimB();
     const unsigned int fanOut = data.size() / data.dimZ();
 
-    const T n = (mVarianceNorm == FanIn) ? fanIn : (mVarianceNorm == Average)
+    const T n((mVarianceNorm == FanIn) ? fanIn : (mVarianceNorm == Average)
                                                        ? (fanIn + fanOut) / 2.0
-                                                       : fanOut;
+                                                       : fanOut);
 
     if (mDistribution == Uniform) {
         // Variance of uniform distribution between [a,b] is (1/12)*((b-a)^2)
         // for [-scale,scale], variance is therefore (1/3)*(scale^2)
         // in order to have a variance of 1/n, the scale is therefore:
-        const T scale = std::sqrt(3.0 / n);
+        const T scale(std::sqrt(3.0 / n));
 
         for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();

@@ -27,10 +27,11 @@
 namespace N2D2 {
 class LogisticActivationGenerator : public ActivationGenerator {
 public:
-    static std::shared_ptr<LogisticActivation<Float_T> >
+    static std::shared_ptr<LogisticActivation>
     generate(IniParser& iniConfig,
              const std::string& section,
              const std::string& model,
+             const DataType& dataType,
              const std::string& name);
 
 private:

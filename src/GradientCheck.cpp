@@ -189,7 +189,7 @@ void N2D2::GradientCheck<T>::check(const std::string& tensorName,
 template <class T>
 N2D2::GradientCheck<T>::~GradientCheck()
 {
-    mDiffInputs->fill(0.0);
+    mDiffInputs->fill(T(0.0));
 }
 
 template <class T>

@@ -46,7 +46,7 @@ public:
                                   const std::string&,
                                   double,
                                   unsigned int,
-                                  const std::shared_ptr<Activation<Float_T> >&)>
+                                  const std::shared_ptr<Activation>&)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()

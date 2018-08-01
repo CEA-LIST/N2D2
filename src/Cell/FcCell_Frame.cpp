@@ -26,7 +26,7 @@ N2D2::FcCell_Frame::mRegistrar("Frame", N2D2::FcCell_Frame::create);
 N2D2::FcCell_Frame::FcCell_Frame(const std::string& name,
                                  unsigned int nbOutputs,
                                  const std::shared_ptr
-                                 <Activation<Float_T> >& activation)
+                                 <Activation>& activation)
     : Cell(name, nbOutputs),
       FcCell(name, nbOutputs),
       Cell_Frame(name, nbOutputs, activation),
@@ -241,10 +241,10 @@ void N2D2::FcCell_Frame::update()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
         mWeightsSolvers[k]
-            ->update(&mSynapses[k], &mDiffSynapses[k], mInputs.dimB());
+            ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&mBias, &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
 }
 
 void N2D2::FcCell_Frame::checkGradient(double epsilon, double maxError)

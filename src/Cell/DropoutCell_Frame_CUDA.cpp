@@ -63,7 +63,7 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
         CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
             mOutputDesc.back(),
-            CudaContext::data_type,
+            CudaContext::data_type<Float_T>::value,
             mOutputs.dimB(),
             mInputs[k].dimZ(),
             mOutputs.dimY(),

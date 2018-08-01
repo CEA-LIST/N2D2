@@ -116,8 +116,8 @@ TEST(DeepNetGenerator, DeepNetGenerator)
     ASSERT_EQUALS(env->getOnTheFlyTransformation(Database::Test).empty(),
                   false);
 
-    const std::shared_ptr<ConvCell_Frame> conv1 = deepNet->getCell
-                                                  <ConvCell_Frame>("conv1");
+    const std::shared_ptr<ConvCell_Frame<Float_T> > conv1 = deepNet->getCell
+                                            <ConvCell_Frame<Float_T> >("conv1");
     ASSERT_EQUALS((bool)conv1, true);
     ASSERT_EQUALS(conv1->getKernelWidth(), 4U);
     ASSERT_EQUALS(conv1->getKernelHeight(), 4U);

@@ -34,7 +34,7 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class ProposalCell_Frame_CUDA : public virtual ProposalCell, public Cell_Frame_CUDA {
+class ProposalCell_Frame_CUDA : public virtual ProposalCell, public Cell_Frame_CUDA<Float_T> {
 public:
 
     ProposalCell_Frame_CUDA(const std::string& name,

@@ -48,8 +48,8 @@ public:
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims
                 = std::vector<int>(2, 0),
-           const std::shared_ptr<Activation<Float_T> >& /*activation*/
-           = std::shared_ptr<Activation<Float_T> >())
+           const std::shared_ptr<Activation>& /*activation*/
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared<ConvCell_Spike_PCM>(net,
                                                     name,

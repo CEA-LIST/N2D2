@@ -37,6 +37,8 @@ N2D2::PoolCellGenerator::generate(Network& network,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
 
     std::cout << "Layer: " << section << " [Pool(" << model << ")]"
               << std::endl;
@@ -107,9 +109,9 @@ N2D2::PoolCellGenerator::generate(Network& network,
     const PoolCell::Pooling pooling = iniConfig.getProperty
                                       <PoolCell::Pooling>("Pooling");
 
-    std::shared_ptr<Activation<Float_T> > activation
+    std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
-            iniConfig, section, model, "ActivationFunction");
+            iniConfig, section, model, dataType, "ActivationFunction");
 
     // Cell construction
     std::shared_ptr<PoolCell> cell = Registrar

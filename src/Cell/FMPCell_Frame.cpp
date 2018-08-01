@@ -27,7 +27,7 @@ N2D2::FMPCell_Frame::FMPCell_Frame(const std::string& name,
                                    double scalingRatio,
                                    unsigned int nbOutputs,
                                    const std::shared_ptr
-                                   <Activation<Float_T> >& activation)
+                                   <Activation>& activation)
     : Cell(name, nbOutputs),
       FMPCell(name, scalingRatio, nbOutputs),
       Cell_Frame(name, nbOutputs, activation),

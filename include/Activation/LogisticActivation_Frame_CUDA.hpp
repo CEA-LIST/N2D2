@@ -29,16 +29,16 @@
 
 namespace N2D2 {
 template <class T>
-class LogisticActivation_Frame_CUDA : public LogisticActivation<T> {
+class LogisticActivation_Frame_CUDA : public LogisticActivation {
 public:
-    static std::shared_ptr<LogisticActivation<T> > create(bool withLoss = false)
+    static std::shared_ptr<LogisticActivation> create(bool withLoss = false)
     {
         return std::make_shared<LogisticActivation_Frame_CUDA<T> >(withLoss);
     }
 
     LogisticActivation_Frame_CUDA(bool withLoss = false);
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    virtual void propagate(BaseTensor& data);
+    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~LogisticActivation_Frame_CUDA();
 
 protected:
@@ -49,14 +49,14 @@ protected:
 #endif
 
 private:
-    static Registrar<LogisticActivation<T> > mRegistrar;
+    static Registrar<LogisticActivation> mRegistrar;
 };
 }
 
 template <class T>
 N2D2::LogisticActivation_Frame_CUDA
     <T>::LogisticActivation_Frame_CUDA(bool withLoss)
-    : LogisticActivation<T>(withLoss)
+    : LogisticActivation(withLoss)
 {
 #if CUDNN_VERSION >= 5000
     CHECK_CUDNN_STATUS(cudnnCreateActivationDescriptor(&mActivationDesc));
@@ -70,36 +70,36 @@ N2D2::LogisticActivation_Frame_CUDA
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(Tensor<T>* data)
+void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(BaseTensor& data)
 {
     if (LogisticActivationDisabled)
         return;
 
-    CudaTensor<T>* cudaData = static_cast<CudaTensor<T>*>(data);
+    CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
-    const T alpha = 1.0f;
-    const T beta = 0.0f;
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
 
     CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
                                               mActivationDesc,
                                               &alpha,
-                                              cudaData->getCudnnTensorDesc(),
-                                              cudaData->getDevicePtr(),
+                                              cudaData.getCudnnTensorDesc(),
+                                              cudaData.getDevicePtr(),
                                               &beta,
-                                              cudaData->getCudnnTensorDesc(),
-                                              cudaData->getDevicePtr()));
+                                              cudaData.getCudnnTensorDesc(),
+                                              cudaData.getDevicePtr()));
 }
 
 template <class T>
 void N2D2::LogisticActivation_Frame_CUDA
-    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
+    <T>::backPropagate(BaseTensor& data, BaseTensor& diffData)
 {
     if (LogisticActivationDisabled)
         return;
 
     if (!this->mWithLoss) {
-        CudaTensor<T>* cudaData = static_cast<CudaTensor<T>*>(data);
-        CudaTensor<T>* cudaDiffData = static_cast<CudaTensor<T>*>(diffData);
+        CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
+        CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
 
         const float alpha = 1.0f;
         const float beta = 0.0f;
@@ -108,15 +108,15 @@ void N2D2::LogisticActivation_Frame_CUDA
             cudnnActivationBackward(CudaContext::cudnnHandle(),
                                     mActivationDesc,
                                     &alpha,
-                                    cudaData->getCudnnTensorDesc(),
-                                    cudaData->getDevicePtr(),
-                                    cudaDiffData->getCudnnTensorDesc(),
-                                    cudaDiffData->getDevicePtr(),
-                                    cudaData->getCudnnTensorDesc(),
-                                    cudaData->getDevicePtr(),
+                                    cudaData.getCudnnTensorDesc(),
+                                    cudaData.getDevicePtr(),
+                                    cudaDiffData.getCudnnTensorDesc(),
+                                    cudaDiffData.getDevicePtr(),
+                                    cudaData.getCudnnTensorDesc(),
+                                    cudaData.getDevicePtr(),
                                     &beta,
-                                    cudaDiffData->getCudnnTensorDesc(),
-                                    cudaDiffData->getDevicePtr()));
+                                    cudaDiffData.getCudnnTensorDesc(),
+                                    cudaDiffData.getDevicePtr()));
     }
 }
 

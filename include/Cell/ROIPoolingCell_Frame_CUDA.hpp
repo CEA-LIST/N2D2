@@ -36,7 +36,7 @@
 
 namespace N2D2 {
 class ROIPoolingCell_Frame_CUDA : public virtual ROIPoolingCell,
-                                  public Cell_Frame_CUDA
+                                  public Cell_Frame_CUDA<Float_T>
 {
 public:
     ROIPoolingCell_Frame_CUDA(const std::string& name,

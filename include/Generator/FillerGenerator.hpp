@@ -27,6 +27,7 @@
 #include "Filler/Filler.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
+#include "Generator/Generator.hpp"
 
 #ifdef WIN32
 // For static library
@@ -48,9 +49,10 @@ namespace N2D2 {
 class FillerGenerator {
 public:
     typedef std::function
-        <std::shared_ptr<Filler<Float_T> >(IniParser& iniConfig,
+        <std::shared_ptr<Filler>(IniParser& iniConfig,
                                            const std::string& section,
-                                           const std::string& name)>
+                                           const std::string& name,
+                                           const DataType& dataType)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -59,10 +61,11 @@ public:
         return rMap;
     }
 
-    static std::shared_ptr<Filler<Float_T> > generate(IniParser& iniConfig,
+    static std::shared_ptr<Filler> generate(IniParser& iniConfig,
                                                       const std::string
                                                       & section,
-                                                      const std::string& name);
+                                                      const std::string& name,
+                                                      const DataType& dataType);
 };
 }
 

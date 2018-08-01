@@ -24,12 +24,20 @@ N2D2::Registrar<N2D2::FillerGenerator>
 N2D2::ConstantFillerGenerator::mRegistrar(
     "ConstantFiller", N2D2::ConstantFillerGenerator::generate);
 
-std::shared_ptr<N2D2::ConstantFiller<N2D2::Float_T> >
+std::shared_ptr<N2D2::Filler>
 N2D2::ConstantFillerGenerator::generate(IniParser& iniConfig,
                                         const std::string& /*section*/,
-                                        const std::string& name)
+                                        const std::string& name,
+                                        const DataType& dataType)
 {
-    const Float_T value = iniConfig.getProperty<Float_T>(name + ".Value");
+    if (dataType == Float32) {
+        const float value = iniConfig.getProperty<float>(name + ".Value");
 
-    return std::make_shared<ConstantFiller<Float_T> >(value);
+        return std::make_shared<ConstantFiller<float> >(value);
+    }
+    else {
+        const double value = iniConfig.getProperty<double>(name + ".Value");
+
+        return std::make_shared<ConstantFiller<double> >(value);
+    }
 }

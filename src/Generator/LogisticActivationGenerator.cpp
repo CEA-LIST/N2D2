@@ -22,19 +22,22 @@
 
 N2D2::Registrar<N2D2::ActivationGenerator>
 N2D2::LogisticActivationGenerator::mRegistrar(
-    N2D2::LogisticActivationGenerator::generate,
-    "Logistic",
-    "LogisticWithLoss",
-    NULL);
+    {"Logistic",
+    "LogisticWithLoss"},
+    N2D2::LogisticActivationGenerator::generate);
 
-std::shared_ptr<N2D2::LogisticActivation<N2D2::Float_T> >
-N2D2::LogisticActivationGenerator::generate(IniParser& iniConfig,
-                                            const std::string& /*section*/,
-                                            const std::string& model,
-                                            const std::string& name)
+std::shared_ptr<N2D2::LogisticActivation>
+N2D2::LogisticActivationGenerator::generate(
+    IniParser& iniConfig,
+    const std::string& /*section*/,
+    const std::string& model,
+    const DataType& dataType,
+    const std::string& name)
 {
     const std::string type = iniConfig.getProperty<std::string>(name);
     const bool withLoss = (type == "LogisticWithLoss");
 
-    return Registrar<LogisticActivation<Float_T> >::create(model)(withLoss);
+    return (dataType == Float32)
+            ? Registrar<LogisticActivation>::create<float>(model)(withLoss)
+            : Registrar<LogisticActivation>::create<double>(model)(withLoss);
 }

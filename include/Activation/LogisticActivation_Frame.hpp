@@ -25,63 +25,67 @@
 
 namespace N2D2 {
 template <class T>
-class LogisticActivation_Frame : public LogisticActivation<T> {
+class LogisticActivation_Frame : public LogisticActivation {
 public:
-    static std::shared_ptr<LogisticActivation<T> > create(bool withLoss = false)
+    static std::shared_ptr<LogisticActivation> create(bool withLoss = false)
     {
         return std::make_shared<LogisticActivation_Frame<T> >(withLoss);
     }
 
     LogisticActivation_Frame(bool withLoss = false);
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    virtual void propagate(BaseTensor& data);
+    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~LogisticActivation_Frame() {};
 
 private:
-    static Registrar<LogisticActivation<T> > mRegistrar;
+    static Registrar<LogisticActivation> mRegistrar;
 };
 }
 
 template <class T>
 N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
-    : LogisticActivation<T>(withLoss)
+    : LogisticActivation(withLoss)
 {
     // ctor
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame<T>::propagate(Tensor<T>* data)
+void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData)
 {
     if (LogisticActivationDisabled)
         return;
 
-#pragma omp parallel for if (data->size() > 1024)
-    for (int index = 0; index < (int)data->size(); ++index){
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+
+#pragma omp parallel for if (data.size() > 1024)
+    for (int index = 0; index < (int)data.size(); ++index){
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         const int excepts = fegetexcept();
         fedisableexcept(FE_OVERFLOW);
 #endif
 
-        (*data)(index) = 1.0f / (1.0f + std::exp(-(*data)(index)));
+        data(index) = 1.0f / (1.0f + std::exp(-data(index)));
 
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
 #endif
     }
-
 }
 
 template <class T>
 void N2D2::LogisticActivation_Frame
-    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
+    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
 {
     if (LogisticActivationDisabled)
         return;
 
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
     if (!this->mWithLoss) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= (*data)(index) * (1.0f - (*data)(index));
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)diffData.size(); ++index)
+            diffData(index) *= data(index) * (1.0f - data(index));
     }
 }
 

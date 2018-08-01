@@ -20,21 +20,25 @@
 
 #include "Generator/SolverGenerator.hpp"
 
-std::shared_ptr<N2D2::Solver<N2D2::Float_T> >
+std::shared_ptr<N2D2::Solver>
 N2D2::SolverGenerator::generate(IniParser& iniConfig,
                                 const std::string& section,
                                 const std::string& model,
+                                const DataType& dataType,
                                 const std::string& name,
                                 const std::shared_ptr
-                                <Solver<Float_T> >& defaultSolver)
+                                <Solver>& defaultSolver)
 {
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
     if (iniConfig.isProperty(name)) {
         const std::string type = iniConfig.getProperty<std::string>(name);
-        return Registrar
-            <SolverGenerator>::create(type)(iniConfig, section, model, name);
+        return Registrar<SolverGenerator>::create(type)(iniConfig,
+                                                        section,
+                                                        model,
+                                                        dataType,
+                                                        name);
     } else
         return defaultSolver;
 }

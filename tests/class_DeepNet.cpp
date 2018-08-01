@@ -53,7 +53,7 @@ TEST(DeepNet, addCell)
     Network net;
     DeepNet deepNet(net);
 
-    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame("conv",
+    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>("conv",
                                         std::vector<unsigned int>{5, 5}, 10));
     deepNet.addCell(convCell, std::vector<std::shared_ptr<Cell> >(1));
 
@@ -71,7 +71,7 @@ TEST(DeepNet, addCell_bis)
     Network net;
     DeepNet deepNet(net);
 
-    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame("conv",
+    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>("conv",
                                         std::vector<unsigned int>{5, 5}, 10));
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 10));
     deepNet.addCell(convCell, std::vector<std::shared_ptr<Cell> >(1));
@@ -94,7 +94,7 @@ TEST(DeepNet, addCell_ter)
     Network net;
     DeepNet deepNet(net);
 
-    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame("conv",
+    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>("conv",
                                         std::vector<unsigned int>{5, 5}, 10));
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 10));
     deepNet.addCell(convCell, std::vector<std::shared_ptr<Cell> >(1));

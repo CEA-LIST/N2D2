@@ -28,19 +28,19 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-template <class T> class TanhActivation_Frame_CUDA : public TanhActivation<T> {
+template <class T> class TanhActivation_Frame_CUDA : public TanhActivation {
 public:
-    static std::shared_ptr<TanhActivation<T> > create()
+    static std::shared_ptr<TanhActivation> create()
     {
         return std::make_shared<TanhActivation_Frame_CUDA<T> >();
     }
 
     TanhActivation_Frame_CUDA();
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    inline virtual void propagate(BaseTensor& data);
+    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~TanhActivation_Frame_CUDA();
 
-    using TanhActivation<T>::mAlpha;
+    using TanhActivation::mAlpha;
 
 protected:
 #if CUDNN_VERSION >= 5000
@@ -50,7 +50,7 @@ protected:
 #endif
 
 private:
-    static Registrar<TanhActivation<T> > mRegistrar;
+    static Registrar<TanhActivation> mRegistrar;
 };
 }
 
@@ -66,19 +66,30 @@ N2D2::TanhActivation_Frame_CUDA<T>::TanhActivation_Frame_CUDA()
 #endif
 }
 
-namespace N2D2 {
-template <>
-void TanhActivation_Frame_CUDA<float>::propagate(Tensor<float>* data);
-template <>
-void TanhActivation_Frame_CUDA<double>::propagate(Tensor<double>* data);
+template <class T>
+void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data)
+{
+    CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
+
+    const double alpha = mAlpha;
+    const double beta = 0.0f;
+
+    CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
+                                              mActivationDesc,
+                                              &alpha,
+                                              cudaData.getCudnnTensorDesc(),
+                                              cudaData.getDevicePtr(),
+                                              &beta,
+                                              cudaData.getCudnnTensorDesc(),
+                                              cudaData.getDevicePtr()));
 }
 
 template <class T>
 void N2D2::TanhActivation_Frame_CUDA
-    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
+    <T>::backPropagate(BaseTensor& data, BaseTensor& diffData)
 {
-    CudaTensor<T>* cudaData = static_cast<CudaTensor<T>*>(data);
-    CudaTensor<T>* cudaDiffData = static_cast<CudaTensor<T>*>(diffData);
+    CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
+    CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
 
     const float alpha = mAlpha;
     const float beta = 0.0f;
@@ -87,15 +98,15 @@ void N2D2::TanhActivation_Frame_CUDA
         cudnnActivationBackward(CudaContext::cudnnHandle(),
                                 mActivationDesc,
                                 &alpha,
-                                cudaData->getCudnnTensorDesc(),
-                                cudaData->getDevicePtr(),
-                                cudaDiffData->getCudnnTensorDesc(),
-                                cudaDiffData->getDevicePtr(),
-                                cudaData->getCudnnTensorDesc(),
-                                cudaData->getDevicePtr(),
+                                cudaData.getCudnnTensorDesc(),
+                                cudaData.getDevicePtr(),
+                                cudaDiffData.getCudnnTensorDesc(),
+                                cudaDiffData.getDevicePtr(),
+                                cudaData.getCudnnTensorDesc(),
+                                cudaData.getDevicePtr(),
                                 &beta,
-                                cudaDiffData->getCudnnTensorDesc(),
-                                cudaDiffData->getDevicePtr()));
+                                cudaDiffData.getCudnnTensorDesc(),
+                                cudaDiffData.getDevicePtr()));
 }
 
 template <class T>

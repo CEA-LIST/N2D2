@@ -369,7 +369,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
-    const Tensor<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -515,7 +515,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
-    const Tensor<Float_T>& out = pool1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
         for (unsigned int output = 0; output < nbOutputs; ++output) {

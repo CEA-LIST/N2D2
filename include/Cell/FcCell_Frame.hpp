@@ -26,17 +26,17 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-class FcCell_Frame : public virtual FcCell, public Cell_Frame {
+class FcCell_Frame : public virtual FcCell, public Cell_Frame<Float_T> {
 public:
     FcCell_Frame(const std::string& name,
                  unsigned int nbOutputs,
-                 const std::shared_ptr<Activation<Float_T> >& activation
+                 const std::shared_ptr<Activation>& activation
                  = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<FcCell> create(Network& /*net*/,
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
-                                          <Activation<Float_T> >& activation
+                                          <Activation>& activation
                                           = std::make_shared
                                           <TanhActivation_Frame<Float_T> >())
     {
@@ -75,7 +75,7 @@ protected:
     Parameter<double> mDropConnect;
 
     // Internal
-    std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
+    std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     Interface<Float_T> mSynapses;
     Tensor<Float_T> mBias;
     Interface<Float_T> mDiffSynapses;

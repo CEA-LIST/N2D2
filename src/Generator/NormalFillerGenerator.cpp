@@ -24,13 +24,24 @@ N2D2::Registrar<N2D2::FillerGenerator>
 N2D2::NormalFillerGenerator::mRegistrar("NormalFiller",
                                         N2D2::NormalFillerGenerator::generate);
 
-std::shared_ptr<N2D2::NormalFiller<N2D2::Float_T> >
+std::shared_ptr<N2D2::Filler>
 N2D2::NormalFillerGenerator::generate(IniParser& iniConfig,
                                       const std::string& /*section*/,
-                                      const std::string& name)
+                                      const std::string& name,
+                                      const DataType& dataType)
 {
-    const double mean = iniConfig.getProperty<double>(name + ".Mean", 0.0);
-    const double stdDev = iniConfig.getProperty<double>(name + ".StdDev", 1.0);
+    if (dataType == Float32) {
+        const float mean = iniConfig.getProperty<float>(name + ".Mean", 0.0f);
+        const float stdDev = iniConfig.getProperty<float>(name + ".StdDev",
+                                                          1.0f);
 
-    return std::make_shared<NormalFiller<Float_T> >(mean, stdDev);
+        return std::make_shared<NormalFiller<float> >(mean, stdDev);
+    }
+    else {
+        const double mean = iniConfig.getProperty<double>(name + ".Mean", 0.0);
+        const double stdDev = iniConfig.getProperty<double>(name + ".StdDev",
+                                                            1.0);
+
+        return std::make_shared<NormalFiller<double> >(mean, stdDev);
+    }
 }

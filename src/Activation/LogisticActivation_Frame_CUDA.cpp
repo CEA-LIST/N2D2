@@ -23,14 +23,23 @@
 #include "Activation/LogisticActivation_Frame_CUDA.hpp"
 
 template <>
-N2D2::Registrar<N2D2::LogisticActivation<N2D2::Float_T> >
-N2D2::LogisticActivation_Frame_CUDA
-    <N2D2::Float_T>::mRegistrar(N2D2::LogisticActivation_Frame_CUDA
-                                <N2D2::Float_T>::create,
-                                "Frame_CUDA",
-                                "Transcode_CUDA",
-                                "CSpike_CUDA",
-                                "CSpike_BP_CUDA",
-                                NULL);
+N2D2::Registrar<N2D2::LogisticActivation>
+N2D2::LogisticActivation_Frame_CUDA<float>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::LogisticActivation_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::LogisticActivation>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::LogisticActivation>
+N2D2::LogisticActivation_Frame_CUDA<double>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::LogisticActivation_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::LogisticActivation>::Type<double>());
 
 #endif

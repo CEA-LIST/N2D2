@@ -40,13 +40,13 @@ public:
     FcCell_Transcode(Network& net,
                      const std::string& name,
                      unsigned int nbOutputs,
-                     const std::shared_ptr<Activation<Float_T> >& activation
+                     const std::shared_ptr<Activation>& activation
                      = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<FcCell> create(Network& net,
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
-                                          <Activation<Float_T> >& activation
+                                          <Activation>& activation
                                           = std::make_shared
                                           <TanhActivation_Frame<Float_T> >())
     {
@@ -133,7 +133,7 @@ N2D2::FcCell_Transcode
                                      const std::string& name,
                                      unsigned int nbOutputs,
                                      const std::shared_ptr
-                                     <Activation<Float_T> >& activation)
+                                     <Activation>& activation)
     : Cell(name, nbOutputs),
       FcCell(name, nbOutputs),
       FRAME(name, nbOutputs, activation),
@@ -237,7 +237,7 @@ void N2D2::FcCell_Transcode
         throw std::runtime_error(
             "Could not save spike coding compare data file.");
 
-    const Tensor<Float_T>& outputs = FRAME::getOutputs();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(FRAME::getOutputs());
     Float_T minSignal = 0.0;
     Float_T maxSignal = 1.0;
     int minActivity = 0;

@@ -20,13 +20,14 @@
 
 #include "Generator/ActivationGenerator.hpp"
 
-std::shared_ptr<N2D2::Activation<N2D2::Float_T> >
+std::shared_ptr<N2D2::Activation>
 N2D2::ActivationGenerator::generate(IniParser& iniConfig,
                                     const std::string& section,
                                     const std::string& model,
+                                    const DataType& dataType,
                                     const std::string& name,
                                     const std::shared_ptr
-                                    <Activation<Float_T> >& defaultActivation)
+                                    <Activation>& defaultActivation)
 {
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
@@ -35,10 +36,10 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
         const std::string type = iniConfig.getProperty<std::string>(name);
 
         if (type == "Linear")
-            return std::shared_ptr<Activation<Float_T> >();
+            return std::shared_ptr<Activation>();
         else
             return Registrar<ActivationGenerator>::create(type)(
-                iniConfig, section, model, name);
+                iniConfig, section, model, dataType, name);
     } else
         return defaultActivation;
 }

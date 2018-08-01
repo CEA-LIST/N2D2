@@ -31,6 +31,7 @@
 #include <thrust/fill.h>
 
 #include "CudaUtils.hpp"
+#include "CudaContext.hpp"
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {
@@ -93,6 +94,8 @@ public:
     inline CudaBaseTensor(bool hostBased);
     inline virtual void reserve(std::initializer_list<size_t> dims);
     virtual void reserve(const std::vector<size_t>& dims) = 0;
+    inline virtual void resize(std::initializer_list<size_t> dims);
+    virtual void resize(const std::vector<size_t>& dims) = 0;
     virtual void clear() = 0;
 
     /** Synchronize Device To Host */
@@ -148,16 +151,18 @@ public:
     using Tensor<T>::synchronizeHToD;
     using Tensor<T>::operator=;
     using CudaBaseTensor::reserve;
+    using CudaBaseTensor::resize;
 
     CudaTensor();
-    CudaTensor(Tensor<T>& base);
+    CudaTensor(const Tensor<T>& base);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
     inline void reserve(const std::vector<size_t>& dims);
+    inline void resize(const std::vector<size_t>& dims);
     inline void resize(std::initializer_list<size_t> dims,
-                       const T& value = T());
+                       const T& value);
     inline void resize(const std::vector<size_t>& dims,
-                       const T& value = T());
+                       const T& value);
     inline void assign(std::initializer_list<size_t> dims,
                        const T& value);
     inline void assign(const std::vector<size_t>& dims,
@@ -237,6 +242,11 @@ protected:
     friend CudaTensor<U> cuda_tensor_cast(const CudaBaseTensor& base);
     template <class U>
     friend CudaTensor<U> cuda_tensor_cast_nocopy(const CudaBaseTensor& base);
+};
+
+template <> class CudaTensor<bool> {
+private:
+    CudaTensor();
 };
 
 template <class T>
@@ -336,6 +346,11 @@ void N2D2::CudaBaseTensor::reserve(std::initializer_list<size_t> dims)
     reserve(std::vector<size_t>(dims));
 }
 
+void N2D2::CudaBaseTensor::resize(std::initializer_list<size_t> dims)
+{
+    resize(std::vector<size_t>(dims));
+}
+
 N2D2::CudaBaseDeviceTensor::CudaBaseDeviceTensor(const CudaBaseTensor& base)
     : mCudaBaseTensor(base)
 {
@@ -386,7 +401,7 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
             CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size_ * sizeof(T)));
 
         CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(mTensor,
-                                                      CUDNN_DATA_FLOAT,
+                                                      CudaContext::data_type<T>::value,
                                                       dims.size(),
                                                       &dims[0],
                                                       &strides[0]));
@@ -458,7 +473,7 @@ N2D2::CudaTensor<T>::CudaTensor()
 }
 
 template <typename T>
-N2D2::CudaTensor<T>::CudaTensor(Tensor<T>& base)
+N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base)
     : BaseTensor(base),
       Tensor<T>(base),
       CudaBaseTensor(true)
@@ -504,6 +519,15 @@ void N2D2::CudaTensor<T>::reserve(const std::vector<size_t>& dims)
 {
     assert(mDeviceTensor->isOwner());
     Tensor<T>::reserve(dims);
+
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+}
+
+template <typename T>
+void N2D2::CudaTensor<T>::resize(const std::vector<size_t>& dims)
+{
+    assert(mDeviceTensor->isOwner());
+    Tensor<T>::resize(dims);
 
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
 }

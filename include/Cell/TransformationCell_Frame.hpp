@@ -30,7 +30,7 @@
 
 namespace N2D2 {
 class TransformationCell_Frame : public virtual TransformationCell,
-                                 public Cell_Frame {
+                                 public Cell_Frame<Float_T> {
 public:
     TransformationCell_Frame(const std::string& name,
                              unsigned int nbOutputs,

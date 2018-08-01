@@ -24,51 +24,59 @@
 #include "Activation/TanhActivation.hpp"
 
 namespace N2D2 {
-template <class T> class TanhActivation_Frame : public TanhActivation<T> {
+template <class T> class TanhActivation_Frame : public TanhActivation {
 public:
-    static std::shared_ptr<TanhActivation<T> > create()
+    static std::shared_ptr<TanhActivation> create()
     {
         return std::make_shared<TanhActivation_Frame<T> >();
     }
 
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    virtual void propagate(BaseTensor& data);
+    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~TanhActivation_Frame() {};
 
-    using TanhActivation<T>::mAlpha;
+    using TanhActivation::mAlpha;
 
 private:
-    static Registrar<TanhActivation<T> > mRegistrar;
+    static Registrar<TanhActivation> mRegistrar;
 };
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame<T>::propagate(Tensor<T>* data)
+void N2D2::TanhActivation_Frame<T>::propagate(BaseTensor& baseData)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+
     if (mAlpha != 1.0) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) = std::tanh((T)mAlpha * (*data)(index));
+        const T alpha(mAlpha);
+
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index)
+            data(index) = std::tanh(alpha * data(index));
     } else {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)data->size(); ++index)
-            (*data)(index) = std::tanh((*data)(index));
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index)
+            data(index) = std::tanh(data(index));
     }
 }
 
 template <class T>
 void N2D2::TanhActivation_Frame
-    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
+    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
     if (mAlpha != 1.0) {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= (T)mAlpha
-                                  * (1.0f - (*data)(index) * (*data)(index));
+        const T alpha(mAlpha);
+
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)diffData.size(); ++index)
+            diffData(index) *= alpha * (1.0f - data(index) * data(index));
     } else {
-#pragma omp parallel for if (data->size() > 1024)
-        for (int index = 0; index < (int)diffData->size(); ++index)
-            (*diffData)(index) *= (1.0f - (*data)(index) * (*data)(index));
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)diffData.size(); ++index)
+            diffData(index) *= (1.0f - data(index) * data(index));
     }
 }
 

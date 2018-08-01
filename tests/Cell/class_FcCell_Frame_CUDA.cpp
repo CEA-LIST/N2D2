@@ -33,7 +33,7 @@ public:
     FcCell_Frame_Test_CUDA(const std::string& name,
                            unsigned int nbOutputs,
                            const std::shared_ptr
-                           <Activation<Float_T> >& activation)
+                           <Activation>& activation)
         : Cell(name, nbOutputs),
           FcCell(name, nbOutputs),
           FcCell_Frame_CUDA(name, nbOutputs, activation) {};
@@ -174,7 +174,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
     Network net;
 
     FcCell_Frame_Test_CUDA fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -210,7 +210,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
 
     fc1.propagate();
 
-    const Tensor<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
     ASSERT_EQUALS(out.dimX(), 1U);
@@ -247,7 +247,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
     Network net;
 
     FcCell_Frame_Test_CUDA fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -293,7 +293,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
         }
     }
 
-    const Tensor<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
     ASSERT_EQUALS(out.dimX(), fc1.getOutputsWidth());
@@ -329,7 +329,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test_CUDA fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(
@@ -348,7 +348,7 @@ TEST_DATASET(FcCell_Frame_CUDA,
 
     fc1.propagate();
 
-    const Tensor<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
     ASSERT_EQUALS(out.dimX(), 1U);

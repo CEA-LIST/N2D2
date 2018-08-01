@@ -27,12 +27,12 @@
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
-template <class T> class Activation : public Parameterizable {
+class Activation : public Parameterizable {
 public:
-    Activation();
+    inline Activation();
     virtual const char* getType() const = 0;
-    virtual void propagate(Tensor<T>* data) = 0;
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData) = 0;
+    virtual void propagate(BaseTensor& data) = 0;
+    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData) = 0;
     virtual ~Activation() {};
 
 protected:
@@ -41,8 +41,7 @@ protected:
 };
 }
 
-template <class T>
-N2D2::Activation<T>::Activation()
+N2D2::Activation::Activation()
     : mShifting(this, "Shifting", 0)
 {
     // ctor

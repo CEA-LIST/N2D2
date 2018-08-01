@@ -61,7 +61,7 @@ public:
                                    const std::vector<unsigned int>&,
                                    const std::vector<unsigned int>&,
                                    Pooling,
-                                   const std::shared_ptr<Activation<Float_T> >&
+                                   const std::shared_ptr<Activation>&
                                        activation)> RegistryCreate_T;
 
     static RegistryMap_T& registry()

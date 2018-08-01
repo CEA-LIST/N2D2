@@ -27,21 +27,21 @@
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
-template <class T> class Solver : public Parameterizable {
+class Solver : public Parameterizable {
 public:
-    virtual void update(Tensor<T>* data,
-                        Tensor<T>* diffData,
+    virtual void update(BaseTensor& data,
+                        BaseTensor& diffData,
                         unsigned int batchSize) = 0;
     virtual void exportFreeParameters(const std::string& fileName) const = 0;
-    std::shared_ptr<Solver<T> > clone() const
+    std::shared_ptr<Solver> clone() const
     {
-        return std::shared_ptr<Solver<T> >(doClone());
+        return std::shared_ptr<Solver>(doClone());
     }
     virtual bool isNewIteration() const = 0;
     virtual ~Solver() {};
 
 private:
-    virtual Solver<T>* doClone() const = 0;
+    virtual Solver* doClone() const = 0;
 };
 }
 

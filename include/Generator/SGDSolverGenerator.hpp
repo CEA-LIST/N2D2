@@ -28,10 +28,11 @@
 namespace N2D2 {
 class SGDSolverGenerator : public SolverGenerator {
 public:
-    static std::shared_ptr<SGDSolver<Float_T> >
+    static std::shared_ptr<SGDSolver>
     generate(IniParser& iniConfig,
              const std::string& section,
              const std::string& model,
+             const DataType& dataType,
              const std::string& name);
 
 private:

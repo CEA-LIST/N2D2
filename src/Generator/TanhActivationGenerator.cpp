@@ -22,22 +22,25 @@
 
 N2D2::Registrar<N2D2::ActivationGenerator>
 N2D2::TanhActivationGenerator::mRegistrar(
-    N2D2::TanhActivationGenerator::generate, "Tanh", "TanhLeCun", NULL);
+    {"Tanh", "TanhLeCun"}, N2D2::TanhActivationGenerator::generate);
 
-std::shared_ptr<N2D2::TanhActivation<N2D2::Float_T> >
+std::shared_ptr<N2D2::TanhActivation>
 N2D2::TanhActivationGenerator::generate(IniParser& iniConfig,
                                         const std::string& /*section*/,
                                         const std::string& model,
+                                        const DataType& dataType,
                                         const std::string& name)
 {
-    std::shared_ptr<TanhActivation<Float_T> > activation = Registrar
-        <TanhActivation<Float_T> >::create(model)();
+    std::shared_ptr<TanhActivation> activation
+        = (dataType == Float32)
+            ? Registrar<TanhActivation>::create<float>(model)()
+            : Registrar<TanhActivation>::create<double>(model)();
 
     const std::string type = iniConfig.getProperty<std::string>(name);
     const bool leCun = (type == "TanhLeCun");
 
     if (leCun)
-        activation->setParameter("Alpha", TanhActivation<Float_T>::AlphaLeCun);
+        activation->setParameter("Alpha", TanhActivation::AlphaLeCun);
     else
         activation->setParameter("Alpha",
                                  iniConfig.getProperty(name + ".Alpha", 1.0));

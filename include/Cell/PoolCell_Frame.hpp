@@ -26,7 +26,7 @@
 #include "PoolCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
-class PoolCell_Frame : public virtual PoolCell, public Cell_Frame {
+class PoolCell_Frame : public virtual PoolCell, public Cell_Frame<Float_T> {
 public:
     PoolCell_Frame(const std::string& name,
                    const std::vector<unsigned int>& poolDims,
@@ -36,8 +36,8 @@ public:
                    const std::vector<unsigned int>& paddingDims
                       = std::vector<unsigned int>(2, 0),
                    Pooling pooling = Max,
-                   const std::shared_ptr<Activation<Float_T> >& activation
-                   = std::shared_ptr<Activation<Float_T> >());
+                   const std::shared_ptr<Activation>& activation
+                   = std::shared_ptr<Activation>());
     static std::shared_ptr<PoolCell> create(Network& /*net*/,
         const std::string& name,
         const std::vector<unsigned int>& poolDims,
@@ -47,8 +47,8 @@ public:
         const std::vector<unsigned int>& paddingDims
             = std::vector<unsigned int>(2, 0),
         Pooling pooling = Max,
-        const std::shared_ptr<Activation<Float_T> >& activation
-            = std::shared_ptr<Activation<Float_T> >())
+        const std::shared_ptr<Activation>& activation
+            = std::shared_ptr<Activation>())
     {
         return std::make_shared<PoolCell_Frame>(name,
                                                 poolDims,

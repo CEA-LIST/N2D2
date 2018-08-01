@@ -25,15 +25,15 @@
 #include "ElemWiseCell.hpp"
 
 namespace N2D2 {
-class ElemWiseCell_Frame : public virtual ElemWiseCell, public Cell_Frame {
+class ElemWiseCell_Frame : public virtual ElemWiseCell, public Cell_Frame<Float_T> {
 public:
     ElemWiseCell_Frame(const std::string& name,
                    unsigned int nbOutputs,
                    Operation operation = Sum,
                    const std::vector<Float_T>& weights = std::vector<Float_T>(),
                    const std::vector<Float_T>& shifts = std::vector<Float_T>(),
-                   const std::shared_ptr<Activation<Float_T> >& activation
-                   = std::shared_ptr<Activation<Float_T> >());
+                   const std::shared_ptr<Activation>& activation
+                   = std::shared_ptr<Activation>());
     static std::shared_ptr<ElemWiseCell> create(Network& /*net*/,
                                             const std::string& name,
                                             unsigned int nbOutputs,
@@ -43,9 +43,9 @@ public:
                                             const std::vector<Float_T>& shifts
                                             = std::vector<Float_T>(),
                                             const std::shared_ptr
-                                            <Activation<Float_T> >& activation
+                                            <Activation>& activation
                                             = std::shared_ptr
-                                            <Activation<Float_T> >())
+                                            <Activation>())
     {
         return std::make_shared<ElemWiseCell_Frame>(name,
                                                 nbOutputs,

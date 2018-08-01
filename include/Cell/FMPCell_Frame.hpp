@@ -25,21 +25,21 @@
 #include "FMPCell.hpp"
 
 namespace N2D2 {
-class FMPCell_Frame : public virtual FMPCell, public Cell_Frame {
+class FMPCell_Frame : public virtual FMPCell, public Cell_Frame<Float_T> {
 public:
     FMPCell_Frame(const std::string& name,
                   double scalingRatio,
                   unsigned int nbOutputs,
-                  const std::shared_ptr<Activation<Float_T> >& activation
-                  = std::shared_ptr<Activation<Float_T> >());
+                  const std::shared_ptr<Activation>& activation
+                  = std::shared_ptr<Activation>());
     static std::shared_ptr<FMPCell> create(Network& /*net*/,
                                            const std::string& name,
                                            double scalingRatio,
                                            unsigned int nbOutputs,
                                            const std::shared_ptr
-                                           <Activation<Float_T> >& activation
+                                           <Activation>& activation
                                            = std::shared_ptr
-                                           <Activation<Float_T> >())
+                                           <Activation>())
     {
         return std::make_shared
             <FMPCell_Frame>(name, scalingRatio, nbOutputs, activation);

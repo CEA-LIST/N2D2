@@ -48,8 +48,8 @@ public:
            const std::vector<unsigned int>& paddingDims
               = std::vector<unsigned int>(2, 0),
            Pooling pooling = Max,
-           const std::shared_ptr<Activation<Float_T> >& /*activation*/
-           = std::shared_ptr<Activation<Float_T> >())
+           const std::shared_ptr<Activation>& /*activation*/
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared<PoolCell_Spike>(net,
                                                 name,

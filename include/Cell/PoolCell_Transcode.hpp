@@ -47,8 +47,8 @@ public:
                        const std::vector<unsigned int>& paddingDims
                           = std::vector<unsigned int>(2, 0),
                        PoolCell::Pooling pooling = PoolCell::Max,
-                       const std::shared_ptr<Activation<Float_T> >& activation
-                       = std::shared_ptr<Activation<Float_T> >());
+                       const std::shared_ptr<Activation>& activation
+                       = std::shared_ptr<Activation>());
     static std::shared_ptr<PoolCell>
     create(Network& net,
            const std::string& name,
@@ -59,8 +59,8 @@ public:
            const std::vector<unsigned int>& paddingDims
               = std::vector<unsigned int>(2, 0),
            PoolCell::Pooling pooling = PoolCell::Max,
-           const std::shared_ptr<Activation<Float_T> >& activation
-           = std::shared_ptr<Activation<Float_T> >())
+           const std::shared_ptr<Activation>& activation
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared<PoolCell_Transcode>(net,
                                                     name,
@@ -112,7 +112,7 @@ N2D2::PoolCell_Transcode
            const std::vector<unsigned int>& strideDims,
            const std::vector<unsigned int>& paddingDims,
            PoolCell::Pooling pooling,
-           const std::shared_ptr<Activation<Float_T> >& activation)
+           const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       PoolCell(name,
                poolDims,
@@ -241,7 +241,7 @@ void N2D2::PoolCell_Transcode
         = (unsigned int)((PoolCell::mInputsDims[1] - PoolCell::mPoolDims[1]
                           + PoolCell::mStrideDims[1]) / (double)PoolCell::mStrideDims[1]);
 
-    const Tensor<Float_T>& outputs = FRAME::getOutputs();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(FRAME::getOutputs());
     std::vector<Float_T> minVal(PoolCell::getNbOutputs());
     std::vector<Float_T> maxVal(PoolCell::getNbOutputs());
 

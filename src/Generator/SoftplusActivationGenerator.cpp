@@ -24,11 +24,15 @@ N2D2::Registrar<N2D2::ActivationGenerator>
 N2D2::SoftplusActivationGenerator::mRegistrar(
     "Softplus", N2D2::SoftplusActivationGenerator::generate);
 
-std::shared_ptr<N2D2::SoftplusActivation<N2D2::Float_T> >
-N2D2::SoftplusActivationGenerator::generate(IniParser& /*iniConfig*/,
-                                            const std::string& /*section*/,
-                                            const std::string& model,
-                                            const std::string& /*name*/)
+std::shared_ptr<N2D2::SoftplusActivation>
+N2D2::SoftplusActivationGenerator::generate(
+    IniParser& /*iniConfig*/,
+    const std::string& /*section*/,
+    const std::string& model,
+    const DataType& dataType,
+    const std::string& /*name*/)
 {
-    return Registrar<SoftplusActivation<Float_T> >::create(model)();
+    return (dataType == Float32)
+            ? Registrar<SoftplusActivation>::create<float>(model)()
+            : Registrar<SoftplusActivation>::create<double>(model)();
 }

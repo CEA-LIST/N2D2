@@ -34,7 +34,7 @@
 
 namespace N2D2 {
 class DropoutCell_Frame_CUDA : public virtual DropoutCell,
-                               public Cell_Frame_CUDA {
+                               public Cell_Frame_CUDA<Float_T> {
 public:
     DropoutCell_Frame_CUDA(const std::string& name, unsigned int nbOutputs);
     static std::shared_ptr<DropoutCell> create(const std::string& name,

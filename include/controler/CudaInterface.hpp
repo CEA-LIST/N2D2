@@ -51,11 +51,11 @@ class CudaInterface : public Interface<T, STACKING_DIM> {
 public:
     typedef typename cuda_tensor_t<T>::type cuda_tensor_type;
 
-    //using Interface<T, STACKING_DIM>::push_back;
-
     CudaInterface();
+    template <class U> CudaInterface(const CudaInterface<U, STACKING_DIM>&
+                                        interface);
 
-    template <class U> void push_back(Tensor<U>* tensor);
+    void push_back(typename Interface<T, STACKING_DIM>::tensor_type* tensor);
 
     /**
     * Add a CudaTensor to the interface
@@ -97,24 +97,32 @@ template <class T, int STACKING_DIM>
 N2D2::CudaInterface<T, STACKING_DIM>::CudaInterface()
     : Interface<T, STACKING_DIM>()
 {
-
+    // ctor
 }
 
 template <class T, int STACKING_DIM>
 template <class U>
-void N2D2::CudaInterface<T, STACKING_DIM>::push_back(Tensor<U>* tensor)
+N2D2::CudaInterface<T, STACKING_DIM>::CudaInterface(
+    const CudaInterface<U, STACKING_DIM>& interface)
+    : Interface<T, STACKING_DIM>(interface)
 {
-    CudaTensor<U>* cudaTensor = dynamic_cast<CudaTensor<U>*>(tensor);
-
-    if (cudaTensor != NULL)
-        Interface<T, STACKING_DIM>::push_back(tensor);
-    else
-        Interface<T, STACKING_DIM>::push_back(new CudaTensor<U>(*tensor));
+    // copy-ctor
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::push_back(
-    cuda_tensor_type* tensor)
+    typename Interface<T, STACKING_DIM>::tensor_type* tensor)
+{
+    cuda_tensor_type* cudaTensor = dynamic_cast<cuda_tensor_type*>(tensor);
+
+    if (cudaTensor != NULL)
+        Interface<T, STACKING_DIM>::push_back(tensor);
+    else
+        Interface<T, STACKING_DIM>::push_back(tensor->newCuda());
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::CudaInterface<T, STACKING_DIM>::push_back(cuda_tensor_type* tensor)
 {
     Interface<T, STACKING_DIM>::push_back(tensor);
 }

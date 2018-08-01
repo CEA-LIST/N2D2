@@ -36,7 +36,7 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class PaddingCell_Frame_CUDA : public virtual PaddingCell, public Cell_Frame_CUDA {
+class PaddingCell_Frame_CUDA : public virtual PaddingCell, public Cell_Frame_CUDA<Float_T> {
 public:
     PaddingCell_Frame_CUDA(const std::string& name,
                            unsigned int nbOutputs,

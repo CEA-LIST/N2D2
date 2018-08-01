@@ -36,6 +36,7 @@
 #include "controler/CudaInterface.hpp"
 
 namespace N2D2 {
+template <class T>
 class Cell_Frame_CUDA : public virtual Cell, public Cell_Frame_Top {
 public:
     /**
@@ -48,8 +49,8 @@ public:
     */
     Cell_Frame_CUDA(const std::string& name,
                     unsigned int nbOutputs,
-                    const std::shared_ptr<Activation<Float_T> >& activation
-                    = std::shared_ptr<Activation<Float_T> >());
+                    const std::shared_ptr<Activation>& activation
+                    = std::shared_ptr<Activation>());
 
     /**
      * Manage inputs, in particular the transmission input(i) = output(i-1)
@@ -75,8 +76,8 @@ public:
                           unsigned int y0,
                           unsigned int width = 0,
                           unsigned int height = 0);
-    virtual void addInput(Tensor<Float_T>& inputs,
-                          Tensor<Float_T>& diffOutputs);
+    virtual void addInput(BaseTensor& inputs,
+                          BaseTensor& diffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void setOutputTarget(const Tensor<int>& targets,
@@ -85,12 +86,12 @@ public:
     virtual void setOutputTargets(const Tensor<int>& targets,
                                   double targetVal = 1.0,
                                   double defaultVal = 0.0);
-    virtual void setOutputTargets(const Tensor<Float_T>& targets);
-    virtual void setOutputErrors(const Tensor<Float_T>& errors);
-    virtual CudaTensor<Float_T>& getOutputs();
-    virtual const CudaTensor<Float_T>& getOutputs() const;
-    virtual CudaTensor<Float_T>& getDiffInputs();
-    virtual const CudaTensor<Float_T>& getDiffInputs() const;
+    virtual void setOutputTargets(const BaseTensor& targets);
+    virtual void setOutputErrors(const BaseTensor& errors);
+    virtual CudaBaseTensor& getOutputs();
+    virtual const CudaBaseTensor& getOutputs() const;
+    virtual CudaBaseTensor& getDiffInputs();
+    virtual const CudaBaseTensor& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
     virtual ~Cell_Frame_CUDA();
@@ -107,9 +108,9 @@ protected:
     */
 
     CudaInterface<> mInputs;
-    CudaTensor<Float_T> mOutputs;
+    CudaTensor<T> mOutputs;
 
-    CudaTensor<Float_T> mDiffInputs;
+    CudaTensor<T> mDiffInputs;
     CudaInterface<> mDiffOutputs;
 
 #if CUDNN_VERSION >= 5000

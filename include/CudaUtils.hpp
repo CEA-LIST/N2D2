@@ -32,41 +32,44 @@
 #include <cudnn.h>
 
 #define CHECK_CUDNN_STATUS(status)                                             \
-    {                                                                          \
-        if ((status) != CUDNN_STATUS_SUCCESS) {                                \
+    do {                                                                       \
+        const cudnnStatus_t e = (status);                                      \
+        if (e != CUDNN_STATUS_SUCCESS) {                                       \
             std::stringstream error;                                           \
-            error << "CUDNN failure: " << cudnnGetErrorString(status) << " ("  \
-                  << (int)status << ") in " << __FILE__ << ':' << __LINE__;    \
+            error << "CUDNN failure: " << cudnnGetErrorString(e) << " ("       \
+                  << (int)e << ") in " << __FILE__ << ':' << __LINE__;         \
             std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
         }                                                                      \
-    }
+    } while(0)
 
 #define CHECK_CUDA_STATUS(status)                                              \
-    {                                                                          \
-        if ((status) != cudaSuccess) {                                         \
+    do {                                                                       \
+        const cudaError_t e = (status);                                        \
+        if ((e) != cudaSuccess) {                                              \
             std::stringstream error;                                           \
-            error << "Cuda failure: " << cudaGetErrorString(status) << " ("    \
-                  << (int)status << ") in " << __FILE__ << ':' << __LINE__;    \
+            error << "Cuda failure: " << cudaGetErrorString(e) << " ("         \
+                  << (int)e << ") in " << __FILE__ << ':' << __LINE__;         \
             std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
         }                                                                      \
-    }
+    } while(0)
 
 #define CHECK_CUBLAS_STATUS(status)                                            \
-    {                                                                          \
-        if ((status) != CUBLAS_STATUS_SUCCESS) {                               \
+    do {                                                                       \
+        const cublasStatus_t e = (status);                                     \
+        if (e != CUBLAS_STATUS_SUCCESS) {                                      \
             std::stringstream error;                                           \
             error << "Cublas failure: "                                        \
-                  << N2D2::Cuda::cublasGetErrorString(status) << " ("          \
-                  << (int)status << ") in " << __FILE__ << ':' << __LINE__;    \
+                  << N2D2::Cuda::cublasGetErrorString(e) << " ("               \
+                  << (int)e << ") in " << __FILE__ << ':' << __LINE__;         \
             std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
         }                                                                      \
-    }
+    } while(0)
 
 namespace N2D2 {
 namespace Cuda {

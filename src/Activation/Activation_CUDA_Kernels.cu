@@ -36,7 +36,7 @@ __global__ void cudaSRectifier_propagate_kernel(float* x,
         else if (shifting < 0)
             x[i] *= (1 << (-shifting));
 
-        if (clipping > 0.0)
+        if (clipping > 0.0f)
             x[i] = (x[i] > 0.0f) ? min(x[i], clipping) : leakSlope * x[i];
         else
             x[i] = (x[i] > 0.0f) ? x[i] : leakSlope * x[i];

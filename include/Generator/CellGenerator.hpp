@@ -22,6 +22,7 @@
 #define N2D2_CELLGENERATOR_H
 
 #include "Cell/Cell.hpp"
+#include "Generator/Generator.hpp"
 #include "Generator/ActivationGenerator.hpp"
 #include "Generator/SolverGenerator.hpp"
 #include "Generator/TanhActivationGenerator.hpp"
@@ -97,6 +98,7 @@ public:
     }
 
     static std::string mDefaultModel;
+    static DataType mDefaultDataType;
 
     static std::shared_ptr<Cell> generate(Network& network,
                                           StimuliProvider& sp,

@@ -102,7 +102,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     padding1.propagate();
 
 
-    const Tensor<Float_T>& outputs1 = padding1.getOutputs();
+    const Tensor<Float_T>& outputs1 = tensor_cast<Float_T>(padding1.getOutputs());
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int output = 0; output < inputs.dimZ(); ++output) {
@@ -185,7 +185,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     padding1.propagate();
 
 
-    const Tensor<Float_T>& outputs1 = padding1.getOutputs();
+    const Tensor<Float_T>& outputs1 = tensor_cast<Float_T>(padding1.getOutputs());
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int output = 0; output < inputsA.dimZ(); ++output) {

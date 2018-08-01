@@ -29,7 +29,7 @@ N2D2::DeconvCell_Frame::DeconvCell_Frame(const std::string& name,
                                  const std::vector<unsigned int>& strideDims,
                                  const std::vector<int>& paddingDims,
                                  const std::shared_ptr
-                                         <Activation<Float_T> >& activation)
+                                         <Activation>& activation)
     : Cell(name, nbOutputs),
       DeconvCell(name,
                  kernelDims,
@@ -150,7 +150,7 @@ void N2D2::DeconvCell_Frame::propagate(bool /*inference*/)
 
         const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
 
-        ConvCell_Frame_Kernels::backwardData(&alpha,
+        ConvCell_Frame_Kernels::backwardData<Float_T>(&alpha,
                                              mSharedSynapses[k],
                                              input,
                                              mConvDesc,
@@ -163,7 +163,7 @@ void N2D2::DeconvCell_Frame::propagate(bool /*inference*/)
     }
 
     if (!mNoBias)
-        ConvCell_Frame_Kernels::forwardBias(&alpha, (*mBias), &alpha, mOutputs);
+        ConvCell_Frame_Kernels::forwardBias<Float_T>(&alpha, (*mBias), &alpha, mOutputs);
 
     Cell_Frame::propagate();
     mDiffInputs.clearValid();
@@ -183,7 +183,7 @@ void N2D2::DeconvCell_Frame::backPropagate()
 
         const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
 
-        ConvCell_Frame_Kernels::backwardFilter(&alpha,
+        ConvCell_Frame_Kernels::backwardFilter<Float_T>(&alpha,
                                                mDiffInputs,
                                                input,
                                                mConvDesc,
@@ -198,7 +198,7 @@ void N2D2::DeconvCell_Frame::backPropagate()
     if (!mNoBias) {
         const Float_T beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
 
-        ConvCell_Frame_Kernels::backwardBias(&alpha, mDiffInputs,
+        ConvCell_Frame_Kernels::backwardBias<Float_T>(&alpha, mDiffInputs,
                                              &beta, mDiffBias);
     }
 
@@ -212,7 +212,7 @@ void N2D2::DeconvCell_Frame::backPropagate()
                 ? tensor_cast<Float_T>(mDiffOutputs[k])
                 : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
-            ConvCell_Frame_Kernels::forward(&alpha,
+            ConvCell_Frame_Kernels::forward<Float_T>(&alpha,
                                             mDiffInputs,
                                             mSharedSynapses[k],
                                             mConvDesc,
@@ -235,10 +235,10 @@ void N2D2::DeconvCell_Frame::update()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
         mWeightsSolvers[k]->update(
-            &mSharedSynapses[k], &mDiffSharedSynapses[k], mInputs.dimB());
+            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
 void N2D2::DeconvCell_Frame::setWeights(unsigned int k,

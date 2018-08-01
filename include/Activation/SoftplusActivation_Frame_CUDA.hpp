@@ -30,42 +30,57 @@
 
 namespace N2D2 {
 template <class T>
-class SoftplusActivation_Frame_CUDA : public SoftplusActivation<T> {
+class SoftplusActivation_Frame_CUDA : public SoftplusActivation {
 public:
-    static std::shared_ptr<SoftplusActivation<T> > create()
+    static std::shared_ptr<SoftplusActivation> create()
     {
         return std::make_shared<SoftplusActivation_Frame_CUDA<T> >();
     }
 
     SoftplusActivation_Frame_CUDA();
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    inline virtual void propagate(BaseTensor& data);
+    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    void propagate(CudaTensor<T>& data);
+    void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
     virtual ~SoftplusActivation_Frame_CUDA() {};
 
 private:
-    static Registrar<SoftplusActivation<T> > mRegistrar;
+    static Registrar<SoftplusActivation> mRegistrar;
 };
 }
 
 template <class T>
 N2D2::SoftplusActivation_Frame_CUDA<T>::SoftplusActivation_Frame_CUDA()
-    : SoftplusActivation<T>()
+    : SoftplusActivation()
 {
     // ctor
 }
 
+template <class T>
+void N2D2::SoftplusActivation_Frame_CUDA<T>::propagate(BaseTensor& data) {
+    propagate(dynamic_cast<CudaTensor<T>&>(data));
+}
+
+template <class T>
+void N2D2::SoftplusActivation_Frame_CUDA<T>::backPropagate(BaseTensor& data,
+                                                           BaseTensor& diffData)
+{
+    backPropagate(dynamic_cast<CudaTensor<T>&>(data),
+                  dynamic_cast<CudaTensor<T>&>(diffData));
+}
+
 namespace N2D2 {
 template <>
-void SoftplusActivation_Frame_CUDA<float>::propagate(Tensor<float>* data);
+void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data);
 template <>
 void SoftplusActivation_Frame_CUDA
-    <float>::backPropagate(Tensor<float>* data, Tensor<float>* diffData);
+    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData);
 
 template <>
-void SoftplusActivation_Frame_CUDA<double>::propagate(Tensor<double>* data);
+void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data);
 template <>
 void SoftplusActivation_Frame_CUDA
-    <double>::backPropagate(Tensor<double>* data, Tensor<double>* diffData);
+    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData);
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_CUDA_H

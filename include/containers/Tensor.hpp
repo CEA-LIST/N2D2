@@ -176,6 +176,8 @@ public:
 
     inline virtual void reserve(std::initializer_list<size_t> dims);
     virtual void reserve(const std::vector<size_t>& dims) = 0;
+    inline virtual void resize(std::initializer_list<size_t> dims);
+    virtual void resize(const std::vector<size_t>& dims) = 0;
     inline virtual void reshape(std::initializer_list<size_t> dims);
     inline virtual void reshape(const std::vector<size_t>& dims);
     virtual void clear() = 0;
@@ -223,6 +225,9 @@ public:
         (*mValid) = false;
     };
     virtual const std::type_info* getType() const = 0;
+#ifdef CUDA
+    virtual BaseTensor* newCuda() const = 0;
+#endif
     virtual ~BaseTensor() {};
 
 protected:
@@ -282,6 +287,7 @@ public:
     typedef typename std::vector<T>::const_reference const_reference;
 
     using BaseTensor::reserve;
+    using BaseTensor::resize;
 
     Tensor();
     Tensor(std::initializer_list<size_t> dims,
@@ -316,10 +322,11 @@ public:
         return (*mData)().begin() + mDataOffset + size();
     }
     inline virtual void reserve(const std::vector<size_t>& dims);
+    inline virtual void resize(const std::vector<size_t>& dims);
     inline virtual void resize(std::initializer_list<size_t> dims,
-                               const T& value = T());
+                               const T& value);
     inline virtual void resize(const std::vector<size_t>& dims,
-                               const T& value = T());
+                               const T& value);
     inline virtual void assign(std::initializer_list<size_t> dims,
                                const T& value);
     inline virtual void assign(const std::vector<size_t>& dims,
@@ -360,6 +367,9 @@ public:
     {
         return &typeid(T);
     };
+#ifdef CUDA
+    Tensor<T>* newCuda() const;
+#endif
     virtual ~Tensor() {};
 
 protected:
@@ -479,6 +489,11 @@ Tensor<T> tensor_cast_nocopy(const BaseTensor& base)
 void N2D2::BaseTensor::reserve(std::initializer_list<size_t> dims)
 {
     reserve(std::vector<size_t>(dims));
+}
+
+void N2D2::BaseTensor::resize(std::initializer_list<size_t> dims)
+{
+    resize(std::vector<size_t>(dims));
 }
 
 void N2D2::BaseTensor::reshape(std::initializer_list<size_t> dims)
@@ -732,6 +747,15 @@ void N2D2::Tensor<T>::reserve(const std::vector<size_t>& dims)
 
     mDims = dims;
     (*mData)().reserve(computeSize());
+}
+
+template <class T>
+void N2D2::Tensor<T>::resize(const std::vector<size_t>& dims)
+{
+    assert(mData.unique());
+
+    mDims = dims;
+    (*mData)().resize(computeSize());
 }
 
 template <class T>
@@ -1318,6 +1342,16 @@ template <class T> N2D2::Tensor<T>::operator cv::Mat() const
 
         throw std::runtime_error(errorStr.str());
     }
+}
+
+template <class T>
+N2D2::Tensor<T>* N2D2::Tensor<T>::newCuda() const {
+    throw std::runtime_error("Tensor::newCuda(): type not supported");
+}
+
+namespace N2D2 {
+    template <> Tensor<float>* Tensor<float>::newCuda() const;
+    template <> Tensor<double>* Tensor<double>::newCuda() const;
 }
 
 #endif // N2D2_TENSOR_H

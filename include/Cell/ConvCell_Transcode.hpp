@@ -29,7 +29,7 @@
 #endif
 
 namespace N2D2 {
-template <class FRAME = ConvCell_Frame, class SPIKE = ConvCell_Spike>
+template <class FRAME = ConvCell_Frame<Float_T>, class SPIKE = ConvCell_Spike>
 class ConvCell_Transcode : public FRAME, public SPIKE {
 public:
     enum TranscodeMode {
@@ -47,7 +47,7 @@ public:
                             = std::vector<unsigned int>(2, 1U),
                        const std::vector<int>& paddingDims
                             = std::vector<int>(2, 0),
-                       const std::shared_ptr<Activation<Float_T> >& activation
+                       const std::shared_ptr<Activation>& activation
                        = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<ConvCell> create(Network& net,
            const std::string& name,
@@ -59,7 +59,7 @@ public:
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims
                 = std::vector<int>(2, 0),
-           const std::shared_ptr<Activation<Float_T> >& activation
+           const std::shared_ptr<Activation>& activation
                 = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
         return std::make_shared<ConvCell_Transcode>(net,
@@ -101,11 +101,12 @@ public:
 private:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          const Tensor<Float_T>& value);
-    inline Tensor<Float_T> getWeight(unsigned int output,
-                                     unsigned int channel) const;
-    inline void setBias(unsigned int output, Float_T value);
-    inline Float_T getBias(unsigned int output) const;
+                          const BaseTensor& value);
+    inline void getWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const;
+    inline void setBias(unsigned int output, const BaseTensor& value);
+    inline void getBias(unsigned int output, BaseTensor& value) const;
 
     TranscodeMode mTranscodeMode;
 
@@ -117,36 +118,37 @@ private:
 template <class FRAME, class SPIKE>
 void N2D2::ConvCell_Transcode<FRAME, SPIKE>::setWeight(unsigned int output,
                                                        unsigned int channel,
-                                                const Tensor<Float_T>& value)
+                                                       const BaseTensor& value)
 {
     FRAME::setWeight(output, channel, value);
     SPIKE::setWeight(output, channel, value);
 }
 
 template <class FRAME, class SPIKE>
-N2D2::Tensor<N2D2::Float_T> N2D2::ConvCell_Transcode
+void N2D2::ConvCell_Transcode
     <FRAME, SPIKE>::getWeight(unsigned int output,
-                              unsigned int channel) const
+                              unsigned int channel,
+                              BaseTensor& value) const
 {
-    return (mTranscodeMode == Frame)
-               ? FRAME::getWeight(output, channel)
-               : SPIKE::getWeight(output, channel);
+    (mTranscodeMode == Frame)
+           ? FRAME::getWeight(output, channel, value)
+           : SPIKE::getWeight(output, channel, value);
 }
 
 template <class FRAME, class SPIKE>
 void N2D2::ConvCell_Transcode
-    <FRAME, SPIKE>::setBias(unsigned int output, Float_T value)
+    <FRAME, SPIKE>::setBias(unsigned int output, const BaseTensor& value)
 {
     FRAME::setBias(output, value);
     SPIKE::setBias(output, value);
 }
 
 template <class FRAME, class SPIKE>
-N2D2::Float_T N2D2::ConvCell_Transcode
-    <FRAME, SPIKE>::getBias(unsigned int output) const
+void N2D2::ConvCell_Transcode
+    <FRAME, SPIKE>::getBias(unsigned int output, BaseTensor& value) const
 {
-    return (mTranscodeMode == Frame) ? FRAME::getBias(output)
-                                     : SPIKE::getBias(output);
+    (mTranscodeMode == Frame) ? FRAME::getBias(output, value)
+                              : SPIKE::getBias(output, value);
 }
 
 template <class FRAME, class SPIKE>
@@ -159,7 +161,7 @@ N2D2::ConvCell_Transcode
                                const std::vector<unsigned int>& strideDims,
                                const std::vector<int>& paddingDims,
                                const std::shared_ptr
-                               <Activation<Float_T> >& activation)
+                               <Activation>& activation)
     : Cell(name, nbOutputs),
       ConvCell(name,
                kernelDims,
@@ -290,7 +292,7 @@ void N2D2::ConvCell_Transcode
                           - ConvCell::mKernelDims[1] + ConvCell::mStrideDims[1])
                          / (double)ConvCell::mStrideDims[1]);
 
-    const Tensor<Float_T>& outputs = FRAME::getOutputs();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(FRAME::getOutputs());
     std::vector<Float_T> minVal(ConvCell::getNbOutputs());
     std::vector<Float_T> maxVal(ConvCell::getNbOutputs());
 

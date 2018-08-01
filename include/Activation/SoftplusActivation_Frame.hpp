@@ -25,35 +25,37 @@
 
 namespace N2D2 {
 template <class T>
-class SoftplusActivation_Frame : public SoftplusActivation<T> {
+class SoftplusActivation_Frame : public SoftplusActivation {
 public:
-    static std::shared_ptr<SoftplusActivation<T> > create()
+    static std::shared_ptr<SoftplusActivation> create()
     {
         return std::make_shared<SoftplusActivation_Frame<T> >();
     }
 
-    virtual void propagate(Tensor<T>* data);
-    virtual void backPropagate(Tensor<T>* data, Tensor<T>* diffData);
+    virtual void propagate(BaseTensor& data);
+    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~SoftplusActivation_Frame() {};
 
 private:
-    static Registrar<SoftplusActivation<T> > mRegistrar;
+    static Registrar<SoftplusActivation> mRegistrar;
 };
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor<T>* data)
+void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-
-#pragma omp parallel for if (data->size() > 1024)
-    for (int index = 0; index < (int)data->size(); ++index) {
+#pragma omp parallel for if (data.size() > 1024)
+    for (int index = 0; index < (int)data.size(); ++index) {
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
+        // Disabling of FE_OVERFLOW must be INSIDE THE LOOP, because else it
+        // only applies to the main thread when using OpenMP
         const int excepts = fegetexcept();
         fedisableexcept(FE_OVERFLOW);
 #endif
 
-        (*data)(index) = std::log(1.0f + std::exp((*data)(index)));
+        data(index) = std::log(1.0f + std::exp(data(index)));
 
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
@@ -64,11 +66,14 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(Tensor<T>* data)
 
 template <class T>
 void N2D2::SoftplusActivation_Frame
-    <T>::backPropagate(Tensor<T>* data, Tensor<T>* diffData)
+    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
 {
-#pragma omp parallel for if (data->size() > 1024)
-    for (int index = 0; index < (int)diffData->size(); ++index)
-        (*diffData)(index) *= (1.0f - std::exp(-(*data)(index)));
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
+#pragma omp parallel for if (data.size() > 1024)
+    for (int index = 0; index < (int)diffData.size(); ++index)
+        diffData(index) *= (1.0f - std::exp(-data(index)));
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_H

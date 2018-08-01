@@ -60,8 +60,23 @@ public:
         return cudnn_h;
     }
 
-    static const cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
+    template <class T>
+    struct data_type {
+        static const cudnnDataType_t value;
+    };
 };
+}
+
+namespace N2D2 {
+    template <class T>
+    const cudnnDataType_t CudaContext::data_type<T>::value
+        = CUDNN_DATA_FLOAT;     // Dummy value by default
+
+    template <>
+    const cudnnDataType_t CudaContext::data_type<float>::value;
+
+    template <>
+    const cudnnDataType_t CudaContext::data_type<double>::value;
 }
 
 #endif // N2D2_CUDA_CONTEXT_H

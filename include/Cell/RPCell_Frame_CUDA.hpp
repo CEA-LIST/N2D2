@@ -36,7 +36,7 @@
 #include <thrust/functional.h>
 
 namespace N2D2 {
-class RPCell_Frame_CUDA : public virtual RPCell, public Cell_Frame_CUDA {
+class RPCell_Frame_CUDA : public virtual RPCell, public Cell_Frame_CUDA<Float_T> {
 public:
     RPCell_Frame_CUDA(const std::string& name,
                  unsigned int nbAnchors,

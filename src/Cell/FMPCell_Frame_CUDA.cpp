@@ -30,7 +30,7 @@ N2D2::FMPCell_Frame_CUDA::FMPCell_Frame_CUDA(const std::string& name,
                                              double scalingRatio,
                                              unsigned int nbOutputs,
                                              const std::shared_ptr
-                                             <Activation<Float_T> >& activation)
+                                             <Activation>& activation)
     : Cell(name, nbOutputs),
       FMPCell(name, scalingRatio, nbOutputs),
       Cell_Frame_CUDA(name, nbOutputs, activation)

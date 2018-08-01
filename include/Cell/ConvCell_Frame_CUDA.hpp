@@ -30,8 +30,15 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class ConvCell_Frame_CUDA : public virtual ConvCell, public Cell_Frame_CUDA {
+template <class T>
+class ConvCell_Frame_CUDA : public virtual ConvCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::mOutputs;
+    using Cell_Frame_CUDA<T>::mDiffInputs;
+    using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivationDesc;
+
     ConvCell_Frame_CUDA(const std::string& name,
                         const std::vector<unsigned int>& kernelDims,
                         unsigned int nbOutputs,
@@ -41,8 +48,8 @@ public:
                             = std::vector<unsigned int>(2, 1U),
                         const std::vector<int>& paddingDims
                             = std::vector<int>(2, 0),
-                        const std::shared_ptr<Activation<Float_T> >& activation
-                    = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
+                        const std::shared_ptr<Activation>& activation
+                    = std::make_shared<TanhActivation_Frame_CUDA<T> >());
     static std::shared_ptr<ConvCell>
     create(Network& /*net*/,
            const std::string& name,
@@ -53,37 +60,38 @@ public:
            const std::vector<unsigned int>& strideDims
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims = std::vector<int>(2, 0),
-           const std::shared_ptr<Activation<Float_T> >& activation
-           = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
+           const std::shared_ptr<Activation>& activation
+           = std::make_shared<TanhActivation_Frame_CUDA<T> >())
     {
-        return std::make_shared<ConvCell_Frame_CUDA>(name,
-                                                     kernelDims,
-                                                     nbOutputs,
-                                                     subSampleDims,
-                                                     strideDims,
-                                                     paddingDims,
-                                                     activation);
+        return std::make_shared<ConvCell_Frame_CUDA<T> >(name,
+                                                         kernelDims,
+                                                         nbOutputs,
+                                                         subSampleDims,
+                                                         strideDims,
+                                                         paddingDims,
+                                                         activation);
     }
 
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Tensor<Float_T> getWeight(unsigned int output,
-                                     unsigned int channel) const;
-    inline Float_T getBias(unsigned int output) const;
-    inline Interface<Float_T>* getWeights()
+    inline void getWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const;
+    inline void getBias(unsigned int output, BaseTensor& value) const;
+    inline Interface<> getWeights()
     {
-        return &mSharedSynapses;
+        return Interface<>(mSharedSynapses);
     };
     void setWeights(unsigned int k,
-                    Interface<Float_T>* weights,
+                    const Interface<>& weights,
                     unsigned int offset);
-    inline std::shared_ptr<Tensor<Float_T> > getBiases()
+    inline std::shared_ptr<BaseTensor> getBiases()
     {
         return mBias;
     };
-    void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases);
+    void setBiases(const std::shared_ptr<BaseTensor>& biases);
     void checkGradient(double /*epsilon*/ = 1.0e-4,
                        double /*maxError*/ = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
@@ -109,17 +117,17 @@ public:
 protected:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          const Tensor<Float_T>& value);
-    inline void setBias(unsigned int output, Float_T value);
+                          const BaseTensor& value);
+    inline void setBias(unsigned int output, const BaseTensor& value);
 
     // Internal
-    std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
-    CudaInterface<Float_T> mSharedSynapses;
+    std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
+    CudaInterface<T> mSharedSynapses;
     std::map<unsigned int,
-        std::pair<CudaInterface<Float_T>*, unsigned int> > mExtSharedSynapses;
-    std::shared_ptr<CudaTensor<Float_T> > mBias;
-    CudaInterface<Float_T> mDiffSharedSynapses;
-    CudaTensor<Float_T> mDiffBias;
+        std::pair<CudaInterface<T>, unsigned int> > mExtSharedSynapses;
+    std::shared_ptr<CudaTensor<T> > mBias;
+    CudaInterface<T> mDiffSharedSynapses;
+    CudaTensor<T> mDiffBias;
 
     size_t mWorkspaceSize;
     void* mWorkspace;
@@ -139,47 +147,56 @@ private:
 };
 }
 
-void N2D2::ConvCell_Frame_CUDA::setWeight(unsigned int output,
-                                          unsigned int channel,
-                                          const Tensor<Float_T>& value)
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
+                                             unsigned int channel,
+                                             const BaseTensor& value)
 {
     unsigned int tensorChannel;
-    CudaTensor<Float_T>& sharedSynapses
+    CudaTensor<T>& sharedSynapses
         = mSharedSynapses.getTensor(channel, &tensorChannel);
-    sharedSynapses[output][channel - tensorChannel] = value;
+    sharedSynapses[output][channel - tensorChannel] = tensor_cast<T>(value);
 
     if (!mSynchronized)
         sharedSynapses[output][channel - tensorChannel].synchronizeHToD();
 }
 
-N2D2::Tensor<N2D2::Float_T>
-N2D2::ConvCell_Frame_CUDA::getWeight(unsigned int output,
-                                     unsigned int channel) const
+template <class T>
+void
+N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
+                                        unsigned int channel,
+                                        BaseTensor& value) const
 {
     unsigned int tensorChannel;
-    const CudaTensor<Float_T>& sharedSynapses
+    const CudaTensor<T>& sharedSynapses
         = mSharedSynapses.getTensor(channel, &tensorChannel);
 
     if (!mSynchronized)
         sharedSynapses[output][channel - tensorChannel].synchronizeDToH();
 
-    return sharedSynapses[output][channel - tensorChannel];
+    value.resize(sharedSynapses[output][channel - tensorChannel].dims());
+    value = sharedSynapses[output][channel - tensorChannel];
 }
 
-void N2D2::ConvCell_Frame_CUDA::setBias(unsigned int output, Float_T value)
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::setBias(unsigned int output,
+                                           const BaseTensor& value)
 {
-    (*mBias)(output) = value;
+    (*mBias)(output) = tensor_cast<T>(value)(0);
 
     if (!mSynchronized)
         mBias->synchronizeHToD(output, 1);
 }
 
-N2D2::Float_T N2D2::ConvCell_Frame_CUDA::getBias(unsigned int output) const
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::getBias(unsigned int output,
+                                           BaseTensor& value) const
 {
     if (!mSynchronized)
         mBias->synchronizeDToH(output, 1);
 
-    return (*mBias)(output);
+    value.resize({1});
+    value = Tensor<T>({1}, (*mBias)(output));
 }
 
 #endif // N2D2_CONVCELL_FRAME_CUDA_H

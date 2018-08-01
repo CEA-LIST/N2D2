@@ -323,7 +323,6 @@ protected:
     std::vector<int> mBatch;
     std::vector<int> mFutureBatch;
     /// Tensor (x, y, channel, batch)
-
     Tensor<Float_T> mData;
     Tensor<Float_T> mFutureData;
     /// Tensor (x, y, channel, batch)

@@ -31,7 +31,7 @@
 
 namespace N2D2 {
 class DeconvCell_Frame_CUDA : public virtual DeconvCell,
-                              public Cell_Frame_CUDA {
+                              public Cell_Frame_CUDA<Float_T> {
 public:
     DeconvCell_Frame_CUDA(const std::string& name,
                           const std::vector<unsigned int>& kernelDims,
@@ -41,7 +41,7 @@ public:
                           const std::vector<int>& paddingDims
                               = std::vector<int>(2, 0),
                           const std::shared_ptr
-                          <Activation<Float_T> >& activation = std::make_shared
+                          <Activation>& activation = std::make_shared
                           <TanhActivation_Frame_CUDA<Float_T> >());
     static std::shared_ptr<DeconvCell>
     create(Network& /*net*/,
@@ -51,7 +51,7 @@ public:
            const std::vector<unsigned int>& strideDims
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims = std::vector<int>(2, 0),
-           const std::shared_ptr<Activation<Float_T> >& activation
+           const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
     {
         return std::make_shared<DeconvCell_Frame_CUDA>(name,
@@ -106,7 +106,7 @@ protected:
     inline void setBias(unsigned int output, Float_T value);
 
     // Internal
-    std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
+    std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     CudaInterface<Float_T> mSharedSynapses;
     std::map<unsigned int,
         std::pair<CudaInterface<Float_T>*, unsigned int> > mExtSharedSynapses;

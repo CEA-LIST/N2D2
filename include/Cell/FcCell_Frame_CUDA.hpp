@@ -30,18 +30,18 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA {
+class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<Float_T> {
 public:
     FcCell_Frame_CUDA(const std::string& name,
                       unsigned int nbOutputs,
-                      const std::shared_ptr<Activation<Float_T> >& activation
+                      const std::shared_ptr<Activation>& activation
                       = std::make_shared
                       <TanhActivation_Frame_CUDA<Float_T> >());
     static std::shared_ptr<FcCell>
     create(Network& /*net*/,
            const std::string& name,
            unsigned int nbOutputs,
-           const std::shared_ptr<Activation<Float_T> >& activation
+           const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
     {
         return std::make_shared<FcCell_Frame_CUDA>(name, nbOutputs, activation);
@@ -77,7 +77,7 @@ protected:
     inline void setBias(unsigned int output, Float_T value);
 
     // Internal
-    std::vector<std::shared_ptr<Solver<Float_T> > > mWeightsSolvers;
+    std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     CudaInterface<Float_T> mSynapses;
     CudaTensor<Float_T> mBias;
     CudaInterface<Float_T> mDiffSynapses;

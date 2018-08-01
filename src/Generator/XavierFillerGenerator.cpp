@@ -24,17 +24,32 @@ N2D2::Registrar<N2D2::FillerGenerator>
 N2D2::XavierFillerGenerator::mRegistrar("XavierFiller",
                                         N2D2::XavierFillerGenerator::generate);
 
-std::shared_ptr<N2D2::XavierFiller<N2D2::Float_T> >
+std::shared_ptr<N2D2::Filler>
 N2D2::XavierFillerGenerator::generate(IniParser& iniConfig,
                                       const std::string& /*section*/,
-                                      const std::string& name)
+                                      const std::string& name,
+                                      const DataType& dataType)
 {
-    const XavierFiller<N2D2::Float_T>::VarianceNorm varianceNorm
-        = iniConfig.getProperty<XavierFiller<N2D2::Float_T>::VarianceNorm>(
-            name + ".VarianceNorm", XavierFiller<N2D2::Float_T>::FanIn);
-    const XavierFiller<N2D2::Float_T>::Distribution distribution
-        = iniConfig.getProperty<XavierFiller<N2D2::Float_T>::Distribution>(
-            name + ".Distribution", XavierFiller<N2D2::Float_T>::Uniform);
+    if (dataType == Float32) {
+        const XavierFiller<float>::VarianceNorm varianceNorm
+            = iniConfig.getProperty<XavierFiller<float>::VarianceNorm>(
+                name + ".VarianceNorm", XavierFiller<float>::FanIn);
+        const XavierFiller<float>::Distribution distribution
+            = iniConfig.getProperty<XavierFiller<float>::Distribution>(
+                name + ".Distribution", XavierFiller<float>::Uniform);
 
-    return std::make_shared<XavierFiller<Float_T> >(varianceNorm, distribution);
+        return std::make_shared<XavierFiller<float> >(varianceNorm,
+                                                      distribution);
+    }
+    else {
+        const XavierFiller<double>::VarianceNorm varianceNorm
+            = iniConfig.getProperty<XavierFiller<double>::VarianceNorm>(
+                name + ".VarianceNorm", XavierFiller<double>::FanIn);
+        const XavierFiller<double>::Distribution distribution
+            = iniConfig.getProperty<XavierFiller<double>::Distribution>(
+                name + ".Distribution", XavierFiller<double>::Uniform);
+
+        return std::make_shared<XavierFiller<double> >(varianceNorm,
+                                                       distribution);
+    }
 }

@@ -148,9 +148,13 @@ void N2D2::CPP_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
 
         if (cell.getParameter<bool>("NoBias"))
             header << "0";
-        else
+        else {
+            Tensor<Float_T> bias;
+            cell.getBias(output, bias);
+
             CellExport::generateFreeParameter(
-                cell, cell.getBias(output), header);
+                cell, bias(0), header);
+        }
     }
 
     header << "};\n";
@@ -198,7 +202,9 @@ N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
 {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
                                                         cell.getName()));
-    const Tensor<Float_T>& kernel = cell.getWeight(output, channel);
+
+    Tensor<Float_T> kernel;
+    cell.getWeight(output, channel, kernel);
 
     header << "{\n";
 

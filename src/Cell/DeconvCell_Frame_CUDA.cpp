@@ -32,7 +32,7 @@ N2D2::DeconvCell_Frame_CUDA::DeconvCell_Frame_CUDA(
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
     const std::vector<int>& paddingDims,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       DeconvCell(name,
                  kernelDims,
@@ -95,7 +95,7 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
                                         &strides[0],
                                         &upscales[0],
                                         CUDNN_CROSS_CORRELATION,
-                                        CudaContext::data_type));
+                                        CudaContext::data_type<Float_T>::value));
 
     size_t workspaceSize = 0;
 
@@ -172,13 +172,13 @@ void N2D2::DeconvCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&mFilterDesc.back()));
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
-                                                      CudaContext::data_type,
+                                                      CudaContext::data_type<Float_T>::value,
                                                       CUDNN_TENSOR_NCHW,
                                                       cudaKernelDims.size(),
                                                       &cudaKernelDims[0]));
 #else
         CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
-                                                      CudaContext::data_type,
+                                                      CudaContext::data_type<Float_T>::value,
                                                       cudaKernelDims.size(),
                                                       &cudaKernelDims[0]));
 #endif
@@ -466,10 +466,10 @@ void N2D2::DeconvCell_Frame_CUDA::update()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
         mWeightsSolvers[k]->update(
-            &mSharedSynapses[k], &mDiffSharedSynapses[k], mInputs.dimB());
+            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
 void N2D2::DeconvCell_Frame_CUDA::setWeights(unsigned int k,

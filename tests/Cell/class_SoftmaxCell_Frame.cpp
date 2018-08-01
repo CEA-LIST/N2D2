@@ -58,7 +58,7 @@ TEST_DATASET(SoftmaxCell_Frame,
 
     inputs.fill(0.0);
     softmax1.propagate();
-    const Tensor<Float_T>& outputs1 = softmax1.getOutputs();
+    const Tensor<Float_T>& outputs1 = tensor_cast<Float_T>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
         ASSERT_EQUALS_DELTA(outputs1(o), 1.0 / (double)nbOutputs, 1.0e-6);
@@ -66,7 +66,7 @@ TEST_DATASET(SoftmaxCell_Frame,
 
     inputs.fill(1.0);
     softmax1.propagate();
-    const Tensor<Float_T>& outputs2 = softmax1.getOutputs();
+    const Tensor<Float_T>& outputs2 = tensor_cast<Float_T>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
         ASSERT_EQUALS_DELTA(outputs2(o), 1.0 / (double)nbOutputs, 1.0e-6);
@@ -78,7 +78,7 @@ TEST_DATASET(SoftmaxCell_Frame,
         inputs(0, batchPos) = 1.0;
 
     softmax1.propagate();
-    const Tensor<Float_T>& outputs3 = softmax1.getOutputs();
+    const Tensor<Float_T>& outputs3 = tensor_cast<Float_T>(softmax1.getOutputs());
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         ASSERT_EQUALS_DELTA(outputs3(0, batchPos),
@@ -128,7 +128,7 @@ TEST_DATASET(SoftmaxCell_Frame,
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
     softmax1.backPropagate();
-    Tensor<Float_T>& outputs = softmax1.getOutputs();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(softmax1.getOutputs());
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int channel = 0; channel < nbOutputs; ++channel) {

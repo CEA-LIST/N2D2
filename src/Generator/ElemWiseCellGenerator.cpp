@@ -37,6 +37,9 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
 
@@ -51,9 +54,9 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
     const std::vector<Float_T> shifts = iniConfig.getProperty
                     <std::vector<Float_T> >("Shifts", std::vector<Float_T>());
 
-    std::shared_ptr<Activation<Float_T> > activation
+    std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
-            iniConfig, section, model, "ActivationFunction");
+            iniConfig, section, model, dataType, "ActivationFunction");
 
     // Cell construction
     std::shared_ptr<ElemWiseCell> cell = Registrar

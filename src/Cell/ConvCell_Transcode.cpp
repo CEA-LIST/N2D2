@@ -22,16 +22,33 @@
 
 template <>
 N2D2::Registrar<N2D2::ConvCell> N2D2::ConvCell_Transcode
-    <N2D2::ConvCell_Frame, N2D2::ConvCell_Spike>::mRegistrar(
+    <N2D2::ConvCell_Frame<float>, N2D2::ConvCell_Spike>::mRegistrar(
         "Transcode",
         N2D2::ConvCell_Transcode
-        <N2D2::ConvCell_Frame, N2D2::ConvCell_Spike>::create);
+        <N2D2::ConvCell_Frame<float>, N2D2::ConvCell_Spike>::create,
+        N2D2::Registrar<N2D2::ConvCell>::Type<float>());
+template <>
+N2D2::Registrar<N2D2::ConvCell> N2D2::ConvCell_Transcode
+    <N2D2::ConvCell_Frame<double>, N2D2::ConvCell_Spike>::mRegistrar(
+        "Transcode",
+        N2D2::ConvCell_Transcode
+        <N2D2::ConvCell_Frame<double>, N2D2::ConvCell_Spike>::create,
+        N2D2::Registrar<N2D2::ConvCell>::Type<double>());
 
 #ifdef CUDA
 template <>
 N2D2::Registrar<N2D2::ConvCell> N2D2::ConvCell_Transcode
-    <N2D2::ConvCell_Frame_CUDA, N2D2::ConvCell_Spike>::mRegistrar(
+    <N2D2::ConvCell_Frame_CUDA<float>, N2D2::ConvCell_Spike>::mRegistrar(
         "Transcode_CUDA",
         N2D2::ConvCell_Transcode
-        <N2D2::ConvCell_Frame_CUDA, N2D2::ConvCell_Spike>::create);
+        <N2D2::ConvCell_Frame_CUDA<float>, N2D2::ConvCell_Spike>::create,
+        N2D2::Registrar<N2D2::ConvCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::ConvCell> N2D2::ConvCell_Transcode
+    <N2D2::ConvCell_Frame_CUDA<double>, N2D2::ConvCell_Spike>::mRegistrar(
+        "Transcode_CUDA",
+        N2D2::ConvCell_Transcode
+        <N2D2::ConvCell_Frame_CUDA<double>, N2D2::ConvCell_Spike>::create,
+        N2D2::Registrar<N2D2::ConvCell>::Type<double>());
 #endif

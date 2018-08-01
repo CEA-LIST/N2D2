@@ -29,7 +29,7 @@ N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const std::string& name,
                                      const std::vector<Float_T>& weights,
                                      const std::vector<Float_T>& shifts,
                                      const std::shared_ptr
-                                     <Activation<Float_T> >& activation)
+                                     <Activation>& activation)
     : Cell(name, nbOutputs),
       ElemWiseCell(name,
                nbOutputs,

@@ -28,9 +28,9 @@
 #include "PaddingCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
-class PaddingCell_Frame : public virtual PaddingCell, public Cell_Frame {
+class PaddingCell_Frame : public virtual PaddingCell, public Cell_Frame<Float_T> {
 public:
-    PaddingCell_Frame(const std::string& name, 
+    PaddingCell_Frame(const std::string& name,
                       unsigned int nbOutputs,
                       int topPad,
                       int botPad,
@@ -44,7 +44,7 @@ public:
                                            int leftPad = 0,
                                            int rightPad = 0)
     {
-        return std::make_shared<PaddingCell_Frame>(name, 
+        return std::make_shared<PaddingCell_Frame>(name,
                                                    nbOutputs,
                                                    topPad,
                                                    botPad,

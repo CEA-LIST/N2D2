@@ -20,17 +20,27 @@
 
 #include "Cell/ConvCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::ConvCell>
-N2D2::ConvCell_Frame::mRegistrar("Frame", N2D2::ConvCell_Frame::create);
+N2D2::ConvCell_Frame<float>::mRegistrar("Frame",
+    N2D2::ConvCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::ConvCell>::Type<float>());
 
-N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::ConvCell>
+N2D2::ConvCell_Frame<double>::mRegistrar("Frame",
+    N2D2::ConvCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::ConvCell>::Type<double>());
+
+template <class T>
+N2D2::ConvCell_Frame<T>::ConvCell_Frame(const std::string& name,
                                  const std::vector<unsigned int>& kernelDims,
                                  unsigned int nbOutputs,
                                  const std::vector<unsigned int>& subSampleDims,
                                  const std::vector<unsigned int>& strideDims,
                                  const std::vector<int>& paddingDims,
                                  const std::shared_ptr
-                                 <Activation<Float_T> >& activation)
+                                 <Activation>& activation)
     : Cell(name, nbOutputs),
       ConvCell(name,
                kernelDims,
@@ -38,10 +48,10 @@ N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
                subSampleDims,
                strideDims,
                paddingDims),
-      Cell_Frame(name, nbOutputs, activation),
+      Cell_Frame<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(std::make_shared<Tensor<Float_T> >()),
+      mBias(std::make_shared<Tensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
       mConvDesc(subSampleDims, strideDims, paddingDims)
 {
@@ -69,11 +79,14 @@ N2D2::ConvCell_Frame::ConvCell_Frame(const std::string& name,
                                 " dimensions of the kernel.");
     }
 
-    mWeightsSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
-    mBiasSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
+    mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mBiasFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mWeightsSolver = std::make_shared<SGDSolver_Frame<T> >();
+    mBiasSolver = std::make_shared<SGDSolver_Frame<T> >();
 }
 
-void N2D2::ConvCell_Frame::initialize()
+template <class T>
+void N2D2::ConvCell_Frame<T>::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
@@ -84,7 +97,7 @@ void N2D2::ConvCell_Frame::initialize()
             if (mBias->dimX() != 1 || mBias->dimY() != 1
                 || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
-                throw std::runtime_error("ConvCell_Frame::initialize(): in "
+                throw std::runtime_error("ConvCell_Frame<T>::initialize(): in "
                     "cell " + mName + ", wrong size for shared bias");
             }
         }
@@ -96,8 +109,8 @@ void N2D2::ConvCell_Frame::initialize()
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
-        std::map<unsigned int,
-            std::pair<Interface<Float_T>*, unsigned int> >::const_iterator
+        typename std::map<unsigned int,
+            std::pair<Interface<T>, unsigned int> >::iterator
                 it = mExtSharedSynapses.find(k);
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
@@ -105,14 +118,14 @@ void N2D2::ConvCell_Frame::initialize()
         kernelDims.push_back(getNbOutputs());
 
         if (it != mExtSharedSynapses.end()) {
-            Tensor<Float_T>* extWeights
-                = &(*((*it).second.first))[(*it).second.second];
+            Tensor<T>* extWeights
+                = &((*it).second.first[(*it).second.second]);
 
             if (!std::equal(kernelDims.begin(), kernelDims.end(),
                             extWeights->dims().begin()))
             {
                 std::stringstream errorStr;
-                errorStr << "ConvCell_Frame::initialize(): in cell "
+                errorStr << "ConvCell_Frame<T>::initialize(): in cell "
                     << mName << ", mismatch between external weights dim. ("
                     << extWeights->dims() << ") and expected dim. ("
                     << kernelDims << ")";
@@ -123,20 +136,21 @@ void N2D2::ConvCell_Frame::initialize()
             mSharedSynapses.push_back(extWeights);
         }
         else {
-            mSharedSynapses.push_back(new Tensor<Float_T>(kernelDims));
+            mSharedSynapses.push_back(new Tensor<T>(kernelDims));
             mWeightsFiller->apply(mSharedSynapses.back());
         }
 
-        mDiffSharedSynapses.push_back(new Tensor<Float_T>(kernelDims));
+        mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims));
     }
 }
 
-void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
+template <class T>
+void N2D2::ConvCell_Frame<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeDToH();
 
-    const Float_T alpha = 1.0;
-    Float_T beta = 0.0;
+    const T alpha = T(1.0);
+    T beta = T(0.0);
 
     unsigned int offset = 0;
 
@@ -144,9 +158,9 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0;
 
-        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
 
-        ConvCell_Frame_Kernels::forward(&alpha,
+        ConvCell_Frame_Kernels::forward<T>(&alpha,
                                         input,
                                         mSharedSynapses[k],
                                         mConvDesc,
@@ -158,27 +172,28 @@ void N2D2::ConvCell_Frame::propagate(bool /*inference*/)
     }
 
     if (!mNoBias)
-        ConvCell_Frame_Kernels::forwardBias(&alpha, (*mBias), &alpha, mOutputs);
+        ConvCell_Frame_Kernels::forwardBias<T>(&alpha, (*mBias), &alpha, mOutputs);
 
-    Cell_Frame::propagate();
+    Cell_Frame<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::ConvCell_Frame::backPropagate()
+template <class T>
+void N2D2::ConvCell_Frame<T>::backPropagate()
 {
-    Cell_Frame::backPropagate();
+    Cell_Frame<T>::backPropagate();
 
-    const Float_T alpha = 1.0;
+    const T alpha = T(1.0);
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const Float_T beta = (mWeightsSolvers[k]->isNewIteration())
-            ? 0.0f : 1.0f;
+        const T beta = (mWeightsSolvers[k]->isNewIteration())
+            ? T(0.0) : T(1.0);
 
-        const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
 
-        ConvCell_Frame_Kernels::backwardFilter(&alpha,
+        ConvCell_Frame_Kernels::backwardFilter<T>(&alpha,
                                                input,
                                                mDiffInputs,
                                                mConvDesc,
@@ -191,9 +206,9 @@ void N2D2::ConvCell_Frame::backPropagate()
     }
 
     if (!mNoBias) {
-        const Float_T beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+        const T beta = (mBiasSolver->isNewIteration()) ? T(0.0) : T(1.0);
 
-        ConvCell_Frame_Kernels::backwardBias(&alpha, mDiffInputs,
+        ConvCell_Frame_Kernels::backwardBias<T>(&alpha, mDiffInputs,
                                              &beta, mDiffBias);
     }
 
@@ -201,13 +216,13 @@ void N2D2::ConvCell_Frame::backPropagate()
         offset = 0;
 
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
+            const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
-            Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
-                ? tensor_cast<Float_T>(mDiffOutputs[k])
-                : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+            Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
+                ? tensor_cast<T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
-            ConvCell_Frame_Kernels::backwardData(&alpha,
+            ConvCell_Frame_Kernels::backwardData<T>(&alpha,
                                                  mSharedSynapses[k],
                                                  mDiffInputs,
                                                  mConvDesc,
@@ -226,31 +241,34 @@ void N2D2::ConvCell_Frame::backPropagate()
     }
 }
 
-void N2D2::ConvCell_Frame::update()
+template <class T>
+void N2D2::ConvCell_Frame<T>::update()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
         mWeightsSolvers[k]->update(
-            &mSharedSynapses[k], &mDiffSharedSynapses[k], mInputs.dimB());
+            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
-void N2D2::ConvCell_Frame::setWeights(unsigned int k,
-                                      Interface<Float_T>* weights,
+template <class T>
+void N2D2::ConvCell_Frame<T>::setWeights(unsigned int k,
+                                      const Interface<>& weights,
                                       unsigned int offset)
 {
     mExtSharedSynapses[k] = std::make_pair(weights, offset);
 }
 
-void N2D2::ConvCell_Frame::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::ConvCell_Frame<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&ConvCell_Frame::propagate, this, false),
-                  std::bind(&ConvCell_Frame::backPropagate, this));
+                  std::bind(&ConvCell_Frame<T>::propagate, this, false),
+                  std::bind(&ConvCell_Frame<T>::backPropagate, this));
 
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
         std::stringstream name;
@@ -276,7 +294,8 @@ void N2D2::ConvCell_Frame::checkGradient(double epsilon, double maxError)
     }
 }
 
-void N2D2::ConvCell_Frame::saveFreeParameters(const std::string& fileName) const
+template <class T>
+void N2D2::ConvCell_Frame<T>::saveFreeParameters(const std::string& fileName) const
 {
     std::ofstream syn(fileName.c_str(), std::fstream::binary);
 
@@ -285,7 +304,7 @@ void N2D2::ConvCell_Frame::saveFreeParameters(const std::string& fileName) const
                                  + fileName);
 
     for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (std::vector<Float_T>::const_iterator it
+        for (typename std::vector<T>::const_iterator it
              = mSharedSynapses[k].begin();
              it != mSharedSynapses[k].end();
              ++it)
@@ -293,7 +312,7 @@ void N2D2::ConvCell_Frame::saveFreeParameters(const std::string& fileName) const
     }
 
     if (!mNoBias) {
-        for (std::vector<Float_T>::const_iterator it = mBias->begin();
+        for (typename std::vector<T>::const_iterator it = mBias->begin();
              it != mBias->end();
              ++it)
             syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
@@ -303,7 +322,8 @@ void N2D2::ConvCell_Frame::saveFreeParameters(const std::string& fileName) const
         throw std::runtime_error("Error writing synaptic file: " + fileName);
 }
 
-void N2D2::ConvCell_Frame::loadFreeParameters(const std::string& fileName,
+template <class T>
+void N2D2::ConvCell_Frame<T>::loadFreeParameters(const std::string& fileName,
                                               bool ignoreNotExists)
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
@@ -320,14 +340,14 @@ void N2D2::ConvCell_Frame::loadFreeParameters(const std::string& fileName,
     }
 
     for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (std::vector<Float_T>::iterator it = mSharedSynapses[k].begin();
+        for (typename std::vector<T>::iterator it = mSharedSynapses[k].begin();
              it != mSharedSynapses[k].end();
              ++it)
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
     }
 
     if (!mNoBias) {
-        for (std::vector<Float_T>::iterator it = mBias->begin();
+        for (typename std::vector<T>::iterator it = mBias->begin();
              it != mBias->end();
              ++it)
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
@@ -345,8 +365,14 @@ void N2D2::ConvCell_Frame::loadFreeParameters(const std::string& fileName,
             "Synaptic file (.SYN) size larger than expected: " + fileName);
 }
 
-N2D2::ConvCell_Frame::~ConvCell_Frame()
+template <class T>
+N2D2::ConvCell_Frame<T>::~ConvCell_Frame()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
         delete &mSharedSynapses[k];
+}
+
+namespace N2D2 {
+    template class ConvCell_Frame<float>;
+    template class ConvCell_Frame<double>;
 }

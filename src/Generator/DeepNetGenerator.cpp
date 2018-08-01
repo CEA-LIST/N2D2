@@ -33,6 +33,8 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     iniConfig.currentSection();
     CellGenerator::mDefaultModel = iniConfig.getProperty
                                    <std::string>("DefaultModel", "Transcode");
+    CellGenerator::mDefaultDataType = iniConfig.getProperty
+        <DataType>("DefaultDataType", Float32);
 
 #ifndef CUDA
     const std::string suffix = "_CUDA";

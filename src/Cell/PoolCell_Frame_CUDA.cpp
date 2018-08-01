@@ -34,7 +34,7 @@ N2D2::PoolCell_Frame_CUDA::PoolCell_Frame_CUDA(
     const std::vector<unsigned int>& strideDims,
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       PoolCell(name,
                poolDims,
@@ -97,7 +97,7 @@ void N2D2::PoolCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
         CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(
             mOutputDesc.back(),
-            CudaContext::data_type,
+            CudaContext::data_type<Float_T>::value,
             mOutputs.nbDims(),
             &dims[0],
             &strides[0]));

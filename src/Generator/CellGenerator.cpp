@@ -21,6 +21,7 @@
 #include "Generator/CellGenerator.hpp"
 
 std::string N2D2::CellGenerator::mDefaultModel = "Frame";
+N2D2::DataType N2D2::CellGenerator::mDefaultDataType = N2D2::Float32;
 
 std::shared_ptr<N2D2::Cell>
 N2D2::CellGenerator::generate(Network& network,
@@ -43,11 +44,11 @@ void N2D2::CellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
                                        IniParser& iniConfig,
                                        const std::string& section)
 {
-    if (RegistrarCustom
+    if (Registrar
         <CellGenerator, RegistryPostCreate_T>::exists(cell->getType()
                                                       + std::string("+")))
     {
-        RegistrarCustom
+        Registrar
             <CellGenerator, RegistryPostCreate_T>::create(cell->getType()
                                                           + std::string("+"))
                 (cell, deepNet, iniConfig, section);

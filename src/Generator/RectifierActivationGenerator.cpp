@@ -24,14 +24,19 @@ N2D2::Registrar<N2D2::ActivationGenerator>
 N2D2::RectifierActivationGenerator::mRegistrar(
     "Rectifier", N2D2::RectifierActivationGenerator::generate);
 
-std::shared_ptr<N2D2::RectifierActivation<N2D2::Float_T> >
-N2D2::RectifierActivationGenerator::generate(IniParser& iniConfig,
-                                             const std::string& section,
-                                             const std::string& model,
-                                             const std::string& name)
+std::shared_ptr<N2D2::RectifierActivation>
+N2D2::RectifierActivationGenerator::generate(
+    IniParser& iniConfig,
+    const std::string& section,
+    const std::string& model,
+    const DataType& dataType,
+    const std::string& name)
 {
-    std::shared_ptr<RectifierActivation<Float_T> > activation = Registrar
-        <RectifierActivation<Float_T> >::create(model)();
+    std::shared_ptr<RectifierActivation> activation
+        = (dataType == Float32)
+            ? Registrar<RectifierActivation>::create<float>(model)()
+            : Registrar<RectifierActivation>::create<double>(model)();
+
     activation->setPrefixedParameters(iniConfig.getSection(section),
                                       name + ".");
     return activation;

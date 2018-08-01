@@ -30,7 +30,7 @@ class FcCell_Frame_Test : public FcCell_Frame {
 public:
     FcCell_Frame_Test(const std::string& name,
                       unsigned int nbOutputs,
-                      const std::shared_ptr<Activation<Float_T> >& activation)
+                      const std::shared_ptr<Activation>& activation)
         : Cell(name, nbOutputs),
           FcCell(name, nbOutputs),
           FcCell_Frame(name, nbOutputs, activation) {};
@@ -163,11 +163,11 @@ TEST_DATASET(FcCell_Frame,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -255,11 +255,11 @@ TEST_DATASET(FcCell_Frame,
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(env);
@@ -392,7 +392,7 @@ TEST_DATASET(FcCell_Frame,
     Network net;
 
     FcCell_Frame_Test fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -428,7 +428,7 @@ TEST_DATASET(FcCell_Frame,
 
     fc1.propagate();
 
-    const Tensor<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
     ASSERT_EQUALS(out.dimX(), 1U);
@@ -464,7 +464,7 @@ TEST_DATASET(FcCell_Frame,
     Network net;
 
     FcCell_Frame_Test fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -509,7 +509,7 @@ TEST_DATASET(FcCell_Frame,
         }
     }
 
-    const Tensor<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
     ASSERT_EQUALS(out.dimX(), fc1.getOutputsWidth());
@@ -543,7 +543,7 @@ TEST_DATASET(FcCell_Frame,
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation<Float_T> >());
+        "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(
@@ -562,7 +562,7 @@ TEST_DATASET(FcCell_Frame,
 
     fc1.propagate();
 
-    const Tensor<Float_T>& out = fc1.getOutputs();
+    const Tensor<Float_T>& out = tensor_cast<Float_T>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
     ASSERT_EQUALS(out.dimX(), 1U);

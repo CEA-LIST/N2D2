@@ -31,7 +31,7 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class ElemWiseCell_Frame_CUDA : public virtual ElemWiseCell, public Cell_Frame_CUDA {
+class ElemWiseCell_Frame_CUDA : public virtual ElemWiseCell, public Cell_Frame_CUDA<Float_T> {
 public:
     ElemWiseCell_Frame_CUDA(const std::string& name,
                         unsigned int nbOutputs,
@@ -40,8 +40,8 @@ public:
                         = std::vector<Float_T>(),
                         const std::vector<Float_T>& shifts
                         = std::vector<Float_T>(),
-                        const std::shared_ptr<Activation<Float_T> >& activation
-                        = std::shared_ptr<Activation<Float_T> >());
+                        const std::shared_ptr<Activation>& activation
+                        = std::shared_ptr<Activation>());
     static std::shared_ptr<ElemWiseCell> create(Network& /*net*/,
                                             const std::string& name,
                                             unsigned int nbOutputs,
@@ -51,9 +51,9 @@ public:
                                             const std::vector<Float_T>& shifts
                                             = std::vector<Float_T>(),
                                             const std::shared_ptr
-                                            <Activation<Float_T> >& activation
+                                            <Activation>& activation
                                             = std::shared_ptr
-                                            <Activation<Float_T> >())
+                                            <Activation>())
     {
         return std::make_shared<ElemWiseCell_Frame_CUDA>(name,
                                                      nbOutputs,

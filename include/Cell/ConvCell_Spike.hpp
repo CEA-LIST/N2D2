@@ -52,8 +52,8 @@ public:
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims
                 = std::vector<int>(2, 0),
-           const std::shared_ptr<Activation<Float_T> >& /*activation*/
-           = std::shared_ptr<Activation<Float_T> >())
+           const std::shared_ptr<Activation>& /*activation*/
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared<ConvCell_Spike>(net,
                                                 name,
@@ -70,11 +70,13 @@ public:
     virtual void
     incomingSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);
     virtual void notify(Time_T timestamp, NotifyType notify);
-    inline Tensor<Float_T> getWeight(unsigned int output,
-                                     unsigned int channel) const;
-    inline Float_T getBias(unsigned int /*output*/) const
+    inline void getWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const;
+    inline void getBias(unsigned int /*output*/, BaseTensor& value) const
     {
-        return 0.0;
+        value.resize({1});
+        value = Tensor<Float_T>({1}, 0.0);
     };
     NodeOut*
     getOutput(unsigned int output, unsigned int ox, unsigned int oy) const
@@ -100,8 +102,8 @@ protected:
     virtual Synapse* newSynapse() const;
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          const Tensor<Float_T>& value);
-    inline void setBias(unsigned int /*output*/, Float_T /*value*/) {};
+                          const BaseTensor& value);
+    inline void setBias(unsigned int /*output*/, const BaseTensor& /*value*/) {};
     inline EventType_T maps(unsigned int output,
                             unsigned int ox,
                             unsigned int oy,
@@ -144,17 +146,20 @@ void addInput(Xcell& cell, ConvCell_Spike& convCell);
 
 void N2D2::ConvCell_Spike::setWeight(unsigned int output,
                                      unsigned int channel,
-                                     const Tensor<Float_T>& value)
+                                     const BaseTensor& value)
 {
     Tensor<Synapse*> sharedSynapses = mSharedSynapses[output][channel];
     assert(value.dims() == sharedSynapses.dims());
 
+    const Tensor<Float_T>& kernel = tensor_cast<Float_T>(value);
+
     for (size_t index = 0; index < value.size(); ++index)
-        sharedSynapses(index)->setRelativeWeight(value(index));
+        sharedSynapses(index)->setRelativeWeight(kernel(index));
 }
 
-N2D2::Tensor<N2D2::Float_T> N2D2::ConvCell_Spike::getWeight(unsigned int output,
-                                                    unsigned int channel) const
+void N2D2::ConvCell_Spike::getWeight(unsigned int output,
+                                     unsigned int channel,
+                                     BaseTensor& value) const
 {
     const Tensor<Synapse*>& sharedSynapses = mSharedSynapses[output][channel];
     Tensor<Float_T> values(sharedSynapses.dims());
@@ -162,7 +167,8 @@ N2D2::Tensor<N2D2::Float_T> N2D2::ConvCell_Spike::getWeight(unsigned int output,
     for (size_t index = 0; index < values.size(); ++index)
         values(index) = sharedSynapses(index)->getRelativeWeight(true);
 
-    return values;
+    value.resize(values.dims());
+    value = values;
 }
 
 N2D2::EventType_T N2D2::ConvCell_Spike::maps(unsigned int output,

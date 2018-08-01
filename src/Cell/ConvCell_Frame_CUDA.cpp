@@ -22,18 +22,27 @@
 
 #include "Cell/ConvCell_Frame_CUDA.hpp"
 
+template <>
 N2D2::Registrar<N2D2::ConvCell>
-N2D2::ConvCell_Frame_CUDA::mRegistrar("Frame_CUDA",
-                                      N2D2::ConvCell_Frame_CUDA::create);
+N2D2::ConvCell_Frame_CUDA<float>::mRegistrar("Frame_CUDA",
+        N2D2::ConvCell_Frame_CUDA<float>::create,
+        N2D2::Registrar<N2D2::ConvCell>::Type<float>());
 
-N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
+template <>
+N2D2::Registrar<N2D2::ConvCell>
+N2D2::ConvCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
+    N2D2::ConvCell_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::ConvCell>::Type<double>());
+
+template <class T>
+N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
     const std::string& name,
     const std::vector<unsigned int>& kernelDims,
     unsigned int nbOutputs,
     const std::vector<unsigned int>& subSampleDims,
     const std::vector<unsigned int>& strideDims,
     const std::vector<int>& paddingDims,
-    const std::shared_ptr<Activation<Float_T> >& activation)
+    const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       ConvCell(name,
                kernelDims,
@@ -41,10 +50,10 @@ N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
                subSampleDims,
                strideDims,
                paddingDims),
-      Cell_Frame_CUDA(name, nbOutputs, activation),
+      Cell_Frame_CUDA<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mBias(std::make_shared<CudaTensor<Float_T> >()),
+      mBias(std::make_shared<CudaTensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
       mWorkspaceSize(0),
       mWorkspace(NULL),
@@ -68,13 +77,16 @@ N2D2::ConvCell_Frame_CUDA::ConvCell_Frame_CUDA(
                                 " dimensions of the kernel.");
     }
 
-    mWeightsSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
-    mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
+    mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mBiasFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mWeightsSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
+    mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
 
     CHECK_CUDNN_STATUS(cudnnCreateConvolutionDescriptor(&mConvDesc));
 }
 
-void N2D2::ConvCell_Frame_CUDA::initialize()
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 {
     if (!mNoBias) {
         if (mBias->empty()) {
@@ -86,7 +98,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             if (mBias->dimX() != 1 || mBias->dimY() != 1
                 || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
-                throw std::runtime_error("ConvCell_Frame_CUDA::initialize():"
+                throw std::runtime_error("ConvCell_Frame_CUDA<T>::initialize():"
                     " in cell " + mName + ", wrong size for shared bias");
             }
         }
@@ -103,7 +115,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                                         &strides[0],
                                         &upscales[0],
                                         CUDNN_CROSS_CORRELATION,
-                                        CudaContext::data_type));
+                                        CudaContext::data_type<T>::value));
 
     size_t workspaceSize = 0;
 
@@ -113,8 +125,8 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
-        std::map<unsigned int,
-            std::pair<CudaInterface<Float_T>*, unsigned int> >::const_iterator
+        typename std::map<unsigned int,
+            std::pair<CudaInterface<T>, unsigned int> >::iterator
                 it = mExtSharedSynapses.find(k);
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
@@ -122,14 +134,14 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         kernelDims.push_back(getNbOutputs());
 
         if (it != mExtSharedSynapses.end()) {
-            CudaTensor<Float_T>* extWeights
-                = &(*((*it).second.first))[(*it).second.second];
+            CudaTensor<T>* extWeights
+                = &((*it).second.first[(*it).second.second]);
 
             if (!std::equal(kernelDims.begin(), kernelDims.end(),
                             extWeights->dims().begin()))
             {
                 std::stringstream errorStr;
-                errorStr << "ConvCell_Frame_CUDA::initialize(): in cell "
+                errorStr << "ConvCell_Frame_CUDA<T>::initialize(): in cell "
                     << mName << ", mismatch between external weights dim. ("
                     << extWeights->dims() << ") and expected dim. ("
                     << kernelDims << ")";
@@ -140,7 +152,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             mSharedSynapses.push_back(extWeights);
         }
         else {
-            mSharedSynapses.push_back(new CudaTensor<Float_T>(kernelDims));
+            mSharedSynapses.push_back(new CudaTensor<T>(kernelDims));
             mWeightsFiller->apply(mSharedSynapses.back());
 
             if (!isFullMap()) {
@@ -150,7 +162,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
                          ++channel) {
                         if (!isConnection(channel, output))
                             mSharedSynapses.back()[output][channel] = Tensor
-                                <Float_T>(mKernelDims, 0.0);
+                                <T>(mKernelDims, T(0.0));
                     }
                 }
             }
@@ -158,7 +170,7 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
             mSharedSynapses.back().synchronizeHToD();
         }
 
-        mDiffSharedSynapses.push_back(new CudaTensor<Float_T>(kernelDims));
+        mDiffSharedSynapses.push_back(new CudaTensor<T>(kernelDims));
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
@@ -168,13 +180,13 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&mFilterDesc.back()));
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
-                                                      CudaContext::data_type,
+                                                      CudaContext::data_type<T>::value,
                                                       CUDNN_TENSOR_NCHW,
                                                       cudaKernelDims.size(),
                                                       &cudaKernelDims[0]));
 #else
         CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
-                                                      CudaContext::data_type,
+                                                      CudaContext::data_type<T>::value,
                                                       cudaKernelDims.size(),
                                                       &cudaKernelDims[0]));
 #endif
@@ -265,7 +277,8 @@ void N2D2::ConvCell_Frame_CUDA::initialize()
         CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
 }
 
-void N2D2::ConvCell_Frame_CUDA::propagate(bool /*inference*/)
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -281,8 +294,8 @@ void N2D2::ConvCell_Frame_CUDA::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0f;
 
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast<T>(mInputs[k]);
 
         CHECK_CUDNN_STATUS(
             cudnnConvolutionForward(CudaContext::cudnnHandle(),
@@ -325,16 +338,16 @@ void N2D2::ConvCell_Frame_CUDA::propagate(bool /*inference*/)
 #endif
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::ConvCell_Frame_CUDA::backPropagate()
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 {
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<T>::backPropagate();
 
     const float alpha = 1.0f;
-    const Float_T alphaMask = 0.0f;
 
     const unsigned int kernelSize = (!mKernelDims.empty())
         ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
@@ -344,8 +357,8 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
 
 #if CUDNN_VERSION >= 5000
         CHECK_CUDNN_STATUS(cudnnConvolutionBackwardFilter(
@@ -384,12 +397,10 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
                 for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                      ++channel) {
                     if (!isConnection(channel, output)) {
-                        CHECK_CUBLAS_STATUS(cublasSscal(
-                            CudaContext::cublasHandle(),
-                            kernelSize, // size of data
-                            &alphaMask,
-                            mDiffSharedSynapses[k].getDevicePtr() + offset,
-                            1));
+                        thrust_fill<T>(mDiffSharedSynapses[k].getDevicePtr()
+                                            + offset,
+                                       kernelSize,
+                                       T(0.0));
                     }
 
                     offset += kernelSize;
@@ -416,10 +427,10 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
-            std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+            std::shared_ptr<CudaDeviceTensor<T> > diffOutput
                 = (mDiffOutputs[k].isValid())
-                    ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
-                    : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+                    ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
+                    : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
 #if CUDNN_VERSION >= 5000
             CHECK_CUDNN_STATUS(cudnnConvolutionBackwardData(
@@ -457,54 +468,53 @@ void N2D2::ConvCell_Frame_CUDA::backPropagate()
     }
 }
 
-void N2D2::ConvCell_Frame_CUDA::update()
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::update()
 {
 
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
         mWeightsSolvers[k]->update(
-            &mSharedSynapses[k], &mDiffSharedSynapses[k], mInputs.dimB());
+            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
 
     if (!mNoBias)
-        mBiasSolver->update(&(*mBias), &mDiffBias, mInputs.dimB());
+        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
-void N2D2::ConvCell_Frame_CUDA::setWeights(unsigned int k,
-                                           Interface<Float_T>* weights,
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::setWeights(unsigned int k,
+                                           const Interface<>& weights,
                                            unsigned int offset)
 {
-    CudaInterface<Float_T>* cudaWeights
-        = dynamic_cast<CudaInterface<Float_T>*>(weights);
-
-    if (cudaWeights == NULL) {
-        throw std::runtime_error("ConvCell_Frame_CUDA::setWeights(): weights"
-                                 " must be a CudaInterface");
-    }
+    const CudaInterface<>& cudaWeights
+        = dynamic_cast<const CudaInterface<>&>(weights);
 
     mExtSharedSynapses[k] = std::make_pair(cudaWeights, offset);
 }
 
-void N2D2::ConvCell_Frame_CUDA::setBiases(
-    const std::shared_ptr<Tensor<Float_T> >& biases)
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::setBiases(
+    const std::shared_ptr<BaseTensor>& biases)
 {
-    std::shared_ptr<CudaTensor<Float_T> > cudaBiases
-        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(biases);
+    std::shared_ptr<CudaTensor<T> > cudaBiases
+        = std::dynamic_pointer_cast<CudaTensor<T> >(biases);
 
     if (!cudaBiases) {
-        throw std::runtime_error("ConvCell_Frame_CUDA::setBiases(): biases"
+        throw std::runtime_error("ConvCell_Frame_CUDA<T>::setBiases(): biases"
                                  " must be a CudaTensor");
     }
 
     mBias = cudaBiases;
 }
 
-void N2D2::ConvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&ConvCell_Frame_CUDA::propagate, this, false),
-                  std::bind(&ConvCell_Frame_CUDA::backPropagate, this));
+                  std::bind(&ConvCell_Frame_CUDA<T>::propagate, this, false),
+                  std::bind(&ConvCell_Frame_CUDA<T>::backPropagate, this));
 
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
         std::stringstream name;
@@ -530,7 +540,8 @@ void N2D2::ConvCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
     }
 }
 
-void N2D2::ConvCell_Frame_CUDA::logFreeParameters(const std::string& fileName,
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileName,
                                                   unsigned int output,
                                                   unsigned int channel) const
 {
@@ -544,7 +555,8 @@ void N2D2::ConvCell_Frame_CUDA::logFreeParameters(const std::string& fileName,
     mSynchronized = false;
 }
 
-void N2D2::ConvCell_Frame_CUDA::logFreeParameters(const std::string& fileName,
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileName,
                                                   unsigned int output) const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
@@ -557,7 +569,8 @@ void N2D2::ConvCell_Frame_CUDA::logFreeParameters(const std::string& fileName,
     mSynchronized = false;
 }
 
-void N2D2::ConvCell_Frame_CUDA::logFreeParameters(const std::string
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::logFreeParameters(const std::string
                                                   & dirName) const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
@@ -570,7 +583,8 @@ void N2D2::ConvCell_Frame_CUDA::logFreeParameters(const std::string
     mSynchronized = false;
 }
 
-void N2D2::ConvCell_Frame_CUDA::saveFreeParameters(const std::string
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::saveFreeParameters(const std::string
                                                    & fileName) const
 {
     std::ofstream syn(fileName.c_str(), std::fstream::binary);
@@ -582,7 +596,7 @@ void N2D2::ConvCell_Frame_CUDA::saveFreeParameters(const std::string
     mSharedSynapses.synchronizeDToH();
 
     for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (std::vector<Float_T>::const_iterator it
+        for (typename std::vector<T>::const_iterator it
              = mSharedSynapses[k].begin();
              it != mSharedSynapses[k].end();
              ++it)
@@ -592,7 +606,7 @@ void N2D2::ConvCell_Frame_CUDA::saveFreeParameters(const std::string
     if (!mNoBias) {
         mBias->synchronizeDToH();
 
-        for (std::vector<Float_T>::const_iterator it = mBias->begin();
+        for (typename std::vector<T>::const_iterator it = mBias->begin();
              it != mBias->end();
              ++it)
             syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
@@ -602,7 +616,8 @@ void N2D2::ConvCell_Frame_CUDA::saveFreeParameters(const std::string
         throw std::runtime_error("Error writing synaptic file: " + fileName);
 }
 
-void N2D2::ConvCell_Frame_CUDA::loadFreeParameters(const std::string& fileName,
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileName,
                                                    bool ignoreNotExists)
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
@@ -619,7 +634,7 @@ void N2D2::ConvCell_Frame_CUDA::loadFreeParameters(const std::string& fileName,
     }
 
     for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (std::vector<Float_T>::iterator it = mSharedSynapses[k].begin();
+        for (typename std::vector<T>::iterator it = mSharedSynapses[k].begin();
              it != mSharedSynapses[k].end();
              ++it)
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
@@ -628,7 +643,7 @@ void N2D2::ConvCell_Frame_CUDA::loadFreeParameters(const std::string& fileName,
     mSharedSynapses.synchronizeHToD();
 
     if (!mNoBias) {
-        for (std::vector<Float_T>::iterator it = mBias->begin();
+        for (typename std::vector<T>::iterator it = mBias->begin();
              it != mBias->end();
              ++it)
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
@@ -648,7 +663,8 @@ void N2D2::ConvCell_Frame_CUDA::loadFreeParameters(const std::string& fileName,
             "Synaptic file (.SYN) size larger than expected: " + fileName);
 }
 
-void N2D2::ConvCell_Frame_CUDA::exportFreeParameters(const std::string
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                      & fileName) const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
@@ -661,14 +677,16 @@ void N2D2::ConvCell_Frame_CUDA::exportFreeParameters(const std::string
     mSynchronized = false;
 }
 
-void N2D2::ConvCell_Frame_CUDA::exportSolverParameters(const std::string
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::exportSolverParameters(const std::string
                                                        & fileName) const
 {
     for (unsigned int i = 0; i < mSharedSynapses.size(); ++i)
         mWeightsSolvers[i]->exportFreeParameters(fileName);
 }
 
-void N2D2::ConvCell_Frame_CUDA::importFreeParameters(const std::string
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                      & fileName,
                                                      bool ignoreNotExists)
 {
@@ -682,7 +700,8 @@ void N2D2::ConvCell_Frame_CUDA::importFreeParameters(const std::string
     mBias->synchronizeHToD();
 }
 
-void N2D2::ConvCell_Frame_CUDA::logFreeParametersDistrib(const std::string
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
                                                          & fileName) const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
@@ -694,7 +713,8 @@ void N2D2::ConvCell_Frame_CUDA::logFreeParametersDistrib(const std::string
     mSynchronized = false;
 }
 
-void N2D2::ConvCell_Frame_CUDA::discretizeFreeParameters(unsigned int nbLevels)
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::discretizeFreeParameters(unsigned int nbLevels)
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeDToH();
@@ -711,8 +731,9 @@ void N2D2::ConvCell_Frame_CUDA::discretizeFreeParameters(unsigned int nbLevels)
     mBias->synchronizeHToD();
 }
 
+template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::ConvCell_Frame_CUDA::getFreeParametersRange() const
+N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange() const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeDToH();
@@ -732,7 +753,8 @@ N2D2::ConvCell_Frame_CUDA::getFreeParametersRange() const
     return range;
 }
 
-void N2D2::ConvCell_Frame_CUDA::processFreeParameters(const std::function
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(const std::function
                                                 <double(const double&)>& func)
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
@@ -750,7 +772,8 @@ void N2D2::ConvCell_Frame_CUDA::processFreeParameters(const std::function
     mBias->synchronizeHToD();
 }
 
-N2D2::ConvCell_Frame_CUDA::~ConvCell_Frame_CUDA()
+template <class T>
+N2D2::ConvCell_Frame_CUDA<T>::~ConvCell_Frame_CUDA()
 {
 
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
@@ -765,6 +788,11 @@ N2D2::ConvCell_Frame_CUDA::~ConvCell_Frame_CUDA()
         CHECK_CUDA_STATUS(cudaFree(mWorkspace));
 
     CHECK_CUDNN_STATUS(cudnnDestroyConvolutionDescriptor(mConvDesc));
+}
+
+namespace N2D2 {
+    template class ConvCell_Frame_CUDA<float>;
+    template class ConvCell_Frame_CUDA<double>;
 }
 
 #endif
