@@ -1982,6 +1982,10 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
              ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
+#ifdef CUDA
+            std::shared_ptr<Cell_Frame_CUDA> cellFrame_CUDA
+                = std::dynamic_pointer_cast<Cell_Frame_CUDA>(mCells[(*itCell)]);
+#endif
 
             if (!cellFrame)
                 throw std::runtime_error(
@@ -1995,7 +1999,8 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
             if (timings != NULL) {
 #ifdef CUDA
-                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+                if(cellFrame_CUDA)
+                    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
 #endif
                 time2 = std::chrono::high_resolution_clock::now();
                 (*timings).push_back(std::make_pair(
@@ -2025,7 +2030,11 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
         if (timings != NULL) {
 #ifdef CUDA
-            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+            std::shared_ptr<Cell_Frame_CUDA> cellFrame_CUDA
+                = std::dynamic_pointer_cast<Cell_Frame_CUDA>((*itTargets)->
+                                                        getCell());
+            if(cellFrame_CUDA)
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
 #endif
             time2 = std::chrono::high_resolution_clock::now();
             (*timings).push_back(std::make_pair(
