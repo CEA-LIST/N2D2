@@ -1352,6 +1352,8 @@ If \lstinline!START! is not specified, the loop begins at 0 (first value of
   \lstinline!DefaultModel! [\lstinline!Transcode!] & Default layers model.
   Can be \lstinline!Frame!, \lstinline!Frame_CUDA!, \lstinline!Transcode!
   or \lstinline!Spike! \\
+  \lstinline!DefaultDataType! [\lstinline!Float32!] & Default layers data type.
+  Can be \lstinline!Float16!, \lstinline!Float32! or \lstinline!Float64! \\
   \lstinline!SignalsDiscretization! [0] & Number of levels for signal
   discretization \\
   \lstinline!FreeParametersDiscretization! [0] & Number of levels for weights discretization \\
@@ -2943,6 +2945,8 @@ Common set of parameters for any kind of layer.
   \cellcolor{requiredcolor}\lstinline!Type! & Type of the layer. Can be any of
   the type described below \\
   \lstinline!Model! [\lstinline!DefaultModel!] & Layer model to use \\
+  \lstinline!DataType! [\lstinline!DefaultDataType!] & Layer data type to use.
+  Please note that some layers may not support every data type. \\
   \lstinline!ConfigSection! [] & Name of the configuration section for layer \\
  \hline
 \end{tabular}
