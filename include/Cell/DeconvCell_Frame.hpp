@@ -27,8 +27,14 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-class DeconvCell_Frame : public virtual DeconvCell, public Cell_Frame<Float_T> {
+template <class T>
+class DeconvCell_Frame : public virtual DeconvCell, public Cell_Frame<T> {
 public:
+    using Cell_Frame<T>::mInputs;
+    using Cell_Frame<T>::mOutputs;
+    using Cell_Frame<T>::mDiffInputs;
+    using Cell_Frame<T>::mDiffOutputs;
+
     DeconvCell_Frame(const std::string& name,
                      const std::vector<unsigned int>& kernelDims,
                      unsigned int nbOutputs,
@@ -37,7 +43,7 @@ public:
                      const std::vector<int>& paddingDims
                         = std::vector<int>(2, 0),
                        const std::shared_ptr<Activation>& activation
-                     = std::make_shared<TanhActivation_Frame<Float_T> >());
+                     = std::make_shared<TanhActivation_Frame<T> >());
     static std::shared_ptr<DeconvCell>
     create(Network& /*net*/,
            const std::string& name,
@@ -47,46 +53,55 @@ public:
                   = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims = std::vector<int>(2, 0),
            const std::shared_ptr<Activation>& activation
-           = std::make_shared<TanhActivation_Frame<Float_T> >())
+           = std::make_shared<TanhActivation_Frame<T> >())
     {
-        return std::make_shared<DeconvCell_Frame>(name,
-                                                  kernelDims,
-                                                  nbOutputs,
-                                                  strideDims,
-                                                  paddingDims,
-                                                  activation);
+        return std::make_shared<DeconvCell_Frame<T> >(name,
+                                                      kernelDims,
+                                                      nbOutputs,
+                                                      strideDims,
+                                                      paddingDims,
+                                                      activation);
     }
 
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Tensor<Float_T> getWeight(unsigned int output,
-                                     unsigned int channel) const
+    inline void getWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const
     {
         unsigned int tensorChannel;
-        const Tensor<Float_T>& sharedSynapses
+        const Tensor<T>& sharedSynapses
             = mSharedSynapses.getTensor(channel, &tensorChannel);
-        return sharedSynapses[output][channel - tensorChannel];
+
+        value.resize(sharedSynapses[output][channel - tensorChannel].dims());
+        value = sharedSynapses[output][channel - tensorChannel];
     };
-    inline Float_T getBias(unsigned int output) const
+    inline void getBias(unsigned int output, BaseTensor& value) const
     {
-        return (*mBias)(output);
+        value.resize({1});
+        value = Tensor<T>({1}, (*mBias)(output));
     };
-    inline Interface<Float_T>* getWeights()
+    inline Interface<> getWeights()
     {
-        return &mSharedSynapses;
+        return Interface<>(mSharedSynapses);
     };
     void setWeights(unsigned int k,
-                    Interface<Float_T>* weights,
+                    const Interface<>& weights,
                     unsigned int offset);
-    inline std::shared_ptr<Tensor<Float_T> > getBiases()
+    inline std::shared_ptr<BaseTensor> getBiases()
     {
         return mBias;
     };
-    inline void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases)
+    inline void setBiases(const std::shared_ptr<BaseTensor>& biases)
     {
-        mBias = biases;
+        mBias = std::dynamic_pointer_cast<Tensor<T> >(biases);
+
+        if (!mBias) {
+            throw std::runtime_error("DeconvCell_Frame<T>::setBiases():"
+                                     " invalid type");
+        }
     }
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
@@ -98,26 +113,26 @@ public:
 protected:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
-                          const Tensor<Float_T>& value)
+                          const BaseTensor& value)
     {
         unsigned int tensorChannel;
-        Tensor<Float_T>& sharedSynapses
+        Tensor<T>& sharedSynapses
             = mSharedSynapses.getTensor(channel, &tensorChannel);
-        sharedSynapses[output][channel - tensorChannel] = value;
+        sharedSynapses[output][channel - tensorChannel] = tensor_cast<T>(value);
     }
-    inline void setBias(unsigned int output, Float_T value)
+    inline void setBias(unsigned int output, const BaseTensor& value)
     {
-        (*mBias)(output) = value;
+        (*mBias)(output) = tensor_cast<T>(value)(0);
     };
 
     // Internal
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    Interface<Float_T> mSharedSynapses;
+    Interface<T> mSharedSynapses;
     std::map<unsigned int,
-        std::pair<Interface<Float_T>*, unsigned int> > mExtSharedSynapses;
-    std::shared_ptr<Tensor<Float_T> > mBias;
-    Interface<Float_T> mDiffSharedSynapses;
-    Tensor<Float_T> mDiffBias;
+        std::pair<Interface<T>, unsigned int> > mExtSharedSynapses;
+    std::shared_ptr<Tensor<T> > mBias;
+    Interface<T> mDiffSharedSynapses;
+    Tensor<T> mDiffBias;
     ConvCell_Frame_Kernels::Descriptor mConvDesc;
 
 private:

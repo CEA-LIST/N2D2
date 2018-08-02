@@ -120,14 +120,30 @@ N2D2::DeconvCellGenerator::generate(Network& network,
                 : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
-    std::shared_ptr<DeconvCell> cell = Registrar
-        <DeconvCell>::create(model)(network,
-                                    section,
-                                    kernelDims,
-                                    nbChannels,
-                                    strideDims,
-                                    paddingDims,
-                                    activation);
+    std::shared_ptr<DeconvCell> cell
+        = (dataType == Float32)
+            ? Registrar<DeconvCell>::create<float>(model)(network,
+                                                          section,
+                                                          kernelDims,
+                                                          nbChannels,
+                                                          strideDims,
+                                                          paddingDims,
+                                                          activation)
+          : (dataType == Float16)
+            ? Registrar<DeconvCell>::create<half_float::half>(model)(network,
+                                                                    section,
+                                                                    kernelDims,
+                                                                    nbChannels,
+                                                                    strideDims,
+                                                                    paddingDims,
+                                                                    activation)
+            : Registrar<DeconvCell>::create<double>(model)(network,
+                                                           section,
+                                                           kernelDims,
+                                                           nbChannels,
+                                                           strideDims,
+                                                           paddingDims,
+                                                           activation);
 
     if (!cell) {
         throw std::runtime_error(

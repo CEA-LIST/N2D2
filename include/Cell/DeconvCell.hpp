@@ -133,22 +133,23 @@ public:
     {
         return mBiasSolver;
     };
-    virtual Tensor<Float_T> getWeight(unsigned int output,
-                                      unsigned int channel) const = 0;
-    virtual Float_T getBias(unsigned int output) const = 0;
+    virtual void getWeight(unsigned int output,
+                           unsigned int channel,
+                           BaseTensor& value) const = 0;
+    virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
     void setKernel(unsigned int output,
                    unsigned int channel,
                    const Matrix<double>& value,
                    bool normalize);
-    virtual Interface<Float_T>* getWeights() { return NULL; };
+    virtual Interface<> getWeights() { return Interface<>(); };
     virtual void setWeights(unsigned int /*k*/,
-                    Interface<Float_T>* /*weights*/,
+                    Interface<> /*weights*/,
                     unsigned int /*offset*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getBiases()
+    virtual std::shared_ptr<BaseTensor> getBiases()
     {
-        return std::shared_ptr<Tensor<Float_T> >();
+        return std::shared_ptr<BaseTensor>();
     };
-    virtual void setBiases(const std::shared_ptr<Tensor<Float_T> >&
+    virtual void setBiases(const std::shared_ptr<BaseTensor>&
                            /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
@@ -165,8 +166,8 @@ protected:
     virtual void setOutputsDims();
     virtual void setWeight(unsigned int output,
                            unsigned int channel,
-                           const Tensor<Float_T>& value) = 0;
-    virtual void setBias(unsigned int output, Float_T value) = 0;
+                           const BaseTensor& value) = 0;
+    virtual void setBias(unsigned int output, const BaseTensor& value) = 0;
     std::map<unsigned int, unsigned int> outputsRemap() const;
 
     /// If true, the output neurons don't have bias

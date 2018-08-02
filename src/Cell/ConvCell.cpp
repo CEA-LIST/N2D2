@@ -699,6 +699,8 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
                 kernel(index) = Utils::round((nbLevels - 1) * kernel(index))
                          / (nbLevels - 1);
             }
+
+            setWeight(output, channel, kernel);
         }
 
         if (!mNoBias) {
@@ -759,6 +761,8 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
                 kernel(index) = Utils::clamp(
                     Random::randNormal(kernel(index), stdDev), -1.0, 1.0);
             }
+
+            setWeight(output, channel, kernel);
         }
 
         if (!mNoBias) {
@@ -785,6 +789,8 @@ void N2D2::ConvCell::processFreeParameters(const std::function
 
             for (unsigned int index = 0; index < kernel.size(); ++index)
                 kernel(index) = func(kernel(index));
+
+            setWeight(output, channel, kernel);
         }
 
         if (!mNoBias) {
