@@ -63,8 +63,18 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
                 : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
-    std::shared_ptr<BatchNormCell> cell = Registrar
-        <BatchNormCell>::create(model)(section, nbOutputs, activation);
+    std::shared_ptr<BatchNormCell> cell
+        = (dataType == Float32)
+            ? Registrar<BatchNormCell>::create<float>(model)(section,
+                                                             nbOutputs,
+                                                             activation)
+          : (dataType == Float16)
+            ? Registrar<BatchNormCell>::create<half_float::half>(model)(section,
+                                                                 nbOutputs,
+                                                                 activation)
+            : Registrar<BatchNormCell>::create<double>(model)(section,
+                                                              nbOutputs,
+                                                              activation);
 
     if (!cell) {
         throw std::runtime_error(

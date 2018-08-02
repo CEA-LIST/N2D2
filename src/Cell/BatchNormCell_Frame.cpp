@@ -20,33 +20,49 @@
 
 #include "Cell/BatchNormCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::BatchNormCell>
-N2D2::BatchNormCell_Frame::mRegistrar("Frame",
-                                      N2D2::BatchNormCell_Frame::create);
+N2D2::BatchNormCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::BatchNormCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::BatchNormCell>::Type<half_float::half>());
 
-N2D2::BatchNormCell_Frame::BatchNormCell_Frame(
+template <>
+N2D2::Registrar<N2D2::BatchNormCell>
+N2D2::BatchNormCell_Frame<float>::mRegistrar("Frame",
+    N2D2::BatchNormCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::BatchNormCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::BatchNormCell>
+N2D2::BatchNormCell_Frame<double>::mRegistrar("Frame",
+    N2D2::BatchNormCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::BatchNormCell>::Type<double>());
+
+template <class T>
+N2D2::BatchNormCell_Frame<T>::BatchNormCell_Frame(
     const std::string& name,
     unsigned int nbOutputs,
     const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
-      Cell_Frame(name, nbOutputs, activation),
-      mScale(std::make_shared<Tensor<Float_T> >()),
-      mBias(std::make_shared<Tensor<Float_T> >()),
-      mMean(std::make_shared<Tensor<Float_T> >()),
-      mVariance(std::make_shared<Tensor<Float_T> >())
+      Cell_Frame<T>(name, nbOutputs, activation),
+      mScale(std::make_shared<Tensor<T> >()),
+      mBias(std::make_shared<Tensor<T> >()),
+      mMean(std::make_shared<Tensor<T> >()),
+      mVariance(std::make_shared<Tensor<T> >())
 {
     // ctor
-    mScaleSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
-    mBiasSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
+    mScaleSolver = std::make_shared<SGDSolver_Frame<T> >();
+    mBiasSolver = std::make_shared<SGDSolver_Frame<T> >();
 }
 
-void N2D2::BatchNormCell_Frame::initialize()
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initialize()
 {
     mInputs.synchronizeDToH();
 
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-        throw std::domain_error("BatchNormCell_Frame::initialize():"
+        throw std::domain_error("BatchNormCell_Frame<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
@@ -60,11 +76,11 @@ void N2D2::BatchNormCell_Frame::initialize()
     requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
 
     if (mScale->empty())
-        mScale->resize(requiredDims, 1.0);
+        mScale->resize(requiredDims, T(1.0));
     else {
         if (mScale->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame::initialize():"
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared scale, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mScale->dims() << std::endl;
@@ -74,11 +90,11 @@ void N2D2::BatchNormCell_Frame::initialize()
     }
 
     if (mBias->empty())
-        mBias->resize(requiredDims, 0.0);
+        mBias->resize(requiredDims, T(0.0));
     else {
         if (mBias->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame::initialize():"
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared bias, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mBias->dims() << std::endl;
@@ -88,11 +104,11 @@ void N2D2::BatchNormCell_Frame::initialize()
     }
 
     if (mMean->empty())
-        mMean->resize(requiredDims, 0.0);
+        mMean->resize(requiredDims, T(0.0));
     else {
         if (mMean->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame::initialize():"
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared mean, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mMean->dims() << std::endl;
@@ -102,11 +118,11 @@ void N2D2::BatchNormCell_Frame::initialize()
     }
 
     if (mVariance->empty())
-        mVariance->resize(requiredDims, 0.0);
+        mVariance->resize(requiredDims, T(0.0));
     else {
         if (mVariance->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame::initialize():"
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared variance, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mVariance->dims() << std::endl;
@@ -124,12 +140,13 @@ void N2D2::BatchNormCell_Frame::initialize()
     mDiffSavedVariance.resize(requiredDims);
 }
 
-void N2D2::BatchNormCell_Frame::propagate(bool inference)
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 {
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 0, kSize = mInputs.size(); k < kSize; ++k) {
-        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
         const unsigned int size = mInputs.dimB() * input.dimZ();
 
         if (inference) {
@@ -143,12 +160,12 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
                     ++channel)
                 {
                     const unsigned int output = outputOffset + channel;
-                    const Float_T var = std::sqrt((*mVariance)(output)
-                                                  + mEpsilon);
+                    const T var(std::sqrt((*mVariance)(output)
+                                                  + mEpsilon));
 
                     for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
                         for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
-                            const Float_T normalized
+                            const T normalized
                                 = (input(ox, oy, channel, batchPos)
                                    - (*mMean)(output)) / var;
                             mOutputs(ox, oy, output, batchPos)
@@ -167,7 +184,7 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
 #pragma omp parallel for if (input.dimZ() > 16)
             for (int channel = 0; channel < (int)input.dimZ(); ++channel) {
                 const unsigned int output = outputOffset + channel;
-                Float_T sum = 0.0;
+                T sum(0.0);
 
                 for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                     for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
@@ -176,21 +193,21 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
                     }
                 }
 
-                mSavedMean(output) = sum / (Float_T)size;
+                mSavedMean(output) = sum / (T)size;
 
                 sum = 0.0;
 
                 for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                     for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
                         for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
-                            const Float_T zeroed = input(ox, oy, channel, batchPos)
+                            const T zeroed = input(ox, oy, channel, batchPos)
                                                    - mSavedMean(output);
                             sum += zeroed * zeroed;
                         }
                     }
                 }
 
-                mSavedVariance(output) = sum / (Float_T)size;
+                mSavedVariance(output) = sum / (T)size;
 
                 (*mMean)(output) = mSavedMean(output) * expAverageFactor
                                 + (*mMean)(output) * (1.0 - expAverageFactor);
@@ -206,12 +223,11 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                 for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
                     const unsigned int output = outputOffset + channel;
-                    const Float_T var
-                        = std::sqrt(mSavedVariance(output) + mEpsilon);
+                    const T var(std::sqrt(mSavedVariance(output) + mEpsilon));
 
                     for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
                         for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
-                            const Float_T normalized
+                            const T normalized
                                 = (input(ox, oy, channel, batchPos)
                                    - mSavedMean(output)) / var;
                             mOutputs(ox, oy, output, batchPos)
@@ -227,42 +243,42 @@ void N2D2::BatchNormCell_Frame::propagate(bool inference)
         outputOffset += input.dimZ();
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::BatchNormCell_Frame::backPropagate()
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::backPropagate()
 {
-    Cell_Frame::backPropagate();
+    Cell_Frame<T>::backPropagate();
 
-    const float betaScale = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
-    const float betaBias = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+    const T betaScale = (mScaleSolver->isNewIteration()) ? T(0.0) : T(1.0);
+    const T betaBias = (mBiasSolver->isNewIteration()) ? T(0.0) : T(1.0);
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 0, kSize = mInputs.size(); k < kSize; ++k) {
-        const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
         const unsigned int size = input.dimX() * input.dimY() * mInputs.dimB();
 
 #pragma omp parallel for if (input.dimZ() > 16)
         for (int channel = 0; channel < (int)input.dimZ(); ++channel) {
             const unsigned int output = outputOffset + channel;
-            const Float_T var = std::sqrt(mSavedVariance(output) + mEpsilon);
+            const T var(std::sqrt(mSavedVariance(output) + mEpsilon));
 
-            Float_T sumScale = 0.0;
-            Float_T sumBias = 0.0;
-            Float_T sumMean1 = 0.0;
-            Float_T sumMean2 = 0.0;
-            Float_T sumVariance = 0.0;
+            T sumScale(0.0);
+            T sumBias(0.0);
+            T sumMean1(0.0);
+            T sumMean2(0.0);
+            T sumVariance(0.0);
 
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                 for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
                     for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
-                        const Float_T normalized
-                            = (input(ox, oy, channel, batchPos)
-                               - mSavedMean(output)) / var;
-                        const Float_T diffNormalized
-                            = mDiffInputs(ox, oy, output, batchPos)
-                              * (*mScale)(output);
+                        const T normalized((input(ox, oy, channel, batchPos)
+                               - mSavedMean(output)) / var);
+                        const T diffNormalized(
+                            mDiffInputs(ox, oy, output, batchPos)
+                              * (*mScale)(output));
 
                         sumScale += mDiffInputs(ox, oy, output, batchPos)
                                     * normalized;
@@ -283,7 +299,7 @@ void N2D2::BatchNormCell_Frame::backPropagate()
                   * std::pow(mSavedVariance(output) + mEpsilon, -3.0 / 2.0);
             mDiffSavedMean(output) = sumMean1 * (-1.0 / var)
                                      + mDiffSavedVariance(output) * sumMean2
-                                       / (Float_T)size;
+                                       / (T)size;
 
             mDiffScale(output) = sumScale + betaScale * mDiffScale(output);
             mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
@@ -292,9 +308,9 @@ void N2D2::BatchNormCell_Frame::backPropagate()
         if (!mDiffOutputs.empty()) {
             const unsigned int size = mInputs.dimB() * getNbOutputs();
             const bool isValid = mDiffOutputs[k].isValid();
-            Tensor<Float_T> diffOutput = (isValid)
-                ? tensor_cast<Float_T>(mDiffOutputs[k])
-                : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+            Tensor<T> diffOutput = (isValid)
+                ? tensor_cast<T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -306,20 +322,18 @@ void N2D2::BatchNormCell_Frame::backPropagate()
                     ++channel)
                 {
                     const unsigned int output = outputOffset + channel;
-                    const Float_T var
-                        = std::sqrt(mSavedVariance(output) + mEpsilon);
+                    const T var(std::sqrt(mSavedVariance(output) + mEpsilon));
 
                     for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
                         for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
-                            const Float_T diffNormalized
-                                = mDiffInputs(ox, oy, output, batchPos)
-                                  * (*mScale)(output);
-                            const Float_T gradient
-                                = diffNormalized / var
+                            const T diffNormalized(
+                                mDiffInputs(ox, oy, output, batchPos)
+                                  * (*mScale)(output));
+                            const T gradient(diffNormalized / var
                                   + mDiffSavedVariance(output) * 2.0
                                     * (input(ox, oy, channel, batchPos)
-                                       - mSavedMean(output)) / (Float_T)size
-                                  + mDiffSavedMean(output) / (Float_T)size;
+                                       - mSavedMean(output)) / (T)size
+                                  + mDiffSavedMean(output) / (T)size);
 
                             diffOutput(ox, oy, channel, batchPos)
                                 = gradient
@@ -342,7 +356,8 @@ void N2D2::BatchNormCell_Frame::backPropagate()
     }
 }
 
-void N2D2::BatchNormCell_Frame::update()
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::update()
 {
     assert(mScale->size() == mDiffScale.size());
     assert(mBias->size() == mDiffBias.size());
@@ -352,14 +367,15 @@ void N2D2::BatchNormCell_Frame::update()
     mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
-void N2D2::BatchNormCell_Frame::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&BatchNormCell_Frame::propagate, this, false),
-                  std::bind(&BatchNormCell_Frame::backPropagate, this));
+                  std::bind(&BatchNormCell_Frame<T>::propagate, this, false),
+                  std::bind(&BatchNormCell_Frame<T>::backPropagate, this));
     gc.check(mName + "_mDiffSavedMean", mSavedMean, mDiffSavedMean);
     gc.check(mName + "_mDiffSavedVariance", mSavedVariance, mDiffSavedVariance);
     gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
@@ -379,7 +395,8 @@ void N2D2::BatchNormCell_Frame::checkGradient(double epsilon, double maxError)
     }
 }
 
-void N2D2::BatchNormCell_Frame::saveFreeParameters(const std::string
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::saveFreeParameters(const std::string
                                                    & fileName) const
 {
     std::ofstream syn(fileName.c_str(), std::fstream::binary);
@@ -388,22 +405,22 @@ void N2D2::BatchNormCell_Frame::saveFreeParameters(const std::string
         throw std::runtime_error("Could not create parameter file (.SYN): "
                                  + fileName);
 
-    for (std::vector<Float_T>::const_iterator it = mScale->begin();
+    for (typename std::vector<T>::const_iterator it = mScale->begin();
          it != mScale->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::const_iterator it = mBias->begin();
+    for (typename std::vector<T>::const_iterator it = mBias->begin();
          it != mBias->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::const_iterator it = mMean->begin();
+    for (typename std::vector<T>::const_iterator it = mMean->begin();
          it != mMean->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::const_iterator it = mVariance->begin();
+    for (typename std::vector<T>::const_iterator it = mVariance->begin();
          it != mVariance->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
@@ -412,7 +429,8 @@ void N2D2::BatchNormCell_Frame::saveFreeParameters(const std::string
         throw std::runtime_error("Error writing parameter file: " + fileName);
 }
 
-void N2D2::BatchNormCell_Frame::loadFreeParameters(const std::string& fileName,
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::loadFreeParameters(const std::string& fileName,
                                                    bool ignoreNotExists)
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
@@ -428,19 +446,19 @@ void N2D2::BatchNormCell_Frame::loadFreeParameters(const std::string& fileName,
                                      + fileName);
     }
 
-    for (std::vector<Float_T>::iterator it = mScale->begin(); it != mScale->end();
+    for (typename std::vector<T>::iterator it = mScale->begin(); it != mScale->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::iterator it = mBias->begin(); it != mBias->end();
+    for (typename std::vector<T>::iterator it = mBias->begin(); it != mBias->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::iterator it = mMean->begin(); it != mMean->end();
+    for (typename std::vector<T>::iterator it = mMean->begin(); it != mMean->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
 
-    for (std::vector<Float_T>::iterator it = mVariance->begin();
+    for (typename std::vector<T>::iterator it = mVariance->begin();
          it != mVariance->end();
          ++it)
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
@@ -457,6 +475,13 @@ void N2D2::BatchNormCell_Frame::loadFreeParameters(const std::string& fileName,
             "Synaptic file (.SYN) size larger than expected: " + fileName);
 }
 
-N2D2::BatchNormCell_Frame::~BatchNormCell_Frame()
+template <class T>
+N2D2::BatchNormCell_Frame<T>::~BatchNormCell_Frame()
 {
+}
+
+namespace N2D2 {
+    template class BatchNormCell_Frame<half_float::half>;
+    template class BatchNormCell_Frame<float>;
+    template class BatchNormCell_Frame<double>;
 }

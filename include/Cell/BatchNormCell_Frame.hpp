@@ -30,17 +30,23 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-class BatchNormCell_Frame : public virtual BatchNormCell, public Cell_Frame<Float_T> {
+template <class T>
+class BatchNormCell_Frame : public virtual BatchNormCell, public Cell_Frame<T> {
 public:
+    using Cell_Frame<T>::mInputs;
+    using Cell_Frame<T>::mOutputs;
+    using Cell_Frame<T>::mDiffInputs;
+    using Cell_Frame<T>::mDiffOutputs;
+
     BatchNormCell_Frame(const std::string& name,
                         unsigned int nbOutputs,
                         const std::shared_ptr<Activation>& activation
-                        = std::make_shared<TanhActivation_Frame<Float_T> >());
+                        = std::make_shared<TanhActivation_Frame<T> >());
     static std::shared_ptr<BatchNormCell>
     create(const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
-           = std::make_shared<TanhActivation_Frame<Float_T> >())
+           = std::make_shared<TanhActivation_Frame<T> >())
     {
         return std::make_shared
             <BatchNormCell_Frame>(name, nbOutputs, activation);
@@ -50,54 +56,78 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Float_T getScale(unsigned int index) const
+    inline void getScale(unsigned int index, BaseTensor& value) const
     {
-        return (*mScale)(index);
+        value.resize({1});
+        value = Tensor<T>({1}, (*mScale)(index));
     }
-    inline Float_T getBias(unsigned int index) const
+    inline void getBias(unsigned int index, BaseTensor& value) const
     {
-        return (*mBias)(index);
+        value.resize({1});
+        value = Tensor<T>({1}, (*mBias)(index));
     }
-    inline Float_T getMean(unsigned int index) const
+    inline void getMean(unsigned int index, BaseTensor& value) const
     {
-        return (*mMean)(index);
+        value.resize({1});
+        value = Tensor<T>({1}, (*mMean)(index));
     }
-    inline Float_T getVariance(unsigned int index) const
+    inline void getVariance(unsigned int index, BaseTensor& value) const
     {
-        return (*mVariance)(index);
+        value.resize({1});
+        value = Tensor<T>({1}, (*mVariance)(index));
     }
-    inline std::shared_ptr<Tensor<Float_T> > getScales() const
+    inline std::shared_ptr<BaseTensor> getScales() const
     {
         return mScale;
     };
-    inline void setScales(const std::shared_ptr<Tensor<Float_T> >& scales)
+    inline void setScales(const std::shared_ptr<BaseTensor>& scales)
     {
-        mScale = scales;
+        mScale = std::dynamic_pointer_cast<Tensor<T> >(scales);
+
+        if (!mScale) {
+            throw std::runtime_error("BatchNormCell_Frame<T>::setScales():"
+                                     " invalid type");
+        }
     }
-    inline std::shared_ptr<Tensor<Float_T> > getBiases() const
+    inline std::shared_ptr<BaseTensor> getBiases() const
     {
         return mBias;
     };
-    inline void setBiases(const std::shared_ptr<Tensor<Float_T> >& biases)
+    inline void setBiases(const std::shared_ptr<BaseTensor>& biases)
     {
-        mBias = biases;
+        mBias = std::dynamic_pointer_cast<Tensor<T> >(biases);
+
+        if (!mBias) {
+            throw std::runtime_error("BatchNormCell_Frame<T>::setBiases():"
+                                     " invalid type");
+        }
     }
-    inline std::shared_ptr<Tensor<Float_T> > getMeans() const
+    inline std::shared_ptr<BaseTensor> getMeans() const
     {
         return mMean;
     };
-    inline void setMeans(const std::shared_ptr<Tensor<Float_T> >& means)
+    inline void setMeans(const std::shared_ptr<BaseTensor>& means)
     {
-        mMean = means;
+        mMean = std::dynamic_pointer_cast<Tensor<T> >(means);
+
+        if (!mMean) {
+            throw std::runtime_error("BatchNormCell_Frame<T>::setMeans():"
+                                     " invalid type");
+        }
     }
-    inline std::shared_ptr<Tensor<Float_T> > getVariances() const
+    inline std::shared_ptr<BaseTensor> getVariances() const
     {
         return mVariance;
     };
-    inline void setVariances(const std::shared_ptr<Tensor<Float_T> >&
+    inline void setVariances(const std::shared_ptr<BaseTensor>&
                              variances)
     {
-        mVariance = variances;
+        mVariance = std::dynamic_pointer_cast<Tensor<T> >(variances);
+
+        if (!mVariance) {
+            throw std::runtime_error("BatchNormCell_Frame<T>::setVariances():"
+                                     " invalid type");
+        }
     }
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
@@ -106,34 +136,34 @@ public:
     virtual ~BatchNormCell_Frame();
 
 protected:
-    inline void setScale(unsigned int index, Float_T value)
+    inline void setScale(unsigned int index, const BaseTensor& value)
     {
-        (*mScale)(index) = value;
+        (*mScale)(index) = tensor_cast<T>(value)(0);
     }
-    inline void setBias(unsigned int index, Float_T value)
+    inline void setBias(unsigned int index, const BaseTensor& value)
     {
-        (*mBias)(index) = value;
+        (*mBias)(index) = tensor_cast<T>(value)(0);
     }
-    inline void setMean(unsigned int index, Float_T value)
+    inline void setMean(unsigned int index, const BaseTensor& value)
     {
-        (*mMean)(index) = value;
+        (*mMean)(index) = tensor_cast<T>(value)(0);
     }
-    inline void setVariance(unsigned int index, Float_T value)
+    inline void setVariance(unsigned int index, const BaseTensor& value)
     {
-        (*mVariance)(index) = value;
+        (*mVariance)(index) = tensor_cast<T>(value)(0);
     }
 
     unsigned int mNbPropagate;
-    std::shared_ptr<Tensor<Float_T> > mScale;
-    std::shared_ptr<Tensor<Float_T> > mBias;
-    std::shared_ptr<Tensor<Float_T> > mMean;
-    std::shared_ptr<Tensor<Float_T> > mVariance;
-    Tensor<Float_T> mDiffScale;
-    Tensor<Float_T> mDiffBias;
-    Tensor<Float_T> mDiffSavedMean;
-    Tensor<Float_T> mDiffSavedVariance;
-    Tensor<Float_T> mSavedMean;
-    Tensor<Float_T> mSavedVariance;
+    std::shared_ptr<Tensor<T> > mScale;
+    std::shared_ptr<Tensor<T> > mBias;
+    std::shared_ptr<Tensor<T> > mMean;
+    std::shared_ptr<Tensor<T> > mVariance;
+    Tensor<T> mDiffScale;
+    Tensor<T> mDiffBias;
+    Tensor<T> mDiffSavedMean;
+    Tensor<T> mDiffSavedVariance;
+    Tensor<T> mSavedMean;
+    Tensor<T> mSavedVariance;
 
 private:
     static Registrar<BatchNormCell> mRegistrar;

@@ -24,31 +24,48 @@
 
 #include "Cell/BatchNormCell_Frame_CUDA.hpp"
 
-N2D2::Registrar<N2D2::BatchNormCell> N2D2::BatchNormCell_Frame_CUDA::mRegistrar(
-    "Frame_CUDA", N2D2::BatchNormCell_Frame_CUDA::create);
+template <>
+N2D2::Registrar<N2D2::BatchNormCell>
+N2D2::BatchNormCell_Frame_CUDA<half_float::half>::mRegistrar("Frame_CUDA",
+    N2D2::BatchNormCell_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::BatchNormCell>::Type<half_float::half>());
 
-N2D2::BatchNormCell_Frame_CUDA::BatchNormCell_Frame_CUDA(
+template <>
+N2D2::Registrar<N2D2::BatchNormCell>
+N2D2::BatchNormCell_Frame_CUDA<float>::mRegistrar("Frame_CUDA",
+    N2D2::BatchNormCell_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::BatchNormCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::BatchNormCell>
+N2D2::BatchNormCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
+    N2D2::BatchNormCell_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::BatchNormCell>::Type<double>());
+
+template <class T>
+N2D2::BatchNormCell_Frame_CUDA<T>::BatchNormCell_Frame_CUDA(
     const std::string& name,
     unsigned int nbOutputs,
     const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       BatchNormCell(name, nbOutputs),
-      Cell_Frame_CUDA(name, nbOutputs, activation),
-      mScale(std::make_shared<CudaTensor<Float_T> >()),
-      mBias(std::make_shared<CudaTensor<Float_T> >()),
-      mMean(std::make_shared<CudaTensor<Float_T> >()),
-      mVariance(std::make_shared<CudaTensor<Float_T> >()),
+      Cell_Frame_CUDA<T>(name, nbOutputs, activation),
+      mScale(std::make_shared<CudaTensor<T> >()),
+      mBias(std::make_shared<CudaTensor<T> >()),
+      mMean(std::make_shared<CudaTensor<T> >()),
+      mVariance(std::make_shared<CudaTensor<T> >()),
       mSynchronized(false)
 {
     // ctor
-    mScaleSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
-    mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<Float_T> >();
+    mScaleSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
+    mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::initialize()
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
 {
     if (mInputs.size() > 1)
-        throw std::domain_error("BatchNormCell_Frame_CUDA::initialize(): "
+        throw std::domain_error("BatchNormCell_Frame_CUDA<T>::initialize(): "
                                 "inputs concatenation is not supported.");
 
     mMode = CUDNN_BATCHNORM_SPATIAL;
@@ -83,11 +100,11 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     const std::vector<size_t> requiredDims(dims.rbegin(), dims.rend());
 
     if (mScale->empty())
-        mScale->resize(requiredDims, 1.0);
+        mScale->resize(requiredDims, T(1.0));
     else {
         if (mScale->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared scale, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mScale->dims() << std::endl;
@@ -97,11 +114,11 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     }
 
     if (mBias->empty())
-        mBias->resize(requiredDims, 0.0);
+        mBias->resize(requiredDims, T(0.0));
     else {
         if (mBias->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared bias, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mBias->dims() << std::endl;
@@ -111,11 +128,11 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     }
 
     if (mMean->empty())
-        mMean->resize(requiredDims, 0.0);
+        mMean->resize(requiredDims, T(0.0));
     else {
         if (mMean->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared mean, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mMean->dims() << std::endl;
@@ -125,11 +142,11 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     }
 
     if (mVariance->empty())
-        mVariance->resize(requiredDims, 0.0);
+        mVariance->resize(requiredDims, T(0.0));
     else {
         if (mVariance->dims() != requiredDims) {
             std::stringstream msgStr;
-            msgStr << "BatchNormCell_Frame_CUDA::initialize():"
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
                 " in cell " + mName + ", wrong size for shared variance, expected"
                 " size is " << requiredDims << " whereas actual size is "
                 << mVariance->dims() << std::endl;
@@ -145,15 +162,16 @@ void N2D2::BatchNormCell_Frame_CUDA::initialize()
     mDiffBias.resize(requiredDims);
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
-    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
-        = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+    std::shared_ptr<CudaDeviceTensor<T> > input0
+        = cuda_device_tensor_cast<T>(mInputs[0]);
 
     if (inference) {
         CHECK_CUDNN_STATUS(cudnnBatchNormalizationForwardInference(
@@ -198,26 +216,29 @@ void N2D2::BatchNormCell_Frame_CUDA::propagate(bool inference)
     if (!inference)
         ++mNbPropagate;
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 {
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<T>::backPropagate();
 
-    const float alpha = 1.0f;
-    const float alphaData = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alphaData = 1.0f;
     assert(mScaleSolver->isNewIteration() == mBiasSolver->isNewIteration());
-    const float beta = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
-    const float betaData = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type beta
+        = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type betaData
+        = (mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
 
-    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
-        = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
-    std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput0
+    std::shared_ptr<CudaDeviceTensor<T> > input0
+        = cuda_device_tensor_cast_nocopy<T>(mInputs[0]);
+    std::shared_ptr<CudaDeviceTensor<T> > diffOutput0
         = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+            ? cuda_device_tensor_cast<T>(mDiffOutputs[0])
+            : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
 
     CHECK_CUDNN_STATUS(
         cudnnBatchNormalizationBackward(CudaContext::cudnnHandle(),
@@ -245,77 +266,83 @@ void N2D2::BatchNormCell_Frame_CUDA::backPropagate()
     mDiffOutputs.synchronizeDToHBased();
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::update()
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::update()
 {
     mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
     mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setScales(
-    const std::shared_ptr<Tensor<Float_T> >& scales)
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::setScales(
+    const std::shared_ptr<BaseTensor>& scales)
 {
-    std::shared_ptr<CudaTensor<Float_T> > cudaScales
-        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(scales);
+    std::shared_ptr<CudaTensor<T> > cudaScales
+        = std::dynamic_pointer_cast<CudaTensor<T> >(scales);
 
     if (!cudaScales) {
-        throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases(): scales"
+        throw std::runtime_error("BatchNormCell_Frame_CUDA<T>::setBiases(): scales"
                                  " must be a CudaTensor");
     }
 
     mScale = cudaScales;
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setBiases(
-    const std::shared_ptr<Tensor<Float_T> >& biases)
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::setBiases(
+    const std::shared_ptr<BaseTensor>& biases)
 {
-    std::shared_ptr<CudaTensor<Float_T> > cudaBiases
-        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(biases);
+    std::shared_ptr<CudaTensor<T> > cudaBiases
+        = std::dynamic_pointer_cast<CudaTensor<T> >(biases);
 
     if (!cudaBiases) {
-        throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases(): biases"
+        throw std::runtime_error("BatchNormCell_Frame_CUDA<T>::setBiases(): biases"
                                  " must be a CudaTensor");
     }
 
     mBias = cudaBiases;
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setMeans(
-    const std::shared_ptr<Tensor<Float_T> >& means)
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::setMeans(
+    const std::shared_ptr<BaseTensor>& means)
 {
-    std::shared_ptr<CudaTensor<Float_T> > cudaMeans
-        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(means);
+    std::shared_ptr<CudaTensor<T> > cudaMeans
+        = std::dynamic_pointer_cast<CudaTensor<T> >(means);
 
     if (!cudaMeans) {
-        throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases(): means"
+        throw std::runtime_error("BatchNormCell_Frame_CUDA<T>::setBiases(): means"
                                  " must be a CudaTensor");
     }
 
     mMean = cudaMeans;
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::setVariances(
-    const std::shared_ptr<Tensor<Float_T> >& variances)
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::setVariances(
+    const std::shared_ptr<BaseTensor>& variances)
 {
-    std::shared_ptr<CudaTensor<Float_T> > cudaVariances
-        = std::dynamic_pointer_cast<CudaTensor<Float_T> >(variances);
+    std::shared_ptr<CudaTensor<T> > cudaVariances
+        = std::dynamic_pointer_cast<CudaTensor<T> >(variances);
 
     if (!cudaVariances) {
-        throw std::runtime_error("BatchNormCell_Frame_CUDA::setBiases():"
+        throw std::runtime_error("BatchNormCell_Frame_CUDA<T>::setBiases():"
                                  " variances must be a CudaTensor");
     }
 
     mVariance = cudaVariances;
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::checkGradient(double epsilon,
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::checkGradient(double epsilon,
                                                    double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&BatchNormCell_Frame_CUDA::propagate, this, false),
-                  std::bind(&BatchNormCell_Frame_CUDA::backPropagate, this));
+                  std::bind(&BatchNormCell_Frame_CUDA<T>::propagate, this, false),
+                  std::bind(&BatchNormCell_Frame_CUDA<T>::backPropagate, this));
     gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
     gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
@@ -333,7 +360,8 @@ void N2D2::BatchNormCell_Frame_CUDA::checkGradient(double epsilon,
     }
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::saveFreeParameters(const std::string
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::saveFreeParameters(const std::string
                                                         & fileName) const
 {
     std::ofstream syn(fileName.c_str(), std::fstream::binary);
@@ -344,28 +372,28 @@ void N2D2::BatchNormCell_Frame_CUDA::saveFreeParameters(const std::string
 
     mScale->synchronizeDToH();
 
-    for (std::vector<Float_T>::const_iterator it = mScale->begin();
+    for (typename std::vector<T>::const_iterator it = mScale->begin();
          it != mScale->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
     mBias->synchronizeDToH();
 
-    for (std::vector<Float_T>::const_iterator it = mBias->begin();
+    for (typename std::vector<T>::const_iterator it = mBias->begin();
          it != mBias->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
     mMean->synchronizeDToH();
 
-    for (std::vector<Float_T>::const_iterator it = mMean->begin();
+    for (typename std::vector<T>::const_iterator it = mMean->begin();
          it != mMean->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
     mVariance->synchronizeDToH();
 
-    for (std::vector<Float_T>::const_iterator it = mVariance->begin();
+    for (typename std::vector<T>::const_iterator it = mVariance->begin();
          it != mVariance->end();
          ++it)
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
@@ -374,7 +402,8 @@ void N2D2::BatchNormCell_Frame_CUDA::saveFreeParameters(const std::string
         throw std::runtime_error("Error writing parameter file: " + fileName);
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::loadFreeParameters(const std::string
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::loadFreeParameters(const std::string
                                                         & fileName,
                                                         bool ignoreNotExists)
 {
@@ -391,28 +420,35 @@ void N2D2::BatchNormCell_Frame_CUDA::loadFreeParameters(const std::string
                                      + fileName);
     }
 
-    for (std::vector<Float_T>::iterator it = mScale->begin(); it != mScale->end();
-         ++it)
+    for (typename std::vector<T>::iterator it = mScale->begin();
+        it != mScale->end(); ++it)
+    {
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    }
 
     mScale->synchronizeHToD();
 
-    for (std::vector<Float_T>::iterator it = mBias->begin(); it != mBias->end();
-         ++it)
+    for (typename std::vector<T>::iterator it = mBias->begin();
+        it != mBias->end(); ++it)
+    {
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    }
 
     mBias->synchronizeHToD();
 
-    for (std::vector<Float_T>::iterator it = mMean->begin(); it != mMean->end();
-         ++it)
+    for (typename std::vector<T>::iterator it = mMean->begin();
+        it != mMean->end(); ++it)
+    {
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    }
 
     mMean->synchronizeHToD();
 
-    for (std::vector<Float_T>::iterator it = mVariance->begin();
-         it != mVariance->end();
-         ++it)
+    for (typename std::vector<T>::iterator it = mVariance->begin();
+         it != mVariance->end(); ++it)
+    {
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    }
 
     mVariance->synchronizeHToD();
 
@@ -428,7 +464,8 @@ void N2D2::BatchNormCell_Frame_CUDA::loadFreeParameters(const std::string
             "Synaptic file (.SYN) size larger than expected: " + fileName);
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::exportFreeParameters(const std::string
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                           & fileName) const
 {
     mScale->synchronizeDToH();
@@ -441,7 +478,8 @@ void N2D2::BatchNormCell_Frame_CUDA::exportFreeParameters(const std::string
     mSynchronized = false;
 }
 
-void N2D2::BatchNormCell_Frame_CUDA::importFreeParameters(const std::string
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                           & fileName,
                                                           bool ignoreNotExists)
 {
@@ -455,8 +493,15 @@ void N2D2::BatchNormCell_Frame_CUDA::importFreeParameters(const std::string
     mVariance->synchronizeHToD();
 }
 
-N2D2::BatchNormCell_Frame_CUDA::~BatchNormCell_Frame_CUDA()
+template <class T>
+N2D2::BatchNormCell_Frame_CUDA<T>::~BatchNormCell_Frame_CUDA()
 {
+}
+
+namespace N2D2 {
+    template class BatchNormCell_Frame_CUDA<half_float::half>;
+    template class BatchNormCell_Frame_CUDA<float>;
+    template class BatchNormCell_Frame_CUDA<double>;
 }
 
 #endif

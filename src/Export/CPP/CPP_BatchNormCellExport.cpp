@@ -120,8 +120,12 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderBias(BatchNormCell& cell,
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
+
+        Tensor<double> bias;
+        cell.getBias(output, bias);
+
         CellExport::generateFreeParameter(
-            cell, cell.getBias(output), header);
+            cell, bias(0), header);
     }
     header << "};\n";
 }
@@ -139,8 +143,12 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
+
+        Tensor<double> variance;
+        cell.getVariance(output, variance);
+
         CellExport::generateFreeParameter(
-            cell, (double)cell.getVariance(output), header);
+            cell, variance(0), header);
     }
     header << "};\n\n";
 }
@@ -157,8 +165,12 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
+
+        Tensor<double> mean;
+        cell.getMean(output, mean);
+
         CellExport::generateFreeParameter(
-            cell, (double)cell.getMean(output), header);
+            cell, mean(0), header);
     }
     header << "};\n\n";
 }
@@ -175,8 +187,12 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderScale(BatchNormCell& cell,
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
+
+        Tensor<double> scale;
+        cell.getScale(output, scale);
+
         CellExport::generateFreeParameter(
-            cell, (double)cell.getScale(output), header);
+            cell, scale(0), header);
     }
 
     header << "};\n\n";

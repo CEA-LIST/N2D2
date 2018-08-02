@@ -67,16 +67,18 @@ void N2D2::BatchNormCell::exportFreeParameters(const std::string
         throw std::runtime_error("Could not create parameter file: "
                                  + variancesFile);
 
-    const std::shared_ptr<Tensor<Float_T> >& scale = getScales();
-    const std::shared_ptr<Tensor<Float_T> >& bias = getBiases();
-    const std::shared_ptr<Tensor<Float_T> >& mean = getMeans();
-    const std::shared_ptr<Tensor<Float_T> >& variance = getVariances();
+    std::shared_ptr<BaseTensor> baseScales = getScales();
 
-    for (size_t index = 0; index < scale->size(); ++index) {
-        scales << (*scale)(index) << "\n";
-        biases << (*bias)(index) << "\n";
-        means << (*mean)(index) << "\n";
-        variances << (*variance)(index) << "\n";
+    for (size_t index = 0; index < baseScales->size(); ++index) {
+        Tensor<Float_T> scale;      getScale(index, scale);
+        Tensor<Float_T> bias;       getBias(index, bias);
+        Tensor<Float_T> mean;       getMean(index, mean);
+        Tensor<Float_T> variance;   getVariance(index, variance);
+
+        scales << scale(0) << "\n";
+        biases << bias(0) << "\n";
+        means << mean(0) << "\n";
+        variances << variance(0) << "\n";
     }
 }
 
@@ -151,12 +153,14 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
     variances.precision(12);
     biases.precision(12);
 
-    std::shared_ptr<Tensor<Float_T> > scale = getScales();
-    std::shared_ptr<Tensor<Float_T> > bias = getBiases();
-    std::shared_ptr<Tensor<Float_T> > mean = getMeans();
-    std::shared_ptr<Tensor<Float_T> > variance = getVariances();
+    std::shared_ptr<BaseTensor> baseScales = getScales();
 
-    for (size_t index = 0; index < scale->size(); ++index) {
+    for (size_t index = 0; index < baseScales->size(); ++index) {
+        Tensor<Float_T> scale;
+        Tensor<Float_T> bias;
+        Tensor<Float_T> mean;
+        Tensor<Float_T> variance;
+
         if (!(scales >> w))
         {
             if(!ignoreNotExists)
@@ -165,21 +169,21 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
                     + scalesFile);
         }
         else
-            (*scale)(index) = w;
+            scale(0) = w;
 
         if (!(biases >> w))
             throw std::runtime_error(
                 "Error while reading bias in parameter file: "
                 + biasesFile);
 
-        (*bias)(index) = w;
+        bias(0) = w;
 
         if (!(means >> w))
             throw std::runtime_error(
                 "Error while reading mean in parameter file: "
                 + meansFile);
 
-        (*mean)(index) = w;
+        mean(0) = w;
 
         if (!(variances >> w))
             throw std::runtime_error(
@@ -191,7 +195,12 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
                 "Negative variance in parameter file: "
                 + variancesFile);
 
-        (*variance)(index) = w;
+        variance(0) = w;
+
+        setScale(index, scale);
+        setBias(index, bias);
+        setMean(index, mean);
+        setVariance(index, variance);
     }
 
     // Discard trailing whitespaces

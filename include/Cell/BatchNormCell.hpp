@@ -64,33 +64,33 @@ public:
     {
         return mBiasSolver;
     };
-    virtual Float_T getScale(unsigned int index) const = 0;
-    virtual Float_T getBias(unsigned int index) const = 0;
-    virtual Float_T getMean(unsigned int index) const = 0;
-    virtual Float_T getVariance(unsigned int index) const = 0;
-    virtual std::shared_ptr<Tensor<Float_T> > getScales() const
+    virtual void getScale(unsigned int index, BaseTensor& value) const = 0;
+    virtual void getBias(unsigned int index, BaseTensor& value) const = 0;
+    virtual void getMean(unsigned int index, BaseTensor& value) const = 0;
+    virtual void getVariance(unsigned int index, BaseTensor& value) const = 0;
+    virtual std::shared_ptr<BaseTensor> getScales() const
     {
-        return std::shared_ptr<Tensor<Float_T> >();
+        return std::shared_ptr<BaseTensor>();
     };
-    virtual void setScales(const std::shared_ptr<Tensor<Float_T> >&
+    virtual void setScales(const std::shared_ptr<BaseTensor>&
                            /*scales*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getBiases() const
+    virtual std::shared_ptr<BaseTensor> getBiases() const
     {
-        return std::shared_ptr<Tensor<Float_T> >();
+        return std::shared_ptr<BaseTensor>();
     };
-    virtual void setBiases(const std::shared_ptr<Tensor<Float_T> >&
+    virtual void setBiases(const std::shared_ptr<BaseTensor>&
                            /*biases*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getMeans() const
+    virtual std::shared_ptr<BaseTensor> getMeans() const
     {
-        return std::shared_ptr<Tensor<Float_T> >();
+        return std::shared_ptr<BaseTensor>();
     };
-    virtual void setMeans(const std::shared_ptr<Tensor<Float_T> >&
+    virtual void setMeans(const std::shared_ptr<BaseTensor>&
                           /*means*/) {};
-    virtual std::shared_ptr<Tensor<Float_T> > getVariances() const
+    virtual std::shared_ptr<BaseTensor> getVariances() const
     {
-        return std::shared_ptr<Tensor<Float_T> >();
+        return std::shared_ptr<BaseTensor>();
     };
-    virtual void setVariances(const std::shared_ptr<Tensor<Float_T> >&
+    virtual void setVariances(const std::shared_ptr<BaseTensor>&
                               /*variances*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
@@ -100,10 +100,10 @@ public:
 
 protected:
     virtual void setOutputsDims();
-    virtual void setScale(unsigned int index, Float_T value) = 0;
-    virtual void setBias(unsigned int index, Float_T value) = 0;
-    virtual void setMean(unsigned int index, Float_T value) = 0;
-    virtual void setVariance(unsigned int index, Float_T value) = 0;
+    virtual void setScale(unsigned int index, const BaseTensor& value) = 0;
+    virtual void setBias(unsigned int index, const BaseTensor& value) = 0;
+    virtual void setMean(unsigned int index, const BaseTensor& value) = 0;
+    virtual void setVariance(unsigned int index, const BaseTensor& value) = 0;
 
     /// Epsilon value used in the batch normalization formula
     Parameter<double> mEpsilon;
