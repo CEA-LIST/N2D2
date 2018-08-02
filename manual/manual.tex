@@ -628,7 +628,7 @@ In order to compile the manual, you must have \lstinline!pdflatex! and \lstinlin
         \subitem ARM Cortex A53/A57 (tested on Tegra X1)
         \subitem Pentium-compatible PC (Pentium III, Athlon or more-recent system recommended)
     \item Supported operating systems:
-        \subitem Windows $\geq$ 7 or Windows Server $\geq$ 2012, 64 bits with Visual Studio $\geq$ 2013.3 (2013 Update 3)
+        \subitem Windows $\geq$ 7 or Windows Server $\geq$ 2012, 64 bits with Visual Studio $\geq$ 2015.2 (2015 Update 2)
         \subitem GNU/Linux with GCC $\geq$ 4.4 (tested on RHEL $\geq$ 6, Debian $\geq$ 6, Ubuntu $\geq$ 14.04)
     \item At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing
     \item At least 150 MB available hard disk space + 350 MB for MNIST dataset processing
@@ -720,7 +720,7 @@ ln -s /usr/local/cuda-7.5 /usr/local/cuda
 
 \paragraph{Windows}
 
-On Windows 64 bits, Visual Studio $\geq$ 2013.3 (2013 Update 3) is required.
+On Windows 64 bits, Visual Studio $\geq$ 2015.2 (2015 Update 2) is required.
 
 Make sure you have the following software installed:
 \begin{myitemize}
@@ -782,10 +782,10 @@ cmake .. && make
 
 On Windows, you may have to specify the generator, for example:
 \begin{lstlisting}
-cmake .. -G"Visual Studio 12"
+cmake .. -G"Visual Studio 14"
 \end{lstlisting}
 
-Then open the newly created N2D2 project in Visual Studio 2013. Select
+Then open the newly created N2D2 project in Visual Studio 2015. Select
 "Release" for the build target. Right click on \lstinline!ALL_BUILD! item and
 select "Build".
 
@@ -1821,8 +1821,8 @@ The KITTI Database provide ROI which can be use for autonomous driving and envir
 The database provide 8 labeled different classes. Utilization of the KITTI
 Database is under licensing conditions and request an email registration. To install it you have to
 follow this link:
-\url{http://www.cvlibs.net/datasets/kitti/eval_tracking.php} and download the left color images (15 GB) and 
-the trainling labels of tracking data set (9 MB). Extract the downloaded archives in your 
+\url{http://www.cvlibs.net/datasets/kitti/eval_tracking.php} and download the left color images (15 GB) and
+the trainling labels of tracking data set (9 MB). Extract the downloaded archives in your
 \lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_DATA/KITTI! folder.
 
 \begin{center}
@@ -1843,7 +1843,7 @@ the trainling labels of tracking data set (9 MB). Extract the downloaded archive
 The KITTI Road Database provide ROI which can be used to road segmentation.
 The dataset provide 1 labeled class (road) on 289 training images. The 290 test images are not labeled.
  Utilization of the KITTI Road Database
-is under licensing conditions and request an email registration. To install it you have to follow this link: 
+is under licensing conditions and request an email registration. To install it you have to follow this link:
 \url{http://www.cvlibs.net/datasets/kitti/eval_road.php}
 and download the "base kit" of (0.5 GB) with left color images, calibration and training labels. Extract
 the downloaded archive in your \lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_DATA/KITTI! folder.
@@ -1866,7 +1866,7 @@ the downloaded archive in your \lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_D
 The KITTI Object Database provide ROI which can be use for autonomous driving and environment perception.
 The database provide 8 labeled different classes on 7481 training images. The 7518 test images are not labeled.
 The whole database provide 80256 labeled objects. Utilization of the KITTI Object Database is under licensing conditions and request an email registration.
-To install it you have to follow this link: 
+To install it you have to follow this link:
 \url{http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark}
 and download the "lef color images" (12 GB) and the training labels of object data set (5 MB). Extract
 the downloaded archives in your \lstinline[basicstyle=\ttfamily\bfseries]!$N2D2_DATA/KITTI_Object! folder.
