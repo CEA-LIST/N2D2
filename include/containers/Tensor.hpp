@@ -1358,6 +1358,7 @@ template <class T> N2D2::Tensor<T>::operator cv::Mat() const
     }
 }
 
+#ifdef CUDA
 template <class T>
 N2D2::Tensor<T>* N2D2::Tensor<T>::newCuda() const {
     throw std::runtime_error("Tensor::newCuda(): type not supported");
@@ -1369,5 +1370,6 @@ namespace N2D2 {
     template <> Tensor<float>* Tensor<float>::newCuda() const;
     template <> Tensor<double>* Tensor<double>::newCuda() const;
 }
+#endif
 
 #endif // N2D2_TENSOR_H
