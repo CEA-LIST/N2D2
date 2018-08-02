@@ -60,9 +60,6 @@
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "CMonitor_CUDA.hpp"
 #include "Cell/Cell_CSpike_CUDA.hpp"
-//#include "Cell/FcCell_CSpike_IF_CUDA.hpp"
-//#include "Cell/FcCell_CSpike_Dynapse_CUDA.hpp"
-#include "Cell/FcCell_CSpike_BP_CUDA.hpp"
 #endif
 
 namespace N2D2 {
@@ -135,10 +132,6 @@ public:
     void cTicks(Time_T start, Time_T stop, Time_T timestep, bool record=false);
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
-    //void cDecayLearningRates(double decayStep);
-#ifdef CUDA
-    void cDropoutRescaling(bool on=false);
-#endif
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
     void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeOutputsRange(const std::map
@@ -229,9 +222,6 @@ public:
     void logDiffInputs(const std::string& dirName,
                        unsigned int batchPos = 0) const;
     void logFreeParameters(const std::string& dirName) const;
-#ifdef CUDA
-    void logCalculationMetrics(const std::string& dirName) const;
-#endif
     void logStats(const std::string& dirName) const;
     void logSpikeStats(const std::string& dirName,
                        unsigned int nbPatterns) const;

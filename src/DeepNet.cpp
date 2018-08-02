@@ -516,18 +516,6 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
                                            + ".syntxt");
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
                                                + ".distrib.dat");
-/*
-#ifdef CUDA
-        std::shared_ptr<FcCell_CSpike_Dynapse_CUDA> cellCSpike =
-            std::dynamic_pointer_cast<FcCell_CSpike_Dynapse_CUDA>((*it).second);
-        if (cellCSpike != nullptr) {
-            cellCSpike->exportRecFreeParameters(dirName + "/" + (*it).first
-                                           + "-rec.syntxt");
-            cellCSpike->exportTopDownFreeParameters(dirName + "/" + (*it).first
-                                           + "-TopDown.syntxt");
-        }
-#endif
-*/
     }
 }
 
@@ -559,18 +547,6 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
                                            + ".syntxt", ignoreNotExists);
     }
-/*
-#ifdef CUDA
-        std::shared_ptr<FcCell_CSpike_Dynapse_CUDA> cellCSpike =
-            std::dynamic_pointer_cast<FcCell_CSpike_Dynapse_CUDA>((*it).second);
-        if (cellCSpike != nullptr) {
-            cellCSpike->importRecFreeParameters(dirName + "/" + (*it).first
-                                           + "-rec.syntxt");
-            cellCSpike->importTopDownFreeParameters(dirName + "/" + (*it).first
-                                           + "-TopDown.syntxt");
-        }
-#endif
-*/
 }
 
 
@@ -1323,32 +1299,6 @@ void N2D2::DeepNet::logFreeParameters(const std::string& dirName) const
         (*it).second->logFreeParameters(dirName + "/" + (*it).first);
     }
 }
-
-#ifdef CUDA
-void N2D2::DeepNet::logCalculationMetrics(const std::string& dirName) const
-{
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin() + 1,
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-                                                      itCellEnd = (*it).end();
-             itCell != itCellEnd;
-             ++itCell) {
-            const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-            std::shared_ptr<FcCell_CSpike_BP_CUDA> cellSpike =
-                std::dynamic_pointer_cast<FcCell_CSpike_BP_CUDA>(cell);
-            if (!cellSpike)
-                throw std::runtime_error("DeepNet::logCalculationMetrics(): Cast failed");
-            Utils::createDirectories(dirName);
-            std::ostringstream fileName;
-            fileName << dirName << "/" << *itCell << "-metrics.dat";
-            cellSpike->logCalculationMetrics(fileName.str());
-        }
-    }
-}
-#endif
 
 void N2D2::DeepNet::logStats(const std::string& dirName) const
 {
@@ -2208,43 +2158,6 @@ void N2D2::DeepNet::cReset(Time_T timestamp)
         cellCSpike->reset(timestamp);
     }
 }
-
-//TODO: implement also for BP class
-/*
-void N2D2::DeepNet::cDecayLearningRates(double decayStep)
-{
-    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
-         = mCells.begin(),
-         itEnd = mCells.end();
-         it != itEnd;
-         ++it) {
-        std::shared_ptr<FcCell_CSpike_IF_CUDA> cellCSpike = std::dynamic_pointer_cast
-            <FcCell_CSpike_IF_CUDA>((*it).second);
-
-        if (cellCSpike){
-            cellCSpike->decayLearningRate(decayStep);
-        }
-    }
-}
-*/
-
-#ifdef CUDA
-void N2D2::DeepNet::cDropoutRescaling(bool on)
-{
-    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
-         = mCells.begin(),
-         itEnd = mCells.end();
-         it != itEnd;
-         ++it) {
-        std::shared_ptr<FcCell_CSpike_BP_CUDA> cellCSpike = std::dynamic_pointer_cast
-            <FcCell_CSpike_BP_CUDA>((*it).second);
-
-        if (cellCSpike){
-            cellCSpike->dropoutRescaling(on);
-        }
-    }
-}
-#endif
 
 void N2D2::DeepNet::log(const std::string& baseName,
                         Database::StimuliSet set) const
