@@ -30,7 +30,7 @@
 #include "ResizeCell_Frame_Kernels_struct.hpp"
 
 namespace N2D2 {
-class ResizeCell_Frame : public virtual ResizeCell, public Cell_Frame {
+class ResizeCell_Frame : public virtual ResizeCell, public Cell_Frame<Float_T> {
 public:
     void BilinearInterpolation(const int out_size,
                                 const int in_size,

@@ -94,6 +94,10 @@ public:
     virtual const CudaBaseTensor& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
+    bool isCuda() const
+    {
+        return true;
+    }
     virtual ~Cell_Frame_CUDA();
 
 protected:

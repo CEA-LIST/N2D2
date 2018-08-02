@@ -29,7 +29,7 @@
 #include "ObjectDetCell.hpp"
 
 namespace N2D2 {
-class ObjectDetCell_Frame : public virtual ObjectDetCell, public Cell_Frame {
+class ObjectDetCell_Frame : public virtual ObjectDetCell, public Cell_Frame<Float_T> {
 public:
     struct BBox_T {
         float x;

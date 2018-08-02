@@ -36,16 +36,16 @@ public:
                             unsigned int nbOutputs,
                             ResizeMode resizeMode)
         : Cell(name, nbOutputs),
-          ResizeCell(name, 
-                     outputWidth, 
+          ResizeCell(name,
+                     outputWidth,
                      outputHeight,
-                     nbOutputs, 
+                     nbOutputs,
                      resizeMode),
 
-          ResizeCell_Frame(name, 
-                            outputWidth, 
+          ResizeCell_Frame(name,
+                            outputWidth,
                             outputHeight,
-                            nbOutputs, 
+                            nbOutputs,
                             resizeMode) {};
 
     friend class UnitTest_ResizeCell_Frame_propagate_bilinearTF_aligned_checkGradient;
@@ -81,14 +81,14 @@ TEST_DATASET(ResizeCell_Frame,
 
     for (unsigned int index = 0; index < inputs.size(); ++index)
         inputs(index) = Random::randUniform(-1.0, 1.0);
-    
+
 
     resize.addInput(inputs, diffOutputs);
     resize.setOutputsDims();
     resize.initialize();
 
     resize.propagate();
-    const Tensor<Float_T>& outputs = resize.getOutputs();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(resize.getOutputs());
     //ASSERT_NOTHROW_ANY(resize.checkGradient(1.0e-3, 1.0e-3));
 
     ASSERT_EQUALS(outputs.dimB(), batchSize);

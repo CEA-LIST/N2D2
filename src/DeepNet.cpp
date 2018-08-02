@@ -1197,33 +1197,45 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                             * (remainingFactor / shiftedFactor);
 
                 if (activationType == "Linear") {
+                    if (cellFrame->isCuda()) {
 #ifdef CUDA
-                    if (std::dynamic_pointer_cast
-                        <Cell_Frame_CUDA<float> >(cell))
-                    {
-                        cellFrame->setActivation(std::make_shared
-                            <SaturationActivation_Frame_CUDA<float> >());
-                    }
-                    else if (std::dynamic_pointer_cast
-                        <Cell_Frame_CUDA<double> >(cell))
-                    {
-                        cellFrame->setActivation(std::make_shared
-                            <SaturationActivation_Frame_CUDA<double> >());
+                        if (std::dynamic_pointer_cast
+                            <Cell_Frame_CUDA<float> >(cell))
+                        {
+                            cellFrame->setActivation(std::make_shared
+                                <SaturationActivation_Frame_CUDA<float> >());
+                        }
+                        else if (std::dynamic_pointer_cast
+                            <Cell_Frame_CUDA<half_float::half> >(cell))
+                        {
+                            cellFrame->setActivation(std::make_shared
+                                <SaturationActivation_Frame_CUDA
+                                    <half_float::half> >());
+                        }
+                        else {
+                            cellFrame->setActivation(std::make_shared
+                                <SaturationActivation_Frame_CUDA<double> >());
+                        }
+#endif
                     }
                     else {
-#endif
                         if (std::dynamic_pointer_cast<Cell_Frame<float> >(cell))
                         {
                             cellFrame->setActivation(std::make_shared
                                 <SaturationActivation_Frame<float> >());
                         }
+                        else if (std::dynamic_pointer_cast
+                            <Cell_Frame<half_float::half> >(cell))
+                        {
+                            cellFrame->setActivation(std::make_shared
+                                <SaturationActivation_Frame
+                                    <half_float::half> >());
+                        }
                         else {
                             cellFrame->setActivation(std::make_shared
                                 <SaturationActivation_Frame<double> >());
                         }
-#ifdef CUDA
                     }
-#endif
                 }
 
                 activation->setParameter<int>("Shifting", shifting);
@@ -1997,10 +2009,6 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
              ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
-#ifdef CUDA
-            std::shared_ptr<Cell_Frame_CUDA> cellFrame_CUDA
-                = std::dynamic_pointer_cast<Cell_Frame_CUDA>(mCells[(*itCell)]);
-#endif
 
             if (!cellFrame)
                 throw std::runtime_error(
@@ -2014,7 +2022,7 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
             if (timings != NULL) {
 #ifdef CUDA
-                if(cellFrame_CUDA)
+                if(cellFrame->isCuda())
                     CHECK_CUDA_STATUS(cudaDeviceSynchronize());
 #endif
                 time2 = std::chrono::high_resolution_clock::now();
@@ -2030,12 +2038,13 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
          = mTargets.begin(),
          itTargetsEnd = mTargets.end();
          itTargets != itTargetsEnd;
-         ++itTargets) {
-        if (mSignalsDiscretization > 0) {
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
-                                                            getCell());
+         ++itTargets)
+    {
+        std::shared_ptr<Cell_Frame_Top> cellFrame
+            = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
+                                                        getCell());
 
+        if (mSignalsDiscretization > 0) {
             cellFrame->discretizeSignals(mSignalsDiscretization,
                                          Cell_Frame_Top::Out);
         }
@@ -2045,10 +2054,7 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
         if (timings != NULL) {
 #ifdef CUDA
-            std::shared_ptr<Cell_Frame_CUDA> cellFrame_CUDA
-                = std::dynamic_pointer_cast<Cell_Frame_CUDA>((*itTargets)->
-                                                        getCell());
-            if(cellFrame_CUDA)
+            if (cellFrame->isCuda())
                 CHECK_CUDA_STATUS(cudaDeviceSynchronize());
 #endif
             time2 = std::chrono::high_resolution_clock::now();

@@ -35,7 +35,7 @@
 #include "ResizeCell_Frame_CUDA_Kernels.hpp"
 
 namespace N2D2 {
-class ResizeCell_Frame_CUDA : public virtual ResizeCell, public Cell_Frame_CUDA {
+class ResizeCell_Frame_CUDA : public virtual ResizeCell, public Cell_Frame_CUDA<Float_T> {
 public:
     void BilinearInterpolation(const int out_size,
                                 const int in_size,
@@ -82,7 +82,7 @@ protected:
 
     std::vector<dim3> GPU_BLOCK_GRID;
     std::vector<dim3> GPU_THREAD_GRID;
-    
+
 private:
     static Registrar<ResizeCell> mRegistrar;
 };

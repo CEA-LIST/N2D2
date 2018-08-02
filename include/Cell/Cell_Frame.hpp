@@ -107,6 +107,10 @@ public:
     }
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
+    bool isCuda() const
+    {
+        return false;
+    }
     virtual ~Cell_Frame() {};
 
 protected:

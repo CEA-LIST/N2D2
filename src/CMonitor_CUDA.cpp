@@ -43,7 +43,7 @@ void N2D2::CMonitor_CUDA::add(StimuliProvider& sp)
             "CMonitor::add(): CMonitor models require CEnvironment");
     }
 
-    mInputs.push_back<char>(&(cenvCSpike->getTickOutputs()));
+    mInputs.push_back(&(cenvCSpike->getTickOutputs()));
     mInputs.back().setValid();
 
 
@@ -64,7 +64,7 @@ void N2D2::CMonitor_CUDA::add(Cell* cell)
     Cell_CSpike_CUDA* cellCSpike_CUDA = dynamic_cast<Cell_CSpike_CUDA*>(cell);
 
     if (cellCSpike_CUDA) {
-        mInputs.push_back<char>(&(cellCSpike_CUDA->getOutputs()));
+        mInputs.push_back(&(cellCSpike_CUDA->getOutputs()));
 
     }
     else {

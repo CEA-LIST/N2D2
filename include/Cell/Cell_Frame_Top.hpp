@@ -77,6 +77,7 @@ public:
     {
         mActivation = activation;
     };
+    virtual bool isCuda() const = 0;
     virtual ~Cell_Frame_Top() {};
 
 protected:
