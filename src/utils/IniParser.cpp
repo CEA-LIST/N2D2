@@ -571,6 +571,7 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
         const std::string varName = "$"
             + value.substr(startPos + 2, endPos - startPos - 2);
         std::string varValue = "";
+        bool varExists = true;
 
         if (varName == "$SECTION_NAME")
             varValue = mIniSections[mCurrentSection];
@@ -607,10 +608,15 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
 
                 if (itVarGlobal != mIniData.begin()->end())
                     varValue = getPropertyValue((*itVarGlobal).second.first);
+                else
+                    varExists = false;
             }
         }
 
-        value.replace(startPos, endPos - startPos + 1, varValue);
+        if (varExists)
+            value.replace(startPos, endPos - startPos + 1, varValue);
+        else
+            startPos = endPos + 1;
     }
 
     startPos = 0;
