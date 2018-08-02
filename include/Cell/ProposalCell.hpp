@@ -27,20 +27,6 @@
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-/*
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ProposalCell_Frame_CUDA@N2D2@@0U?$Registrar@VProposalCell@N2D2@@@2@A")
-#endif
-*/
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ProposalCell_Frame@N2D2@@0U?$Registrar@VProposalCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class ProposalCell : public virtual Cell {
 public:

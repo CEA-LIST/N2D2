@@ -30,7 +30,15 @@ ENDFOREACH()
 foreach(f ${EXEC})
     GET_FILENAME_COMPONENT(bin ${f} NAME_WE)
     ADD_EXECUTABLE(${bin} ${f})
-    TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive ${N2D2_LIB} -Wl,-no-whole-archive)
+
+    IF(CMAKE_COMPILER_IS_GNUCXX)
+        TARGET_LINK_LIBRARIES(${bin} -Wl,-whole-archive ${N2D2_LIB} -Wl,-no-whole-archive)
+    ELSEIF(MSVC)
+        SET_TARGET_PROPERTIES(${bin} PROPERTIES LINK_FLAGS "/WHOLEARCHIVE:${N2D2_LIB}")
+        TARGET_LINK_LIBRARIES(${bin} ${N2D2_LIB})
+    ELSE()
+        TARGET_LINK_LIBRARIES(${bin} ${N2D2_LIB})
+    ENDIF()
 
     INSTALL(TARGETS ${bin}
         RUNTIME DESTINATION bin

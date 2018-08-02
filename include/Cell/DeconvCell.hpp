@@ -34,18 +34,6 @@
 #include "utils/Registrar.hpp"
 #include "controler/Interface.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@DeconvCell_Frame@N2D2@@0U?$Registrar@VDeconvCell@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@DeconvCell_Frame_CUDA@N2D2@@0U?$Registrar@VDeconvCell@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 class DeconvCell : public virtual Cell {
 public:

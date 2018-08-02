@@ -31,19 +31,6 @@
 
 #include "Cell.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ElemWiseCell_Frame@N2D2@@0U?$Registrar@VElemWiseCell@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ElemWiseCell_Frame_CUDA@N2D2@@0U?$Registrar@VElemWiseCell@N2D2@@@2@A")
-
-#endif
-#endif
-
 namespace N2D2 {
 class ElemWiseCell : public virtual Cell {
 public:

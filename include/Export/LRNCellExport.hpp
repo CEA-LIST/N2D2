@@ -24,16 +24,6 @@
 #include "Cell/LRNCell.hpp"
 #include "CellExport.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_LRNCellExport@N2D2@@0U?$Registrar@VLRNCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_cuDNN_LRNCellExport@N2D2@@0U?$Registrar@VLRNCellExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 /**
  * Base class for methods for the LRNCell type for any export type

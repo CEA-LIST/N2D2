@@ -27,20 +27,6 @@
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-/*
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ResizeCell_Frame_CUDA@N2D2@@0U?$Registrar@VResizeCell@N2D2@@@2@A")
-#endif
-*/
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ResizeCell_Frame@N2D2@@0U?$Registrar@VResizeCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class ResizeCell : public virtual Cell {
 public:
@@ -84,7 +70,7 @@ public:
 protected:
     //virtual void setInputsDims(const std::vector<size_t>& dims);
     virtual void setOutputsDims();
-    
+
     Parameter<bool> mAlignCorners;
 
     // resize type

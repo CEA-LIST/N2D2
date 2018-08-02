@@ -23,18 +23,6 @@
 
 #include "Solver/Solver.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$SGDSolver_Frame@M@N2D2@@0U?$Registrar@V?$SGDSolver@M@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$SGDSolver_Frame_CUDA@M@N2D2@@0U?$Registrar@V?$SGDSolver@M@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 class SGDSolver : public Solver {
 public:

@@ -33,18 +33,6 @@
 #include "Cell/PoolCell.hpp"
 #include "Cell/PoolCell_Frame_Kernels.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@UnpoolCell_Frame@N2D2@@0U?$Registrar@VUnpoolCell@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@UnpoolCell_Frame_CUDA@N2D2@@0U?$Registrar@VUnpoolCell@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 class UnpoolCell : public virtual Cell {
 public:

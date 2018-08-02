@@ -25,16 +25,6 @@
 #include "CellExport.hpp"
 #include "Cell/FMPCell.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_FMPCellExport@N2D2@@0U?$Registrar@VFMPCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_cuDNN_FMPCellExport@N2D2@@0U?$Registrar@VFMPCellExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 /**
  * Base class for methods for the FMPCell type for any export type

@@ -27,49 +27,6 @@
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CIFAR100_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CIFAR10_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CKP_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@Caltech101_DIR_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@Caltech256_DIR_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CaltechPedestrian_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@DIR_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@FDDB_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@GTSDB_DIR_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@GTSRB_DIR_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ILSVRC2012_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@LITISRouen_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@MNIST_IDX_DatabaseGenerator@N2D2@@0U?$Registrar@VDatabaseGenerator@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class DatabaseGenerator {
 public:

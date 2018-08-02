@@ -24,16 +24,6 @@
 #include "CellExport.hpp"
 #include "Cell/SoftmaxCell.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_SoftmaxCellExport@N2D2@@0U?$Registrar@VSoftmaxCellExport@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@CPP_cuDNN_SoftmaxCellExport@N2D2@@0U?$Registrar@VSoftmaxCellExport@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 /**
  * Base class for methods for the SoftmaxCell type for any export type

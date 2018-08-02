@@ -23,18 +23,6 @@
 
 #include "Activation/Activation.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$LogisticActivation_Frame@M@N2D2@@0U?$Registrar@V?$LogisticActivation@M@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$LogisticActivation_Frame_CUDA@M@N2D2@@0U?$Registrar@V?$LogisticActivation@M@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 extern bool LogisticActivationDisabled;     // declaration in Frame cpp file
 

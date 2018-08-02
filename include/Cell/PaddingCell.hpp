@@ -28,15 +28,6 @@
 #include "utils/Registrar.hpp"
 #include "Cell.hpp"
 
-#ifdef WIN32
-// For static library
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PaddingCell_Frame_CUDA@N2D2@@0U?$Registrar@VPaddingCell@N2D2@@@2@A")
-#endif
-#endif
-
 namespace N2D2 {
 class PaddingCell : public virtual Cell {
 public:

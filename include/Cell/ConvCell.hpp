@@ -34,33 +34,6 @@
 #include "utils/Registrar.hpp"
 #include "controler/Interface.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Frame@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#ifdef CUDA
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Frame_CUDA@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#endif
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Spike@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Spike_Analog@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Spike_PCM@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ConvCell_Spike_RRAM@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@?$ConvCell_Transcode@VConvCell_Frame@N2D2@@VConvCell_Spike@2@@N2D2@@0U?$Registrar@VConvCell@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class ConvCell : public virtual Cell {
 public:

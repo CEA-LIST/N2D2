@@ -27,55 +27,6 @@
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
 
-#ifdef WIN32
-// For static library
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@AffineTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ApodizationTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ChannelExtractionTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ColorSpaceTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@DFTTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@FilterTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@FlipTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@MagnitudePhaseTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@NormalizeTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@PadCropTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@RangeAffineTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@RescaleTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ReshapeTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@ThresholdTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#pragma comment(                                                               \
-    linker,                                                                    \
-    "/include:?mRegistrar@TrimTransformationGenerator@N2D2@@0U?$Registrar@VTransformationGenerator@N2D2@@@2@A")
-#endif
-
 namespace N2D2 {
 class TransformationGenerator {
 public:
