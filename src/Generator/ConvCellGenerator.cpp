@@ -135,12 +135,23 @@ N2D2::ConvCellGenerator::generate(Network& network,
             "ActivationFunction",
             (dataType == Float32)
                 ? Registrar<TanhActivation>::create<float>(model)()
+            : (dataType == Float16)
+                ? Registrar<TanhActivation>::create<half_float::half>(model)()
                 : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
     std::shared_ptr<ConvCell> cell
         = (dataType == Float32)
             ? Registrar<ConvCell>::create<float>(model)(network,
+                                                        section,
+                                                        kernelDims,
+                                                        nbChannels,
+                                                        subSampleDims,
+                                                        strideDims,
+                                                        paddingDims,
+                                                        activation)
+          : (dataType == Float16)
+            ? Registrar<ConvCell>::create<half_float::half>(model)(network,
                                                         section,
                                                         kernelDims,
                                                         nbChannels,

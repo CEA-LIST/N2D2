@@ -73,6 +73,12 @@ void N2D2::SaturationActivation_Frame_CUDA<T>::backPropagate(BaseTensor& data,
 
 namespace N2D2 {
 template <>
+void SaturationActivation_Frame_CUDA<half_float::half>::propagate(CudaTensor<half_float::half>& data);
+template <>
+void SaturationActivation_Frame_CUDA
+    <half_float::half>::backPropagate(CudaTensor<half_float::half>& data, CudaTensor<half_float::half>& diffData);
+
+template <>
 void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data);
 template <>
 void SaturationActivation_Frame_CUDA

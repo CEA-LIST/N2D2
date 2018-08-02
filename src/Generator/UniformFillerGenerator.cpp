@@ -35,6 +35,14 @@ N2D2::UniformFillerGenerator::generate(IniParser& iniConfig,
 
         return std::make_shared<UniformFiller<float> >(min, max);
     }
+    else if (dataType == Float16) {
+        const half_float::half min = iniConfig.getProperty<half_float::half>
+            (name + ".Min", half_float::half(0.0f));
+        const half_float::half max = iniConfig.getProperty<half_float::half>
+            (name + ".Max", half_float::half(1.0f));
+
+        return std::make_shared<UniformFiller<half_float::half> >(min, max);
+    }
     else {
         const double min = iniConfig.getProperty<double>(name + ".Min", 0.0);
         const double max = iniConfig.getProperty<double>(name + ".Max", 1.0);

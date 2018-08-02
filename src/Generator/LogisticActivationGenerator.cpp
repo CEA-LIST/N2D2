@@ -38,6 +38,9 @@ N2D2::LogisticActivationGenerator::generate(
     const bool withLoss = (type == "LogisticWithLoss");
 
     return (dataType == Float32)
-            ? Registrar<LogisticActivation>::create<float>(model)(withLoss)
-            : Registrar<LogisticActivation>::create<double>(model)(withLoss);
+        ? Registrar<LogisticActivation>::create<float>(model)(withLoss)
+    : (dataType == Float16)
+        ? Registrar<LogisticActivation>::create<half_float::half>(model)
+            (withLoss)
+        : Registrar<LogisticActivation>::create<double>(model)(withLoss);
 }

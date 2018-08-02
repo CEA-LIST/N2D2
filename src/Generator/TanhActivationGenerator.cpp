@@ -34,6 +34,8 @@ N2D2::TanhActivationGenerator::generate(IniParser& iniConfig,
     std::shared_ptr<TanhActivation> activation
         = (dataType == Float32)
             ? Registrar<TanhActivation>::create<float>(model)()
+        : (dataType == Float16)
+            ? Registrar<TanhActivation>::create<half_float::half>(model)()
             : Registrar<TanhActivation>::create<double>(model)();
 
     const std::string type = iniConfig.getProperty<std::string>(name);

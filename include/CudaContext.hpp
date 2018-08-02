@@ -26,6 +26,8 @@
 
 #include "CudaUtils.hpp"
 
+#include "third_party/half.hpp"
+
 namespace N2D2 {
 class CudaContext {
 public:
@@ -71,6 +73,9 @@ namespace N2D2 {
     template <class T>
     const cudnnDataType_t CudaContext::data_type<T>::value
         = CUDNN_DATA_FLOAT;     // Dummy value by default
+
+    template <>
+    const cudnnDataType_t CudaContext::data_type<half_float::half>::value;
 
     template <>
     const cudnnDataType_t CudaContext::data_type<float>::value;

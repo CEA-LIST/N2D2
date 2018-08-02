@@ -50,11 +50,19 @@ private:
 
 namespace {
 template <>
+const char* const EnumStrings<N2D2::XavierFiller<half_float::half>
+    ::VarianceNorm>::data[]
+    = {"FanIn", "Average", "FanOut"};
+template <>
 const char* const EnumStrings<N2D2::XavierFiller<float>::VarianceNorm>::data[]
     = {"FanIn", "Average", "FanOut"};
 template <>
 const char* const EnumStrings<N2D2::XavierFiller<double>::VarianceNorm>::data[]
     = {"FanIn", "Average", "FanOut"};
+template <>
+const char* const EnumStrings<N2D2::XavierFiller<half_float::half>
+    ::Distribution>::data[]
+    = {"Uniform", "Normal"};
 template <>
 const char* const EnumStrings<N2D2::XavierFiller<float>::Distribution>::data[]
     = {"Uniform", "Normal"};

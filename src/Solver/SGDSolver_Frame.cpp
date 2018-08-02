@@ -22,6 +22,14 @@
 
 template <>
 N2D2::Registrar<N2D2::SGDSolver>
+N2D2::SGDSolver_Frame<half_float::half>::mRegistrar(
+    {"Frame",
+     "Transcode"},
+    N2D2::SGDSolver_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::SGDSolver>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::SGDSolver>
 N2D2::SGDSolver_Frame<float>::mRegistrar(
     {"Frame",
      "Transcode"},

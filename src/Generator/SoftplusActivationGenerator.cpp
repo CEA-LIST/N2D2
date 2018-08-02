@@ -34,5 +34,7 @@ N2D2::SoftplusActivationGenerator::generate(
 {
     return (dataType == Float32)
             ? Registrar<SoftplusActivation>::create<float>(model)()
+        : (dataType == Float16)
+            ? Registrar<SoftplusActivation>::create<half_float::half>(model)()
             : Registrar<SoftplusActivation>::create<double>(model)();
 }

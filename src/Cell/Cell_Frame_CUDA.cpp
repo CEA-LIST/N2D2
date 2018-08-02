@@ -438,6 +438,7 @@ void N2D2::Cell_Frame_CUDA<T>::discretizeSignals(unsigned int nbLevels,
 }
 
 namespace N2D2 {
+    template class Cell_Frame_CUDA<half_float::half>;
     template class Cell_Frame_CUDA<float>;
     template class Cell_Frame_CUDA<double>;
 }

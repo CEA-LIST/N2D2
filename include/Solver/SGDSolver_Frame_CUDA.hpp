@@ -127,6 +127,11 @@ void N2D2::SGDSolver_Frame_CUDA<T>::exportFreeParameters(
 
 namespace N2D2 {
 template <>
+void SGDSolver_Frame_CUDA<half_float::half>::update(CudaTensor<half_float::half>& data,
+                                         CudaTensor<half_float::half>& diffData,
+                                         unsigned int batchSize);
+
+template <>
 void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
                                          CudaTensor<float>& diffData,
                                          unsigned int batchSize);

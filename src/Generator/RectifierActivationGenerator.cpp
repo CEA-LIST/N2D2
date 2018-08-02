@@ -35,6 +35,8 @@ N2D2::RectifierActivationGenerator::generate(
     std::shared_ptr<RectifierActivation> activation
         = (dataType == Float32)
             ? Registrar<RectifierActivation>::create<float>(model)()
+        : (dataType == Float16)
+            ? Registrar<RectifierActivation>::create<half_float::half>(model)()
             : Registrar<RectifierActivation>::create<double>(model)();
 
     activation->setPrefixedParameters(iniConfig.getSection(section),

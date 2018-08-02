@@ -37,6 +37,14 @@ N2D2::NormalFillerGenerator::generate(IniParser& iniConfig,
 
         return std::make_shared<NormalFiller<float> >(mean, stdDev);
     }
+    else if (dataType == Float16) {
+        const half_float::half mean = iniConfig.getProperty<half_float::half>
+            (name + ".Mean", half_float::half(0.0f));
+        const half_float::half stdDev = iniConfig.getProperty<half_float::half>
+            (name + ".StdDev", half_float::half(1.0f));
+
+        return std::make_shared<NormalFiller<half_float::half> >(mean, stdDev);
+    }
     else {
         const double mean = iniConfig.getProperty<double>(name + ".Mean", 0.0);
         const double stdDev = iniConfig.getProperty<double>(name + ".StdDev",

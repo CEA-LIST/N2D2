@@ -115,6 +115,8 @@ N2D2::DeconvCellGenerator::generate(Network& network,
             "ActivationFunction",
             (dataType == Float32)
                 ? Registrar<TanhActivation>::create<float>(model)()
+            : (dataType == Float16)
+                ? Registrar<TanhActivation>::create<half_float::half>(model)()
                 : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction

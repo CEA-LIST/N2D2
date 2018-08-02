@@ -18,9 +18,51 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <cuda_fp16.h>
+
 #include "Activation/Activation_CUDA_Kernels.hpp"
 
 // LeakyRectifier
+__global__ void cudaHRectifier_propagate_kernel(__half* x,
+                                                unsigned int size,
+                                                __half leakSlope,
+                                                int shifting,
+                                                __half clipping)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            x[i] = __float2half(__half2float(x[i]) / (1 << shifting));
+        else if (shifting < 0)
+            x[i] = __float2half(__half2float(x[i]) * (1 << (-shifting)));
+
+        if (__half2float(clipping) > 0.0f) {
+#if __CUDA_ARCH__ >= 530
+            x[i] = (__half2float(x[i]) > 0.0f)
+                ? ((__hlt(x[i], clipping))
+                    ? x[i]
+                    : clipping)
+                : __hmul(leakSlope, x[i]);
+#else
+            x[i] = (__half2float(x[i]) > 0.0f)
+                ? ((__half2float(x[i]) < __half2float(clipping))
+                    ? x[i]
+                    : clipping)
+                : __float2half(__half2float(leakSlope) * __half2float(x[i]));
+#endif
+        }
+        else
+#if __CUDA_ARCH__ >= 530
+            x[i] = (__half2float(x[i]) > 0.0f) ? x[i] : __hmul(leakSlope, x[i]);
+#else
+            x[i] = (__half2float(x[i]) > 0.0f) ? x[i]
+                : __float2half(__half2float(leakSlope) * __half2float(x[i]));
+#endif
+    }
+}
+
 __global__ void cudaSRectifier_propagate_kernel(float* x,
                                                 unsigned int size,
                                                 float leakSlope,
@@ -62,6 +104,50 @@ __global__ void cudaDRectifier_propagate_kernel(double* x,
             x[i] = (x[i] > 0.0) ? min(x[i], clipping) : leakSlope * x[i];
         else
             x[i] = (x[i] > 0.0) ? x[i] : leakSlope * x[i];
+    }
+}
+
+__global__ void cudaHRectifier_backPropagate_kernel(__half* x,
+                                                    __half* dx,
+                                                    unsigned int size,
+                                                    __half leakSlope,
+                                                    int shifting,
+                                                    __half clipping)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            dx[i] = __float2half(__half2float(dx[i]) / (1 << shifting));
+        else if (shifting < 0)
+            dx[i] = __float2half(__half2float(dx[i]) * (1 << (-shifting)));
+
+        if (__half2float(clipping) > 0.0f) {
+#if __CUDA_ARCH__ >= 530
+            dx[i] = (__hgt(x[i], clipping))
+                ? __float2half(0.0f)
+                : (__half2float(x[i]) > 0.0f)
+                    ? dx[i]
+                    : __hmul(leakSlope, dx[i]);
+#else
+            dx[i] = (__half2float(x[i]) > __half2float(clipping))
+                ? __float2half(0.0f)
+                : (__half2float(x[i]) > 0.0f)
+                    ? dx[i]
+                    : __float2half(__half2float(leakSlope)
+                                   * __half2float(dx[i]));
+#endif
+        }
+        else {
+#if __CUDA_ARCH__ >= 530
+            dx[i] = (__half2float(x[i]) > 0.0f) ? dx[i]
+                                                : __hmul(leakSlope, dx[i]);
+#else
+            dx[i] = (__half2float(x[i]) > 0.0f) ? dx[i]
+                : __float2half(__half2float(leakSlope) * __half2float(dx[i]));
+#endif
+        }
     }
 }
 
@@ -118,6 +204,33 @@ __global__ void cudaDRectifier_backPropagate_kernel(double* x,
 }
 
 // Saturation
+__global__ void cudaHSaturation_propagate_kernel(__half* x,
+                                                 unsigned int size,
+                                                 int shifting,
+                                                 __half threshold)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            x[i] = __float2half(__half2float(x[i]) / (1 << shifting));
+        else if (shifting < 0)
+            x[i] = __float2half(__half2float(x[i]) * (1 << (-shifting)));
+
+#if __CUDA_ARCH__ >= 530
+        x[i] = (__hlt(x[i], __hneg(threshold))) ? __hneg(threshold)
+             : (__hgt(x[i], threshold)) ? threshold
+             : x[i];
+#else
+        x[i] = (__half2float(x[i]) < -__half2float(threshold))
+             ? __float2half(-__half2float(threshold))
+                : (__half2float(x[i]) > __half2float(threshold)) ? threshold
+                : x[i];
+#endif
+    }
+}
+
 __global__ void cudaSSaturation_propagate_kernel(float* x,
                                                  unsigned int size,
                                                  int shifting,
@@ -155,6 +268,33 @@ __global__ void cudaDSaturation_propagate_kernel(double* x,
         x[i] = (x[i] < -threshold) ? -threshold
              : (x[i] > threshold) ? threshold
              : x[i];
+    }
+}
+
+__global__ void
+cudaHSaturation_backPropagate_kernel(__half* x,
+                                     __half* dx,
+                                     unsigned int size,
+                                     int shifting,
+                                     __half threshold)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        if (shifting > 0)
+            dx[i] = __float2half(__half2float(dx[i]) / (1 << shifting));
+        else if (shifting < 0)
+            dx[i] = __float2half(__half2float(dx[i]) * (1 << (-shifting)));
+
+#if __CUDA_ARCH__ >= 530
+        dx[i] = (__hgt(x[i], __hneg(threshold)) && __hlt(x[i], threshold))
+            ? dx[i] : __float2half(0.0f);
+#else
+        dx[i] = (__half2float(x[i]) > -__half2float(threshold)
+                 && __half2float(x[i]) < __half2float(threshold))
+            ? dx[i] : __float2half(0.0f);
+#endif
     }
 }
 
@@ -201,6 +341,20 @@ cudaDSaturation_backPropagate_kernel(double* x,
 }
 
 // Softplus
+__global__ void cudaHSoftplus_propagate_kernel(__half* x, unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+        x[i] = hlog(__hadd(__float2half(1.0f), hexp(x[i])));
+#else
+        x[i] = __float2half(log(1.0f + exp(__half2float(x[i]))));
+#endif
+    }
+}
+
 __global__ void cudaSSoftplus_propagate_kernel(float* x, unsigned int size)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -218,6 +372,22 @@ __global__ void cudaDSoftplus_propagate_kernel(double* x, unsigned int size)
 
     for (unsigned int i = index; i < size; i += stride) {
         x[i] = log(1.0 + exp(x[i]));
+    }
+}
+
+__global__ void
+cudaHSoftplus_backPropagate_kernel(__half* x, __half* dx, unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+        dx[i] = __hmul(dx[i], (__hsub(__float2half(1.0f), hexp(__hneg(x[i])))));
+#else
+        dx[i] = __float2half(__half2float(dx[i])
+                             * (1.0f - exp(-__half2float(x[i]))));
+#endif
     }
 }
 
@@ -244,6 +414,21 @@ cudaDSoftplus_backPropagate_kernel(double* x, double* dx, unsigned int size)
 }
 
 // Rectifier
+void N2D2::cudaHRectifier_propagate(half_float::half* x,
+                                    unsigned int size,
+                                    half_float::half leakSlope,
+                                    int shifting,
+                                    half_float::half clipping)
+{
+    cudaHRectifier_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x),
+         size,
+         reinterpret_cast<__half&>(leakSlope),
+         shifting,
+         reinterpret_cast<__half&>(clipping));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
 void N2D2::cudaSRectifier_propagate(float* x,
                                     unsigned int size,
                                     float leakSlope,
@@ -263,6 +448,23 @@ void N2D2::cudaDRectifier_propagate(double* x,
 {
     cudaDRectifier_propagate_kernel<<<(size + 255) / 256, 256>>>
         (x, size, leakSlope, shifting, clipping);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHRectifier_backPropagate(half_float::half* x,
+                                        half_float::half* dx,
+                                        unsigned int size,
+                                        half_float::half leakSlope,
+                                        int shifting,
+                                        half_float::half clipping)
+{
+    cudaHRectifier_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x),
+         reinterpret_cast<__half*>(dx),
+         size,
+         reinterpret_cast<__half&>(leakSlope),
+         shifting,
+         reinterpret_cast<__half&>(clipping));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -291,6 +493,19 @@ void N2D2::cudaDRectifier_backPropagate(double* x,
 }
 
 // Saturation
+void N2D2::cudaHSaturation_propagate(half_float::half* x,
+                                     unsigned int size,
+                                     int shifting,
+                                     half_float::half threshold)
+{
+    cudaHSaturation_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x),
+         size,
+         shifting,
+         reinterpret_cast<__half&>(threshold));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
 void N2D2::cudaSSaturation_propagate(float* x,
                                      unsigned int size,
                                      int shifting,
@@ -308,6 +523,21 @@ void N2D2::cudaDSaturation_propagate(double* x,
 {
     cudaDSaturation_propagate_kernel<<<(size + 255) / 256, 256>>>
         (x, size, shifting, threshold);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHSaturation_backPropagate(half_float::half* x,
+                                         half_float::half* dx,
+                                         unsigned int size,
+                                         int shifting,
+                                         half_float::half threshold)
+{
+    cudaHSaturation_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x),
+         reinterpret_cast<__half*>(dx),
+         size,
+         shifting,
+         reinterpret_cast<__half&>(threshold));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -335,6 +565,13 @@ N2D2::cudaDSaturation_backPropagate(double* x,
 }
 
 // Softplus
+void N2D2::cudaHSoftplus_propagate(half_float::half* x, unsigned int size)
+{
+    cudaHSoftplus_propagate_kernel<<<(size + 255) / 256, 256>>>(
+                                            reinterpret_cast<__half*>(x), size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
 void N2D2::cudaSSoftplus_propagate(float* x, unsigned int size)
 {
     cudaSSoftplus_propagate_kernel<<<(size + 255) / 256, 256>>>(x, size);
@@ -344,6 +581,15 @@ void N2D2::cudaSSoftplus_propagate(float* x, unsigned int size)
 void N2D2::cudaDSoftplus_propagate(double* x, unsigned int size)
 {
     cudaDSoftplus_propagate_kernel<<<(size + 255) / 256, 256>>>(x, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHSoftplus_backPropagate(half_float::half* x,
+                                       half_float::half* dx,
+                                       unsigned int size)
+{
+    cudaHSoftplus_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x), reinterpret_cast<__half*>(dx), size);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 

@@ -34,5 +34,7 @@ N2D2::SaturationActivationGenerator::generate(
 {
     return (dataType == Float32)
             ? Registrar<SaturationActivation>::create<float>(model)()
+        : (dataType == Float16)
+            ? Registrar<SaturationActivation>::create<half_float::half>(model)()
             : Registrar<SaturationActivation>::create<double>(model)();
 }

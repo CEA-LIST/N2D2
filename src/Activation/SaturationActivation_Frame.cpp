@@ -22,6 +22,19 @@
 
 template <>
 N2D2::Registrar<N2D2::SaturationActivation>
+N2D2::SaturationActivation_Frame<half_float::half>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::SaturationActivation_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::SaturationActivation>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::SaturationActivation>
 N2D2::SaturationActivation_Frame<float>::mRegistrar(
     {"Frame",
     "Transcode",

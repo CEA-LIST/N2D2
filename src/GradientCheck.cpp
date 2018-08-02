@@ -177,6 +177,11 @@ void N2D2::GradientCheck<T>::check(const std::string& tensorName,
               dynamic_cast<Tensor<float>&>(tensor),
               dynamic_cast<Tensor<float>&>(diffTensor));
     }
+    else if (tensor.getType() == &typeid(half_float::half)) {
+        check(tensorName,
+              dynamic_cast<Tensor<half_float::half>&>(tensor),
+              dynamic_cast<Tensor<half_float::half>&>(diffTensor));
+    }
     else if (tensor.getType() == &typeid(double)) {
         check(tensorName,
               dynamic_cast<Tensor<double>&>(tensor),
@@ -210,6 +215,7 @@ double N2D2::GradientCheck<T>::cost() const
 }
 
 namespace N2D2 {
+    template class GradientCheck<half_float::half>;
     template class GradientCheck<float>;
     template class GradientCheck<double>;
 }

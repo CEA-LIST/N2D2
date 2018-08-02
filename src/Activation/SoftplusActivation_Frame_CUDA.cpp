@@ -24,6 +24,16 @@
 
 template <>
 N2D2::Registrar<N2D2::SoftplusActivation>
+N2D2::SoftplusActivation_Frame_CUDA<half_float::half>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::SoftplusActivation_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::SoftplusActivation>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::SoftplusActivation>
 N2D2::SoftplusActivation_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",
@@ -44,6 +54,12 @@ N2D2::SoftplusActivation_Frame_CUDA<double>::mRegistrar(
 
 namespace N2D2 {
 template <>
+void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(CudaTensor<half_float::half>& data)
+{
+    cudaHSoftplus_propagate(data.getDevicePtr(), data.size());
+}
+
+template <>
 void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
 {
     cudaSSoftplus_propagate(data.getDevicePtr(), data.size());
@@ -53,6 +69,15 @@ template <>
 void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data)
 {
     cudaDSoftplus_propagate(data.getDevicePtr(), data.size());
+}
+
+template <>
+void SoftplusActivation_Frame_CUDA
+    <half_float::half>::backPropagate(CudaTensor<half_float::half>& data, CudaTensor<half_float::half>& diffData)
+{
+    cudaHSoftplus_backPropagate(data.getDevicePtr(),
+                                diffData.getDevicePtr(),
+                                data.size());
 }
 
 template <>

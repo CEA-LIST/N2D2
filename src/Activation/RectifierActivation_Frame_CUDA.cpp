@@ -24,6 +24,16 @@
 
 template <>
 N2D2::Registrar<N2D2::RectifierActivation>
+N2D2::RectifierActivation_Frame_CUDA<half_float::half>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::RectifierActivation_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::RectifierActivation>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::RectifierActivation>
 N2D2::RectifierActivation_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",
@@ -43,6 +53,34 @@ N2D2::RectifierActivation_Frame_CUDA<double>::mRegistrar(
     N2D2::Registrar<N2D2::RectifierActivation>::Type<double>());
 
 namespace N2D2 {
+template <>
+void RectifierActivation_Frame_CUDA<half_float::half>::propagate(
+    CudaTensor<half_float::half>& data)
+{
+    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
+
+        CHECK_CUDNN_STATUS(
+            cudnnActivationForward(CudaContext::cudnnHandle(),
+                                   mActivationDesc,
+                                   &alpha,
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr(),
+                                   &beta,
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr()));
+    }
+    else {
+        cudaHRectifier_propagate(
+            data.getDevicePtr(),
+            data.size(),
+            half_float::half(mLeakSlope),
+            (int)mShifting,
+            half_float::half(mClipping));
+    }
+}
+
 template <>
 void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
 {
@@ -88,6 +126,39 @@ void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data)
         cudaDRectifier_propagate(
             data.getDevicePtr(), data.size(),
             (double)mLeakSlope, (int)mShifting, (double)mClipping);
+    }
+}
+
+template <>
+void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(
+    CudaTensor<half_float::half>& data,
+    CudaTensor<half_float::half>& diffData)
+{
+    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
+
+        CHECK_CUDNN_STATUS(
+            cudnnActivationBackward(CudaContext::cudnnHandle(),
+                                    mActivationDesc,
+                                    &alpha,
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr(),
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
+                                    &beta,
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr()));
+    }
+    else {
+        cudaHRectifier_backPropagate(data.getDevicePtr(),
+                                     diffData.getDevicePtr(),
+                                     data.size(),
+                                     half_float::half(mLeakSlope),
+                                     (int)mShifting,
+                                     half_float::half(mClipping));
     }
 }
 

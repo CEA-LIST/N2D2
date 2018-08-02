@@ -71,8 +71,8 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data)
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
-    const double alpha = mAlpha;
-    const double beta = 0.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
+    const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
     CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
                                               mActivationDesc,
@@ -91,8 +91,8 @@ void N2D2::TanhActivation_Frame_CUDA
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
     CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
 
-    const float alpha = mAlpha;
-    const float beta = 0.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
+    const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
     CHECK_CUDNN_STATUS(
         cudnnActivationBackward(CudaContext::cudnnHandle(),

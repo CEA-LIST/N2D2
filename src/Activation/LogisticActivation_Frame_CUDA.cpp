@@ -24,6 +24,16 @@
 
 template <>
 N2D2::Registrar<N2D2::LogisticActivation>
+N2D2::LogisticActivation_Frame_CUDA<half_float::half>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::LogisticActivation_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::LogisticActivation>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::LogisticActivation>
 N2D2::LogisticActivation_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",

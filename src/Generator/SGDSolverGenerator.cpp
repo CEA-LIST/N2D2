@@ -33,6 +33,8 @@ N2D2::SGDSolverGenerator::generate(IniParser& iniConfig,
     std::shared_ptr<SGDSolver> solver
         = (dataType == Float32)
             ? Registrar<SGDSolver>::create<float>(model)()
+        : (dataType == Float16)
+            ? Registrar<SGDSolver>::create<half_float::half>(model)()
             : Registrar<SGDSolver>::create<double>(model)();
 
     solver->setPrefixedParameters(iniConfig.getSection(section), name + ".");

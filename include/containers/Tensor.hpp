@@ -55,6 +55,8 @@
 
 #include "utils/Utils.hpp"
 
+#include "third_party/half.hpp"
+
 namespace N2D2 {
 template <class T> class Tensor;
 
@@ -269,10 +271,12 @@ protected:
 
     template <class U> friend
         typename std::enable_if<std::is_convertible<float,U>::value
+            || std::is_convertible<half_float::half,U>::value
             || std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U> friend
         typename std::enable_if<!std::is_convertible<float,U>::value
+            && !std::is_convertible<half_float::half,U>::value
             && !std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U>
@@ -387,10 +391,12 @@ protected:
 
     template <class U> friend
         typename std::enable_if<std::is_convertible<float,U>::value
+            || std::is_convertible<half_float::half,U>::value
             || std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U> friend
         typename std::enable_if<!std::is_convertible<float,U>::value
+            && !std::is_convertible<half_float::half,U>::value
             && !std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
     template <class U>
@@ -402,6 +408,7 @@ protected:
 
 template <class T>
 typename std::enable_if<std::is_convertible<float,T>::value
+                     || std::is_convertible<half_float::half,T>::value
                      || std::is_convertible<double,T>::value, Tensor<T> >::type
 tensor_cast(const BaseTensor& base)
 {
@@ -423,6 +430,12 @@ tensor_cast(const BaseTensor& base)
     if (base.getType() == &typeid(float)) {
         const Tensor<float>& tensor
             = dynamic_cast<const Tensor<float>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(half_float::half)) {
+        const Tensor<half_float::half>& tensor
+            = dynamic_cast<const Tensor<half_float::half>&>(base);
 
         std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
     }
@@ -448,6 +461,7 @@ tensor_cast(const BaseTensor& base)
 
 template <class T>
 typename std::enable_if<!std::is_convertible<float,T>::value
+                     && !std::is_convertible<half_float::half,T>::value
                      && !std::is_convertible<double,T>::value, Tensor<T> >::type
 tensor_cast(const BaseTensor& base)
 {
@@ -1350,6 +1364,8 @@ N2D2::Tensor<T>* N2D2::Tensor<T>::newCuda() const {
 }
 
 namespace N2D2 {
+    template <> Tensor<half_float::half>* Tensor<half_float::half>::newCuda()
+        const;
     template <> Tensor<float>* Tensor<float>::newCuda() const;
     template <> Tensor<double>* Tensor<double>::newCuda() const;
 }

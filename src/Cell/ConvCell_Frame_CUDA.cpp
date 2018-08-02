@@ -24,6 +24,12 @@
 
 template <>
 N2D2::Registrar<N2D2::ConvCell>
+N2D2::ConvCell_Frame_CUDA<half_float::half>::mRegistrar("Frame_CUDA",
+        N2D2::ConvCell_Frame_CUDA<half_float::half>::create,
+        N2D2::Registrar<N2D2::ConvCell>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Frame_CUDA<float>::mRegistrar("Frame_CUDA",
         N2D2::ConvCell_Frame_CUDA<float>::create,
         N2D2::Registrar<N2D2::ConvCell>::Type<float>());
@@ -193,9 +199,14 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
         mFwdAlgo.push_back(cudnnConvolutionFwdAlgo_t());
 
+        // Need to cast mInputs[k] so that getCudnnTensorDesc() returns the
+        // right data type. No need to actually copy any data.
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
+
         CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardAlgorithm(
             CudaContext::cudnnHandle(),
-            mInputs[k].getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
             mFilterDesc.back(),
             mConvDesc,
             mOutputs.getCudnnTensorDesc(),
@@ -208,7 +219,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
         CHECK_CUDNN_STATUS(cudnnGetConvolutionBackwardFilterAlgorithm(
             CudaContext::cudnnHandle(),
-            mInputs[k].getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
             mOutputs.getCudnnTensorDesc(),
             mConvDesc,
             mFilterDesc.back(),
@@ -223,7 +234,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
             mFilterDesc.back(),
             mOutputs.getCudnnTensorDesc(),
             mConvDesc,
-            mInputs[k].getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
             CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
             0,
             &mBwdDataAlgo.back()));
@@ -231,7 +242,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
         CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardWorkspaceSize(
             CudaContext::cudnnHandle(),
-            mInputs[k].getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
             mFilterDesc.back(),
             mConvDesc,
             mOutputs.getCudnnTensorDesc(),
@@ -246,7 +257,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
             CudaContext::cudnnHandle(),
             // same arguments as cudnnGetConvolutionBackwardFilterAlgorithm()
             // -->
-            mInputs[k].getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
             mOutputs.getCudnnTensorDesc(),
             mConvDesc,
             mFilterDesc.back(),
@@ -263,7 +274,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
             mFilterDesc.back(),
             mOutputs.getCudnnTensorDesc(),
             mConvDesc,
-            mInputs[k].getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
             // <--
             mBwdDataAlgo.back(),
             &workspaceSize));
@@ -287,8 +298,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool /*inference*/)
      * Corps de la procédure de convolution via CuDNN
      * Pour plus de détails, cf. doc : cuDNN Library
      */
-    const float alpha = 1.0f;
-    float beta = 0.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+    typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
@@ -347,7 +358,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 {
     Cell_Frame_CUDA<T>::backPropagate();
 
-    const float alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
 
     const unsigned int kernelSize = (!mKernelDims.empty())
         ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
@@ -355,7 +366,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
         : 0U;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
+        const typename Cuda::cudnn_scaling_type<T>::type beta
+            = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
         std::shared_ptr<CudaDeviceTensor<T> > input
             = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
@@ -410,7 +422,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
     }
 
     if (!mNoBias) {
-        const float beta = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
+        const typename Cuda::cudnn_scaling_type<T>::type beta
+            = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
 
         CHECK_CUDNN_STATUS(
             cudnnConvolutionBackwardBias(CudaContext::cudnnHandle(),
@@ -425,7 +438,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
     /** Si il ne s'agit pas de la première couche */
     if (!mDiffOutputs.empty() && mBackPropagate) {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+            const typename Cuda::cudnn_scaling_type<T>::type beta
+                = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
             std::shared_ptr<CudaDeviceTensor<T> > diffOutput
                 = (mDiffOutputs[k].isValid())
@@ -791,6 +805,7 @@ N2D2::ConvCell_Frame_CUDA<T>::~ConvCell_Frame_CUDA()
 }
 
 namespace N2D2 {
+    template class ConvCell_Frame_CUDA<half_float::half>;
     template class ConvCell_Frame_CUDA<float>;
     template class ConvCell_Frame_CUDA<double>;
 }

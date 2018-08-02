@@ -22,9 +22,15 @@
 #define N2D2_ACTIVATION_CUDA_KERNELS_H
 
 #include "CudaUtils.hpp"
+#include "third_party/half.hpp"
 
 namespace N2D2 {
 // Rectifier
+void cudaHRectifier_propagate(half_float::half* x,
+                              unsigned int size,
+                              half_float::half leakSlope,
+                              int shifting,
+                              half_float::half clipping);
 void cudaSRectifier_propagate(float* x,
                               unsigned int size,
                               float leakSlope,
@@ -35,6 +41,12 @@ void cudaDRectifier_propagate(double* x,
                               double leakSlope,
                               int shifting,
                               double clipping);
+void cudaHRectifier_backPropagate(half_float::half* x,
+                                  half_float::half* dx,
+                                  unsigned int size,
+                                  half_float::half leakSlope,
+                                  int shifting,
+                                  half_float::half clipping);
 void cudaSRectifier_backPropagate(float* x,
                                   float* dx,
                                   unsigned int size,
@@ -48,6 +60,10 @@ void cudaDRectifier_backPropagate(double* x,
                                   int shifting,
                                   double clipping);
 // Saturation
+void cudaHSaturation_propagate(half_float::half* x,
+                               unsigned int size,
+                               int shifting,
+                               half_float::half threshold);
 void cudaSSaturation_propagate(float* x,
                                unsigned int size,
                                int shifting,
@@ -56,6 +72,11 @@ void cudaDSaturation_propagate(double* x,
                                unsigned int size,
                                int shifting,
                                double threshold);
+void cudaHSaturation_backPropagate(half_float::half* x,
+                                   half_float::half* dx,
+                                   unsigned int size,
+                                   int shifting,
+                                   half_float::half threshold);
 void cudaSSaturation_backPropagate(float* x,
                                    float* dx,
                                    unsigned int size,
@@ -67,8 +88,11 @@ void cudaDSaturation_backPropagate(double* x,
                                    int shifting,
                                    double threshold);
 // Softplus
+void cudaHSoftplus_propagate(half_float::half* x, unsigned int size);
 void cudaSSoftplus_propagate(float* x, unsigned int size);
 void cudaDSoftplus_propagate(double* x, unsigned int size);
+void cudaHSoftplus_backPropagate(half_float::half* x, half_float::half* dx,
+                                 unsigned int size);
 void cudaSSoftplus_backPropagate(float* x, float* dx, unsigned int size);
 void cudaDSoftplus_backPropagate(double* x, double* dx, unsigned int size);
 }

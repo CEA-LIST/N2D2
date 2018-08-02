@@ -41,6 +41,19 @@ N2D2::XavierFillerGenerator::generate(IniParser& iniConfig,
         return std::make_shared<XavierFiller<float> >(varianceNorm,
                                                       distribution);
     }
+    else if (dataType == Float16) {
+        const XavierFiller<half_float::half>::VarianceNorm varianceNorm
+            = iniConfig.getProperty<XavierFiller<half_float::half>
+                ::VarianceNorm>(name + ".VarianceNorm",
+                                XavierFiller<half_float::half>::FanIn);
+        const XavierFiller<half_float::half>::Distribution distribution
+            = iniConfig.getProperty<XavierFiller<half_float::half>
+                ::Distribution>(name + ".Distribution",
+                                XavierFiller<half_float::half>::Uniform);
+
+        return std::make_shared<XavierFiller<half_float::half> >(varianceNorm,
+                                                      distribution);
+    }
     else {
         const XavierFiller<double>::VarianceNorm varianceNorm
             = iniConfig.getProperty<XavierFiller<double>::VarianceNorm>(

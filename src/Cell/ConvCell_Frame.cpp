@@ -22,6 +22,12 @@
 
 template <>
 N2D2::Registrar<N2D2::ConvCell>
+N2D2::ConvCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::ConvCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::ConvCell>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Frame<float>::mRegistrar("Frame",
     N2D2::ConvCell_Frame<float>::create,
     N2D2::Registrar<N2D2::ConvCell>::Type<float>());
@@ -373,6 +379,7 @@ N2D2::ConvCell_Frame<T>::~ConvCell_Frame()
 }
 
 namespace N2D2 {
+    template class ConvCell_Frame<half_float::half>;
     template class ConvCell_Frame<float>;
     template class ConvCell_Frame<double>;
 }

@@ -25,6 +25,7 @@
 
 namespace N2D2 {
 enum DataType {
+    Float16,
     Float32,
     Float64
 };
@@ -33,7 +34,7 @@ enum DataType {
 namespace {
 template <>
 const char* const EnumStrings<N2D2::DataType>::data[]
-    = {"Float32", "Float64"};
+    = {"Float16", "Float32", "Float64"};
 }
 
 #endif // N2D2_GENERATOR_H

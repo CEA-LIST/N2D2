@@ -24,6 +24,14 @@
 
 template <>
 N2D2::Registrar<N2D2::SGDSolver>
+N2D2::SGDSolver_Frame_CUDA<half_float::half>::mRegistrar(
+    {"Frame_CUDA",
+     "Transcode_CUDA"},
+    N2D2::SGDSolver_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::SGDSolver>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::SGDSolver>
 N2D2::SGDSolver_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
      "Transcode_CUDA"},
@@ -39,6 +47,88 @@ N2D2::SGDSolver_Frame_CUDA<double>::mRegistrar(
     N2D2::Registrar<N2D2::SGDSolver>::Type<double>());
 
 namespace N2D2 {
+template <>
+void SGDSolver_Frame_CUDA<half_float::half>::update(
+    CudaTensor<half_float::half>& data,
+    CudaTensor<half_float::half>& diffData,
+    unsigned int batchSize)
+{
+    const float rate = SGDSolver::getLearningRate(batchSize);
+
+    if (rate == 0.0)
+        return;
+
+    if (mQuantizationLevels > 0 && mContinuousData.empty()) {
+        mContinuousData.resize(data.dims());
+        CHECK_CUDA_STATUS(cudaMemcpy(mContinuousData.getDevicePtr(),
+                                     data.getDevicePtr(),
+                                     data.size() * sizeof(half_float::half),
+                                     cudaMemcpyDeviceToDevice));
+    }
+
+    CudaTensor<half_float::half>& cudaContinuousData
+        = (mQuantizationLevels > 0) ? mContinuousData : data;
+
+    // Normalize in function of the iteration size
+    const half_float::half rateDiff(rate / (batchSize * (float)mIterationSize));
+
+    if (mMomentum == 0.0 && mDecay == 0.0) {
+        // data = data + diffData*rate
+        cudaHaxpy(diffData.size(), // size of data
+                  &rateDiff,
+                  diffData.getDevicePtr(),
+                  cudaContinuousData.getDevicePtr());
+    } else {
+        const half_float::half momentum(mMomentum);
+        const half_float::half decay(mDecay);
+        const half_float::half unit(1.0f);
+
+        if (mMomentumData.empty()) {
+            mMomentumData.resize(data.dims());
+            mMomentumData.fill(half_float::half(0.0));
+            mMomentumData.synchronizeHToD();
+        }
+
+        // mMomentumData = mMomentumData*momentum
+        cudaHscal(mMomentumData.size(),
+                  &momentum,
+                  mMomentumData.getDevicePtr());
+
+        // mMomentumData = mMomentumData + diffData*rate
+        cudaHaxpy(diffData.size(),
+                  &rateDiff,
+                  diffData.getDevicePtr(),
+                  mMomentumData.getDevicePtr());
+
+        if (decay != 0.0f) {
+            const half_float::half alpha(-decay * rate);
+            // mMomentumData = mMomentumData - decay*rate*data
+            cudaHaxpy(data.size(),
+                      &alpha,
+                      cudaContinuousData.getDevicePtr(),
+                      mMomentumData.getDevicePtr());
+        }
+
+        // data = data + mMomentumData
+        cudaHaxpy(mMomentumData.size(),
+                  &unit,
+                  mMomentumData.getDevicePtr(),
+                  cudaContinuousData.getDevicePtr());
+    }
+
+    if (mClamping) {
+        cudaHclamp(cudaContinuousData.getDevicePtr(), data.size(),
+                   half_float::half(-1.0), half_float::half(1.0));
+    }
+
+    if (mQuantizationLevels > 0) {
+        cudaHquantize(data.getDevicePtr(),
+                      cudaContinuousData.getDevicePtr(),
+                      data.size(),
+                      mQuantizationLevels);
+    }
+}
+
 template <>
 void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
                                          CudaTensor<float>& diffData,

@@ -77,16 +77,31 @@ namespace Cuda {
 
     template <class T> void printDeviceVector(unsigned int size, T* devVec)
     {
-        std::unique_ptr<float[]> vec(new T[size]);
+        std::unique_ptr<T[]> vec(new T[size]);
         CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(vec, devVec, size * sizeof(T), cudaMemcpyDeviceToHost));
+        CHECK_CUDA_STATUS(cudaMemcpy(vec.get(),
+                                     devVec,
+                                     size * sizeof(T),
+                                     cudaMemcpyDeviceToHost));
 
         for (unsigned int i = 0; i < size; i++)
             std::cout << vec[i] << " ";
 
         std::cout << std::endl;
     }
+
+    // CuDNN scaling parameters are typically "alpha" and "beta".
+    // Their type must be "float" for HALF and FLOAT (default template)
+    // and "double" for DOUBLE (specialized template)
+    template <class T>
+    struct cudnn_scaling_type {
+        typedef float type;
+    };
+
+    template <>
+    struct cudnn_scaling_type<double> {
+        typedef double type;
+    };
 }
 }
 

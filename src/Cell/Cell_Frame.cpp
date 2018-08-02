@@ -381,6 +381,7 @@ void N2D2::Cell_Frame<T>::discretizeSignals(unsigned int nbLevels,
 }
 
 namespace N2D2 {
+    template class Cell_Frame<half_float::half>;
     template class Cell_Frame<float>;
     template class Cell_Frame<double>;
 }

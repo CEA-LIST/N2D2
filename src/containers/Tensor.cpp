@@ -25,6 +25,12 @@
 
 namespace N2D2 {
     template <>
+    Tensor<half_float::half>* Tensor<half_float::half>::newCuda() const
+    {
+    return new CudaTensor<half_float::half>(*this);
+    }
+
+    template <>
     Tensor<float>* Tensor<float>::newCuda() const
     {
     return new CudaTensor<float>(*this);

@@ -35,6 +35,12 @@ N2D2::ConstantFillerGenerator::generate(IniParser& iniConfig,
 
         return std::make_shared<ConstantFiller<float> >(value);
     }
+    else if (dataType == Float16) {
+        const half_float::half value
+            = iniConfig.getProperty<half_float::half>(name + ".Value");
+
+        return std::make_shared<ConstantFiller<half_float::half> >(value);
+    }
     else {
         const double value = iniConfig.getProperty<double>(name + ".Value");
 

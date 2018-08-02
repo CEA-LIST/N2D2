@@ -40,8 +40,18 @@ template <typename T> void thrust_fill(T* devData, size_t size, T value);
 template <typename T, typename U>
 void thrust_copy(T* /*srcData*/, U* /*dstData*/, size_t /*size*/) {}
 
-template <> void thrust_copy(double* srcData, float* dstData, size_t size);
-template <> void thrust_copy(float* srcData, double* dstData, size_t size);
+template <> void thrust_copy(double* srcData, float* dstData,
+                             size_t size);
+template <> void thrust_copy(double* srcData, half_float::half* dstData,
+                             size_t size);
+template <> void thrust_copy(float* srcData, double* dstData,
+                             size_t size);
+template <> void thrust_copy(float* srcData, half_float::half* dstData,
+                             size_t size);
+template <> void thrust_copy(half_float::half* srcData, float* dstData,
+                             size_t size);
+template <> void thrust_copy(half_float::half* srcData, double* dstData,
+                             size_t size);
 
 class CudaBaseTensor;
 template <typename T> class CudaTensor;
@@ -277,6 +287,14 @@ cuda_device_tensor_cast(const CudaBaseTensor& base)
                     deviceTensor->getDevicePtr(),
                     base.size());
     }
+    else if (base.getType() == &typeid(half_float::half)) {
+        const CudaTensor<half_float::half>& tensor
+            = dynamic_cast<const CudaTensor<half_float::half>&>(base);
+
+        thrust_copy(tensor.mDeviceTensor->getDevicePtr(),
+                    deviceTensor->getDevicePtr(),
+                    base.size());
+    }
     else if (base.getType() == &typeid(double)) {
         const CudaTensor<double>& tensor
             = dynamic_cast<const CudaTensor<double>&>(base);
@@ -425,6 +443,14 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
     if (device.getType() == &typeid(float)) {
         const CudaDeviceTensor<float>& deviceTensor
             = dynamic_cast<const CudaDeviceTensor<float>&>(device);
+
+        thrust_copy(deviceTensor.getDevicePtr(),
+                    mDataDevice,
+                    mCudaBaseTensor.size());
+    }
+    else if (device.getType() == &typeid(half_float::half)) {
+        const CudaDeviceTensor<half_float::half>& deviceTensor
+            = dynamic_cast<const CudaDeviceTensor<half_float::half>&>(device);
 
         thrust_copy(deviceTensor.getDevicePtr(),
                     mDataDevice,

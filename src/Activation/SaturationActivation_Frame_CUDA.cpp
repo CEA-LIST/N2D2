@@ -24,6 +24,16 @@
 
 template <>
 N2D2::Registrar<N2D2::SaturationActivation>
+N2D2::SaturationActivation_Frame_CUDA<half_float::half>::mRegistrar(
+    {"Frame_CUDA",
+    "Transcode_CUDA",
+    "CSpike_CUDA",
+    "CSpike_BP_CUDA"},
+    N2D2::SaturationActivation_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::SaturationActivation>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::SaturationActivation>
 N2D2::SaturationActivation_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",
@@ -44,6 +54,16 @@ N2D2::SaturationActivation_Frame_CUDA<double>::mRegistrar(
 
 namespace N2D2 {
 template <>
+void SaturationActivation_Frame_CUDA<half_float::half>::propagate(
+    CudaTensor<half_float::half>& data)
+{
+    cudaHSaturation_propagate(data.getDevicePtr(),
+                              data.size(),
+                              (int)mShifting,
+                              half_float::half(mThreshold));
+}
+
+template <>
 void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
 {
     cudaSSaturation_propagate(data.getDevicePtr(),
@@ -59,6 +79,18 @@ void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data
                               data.size(),
                               (int)mShifting,
                               (double)mThreshold);
+}
+
+template <>
+void SaturationActivation_Frame_CUDA
+    <half_float::half>::backPropagate(CudaTensor<half_float::half>& data,
+                                      CudaTensor<half_float::half>& diffData)
+{
+    cudaHSaturation_backPropagate(data.getDevicePtr(),
+                                  diffData.getDevicePtr(),
+                                  data.size(),
+                                  (int)mShifting,
+                                  half_float::half(mThreshold));
 }
 
 template <>

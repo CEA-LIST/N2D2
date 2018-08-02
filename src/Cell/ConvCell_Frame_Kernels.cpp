@@ -351,6 +351,14 @@ void N2D2::ConvCell_Frame_Kernels::backwardBias(const T* alpha,
 }
 
 namespace N2D2 {
+    template void ConvCell_Frame_Kernels::forward<half_float::half>(const half_float::half* alpha,
+                                           const Tensor<half_float::half>& inputs,
+                                           const Tensor
+                                           <half_float::half>& sharedSynapses,
+                                           const Descriptor& desc,
+                                           const half_float::half* beta,
+                                           Tensor<half_float::half>& outputs,
+                                           const Tensor<bool>& maps);
     template void ConvCell_Frame_Kernels::forward<float>(const float* alpha,
                                            const Tensor<float>& inputs,
                                            const Tensor
@@ -368,6 +376,10 @@ namespace N2D2 {
                                            Tensor<double>& outputs,
                                            const Tensor<bool>& maps);
 
+    template void ConvCell_Frame_Kernels::forwardBias<half_float::half>(const half_float::half* alpha,
+                                               const Tensor<half_float::half>& bias,
+                                               const half_float::half* beta,
+                                               Tensor<half_float::half>& outputs);
     template void ConvCell_Frame_Kernels::forwardBias<float>(const float* alpha,
                                                const Tensor<float>& bias,
                                                const float* beta,
@@ -377,6 +389,15 @@ namespace N2D2 {
                                                const double* beta,
                                                Tensor<double>& outputs);
 
+    template void ConvCell_Frame_Kernels::backwardData<half_float::half>(const half_float::half* alpha,
+                                                const Tensor
+                                                <half_float::half>& sharedSynapses,
+                                                const Tensor
+                                                <half_float::half>& diffInputs,
+                                                const Descriptor& desc,
+                                                const half_float::half* beta,
+                                                Tensor<half_float::half>& diffOutputs,
+                                                const Tensor<bool>& maps);
     template void ConvCell_Frame_Kernels::backwardData<float>(const float* alpha,
                                                 const Tensor
                                                 <float>& sharedSynapses,
@@ -396,6 +417,16 @@ namespace N2D2 {
                                                 Tensor<double>& diffOutputs,
                                                 const Tensor<bool>& maps);
 
+    template void ConvCell_Frame_Kernels::backwardFilter<half_float::half>(const half_float::half* alpha,
+                                                  const Tensor
+                                                  <half_float::half>& inputs,
+                                                  const Tensor
+                                                  <half_float::half>& diffInputs,
+                                                  const Descriptor& desc,
+                                                  const half_float::half* beta,
+                                                  Tensor
+                                                  <half_float::half>& diffSharedSynapses,
+                                                  const Tensor<bool>& maps);
     template void ConvCell_Frame_Kernels::backwardFilter<float>(const float* alpha,
                                                   const Tensor
                                                   <float>& inputs,
@@ -417,6 +448,11 @@ namespace N2D2 {
                                                   <double>& diffSharedSynapses,
                                                   const Tensor<bool>& maps);
 
+    template void ConvCell_Frame_Kernels::backwardBias<half_float::half>(const half_float::half* alpha,
+                                                const Tensor
+                                                <half_float::half>& diffInputs,
+                                                const half_float::half* beta,
+                                                Tensor<half_float::half>& diffBias);
     template void ConvCell_Frame_Kernels::backwardBias<float>(const float* alpha,
                                                 const Tensor
                                                 <float>& diffInputs,

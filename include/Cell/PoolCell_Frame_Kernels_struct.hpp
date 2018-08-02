@@ -51,7 +51,8 @@ namespace PoolCell_Frame_Kernels {
         unsigned int channel;
         bool valid;
 
-        ArgMax(unsigned int ix_ = 0,
+        // explicit required for std::is_convertible<half_float::half,U>::value
+        explicit ArgMax(unsigned int ix_ = 0,
                unsigned int iy_ = 0,
                unsigned int channel_ = 0,
                bool valid_ = false)

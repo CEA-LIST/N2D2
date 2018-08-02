@@ -22,10 +22,17 @@
 #define N2D2_SGDSOLVER_CUDA_KERNELS_H
 
 #include "CudaUtils.hpp"
+#include "third_party/half.hpp"
 
 namespace N2D2 {
+void cudaHclamp(half_float::half* x, unsigned int size,
+                half_float::half minVal, half_float::half maxVal);
 void cudaSclamp(float* x, unsigned int size, float minVal, float maxVal);
 void cudaDclamp(double* x, unsigned int size, double minVal, double maxVal);
+void cudaHquantize(half_float::half* y,
+                   half_float::half* x,
+                   unsigned int size,
+                   unsigned int quantizationLevels);
 void cudaSquantize(float* y,
                    float* x,
                    unsigned int size,
@@ -34,6 +41,13 @@ void cudaDquantize(double* y,
                    double* x,
                    unsigned int size,
                    unsigned int quantizationLevels);
+void cudaHscal(int n,
+               const half_float::half *alpha,
+               half_float::half *x);
+void cudaHaxpy(int n,
+               const half_float::half *alpha,
+               const half_float::half *x,
+               half_float::half *y);
 }
 
 #endif // N2D2_SGDSOLVER_CUDA_KERNELS_H

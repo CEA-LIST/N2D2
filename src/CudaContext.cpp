@@ -23,6 +23,10 @@
 #include "CudaContext.hpp"
 
 template <>
+const cudnnDataType_t N2D2::CudaContext::data_type<half_float::half>::value
+    = CUDNN_DATA_HALF;
+
+template <>
 const cudnnDataType_t N2D2::CudaContext::data_type<float>::value
     = CUDNN_DATA_FLOAT;
 

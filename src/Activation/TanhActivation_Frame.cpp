@@ -22,6 +22,19 @@
 
 template <>
 N2D2::Registrar<N2D2::TanhActivation>
+N2D2::TanhActivation_Frame<half_float::half>::mRegistrar(
+    {"Frame",
+    "Transcode",
+    "Spike",
+    "Spike_Analog",
+    "Spike_PCM",
+    "Spike_RRAM",
+    "CSpike"},
+    N2D2::TanhActivation_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::TanhActivation>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::TanhActivation>
 N2D2::TanhActivation_Frame<float>::mRegistrar(
     {"Frame",
     "Transcode",
