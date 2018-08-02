@@ -164,7 +164,7 @@ public:
     using CudaBaseTensor::resize;
 
     CudaTensor();
-    CudaTensor(const Tensor<T>& base);
+    CudaTensor(const Tensor<T>& base, bool hostBased = true);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
     inline void reserve(const std::vector<size_t>& dims);
@@ -180,6 +180,7 @@ public:
     inline void push_back(const std::vector<T>& vec);
     inline void push_back(const Tensor<T>& frame);
     inline void clear();
+    inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
     inline const CudaTensor<T> operator[](size_t i) const;
     CudaTensor<T>& operator=(const Tensor<T>& tensor);
@@ -499,10 +500,10 @@ N2D2::CudaTensor<T>::CudaTensor()
 }
 
 template <typename T>
-N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base)
+N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base, bool hostBased)
     : BaseTensor(base),
       Tensor<T>(base),
-      CudaBaseTensor(true)
+      CudaBaseTensor(hostBased)
 {
     // ctor
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
@@ -632,6 +633,10 @@ template <typename T> void N2D2::CudaTensor<T>::clear()
     Tensor<T>::clear();
 
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+}
+
+template <class T> N2D2::CudaTensor<T> N2D2::CudaTensor<T>::clone() const {
+    return CudaTensor<T>(Tensor<T>::clone(), mHostBased);
 }
 
 template <class T>
