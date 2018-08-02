@@ -87,14 +87,10 @@ std::vector<N2D2::AerReadEvent> N2D2::N_MNIST_Database::loadAerStimulusData(
                                                 unsigned int repetitions,
                                                 unsigned int partialStimulus)
 {
-    unsigned int index = id;
-    if (set == Database::Test) {
-        index -= mStimuliSets(Database::Learn).size();
-    }
 
-    std::string filename = mStimuli[mStimuliSets(set)[index]].name;
+
+    std::string filename = mStimuli[mStimuliSets(set)[id]].name;
     //std::cout << filename << std::endl;
-
 
     std::vector<AerReadEvent> stimu;
 
