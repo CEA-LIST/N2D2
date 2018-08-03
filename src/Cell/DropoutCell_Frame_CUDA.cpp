@@ -76,8 +76,11 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
         mReserveSpaceSize.push_back(0);
         mReserveSpace.push_back(NULL);
 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > input
+            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
+
         CHECK_CUDNN_STATUS(cudnnDropoutGetReserveSpaceSize(
-            mInputs[k].getCudnnTensorDesc(), &mReserveSpaceSize.back()));
+            input->getCudnnTensorDesc(), &mReserveSpaceSize.back()));
         CHECK_CUDA_STATUS(
             cudaMalloc(&mReserveSpace.back(), mReserveSpaceSize.back()));
     }
