@@ -88,10 +88,10 @@ public:
                                   double defaultVal = 0.0);
     virtual void setOutputTargets(const BaseTensor& targets);
     virtual void setOutputErrors(const BaseTensor& errors);
-    virtual CudaBaseTensor& getOutputs();
-    virtual const CudaBaseTensor& getOutputs() const;
-    virtual CudaBaseTensor& getDiffInputs();
-    virtual const CudaBaseTensor& getDiffInputs() const;
+    virtual BaseTensor& getOutputs();
+    virtual const BaseTensor& getOutputs() const;
+    virtual BaseTensor& getDiffInputs();
+    virtual const BaseTensor& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
     bool isCuda() const

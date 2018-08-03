@@ -359,28 +359,28 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
 }
 
 template <class T>
-N2D2::CudaBaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs()
+N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs()
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
 }
 
 template <class T>
-const N2D2::CudaBaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs() const
+const N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs() const
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
 }
 
 template <class T>
-N2D2::CudaBaseTensor& N2D2::Cell_Frame_CUDA<T>::getDiffInputs()
+N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getDiffInputs()
 {
     mDiffInputs.synchronizeDToH();
     return mDiffInputs;
 }
 
 template <class T>
-const N2D2::CudaBaseTensor&
+const N2D2::BaseTensor&
 N2D2::Cell_Frame_CUDA<T>::getDiffInputs() const
 {
     mDiffInputs.synchronizeDToH();
