@@ -21,6 +21,9 @@
 #ifndef N2D2_SGDSOLVER_CUDA_KERNELS_H
 #define N2D2_SGDSOLVER_CUDA_KERNELS_H
 
+#include <cuda_runtime_api.h>
+#include <cuda_fp16.h>
+
 #include "CudaUtils.hpp"
 #include "third_party/half.hpp"
 

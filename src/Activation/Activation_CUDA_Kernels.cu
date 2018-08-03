@@ -18,8 +18,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include <cuda_fp16.h>
-
 #include "Activation/Activation_CUDA_Kernels.hpp"
 
 // LeakyRectifier
@@ -347,7 +345,8 @@ __global__ void cudaHSoftplus_propagate_kernel(__half* x, unsigned int size)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-#if __CUDA_ARCH__ >= 530
+// hexp and hlog are only available since CUDA 8.0
+#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
         x[i] = hlog(__hadd(__float2half(1.0f), hexp(x[i])));
 #else
         x[i] = __float2half(log(1.0f + exp(__half2float(x[i]))));
@@ -382,7 +381,8 @@ cudaHSoftplus_backPropagate_kernel(__half* x, __half* dx, unsigned int size)
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-#if __CUDA_ARCH__ >= 530
+// hexp and hlog are only available since CUDA 8.0
+#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
         dx[i] = __hmul(dx[i], (__hsub(__float2half(1.0f), hexp(__hneg(x[i])))));
 #else
         dx[i] = __float2half(__half2float(dx[i])

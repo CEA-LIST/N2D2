@@ -64,24 +64,27 @@ public:
 
     template <class T>
     struct data_type {
-        static const cudnnDataType_t value;
+        static const cudnnDataType_t value = CUDNN_DATA_FLOAT;
+                                            // Dummy value by default
     };
 };
 }
 
 namespace N2D2 {
-    template <class T>
-    const cudnnDataType_t CudaContext::data_type<T>::value
-        = CUDNN_DATA_FLOAT;     // Dummy value by default
+    template <>
+    struct CudaContext::data_type<half_float::half> {
+        static const cudnnDataType_t value = CUDNN_DATA_HALF;
+    };
 
     template <>
-    const cudnnDataType_t CudaContext::data_type<half_float::half>::value;
+    struct CudaContext::data_type<float> {
+        static const cudnnDataType_t value = CUDNN_DATA_FLOAT;
+    };
 
     template <>
-    const cudnnDataType_t CudaContext::data_type<float>::value;
-
-    template <>
-    const cudnnDataType_t CudaContext::data_type<double>::value;
+    struct CudaContext::data_type<double> {
+        static const cudnnDataType_t value = CUDNN_DATA_DOUBLE;
+    };
 }
 
 #endif // N2D2_CUDA_CONTEXT_H

@@ -51,7 +51,7 @@ __global__ void cudaHquantize_kernel(__half* y,
         y[i] = (quantizationLevels > 1)
                        ? __float2half((int)round((quantizationLevels - 1) * __half2float(x[i]))
                          / (float)(quantizationLevels - 1))
-                       : __int2half_rn((__half2float(x[i]) >= 0.0f) ? 1 : -1);
+                       : __float2half((__half2float(x[i]) >= 0.0f) ? 1.0f : -1.0f);
     }
 }
 
