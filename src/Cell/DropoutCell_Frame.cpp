@@ -20,23 +20,39 @@
 
 #include "Cell/DropoutCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::DropoutCell>
-N2D2::DropoutCell_Frame::mRegistrar("Frame",
-                                         N2D2::DropoutCell_Frame::create);
+N2D2::DropoutCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::DropoutCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::DropoutCell>::Type<half_float::half>());
 
-N2D2::DropoutCell_Frame::DropoutCell_Frame(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::DropoutCell>
+N2D2::DropoutCell_Frame<float>::mRegistrar("Frame",
+    N2D2::DropoutCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::DropoutCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::DropoutCell>
+N2D2::DropoutCell_Frame<double>::mRegistrar("Frame",
+    N2D2::DropoutCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::DropoutCell>::Type<double>());
+
+template <class T>
+N2D2::DropoutCell_Frame<T>::DropoutCell_Frame(const std::string& name,
                                                      unsigned int nbOutputs)
     : Cell(name, nbOutputs),
       DropoutCell(name, nbOutputs),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<T>(name, nbOutputs)
 {
     // ctor
 }
 
-void N2D2::DropoutCell_Frame::initialize()
+template <class T>
+void N2D2::DropoutCell_Frame<T>::initialize()
 {
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-        throw std::domain_error("DropoutCell_Frame::initialize():"
+        throw std::domain_error("DropoutCell_Frame<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
@@ -51,7 +67,8 @@ void N2D2::DropoutCell_Frame::initialize()
     mMask.resize(mOutputs.dims());
 }
 
-void N2D2::DropoutCell_Frame::propagate(bool inference)
+template <class T>
+void N2D2::DropoutCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
@@ -62,7 +79,7 @@ void N2D2::DropoutCell_Frame::propagate(bool inference)
             mOutputs = mInputs[0];
         else {
             for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+                const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
 
                 unsigned int outputOffset = offset;
                 unsigned int inputOffset = 0;
@@ -86,7 +103,7 @@ void N2D2::DropoutCell_Frame::propagate(bool inference)
         }
     } else {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+            const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
 
             unsigned int outputOffset = offset;
             unsigned int inputOffset = 0;
@@ -120,7 +137,8 @@ void N2D2::DropoutCell_Frame::propagate(bool inference)
     mDiffInputs.clearValid();
 }
 
-void N2D2::DropoutCell_Frame::backPropagate()
+template <class T>
+void N2D2::DropoutCell_Frame<T>::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
@@ -132,8 +150,8 @@ void N2D2::DropoutCell_Frame::backPropagate()
             throw std::runtime_error(
                 "Cannot blend gradient from a Dropout cell");
 
-        Tensor<Float_T> diffOutput
-            = tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+        Tensor<T> diffOutput
+            = tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
         unsigned int outputOffset = offset;
         unsigned int inputOffset = 0;
@@ -167,11 +185,19 @@ void N2D2::DropoutCell_Frame::backPropagate()
     mDiffOutputs.synchronizeHToD();
 }
 
-void N2D2::DropoutCell_Frame::update()
+template <class T>
+void N2D2::DropoutCell_Frame<T>::update()
 {
 }
 
-N2D2::DropoutCell_Frame::~DropoutCell_Frame()
+template <class T>
+N2D2::DropoutCell_Frame<T>::~DropoutCell_Frame()
 {
     //dtor
+}
+
+namespace N2D2 {
+    template class DropoutCell_Frame<half_float::half>;
+    template class DropoutCell_Frame<float>;
+    template class DropoutCell_Frame<double>;
 }

@@ -379,7 +379,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     Network net;
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test<float> conv1("conv1",
@@ -536,9 +536,9 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     Network net;
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-    DropoutCell_Frame_CUDA drop2("drop2", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop2("drop2", 1);
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test<float> conv1("conv1",
@@ -1044,7 +1044,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     Network net;
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test<double> conv1("conv1",
@@ -1201,9 +1201,9 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     Network net;
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-    DropoutCell_Frame_CUDA drop2("drop2", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop2("drop2", 1);
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test<double> conv1("conv1",
@@ -1713,7 +1713,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     Network net;
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",
@@ -1873,9 +1873,9 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     Network net;
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-    DropoutCell_Frame_CUDA drop2("drop2", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop2("drop2", 1);
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
     ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",

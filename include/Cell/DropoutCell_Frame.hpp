@@ -30,9 +30,15 @@
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {
+template <class T>
 class DropoutCell_Frame : public virtual DropoutCell,
-                               public Cell_Frame<Float_T> {
+                               public Cell_Frame<T> {
 public:
+    using Cell_Frame<T>::mInputs;
+    using Cell_Frame<T>::mOutputs;
+    using Cell_Frame<T>::mDiffInputs;
+    using Cell_Frame<T>::mDiffOutputs;
+
     DropoutCell_Frame(const std::string& name, unsigned int nbOutputs);
     static std::shared_ptr<DropoutCell> create(const std::string& name,
                                                unsigned int nbOutputs)

@@ -37,6 +37,9 @@ N2D2::DropoutCellGenerator::generate(Network& /*network*/,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
 
@@ -44,8 +47,14 @@ N2D2::DropoutCellGenerator::generate(Network& /*network*/,
               << std::endl;
 
     // Cell construction
-    std::shared_ptr<DropoutCell> cell = Registrar
-        <DropoutCell>::create(model)(section, nbOutputs);
+    std::shared_ptr<DropoutCell> cell
+        = (dataType == Float32)
+            ? Registrar<DropoutCell>::create<float>(model)(section, nbOutputs)
+          : (dataType == Float16)
+            ? Registrar<DropoutCell>::create<half_float::half>(model)(section,
+                                                                      nbOutputs)
+            : Registrar<DropoutCell>::create<double>(model)(section,
+                                                            nbOutputs);
 
     if (!cell) {
         throw std::runtime_error(

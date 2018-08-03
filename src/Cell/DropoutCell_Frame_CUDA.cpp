@@ -24,15 +24,30 @@
 
 #include "Cell/DropoutCell_Frame_CUDA.hpp"
 
+template <>
 N2D2::Registrar<N2D2::DropoutCell>
-N2D2::DropoutCell_Frame_CUDA::mRegistrar("Frame_CUDA",
-                                         N2D2::DropoutCell_Frame_CUDA::create);
+N2D2::DropoutCell_Frame_CUDA<half_float::half>::mRegistrar("Frame_CUDA",
+    N2D2::DropoutCell_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::DropoutCell>::Type<half_float::half>());
 
-N2D2::DropoutCell_Frame_CUDA::DropoutCell_Frame_CUDA(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::DropoutCell>
+N2D2::DropoutCell_Frame_CUDA<float>::mRegistrar("Frame_CUDA",
+    N2D2::DropoutCell_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::DropoutCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::DropoutCell>
+N2D2::DropoutCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
+    N2D2::DropoutCell_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::DropoutCell>::Type<double>());
+
+template <class T>
+N2D2::DropoutCell_Frame_CUDA<T>::DropoutCell_Frame_CUDA(const std::string& name,
                                                      unsigned int nbOutputs)
     : Cell(name, nbOutputs),
       DropoutCell(name, nbOutputs),
-      Cell_Frame_CUDA(name, nbOutputs),
+      Cell_Frame_CUDA<T>(name, nbOutputs),
       mStatesSize(0),
       mStates(NULL)
 {
@@ -40,10 +55,11 @@ N2D2::DropoutCell_Frame_CUDA::DropoutCell_Frame_CUDA(const std::string& name,
     CHECK_CUDNN_STATUS(cudnnCreateDropoutDescriptor(&mDropoutDesc));
 }
 
-void N2D2::DropoutCell_Frame_CUDA::initialize()
+template <class T>
+void N2D2::DropoutCell_Frame_CUDA<T>::initialize()
 {
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-        throw std::domain_error("DropoutCell_Frame_CUDA::initialize():"
+        throw std::domain_error("DropoutCell_Frame_CUDA<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
@@ -63,7 +79,7 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
         CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
             mOutputDesc.back(),
-            CudaContext::data_type<Float_T>::value,
+            CudaContext::data_type<T>::value,
             mOutputs.dimB(),
             mInputs[k].dimZ(),
             mOutputs.dimY(),
@@ -76,8 +92,8 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
         mReserveSpaceSize.push_back(0);
         mReserveSpace.push_back(NULL);
 
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
 
         CHECK_CUDNN_STATUS(cudnnDropoutGetReserveSpaceSize(
             input->getCudnnTensorDesc(), &mReserveSpaceSize.back()));
@@ -93,7 +109,8 @@ void N2D2::DropoutCell_Frame_CUDA::initialize()
                                                  Random::mtRand()));
 }
 
-void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
+template <class T>
+void N2D2::DropoutCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -101,17 +118,17 @@ void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
 
     if (inference) {
         if (mInputs.size() == 1) {
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input0
-                = cuda_device_tensor_cast<Float_T>(mInputs[0]);
+            std::shared_ptr<CudaDeviceTensor<T> > input0
+                = cuda_device_tensor_cast<T>(mInputs[0]);
 
             CHECK_CUDA_STATUS(cudaMemcpy(mOutputs.getDevicePtr(),
                                          input0->getDevicePtr(),
-                                         mInputs[0].size() * sizeof(Float_T),
+                                         mInputs[0].size() * sizeof(T),
                                          cudaMemcpyDeviceToDevice));
         } else {
             for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                std::shared_ptr<CudaDeviceTensor<Float_T> > input
-                    = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+                std::shared_ptr<CudaDeviceTensor<T> > input
+                    = cuda_device_tensor_cast<T>(mInputs[k]);
 
                 unsigned int outputOffset = offset;
                 unsigned int inputOffset = 0;
@@ -121,7 +138,7 @@ void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
                     CHECK_CUDA_STATUS(cudaMemcpy(
                         mOutputs.getDevicePtr() + outputOffset,
                         input->getDevicePtr() + inputOffset,
-                        (mInputs[k].size() / mInputs.dimB()) * sizeof(Float_T),
+                        (mInputs[k].size() / mInputs.dimB()) * sizeof(T),
                         cudaMemcpyDeviceToDevice));
 
                     outputOffset += mOutputs.dimX() * mOutputs.dimY()
@@ -135,8 +152,8 @@ void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
         }
     } else {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input
-                = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+            std::shared_ptr<CudaDeviceTensor<T> > input
+                = cuda_device_tensor_cast<T>(mInputs[k]);
 
             CHECK_CUDNN_STATUS(
                 cudnnDropoutForward(CudaContext::cudnnHandle(),
@@ -155,7 +172,8 @@ void N2D2::DropoutCell_Frame_CUDA::propagate(bool inference)
     mDiffInputs.clearValid();
 }
 
-void N2D2::DropoutCell_Frame_CUDA::backPropagate()
+template <class T>
+void N2D2::DropoutCell_Frame_CUDA<T>::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
@@ -167,8 +185,8 @@ void N2D2::DropoutCell_Frame_CUDA::backPropagate()
             throw std::runtime_error(
                 "Cannot blend gradient from a Dropout cell");
 
-        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
-            = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > diffOutput
+            = cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
         CHECK_CUDNN_STATUS(
             cudnnDropoutBackward(CudaContext::cudnnHandle(),
@@ -189,11 +207,13 @@ void N2D2::DropoutCell_Frame_CUDA::backPropagate()
     mDiffOutputs.synchronizeDToHBased();
 }
 
-void N2D2::DropoutCell_Frame_CUDA::update()
+template <class T>
+void N2D2::DropoutCell_Frame_CUDA<T>::update()
 {
 }
 
-N2D2::DropoutCell_Frame_CUDA::~DropoutCell_Frame_CUDA()
+template <class T>
+N2D2::DropoutCell_Frame_CUDA<T>::~DropoutCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
         CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mOutputDesc[k]));
@@ -205,6 +225,12 @@ N2D2::DropoutCell_Frame_CUDA::~DropoutCell_Frame_CUDA()
         CHECK_CUDA_STATUS(cudaFree(mStates));
 
     CHECK_CUDNN_STATUS(cudnnDestroyDropoutDescriptor(mDropoutDesc));
+}
+
+namespace N2D2 {
+    template class DropoutCell_Frame_CUDA<half_float::half>;
+    template class DropoutCell_Frame_CUDA<float>;
+    template class DropoutCell_Frame_CUDA<double>;
 }
 
 #endif
