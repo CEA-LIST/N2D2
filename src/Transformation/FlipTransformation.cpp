@@ -30,6 +30,18 @@ N2D2::FlipTransformation::FlipTransformation(bool horizontalFlip,
     // ctor
 }
 
+N2D2::FlipTransformation::FlipTransformation(
+    const FlipTransformation& trans)
+    : mHorizontalFlip(trans.mHorizontalFlip),
+      mVerticalFlip(trans.mVerticalFlip),
+      mRandomHorizontalFlip(this, "RandomHorizontalFlip",
+                            trans.mRandomHorizontalFlip),
+      mRandomVerticalFlip(this, "RandomVerticalFlip",
+                          trans.mRandomVerticalFlip)
+{
+    // copy-ctor
+}
+
 void N2D2::FlipTransformation::apply(cv::Mat& frame,
                                      cv::Mat& labels,
                                      std::vector

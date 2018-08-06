@@ -29,6 +29,7 @@ public:
     using Transformation::apply;
 
     RescaleTransformation(unsigned int width, unsigned int height);
+    RescaleTransformation(const RescaleTransformation& trans);
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& labelsROI,

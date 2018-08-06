@@ -36,9 +36,6 @@ public:
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~SaturationActivation_Frame() {};
 
-    using SaturationActivation::mShifting;
-    using SaturationActivation::mThreshold;
-
 private:
     static Registrar<SaturationActivation> mRegistrar;
 };

@@ -118,16 +118,16 @@ TEST(Parameterizable, conversion_operator)
 {
     TestParameterizable param;
 
-    ASSERT_EQUALS(param.mParam1, 1.0);
-    ASSERT_EQUALS(param.mParam2, 3U);
-    ASSERT_EQUALS(param.mParam3, true);
+    ASSERT_EQUALS((double)param.mParam1, 1.0);
+    ASSERT_EQUALS((unsigned int)param.mParam2, 3U);
+    ASSERT_EQUALS((bool)param.mParam3, true);
 
     param.mParam1 = 12.0;
     param.mParam2 = 36U;
     param.mParam3 = false;
 
-    ASSERT_EQUALS(param.mParam1, 12.0);
-    ASSERT_EQUALS(param.mParam2, 36U);
+    ASSERT_EQUALS((double)param.mParam1, 12.0);
+    ASSERT_EQUALS((unsigned int)param.mParam2, 36U);
     ASSERT_EQUALS(param.getParameter<double>("Param1"), 12.0);
     ASSERT_EQUALS(param.getParameter<unsigned int>("Param2"), 36U);
     ASSERT_EQUALS(param.getParameter<bool>("Param3"), false);

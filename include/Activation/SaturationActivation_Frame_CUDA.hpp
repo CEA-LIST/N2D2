@@ -44,9 +44,6 @@ public:
     void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
     virtual ~SaturationActivation_Frame_CUDA() {};
 
-    using SaturationActivation::mShifting;
-    using SaturationActivation::mThreshold;
-
 private:
     static Registrar<SaturationActivation> mRegistrar;
 };

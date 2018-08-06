@@ -30,6 +30,7 @@ public:
     using Transformation::apply;
 
     FlipTransformation(bool horizontalFlip = false, bool verticalFlip = false);
+    FlipTransformation(const FlipTransformation& trans);
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& labelsROI,

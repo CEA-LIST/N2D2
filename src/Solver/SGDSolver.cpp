@@ -37,6 +37,25 @@ N2D2::SGDSolver::SGDSolver()
     // ctor
 }
 
+N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
+    : mLearningRate(this, "LearningRate", solver.mLearningRate),
+      mMomentum(this, "Momentum", solver.mMomentum),
+      mDecay(this, "Decay", solver.mDecay),
+      mPower(this, "Power", solver.mPower),
+      mIterationSize(this, "IterationSize", solver.mIterationSize),
+      mMaxIterations(this, "MaxIterations", solver.mMaxIterations),
+      mLearningRatePolicy(this, "LearningRatePolicy",
+                          solver.mLearningRatePolicy),
+      mLearningRateStepSize(this, "LearningRateStepSize",
+                            solver.mLearningRateStepSize),
+      mLearningRateDecay(this, "LearningRateDecay", solver.mLearningRateDecay),
+      mClamping(this, "Clamping", solver.mClamping),
+      mIterationPass(solver.mIterationPass),
+      mNbIterations(solver.mNbIterations)
+{
+    // copy-ctor
+}
+
 double N2D2::SGDSolver::getLearningRate(unsigned int batchSize)
 {
     if (mLearningRate == 0.0)

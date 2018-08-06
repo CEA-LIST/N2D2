@@ -30,6 +30,16 @@ N2D2::RescaleTransformation::RescaleTransformation(unsigned int width,
     // ctor
 }
 
+N2D2::RescaleTransformation::RescaleTransformation(
+    const RescaleTransformation& trans)
+    : mWidth(trans.mWidth),
+      mHeight(trans.mHeight),
+      mKeepAspectRatio(this, "KeepAspectRatio", trans.mKeepAspectRatio),
+      mResizeToFit(this, "ResizeToFit", trans.mResizeToFit)
+{
+    // copy-ctor
+}
+
 void N2D2::RescaleTransformation::apply(cv::Mat& frame,
                                         cv::Mat& labels,
                                         std::vector

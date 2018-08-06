@@ -32,7 +32,7 @@ public:
     }
 
     SGDSolver_Frame();
-    SGDSolver_Frame(const SGDSolver_Frame& solver);
+    SGDSolver_Frame(const SGDSolver_Frame<T>& solver);
     void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
     void exportFreeParameters(const std::string& fileName) const;
     std::shared_ptr<SGDSolver_Frame<T> > clone() const
@@ -42,19 +42,6 @@ public:
     virtual ~SGDSolver_Frame() {};
 
 protected:
-    using SGDSolver::mLearningRate;
-    using SGDSolver::mMomentum;
-    using SGDSolver::mDecay;
-    using SGDSolver::mPower;
-    using SGDSolver::mIterationSize;
-    using SGDSolver::mMaxIterations;
-    using SGDSolver::mLearningRatePolicy;
-    using SGDSolver::mLearningRateStepSize;
-    using SGDSolver::mLearningRateDecay;
-    using SGDSolver::mClamping;
-    using SGDSolver::mIterationPass;
-    using SGDSolver::mNbIterations;
-
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
 
@@ -73,18 +60,17 @@ private:
 
 template <class T>
 N2D2::SGDSolver_Frame<T>::SGDSolver_Frame()
-    : SGDSolver::SGDSolver(),
+    : SGDSolver(),
       mQuantizationLevels(this, "QuantizationLevels", 0U)
 {
     // ctor
 }
 
 template <class T>
-N2D2::SGDSolver_Frame<T>::SGDSolver_Frame(const SGDSolver_Frame& solver)
-    : SGDSolver::SGDSolver(solver),
-      mQuantizationLevels(solver.mQuantizationLevels),
-      mMomentumData(solver.mMomentumData.clone()),
-      mContinuousData(solver.mContinuousData.clone())
+N2D2::SGDSolver_Frame<T>::SGDSolver_Frame(const SGDSolver_Frame<T>& solver)
+    : SGDSolver(solver),
+      mQuantizationLevels(this, "QuantizationLevels",
+                          solver.mQuantizationLevels)
 {
     // copy-ctor
 }

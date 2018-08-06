@@ -36,10 +36,6 @@ public:
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~RectifierActivation_Frame() {};
 
-    using RectifierActivation::mLeakSlope;
-    using RectifierActivation::mShifting;
-    using RectifierActivation::mClipping;
-
 private:
     static Registrar<RectifierActivation> mRegistrar;
 };

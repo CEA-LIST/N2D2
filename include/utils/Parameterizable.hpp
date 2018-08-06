@@ -192,6 +192,14 @@ template <class T> class ParameterWithSpread;
 */
 class Parameterizable {
 public:
+    Parameterizable() {}
+
+    // Parameterizable is construction-copyable, but Parameter is not,
+    // so Parameter's constructor must be called in copy constructor.
+    Parameterizable(const Parameterizable&) {}
+    // Parameterizable is copyable because Parameter is.
+    const Parameterizable& operator=(const Parameterizable&) { return *this; }
+
     bool isParameter(const std::string& name) const;
     template <class T> void setParameter(const std::string& name, T value);
     template <class T>
@@ -322,6 +330,8 @@ public:
 
 private:
     T mValue;
+
+    Parameter(const Parameter&); // non construction-copyable
 };
 
 template <class T> class ParameterWithSpread : public Parameter_T {

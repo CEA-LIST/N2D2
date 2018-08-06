@@ -22,10 +22,21 @@
 
 N2D2::StimuliData::StimuliData(const std::string& name,
                                StimuliProvider& provider)
-    : mName(name), mProvider(provider), mMeanData(this, "MeanData", false)
+    : mName(name),
+      mProvider(provider),
+      mMeanData(this, "MeanData", false)
 {
     // ctor
     Utils::createDirectories(mName);
+}
+
+N2D2::StimuliData::StimuliData(const StimuliData& stimuliData)
+    : Parameterizable(),
+      mName(stimuliData.mName),
+      mProvider(stimuliData.mProvider),
+      mMeanData(this, "MeanData", stimuliData.mMeanData)
+{
+    // copy-ctor
 }
 
 void N2D2::StimuliData::displayData() const

@@ -30,6 +30,16 @@ N2D2::ThresholdTransformation::ThresholdTransformation(double threshold,
     // ctor
 }
 
+N2D2::ThresholdTransformation::ThresholdTransformation(
+    const ThresholdTransformation& trans)
+    : mThreshold(trans.mThreshold),
+      mOtsuMethod(trans.mOtsuMethod),
+      mOperation(this, "Operation", trans.mOperation),
+      mMaxValue(this, "MaxValue", trans.mMaxValue)
+{
+    // copy-ctor
+}
+
 void
 N2D2::ThresholdTransformation::apply(cv::Mat& frame,
                                      cv::Mat& /*labels*/,

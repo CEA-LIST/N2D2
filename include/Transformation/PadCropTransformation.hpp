@@ -34,6 +34,7 @@ public:
     };
 
     PadCropTransformation(unsigned int width, unsigned int height);
+    PadCropTransformation(const PadCropTransformation& trans);
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& labelsROI,

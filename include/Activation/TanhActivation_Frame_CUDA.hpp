@@ -40,8 +40,6 @@ public:
     inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~TanhActivation_Frame_CUDA();
 
-    using TanhActivation::mAlpha;
-
 protected:
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;

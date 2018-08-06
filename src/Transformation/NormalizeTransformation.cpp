@@ -30,6 +30,17 @@ N2D2::NormalizeTransformation::NormalizeTransformation()
     // ctor
 }
 
+N2D2::NormalizeTransformation::NormalizeTransformation(
+    const NormalizeTransformation& trans)
+    : mNorm(this, "Norm", trans.mNorm),
+      mNormValue(this, "NormValue", trans.mNormValue),
+      mNormMin(this, "NormMin", trans.mNormMin),
+      mNormMax(this, "NormMax", trans.mNormMax),
+      mPerChannel(this, "PerChannel", trans.mPerChannel)
+{
+    // copy-ctor
+}
+
 void
 N2D2::NormalizeTransformation::apply(cv::Mat& frame,
                                      cv::Mat& /*labels*/,

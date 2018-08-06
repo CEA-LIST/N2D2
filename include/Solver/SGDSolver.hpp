@@ -44,6 +44,7 @@ public:
     };
 
     SGDSolver();
+    SGDSolver(const SGDSolver& solver);
     std::shared_ptr<SGDSolver> clone() const
     {
         return std::shared_ptr<SGDSolver>(doClone());

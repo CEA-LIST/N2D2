@@ -35,8 +35,6 @@ public:
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~TanhActivation_Frame() {};
 
-    using TanhActivation::mAlpha;
-
 private:
     static Registrar<TanhActivation> mRegistrar;
 };

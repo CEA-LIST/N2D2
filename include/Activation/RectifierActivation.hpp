@@ -43,8 +43,6 @@ public:
     };
     virtual ~RectifierActivation() {};
 
-    using Activation::mShifting;
-
 protected:
     /// Leak slope
     Parameter<double> mLeakSlope;

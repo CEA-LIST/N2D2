@@ -22,9 +22,19 @@
 
 N2D2::TrimTransformation::TrimTransformation(unsigned int nbLevels,
                                              const cv::Mat& kernel)
-    : mNbLevels(nbLevels), mKernel(kernel), mMethod(this, "Method", Discretize)
+    : mNbLevels(nbLevels),
+      mKernel(kernel),
+      mMethod(this, "Method", Discretize)
 {
     // ctor
+}
+
+N2D2::TrimTransformation::TrimTransformation(const TrimTransformation& trans)
+    : mNbLevels(trans.mNbLevels),
+      mKernel(trans.mKernel),
+      mMethod(this, "Method", trans.mMethod)
+{
+    // copy-ctor
 }
 
 void N2D2::TrimTransformation::apply(cv::Mat& frame,

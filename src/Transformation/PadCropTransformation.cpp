@@ -29,6 +29,15 @@ N2D2::PadCropTransformation::PadCropTransformation(unsigned int width,
     // ctor
 }
 
+N2D2::PadCropTransformation::PadCropTransformation(
+    const PadCropTransformation& trans)
+    : mWidth(trans.mWidth),
+      mHeight(trans.mHeight),
+      mPaddingBackground(this, "PaddingBackground", trans.mPaddingBackground)
+{
+    // copy-ctor
+}
+
 void N2D2::PadCropTransformation::apply(cv::Mat& frame,
                                         cv::Mat& labels,
                                         std::vector

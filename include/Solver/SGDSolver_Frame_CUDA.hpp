@@ -37,7 +37,7 @@ public:
     }
 
     SGDSolver_Frame_CUDA();
-    SGDSolver_Frame_CUDA(const SGDSolver_Frame_CUDA& solver);
+    SGDSolver_Frame_CUDA(const SGDSolver_Frame_CUDA<T>& solver);
     void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
     void update(CudaTensor<T>& data, CudaTensor<T>& diffData,
                 unsigned int batchSize);
@@ -52,19 +52,6 @@ public:
 protected:
     // inline void setMomentum(unsigned int output, unsigned int channel,
     // unsigned int sx, unsigned int sy, float value);
-
-    using SGDSolver::mLearningRate;
-    using SGDSolver::mMomentum;
-    using SGDSolver::mDecay;
-    using SGDSolver::mPower;
-    using SGDSolver::mIterationSize;
-    using SGDSolver::mMaxIterations;
-    using SGDSolver::mLearningRatePolicy;
-    using SGDSolver::mLearningRateStepSize;
-    using SGDSolver::mLearningRateDecay;
-    using SGDSolver::mClamping;
-    using SGDSolver::mIterationPass;
-    using SGDSolver::mNbIterations;
 
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
@@ -84,7 +71,7 @@ private:
 
 template <class T>
 N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA()
-    : SGDSolver::SGDSolver(),
+    : SGDSolver(),
       mQuantizationLevels(this, "QuantizationLevels", 0U)
 {
     // ctor
@@ -92,11 +79,10 @@ N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA()
 
 template <class T>
 N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA(
-    const SGDSolver_Frame_CUDA& solver)
-    : SGDSolver::SGDSolver(solver),
-      mQuantizationLevels(solver.mQuantizationLevels),
-      mMomentumData(solver.mMomentumData.clone()),
-      mContinuousData(solver.mContinuousData.clone())
+    const SGDSolver_Frame_CUDA<T>& solver)
+    : SGDSolver(solver),
+      mQuantizationLevels(this, "QuantizationLevels",
+                          solver.mQuantizationLevels)
 {
     // copy-ctor
 }

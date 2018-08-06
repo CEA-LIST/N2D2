@@ -44,10 +44,6 @@ public:
     void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
     virtual ~RectifierActivation_Frame_CUDA();
 
-    using RectifierActivation::mLeakSlope;
-    using RectifierActivation::mShifting;
-    using RectifierActivation::mClipping;
-
 protected:
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;

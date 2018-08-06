@@ -36,6 +36,7 @@ public:
     };
 
     NormalizeTransformation();
+    NormalizeTransformation(const NormalizeTransformation& trans);
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
