@@ -66,8 +66,8 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
 
     if(mInputs.size() > 3)
     {
-        mKeepIndex.resize({mOutputs.dimB()*2});
-        mKeepIndex.fill(-1);
+        mKeepIndex.resize({mOutputs.dimB()*2}, -1);
+
         if(mInputs.size() < 5)
         {
             if(mNumTemplates.size() != mNbClass)

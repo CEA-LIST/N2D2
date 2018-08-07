@@ -163,12 +163,14 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
             if (!isFullMap()) {
                 // Set the non-connected kernels coefficients to 0
-                for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
+                {
                     for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                          ++channel) {
-                        if (!isConnection(channel, output))
-                            mSharedSynapses.back()[output][channel] = Tensor
-                                <T>(mKernelDims, T(0.0));
+                        if (!isConnection(channel, output)) {
+                            mSharedSynapses.back()[output][channel]
+                                                                .fill(T(0.0));
+                        }
                     }
                 }
             }

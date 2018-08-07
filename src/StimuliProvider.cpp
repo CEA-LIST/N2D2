@@ -650,7 +650,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     unsigned int dimY = data.dimY();
 
     for (unsigned int z = 0; z < data.dimZ(); ++z) {
-        const Tensor<Float_T> channel = data[z];
+        const Tensor<Float_T>& channel = data[z];
 
         if (dimX > 1 && dimY > 1) {
             // 2D data
@@ -779,7 +779,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     }
 }
 
-// This implementation plots grey level matrices. Only used in spiking version  
+// This implementation plots grey level matrices. Only used in spiking version
 void N2D2::StimuliProvider::logData(const std::string& fileName,
                                     Tensor<Float_T> data,
                                     const double minValue,
@@ -808,7 +808,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     unsigned int dimY = data.dimY();
 
     for (unsigned int z = 0; z < data.dimZ(); ++z) {
-        const Tensor<Float_T> channel = data[z];
+        const Tensor<Float_T>& channel = data[z];
 
         if (dimX > 1 && dimY > 1) {
             // 2D data

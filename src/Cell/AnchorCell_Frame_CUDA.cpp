@@ -185,7 +185,7 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
                       mOutputsDims[1],
                       mAnchors.size(),
                       mOutputs.dimB()});
-    mMaxIoU.resize({mOutputs.dimB(), 1, 1, 1}, 0.0);
+    mMaxIoU.resize({mOutputs.dimB(), 1, 1, 1});
 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
@@ -205,7 +205,8 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
 
     GPU_THREAD_GRID.push_back(thread_size);
     GPU_BLOCK_GRID.push_back(block_size);
-    
+
+    mAnchors.synchronizeHToD();
 }
 
 void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
@@ -267,9 +268,7 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
     }
 
     mNbLabels.synchronizeHToD();
-    mMaxIoU.fill(0.0);
-    mMaxIoU.synchronizeHToD();
-    mAnchors.synchronizeHToD();
+    mMaxIoU.deviceTensor().fill(0.0);
 
     std::shared_ptr<CudaDeviceTensor<Float_T> > inputCls
         = cuda_device_tensor_cast<Float_T>(mInputs[0]);
@@ -301,7 +300,6 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                          mInputs.size(),
                          GPU_BLOCK_GRID[0],
                          GPU_THREAD_GRID[0]);
-    mOutputs.synchronizeDToH();
 
     Cell_Frame_CUDA::propagate();
     mDiffInputs.clearValid();

@@ -212,7 +212,7 @@ public:
     /** Synchronize Host data To Device-based */
     void synchronizeHToDBased() const;
 
-    CudaBaseDeviceTensor& deviceTensor()
+    CudaDeviceTensor<T>& deviceTensor()
     {
         return (*mDeviceTensor);
     }

@@ -698,7 +698,7 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
     const unsigned int cellHeight = 50;
 
     const unsigned int nbTargets = getNbTargets();
-    const std::vector<std::string> labelsName = getTargetLabelsName();
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
 
     cv::Mat legendImg(cv::Size(cellWidth + labelWidth, cellHeight * nbTargets),
                       CV_8UC3,
@@ -717,7 +717,7 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
         legendStr << target << " " << labelsName[target];
 
         int baseline = 0;
-        cv::Size textSize = cv::getTextSize(
+        const cv::Size textSize = cv::getTextSize(
             legendStr.str(), cv::FONT_HERSHEY_SIMPLEX, 1.0, 2, &baseline);
         cv::putText(legendImg,
                     legendStr.str(),

@@ -83,11 +83,8 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
         const half_float::half decay(mDecay);
         const half_float::half unit(1.0f);
 
-        if (mMomentumData.empty()) {
-            mMomentumData.resize(data.dims());
-            mMomentumData.fill(half_float::half(0.0));
-            mMomentumData.synchronizeHToD();
-        }
+        if (mMomentumData.empty())
+            mMomentumData.resize(data.dims(), half_float::half(0.0));
 
         // mMomentumData = mMomentumData*momentum
         cudaHscal(mMomentumData.size(),
@@ -167,11 +164,8 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
         const float decay = mDecay;
         const float unit = 1.0f;
 
-        if (mMomentumData.empty()) {
-            mMomentumData.resize(data.dims());
-            mMomentumData.fill(0.0);
-            mMomentumData.synchronizeHToD();
-        }
+        if (mMomentumData.empty())
+            mMomentumData.resize(data.dims(), 0.0f);
 
         // mMomentumData = mMomentumData*momentum
         CHECK_CUBLAS_STATUS(cublasSscal(CudaContext::cublasHandle(),
@@ -259,11 +253,8 @@ void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
         const double decay = mDecay;
         const double unit = 1.0;
 
-        if (mMomentumData.empty()) {
-            mMomentumData.resize(data.dims());
-            mMomentumData.fill(0.0);
-            mMomentumData.synchronizeHToD();
-        }
+        if (mMomentumData.empty())
+            mMomentumData.resize(data.dims(), 0.0);
 
         // mMomentumData = mMomentumData*momentum
         CHECK_CUBLAS_STATUS(cublasDscal(CudaContext::cublasHandle(),
