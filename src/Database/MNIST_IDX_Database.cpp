@@ -32,6 +32,20 @@ void N2D2::MNIST_IDX_Database::load(const std::string& dataPath,
 {
     const std::string labelPathDef = (labelPath.empty()) ? dataPath : labelPath;
 
+    // Create labels in order, so that the output number will match the digit
+    assert(getNbLabels() == 0);
+    labelID("0");
+    labelID("1");
+    labelID("2");
+    labelID("3");
+    labelID("4");
+    labelID("5");
+    labelID("6");
+    labelID("7");
+    labelID("8");
+    labelID("9");
+    assert(getNbLabels() == 10);
+
     // Learn and validation stimuli
     IDX_Database::load(dataPath + "/train-images-idx3-ubyte",
                        labelPathDef + "/train-labels-idx1-ubyte");
@@ -41,4 +55,6 @@ void N2D2::MNIST_IDX_Database::load(const std::string& dataPath,
     IDX_Database::load(dataPath + "/t10k-images-idx3-ubyte",
                        labelPathDef + "/t10k-labels-idx1-ubyte");
     partitionStimuli(0.0, 0.0, 1.0);
+
+    assert(getNbLabels() == 10);
 }

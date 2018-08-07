@@ -45,6 +45,17 @@ TEST_DATASET(MNIST_IDX_Database,
     ASSERT_EQUALS(db.getNbStimuli(Database::Test), 10000U);
     ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned), 0U);
     ASSERT_EQUALS(db.getNbLabels(), 10U);
+
+    ASSERT_EQUALS(db.getLabelName(0), "0");
+    ASSERT_EQUALS(db.getLabelName(1), "1");
+    ASSERT_EQUALS(db.getLabelName(2), "2");
+    ASSERT_EQUALS(db.getLabelName(3), "3");
+    ASSERT_EQUALS(db.getLabelName(4), "4");
+    ASSERT_EQUALS(db.getLabelName(5), "5");
+    ASSERT_EQUALS(db.getLabelName(6), "6");
+    ASSERT_EQUALS(db.getLabelName(7), "7");
+    ASSERT_EQUALS(db.getLabelName(8), "8");
+    ASSERT_EQUALS(db.getLabelName(9), "9");
 }
 
 TEST(MNIST_IDX_Database, getStimulusData)
@@ -73,7 +84,7 @@ TEST(MNIST_IDX_Database, getStimulusLabelsData)
     ASSERT_EQUALS(labels.channels(), 1);
     ASSERT_EQUALS(labels.rows, 1);
     ASSERT_EQUALS(labels.cols, 1);
-    ASSERT_EQUALS(labels.at<int>(0, 0), 0);
+    ASSERT_EQUALS(labels.at<int>(0, 0), 5);    // first stimulus is a 5
 }
 
 RUN_TESTS()
