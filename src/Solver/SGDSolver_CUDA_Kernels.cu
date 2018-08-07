@@ -113,35 +113,35 @@ __global__ void cudaDquantize_kernel(double* y,
     }
 }
 
-__global__ void cudaHscal_kernel(int n,
-                                 const __half *alpha,
+__global__ void cudaHscal_kernel(unsigned int size,
+                                 __half alpha,
                                  __half *x)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < n; i += stride) {
+    for (unsigned int i = index; i < size; i += stride) {
 #if __CUDA_ARCH__ >= 530
-        x[i] = __hmul((*alpha), x[i]);
+        x[i] = __hmul(alpha, x[i]);
 #else
-        x[i] = __float2half(__half2float(*alpha) * __half2float(x[i]));
+        x[i] = __float2half(__half2float(alpha) * __half2float(x[i]));
 #endif
     }
 }
 
-__global__ void cudaHaxpy_kernel(int n,
-                                 const __half *alpha,
+__global__ void cudaHaxpy_kernel(unsigned int size,
+                                 __half alpha,
                                  const __half *x,
                                  __half *y)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < n; i += stride) {
+    for (unsigned int i = index; i < size; i += stride) {
 #if __CUDA_ARCH__ >= 530
-        y[i] = __hadd(__hmul((*alpha), x[i]), y[i]);
+        y[i] = __hadd(__hmul(alpha, x[i]), y[i]);
 #else
-        y[i] = __float2half(__half2float(*alpha) * __half2float(x[i])
+        y[i] = __float2half(__half2float(alpha) * __half2float(x[i])
                             + __half2float(y[i]));
 #endif
     }
@@ -203,25 +203,25 @@ void N2D2::cudaDquantize(double* y,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaHscal(int n,
-                     const half_float::half *alpha,
+void N2D2::cudaHscal(unsigned int size,
+                     half_float::half alpha,
                      half_float::half *x)
 {
-    cudaHscal_kernel<<<(n + 255) / 256, 256>>>
-        (n,
-        reinterpret_cast<const __half*>(alpha),
+    cudaHscal_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+        reinterpret_cast<__half&>(alpha),
         reinterpret_cast<__half*>(x));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaHaxpy(int n,
-                     const half_float::half *alpha,
+void N2D2::cudaHaxpy(unsigned int size,
+                     half_float::half alpha,
                      const half_float::half *x,
                      half_float::half *y)
 {
-    cudaHaxpy_kernel<<<(n + 255) / 256, 256>>>
-        (n,
-         reinterpret_cast<const __half*>(alpha),
+    cudaHaxpy_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+         reinterpret_cast<__half&>(alpha),
          reinterpret_cast<const __half*>(x),
          reinterpret_cast<__half*>(y));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());

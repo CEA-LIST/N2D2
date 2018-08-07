@@ -75,7 +75,7 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // data = data + diffData*rate
         cudaHaxpy(diffData.size(), // size of data
-                  &rateDiff,
+                  rateDiff,
                   diffData.getDevicePtr(),
                   cudaContinuousData.getDevicePtr());
     } else {
@@ -91,12 +91,12 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
 
         // mMomentumData = mMomentumData*momentum
         cudaHscal(mMomentumData.size(),
-                  &momentum,
+                  momentum,
                   mMomentumData.getDevicePtr());
 
         // mMomentumData = mMomentumData + diffData*rate
         cudaHaxpy(diffData.size(),
-                  &rateDiff,
+                  rateDiff,
                   diffData.getDevicePtr(),
                   mMomentumData.getDevicePtr());
 
@@ -104,14 +104,14 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
             const half_float::half alpha(-decay * rate);
             // mMomentumData = mMomentumData - decay*rate*data
             cudaHaxpy(data.size(),
-                      &alpha,
+                      alpha,
                       cudaContinuousData.getDevicePtr(),
                       mMomentumData.getDevicePtr());
         }
 
         // data = data + mMomentumData
         cudaHaxpy(mMomentumData.size(),
-                  &unit,
+                  unit,
                   mMomentumData.getDevicePtr(),
                   cudaContinuousData.getDevicePtr());
     }

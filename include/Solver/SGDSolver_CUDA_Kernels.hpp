@@ -44,11 +44,11 @@ void cudaDquantize(double* y,
                    double* x,
                    unsigned int size,
                    unsigned int quantizationLevels);
-void cudaHscal(int n,
-               const half_float::half *alpha,
+void cudaHscal(unsigned int size,
+               half_float::half alpha,
                half_float::half *x);
-void cudaHaxpy(int n,
-               const half_float::half *alpha,
+void cudaHaxpy(unsigned int size,
+               half_float::half alpha,
                const half_float::half *x,
                half_float::half *y);
 }
