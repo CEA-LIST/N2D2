@@ -20,12 +20,95 @@
 
 #include "N2D2.hpp"
 
+#include "Database/Caltech101_DIR_Database.hpp"
 #include "Database/Caltech256_DIR_Database.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
 
-const char* labelNames[]
+const char* labelNames101[] = {
+    "BACKGROUND_Google", "Faces",          "Leopards",      "Motorbikes",
+    "accordion",         "airplanes",      "anchor",        "ant",
+    "barrel",            "bass",           "beaver",        "binocular",
+    "bonsai",            "brain",          "brontosaurus",  "buddha",
+    "butterfly",         "camera",         "cannon",        "car_side",
+    "ceiling_fan",       "cellphone",      "chair",         "chandelier",
+    "cougar_body",       "cougar_face",    "crab",          "crayfish",
+    "crocodile",         "crocodile_head", "cup",           "dalmatian",
+    "dollar_bill",       "dolphin",        "dragonfly",     "electric_guitar",
+    "elephant",          "emu",            "euphonium",     "ewer",
+    "ferry",             "flamingo",       "flamingo_head", "garfield",
+    "gerenuk",           "gramophone",     "grand_piano",   "hawksbill",
+    "headphone",         "hedgehog",       "helicopter",    "ibis",
+    "inline_skate",      "joshua_tree",    "kangaroo",      "ketch",
+    "lamp",              "laptop",         "llama",         "lobster",
+    "lotus",             "mandolin",       "mayfly",        "menorah",
+    "metronome",         "minaret",        "nautilus",      "octopus",
+    "okapi",             "pagoda",         "panda",         "pigeon",
+    "pizza",             "platypus",       "pyramid",       "revolver",
+    "rhino",             "rooster",        "saxophone",     "schooner",
+    "scissors",          "scorpion",       "sea_horse",     "snoopy",
+    "soccer_ball",       "stapler",        "starfish",      "stegosaurus",
+    "stop_sign",         "strawberry",     "sunflower",     "tick",
+    "trilobite",         "umbrella",       "watch",         "water_lilly",
+    "wheelchair",        "wild_cat",       "windsor_chair", "wrench",
+    "yin_yang"};
+
+TEST_DATASET(Caltech101_DIR_Database,
+             load,
+             (double learn, double validation, bool incClutter),
+             std::make_tuple(0.0, 0.0, true),
+             std::make_tuple(1.0, 0.0, true),
+             std::make_tuple(0.0, 1.0, true),
+             std::make_tuple(0.6, 0.1, true),
+             std::make_tuple(0.1, 0.4, true),
+             std::make_tuple(0.0, 0.0, false),
+             std::make_tuple(1.0, 0.0, false),
+             std::make_tuple(0.0, 1.0, false),
+             std::make_tuple(0.6, 0.1, false),
+             std::make_tuple(0.1, 0.4, false))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("101_ObjectCategories")));
+
+    Caltech101_DIR_Database db(learn, validation, incClutter);
+    db.load(N2D2_DATA("101_ObjectCategories"));
+
+    unsigned int nbStimuli
+        = 8709; // Exclude Faces_easy and "tmp" file in BACKGROUND_Google
+    unsigned int nbLabels
+        = 101; // Exclude Faces_easy and "tmp" file in BACKGROUND_Google
+
+    if (!incClutter) {
+        nbStimuli -= 467;
+        --nbLabels;
+    }
+
+    if (incClutter) {
+        ASSERT_EQUALS(db.getNbStimuliWithLabel(0), 467U);
+    } else {
+        ASSERT_EQUALS(db.getNbStimuliWithLabel(0), 435U);
+    }
+
+    for (unsigned int label = 0; label < nbLabels; ++label) {
+        ASSERT_EQUALS(db.getLabelName(label),
+                      std::string("/") + labelNames101[label + (!incClutter)]);
+    }
+
+    ASSERT_EQUALS(db.getNbStimuli(), nbStimuli);
+
+    if (learn == 0.0 && validation == 0.0) {
+        ASSERT_EQUALS(db.getNbStimuli(Database::Test), nbStimuli);
+    }
+
+    ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned), 0U);
+    ASSERT_EQUALS(db.getNbStimuli(Database::Learn)
+                  + db.getNbStimuli(Database::Validation)
+                  + db.getNbStimuli(Database::Test),
+                  nbStimuli);
+    ASSERT_EQUALS(db.getNbLabels(), nbLabels);
+}
+
+const char* labelNames256[]
     = {"001.ak47",                "002.american-flag",
        "003.backpack",            "004.baseball-bat",
        "005.baseball-glove",      "006.basketball-hoop",
@@ -189,7 +272,7 @@ TEST_DATASET(Caltech256_DIR_Database,
 
     for (unsigned int label = 0; label < nbLabels; ++label) {
         ASSERT_EQUALS(db.getLabelName(label),
-                      std::string("/") + labelNames[label]);
+                      std::string("/") + labelNames256[label]);
     }
 
     ASSERT_EQUALS(db.getNbStimuli(), nbStimuli);

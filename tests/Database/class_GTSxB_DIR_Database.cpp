@@ -21,6 +21,7 @@
 #include "N2D2.hpp"
 
 #include "Database/GTSDB_DIR_Database.hpp"
+#include "Database/GTSRB_DIR_Database.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
@@ -58,6 +59,68 @@ TEST_DATASET(GTSDB_DIR_Database,
     ASSERT_EQUALS(db.getLabelName(0), "11");
     ASSERT_EQUALS(db.getLabelName(1), "40");
     ASSERT_EQUALS(db.getLabelName(2), "38");
+}
+
+TEST_DATASET(GTSRB_DIR_Database,
+             load,
+             (double validation),
+             std::make_tuple(0.0),
+             std::make_tuple(0.5),
+             std::make_tuple(1.0))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("GTSRB")));
+
+    GTSRB_DIR_Database db(validation);
+    db.load(N2D2_DATA("GTSRB"));
+
+    ASSERT_EQUALS(db.getNbStimuli(), 39209U + 12630U);
+    ASSERT_EQUALS(
+        db.getNbStimuli(Database::Learn),
+        (unsigned int)Utils::round((1.0 - validation) * 39209, Utils::HalfUp));
+    ASSERT_EQUALS(
+        db.getNbStimuli(Database::Validation),
+        (unsigned int)Utils::round(validation * 39209, Utils::HalfDown));
+    ASSERT_EQUALS(db.getNbStimuli(Database::Test), 12630U);
+    ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned), 0U);
+    ASSERT_EQUALS(db.getNbLabels(), 43U);
+
+    for (int label = 0; label < 43; ++label) {
+        std::stringstream labelName;
+        labelName << label;
+
+        ASSERT_EQUALS(db.getLabelName(label), labelName.str());
+    }
+}
+
+TEST_DATASET(GTSRB_DIR_Database,
+             load__extract,
+             (double validation),
+             std::make_tuple(0.0),
+             std::make_tuple(0.5),
+             std::make_tuple(1.0))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("GTSRB")));
+
+    GTSRB_DIR_Database db(validation);
+    db.load(N2D2_DATA("GTSRB"), "", true);
+
+    ASSERT_EQUALS(db.getNbStimuli(), 39209U + 12630U);
+    ASSERT_EQUALS(
+        db.getNbStimuli(Database::Learn),
+        (unsigned int)Utils::round((1.0 - validation) * 39209, Utils::HalfUp));
+    ASSERT_EQUALS(
+        db.getNbStimuli(Database::Validation),
+        (unsigned int)Utils::round(validation * 39209, Utils::HalfDown));
+    ASSERT_EQUALS(db.getNbStimuli(Database::Test), 12630U);
+    ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned), 0U);
+    ASSERT_EQUALS(db.getNbLabels(), 43U);
+
+    for (int label = 0; label < 43; ++label) {
+        std::stringstream labelName;
+        labelName << label;
+
+        ASSERT_EQUALS(db.getLabelName(label), labelName.str());
+    }
 }
 
 RUN_TESTS()
