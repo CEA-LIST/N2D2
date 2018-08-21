@@ -24,24 +24,40 @@
 
 #include "Cell/LRNCell_Frame_CUDA.hpp"
 
+template <>
 N2D2::Registrar<N2D2::LRNCell>
-N2D2::LRNCell_Frame_CUDA::mRegistrar("Frame_CUDA",
-                                     N2D2::LRNCell_Frame_CUDA::create);
+N2D2::LRNCell_Frame_CUDA<half_float::half>::mRegistrar("Frame_CUDA",
+    N2D2::LRNCell_Frame_CUDA<half_float::half>::create,
+    N2D2::Registrar<N2D2::LRNCell>::Type<half_float::half>());
 
-N2D2::LRNCell_Frame_CUDA::LRNCell_Frame_CUDA(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::LRNCell>
+N2D2::LRNCell_Frame_CUDA<float>::mRegistrar("Frame_CUDA",
+    N2D2::LRNCell_Frame_CUDA<float>::create,
+    N2D2::Registrar<N2D2::LRNCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::LRNCell>
+N2D2::LRNCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
+    N2D2::LRNCell_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::LRNCell>::Type<double>());
+
+template <class T>
+N2D2::LRNCell_Frame_CUDA<T>::LRNCell_Frame_CUDA(const std::string& name,
                                              unsigned int nbOutputs)
     : Cell(name, nbOutputs),
       LRNCell(name, nbOutputs),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<T>(name, nbOutputs)
 {
     // ctor
     CHECK_CUDNN_STATUS(cudnnCreateLRNDescriptor(&mLRNDesc));
 }
 
-void N2D2::LRNCell_Frame_CUDA::initialize()
+template <class T>
+void N2D2::LRNCell_Frame_CUDA<T>::initialize()
 {
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-        throw std::domain_error("LRNCell_Frame_CUDA::initialize():"
+        throw std::domain_error("LRNCell_Frame_CUDA<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
@@ -57,7 +73,7 @@ void N2D2::LRNCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
         CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
             mOutputDesc.back(),
-            CudaContext::data_type<Float_T>::value,
+            CudaContext::data_type<T>::value,
             mOutputs.dimB(),
             mInputs[k].dimZ(),
             mOutputs.dimY(),
@@ -69,18 +85,19 @@ void N2D2::LRNCell_Frame_CUDA::initialize()
     }
 }
 
-void N2D2::LRNCell_Frame_CUDA::propagate(bool /*inference*/)
+template <class T>
+void N2D2::LRNCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeHBasedToD();
 
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast<T>(mInputs[k]);
 
         CHECK_CUDNN_STATUS(
             cudnnLRNCrossChannelForward(CudaContext::cudnnHandle(),
@@ -99,24 +116,26 @@ void N2D2::LRNCell_Frame_CUDA::propagate(bool /*inference*/)
     mDiffInputs.clearValid();
 }
 
-void N2D2::LRNCell_Frame_CUDA::backPropagate()
+template <class T>
+void N2D2::LRNCell_Frame_CUDA<T>::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
 
-    const float alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+        const typename Cuda::cudnn_scaling_type<T>::type beta
+            = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
-        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > diffOutput
             = (mDiffOutputs[k].isValid())
-                ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
-                : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+                ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
+                : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
         CHECK_CUDNN_STATUS(cudnnLRNCrossChannelBackward(
             CudaContext::cudnnHandle(),
@@ -142,16 +161,24 @@ void N2D2::LRNCell_Frame_CUDA::backPropagate()
     mDiffOutputs.synchronizeDToHBased();
 }
 
-void N2D2::LRNCell_Frame_CUDA::update()
+template <class T>
+void N2D2::LRNCell_Frame_CUDA<T>::update()
 {
 }
 
-N2D2::LRNCell_Frame_CUDA::~LRNCell_Frame_CUDA()
+template <class T>
+N2D2::LRNCell_Frame_CUDA<T>::~LRNCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
         CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mOutputDesc[k]));
 
     CHECK_CUDNN_STATUS(cudnnDestroyLRNDescriptor(mLRNDesc));
+}
+
+namespace N2D2 {
+    template class LRNCell_Frame_CUDA<half_float::half>;
+    template class LRNCell_Frame_CUDA<float>;
+    template class LRNCell_Frame_CUDA<double>;
 }
 
 #endif

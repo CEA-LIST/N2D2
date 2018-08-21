@@ -33,8 +33,15 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class LRNCell_Frame_CUDA : public virtual LRNCell, public Cell_Frame_CUDA<Float_T> {
+template <class T>
+class LRNCell_Frame_CUDA : public virtual LRNCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::mOutputs;
+    using Cell_Frame_CUDA<T>::mDiffInputs;
+    using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivationDesc;
+
     LRNCell_Frame_CUDA(const std::string& name, unsigned int nbOutputs);
     static std::shared_ptr<LRNCell> create(const std::string& name,
                                            unsigned int nbOutputs)

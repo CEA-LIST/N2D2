@@ -21,22 +21,39 @@
 
 #include "Cell/LRNCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::LRNCell>
-N2D2::LRNCell_Frame::mRegistrar("Frame", N2D2::LRNCell_Frame::create);
+N2D2::LRNCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::LRNCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::LRNCell>::Type<half_float::half>());
 
-N2D2::LRNCell_Frame::LRNCell_Frame(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::LRNCell>
+N2D2::LRNCell_Frame<float>::mRegistrar("Frame",
+    N2D2::LRNCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::LRNCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::LRNCell>
+N2D2::LRNCell_Frame<double>::mRegistrar("Frame",
+    N2D2::LRNCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::LRNCell>::Type<double>());
+
+template <class T>
+N2D2::LRNCell_Frame<T>::LRNCell_Frame(const std::string& name,
                                    unsigned int nbOutputs)
     : Cell(name, nbOutputs),
       LRNCell(name, nbOutputs),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<T>(name, nbOutputs)
 {
     // ctor
 }
 
-void N2D2::LRNCell_Frame::initialize()
+template <class T>
+void N2D2::LRNCell_Frame<T>::initialize()
 {
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-        throw std::domain_error("LRNCell_Frame::initialize():"
+        throw std::domain_error("LRNCell_Frame<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
@@ -47,16 +64,17 @@ void N2D2::LRNCell_Frame::initialize()
     }
 }
 
-void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
+template <class T>
+void N2D2::LRNCell_Frame<T>::propagate(bool /*inference*/)
 {
     if (mN > getNbOutputs())
-        throw std::runtime_error("LRNCell_Frame::propagate(): mN > nbOutputs "
+        throw std::runtime_error("LRNCell_Frame<T>::propagate(): mN > nbOutputs "
                                  "doesn't match for local response "
                                  "normalization accross channels\n");
 
     mInputs.synchronizeDToH();
 
-    float beta = 0.0f;
+    T beta(0.0f);
 
     unsigned int offset = 0;
 
@@ -64,7 +82,7 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
         if (k > 0)
             beta = 1.0;
 
-        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (getNbOutputs() > 16)
@@ -83,7 +101,7 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
                 for (unsigned int oy = 0; oy < input.dimY(); ++oy) {
                     for (unsigned int ox = 0; ox < input.dimX(); ++ox) {
                         // For each input channel, accumulate the value
-                        Float_T accAccrossChannels = 0;
+                        T accAccrossChannels(0.0);
 
                         for (unsigned int accChannel = channelMin;
                             accChannel < channelMax; ++accChannel)
@@ -96,9 +114,9 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
                         mOutputs(ox, oy, output, batchPos)
                             = normAccrossChannel(input(ox, oy, channel, batchPos),
                                                  accAccrossChannels,
-                                                 mAlpha,
-                                                 mBeta,
-                                                 mK)
+                                                 T(mAlpha),
+                                                 T(mBeta),
+                                                 T(mK))
                             + beta * mOutputs(ox, oy, output, batchPos);
                     }
                 }
@@ -111,26 +129,36 @@ void N2D2::LRNCell_Frame::propagate(bool /*inference*/)
     mDiffInputs.clearValid();
 }
 
-void N2D2::LRNCell_Frame::backPropagate()
+template <class T>
+void N2D2::LRNCell_Frame<T>::backPropagate()
 {
     throw std::runtime_error(
-        "LRNCell_Frame::backPropagate(): not implemented.");
+        "LRNCell_Frame<T>::backPropagate(): not implemented.");
 }
 
-void N2D2::LRNCell_Frame::update()
+template <class T>
+void N2D2::LRNCell_Frame<T>::update()
 {
     for (unsigned int k = 0, size = mDiffOutputs.size(); k < size; ++k) {
-        Tensor<Float_T> diffOutput
-            = tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+        Tensor<T> diffOutput
+            = tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
-        diffOutput.fill(0.0);
+        diffOutput.fill(T(0.0));
 
         mDiffOutputs[k] = diffOutput;
     }
 }
 
-float N2D2::LRNCell_Frame::normAccrossChannel(
-    Float_T input, Float_T xAcc, Float_T alpha, Float_T beta, Float_T k)
+template <class T>
+T N2D2::LRNCell_Frame<T>::normAccrossChannel(
+    T input, T xAcc, T alpha, T beta, T k)
 {
-    return input / (std::pow((k + std::pow(xAcc, 2.0) * alpha), beta));
+    const T norm(std::pow((k + (xAcc * xAcc) * alpha), beta));
+    return (input / norm);
+}
+
+namespace N2D2 {
+    template class LRNCell_Frame<half_float::half>;
+    template class LRNCell_Frame<float>;
+    template class LRNCell_Frame<double>;
 }

@@ -37,14 +37,22 @@ N2D2::LRNCellGenerator::generate(Network& /*network*/,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
 
     std::cout << "Layer: " << section << " [LRN(" << model << ")]" << std::endl;
 
     // Cell construction
-    std::shared_ptr<LRNCell> cell = Registrar
-        <LRNCell>::create(model)(section, nbOutputs);
+    std::shared_ptr<LRNCell> cell
+        = (dataType == Float32)
+            ? Registrar<LRNCell>::create<float>(model)(section, nbOutputs)
+          : (dataType == Float16)
+            ? Registrar<LRNCell>::create<half_float::half>(model)(section,
+                                                                  nbOutputs)
+            : Registrar<LRNCell>::create<double>(model)(section, nbOutputs);
 
     if (!cell) {
         throw std::runtime_error(

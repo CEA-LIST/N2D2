@@ -25,8 +25,14 @@
 #include "LRNCell.hpp"
 
 namespace N2D2 {
-class LRNCell_Frame : public virtual LRNCell, public Cell_Frame<Float_T> {
+template <class T>
+class LRNCell_Frame : public virtual LRNCell, public Cell_Frame<T> {
 public:
+    using Cell_Frame<T>::mInputs;
+    using Cell_Frame<T>::mOutputs;
+    using Cell_Frame<T>::mDiffInputs;
+    using Cell_Frame<T>::mDiffOutputs;
+
     LRNCell_Frame(const std::string& name, unsigned int nbOutputs);
     static std::shared_ptr<LRNCell> create(const std::string& name,
                                            unsigned int nbOutputs)
@@ -43,8 +49,7 @@ public:
     virtual ~LRNCell_Frame() {};
 
 protected:
-    float normAccrossChannel(
-        Float_T input, Float_T xAcc, Float_T alpha, Float_T beta, Float_T k);
+    T normAccrossChannel(T input, T xAcc, T alpha, T beta, T k);
     // mInputsBackProp (ix, iy, channel, batchPos)
     // list of the output node(s) to backpropagate from] (for Max pooling)
     Tensor<std::vector<unsigned int> > mInputsBackProp;
