@@ -21,7 +21,9 @@
 #include "Cell/ConvCell_Spike.hpp"
 
 N2D2::Registrar<N2D2::ConvCell>
-N2D2::ConvCell_Spike::mRegistrar("Spike", N2D2::ConvCell_Spike::create);
+N2D2::ConvCell_Spike::mRegistrar("Spike",
+    N2D2::ConvCell_Spike::create,
+    N2D2::Registrar<N2D2::ConvCell>::Type<Float_T>());
 
 N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
                                  const std::string& name,

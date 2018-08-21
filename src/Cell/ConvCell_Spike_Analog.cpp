@@ -22,7 +22,8 @@
 
 N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Spike_Analog::mRegistrar("Spike_Analog",
-                                        N2D2::ConvCell_Spike_Analog::create);
+    N2D2::ConvCell_Spike_Analog::create,
+    N2D2::Registrar<N2D2::ConvCell>::Type<Float_T>());
 
 N2D2::ConvCell_Spike_Analog::ConvCell_Spike_Analog(Network& net,
                                  const std::string& name,

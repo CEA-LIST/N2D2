@@ -21,7 +21,9 @@
 #include "Cell/PoolCell_Spike.hpp"
 
 N2D2::Registrar<N2D2::PoolCell>
-N2D2::PoolCell_Spike::mRegistrar("Spike", N2D2::PoolCell_Spike::create);
+N2D2::PoolCell_Spike::mRegistrar("Spike",
+    N2D2::PoolCell_Spike::create,
+    N2D2::Registrar<N2D2::PoolCell>::Type<Float_T>());
 
 N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
     const std::string& name,

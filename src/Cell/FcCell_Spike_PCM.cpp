@@ -21,7 +21,9 @@
 #include "Cell/FcCell_Spike_PCM.hpp"
 
 N2D2::Registrar<N2D2::FcCell>
-N2D2::FcCell_Spike_PCM::mRegistrar("Spike_PCM", N2D2::FcCell_Spike_PCM::create);
+N2D2::FcCell_Spike_PCM::mRegistrar("Spike_PCM",
+    N2D2::FcCell_Spike_PCM::create,
+    N2D2::Registrar<N2D2::FcCell>::Type<Float_T>());
 
 N2D2::FcCell_Spike_PCM::FcCell_Spike_PCM(Network& net,
                                          const std::string& name,

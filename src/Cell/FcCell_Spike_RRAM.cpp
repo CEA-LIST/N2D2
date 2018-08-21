@@ -22,7 +22,8 @@
 
 N2D2::Registrar<N2D2::FcCell>
 N2D2::FcCell_Spike_RRAM::mRegistrar("Spike_RRAM",
-                                    N2D2::FcCell_Spike_RRAM::create);
+    N2D2::FcCell_Spike_RRAM::create,
+    N2D2::Registrar<N2D2::FcCell>::Type<Float_T>());
 
 N2D2::FcCell_Spike_RRAM::FcCell_Spike_RRAM(Network& net,
                                            const std::string& name,
