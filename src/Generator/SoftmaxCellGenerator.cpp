@@ -37,6 +37,9 @@ N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
+    const DataType dataType = iniConfig.getProperty<DataType>(
+        "DataType", CellGenerator::mDefaultDataType);
+
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
     const unsigned int groupSize = iniConfig.getProperty
@@ -48,8 +51,21 @@ N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
               << std::endl;
 
     // Cell construction
-    std::shared_ptr<SoftmaxCell> cell = Registrar
-        <SoftmaxCell>::create(model)(section, nbOutputs, withLoss, groupSize);
+    std::shared_ptr<SoftmaxCell> cell
+        = (dataType == Float32)
+            ? Registrar<SoftmaxCell>::create<float>(model)(section,
+                                                           nbOutputs,
+                                                           withLoss,
+                                                           groupSize)
+          : (dataType == Float16)
+            ? Registrar<SoftmaxCell>::create<half_float::half>(model)(section,
+                                                                      nbOutputs,
+                                                                      withLoss,
+                                                                      groupSize)
+            : Registrar<SoftmaxCell>::create<double>(model)(section,
+                                                           nbOutputs,
+                                                           withLoss,
+                                                           groupSize);
 
     if (!cell) {
         throw std::runtime_error(

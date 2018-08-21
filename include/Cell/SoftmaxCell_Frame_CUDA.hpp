@@ -28,15 +28,23 @@
 
 #include "Cell_Frame_CUDA.hpp"
 #include "SoftmaxCell.hpp"
+#include "Solver/SGDSolver_CUDA_Kernels.hpp" // provides cudaHaxpy()
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
+template <class T>
 class SoftmaxCell_Frame_CUDA : public virtual SoftmaxCell,
-                               public Cell_Frame_CUDA<Float_T> {
+                               public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::mOutputs;
+    using Cell_Frame_CUDA<T>::mDiffInputs;
+    using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivationDesc;
+
     SoftmaxCell_Frame_CUDA(const std::string& name,
                            unsigned int nbOutputs,
                            bool withLoss = false,
@@ -59,10 +67,18 @@ public:
     virtual ~SoftmaxCell_Frame_CUDA();
 
 private:
+    virtual void backPropagateWithLoss();
+
     cudnnTensorDescriptor_t mGroupTensor;
 
     static Registrar<SoftmaxCell> mRegistrar;
 };
+}
+
+namespace N2D2 {
+template <> void SoftmaxCell_Frame_CUDA<half_float::half>::backPropagateWithLoss();
+template <> void SoftmaxCell_Frame_CUDA<float>::backPropagateWithLoss();
+template <> void SoftmaxCell_Frame_CUDA<double>::backPropagateWithLoss();
 }
 
 #endif // N2D2_SOFTMAXCELL_FRAME_CUDA_H

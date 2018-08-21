@@ -20,28 +20,45 @@
 
 #include "Cell/SoftmaxCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::SoftmaxCell>
-N2D2::SoftmaxCell_Frame::mRegistrar("Frame", N2D2::SoftmaxCell_Frame::create);
+N2D2::SoftmaxCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::SoftmaxCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::SoftmaxCell>::Type<half_float::half>());
 
-N2D2::SoftmaxCell_Frame::SoftmaxCell_Frame(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::SoftmaxCell>
+N2D2::SoftmaxCell_Frame<float>::mRegistrar("Frame",
+    N2D2::SoftmaxCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::SoftmaxCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::SoftmaxCell>
+N2D2::SoftmaxCell_Frame<double>::mRegistrar("Frame",
+    N2D2::SoftmaxCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::SoftmaxCell>::Type<double>());
+
+template <class T>
+N2D2::SoftmaxCell_Frame<T>::SoftmaxCell_Frame(const std::string& name,
                                            unsigned int nbOutputs,
                                            bool withLoss,
                                            unsigned int groupSize)
     : Cell(name, nbOutputs),
       SoftmaxCell(name, nbOutputs, withLoss, groupSize),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<T>(name, nbOutputs)
 {
     // ctor
 }
 
-void N2D2::SoftmaxCell_Frame::initialize()
+template <class T>
+void N2D2::SoftmaxCell_Frame<T>::initialize()
 {
     if (mInputs.size() > 1)
-        throw std::domain_error("SoftmaxCell_Frame::initialize(): inputs "
+        throw std::domain_error("SoftmaxCell_Frame<T>::initialize(): inputs "
                                 "concatenation is not supported.");
 /*
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-        throw std::domain_error("SoftmaxCell_Frame::initialize():"
+        throw std::domain_error("SoftmaxCell_Frame<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
@@ -50,19 +67,20 @@ void N2D2::SoftmaxCell_Frame::initialize()
     if(mGroupSize > 0)
     {
         if(getNbOutputs() % mGroupSize)
-            throw std::domain_error("SoftmaxCell_Frame::initialize():"
+            throw std::domain_error("SoftmaxCell_Frame<T>::initialize():"
                                     " the group size must be divisible by "
                                     "the number of outputs.");
 
     }
 }
 
-void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
+template <class T>
+void N2D2::SoftmaxCell_Frame<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeDToH();
     const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
-    const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[0]);
+    const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
 
 #pragma omp parallel for if (mInputs.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
@@ -73,26 +91,26 @@ void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
                     const unsigned int stride = step*mGroupSize;
                     const unsigned int nbNeurons = stride + groupStride;
 
-                    Float_T maxVal = input(ox, oy, stride, batchPos);
+                    T maxVal(input(ox, oy, stride, batchPos));
 
                     for (unsigned int output = stride + 1; output < nbNeurons; ++output)
                         maxVal
                             = std::max(maxVal, input(ox, oy, output, batchPos));
 
                     // double required for large number of channels
-                    double sum = 0.0;
+                    T sum(0.0);
 
                     for (unsigned int output = stride; output < nbNeurons; ++output)
                         sum += std::exp(input(ox, oy, output, batchPos) - maxVal);
 
-                    if (sum > 0.0) {
+                    if (sum > T(0.0)) {
                         for (unsigned int output = stride; output < nbNeurons; ++output)
                             mOutputs(ox, oy, output, batchPos)
                                 = std::exp(input(ox, oy, output, batchPos)
                                         - maxVal) / sum;
                     } else {
                         for (unsigned int output = stride; output < nbNeurons; ++output)
-                            mOutputs(ox, oy, output, batchPos) = 0.0;
+                            mOutputs(ox, oy, output, batchPos) = T(0.0);
                     }
                 }
             }
@@ -102,7 +120,8 @@ void N2D2::SoftmaxCell_Frame::propagate(bool /*inference*/)
     mDiffInputs.clearValid();
 }
 
-void N2D2::SoftmaxCell_Frame::backPropagate()
+template <class T>
+void N2D2::SoftmaxCell_Frame<T>::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
@@ -110,11 +129,11 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     const unsigned int size = mInputs.dimB() * getNbChannels();
     const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
-    const Float_T beta = (mDiffOutputs[0].isValid()) ? 1.0 : 0.0;
+    const T beta((mDiffOutputs[0].isValid()) ? 1.0 : 0.0);
 
-    Tensor<Float_T> diffOutput = (mDiffOutputs[0].isValid())
-        ? tensor_cast<Float_T>(mDiffOutputs[0])
-        : tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+    Tensor<T> diffOutput = (mDiffOutputs[0].isValid())
+        ? tensor_cast<T>(mDiffOutputs[0])
+        : tensor_cast_nocopy<T>(mDiffOutputs[0]);
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
@@ -132,7 +151,7 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
                               + beta
                                 * diffOutput(ix, iy, channel, batchPos);
                     } else {
-                        Float_T gradient = 0.0;
+                        T gradient(0.0);
 
                         for(unsigned int step = 0; step < getNbOutputs()/groupStride; ++step)
                         {
@@ -162,18 +181,20 @@ void N2D2::SoftmaxCell_Frame::backPropagate()
     mDiffOutputs.synchronizeHToD();
 }
 
-void N2D2::SoftmaxCell_Frame::update()
+template <class T>
+void N2D2::SoftmaxCell_Frame<T>::update()
 {
 }
 
-void N2D2::SoftmaxCell_Frame::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::SoftmaxCell_Frame<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&SoftmaxCell_Frame::propagate, this, false),
-                  std::bind(&SoftmaxCell_Frame::backPropagate, this));
+                  std::bind(&SoftmaxCell_Frame<T>::propagate, this, false),
+                  std::bind(&SoftmaxCell_Frame<T>::backPropagate, this));
 
     if (!mDiffOutputs.empty()) {
         for (unsigned int in = 0; in < mInputs.size(); ++in) {
@@ -187,4 +208,10 @@ void N2D2::SoftmaxCell_Frame::checkGradient(double epsilon, double maxError)
                   << ", could not check the gradient!" << Utils::cdef
                   << std::endl;
     }
+}
+
+namespace N2D2 {
+    template class SoftmaxCell_Frame<half_float::half>;
+    template class SoftmaxCell_Frame<float>;
+    template class SoftmaxCell_Frame<double>;
 }

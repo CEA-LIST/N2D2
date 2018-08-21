@@ -25,17 +25,23 @@
 
 using namespace N2D2;
 
-class SoftmaxCell_Frame_Test : public SoftmaxCell_Frame {
+template <class T>
+class SoftmaxCell_Frame_Test : public SoftmaxCell_Frame<T> {
 public:
     SoftmaxCell_Frame_Test(const std::string& name, unsigned int nbOutputs)
         : Cell(name, nbOutputs),
           SoftmaxCell(name, nbOutputs),
-          SoftmaxCell_Frame(name, nbOutputs) {};
+          SoftmaxCell_Frame<T>(name, nbOutputs) {};
 
-    friend class UnitTest_SoftmaxCell_Frame_backPropagate;
+    friend class UnitTest_SoftmaxCell_Frame_float_backPropagate;
+    friend class UnitTest_SoftmaxCell_Frame_double_backPropagate;
+    friend class UnitTest_SoftmaxCell_Frame_half_backPropagate;
 };
 
-TEST_DATASET(SoftmaxCell_Frame,
+////////////////////////////////////////////////////////////////////////////////
+// float
+////////////////////////////////////////////////////////////////////////////////
+TEST_DATASET(SoftmaxCell_Frame_float,
              propagate,
              (unsigned int nbOutputs, unsigned int batchSize),
              std::make_tuple(1U, 1U),
@@ -47,18 +53,18 @@ TEST_DATASET(SoftmaxCell_Frame,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    SoftmaxCell_Frame softmax1("softmax1", nbOutputs);
+    SoftmaxCell_Frame<float> softmax1("softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
 
-    Tensor<Float_T> inputs({1, 1, nbOutputs, batchSize});
-    Tensor<Float_T> diffOutputs;
+    Tensor<float> inputs({1, 1, nbOutputs, batchSize});
+    Tensor<float> diffOutputs;
     softmax1.addInput(inputs, diffOutputs);
 
     inputs.fill(0.0);
     softmax1.propagate();
-    const Tensor<Float_T>& outputs1 = tensor_cast<Float_T>(softmax1.getOutputs());
+    const Tensor<float>& outputs1 = tensor_cast<float>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
         ASSERT_EQUALS_DELTA(outputs1(o), 1.0 / (double)nbOutputs, 1.0e-6);
@@ -66,7 +72,7 @@ TEST_DATASET(SoftmaxCell_Frame,
 
     inputs.fill(1.0);
     softmax1.propagate();
-    const Tensor<Float_T>& outputs2 = tensor_cast<Float_T>(softmax1.getOutputs());
+    const Tensor<float>& outputs2 = tensor_cast<float>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
         ASSERT_EQUALS_DELTA(outputs2(o), 1.0 / (double)nbOutputs, 1.0e-6);
@@ -78,7 +84,7 @@ TEST_DATASET(SoftmaxCell_Frame,
         inputs(0, batchPos) = 1.0;
 
     softmax1.propagate();
-    const Tensor<Float_T>& outputs3 = tensor_cast<Float_T>(softmax1.getOutputs());
+    const Tensor<float>& outputs3 = tensor_cast<float>(softmax1.getOutputs());
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         ASSERT_EQUALS_DELTA(outputs3(0, batchPos),
@@ -93,7 +99,7 @@ TEST_DATASET(SoftmaxCell_Frame,
     }
 }
 
-TEST_DATASET(SoftmaxCell_Frame,
+TEST_DATASET(SoftmaxCell_Frame_float,
              backPropagate,
              (unsigned int nbOutputs, unsigned int batchSize),
              std::make_tuple(1U, 1U),
@@ -105,13 +111,127 @@ TEST_DATASET(SoftmaxCell_Frame,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    SoftmaxCell_Frame_Test softmax1("softmax1", nbOutputs);
+    SoftmaxCell_Frame_Test<float> softmax1("softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
 
-    Tensor<Float_T> inputs({1, 1, nbOutputs, batchSize});
-    Tensor<Float_T> diffOutputs({1, 1, nbOutputs, batchSize});
+    Tensor<float> inputs({1, 1, nbOutputs, batchSize});
+    Tensor<float> diffOutputs({1, 1, nbOutputs, batchSize});
+    softmax1.addInput(inputs, diffOutputs);
+
+    ASSERT_NOTHROW_ANY(softmax1.checkGradient(1.0e-3, 1.0e-2));
+
+    inputs.fill(0.0);
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        inputs(0, batchPos) = 1.0;
+
+    softmax1.propagate();
+    softmax1.mDiffInputs.fill(0.0);
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
+
+    softmax1.backPropagate();
+    const Tensor<float>& outputs = tensor_cast<float>(softmax1.getOutputs());
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
+        for (unsigned int channel = 0; channel < nbOutputs; ++channel) {
+            float gradient = 0.0;
+
+            for (unsigned int output = 0; output < nbOutputs; ++output) {
+                gradient += ((output == channel) - outputs(channel, batchPos))
+                            * outputs(output, batchPos)
+                            * softmax1.mDiffInputs(output, batchPos);
+            }
+
+            ASSERT_EQUALS_DELTA(
+                diffOutputs(channel, batchPos), gradient, 1.0e-6);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// double
+////////////////////////////////////////////////////////////////////////////////
+TEST_DATASET(SoftmaxCell_Frame_double,
+             propagate,
+             (unsigned int nbOutputs, unsigned int batchSize),
+             std::make_tuple(1U, 1U),
+             std::make_tuple(10U, 1U),
+             std::make_tuple(100U, 1U),
+             std::make_tuple(1000U, 1U),
+             std::make_tuple(1U, 9U),
+             std::make_tuple(10U, 9U),
+             std::make_tuple(100U, 9U),
+             std::make_tuple(1000U, 9U))
+{
+    SoftmaxCell_Frame<double> softmax1("softmax1", nbOutputs);
+
+    ASSERT_EQUALS(softmax1.getName(), "softmax1");
+    ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
+
+    Tensor<double> inputs({1, 1, nbOutputs, batchSize});
+    Tensor<double> diffOutputs;
+    softmax1.addInput(inputs, diffOutputs);
+
+    inputs.fill(0.0);
+    softmax1.propagate();
+    const Tensor<double>& outputs1 = tensor_cast<double>(softmax1.getOutputs());
+
+    for (unsigned int o = 0; o < nbOutputs; ++o) {
+        ASSERT_EQUALS_DELTA(outputs1(o), 1.0 / (double)nbOutputs, 1.0e-6);
+    }
+
+    inputs.fill(1.0);
+    softmax1.propagate();
+    const Tensor<double>& outputs2 = tensor_cast<double>(softmax1.getOutputs());
+
+    for (unsigned int o = 0; o < nbOutputs; ++o) {
+        ASSERT_EQUALS_DELTA(outputs2(o), 1.0 / (double)nbOutputs, 1.0e-6);
+    }
+
+    inputs.fill(0.0);
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        inputs(0, batchPos) = 1.0;
+
+    softmax1.propagate();
+    const Tensor<double>& outputs3 = tensor_cast<double>(softmax1.getOutputs());
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
+        ASSERT_EQUALS_DELTA(outputs3(0, batchPos),
+                            std::exp(1.0) / (std::exp(1.0) + (nbOutputs - 1)),
+                            1.0e-6);
+
+        for (unsigned int o = 1; o < nbOutputs; ++o) {
+            ASSERT_EQUALS_DELTA(outputs3(o, batchPos),
+                                1.0 / (std::exp(1.0) + (nbOutputs - 1)),
+                                1.0e-6);
+        }
+    }
+}
+
+TEST_DATASET(SoftmaxCell_Frame_double,
+             backPropagate,
+             (unsigned int nbOutputs, unsigned int batchSize),
+             std::make_tuple(1U, 1U),
+             std::make_tuple(10U, 1U),
+             std::make_tuple(100U, 1U),
+             std::make_tuple(1000U, 1U),
+             std::make_tuple(1U, 9U),
+             std::make_tuple(10U, 9U),
+             std::make_tuple(100U, 9U),
+             std::make_tuple(1000U, 9U))
+{
+    SoftmaxCell_Frame_Test<double> softmax1("softmax1", nbOutputs);
+
+    ASSERT_EQUALS(softmax1.getName(), "softmax1");
+    ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
+
+    Tensor<double> inputs({1, 1, nbOutputs, batchSize});
+    Tensor<double> diffOutputs({1, 1, nbOutputs, batchSize});
     softmax1.addInput(inputs, diffOutputs);
 
     ASSERT_NOTHROW_ANY(softmax1.checkGradient(1.0e-3, 1.0e-3));
@@ -128,11 +248,11 @@ TEST_DATASET(SoftmaxCell_Frame,
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
     softmax1.backPropagate();
-    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(softmax1.getOutputs());
+    const Tensor<double>& outputs = tensor_cast<double>(softmax1.getOutputs());
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
         for (unsigned int channel = 0; channel < nbOutputs; ++channel) {
-            Float_T gradient = 0.0;
+            double gradient = 0.0;
 
             for (unsigned int output = 0; output < nbOutputs; ++output) {
                 gradient += ((output == channel) - outputs(channel, batchPos))
@@ -142,6 +262,124 @@ TEST_DATASET(SoftmaxCell_Frame,
 
             ASSERT_EQUALS_DELTA(
                 diffOutputs(channel, batchPos), gradient, 1.0e-6);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// half
+////////////////////////////////////////////////////////////////////////////////
+TEST_DATASET(SoftmaxCell_Frame_half,
+             propagate,
+             (unsigned int nbOutputs, unsigned int batchSize),
+             std::make_tuple(1U, 1U),
+             std::make_tuple(10U, 1U),
+             std::make_tuple(100U, 1U),
+             std::make_tuple(1000U, 1U),
+             std::make_tuple(1U, 9U),
+             std::make_tuple(10U, 9U),
+             std::make_tuple(100U, 9U),
+             std::make_tuple(1000U, 9U))
+{
+    SoftmaxCell_Frame<half_float::half> softmax1("softmax1", nbOutputs);
+
+    ASSERT_EQUALS(softmax1.getName(), "softmax1");
+    ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
+
+    Tensor<half_float::half> inputs({1, 1, nbOutputs, batchSize});
+    Tensor<half_float::half> diffOutputs;
+    softmax1.addInput(inputs, diffOutputs);
+
+    inputs.fill(half_float::half(0.0f));
+    softmax1.propagate();
+    const Tensor<half_float::half>& outputs1
+        = tensor_cast<half_float::half>(softmax1.getOutputs());
+
+    for (unsigned int o = 0; o < nbOutputs; ++o) {
+        ASSERT_EQUALS_DELTA(outputs1(o), 1.0f / (double)nbOutputs, 1.0e-4);
+    }
+
+    inputs.fill(half_float::half(1.0f));
+    softmax1.propagate();
+    const Tensor<half_float::half>& outputs2
+        = tensor_cast<half_float::half>(softmax1.getOutputs());
+
+    for (unsigned int o = 0; o < nbOutputs; ++o) {
+        ASSERT_EQUALS_DELTA(outputs2(o), 1.0f / (double)nbOutputs, 1.0e-4);
+    }
+
+    inputs.fill(half_float::half(0.0f));
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        inputs(0, batchPos) = 1.0f;
+
+    softmax1.propagate();
+    const Tensor<half_float::half>& outputs3
+        = tensor_cast<half_float::half>(softmax1.getOutputs());
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
+        ASSERT_EQUALS_DELTA(outputs3(0, batchPos),
+                            std::exp(1.0f) / (std::exp(1.0f) + (nbOutputs - 1)),
+                            1.0e-3);
+
+        for (unsigned int o = 1; o < nbOutputs; ++o) {
+            ASSERT_EQUALS_DELTA(outputs3(o, batchPos),
+                                1.0f / (std::exp(1.0f) + (nbOutputs - 1)),
+                                1.0e-3);
+        }
+    }
+}
+
+TEST_DATASET(SoftmaxCell_Frame_half,
+             backPropagate,
+             (unsigned int nbOutputs, unsigned int batchSize),
+             std::make_tuple(1U, 1U),
+             std::make_tuple(10U, 1U),
+             std::make_tuple(100U, 1U),
+             std::make_tuple(1000U, 1U),
+             std::make_tuple(1U, 9U),
+             std::make_tuple(10U, 9U),
+             std::make_tuple(100U, 9U),
+             std::make_tuple(1000U, 9U))
+{
+    SoftmaxCell_Frame_Test<half_float::half> softmax1("softmax1", nbOutputs);
+
+    ASSERT_EQUALS(softmax1.getName(), "softmax1");
+    ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
+
+    Tensor<half_float::half> inputs({1, 1, nbOutputs, batchSize});
+    Tensor<half_float::half> diffOutputs({1, 1, nbOutputs, batchSize});
+    softmax1.addInput(inputs, diffOutputs);
+
+    ASSERT_NOTHROW_ANY(softmax1.checkGradient(1.0, 1.0));
+
+    inputs.fill(half_float::half(0.0f));
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        inputs(0, batchPos) = 1.0f;
+
+    softmax1.propagate();
+    softmax1.mDiffInputs.fill(half_float::half(0.0f));
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
+
+    softmax1.backPropagate();
+    const Tensor<half_float::half>& outputs
+        = tensor_cast<half_float::half>(softmax1.getOutputs());
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
+        for (unsigned int channel = 0; channel < nbOutputs; ++channel) {
+            half_float::half gradient(0.0f);
+
+            for (unsigned int output = 0; output < nbOutputs; ++output) {
+                gradient += ((output == channel) - outputs(channel, batchPos))
+                            * outputs(output, batchPos)
+                            * softmax1.mDiffInputs(output, batchPos);
+            }
+
+            ASSERT_EQUALS_DELTA(
+                diffOutputs(channel, batchPos), gradient, 1.0e-3);
         }
     }
 }
