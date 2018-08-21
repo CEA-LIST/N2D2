@@ -20,27 +20,48 @@
 
 #include "Cell/FcCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::FcCell>
-N2D2::FcCell_Frame::mRegistrar("Frame", N2D2::FcCell_Frame::create);
+N2D2::FcCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::FcCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::FcCell>::Type<half_float::half>());
 
-N2D2::FcCell_Frame::FcCell_Frame(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::FcCell>
+N2D2::FcCell_Frame<float>::mRegistrar("Frame",
+    N2D2::FcCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::FcCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::FcCell>
+N2D2::FcCell_Frame<double>::mRegistrar("Frame",
+    N2D2::FcCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::FcCell>::Type<double>());
+
+template <class T>
+N2D2::FcCell_Frame<T>::FcCell_Frame(const std::string& name,
                                  unsigned int nbOutputs,
                                  const std::shared_ptr
                                  <Activation>& activation)
     : Cell(name, nbOutputs),
       FcCell(name, nbOutputs),
-      Cell_Frame(name, nbOutputs, activation),
+      Cell_Frame<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().,
       mDropConnect(this, "DropConnect", 1.0),
       mLockRandom(false)
 {
     // ctor
-    mWeightsSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
-    mBiasSolver = std::make_shared<SGDSolver_Frame<Float_T> >();
+    mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mTopDownWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mRecWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mBiasFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
+    mWeightsSolver = std::make_shared<SGDSolver_Frame<T> >();
+    mBiasSolver = std::make_shared<SGDSolver_Frame<T> >();
 }
 
-void N2D2::FcCell_Frame::initialize()
+template <class T>
+void N2D2::FcCell_Frame<T>::initialize()
 {
     if (!mNoBias) {
         mBias.resize({mOutputs.dimZ(), 1, 1, 1});
@@ -53,9 +74,9 @@ void N2D2::FcCell_Frame::initialize()
             throw std::runtime_error("Zero-sized input for FcCell " + mName);
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
-        mSynapses.push_back(new Tensor<Float_T>(
+        mSynapses.push_back(new Tensor<T>(
             {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
-        mDiffSynapses.push_back(new Tensor<Float_T>(
+        mDiffSynapses.push_back(new Tensor<T>(
             {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
         mDropConnectMask.push_back(new Tensor<bool>(
             {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}, true));
@@ -63,7 +84,8 @@ void N2D2::FcCell_Frame::initialize()
     }
 }
 
-void N2D2::FcCell_Frame::propagate(bool inference)
+template <class T>
+void N2D2::FcCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
@@ -71,7 +93,7 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                                     * mOutputs.dimZ();
     const unsigned int count = mInputs.dimB() * outputSize;
 
-    Float_T beta = 0.0;
+    T beta(0.0);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
@@ -85,8 +107,8 @@ void N2D2::FcCell_Frame::propagate(bool inference)
                     = Random::randBernoulli(mDropConnect);
         }
 
-        const Tensor<Float_T>& synapses = mSynapses[k];
-        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const Tensor<T>& synapses = mSynapses[k];
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
         const unsigned int inputSize = input.dimX() * input.dimY()
                                         * input.dimZ();
 
@@ -98,7 +120,7 @@ void N2D2::FcCell_Frame::propagate(bool inference)
         for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
             for (unsigned int output = 0; output < outputSize; ++output) {
                 // Compute the weighted sum
-                Float_T weightedSum = (!mNoBias) ? mBias(output) : 0.0;
+                T weightedSum((!mNoBias) ? mBias(output) : 0.0);
 
                 if (mDropConnect < 1.0 && !inference) {
                     for (unsigned int channel = 0; channel < inputSize;
@@ -125,29 +147,30 @@ void N2D2::FcCell_Frame::propagate(bool inference)
         }
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::FcCell_Frame::backPropagate()
+template <class T>
+void N2D2::FcCell_Frame<T>::backPropagate()
 {
-    Cell_Frame::backPropagate();
+    Cell_Frame<T>::backPropagate();
 
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
                                     * mOutputs.dimZ();
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const Tensor<Float_T>& input = tensor_cast_nocopy<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
         const unsigned int nbChannels = input.size() / input.dimB();
 
         if (!mDiffOutputs.empty() && mBackPropagate) {
-            const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
+            const T beta((mDiffOutputs[k].isValid()) ? 1.0 : 0.0);
 
-            Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
-                ? tensor_cast<Float_T>(mDiffOutputs[k])
-                : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+            Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
+                ? tensor_cast<T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
-            const Tensor<Float_T>& synapses = mSynapses[k];
+            const Tensor<T>& synapses = mSynapses[k];
             const unsigned int count = mInputs.dimB() * nbChannels;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -158,7 +181,7 @@ void N2D2::FcCell_Frame::backPropagate()
             for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
                 for (unsigned int channel = 0; channel < nbChannels; ++channel)
                 {
-                    Float_T gradient = 0.0;
+                    T gradient(0.0);
 
                     if (mDropConnect < 1.0) {
                         for (unsigned int output = 0; output < outputSize;
@@ -187,7 +210,7 @@ void N2D2::FcCell_Frame::backPropagate()
             mDiffOutputs[k].setValid();
         }
 
-        Tensor<Float_T>& diffSynapses = mDiffSynapses[k];
+        Tensor<T>& diffSynapses = mDiffSynapses[k];
         const unsigned int count2 = nbChannels * getNbOutputs();
 
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
@@ -201,7 +224,7 @@ void N2D2::FcCell_Frame::backPropagate()
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 if (!(mDropConnect < 1.0)
                     || mDropConnectMask[k](channel, output)) {
-                    Float_T sum = 0.0;
+                    T sum(0.0);
 
                     for (unsigned int batchPos = 0; batchPos < input.dimB();
                          ++batchPos)
@@ -224,7 +247,7 @@ void N2D2::FcCell_Frame::backPropagate()
 
 #pragma omp parallel for if (getNbOutputs() > 16)
         for (int output = 0; output < (int)getNbOutputs(); ++output) {
-            Float_T sum = 0.0;
+            T sum(0.0);
 
             for (unsigned int batchPos = 0; batchPos < mInputs.dimB();
                  ++batchPos)
@@ -237,7 +260,8 @@ void N2D2::FcCell_Frame::backPropagate()
     mDiffOutputs.synchronizeHToD();
 }
 
-void N2D2::FcCell_Frame::update()
+template <class T>
+void N2D2::FcCell_Frame<T>::update()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
         mWeightsSolvers[k]
@@ -247,14 +271,15 @@ void N2D2::FcCell_Frame::update()
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
 }
 
-void N2D2::FcCell_Frame::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::FcCell_Frame<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&FcCell_Frame::propagate, this, false),
-                  std::bind(&FcCell_Frame::backPropagate, this));
+                  std::bind(&FcCell_Frame<T>::propagate, this, false),
+                  std::bind(&FcCell_Frame<T>::backPropagate, this));
 
     mLockRandom = true;
 
@@ -284,7 +309,8 @@ void N2D2::FcCell_Frame::checkGradient(double epsilon, double maxError)
     mLockRandom = false;
 }
 
-void N2D2::FcCell_Frame::saveFreeParameters(const std::string& fileName) const
+template <class T>
+void N2D2::FcCell_Frame<T>::saveFreeParameters(const std::string& fileName) const
 {
     std::ofstream syn(fileName.c_str(), std::fstream::binary);
 
@@ -293,22 +319,25 @@ void N2D2::FcCell_Frame::saveFreeParameters(const std::string& fileName) const
                                  + fileName);
 
     for (unsigned int k = 0; k < mSynapses.size(); ++k) {
-        for (std::vector<Float_T>::const_iterator it = mSynapses[k].begin();
-             it != mSynapses[k].end();
-             ++it)
+        for (typename std::vector<T>::const_iterator it = mSynapses[k].begin();
+            it != mSynapses[k].end(); ++it)
+        {
             syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+        }
     }
 
-    for (std::vector<Float_T>::const_iterator it = mBias.begin();
-         it != mBias.end();
-         ++it)
+    for (typename std::vector<T>::const_iterator it = mBias.begin();
+        it != mBias.end(); ++it)
+    {
         syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+    }
 
     if (!syn.good())
         throw std::runtime_error("Error writing synaptic file: " + fileName);
 }
 
-void N2D2::FcCell_Frame::loadFreeParameters(const std::string& fileName,
+template <class T>
+void N2D2::FcCell_Frame<T>::loadFreeParameters(const std::string& fileName,
                                             bool ignoreNotExists)
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
@@ -325,15 +354,18 @@ void N2D2::FcCell_Frame::loadFreeParameters(const std::string& fileName,
     }
 
     for (unsigned int k = 0; k < mSynapses.size(); ++k) {
-        for (std::vector<Float_T>::iterator it = mSynapses[k].begin();
-             it != mSynapses[k].end();
-             ++it)
+        for (typename std::vector<T>::iterator it = mSynapses[k].begin();
+            it != mSynapses[k].end(); ++it)
+        {
             syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+        }
     }
 
-    for (std::vector<Float_T>::iterator it = mBias.begin(); it != mBias.end();
-         ++it)
+    for (typename std::vector<T>::iterator it = mBias.begin();
+        it != mBias.end(); ++it)
+    {
         syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    }
 
     if (syn.eof())
         throw std::runtime_error(
@@ -347,8 +379,15 @@ void N2D2::FcCell_Frame::loadFreeParameters(const std::string& fileName,
             "Synaptic file (.SYN) size larger than expected: " + fileName);
 }
 
-N2D2::FcCell_Frame::~FcCell_Frame()
+template <class T>
+N2D2::FcCell_Frame<T>::~FcCell_Frame()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
         delete &mSynapses[k];
+}
+
+namespace N2D2 {
+    template class FcCell_Frame<half_float::half>;
+    template class FcCell_Frame<float>;
+    template class FcCell_Frame<double>;
 }

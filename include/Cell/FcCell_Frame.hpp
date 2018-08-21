@@ -26,19 +26,25 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-class FcCell_Frame : public virtual FcCell, public Cell_Frame<Float_T> {
+template <class T>
+class FcCell_Frame : public virtual FcCell, public Cell_Frame<T> {
 public:
+    using Cell_Frame<T>::mInputs;
+    using Cell_Frame<T>::mOutputs;
+    using Cell_Frame<T>::mDiffInputs;
+    using Cell_Frame<T>::mDiffOutputs;
+
     FcCell_Frame(const std::string& name,
                  unsigned int nbOutputs,
                  const std::shared_ptr<Activation>& activation
-                 = std::make_shared<TanhActivation_Frame<Float_T> >());
+                 = std::make_shared<TanhActivation_Frame<T> >());
     static std::shared_ptr<FcCell> create(Network& /*net*/,
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
                                           <Activation>& activation
                                           = std::make_shared
-                                          <TanhActivation_Frame<Float_T> >())
+                                          <TanhActivation_Frame<T> >())
     {
         return std::make_shared<FcCell_Frame>(name, nbOutputs, activation);
     }
@@ -47,13 +53,16 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Float_T getWeight(unsigned int output, unsigned int channel) const
+    inline void getWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const
     {
-        return mSynapses(0, 0, channel, output);
+        value.resize({1});
+        value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
     };
-    inline Float_T getBias(unsigned int output) const
+    inline void getBias(unsigned int output, BaseTensor& value) const
     {
-        return mBias(output);
+        value.resize({1});
+        value = Tensor<T>({1}, mBias(output));
     };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
@@ -62,24 +71,24 @@ public:
     virtual ~FcCell_Frame();
 
 protected:
-    inline void
-    setWeight(unsigned int output, unsigned int channel, Float_T value)
+    inline void setWeight(unsigned int output, unsigned int channel,
+                          const BaseTensor& value)
     {
-        mSynapses(0, 0, channel, output) = value;
+        mSynapses(0, 0, channel, output) = tensor_cast<T>(value)(0);
     };
-    inline void setBias(unsigned int output, Float_T value)
+    inline void setBias(unsigned int output, const BaseTensor& value)
     {
-        mBias(output) = value;
+        mBias(output) = tensor_cast<T>(value)(0);
     };
 
     Parameter<double> mDropConnect;
 
     // Internal
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    Interface<Float_T> mSynapses;
-    Tensor<Float_T> mBias;
-    Interface<Float_T> mDiffSynapses;
-    Tensor<Float_T> mDiffBias;
+    Interface<T> mSynapses;
+    Tensor<T> mBias;
+    Interface<T> mDiffSynapses;
+    Tensor<T> mDiffBias;
 
     Interface<bool> mDropConnectMask;
     bool mLockRandom;

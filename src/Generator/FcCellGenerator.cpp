@@ -59,8 +59,21 @@ N2D2::FcCellGenerator::generate(Network& network,
                 : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
-    std::shared_ptr<FcCell> cell = Registrar
-        <FcCell>::create(model)(network, section, nbOutputs, activation);
+    std::shared_ptr<FcCell> cell
+        = (dataType == Float32)
+            ? Registrar<FcCell>::create<float>(model)(network,
+                                                      section,
+                                                      nbOutputs,
+                                                      activation)
+          : (dataType == Float16)
+            ? Registrar<FcCell>::create<half_float::half>(model)(network,
+                                                                 section,
+                                                                 nbOutputs,
+                                                                 activation)
+            : Registrar<FcCell>::create<double>(model)(network,
+                                                       section,
+                                                       nbOutputs,
+                                                       activation);
 
     if (!cell) {
         throw std::runtime_error(

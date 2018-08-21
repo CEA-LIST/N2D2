@@ -27,11 +27,7 @@ N2D2::FcCell::FcCell(const std::string& name, unsigned int nbOutputs)
       mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OC),
-      mOutputsRemap(this, "OutputsRemap", ""),
-      mWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
-      mTopDownWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
-      mRecWeightsFiller(new NormalFiller<Float_T>(0.0, 0.05)),
-      mBiasFiller(new NormalFiller<Float_T>(0.0, 0.05))
+      mOutputsRemap(this, "OutputsRemap", "")
 {
     // ctor
 }
@@ -47,8 +43,11 @@ void N2D2::FcCell::logFreeParameters(const std::string& fileName,
 
     Tensor<Float_T> weights({1, 1, channelsSize});
 
-    for (unsigned int channel = 0; channel < channelsSize; ++channel)
-        weights(channel) = getWeight(output, channel);
+    for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+        Tensor<Float_T> weight;
+        getWeight(output, channel, weight);
+        weights(channel) = weight(0);
+    }
 
     StimuliProvider::logData(fileName, weights);
 }
@@ -91,8 +90,11 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
     const unsigned int channelsSize = getInputsSize();
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel)
-            weights << getWeight(output, channel) << " ";
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            Tensor<Float_T> weight;
+            getWeight(output, channel, weight);
+            weights << weight(0) << " ";
+        }
 
         weights << "\n";
     }
@@ -104,8 +106,11 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
             throw std::runtime_error("Could not create synaptic file: "
                                       + biasesFile);
 
-        for (unsigned int output = 0; output < getNbOutputs(); ++output)
-            biases << getBias(output) << "\n";
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+            Tensor<Float_T> bias;
+            getBias(output, bias);
+            biases << bias(0) << "\n";
+        }
     }
 }
 
@@ -149,7 +154,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
 
     std::ifstream& biases = (!singleFile && !mNoBias) ? biases_ : weights;
 
-    double weight;
+    Tensor<double> weight({1});
 
     const unsigned int channelsSize = getInputsSize();
 
@@ -162,7 +167,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
 
             for (unsigned int channel = 0; channel < channelsSize; ++channel) {
 
-                if (!(weights >> weight))
+                if (!(weights >> weight(0)))
                     throw std::runtime_error("Error while reading synaptic file: "
                                             + fileName);
 
@@ -171,7 +176,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
 
             if (!mNoBias) {
 
-                if (!(biases >> weight))
+                if (!(biases >> weight(0)))
                     throw std::runtime_error("Error while reading synaptic file: "
                                             + fileName);
 
@@ -186,7 +191,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
                 const unsigned int outputRemap = (!outputsMap.empty())
                                 ? outputsMap.find(output)->second : output;
 
-                if (!(weights >> weight))
+                if (!(weights >> weight(0)))
                     throw std::runtime_error("Error while reading synaptic file: "
                                             + fileName);
 
@@ -199,7 +204,7 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
                 const unsigned int outputRemap = (!outputsMap.empty())
                         ? outputsMap.find(output)->second : output;
 
-                if (!(biases >> weight))
+                if (!(biases >> weight(0)))
                     throw std::runtime_error("Error while reading synaptic file: "
                                             + fileName);
 
@@ -236,11 +241,17 @@ void N2D2::FcCell::logFreeParametersDistrib(const std::string& fileName) const
     weights.reserve(getNbOutputs() * channelsSize);
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel)
-            weights.push_back(getWeight(output, channel));
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            Tensor<double> weight;
+            getWeight(output, channel, weight);
+            weights.push_back(weight(0));
+        }
 
-        if (!mNoBias)
-            weights.push_back(getBias(output));
+        if (!mNoBias) {
+            Tensor<double> bias;
+            getBias(output, bias);
+            weights.push_back(bias(0));
+        }
     }
 
     std::sort(weights.begin(), weights.end());
@@ -335,15 +346,19 @@ void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
 #pragma omp parallel for if (getNbOutputs() > 32)
     for (int output = 0; output < (int)getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            double weight = getWeight(output, channel);
-            weight = Utils::round((nbLevels - 1) * weight) / (nbLevels - 1);
+            Tensor<double> weight;
+            getWeight(output, channel, weight);
+
+            weight(0) = Utils::round((nbLevels - 1) * weight(0))
+                            / (nbLevels - 1);
 
             setWeight(output, channel, weight);
         }
 
         if (!mNoBias) {
-            double bias = getBias(output);
-            bias = Utils::round((nbLevels - 1) * bias) / (nbLevels - 1);
+            Tensor<double> bias;
+            getBias(output, bias);
+            bias(0) = Utils::round((nbLevels - 1) * bias(0)) / (nbLevels - 1);
 
             setBias(output, bias);
         }
@@ -360,17 +375,19 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange()
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            Float_T weight = getWeight(output, channel);
+            Tensor<Float_T> weight;
+            getWeight(output, channel, weight);
 
-            if (weight < wMin)  wMin = weight;
-            if (weight > wMax)  wMax = weight;
+            if (weight(0) < wMin)  wMin = weight(0);
+            if (weight(0) > wMax)  wMax = weight(0);
         }
 
         if (!mNoBias) {
-            Float_T bias = getBias(output);
+            Tensor<Float_T> bias;
+            getBias(output, bias);
 
-            if (bias < wMin)  wMin = bias;
-            if (bias > wMax)  wMax = bias;
+            if (bias(0) < wMin)  wMin = bias(0);
+            if (bias(0) > wMax)  wMax = bias(0);
         }
     }
 
@@ -383,16 +400,19 @@ void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            double weight = getWeight(output, channel);
-            weight
-                = Utils::clamp(Random::randNormal(weight, stdDev), -1.0, 1.0);
+            Tensor<double> weight;
+            getWeight(output, channel, weight);
+            weight(0) = Utils::clamp(Random::randNormal(weight(0), stdDev),
+                                     -1.0, 1.0);
 
             setWeight(output, channel, weight);
         }
 
         if (!mNoBias) {
-            double bias = getBias(output);
-            bias = Utils::clamp(Random::randNormal(bias, stdDev), -1.0, 1.0);
+            Tensor<double> bias;
+            getBias(output, bias);
+            bias(0) = Utils::clamp(Random::randNormal(bias(0), stdDev),
+                                   -1.0, 1.0);
 
             setBias(output, bias);
         }
@@ -406,15 +426,17 @@ void N2D2::FcCell::processFreeParameters(const std::function
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            double weight = getWeight(output, channel);
-            weight = func(weight);
+            Tensor<double> weight;
+            getWeight(output, channel, weight);
+            weight(0) = func(weight(0));
 
             setWeight(output, channel, weight);
         }
 
         if (!mNoBias) {
-            double bias = getBias(output);
-            bias = func(bias);
+            Tensor<double> bias;
+            getBias(output, bias);
+            bias(0) = func(bias(0));
 
             setBias(output, bias);
         }

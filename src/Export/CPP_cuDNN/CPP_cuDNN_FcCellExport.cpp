@@ -128,9 +128,13 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasValues(FcCell& cell,
 
         if (cell.getParameter<bool>("NoBias"))
             header << "0";
-        else
+        else {
+            Tensor<Float_T> bias;
+            cell.getBias(output, bias);
+
             CellExport::generateFreeParameter(
-                cell, cell.getBias(output), header);
+                cell, bias(0), header);
+        }
     }
 
     header << "};\n";
@@ -159,8 +163,11 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
             if (output > 0 || channel > 0)
                 header << ", ";
 
+            Tensor<Float_T> weight;
+            cell.getWeight(output, channel, weight);
+
             CellExport::generateFreeParameter(
-                cell, cell.getWeight(output, channel), header);
+                cell, weight(0), header);
         }
     }
 
@@ -182,10 +189,11 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            double w = cell.getWeight(output, channel);
+            Tensor<double> weight;
+            cell.getWeight(output, channel, weight);
 
-            if (std::fabs(w) >= mThreshold) {
-                weights.push_back(w);
+            if (std::fabs(weight(0)) >= mThreshold) {
+                weights.push_back(weight(0));
                 offsets.push_back(offset);
                 offset = 1;
             } else

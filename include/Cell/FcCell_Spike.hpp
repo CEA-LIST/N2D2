@@ -49,10 +49,12 @@ public:
     virtual void
     incomingSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);
     virtual void notify(Time_T timestamp, NotifyType notify);
-    inline Float_T getWeight(unsigned int output, unsigned int channel) const;
-    inline Float_T getBias(unsigned int /*output*/) const
+    inline void getWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
+    inline void getBias(unsigned int /*output*/, BaseTensor& value) const
     {
-        return 0.0;
+        value.resize({1});
+        value = Tensor<Float_T>({1}, 0.0);
     };
     NodeId_T getBestResponseId(bool report = false) const;
     void saveFreeParameters(const std::string& fileName) const;
@@ -63,9 +65,9 @@ public:
 
 protected:
     virtual Synapse* newSynapse() const;
-    inline void
-    setWeight(unsigned int output, unsigned int channel, Float_T value);
-    inline void setBias(unsigned int /*output*/, Float_T /*value*/) {};
+    inline void setWeight(unsigned int output, unsigned int channel,
+                          const BaseTensor& value);
+    inline void setBias(unsigned int /*output*/, const BaseTensor& /*value*/) {};
     EventType_T maps(unsigned int output, bool negative) const
     {
         return ((EventType_T)output << 1) | (int)negative;
@@ -103,15 +105,19 @@ private:
 
 void N2D2::FcCell_Spike::setWeight(unsigned int output,
                                    unsigned int channel,
-                                   Float_T value)
+                                   const BaseTensor& value)
 {
-    mSynapses(channel, output)->setRelativeWeight(value);
+    const Tensor<Float_T>& weight = tensor_cast<Float_T>(value);
+    mSynapses(channel, output)->setRelativeWeight(weight(0));
 }
 
-N2D2::Float_T N2D2::FcCell_Spike::getWeight(unsigned int output,
-                                            unsigned int channel) const
+void N2D2::FcCell_Spike::getWeight(unsigned int output,
+                                   unsigned int channel,
+                                   BaseTensor& value) const
 {
-    return mSynapses(channel, output)->getRelativeWeight(true);
+    value.resize({1});
+    value = Tensor<Float_T>({1},
+                        mSynapses(channel, output)->getRelativeWeight(true));
 }
 
 #endif // N2D2_FCCELL_SPIKE_H

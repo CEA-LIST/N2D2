@@ -30,19 +30,26 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<Float_T> {
+template <class T>
+class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::mOutputs;
+    using Cell_Frame_CUDA<T>::mDiffInputs;
+    using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivationDesc;
+
     FcCell_Frame_CUDA(const std::string& name,
                       unsigned int nbOutputs,
                       const std::shared_ptr<Activation>& activation
                       = std::make_shared
-                      <TanhActivation_Frame_CUDA<Float_T> >());
+                      <TanhActivation_Frame_CUDA<T> >());
     static std::shared_ptr<FcCell>
     create(Network& /*net*/,
            const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
-           = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
+           = std::make_shared<TanhActivation_Frame_CUDA<T> >())
     {
         return std::make_shared<FcCell_Frame_CUDA>(name, nbOutputs, activation);
     }
@@ -51,8 +58,9 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
-    inline Float_T getWeight(unsigned int output, unsigned int channel) const;
-    inline Float_T getBias(unsigned int output) const;
+    inline void getWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
+    inline void getBias(unsigned int output, BaseTensor& value) const;
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
                            unsigned int output) const;
@@ -72,18 +80,18 @@ public:
     virtual ~FcCell_Frame_CUDA();
 
 protected:
-    inline void
-    setWeight(unsigned int output, unsigned int channel, Float_T value);
-    inline void setBias(unsigned int output, Float_T value);
+    inline void setWeight(unsigned int output, unsigned int channel,
+                          const BaseTensor& value);
+    inline void setBias(unsigned int output, const BaseTensor& value);
 
     // Internal
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    CudaInterface<Float_T> mSynapses;
-    CudaTensor<Float_T> mBias;
-    CudaInterface<Float_T> mDiffSynapses;
-    CudaTensor<Float_T> mDiffBias;
+    CudaInterface<T> mSynapses;
+    CudaTensor<T> mBias;
+    CudaInterface<T> mDiffSynapses;
+    CudaTensor<T> mDiffBias;
 
-    Float_T* mOnesVector; // Bias inputs
+    T* mOnesVector; // Bias inputs
     mutable bool mSynchronized;
 
 private:
@@ -91,39 +99,58 @@ private:
 };
 }
 
-void N2D2::FcCell_Frame_CUDA::setWeight(unsigned int output,
-                                        unsigned int channel,
-                                        Float_T value)
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::setWeight(unsigned int output,
+                                           unsigned int channel,
+                                           const BaseTensor& value)
 {
-    mSynapses(0, 0, channel, output) = value;
+    mSynapses(0, 0, channel, output) = tensor_cast<T>(value)(0);
 
     if (!mSynchronized)
         mSynapses.synchronizeHToD(0, 0, channel, output, 1);
 }
 
-N2D2::Float_T N2D2::FcCell_Frame_CUDA::getWeight(unsigned int output,
-                                                 unsigned int channel) const
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::getWeight(unsigned int output,
+                                           unsigned int channel,
+                                           BaseTensor& value) const
 {
     if (!mSynchronized)
         mSynapses.synchronizeDToH(0, 0, channel, output, 1);
 
-    return mSynapses(0, 0, channel, output);
+    value.resize({1});
+    value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
 }
 
-void N2D2::FcCell_Frame_CUDA::setBias(unsigned int output, Float_T value)
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::setBias(unsigned int output,
+                                         const BaseTensor& value)
 {
-    mBias(output) = value;
+    mBias(output) = tensor_cast<T>(value)(0);
 
     if (!mSynchronized)
         mBias.synchronizeHToD(output, 1);
 }
 
-N2D2::Float_T N2D2::FcCell_Frame_CUDA::getBias(unsigned int output) const
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::getBias(unsigned int output,
+                                         BaseTensor& value) const
 {
     if (!mSynchronized)
         mBias.synchronizeDToH(output, 1);
 
-    return mBias(output);
+    value.resize({1});
+    value = Tensor<T>({1}, mBias(output));
+}
+
+namespace N2D2 {
+template <> void FcCell_Frame_CUDA<half_float::half>::propagate(bool inference);
+template <> void FcCell_Frame_CUDA<float>::propagate(bool inference);
+template <> void FcCell_Frame_CUDA<double>::propagate(bool inference);
+
+template <> void FcCell_Frame_CUDA<half_float::half>::backPropagate();
+template <> void FcCell_Frame_CUDA<float>::backPropagate();
+template <> void FcCell_Frame_CUDA<double>::backPropagate();
 }
 
 #endif // N2D2_FCCELL_FRAME_CUDA_H

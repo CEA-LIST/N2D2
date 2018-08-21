@@ -29,7 +29,7 @@
 #endif
 
 namespace N2D2 {
-template <class FRAME = FcCell_Frame, class SPIKE = FcCell_Spike>
+template <class FRAME = FcCell_Frame<Float_T>, class SPIKE = FcCell_Spike>
 class FcCell_Transcode : public FRAME, public SPIKE {
 public:
     enum TranscodeMode {
@@ -81,11 +81,12 @@ public:
     virtual ~FcCell_Transcode() {};
 
 protected:
-    inline void
-    setWeight(unsigned int output, unsigned int channel, Float_T value);
-    inline Float_T getWeight(unsigned int output, unsigned int channel) const;
-    inline void setBias(unsigned int output, Float_T value);
-    inline Float_T getBias(unsigned int output) const;
+    inline void setWeight(unsigned int output, unsigned int channel,
+                          const BaseTensor& value);
+    inline void getWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
+    inline void setBias(unsigned int output, const BaseTensor& value);
+    inline void getBias(unsigned int output, BaseTensor& value) const;
 
     TranscodeMode mTranscodeMode;
 
@@ -97,34 +98,35 @@ private:
 template <class FRAME, class SPIKE>
 void N2D2::FcCell_Transcode<FRAME, SPIKE>::setWeight(unsigned int output,
                                                      unsigned int channel,
-                                                     Float_T value)
+                                                     const BaseTensor& value)
 {
     FRAME::setWeight(output, channel, value);
     SPIKE::setWeight(output, channel, value);
 }
 
 template <class FRAME, class SPIKE>
-N2D2::Float_T N2D2::FcCell_Transcode
-    <FRAME, SPIKE>::getWeight(unsigned int output, unsigned int channel) const
+void N2D2::FcCell_Transcode
+    <FRAME, SPIKE>::getWeight(unsigned int output, unsigned int channel,
+                              BaseTensor& value) const
 {
-    return (mTranscodeMode == Frame) ? FRAME::getWeight(output, channel)
-                                     : SPIKE::getWeight(output, channel);
+    return (mTranscodeMode == Frame) ? FRAME::getWeight(output, channel, value)
+                                     : SPIKE::getWeight(output, channel, value);
 }
 
 template <class FRAME, class SPIKE>
 void N2D2::FcCell_Transcode
-    <FRAME, SPIKE>::setBias(unsigned int output, Float_T value)
+    <FRAME, SPIKE>::setBias(unsigned int output, const BaseTensor& value)
 {
     FRAME::setBias(output, value);
     SPIKE::setBias(output, value);
 }
 
 template <class FRAME, class SPIKE>
-N2D2::Float_T N2D2::FcCell_Transcode
-    <FRAME, SPIKE>::getBias(unsigned int output) const
+void N2D2::FcCell_Transcode
+    <FRAME, SPIKE>::getBias(unsigned int output, BaseTensor& value) const
 {
-    return (mTranscodeMode == Frame) ? FRAME::getBias(output)
-                                     : SPIKE::getBias(output);
+    return (mTranscodeMode == Frame) ? FRAME::getBias(output, value)
+                                     : SPIKE::getBias(output, value);
 }
 
 template <class FRAME, class SPIKE>

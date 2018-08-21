@@ -22,15 +22,48 @@
 
 template <>
 N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode
-    <N2D2::FcCell_Frame, N2D2::FcCell_Spike>::mRegistrar(
+    <N2D2::FcCell_Frame<half_float::half>, N2D2::FcCell_Spike>::mRegistrar(
         "Transcode",
-        N2D2::FcCell_Transcode<N2D2::FcCell_Frame, N2D2::FcCell_Spike>::create);
+        N2D2::FcCell_Transcode
+        <N2D2::FcCell_Frame<half_float::half>, N2D2::FcCell_Spike>::create,
+        N2D2::Registrar<N2D2::FcCell>::Type<half_float::half>());
+template <>
+N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode
+    <N2D2::FcCell_Frame<float>, N2D2::FcCell_Spike>::mRegistrar(
+        "Transcode",
+        N2D2::FcCell_Transcode
+        <N2D2::FcCell_Frame<float>, N2D2::FcCell_Spike>::create,
+        N2D2::Registrar<N2D2::FcCell>::Type<float>());
+template <>
+N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode
+    <N2D2::FcCell_Frame<double>, N2D2::FcCell_Spike>::mRegistrar(
+        "Transcode",
+        N2D2::FcCell_Transcode
+        <N2D2::FcCell_Frame<double>, N2D2::FcCell_Spike>::create,
+        N2D2::Registrar<N2D2::FcCell>::Type<double>());
 
 #ifdef CUDA
 template <>
 N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode
-    <N2D2::FcCell_Frame_CUDA, N2D2::FcCell_Spike>::mRegistrar(
+    <N2D2::FcCell_Frame_CUDA<half_float::half>, N2D2::FcCell_Spike>::mRegistrar(
         "Transcode_CUDA",
         N2D2::FcCell_Transcode
-        <N2D2::FcCell_Frame_CUDA, N2D2::FcCell_Spike>::create);
+        <N2D2::FcCell_Frame_CUDA<half_float::half>, N2D2::FcCell_Spike>::create,
+        N2D2::Registrar<N2D2::FcCell>::Type<half_float::half>());
+
+template <>
+N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode
+    <N2D2::FcCell_Frame_CUDA<float>, N2D2::FcCell_Spike>::mRegistrar(
+        "Transcode_CUDA",
+        N2D2::FcCell_Transcode
+        <N2D2::FcCell_Frame_CUDA<float>, N2D2::FcCell_Spike>::create,
+        N2D2::Registrar<N2D2::FcCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode
+    <N2D2::FcCell_Frame_CUDA<double>, N2D2::FcCell_Spike>::mRegistrar(
+        "Transcode_CUDA",
+        N2D2::FcCell_Transcode
+        <N2D2::FcCell_Frame_CUDA<double>, N2D2::FcCell_Spike>::create,
+        N2D2::Registrar<N2D2::FcCell>::Type<double>());
 #endif

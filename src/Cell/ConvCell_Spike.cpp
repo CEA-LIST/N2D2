@@ -69,6 +69,9 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
                                 " passing must match the number of dimensions"
                                 " of the kernel.");
     }
+
+    mWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
+    mBiasFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
 }
 
 void N2D2::ConvCell_Spike::initialize()

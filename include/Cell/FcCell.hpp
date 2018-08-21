@@ -103,9 +103,9 @@ public:
     {
         return mBiasSolver;
     };
-    virtual Float_T getWeight(unsigned int output,
-                              unsigned int channel) const = 0;
-    virtual Float_T getBias(unsigned int output) const = 0;
+    virtual void getWeight(unsigned int output,
+                           unsigned int channel, BaseTensor& value) const = 0;
+    virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
@@ -121,9 +121,9 @@ public:
 
 protected:
     virtual void setOutputsDims() {};
-    virtual void
-    setWeight(unsigned int output, unsigned int channel, Float_T value) = 0;
-    virtual void setBias(unsigned int output, Float_T value) = 0;
+    virtual void setWeight(unsigned int output, unsigned int channel,
+                           const BaseTensor& value) = 0;
+    virtual void setBias(unsigned int output, const BaseTensor& value) = 0;
     std::map<unsigned int, unsigned int> outputsRemap() const;
 
     /// If true, the output neurons don't have bias

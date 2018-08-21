@@ -40,6 +40,10 @@ N2D2::FcCell_Spike::FcCell_Spike(Network& net,
       mTerminateMax(this, "TerminateMax", 0)
 {
     // ctor
+    mWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
+    mTopDownWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
+    mRecWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
+    mBiasFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
 }
 
 void N2D2::FcCell_Spike::initialize()

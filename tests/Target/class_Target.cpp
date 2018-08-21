@@ -29,7 +29,7 @@ using namespace N2D2;
 
 TEST(Target, Target)
 {
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 10));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 10));
     std::shared_ptr
         <StimuliProvider> sp(new StimuliProvider(EmptyDatabase, {32, 32, 1}));
     Target target("TEST", fcCell, sp);
@@ -55,7 +55,7 @@ TEST_DATASET(Target,
              std::make_tuple(2U, 2U, 0.0, 1.0, 2U),
              std::make_tuple(3U, 3U, 0.5, -0.5, 3U))
 {
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", nbOutputs));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", nbOutputs));
     std::shared_ptr
         <StimuliProvider> sp(new StimuliProvider(EmptyDatabase, {32, 32, 1}));
     Target target("TEST", fcCell, sp, targetValue, defaultValue, targetTopN);
@@ -84,7 +84,7 @@ TEST(Target, Target_ter)
     database.addStimulus("s3", "label2");
     database.addStimulus("s4", "label3");
 
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 4));
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
                                                             {32, 32, 1}));
 
@@ -127,7 +127,7 @@ TEST(Target, Target_ter2)
     database.addStimulus("s3", "label2");
     database.addStimulus("s4", "label3");
 
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 4));
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
                                                             {32, 32, 1}));
 
@@ -171,7 +171,7 @@ TEST(Target, Target_ter3)
     database.addStimulus("s5", -1);
     database.addStimulus("s6", -1);
 
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 4));
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
                                                             {32, 32, 1}));
 
@@ -209,7 +209,7 @@ TEST(Target, setLabelTarget)
     database.addStimulus("s5", -1);
     database.addStimulus("s6", -1);
 
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame("fc", 4));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 4));
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(database,
                                                             {32, 32, 1}));
 
