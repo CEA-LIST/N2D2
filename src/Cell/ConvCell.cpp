@@ -77,11 +77,12 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
         Tensor<Float_T> kernel;
-
+        
         if (isConnection(channel, output))
             getWeight(output, channel, kernel);
         else
-            kernel = Tensor<Float_T>(mKernelDims, 0.0);
+            kernel.resize(std::vector<size_t>(mKernelDims.begin(), 
+                                              mKernelDims.end()), 0.0);
 
         weights.push_back(kernel);
     }
