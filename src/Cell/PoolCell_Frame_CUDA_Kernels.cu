@@ -387,7 +387,7 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
 #if __CUDA_ARCH__ >= 530
                         poolValue = inputs[inputsIdx + batchInputOffset];
 #else
-                        poolValue = __half2float(inputs[inputsId
+                        poolValue = __half2float(inputs[inputsIdx
                                                          + batchInputOffset]);
 #endif
                     }
