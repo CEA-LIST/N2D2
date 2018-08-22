@@ -69,7 +69,7 @@ void cudaHPoolForwardAverage_kernel(const __half alpha,
 
                 // For each output, compute the pool value
 #if __CUDA_ARCH__ >= 530
-                __half poolValue(0.0f);
+                __half poolValue = __float2half(0.0f);
 #else
                 float poolValue = 0.0f;
 #endif
@@ -105,11 +105,11 @@ void cudaHPoolForwardAverage_kernel(const __half alpha,
                     = ox + (oy + output * outputsHeight) * outputsWidth;
 
 #if __CUDA_ARCH__ >= 530
-                __half finalOutput(0.0f);
+                __half finalOutput = __float2half(0.0f);
 
                 if (poolCount > 0) {
-                    finalOutput = __hdiv( __hmul(poolValue, alpha),
-                                         __float2half(float(poolCount)));
+                    finalOutput = __hmul(__hmul(poolValue, alpha),
+                                         __float2half(1.0f / poolCount));
                 }
 
                 if (!__heq(beta, __float2half(0.0f))) {
@@ -366,7 +366,7 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
                 const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
 
 #if __CUDA_ARCH__ >= 530
-                __half poolValue(0.0f);
+                __half poolValue = __float2half(0.0f);
 #else
                 float poolValue = 0.0f;
 #endif
@@ -760,7 +760,7 @@ void cudaHPoolBackwardAverage_kernel(const __half alpha,
                 const unsigned int syMax = min(desc->pool[1], iyPad + 1);
 
 #if __CUDA_ARCH__ >= 530
-                __half poolGradient(0.0f);
+                __half poolGradient = __float2half(0.0f);
 #else
                 float poolGradient = 0.0f;
 #endif
@@ -796,9 +796,9 @@ void cudaHPoolBackwardAverage_kernel(const __half alpha,
                                     * outputsWidth;
 #if __CUDA_ARCH__ >= 530
                             poolGradient
-                                = __hadd(__hdiv(diffInputs[outputsIdx
+                                = __hadd(__hmul(diffInputs[outputsIdx
                                                         + batchOutputOffset],
-                                                __float2half((float)
+                                                __float2half(1.0f /
                                                     poolChannelsCount[output])),
                                          poolGradient);
 #else
@@ -820,14 +820,14 @@ void cudaHPoolBackwardAverage_kernel(const __half alpha,
 #if __CUDA_ARCH__ >= 530
                 if (! __heq(beta, __float2half(0.0f))) {
                     diffOutputs[inputsIdx] = __hadd(
-                        __hmul(alpha, __hdiv(poolGradient,
-                                             __float2half((float) poolCount))),
+                        __hmul(alpha, __hmul(poolGradient,
+                                             __float2half(1.0f / poolCount))),
                         __hmul(beta, diffOutputs[inputsIdx]));
                 }
                 else {
                     diffOutputs[inputsIdx]
-                        = __hmul(alpha, __hdiv(poolGradient,
-                                            __float2half((float) poolCount)));
+                        = __hmul(alpha, __hmul(poolGradient,
+                                            __float2half(1.0f / poolCount)));
                 }
 #else
                 if (__half2float(beta) != 0.0f) {
@@ -1104,11 +1104,9 @@ void cudaHPoolBackwardMax_kernel(const __half alpha,
                 const unsigned int syMax = min(desc->pool[1], iyPad + 1);
 
 #if __CUDA_ARCH__ >= 530
-
-                __half poolGradient(0.0f);
+                __half poolGradient = __float2half(0.0f);
 #else
                 float poolGradient = 0.0f;
-
 #endif
 
                 for (unsigned int sy = iyPad % desc->stride[1],
@@ -1165,7 +1163,6 @@ void cudaHPoolBackwardMax_kernel(const __half alpha,
                         + batchInputOffset;
 
 #if __CUDA_ARCH__ >= 530
-
                 if (!__heq(beta, __float2half(0.0f)) ) {
                     diffOutputs[inputsIdx]
                         = __hadd(__hmul(alpha, poolGradient),
