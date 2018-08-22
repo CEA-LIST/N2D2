@@ -133,12 +133,12 @@ void N2D2::PoolCell_Frame_EXT_CUDA<half_float::half>::propagate(bool /*inference
 {
     mInputs.synchronizeHBasedToD();
 
-    const half_float::half alpha = half_float::half(1.0);
-    half_float::half beta = half_float::half(0.0);
+    const half_float::half alpha(1.0f);
+    half_float::half beta(0.0f);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
-            beta = half_float::half(1.0);
+            beta = half_float::half(1.0f);
 
         std::shared_ptr<CudaDeviceTensor<half_float::half> > input
             = cuda_device_tensor_cast<half_float::half>(mInputs[k]);
@@ -192,7 +192,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA<float>::propagate(bool /*inference*/)
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
-            beta = 1.0;
+            beta = 1.0f;
 
         std::shared_ptr<CudaDeviceTensor<float> > input
             = cuda_device_tensor_cast<float>(mInputs[k]);
@@ -301,12 +301,10 @@ void N2D2::PoolCell_Frame_EXT_CUDA<half_float::half>::backPropagate()
     mDiffInputs.synchronizeHBasedToD();
     Cell_Frame_CUDA<half_float::half>::backPropagate();
 
-    const half_float::half alpha = half_float::half(1.0);
+    const half_float::half alpha(1.0f);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const half_float::half beta = (mDiffOutputs[k].isValid()) 
-                                            ? half_float::half(1.0) 
-                                            : half_float::half(0.0);
+        const half_float::half beta((mDiffOutputs[k].isValid()) ? 1.0f : 0.0f);
 
         std::shared_ptr<CudaDeviceTensor<half_float::half> > diffOutput
             = (mDiffOutputs[k].isValid())
@@ -363,9 +361,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA<float>::backPropagate()
     const float alpha = 1.0f;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const float beta = (mDiffOutputs[k].isValid()) 
-                                            ? 1.0f 
-                                            : 0.0f;
+        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
         std::shared_ptr<CudaDeviceTensor<float> > diffOutput
             = (mDiffOutputs[k].isValid())
@@ -422,8 +418,8 @@ void N2D2::PoolCell_Frame_EXT_CUDA<double>::backPropagate()
     const double alpha = 1.0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const double beta = (mDiffOutputs[k].isValid()) 
-                                            ? 1.0 
+        const double beta = (mDiffOutputs[k].isValid())
+                                            ? 1.0
                                             : 0.0;
 
         std::shared_ptr<CudaDeviceTensor<double> > diffOutput

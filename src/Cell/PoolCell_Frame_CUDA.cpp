@@ -152,9 +152,9 @@ template <class T>
 void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeHBasedToD();
-    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
-    typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
     unsigned int offset = 0;
 
@@ -192,7 +192,7 @@ void N2D2::PoolCell_Frame_CUDA<T>::backPropagate()
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const typename Cuda::cudnn_scaling_type<T>::type beta 
+        const typename Cuda::cudnn_scaling_type<T>::type beta
                             = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
         std::shared_ptr<CudaDeviceTensor<T> > input

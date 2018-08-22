@@ -109,9 +109,6 @@ N2D2::PoolCellGenerator::generate(Network& network,
     const PoolCell::Pooling pooling = iniConfig.getProperty
                                       <PoolCell::Pooling>("Pooling");
 
-    /*std::shared_ptr<Activation> activation
-        = ActivationGenerator::generate(
-            iniConfig, section, model, dataType, "ActivationFunction");*/
     std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
             iniConfig,
@@ -126,7 +123,7 @@ N2D2::PoolCellGenerator::generate(Network& network,
                 : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
-    std::shared_ptr<PoolCell> cell 
+    std::shared_ptr<PoolCell> cell
         = (dataType == Float32)
             ?  Registrar<PoolCell>::create<float>(model)(network,
                                                         section,
@@ -145,7 +142,7 @@ N2D2::PoolCellGenerator::generate(Network& network,
                                                           paddingDims,
                                                           pooling,
                                                           activation)
-        : 
+        :
                 Registrar<PoolCell>::create<double>(model)(network,
                                                           section,
                                                           poolDims,

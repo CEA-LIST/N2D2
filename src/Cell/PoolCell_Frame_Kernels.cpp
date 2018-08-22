@@ -58,7 +58,7 @@ void N2D2::PoolCell_Frame_Kernels::forwardAverage(const T* alpha,
                     const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
 
                     // For each output, compute the pool value
-                    T poolValue = T(0.0);
+                    T poolValue(0.0);
                     unsigned int poolCount = 0;
 
                     for (unsigned int channel = 0; channel < inputs.dimZ();
@@ -129,7 +129,7 @@ void N2D2::PoolCell_Frame_Kernels::forwardMax(const T* alpha,
                     const int ix = (int)(ox * desc.stride[0]) - desc.padding[0];
                     const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
 
-                    T poolValue = T(0.0);
+                    T poolValue(0.0);
 
                     // For each output, compute the pool value
                     if (useArgMax) {
@@ -234,7 +234,7 @@ void N2D2::PoolCell_Frame_Kernels::backwardAverage(const T* alpha,
                     const unsigned int syMax
                         = std::min(desc.pool[1], iyPad + 1);
 
-                    T poolGradient = T(0.0);
+                    T poolGradient(0.0);
 
                     for (unsigned int sy = iyPad % desc.stride[1],
                                       sx0 = ixPad % desc.stride[0];
@@ -316,7 +316,7 @@ void N2D2::PoolCell_Frame_Kernels::backwardMax(const T* alpha,
                     const unsigned int syMax
                         = std::min(desc.pool[1], iyPad + 1);
 
-                    T poolGradient = T(0.0);
+                    T poolGradient(0.0);
 
                     for (unsigned int sy = iyPad % desc.stride[1],
                                       sx0 = ixPad % desc.stride[0];
@@ -371,114 +371,112 @@ void N2D2::PoolCell_Frame_Kernels::backwardMax(const T* alpha,
 }
 
 namespace N2D2 {
+    template void PoolCell_Frame_Kernels::forwardAverage<half_float::half>(
+        const half_float::half* alpha,
+        const Tensor<half_float::half>& inputs,
+        const Descriptor& desc,
+        const half_float::half* beta,
+        Tensor<half_float::half>& outputs,
+        bool countIncludePadding,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::forwardAverage<float>(
+        const float* alpha,
+        const Tensor<float>& inputs,
+        const Descriptor& desc,
+        const float* beta,
+        Tensor<float>& outputs,
+        bool countIncludePadding,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::forwardAverage<double>(
+        const double* alpha,
+        const Tensor<double>& inputs,
+        const Descriptor& desc,
+        const double* beta,
+        Tensor<double>& outputs,
+        bool countIncludePadding,
+        const Tensor<bool>& maps);
 
-    template void PoolCell_Frame_Kernels::forwardAverage<half_float::half>(const half_float::half* alpha,
-                                                                        const Tensor<half_float::half>&
-                                                                        inputs,
-                                                                        const Descriptor& desc,
-                                                                        const half_float::half* beta,
-                                                                        Tensor<half_float::half>& outputs,
-                                                                        bool countIncludePadding,
-                                                                        const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::forwardAverage<float>(const float* alpha,
-                                                                const Tensor<float>&
-                                                                inputs,
-                                                                const Descriptor& desc,
-                                                                const float* beta,
-                                                                Tensor<float>& outputs,
-                                                                bool countIncludePadding,
-                                                                const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::forwardAverage<double>( const double* alpha,
-                                                                const Tensor<double>&
-                                                                inputs,
-                                                                const Descriptor& desc,
-                                                                const double* beta,
-                                                                Tensor<double>& outputs,
-                                                                bool countIncludePadding,
-                                                                const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::forwardMax<half_float::half>(
+        const half_float::half* alpha,
+        const Tensor<half_float::half>& inputs,
+        const Descriptor& desc,
+        const half_float::half* beta,
+        Tensor<half_float::half>& outputs,
+        Tensor<ArgMax>& argMax,
+        bool useArgMax,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::forwardMax<float>(
+        const float* alpha,
+        const Tensor<float>& inputs,
+        const Descriptor& desc,
+        const float* beta,
+        Tensor<float>& outputs,
+        Tensor<ArgMax>& argMax,
+        bool useArgMax,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::forwardMax<double>(
+        const double* alpha,
+        const Tensor<double>& inputs,
+        const Descriptor& desc,
+        const double* beta,
+        Tensor<double>& outputs,
+        Tensor<ArgMax>& argMax,
+        bool useArgMax,
+        const Tensor<bool>& maps);
 
-    template void PoolCell_Frame_Kernels::forwardMax<half_float::half>(const half_float::half* alpha,
-                                                                        const Tensor<half_float::half>&
-                                                                        inputs,
-                                                                        const Descriptor& desc,
-                                                                        const half_float::half* beta,
-                                                                        Tensor<half_float::half>& outputs,
-                                                                        Tensor<ArgMax>& argMax,
-                                                                        bool useArgMax,
-                                                                        const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::forwardMax<float>(const float* alpha,
-                                                            const Tensor<float>&
-                                                            inputs,
-                                                            const Descriptor& desc,
-                                                            const float* beta,
-                                                            Tensor<float>& outputs,
-                                                            Tensor<ArgMax>& argMax,
-                                                            bool useArgMax,
-                                                            const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::forwardMax<double>(const double* alpha,
-                                                            const Tensor<double>&
-                                                            inputs,
-                                                            const Descriptor& desc,
-                                                            const double* beta,
-                                                            Tensor<double>& outputs,
-                                                            Tensor<ArgMax>& argMax,
-                                                            bool useArgMax,
-                                                            const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::backwardAverage<half_float::half>(
+        const half_float::half* alpha,
+        const Tensor<half_float::half>& diffInputs,
+        const Descriptor& desc,
+        const half_float::half* beta,
+        Tensor<half_float::half>&
+        diffOutputs,
+        bool countIncludePadding,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::backwardAverage<float>(
+        const float* alpha,
+        const Tensor<float>& diffInputs,
+        const Descriptor& desc,
+        const float* beta,
+        Tensor<float>&
+        diffOutputs,
+        bool countIncludePadding,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::backwardAverage<double>(
+        const double* alpha,
+        const Tensor<double>& diffInputs,
+        const Descriptor& desc,
+        const double* beta,
+        Tensor<double>&
+        diffOutputs,
+        bool countIncludePadding,
+        const Tensor<bool>& maps);
 
-    template void PoolCell_Frame_Kernels::backwardAverage<half_float::half>(const half_float::half* alpha,
-                                                                            const Tensor
-                                                                            <half_float::half>& diffInputs,
-                                                                            const Descriptor& desc,
-                                                                            const half_float::half* beta,
-                                                                            Tensor<half_float::half>&
-                                                                            diffOutputs,
-                                                                            bool countIncludePadding,
-                                                                            const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::backwardAverage<float>(const float* alpha,
-                                                                    const Tensor
-                                                                    <float>& diffInputs,
-                                                                    const Descriptor& desc,
-                                                                    const float* beta,
-                                                                    Tensor<float>&
-                                                                    diffOutputs,
-                                                                    bool countIncludePadding,
-                                                                    const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::backwardAverage<double>(const double* alpha,
-                                                                    const Tensor
-                                                                    <double>& diffInputs,
-                                                                    const Descriptor& desc,
-                                                                    const double* beta,
-                                                                    Tensor<double>&
-                                                                    diffOutputs,
-                                                                    bool countIncludePadding,
-                                                                    const Tensor<bool>& maps);
-
-    template void PoolCell_Frame_Kernels::backwardMax<half_float::half>(const half_float::half* alpha,
-                                                                        const Tensor
-                                                                        <half_float::half>& diffInputs,
-                                                                        const Descriptor& desc,
-                                                                        const half_float::half* beta,
-                                                                        Tensor<half_float::half>&
-                                                                        diffOutputs,
-                                                                        const Tensor<ArgMax>& argMax,
-                                                                        const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::backwardMax<float>(const float* alpha,
-                                                                const Tensor
-                                                                <float>& diffInputs,
-                                                                const Descriptor& desc,
-                                                                const float* beta,
-                                                                Tensor<float>&
-                                                                diffOutputs,
-                                                                const Tensor<ArgMax>& argMax,
-                                                                const Tensor<bool>& maps);
-    template void PoolCell_Frame_Kernels::backwardMax<double>(const double* alpha,
-                                                                const Tensor
-                                                                <double>& diffInputs,
-                                                                const Descriptor& desc,
-                                                                const double* beta,
-                                                                Tensor<double>&
-                                                                diffOutputs,
-                                                                const Tensor<ArgMax>& argMax,
-                                                                const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::backwardMax<half_float::half>(
+        const half_float::half* alpha,
+        const Tensor<half_float::half>& diffInputs,
+        const Descriptor& desc,
+        const half_float::half* beta,
+        Tensor<half_float::half>&
+        diffOutputs,
+        const Tensor<ArgMax>& argMax,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::backwardMax<float>(
+        const float* alpha,
+        const Tensor<float>& diffInputs,
+        const Descriptor& desc,
+        const float* beta,
+        Tensor<float>&
+        diffOutputs,
+        const Tensor<ArgMax>& argMax,
+        const Tensor<bool>& maps);
+    template void PoolCell_Frame_Kernels::backwardMax<double>(
+        const double* alpha,
+        const Tensor<double>& diffInputs,
+        const Descriptor& desc,
+        const double* beta,
+        Tensor<double>&
+        diffOutputs,
+        const Tensor<ArgMax>& argMax,
+        const Tensor<bool>& maps);
 }
-

@@ -69,7 +69,7 @@ void cudaHPoolForwardAverage_kernel(const __half alpha,
 
                 // For each output, compute the pool value
 #if __CUDA_ARCH__ >= 530
-                __half poolValue = __float2half(0.0f);
+                __half poolValue(0.0f);
 #else
                 float poolValue = 0.0f;
 #endif
@@ -88,10 +88,11 @@ void cudaHPoolForwardAverage_kernel(const __half alpha,
                                     + ((iy + sy) + channel * channelsHeight)
                                         * channelsWidth;
 #if __CUDA_ARCH__ >= 530
-                            const __half accPool = poolValue;
-                            poolValue = __hadd(accPool, inputs[inputsIdx + batchInputOffset]);
+                            poolValue = __hadd(poolValue,
+                                          inputs[inputsIdx + batchInputOffset]);
 #else
-                            poolValue += __half2float(inputs[inputsIdx + batchInputOffset]);
+                            poolValue += __half2float(inputs[inputsIdx
+                                                           + batchInputOffset]);
 #endif
                         }
                     }
@@ -102,29 +103,33 @@ void cudaHPoolForwardAverage_kernel(const __half alpha,
 
                 const unsigned int outputsIdx
                     = ox + (oy + output * outputsHeight) * outputsWidth;
-#if __CUDA_ARCH__ >= 530
-                __half finalOutput = __float2half(0.0f);
-                const __half currentOutput = outputs[outputsIdx + batchOutputOffset];
 
-                if(poolCount > 0)
-                    finalOutput = __hdiv( __hmul(poolValue, alpha), __float2half(float(poolCount)) );
-                
-                if(!__heq(beta, __float2half(0.0f)))
-                {
-                    const __half interOutput = finalOutput;
-                    finalOutput = __hadd(interOutput, __hmul(currentOutput, beta));
+#if __CUDA_ARCH__ >= 530
+                __half finalOutput(0.0f);
+
+                if (poolCount > 0) {
+                    finalOutput = __hdiv( __hmul(poolValue, alpha),
+                                         __float2half(float(poolCount)));
                 }
+
+                if (!__heq(beta, __float2half(0.0f))) {
+                    finalOutput = __hadd(finalOutput,
+                        __hmul(outputs[outputsIdx + batchOutputOffset], beta));
+                }
+
                 outputs[outputsIdx + batchOutputOffset] = finalOutput;
 #else
                 if (__half2float(beta) != 0.0f) {
                     outputs[outputsIdx + batchOutputOffset]
-                        = __float2half( __half2float(alpha) * ((poolCount > 0) ?(poolValue / poolCount) : 0.0f)
-                          + __half2float(beta) * __half2float(outputs[outputsIdx + batchOutputOffset]));
+                        = __float2half( __half2float(alpha) * ((poolCount > 0)
+                                            ? (poolValue / poolCount) : 0.0f)
+                          + __half2float(beta) * __half2float(outputs[outputsIdx
+                                                        + batchOutputOffset]));
                 }
                 else {
                     outputs[outputsIdx + batchOutputOffset]
-                        = __float2half( __half2float(alpha) * ((poolCount > 0) ?
-                                        (poolValue / poolCount) : 0.0f));
+                        = __float2half( __half2float(alpha) * ((poolCount > 0)
+                                            ? (poolValue / poolCount) : 0.0f));
                 }
 #endif
             }
@@ -178,7 +183,7 @@ void cudaSPoolForwardAverage_kernel(const float alpha,
                 const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
 
                 // For each output, compute the pool value
-                float poolValue = 0.0;
+                float poolValue = 0.0f;
                 unsigned int poolCount = 0;
 
                 for (unsigned int channel = 0; channel < nbChannels;
@@ -268,7 +273,7 @@ void cudaDPoolForwardAverage_kernel(const double alpha,
                 const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
 
                 // For each output, compute the pool value
-                float poolValue = 0.0;
+                double poolValue = 0.0;
                 unsigned int poolCount = 0;
 
                 for (unsigned int channel = 0; channel < nbChannels;
@@ -359,8 +364,9 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
 
                 const int ix = (int)(ox * desc->stride[0]) - desc->padding[0];
                 const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
+
 #if __CUDA_ARCH__ >= 530
-                __half poolValue = __float2half(0.0f);
+                __half poolValue(0.0f);
 #else
                 float poolValue = 0.0f;
 #endif
@@ -381,7 +387,8 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
 #if __CUDA_ARCH__ >= 530
                         poolValue = inputs[inputsIdx + batchInputOffset];
 #else
-                        poolValue = __half2float(inputs[inputsIdx + batchInputOffset]);
+                        poolValue = __half2float(inputs[inputsId
+                                                         + batchInputOffset]);
 #endif
                     }
                 }
@@ -405,7 +412,9 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
                                         + ((iy + sy) + channel * channelsHeight)
                                             * channelsWidth;
 #if __CUDA_ARCH__ >= 530
-                                const __half value = inputs[inputsIdx + batchInputOffset];
+                                const __half value
+                                    = inputs[inputsIdx + batchInputOffset];
+
                                 if (!valid || __hgt(value, poolValue)) {
                                     poolValue = value;
                                     valid = true;
@@ -415,7 +424,10 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
                                     channelMax = channel;
                                 }
 #else
-                                const float value = __half2float(inputs[inputsIdx + batchInputOffset]);
+                                const float value
+                                    = __half2float(inputs[inputsIdx
+                                                           + batchInputOffset]);
+
                                 if (!valid || value > poolValue) {
                                     poolValue = value;
                                     valid = true;
@@ -434,22 +446,24 @@ void cudaHPoolForwardMax_kernel(const __half alpha,
                     argMax[outputsIdx].channel = channelMax;
                     argMax[outputsIdx].valid = valid;
                 }
+
 #if __CUDA_ARCH__ >= 530
-                if ( !__heq(beta, __float2half(0.0f) ))
-                {
-                    const __half currentOutput = outputs[outputsIdx];
-                    outputs[outputsIdx] = __hadd( __hmul(alpha, poolValue), __hmul(beta, currentOutput));
+                if (!__heq(beta, __float2half(0.0f) )) {
+                    outputs[outputsIdx] = __hadd(__hmul(alpha, poolValue),
+                                            __hmul(beta, outputs[outputsIdx]));
                 }
                 else
-                    outputs[outputsIdx] = __hmul(alpha, poolValue);        
+                    outputs[outputsIdx] = __hmul(alpha, poolValue);
 #else
-                if ( __half2float(beta) > 0.0f)
-                {
-                    outputs[outputsIdx]
-                        = __float2half( __half2float(alpha) * poolValue + __half2float(beta) * __half2float(outputs[outputsIdx]) );
+                if (__half2float(beta) > 0.0f) {
+                    outputs[outputsIdx] = __float2half( __half2float(alpha)
+                                                       * poolValue
+                      + __half2float(beta) * __half2float(outputs[outputsIdx]));
                 }
-                else
-                    outputs[outputsIdx] = __float2half(__half2float(alpha)*poolValue);        
+                else {
+                    outputs[outputsIdx] = __float2half(__half2float(alpha)
+                                                       * poolValue);
+                }
 #endif
             }
         }
@@ -502,7 +516,7 @@ void cudaSPoolForwardMax_kernel(const float alpha,
                 const int ix = (int)(ox * desc->stride[0]) - desc->padding[0];
                 const int iy = (int)(oy * desc->stride[1]) - desc->padding[1];
 
-                float poolValue = 0.0;
+                float poolValue = 0.0f;
 
                 const unsigned int outputsIdx
                     = ox + (oy + output * outputsHeight) * outputsWidth
@@ -744,13 +758,13 @@ void cudaHPoolBackwardAverage_kernel(const __half alpha,
                 const unsigned int iyPad = iy + desc->padding[1];
                 const unsigned int sxMax = min(desc->pool[0], ixPad + 1);
                 const unsigned int syMax = min(desc->pool[1], iyPad + 1);
-#if __CUDA_ARCH__ >= 530
 
-                __half poolGradient = __float2half(0.0f);
+#if __CUDA_ARCH__ >= 530
+                __half poolGradient(0.0f);
 #else
                 float poolGradient = 0.0f;
-
 #endif
+
                 for (unsigned int sy = iyPad % desc->stride[1],
                                   sx0 = ixPad % desc->stride[0];
                      sy < syMax;
@@ -781,13 +795,15 @@ void cudaHPoolBackwardAverage_kernel(const __half alpha,
                                 = ox + (oy + output * outputsHeight)
                                     * outputsWidth;
 #if __CUDA_ARCH__ >= 530
-                            const __half currentGradient = poolGradient;
-                            poolGradient = __hadd( __hdiv(diffInputs[outputsIdx + batchOutputOffset], 
-                                                            __float2half((float) poolChannelsCount[output])),
-                                                     currentGradient);
-#else
                             poolGradient
-                                += __half2float(diffInputs[outputsIdx + batchOutputOffset])
+                                = __hadd(__hdiv(diffInputs[outputsIdx
+                                                        + batchOutputOffset],
+                                                __float2half((float)
+                                                    poolChannelsCount[output])),
+                                         poolGradient);
+#else
+                            poolGradient += __half2float(diffInputs[outputsIdx
+                                                           + batchOutputOffset])
                                     / poolChannelsCount[output];
 #endif
                         }
@@ -800,26 +816,29 @@ void cudaHPoolBackwardAverage_kernel(const __half alpha,
                 const unsigned int inputsIdx
                     = ix + (iy + channel * channelsHeight) * channelsWidth
                         + batchInputOffset;
-#if __CUDA_ARCH__ >= 530
-                if ( ! __heq(beta, __float2half(0.0f))) 
-                {
-                    const __half currentDiffOutput = diffOutputs[inputsIdx];
 
-                    diffOutputs[inputsIdx]
-                        = __hadd( __hmul(alpha, __hdiv(poolGradient, __float2half((float) poolCount) ) ),
-                                  __hmul(beta, currentDiffOutput));
+#if __CUDA_ARCH__ >= 530
+                if (! __heq(beta, __float2half(0.0f))) {
+                    diffOutputs[inputsIdx] = __hadd(
+                        __hmul(alpha, __hdiv(poolGradient,
+                                             __float2half((float) poolCount))),
+                        __hmul(beta, diffOutputs[inputsIdx]));
                 }
                 else {
-                    diffOutputs[inputsIdx] = __hmul(alpha, __hdiv(poolGradient, __float2half((float) poolCount) ) );
+                    diffOutputs[inputsIdx]
+                        = __hmul(alpha, __hdiv(poolGradient,
+                                            __float2half((float) poolCount)));
                 }
 #else
                 if (__half2float(beta) != 0.0f) {
-                    diffOutputs[inputsIdx]
-                        =__float2half( __half2float(alpha) * (poolGradient / poolCount)
-                                        + __half2float(beta) * __half2float(diffOutputs[inputsIdx]) );
+                    diffOutputs[inputsIdx] = __float2half(
+                        __half2float(alpha) * (poolGradient / poolCount)
+                        + __half2float(beta)
+                                        * __half2float(diffOutputs[inputsIdx]));
                 }
                 else {
-                    diffOutputs[inputsIdx] = __float2half( __half2float(alpha) * (poolGradient / poolCount));
+                    diffOutputs[inputsIdx] = __float2half( __half2float(alpha)
+                                                * (poolGradient / poolCount));
                 }
 #endif
             }
@@ -876,7 +895,7 @@ void cudaSPoolBackwardAverage_kernel(const float alpha,
                 const unsigned int sxMax = min(desc->pool[0], ixPad + 1);
                 const unsigned int syMax = min(desc->pool[1], iyPad + 1);
 
-                float poolGradient = 0.0;
+                float poolGradient = 0.0f;
 
                 for (unsigned int sy = iyPad % desc->stride[1],
                                   sx0 = ixPad % desc->stride[0];
@@ -1086,7 +1105,7 @@ void cudaHPoolBackwardMax_kernel(const __half alpha,
 
 #if __CUDA_ARCH__ >= 530
 
-                __half poolGradient = __float2half(0.0f);
+                __half poolGradient(0.0f);
 #else
                 float poolGradient = 0.0f;
 
@@ -1130,10 +1149,11 @@ void cudaHPoolBackwardMax_kernel(const __half alpha,
                                 && inputMax.valid)
                             {
 #if __CUDA_ARCH__ >= 530
-                                const __half currentGradient = poolGradient;
-                                poolGradient = __hadd(currentGradient, diffInputs[outputsIdx]);
+                                poolGradient = __hadd(poolGradient,
+                                                      diffInputs[outputsIdx]);
 #else
-                                poolGradient += __half2float(diffInputs[outputsIdx]);
+                                poolGradient
+                                    += __half2float(diffInputs[outputsIdx]);
 #endif
                             }
                         }
@@ -1147,22 +1167,23 @@ void cudaHPoolBackwardMax_kernel(const __half alpha,
 #if __CUDA_ARCH__ >= 530
 
                 if (!__heq(beta, __float2half(0.0f)) ) {
-                    const __half currentDiffOutput = diffOutputs[inputsIdx];
-                   
                     diffOutputs[inputsIdx]
-                        = __hadd( __hmul(alpha, poolGradient), __hmul(beta, currentDiffOutput) );
+                        = __hadd(__hmul(alpha, poolGradient),
+                                 __hmul(beta, diffOutputs[inputsIdx]));
                 }
                 else {
                     diffOutputs[inputsIdx] = __hmul(alpha, poolGradient);
                 }
 #else
                 if (__half2float(beta) != 0.0f) {
-                    diffOutputs[inputsIdx]
-                        = __float2half( __half2float(alpha) * poolGradient
-                                        + __half2float(beta) * __half2float(diffOutputs[inputsIdx])) ;
+                    diffOutputs[inputsIdx] = __float2half(
+                        __half2float(alpha) * poolGradient
+                        + __half2float(beta)
+                                    * __half2float(diffOutputs[inputsIdx]));
                 }
                 else {
-                    diffOutputs[inputsIdx] = __float2half( __half2float(alpha) * poolGradient);
+                    diffOutputs[inputsIdx] = __float2half(__half2float(alpha)
+                                                          * poolGradient);
                 }
 #endif
             }
@@ -1209,7 +1230,7 @@ void cudaSPoolBackwardMax_kernel(const float alpha,
                 const unsigned int sxMax = min(desc->pool[0], ixPad + 1);
                 const unsigned int syMax = min(desc->pool[1], iyPad + 1);
 
-                float poolGradient = 0.0;
+                float poolGradient = 0.0f;
 
                 for (unsigned int sy = iyPad % desc->stride[1],
                                   sx0 = ixPad % desc->stride[0];
