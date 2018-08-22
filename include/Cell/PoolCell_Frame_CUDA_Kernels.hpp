@@ -25,12 +25,30 @@
 #include <cfloat>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <cuda_fp16.h>
 
 #include "CudaUtils.hpp"
 #include "PoolCell_Frame_Kernels_struct.hpp"
+#include "third_party/half.hpp"
 
 namespace N2D2 {
-// Forward
+/******************** Forward ***************************/
+//Half
+void cudaHPoolForwardAverage(half_float::half alpha,
+                             half_float::half* inputs,
+                             unsigned int nbChannels,
+                             unsigned int channelsHeight,
+                             unsigned int channelsWidth,
+                             unsigned int batchSize,
+                             const PoolCell_Frame_Kernels::Descriptor* desc,
+                             half_float::half beta,
+                             half_float::half* outputs,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             bool countIncludePadding = true,
+                             char* maps = NULL);
+//Float
 void cudaSPoolForwardAverage(const float alpha,
                              float* inputs,
                              unsigned int nbChannels,
@@ -45,7 +63,38 @@ void cudaSPoolForwardAverage(const float alpha,
                              unsigned int outputsWidth,
                              bool countIncludePadding = true,
                              char* maps = NULL);
-
+//Double
+void cudaDPoolForwardAverage(const double alpha,
+                             double* inputs,
+                             unsigned int nbChannels,
+                             unsigned int channelsHeight,
+                             unsigned int channelsWidth,
+                             unsigned int batchSize,
+                             const PoolCell_Frame_Kernels::Descriptor* desc,
+                             const double beta,
+                             double* outputs,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             bool countIncludePadding = true,
+                             char* maps = NULL);
+//Half
+void cudaHPoolForwardMax(half_float::half alpha,
+                         half_float::half* inputs,
+                         unsigned int nbChannels,
+                         unsigned int channelsHeight,
+                         unsigned int channelsWidth,
+                         unsigned int batchSize,
+                         const PoolCell_Frame_Kernels::Descriptor* desc,
+                         half_float::half beta,
+                         half_float::half* outputs,
+                         unsigned int nbOutputs,
+                         unsigned int outputsHeight,
+                         unsigned int outputsWidth,
+                         PoolCell_Frame_Kernels::ArgMax* argMax,
+                         bool useArgMax = false,
+                         char* maps = NULL);
+//Float
 void cudaSPoolForwardMax(const float alpha,
                          float* inputs,
                          unsigned int nbChannels,
@@ -61,8 +110,41 @@ void cudaSPoolForwardMax(const float alpha,
                          PoolCell_Frame_Kernels::ArgMax* argMax,
                          bool useArgMax = false,
                          char* maps = NULL);
+//Double
+void cudaDPoolForwardMax(const double alpha,
+                         double* inputs,
+                         unsigned int nbChannels,
+                         unsigned int channelsHeight,
+                         unsigned int channelsWidth,
+                         unsigned int batchSize,
+                         const PoolCell_Frame_Kernels::Descriptor* desc,
+                         const double beta,
+                         double* outputs,
+                         unsigned int nbOutputs,
+                         unsigned int outputsHeight,
+                         unsigned int outputsWidth,
+                         PoolCell_Frame_Kernels::ArgMax* argMax,
+                         bool useArgMax = false,
+                         char* maps = NULL);
+/*********************************************************/
 
-// Backward
+/******************** Backward ***************************/
+//Half
+void cudaHPoolBackwardAverage(half_float::half alpha,
+                              half_float::half* diffInputs,
+                              unsigned int nbOutputs,
+                              unsigned int outputsHeight,
+                              unsigned int outputsWidth,
+                              unsigned int batchSize,
+                              const PoolCell_Frame_Kernels::Descriptor* desc,
+                              half_float::half beta,
+                              half_float::half* diffOutputs,
+                              unsigned int nbChannels,
+                              unsigned int channelsHeight,
+                              unsigned int channelsWidth,
+                              bool countIncludePadding = true,
+                              char* maps = NULL);
+//Float
 void cudaSPoolBackwardAverage(const float alpha,
                               float* diffInputs,
                               unsigned int nbOutputs,
@@ -77,7 +159,37 @@ void cudaSPoolBackwardAverage(const float alpha,
                               unsigned int channelsWidth,
                               bool countIncludePadding = true,
                               char* maps = NULL);
-
+//Double
+void cudaDPoolBackwardAverage(const double alpha,
+                              double* diffInputs,
+                              unsigned int nbOutputs,
+                              unsigned int outputsHeight,
+                              unsigned int outputsWidth,
+                              unsigned int batchSize,
+                              const PoolCell_Frame_Kernels::Descriptor* desc,
+                              const double beta,
+                              double* diffOutputs,
+                              unsigned int nbChannels,
+                              unsigned int channelsHeight,
+                              unsigned int channelsWidth,
+                              bool countIncludePadding = true,
+                              char* maps = NULL);
+//Half
+void cudaHPoolBackwardMax(half_float::half alpha,
+                          half_float::half* diffInputs,
+                          unsigned int nbOutputs,
+                          unsigned int outputsHeight,
+                          unsigned int outputsWidth,
+                          unsigned int batchSize,
+                          const PoolCell_Frame_Kernels::Descriptor* desc,
+                          half_float::half beta,
+                          half_float::half* diffOutputs,
+                          unsigned int nbChannels,
+                          unsigned int channelsHeight,
+                          unsigned int channelsWidth,
+                          PoolCell_Frame_Kernels::ArgMax* argMax,
+                          char* maps = NULL);
+//Float
 void cudaSPoolBackwardMax(const float alpha,
                           float* diffInputs,
                           unsigned int nbOutputs,
@@ -92,6 +204,22 @@ void cudaSPoolBackwardMax(const float alpha,
                           unsigned int channelsWidth,
                           PoolCell_Frame_Kernels::ArgMax* argMax,
                           char* maps = NULL);
+//Double
+void cudaDPoolBackwardMax(const double alpha,
+                          double* diffInputs,
+                          unsigned int nbOutputs,
+                          unsigned int outputsHeight,
+                          unsigned int outputsWidth,
+                          unsigned int batchSize,
+                          const PoolCell_Frame_Kernels::Descriptor* desc,
+                          const double beta,
+                          double* diffOutputs,
+                          unsigned int nbChannels,
+                          unsigned int channelsHeight,
+                          unsigned int channelsWidth,
+                          PoolCell_Frame_Kernels::ArgMax* argMax,
+                          char* maps = NULL);
+
 }
 
 #endif // N2D2_POOLCELL_FRAME_CUDA_KERNELS_H

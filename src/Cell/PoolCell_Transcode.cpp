@@ -22,16 +22,51 @@
 
 template <>
 N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
-    <N2D2::PoolCell_Frame, N2D2::PoolCell_Spike>::mRegistrar(
+    <N2D2::PoolCell_Frame<double>, N2D2::PoolCell_Spike>::mRegistrar(
         "Transcode",
         N2D2::PoolCell_Transcode
-        <N2D2::PoolCell_Frame, N2D2::PoolCell_Spike>::create);
+        <N2D2::PoolCell_Frame<double>, N2D2::PoolCell_Spike>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<double>());
+template <>
+N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
+    <N2D2::PoolCell_Frame<float>, N2D2::PoolCell_Spike>::mRegistrar(
+        "Transcode",
+        N2D2::PoolCell_Transcode
+        <N2D2::PoolCell_Frame<float>, N2D2::PoolCell_Spike>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<float>());
+template <>
+N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
+    <N2D2::PoolCell_Frame<half_float::half>, N2D2::PoolCell_Spike>::mRegistrar(
+        "Transcode",
+        N2D2::PoolCell_Transcode
+        <N2D2::PoolCell_Frame<half_float::half>, N2D2::PoolCell_Spike>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<half_float::half>());
 
 #ifdef CUDA
 template <>
 N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
-    <N2D2::PoolCell_Frame_CUDA, N2D2::PoolCell_Spike>::mRegistrar(
+    <N2D2::PoolCell_Frame_CUDA<double>, N2D2::PoolCell_Spike>::mRegistrar(
         "Transcode_CUDA",
         N2D2::PoolCell_Transcode
-        <N2D2::PoolCell_Frame_CUDA, N2D2::PoolCell_Spike>::create);
+        <N2D2::PoolCell_Frame_CUDA<double>, N2D2::PoolCell_Spike>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<double>());
+
+template <>
+N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
+    <N2D2::PoolCell_Frame_CUDA<float>, N2D2::PoolCell_Spike>::mRegistrar(
+        "Transcode_CUDA",
+        N2D2::PoolCell_Transcode
+        <N2D2::PoolCell_Frame_CUDA<float>, N2D2::PoolCell_Spike>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode
+    <N2D2::PoolCell_Frame_CUDA<half_float::half>, N2D2::PoolCell_Spike>::mRegistrar(
+        "Transcode_CUDA",
+        N2D2::PoolCell_Transcode
+        <N2D2::PoolCell_Frame_CUDA<half_float::half>, N2D2::PoolCell_Spike>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<half_float::half>());
+
 #endif
+
+

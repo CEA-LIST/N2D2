@@ -31,8 +31,15 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class PoolCell_Frame_EXT_CUDA : public virtual PoolCell, public Cell_Frame_CUDA<Float_T> {
+template <class T>
+class PoolCell_Frame_EXT_CUDA : public virtual PoolCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::mOutputs;
+    using Cell_Frame_CUDA<T>::mDiffInputs;
+    using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivationDesc;
+
     PoolCell_Frame_EXT_CUDA(const std::string& name,
                         const std::vector<unsigned int>& poolDims,
                         unsigned int nbOutputs,
@@ -55,13 +62,13 @@ public:
         const std::shared_ptr<Activation>& activation
             = std::shared_ptr<Activation>())
     {
-        return std::make_shared<PoolCell_Frame_EXT_CUDA>(name,
-                                                         poolDims,
-                                                         nbOutputs,
-                                                         strideDims,
-                                                         paddingDims,
-                                                         pooling,
-                                                         activation);
+        return std::make_shared<PoolCell_Frame_EXT_CUDA<T> >(name,
+                                                            poolDims,
+                                                            nbOutputs,
+                                                            strideDims,
+                                                            paddingDims,
+                                                            pooling,
+                                                            activation);
     }
 
     virtual void initialize();
@@ -85,5 +92,23 @@ private:
     static Registrar<PoolCell> mRegistrar;
 };
 }
+
+namespace N2D2 {
+template <>
+void PoolCell_Frame_EXT_CUDA<half_float::half>::propagate(bool inference);
+template <>
+void PoolCell_Frame_EXT_CUDA<half_float::half>::backPropagate();
+
+template <>
+void PoolCell_Frame_EXT_CUDA<float>::propagate(bool inference);
+template <>
+void PoolCell_Frame_EXT_CUDA<float>::backPropagate();
+
+template <>
+void PoolCell_Frame_EXT_CUDA<double>::propagate(bool inference);
+template <>
+void PoolCell_Frame_EXT_CUDA<double>::backPropagate();
+}
+
 
 #endif // N2D2_POOLCELL_FRAME_EXT_CUDA_H

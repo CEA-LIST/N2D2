@@ -23,11 +23,26 @@
 
 #include "Cell/PoolCell_Frame_CUDA.hpp"
 
+template <>
 N2D2::Registrar<N2D2::PoolCell>
-N2D2::PoolCell_Frame_CUDA::mRegistrar("Frame_CUDA",
-                                      N2D2::PoolCell_Frame_CUDA::create);
+N2D2::PoolCell_Frame_CUDA<half_float::half>::mRegistrar("Frame_CUDA",
+        N2D2::PoolCell_Frame_CUDA<half_float::half>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<half_float::half>());
 
-N2D2::PoolCell_Frame_CUDA::PoolCell_Frame_CUDA(
+template <>
+N2D2::Registrar<N2D2::PoolCell>
+N2D2::PoolCell_Frame_CUDA<float>::mRegistrar("Frame_CUDA",
+        N2D2::PoolCell_Frame_CUDA<float>::create,
+        N2D2::Registrar<N2D2::PoolCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::PoolCell>
+N2D2::PoolCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
+    N2D2::PoolCell_Frame_CUDA<double>::create,
+    N2D2::Registrar<N2D2::PoolCell>::Type<double>());
+
+template <class T>
+N2D2::PoolCell_Frame_CUDA<T>::PoolCell_Frame_CUDA(
     const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
@@ -42,7 +57,7 @@ N2D2::PoolCell_Frame_CUDA::PoolCell_Frame_CUDA(
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame_CUDA(name, nbOutputs, activation)
+      Cell_Frame_CUDA<T>(name, nbOutputs, activation)
 {
     // ctor
     assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);
@@ -62,7 +77,8 @@ N2D2::PoolCell_Frame_CUDA::PoolCell_Frame_CUDA(
     CHECK_CUDNN_STATUS(cudnnCreatePoolingDescriptor(&mPoolingDesc));
 }
 
-void N2D2::PoolCell_Frame_CUDA::initialize()
+template <class T>
+void N2D2::PoolCell_Frame_CUDA<T>::initialize()
 {
     if (!isUnitMap()) {
         throw std::domain_error(
@@ -97,7 +113,7 @@ void N2D2::PoolCell_Frame_CUDA::initialize()
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
         CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(
             mOutputDesc.back(),
-            CudaContext::data_type<Float_T>::value,
+            CudaContext::data_type<T>::value,
             mOutputs.nbDims(),
             &dims[0],
             &strides[0]));
@@ -116,7 +132,7 @@ void N2D2::PoolCell_Frame_CUDA::initialize()
         mPoolingDesc,
         poolingMode,
         CUDNN_PROPAGATE_NAN,
-        // CUDNN_NOT_PROPAGATE_NAN,
+        //CUDNN_NOT_PROPAGATE_NAN,
         mPoolDims.size(),
         &pools[0],
         &paddings[0],
@@ -132,18 +148,19 @@ void N2D2::PoolCell_Frame_CUDA::initialize()
 #endif
 }
 
-void N2D2::PoolCell_Frame_CUDA::propagate(bool /*inference*/)
+template <class T>
+void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeHBasedToD();
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+    typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast<T>(mInputs[k]);
 
         CHECK_CUDNN_STATUS(
             cudnnPoolingForward(CudaContext::cudnnHandle(),
@@ -158,30 +175,32 @@ void N2D2::PoolCell_Frame_CUDA::propagate(bool /*inference*/)
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::PoolCell_Frame_CUDA::backPropagate()
+template <class T>
+void N2D2::PoolCell_Frame_CUDA<T>::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<T>::backPropagate();
 
-    const float alpha = 1.0f;
+    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+        const typename Cuda::cudnn_scaling_type<T>::type beta 
+                            = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
-        std::shared_ptr<CudaDeviceTensor<Float_T> > input
-            = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
-        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > diffOutput
             = (mDiffOutputs[k].isValid())
-                ? cuda_device_tensor_cast<Float_T>(mDiffOutputs[k])
-                : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+                ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
+                : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
         CHECK_CUDNN_STATUS(
             cudnnPoolingBackward(CudaContext::cudnnHandle(),
@@ -206,18 +225,20 @@ void N2D2::PoolCell_Frame_CUDA::backPropagate()
     mDiffOutputs.synchronizeDToHBased();
 }
 
-void N2D2::PoolCell_Frame_CUDA::update()
+template <class T>
+void N2D2::PoolCell_Frame_CUDA<T>::update()
 {
 }
 
-void N2D2::PoolCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::PoolCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
-                  std::bind(&PoolCell_Frame_CUDA::propagate, this, false),
-                  std::bind(&PoolCell_Frame_CUDA::backPropagate, this),
+                  std::bind(&PoolCell_Frame_CUDA<T>::propagate, this, false),
+                  std::bind(&PoolCell_Frame_CUDA<T>::backPropagate, this),
                   (mPooling == Max));
 
     if (!mDiffOutputs.empty()) {
@@ -234,12 +255,20 @@ void N2D2::PoolCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
     }
 }
 
-N2D2::PoolCell_Frame_CUDA::~PoolCell_Frame_CUDA()
+template <class T>
+N2D2::PoolCell_Frame_CUDA<T>::~PoolCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
         CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mOutputDesc[k]));
 
     CHECK_CUDNN_STATUS(cudnnDestroyPoolingDescriptor(mPoolingDesc));
 }
+
+namespace N2D2 {
+    template class PoolCell_Frame_CUDA<half_float::half>;
+    template class PoolCell_Frame_CUDA<float>;
+    template class PoolCell_Frame_CUDA<double>;
+}
+
 
 #endif

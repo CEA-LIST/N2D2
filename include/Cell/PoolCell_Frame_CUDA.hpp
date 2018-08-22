@@ -30,8 +30,15 @@
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-class PoolCell_Frame_CUDA : public virtual PoolCell, public Cell_Frame_CUDA<Float_T> {
+template <class T>
+class PoolCell_Frame_CUDA : public virtual PoolCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::mOutputs;
+    using Cell_Frame_CUDA<T>::mDiffInputs;
+    using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivationDesc;
+
     PoolCell_Frame_CUDA(const std::string& name,
                         const std::vector<unsigned int>& poolDims,
                         unsigned int nbOutputs,
@@ -54,13 +61,13 @@ public:
         const std::shared_ptr<Activation>& activation
             = std::shared_ptr<Activation>())
     {
-        return std::make_shared<PoolCell_Frame_CUDA>(name,
-                                                     poolDims,
-                                                     nbOutputs,
-                                                     strideDims,
-                                                     paddingDims,
-                                                     pooling,
-                                                     activation);
+        return std::make_shared<PoolCell_Frame_CUDA<T> >(name,
+                                                         poolDims,
+                                                         nbOutputs,
+                                                         strideDims,
+                                                         paddingDims,
+                                                         pooling,
+                                                         activation);
     }
 
     virtual void initialize();

@@ -109,20 +109,51 @@ N2D2::PoolCellGenerator::generate(Network& network,
     const PoolCell::Pooling pooling = iniConfig.getProperty
                                       <PoolCell::Pooling>("Pooling");
 
+    /*std::shared_ptr<Activation> activation
+        = ActivationGenerator::generate(
+            iniConfig, section, model, dataType, "ActivationFunction");*/
     std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
-            iniConfig, section, model, dataType, "ActivationFunction");
+            iniConfig,
+            section,
+            model,
+            dataType,
+            "ActivationFunction",
+            (dataType == Float32)
+                ? Registrar<TanhActivation>::create<float>(model)()
+            : (dataType == Float16)
+                ? Registrar<TanhActivation>::create<half_float::half>(model)()
+                : Registrar<TanhActivation>::create<double>(model)());
 
     // Cell construction
-    std::shared_ptr<PoolCell> cell = Registrar
-        <PoolCell>::create(model)(network,
-                                  section,
-                                  poolDims,
-                                  nbChannels,
-                                  strideDims,
-                                  paddingDims,
-                                  pooling,
-                                  activation);
+    std::shared_ptr<PoolCell> cell 
+        = (dataType == Float32)
+            ?  Registrar<PoolCell>::create<float>(model)(network,
+                                                        section,
+                                                        poolDims,
+                                                        nbChannels,
+                                                        strideDims,
+                                                        paddingDims,
+                                                        pooling,
+                                                        activation)
+        : (dataType == Float16) ?
+                Registrar<PoolCell>::create<half_float::half>(model)(network,
+                                                          section,
+                                                          poolDims,
+                                                          nbChannels,
+                                                          strideDims,
+                                                          paddingDims,
+                                                          pooling,
+                                                          activation)
+        : 
+                Registrar<PoolCell>::create<double>(model)(network,
+                                                          section,
+                                                          poolDims,
+                                                          nbChannels,
+                                                          strideDims,
+                                                          paddingDims,
+                                                          pooling,
+                                                          activation);
 
     if (!cell) {
         throw std::runtime_error(

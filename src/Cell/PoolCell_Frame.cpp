@@ -20,10 +20,27 @@
 
 #include "Cell/PoolCell_Frame.hpp"
 
+template <>
 N2D2::Registrar<N2D2::PoolCell>
-N2D2::PoolCell_Frame::mRegistrar("Frame", N2D2::PoolCell_Frame::create);
+N2D2::PoolCell_Frame<half_float::half>::mRegistrar("Frame",
+    N2D2::PoolCell_Frame<half_float::half>::create,
+    N2D2::Registrar<N2D2::PoolCell>::Type<half_float::half>());
 
-N2D2::PoolCell_Frame::PoolCell_Frame(const std::string& name,
+template <>
+N2D2::Registrar<N2D2::PoolCell>
+N2D2::PoolCell_Frame<float>::mRegistrar("Frame",
+    N2D2::PoolCell_Frame<float>::create,
+    N2D2::Registrar<N2D2::PoolCell>::Type<float>());
+
+template <>
+N2D2::Registrar<N2D2::PoolCell>
+N2D2::PoolCell_Frame<double>::mRegistrar("Frame",
+    N2D2::PoolCell_Frame<double>::create,
+    N2D2::Registrar<N2D2::PoolCell>::Type<double>());
+
+
+template <class T>
+N2D2::PoolCell_Frame<T>::PoolCell_Frame(const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
@@ -37,7 +54,7 @@ N2D2::PoolCell_Frame::PoolCell_Frame(const std::string& name,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame(name, nbOutputs, activation),
+      Cell_Frame<T>(name, nbOutputs, activation),
       mPoolDesc(poolDims.size(),
                 &poolDims[0],
                 &strideDims[0],
@@ -64,7 +81,8 @@ N2D2::PoolCell_Frame::PoolCell_Frame(const std::string& name,
     }
 }
 
-void N2D2::PoolCell_Frame::initialize()
+template <class T>
+void N2D2::PoolCell_Frame<T>::initialize()
 {
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
@@ -77,34 +95,35 @@ void N2D2::PoolCell_Frame::initialize()
     }
 }
 
-void N2D2::PoolCell_Frame::propagate(bool /*inference*/)
+template <class T>
+void N2D2::PoolCell_Frame<T>::propagate(bool /*inference*/)
 {
     mInputs.synchronizeDToH();
 
-    const float alpha = 1.0f;
-    float beta = 0.0f;
+    const T alpha = T(1.0);
+    T beta = T(0.0);
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
-            beta = 1.0;
+            beta = T(1.0);
 
-        const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
 
         if (mPooling == Max) {
-            PoolCell_Frame_Kernels::forwardMax(&alpha,
-                                               input,
-                                               mPoolDesc,
-                                               &beta,
-                                               mOutputs,
-                                               mArgMax[k],
-                                               false,
-                                               mMaps.rows(offset,
-                                                          mInputs[k].dimZ()));
+            PoolCell_Frame_Kernels::forwardMax<T>(&alpha,
+                                                    input,
+                                                    mPoolDesc,
+                                                    &beta,
+                                                    mOutputs,
+                                                    mArgMax[k],
+                                                    false,
+                                                    mMaps.rows(offset,
+                                                                mInputs[k].dimZ()));
         }
         else {
-            PoolCell_Frame_Kernels::forwardAverage(&alpha,
+            PoolCell_Frame_Kernels::forwardAverage<T>(&alpha,
                                                    input,
                                                    mPoolDesc,
                                                    &beta,
@@ -117,30 +136,31 @@ void N2D2::PoolCell_Frame::propagate(bool /*inference*/)
         offset += mInputs[k].dimZ();
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<T>::propagate();
     mDiffInputs.clearValid();
 }
 
-void N2D2::PoolCell_Frame::backPropagate()
+template <class T>
+void N2D2::PoolCell_Frame<T>::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame::backPropagate();
+    Cell_Frame<T>::backPropagate();
 
-    const Float_T alpha = 1.0;
+    const T alpha = T(1.0);
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
+        const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
-        Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
-            ? tensor_cast<Float_T>(mDiffOutputs[k])
-            : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+        Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
+            ? tensor_cast<T>(mDiffOutputs[k])
+            : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
         if (mPooling == Max) {
-            PoolCell_Frame_Kernels::backwardMax(&alpha,
+            PoolCell_Frame_Kernels::backwardMax<T>(&alpha,
                                                 mDiffInputs,
                                                 mPoolDesc,
                                                 &beta,
@@ -150,7 +170,7 @@ void N2D2::PoolCell_Frame::backPropagate()
                                                            mInputs[k].dimZ()));
         }
         else {
-            PoolCell_Frame_Kernels::backwardAverage(&alpha,
+            PoolCell_Frame_Kernels::backwardAverage<T>(&alpha,
                                                     mDiffInputs,
                                                     mPoolDesc,
                                                     &beta,
@@ -168,14 +188,15 @@ void N2D2::PoolCell_Frame::backPropagate()
 
     mDiffOutputs.synchronizeHToD();
 }
-
-void N2D2::PoolCell_Frame::update()
+template <class T>
+void N2D2::PoolCell_Frame<T>::update()
 {
 }
 
-void N2D2::PoolCell_Frame::checkGradient(double epsilon, double maxError)
+template <class T>
+void N2D2::PoolCell_Frame<T>::checkGradient(double epsilon, double maxError)
 {
-    GradientCheck<Float_T> gc(epsilon, maxError);
+    GradientCheck<T> gc(epsilon, maxError);
     gc.initialize(mInputs,
                   mOutputs,
                   mDiffInputs,
@@ -197,8 +218,15 @@ void N2D2::PoolCell_Frame::checkGradient(double epsilon, double maxError)
     }
 }
 
-N2D2::PoolCell_Frame::~PoolCell_Frame()
+template <class T>
+N2D2::PoolCell_Frame<T>::~PoolCell_Frame()
 {
     for (unsigned int k = 0, size = mArgMax.size(); k < size; ++k)
         delete &mArgMax[k];
+}
+
+namespace N2D2 {
+    template class PoolCell_Frame<half_float::half>;
+    template class PoolCell_Frame<float>;
+    template class PoolCell_Frame<double>;
 }

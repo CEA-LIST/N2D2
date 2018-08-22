@@ -27,35 +27,40 @@
 namespace N2D2 {
 namespace PoolCell_Frame_Kernels {
     // Forward
-    void forwardAverage(const Float_T* alpha,
-                        const Tensor<Float_T>& inputs,
+    template <class T>
+    void forwardAverage(const T* alpha,
+                        const Tensor<T>& inputs,
                         const Descriptor& desc,
-                        const Float_T* beta,
-                        Tensor<Float_T>& outputs,
+                        const T* beta,
+                        Tensor<T>& outputs,
                         bool countIncludePadding = true,
                         const Tensor<bool>& maps = Tensor<bool>());
-    void forwardMax(const Float_T* alpha,
-                    const Tensor<Float_T>& inputs,
+
+    template <class T>
+    void forwardMax(const T* alpha,
+                    const Tensor<T>& inputs,
                     const Descriptor& desc,
-                    const Float_T* beta,
-                    Tensor<Float_T>& outputs,
+                    const T* beta,
+                    Tensor<T>& outputs,
                     Tensor<ArgMax>& argMax,
                     bool useArgMax = false,
                     const Tensor<bool>& maps = Tensor<bool>());
 
     // Backward
-    void backwardAverage(const Float_T* alpha,
-                         const Tensor<Float_T>& diffInputs,
+    template <class T>
+    void backwardAverage(const T* alpha,
+                         const Tensor<T>& diffInputs,
                          const Descriptor& desc,
-                         const Float_T* beta,
-                         Tensor<Float_T>& diffOutputs,
+                         const T* beta,
+                         Tensor<T>& diffOutputs,
                          bool countIncludePadding = true,
                          const Tensor<bool>& maps = Tensor<bool>());
-    void backwardMax(const Float_T* alpha,
-                     const Tensor<Float_T>& diffInputs,
+    template <class T>
+    void backwardMax(const T* alpha,
+                     const Tensor<T>& diffInputs,
                      const Descriptor& desc,
-                     const Float_T* beta,
-                     Tensor<Float_T>& diffOutputs,
+                     const T* beta,
+                     Tensor<T>& diffOutputs,
                      const Tensor<ArgMax>& argMax,
                      const Tensor<bool>& maps = Tensor<bool>());
 }

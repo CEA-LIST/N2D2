@@ -30,7 +30,7 @@
 #include "PoolCell_Spike.hpp"
 
 namespace N2D2 {
-template <class FRAME = PoolCell_Frame, class SPIKE = PoolCell_Spike>
+template <class FRAME = PoolCell_Frame<float>, class SPIKE = PoolCell_Spike>
 class PoolCell_Transcode : public FRAME, public SPIKE {
 public:
     enum TranscodeMode {

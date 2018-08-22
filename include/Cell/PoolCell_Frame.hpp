@@ -26,8 +26,14 @@
 #include "PoolCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
-class PoolCell_Frame : public virtual PoolCell, public Cell_Frame<Float_T> {
+template <class T>
+class PoolCell_Frame : public virtual PoolCell, public Cell_Frame<T> {
 public:
+    using Cell_Frame<T>::mInputs;
+    using Cell_Frame<T>::mOutputs;
+    using Cell_Frame<T>::mDiffInputs;
+    using Cell_Frame<T>::mDiffOutputs;
+
     PoolCell_Frame(const std::string& name,
                    const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
