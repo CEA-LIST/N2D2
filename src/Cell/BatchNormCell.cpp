@@ -148,18 +148,19 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
     std::ifstream& scales = (!singleFile) ? scales_ : biases;
     std::ifstream& means = (!singleFile) ? means_ : biases;
     std::ifstream& variances = (!singleFile) ? variances_ : biases;
-    double w;
+    
     means.precision(12);
     variances.precision(12);
     biases.precision(12);
 
     std::shared_ptr<BaseTensor> baseScales = getScales();
-
+    std::vector<size_t> dim = {(size_t) 1};
     for (size_t index = 0; index < baseScales->size(); ++index) {
-        Tensor<Float_T> scale;
-        Tensor<Float_T> bias;
-        Tensor<Float_T> mean;
-        Tensor<Float_T> variance;
+        double w;
+        Tensor<Float_T> scale(dim, 1.0);
+        Tensor<Float_T> bias(dim, 0.0);
+        Tensor<Float_T> mean(dim, 0.0);
+        Tensor<Float_T> variance(dim, 0.0);
 
         if (!(scales >> w))
         {
