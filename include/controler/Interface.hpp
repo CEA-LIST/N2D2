@@ -108,7 +108,7 @@ public:
     typedef typename std::vector<tensor_type*>::iterator iterator;
     typedef typename std::vector<tensor_type*>::const_iterator const_iterator;
 
-    template <class U> Interface(const Interface<U, STACKING_DIM>& interface);
+    template <class U, int V> Interface(const Interface<U, V>& interface);
     Interface(std::initializer_list<bool> matchingDim
                 = std::initializer_list<bool>({true, true, false, true}));
     void matchingDims(std::initializer_list<bool> matchingDims_)
@@ -190,14 +190,14 @@ protected:
 }
 
 template <class T, int STACKING_DIM>
-template <class U>
+template <class U, int V>
 N2D2::Interface<T, STACKING_DIM>::Interface(
-    const Interface<U, STACKING_DIM>& interface)
+    const Interface<U, V>& interface)
     : mMatchingDim(interface.mMatchingDim),
       mDataOffset(interface.mDataOffset)
 {
     // copy-ctor
-    for (typename Interface<U, STACKING_DIM>::const_iterator
+    for (typename Interface<U, V>::const_iterator
         it = interface.begin(), itEnd = interface.end();
         it != itEnd; ++it)
     {

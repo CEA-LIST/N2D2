@@ -422,9 +422,11 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
             // Set the non-connected kernels diff to 0
             unsigned int offset = 0;
 
-            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
-                     ++channel) {
+            for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                ++channel)
+            {
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
+                {
                     if (!isConnection(channel, output)) {
                         thrust_fill<T>(mDiffSharedSynapses[k].getDevicePtr()
                                             + offset,

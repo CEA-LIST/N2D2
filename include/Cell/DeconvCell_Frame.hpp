@@ -75,8 +75,8 @@ public:
         const Tensor<T>& sharedSynapses
             = mSharedSynapses.getTensor(channel, &tensorChannel);
 
-        value.resize(sharedSynapses[output][channel - tensorChannel].dims());
-        value = sharedSynapses[output][channel - tensorChannel];
+        value.resize(sharedSynapses[channel - tensorChannel][output].dims());
+        value = sharedSynapses[channel - tensorChannel][output];
     };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
@@ -118,7 +118,7 @@ protected:
         unsigned int tensorChannel;
         Tensor<T>& sharedSynapses
             = mSharedSynapses.getTensor(channel, &tensorChannel);
-        sharedSynapses[output][channel - tensorChannel] = tensor_cast<T>(value);
+        sharedSynapses[channel - tensorChannel][output] = tensor_cast<T>(value);
     }
     inline void setBias(unsigned int output, const BaseTensor& value)
     {
@@ -127,11 +127,11 @@ protected:
 
     // Internal
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    Interface<T> mSharedSynapses;
+    Interface<T,-1> mSharedSynapses;
     std::map<unsigned int,
         std::pair<Interface<T>, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<Tensor<T> > mBias;
-    Interface<T> mDiffSharedSynapses;
+    Interface<T,-1> mDiffSharedSynapses;
     Tensor<T> mDiffBias;
     ConvCell_Frame_Kernels::Descriptor mConvDesc;
 

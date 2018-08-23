@@ -115,11 +115,11 @@ protected:
 
     // Internal
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    CudaInterface<T> mSharedSynapses;
+    CudaInterface<T,-1> mSharedSynapses;
     std::map<unsigned int,
         std::pair<CudaInterface<T>, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<CudaTensor<T> > mBias;
-    CudaInterface<T> mDiffSharedSynapses;
+    CudaInterface<T,-1> mDiffSharedSynapses;
     CudaTensor<T> mDiffBias;
 
     size_t mWorkspaceSize;
@@ -147,10 +147,10 @@ void N2D2::DeconvCell_Frame_CUDA<T>::setWeight(unsigned int output,
     unsigned int tensorChannel;
     CudaTensor<T>& sharedSynapses
         = mSharedSynapses.getTensor(channel, &tensorChannel);
-    sharedSynapses[output][channel - tensorChannel] = tensor_cast<T>(value);
+    sharedSynapses[channel - tensorChannel][output] = tensor_cast<T>(value);
 
     if (!mSynchronized)
-        sharedSynapses[output][channel - tensorChannel].synchronizeHToD();
+        sharedSynapses[channel - tensorChannel][output].synchronizeHToD();
 }
 
 template <class T>
@@ -163,10 +163,10 @@ void N2D2::DeconvCell_Frame_CUDA<T>::getWeight(unsigned int output,
         = mSharedSynapses.getTensor(channel, &tensorChannel);
 
     if (!mSynchronized)
-        sharedSynapses[output][channel - tensorChannel].synchronizeDToH();
+        sharedSynapses[channel - tensorChannel][output].synchronizeDToH();
 
-    value.resize(sharedSynapses[output][channel - tensorChannel].dims());
-    value = sharedSynapses[output][channel - tensorChannel];
+    value.resize(sharedSynapses[channel - tensorChannel][output].dims());
+    value = sharedSynapses[channel - tensorChannel][output];
 }
 
 template <class T>

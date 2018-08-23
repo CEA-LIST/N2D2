@@ -144,6 +144,7 @@ template <class T>
 N2D2::Kernel<T>::Kernel(const std::string& kernel,
                         unsigned int sizeX,
                         unsigned int sizeY)
+    : Matrix<T>(sizeY, sizeX)
 {
     // ctor
     if (!kernel.empty()) {
