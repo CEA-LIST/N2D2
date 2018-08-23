@@ -81,10 +81,7 @@ public:
     {
         return mDataDeviceOwner;
     }
-    const cudnnTensorDescriptor_t& getCudnnTensorDesc() const
-    {
-        return mTensor;
-    }
+    const cudnnTensorDescriptor_t& getCudnnTensorDesc() const;
     const std::type_info* getType() const
     {
         return &typeid(T);
@@ -96,7 +93,7 @@ public:
 protected:
     T* mDataDevice;
     const bool mDataDeviceOwner;
-    cudnnTensorDescriptor_t mTensor;
+    mutable cudnnTensorDescriptor_t mTensor;
 };
 
 class CudaBaseTensor : public virtual BaseTensor {
@@ -381,50 +378,60 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
                                             T* dataDevice)
     : CudaBaseDeviceTensor(base),
       mDataDevice(dataDevice),
-      mDataDeviceOwner(dataDevice == NULL)
+      mDataDeviceOwner(dataDevice == NULL),
+      mTensor(NULL)
 {
     // ctor
-    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
+    if (mDataDeviceOwner && base.size() > 0)
+        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, base.size() * sizeof(T)));
+}
 
-    const size_t size_ = base.size();
+template <typename T>
+const cudnnTensorDescriptor_t& N2D2::CudaDeviceTensor<T>::getCudnnTensorDesc()
+    const
+{
+    if (mTensor == NULL) {
+        CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mTensor));
 
-    if (size_ > 0) {
+        const CudaBaseTensor& base = getCudaTensor();
+
+        if (base.size() > 0) {
 /**
 **      cudNN Tensors are restricted to having at least 4 dimensions :
 **      When working with lower dimensionsal data, unused dimensions are set to 1.
 **      Referes to the cudnnSetTensorNdDescriptor documentation from :
 **      https://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html
 **/
-        std::vector<int> dims(4,1);
-        std::vector<int> strides(4,1);
-        int stride = 1;
+            std::vector<int> dims(4,1);
+            std::vector<int> strides(4,1);
+            int stride = 1;
 
-        for (unsigned int dim = 0; dim < 4; ++dim) {
-            if(dim < base.nbDims()) {
-                dims[dim] = base.dims()[dim];
-                strides[dim] = stride;
-                stride  *= base.dims()[dim];
+            for (unsigned int dim = 0; dim < 4; ++dim) {
+                if(dim < base.nbDims()) {
+                    dims[dim] = base.dims()[dim];
+                    strides[dim] = stride;
+                    stride  *= base.dims()[dim];
+                }
             }
+
+            for (unsigned int dim = 4; dim < base.nbDims(); ++dim) {
+                dims.push_back(base.dims()[dim]);
+                strides.push_back(stride);
+                stride *= base.dims()[dim];
+            }
+
+            std::reverse(dims.begin(), dims.end());
+            std::reverse(strides.begin(), strides.end());
+
+            CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(mTensor,
+                                          CudaContext::data_type<T>::value,
+                                          dims.size(),
+                                          &dims[0],
+                                          &strides[0]));
         }
-
-        for (unsigned int dim = 4; dim < base.nbDims(); ++dim) {
-            dims.push_back(base.dims()[dim]);
-            strides.push_back(stride);
-            stride *= base.dims()[dim];
-        }
-
-        std::reverse(dims.begin(), dims.end());
-        std::reverse(strides.begin(), strides.end());
-
-        if (mDataDeviceOwner)
-            CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, size_ * sizeof(T)));
-
-        CHECK_CUDNN_STATUS(cudnnSetTensorNdDescriptor(mTensor,
-                                                      CudaContext::data_type<T>::value,
-                                                      dims.size(),
-                                                      &dims[0],
-                                                      &strides[0]));
     }
+
+    return mTensor;
 }
 
 template <typename T>
@@ -480,7 +487,8 @@ template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
         mDataDevice = NULL;
     }
 
-    CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mTensor));
+    if (mTensor != NULL)
+        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mTensor));
 }
 
 N2D2::CudaBaseTensor::CudaBaseTensor(bool hostBased):
