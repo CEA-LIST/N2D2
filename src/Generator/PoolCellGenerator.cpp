@@ -115,12 +115,7 @@ N2D2::PoolCellGenerator::generate(Network& network,
             section,
             model,
             dataType,
-            "ActivationFunction",
-            (dataType == Float32)
-                ? Registrar<TanhActivation>::create<float>(model)()
-            : (dataType == Float16)
-                ? Registrar<TanhActivation>::create<half_float::half>(model)()
-                : Registrar<TanhActivation>::create<double>(model)());
+            "ActivationFunction");
 
     // Cell construction
     std::shared_ptr<PoolCell> cell
