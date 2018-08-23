@@ -527,13 +527,15 @@ IniParser::getSectionsWithProperty(const std::string& name,
 
 std::string N2D2::IniParser::getPropertyValue(std::string value) const
 {
-    // Value is actually identical to another property value in the INI file
-    if (!value.empty() && *(value.begin()) == '[') {
-        const size_t posCloseBracket = value.find_first_of(']', 1);
+    // 1. Replace INI property values
+    size_t startPos = 0;
+
+    while ((startPos = value.find('[', startPos)) != std::string::npos) {
+        size_t posCloseBracket = value.find(']', startPos + 1);
 
         if (posCloseBracket != std::string::npos) {
             const std::string sectionName
-                = value.substr(1, posCloseBracket - 1);
+                = value.substr(startPos + 1, posCloseBracket - startPos - 1);
             std::vector<std::string>::const_iterator itSection = std::find(
                 mIniSections.begin(), mIniSections.end(), sectionName);
 
@@ -543,7 +545,11 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
                                          + mFileName);
 
             const unsigned int sectionIndex = itSection - mIniSections.begin();
-            const std::string propertyName = value.substr(posCloseBracket + 1);
+
+            const size_t posSpace = value.find_first_of(" \t\n\v\f\r",
+                                                        posCloseBracket + 1);
+            const std::string propertyName = value.substr(posCloseBracket + 1,
+                                                posSpace - posCloseBracket - 1);
 
             const std::map
                 <std::string, std::pair<std::string, bool> >::const_iterator it
@@ -555,15 +561,16 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
                                          + mIniSections[sectionIndex] + "]");
             }
 
-            return getPropertyValue((*it).second.first);
+            value.replace(startPos, posSpace - startPos,
+                          getPropertyValue((*it).second.first));
         }
     }
 
-    // Replace variables
-    size_t startPos = 0;
+    // 2. Replace variables
+    startPos = 0;
 
     while ((startPos = value.find("${", startPos)) != std::string::npos) {
-        size_t endPos = value.find("}", startPos + 2);
+        size_t endPos = value.find('}', startPos + 2);
 
         if (endPos == std::string::npos)
             return value;
@@ -619,10 +626,20 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
             startPos = endPos + 1;
     }
 
+    // 3. Replace math expressions
     startPos = 0;
 
     while ((startPos = value.find("$(", startPos)) != std::string::npos) {
-        size_t endPos = value.find(")", startPos + 2);
+        size_t nextPar = value.find('(', startPos + 2);
+        size_t endPos = value.find(')', startPos + 2);
+
+        while (nextPar != std::string::npos
+            && endPos != std::string::npos
+            && nextPar < endPos)
+        {
+            nextPar = value.find('(', nextPar + 1);
+            endPos = value.find(')', endPos + 1);
+        }
 
         if (endPos == std::string::npos)
             return value;
