@@ -146,27 +146,33 @@ N2D2::Kernel<T>::Kernel(const std::string& kernel,
                         unsigned int sizeY)
 {
     // ctor
-    std::vector<T> kernelVec;
-    std::stringstream kernelStr(kernel);
-    double value;
+    if (!kernel.empty()) {
+        std::vector<T> kernelVec;
+        std::stringstream kernelStr(kernel);
+        double value;
 
-    while (kernelStr >> value)
-        kernelVec.push_back(value);
+        while (kernelStr >> value)
+            kernelVec.push_back(value);
 
-    if (sizeX == 0 && sizeY == 0) {
-        // No size specified, the kernel is supposed to be a square
-        sizeX = sizeY = std::sqrt((double)kernelVec.size());
-    } else if (sizeX != 0 && sizeY == 0)
-        sizeY = kernelVec.size() / sizeX;
-    else if (sizeX == 0 && sizeY != 0)
-        sizeX = kernelVec.size() / sizeY;
+        if (sizeX == 0 && sizeY == 0) {
+            // No size specified, the kernel is supposed to be a square
+            sizeX = sizeY = std::sqrt((double)kernelVec.size());
+        } else if (sizeX != 0 && sizeY == 0)
+            sizeY = kernelVec.size() / sizeX;
+        else if (sizeX == 0 && sizeY != 0)
+            sizeX = kernelVec.size() / sizeY;
 
-    if (kernelVec.size() != sizeX * sizeY)
-        throw std::runtime_error("Kernel<T>::Kernel: Kernel size mismatch with "
-                                 "the size of its specified values.");
+        if (kernelVec.size() != sizeX * sizeY)
+            throw std::runtime_error("Kernel<T>::Kernel: Kernel size mismatch "
+                                     "with the size of its specified values.");
 
-    Matrix<T>::resize(sizeY, sizeX);
-    std::copy(kernelVec.begin(), kernelVec.end(), Matrix<T>::mData.begin());
+        Matrix<T>::resize(sizeY, sizeX);
+        std::copy(kernelVec.begin(), kernelVec.end(), Matrix<T>::mData.begin());
+    }
+    else if (sizeX > 0 && sizeY > 0) {
+        throw std::runtime_error("Kernel<T>::Kernel: Kernel size mismatch "
+                                 "with the size of its specified values.");
+    }
 }
 
 template <class T> void N2D2::Kernel<T>::zeroSummingNorm()
