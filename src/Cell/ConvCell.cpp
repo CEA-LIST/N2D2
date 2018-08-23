@@ -77,11 +77,11 @@ void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
 
     for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
         Tensor<Float_T> kernel;
-        
+
         if (isConnection(channel, output))
             getWeight(output, channel, kernel);
         else
-            kernel.resize(std::vector<size_t>(mKernelDims.begin(), 
+            kernel.resize(std::vector<size_t>(mKernelDims.begin(),
                                               mKernelDims.end()), 0.0);
 
         weights.push_back(kernel);
@@ -530,8 +530,13 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
 void N2D2::ConvCell::logFreeParametersDistrib(const std::string& fileName) const
 {
     // Append all weights
+    const unsigned int kernelSize = (!mKernelDims.empty())
+        ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                          1U, std::multiplies<unsigned int>())
+        : 0U;
+
     std::vector<double> weights;
-    weights.reserve(getNbOutputs() * getNbChannels());
+    weights.reserve(getNbOutputs() * getNbChannels() * kernelSize);
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
