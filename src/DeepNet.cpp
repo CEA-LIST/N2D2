@@ -1616,18 +1616,18 @@ void N2D2::DeepNet::drawHistogram(std::string title,
     {
         p.plot(
             dataFileName,
-            "using ($"
+            "i 0 using ($"
             + fileRowStr.str()
             + "):xticlabels(wrap(stringcolumn(1),"
             + maxLabelSizeStr.str()
             + ")) ti col,"
-            " '' using 0:($"
+            " '' i 0 using 0:($"
             + fileRowStr.str()
             + "):(gprintf(\"%.2s%c\",$"
             + fileRowStr.str()
             + ")) ti col with labels rotate"
             " offset char 0,2 textcolor lt 2,"
-            + " '' using 0:($"
+            + " '' i 0 using 0:($"
             + fileRowStr.str() + "):" + fileRowStr.str()
             + "ti col with boxes lc palette"
             );
@@ -1637,17 +1637,17 @@ void N2D2::DeepNet::drawHistogram(std::string title,
     {
         p.plot(
             dataFileName,
-            "using ($"
+            "i 0 using ($"
             + fileRowStr.str()
             + "):xticlabels(wrap(stringcolumn(1),"
             + maxLabelSizeStr.str()
             + ")) ti col,"
-            " '' using 0:($"
+            " '' i 0 using 0:($"
             + fileRowStr.str() + "):($"
             + fileRowStr.str()
             + ") ti col with labels rotate"
             " offset char 0,2 textcolor lt 2,"
-            + " '' using 0:($"
+            + " '' i 0 using 0:($"
             + fileRowStr.str() + "):" + fileRowStr.str()
             + "ti col with boxes lc palette"
             );
@@ -2226,11 +2226,32 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
 
     timingsData << "Cell Timing(s) Timing(%)\n";
 
+    double propTime = 0.0;
+    double backPropTime = 0.0;
+    double updateTime = 0.0;
+
     for (std::vector<std::pair<std::string, double> >::const_iterator it
          = timings.begin(),
          itEnd = timings.end();
          it != itEnd;
-         ++it) {
+         ++it)
+    {
+        const std::string backPropStr = "[back-prop]";
+        const std::string updateStr = "[update]";
+
+        if (std::equal(backPropStr.rbegin(), backPropStr.rend(),
+                            (*it).first.rbegin()))
+        {
+            backPropTime += (*it).second;
+        }
+        else if (std::equal(updateStr.rbegin(), updateStr.rend(),
+                            (*it).first.rbegin()))
+        {
+            updateTime += (*it).second;
+        }
+        else
+            propTime += (*it).second;
+
         timingsData << (*it).first << " " << (*it).second << " "
                     << (100.0 * (*it).second / totalTime) << "\n";
 
@@ -2239,17 +2260,27 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
 
     }
 
+    timingsData << "\n\n";
+    timingsData << "Total[prop] " << propTime << " "
+                << (100.0 * propTime / totalTime) << "\n";
+    timingsData << "Total[back-prop] " << backPropTime << " "
+                << (100.0 * backPropTime / totalTime) << "\n";
+    timingsData << "Total[update] " << updateTime << " "
+                << (100.0 * updateTime / totalTime) << "\n";
+    timingsData << "Total " << totalTime << " "
+                << (100.0 * totalTime / totalTime) << "\n";
+
     timingsData.close();
 
     std::stringstream outputStr;
     outputStr << "set term png size "
-            << (timings.size() * 50)*2
-            << ",800 enhanced large";
+            << (timings.size() * 50)
+            << ",1600 enhanced large";
 
     Gnuplot multiplot;
     multiplot.saveToFile(fileName);
     multiplot << outputStr.str();
-    multiplot.setMultiplot(1, 2);
+    multiplot.setMultiplot(2, 1);
     multiplot.set("origin 0.0,0.0");
     multiplot.set("grid");
     drawHistogram("Timing (s)" + totalFPSstr.str(),
@@ -2259,7 +2290,7 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
                   true,
                   multiplot);
 
-    multiplot.set("origin 0.5,0.0");
+    multiplot.set("origin 0.0,0.5");
     multiplot.set("grid");
     drawHistogram("Relative Timing (%)" + totalFPSstr.str(),
                   fileName,
