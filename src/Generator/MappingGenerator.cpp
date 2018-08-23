@@ -79,7 +79,7 @@ N2D2::MappingGenerator::getMapping(IniParser& iniConfig,
 N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
                                                     std::shared_ptr
                                                     <Cell> parent,
-                                                    unsigned int nbChannels,
+                                                    unsigned int nbOutputs,
                                                     IniParser& iniConfig,
                                                     const std::string& section,
                                                     const Mapping
@@ -88,35 +88,96 @@ N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
+    if (iniConfig.isProperty("Mapping.NbGroups")
+        && iniConfig.isProperty("Mapping.ChannelsPerGroup"))
+    {
+        throw std::runtime_error(
+            "Mapping.NbGroups and Mapping.ChannelsPerGroup are mutually"
+            " exclusive in section [" + section + "] in network"
+            " configuration file: " + iniConfig.getFileName());
+    }
+
     const std::string parentName = (!parent) ? "env" : parent->getName();
-    const unsigned int parentNbOutputs = (!parent) ? sp.getNbChannels()
-                                                   : parent->getNbOutputs();
+    const unsigned int nbChannels = (!parent) ? sp.getNbChannels()
+                                              : parent->getNbOutputs();
 
     const bool isMappingFunction = iniConfig.isProperty("Mapping.*");
     const std::string mappingPrefix = "Mapping(" + parentName + ")";
     const bool isFunction = isMappingFunction
                             || iniConfig.isProperty(mappingPrefix + ".*");
 
-    Matrix<bool> map = Matrix<bool>(parentNbOutputs, nbChannels, !isFunction);
+    Matrix<bool> map = Matrix<bool>(nbChannels, nbOutputs, !isFunction);
 
-    if (iniConfig.isProperty("Map(" + parentName + ")")) {
-        // Hand-made mapping matrix
-        map << iniConfig.getProperty<std::string>("Map(" + parentName + ")");
-    } else if (isFunction && !map.empty()) {
-        // Mapping function
-        Mapping mapping
-            = getMapping(iniConfig, section, mappingPrefix, defaultMapping);
+    if (iniConfig.isProperty("Mapping.NbGroups")
+        || iniConfig.isProperty("Mapping.ChannelsPerGroup"))
+    {
+        unsigned int nbGroups;
+        unsigned int nbChannelsPerGroup;
 
-        if (mapping.nbIterations == 0)
-            mapping.nbIterations = std::max(nbChannels, parentNbOutputs);
+        if (iniConfig.isProperty("Mapping.NbGroups")) {
+            nbGroups = iniConfig.getProperty<unsigned int>("Mapping.NbGroups");
+            nbChannelsPerGroup = nbChannels / nbGroups;
+        }
+        else {
+            nbChannelsPerGroup = iniConfig.getProperty
+                                    <unsigned int>("Mapping.ChannelsPerGroup");
+            nbGroups = nbChannels / nbChannelsPerGroup;
+        }
 
-        for (unsigned int x = mapping.offsetX, y = mapping.offsetY, i = 0;
-             i < mapping.nbIterations;
-             x += mapping.strideX, y += mapping.strideY, ++i) {
-            for (unsigned int patchX = 0; patchX < mapping.sizeX; ++patchX) {
-                for (unsigned int patchY = 0; patchY < mapping.sizeY; ++patchY)
-                    map((y + patchY) % parentNbOutputs,
-                        (x + patchX) % nbChannels) = true;
+        if (nbChannels % nbGroups != 0) {
+            throw std::runtime_error(
+                "Mapping.NbGroups must be a multiple of the number of input"
+                " channels in section [" + section + "] in network"
+                " configuration file: " + iniConfig.getFileName());
+        }
+
+        size_t outputGroupOffset = 0;
+        size_t channelGroupOffset = 0;
+
+        for (size_t group = 0; group < nbGroups; ++group) {
+            const size_t outputGroupSize = (nbOutputs - outputGroupOffset)
+                                                / (nbGroups - group);
+
+            for (size_t output = outputGroupOffset;
+                output < outputGroupOffset + outputGroupSize; ++output)
+            {
+                for (size_t channel = channelGroupOffset;
+                    channel < channelGroupOffset + nbChannelsPerGroup;
+                    ++channel)
+                {
+                    map(channel, output) = true;
+                }
+            }
+
+            outputGroupOffset += outputGroupSize;
+            channelGroupOffset += nbChannelsPerGroup;
+        }
+    }
+    else {
+        if (iniConfig.isProperty("Map(" + parentName + ")")) {
+            // Hand-made mapping matrix
+            map << iniConfig.getProperty<std::string>("Map(" + parentName + ")");
+        }
+        else if (isFunction && !map.empty()) {
+            // Mapping function
+            Mapping mapping
+                = getMapping(iniConfig, section, mappingPrefix, defaultMapping);
+
+            if (mapping.nbIterations == 0)
+                mapping.nbIterations = std::max(nbOutputs, nbChannels);
+
+            for (unsigned int x = mapping.offsetX, y = mapping.offsetY, i = 0;
+                 i < mapping.nbIterations;
+                 x += mapping.strideX, y += mapping.strideY, ++i) {
+                for (unsigned int patchX = 0; patchX < mapping.sizeX; ++patchX)
+                {
+                    for (unsigned int patchY = 0; patchY < mapping.sizeY;
+                        ++patchY)
+                    {
+                        map((y + patchY) % nbChannels,
+                            (x + patchX) % nbOutputs) = true;
+                    }
+                }
             }
         }
     }

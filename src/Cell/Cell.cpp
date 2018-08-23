@@ -28,8 +28,8 @@ N2D2::Cell::Cell(const std::string& name, unsigned int nbOutputs)
       mOutputsDims(std::vector<size_t>({1U, 1U, nbOutputs})),
       mFullMap(true),
       mFullMapInitialized(false),
-      mUnitMap(true),
-      mUnitMapInitialized(false)
+      mGroupMap(0),
+      mGroupMapInitialized(false)
 {
     // ctor
 }
@@ -168,31 +168,67 @@ bool N2D2::Cell::isFullMap() const
     return mFullMap;
 }
 
-bool N2D2::Cell::isUnitMap() const
+size_t N2D2::Cell::groupMap() const
 {
-    if (!mUnitMapInitialized) {
-        for (size_t output = 0,
-                    nbOutputs = mMaps.dimX(),
-                    nbChannels = mMaps.dimY();
-             output < nbOutputs;
-             ++output)
-        {
-            if (nbChannels < nbOutputs) {
-                mUnitMap = false;
-                break;
-            }
+    if (!mGroupMapInitialized) {
+        const size_t nbOutputs = mMaps.dimX();
+        const size_t nbChannels = mMaps.dimY();
 
-            for (size_t channel = 0; channel < nbChannels; ++channel) {
-                if ((channel != output && mMaps(output, channel))
-                    || (channel == output && !mMaps(output, channel))) {
-                    mUnitMap = false;
-                    break;
+        // Determine the number of groups
+        size_t nbChannelsPerGroup = 0;
+        for (; nbChannelsPerGroup < nbChannels && mMaps(0, nbChannelsPerGroup);
+            ++nbChannelsPerGroup) {}
+
+        mGroupMap = 0;
+
+        if (nbChannels % nbChannelsPerGroup == 0)
+            mGroupMap = nbChannels / nbChannelsPerGroup;
+
+        // Check that there are really only groups, with mGroupMap groups
+        size_t outputGroupOffset = 0;
+        size_t channelGroupOffset = 0;
+
+        for (size_t group = 0; group < mGroupMap; ++group) {
+            const size_t outputGroupSize = (nbOutputs - outputGroupOffset)
+                                                / (mGroupMap - group);
+
+            for (size_t output = outputGroupOffset;
+                output < outputGroupOffset + outputGroupSize; ++output)
+            {
+                size_t channel = 0;
+
+                for (; channel < channelGroupOffset; ++channel) {
+                    if (mMaps(output, channel)) {
+                        mGroupMap = 0;
+                        goto loops_break;
+                    }
+                }
+
+                for (; channel < channelGroupOffset + nbChannelsPerGroup;
+                    ++channel)
+                {
+                    if (!mMaps(output, channel)) {
+                        mGroupMap = 0;
+                        goto loops_break;
+                    }
+                }
+
+                for (; channel < nbChannels; ++channel)
+                {
+                    if (mMaps(output, channel)) {
+                        mGroupMap = 0;
+                        goto loops_break;
+                    }
                 }
             }
+
+            outputGroupOffset += outputGroupSize;
+            channelGroupOffset += nbChannelsPerGroup;
         }
 
-        mUnitMapInitialized = true;
+loops_break:
+        mGroupMapInitialized = true;
     }
 
-    return mUnitMap;
+    return mGroupMap;
 }

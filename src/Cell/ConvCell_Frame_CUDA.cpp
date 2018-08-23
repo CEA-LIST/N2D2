@@ -136,7 +136,14 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
                 it = mExtSharedSynapses.find(k);
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
-        kernelDims.push_back(mInputs[k].dimZ());
+
+#if CUDNN_VERSION >= 7000
+        if (groupMap() > 1)
+            kernelDims.push_back(mInputs[k].dimZ() / groupMap());
+        else
+#endif
+            kernelDims.push_back(mInputs[k].dimZ());
+
         kernelDims.push_back(getNbOutputs());
 
         if (it != mExtSharedSynapses.end()) {
@@ -161,6 +168,11 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
             mSharedSynapses.push_back(new CudaTensor<T>(kernelDims));
             mWeightsFiller->apply(mSharedSynapses.back());
 
+#if CUDNN_VERSION >= 7000
+            if (groupMap() > 1)
+                cudnnSetConvolutionGroupCount(mConvDesc, groupMap());
+            else
+#endif
             if (!isFullMap()) {
                 // Set the non-connected kernels coefficients to 0
                 for (unsigned int output = 0; output < getNbOutputs(); ++output)
@@ -403,6 +415,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
             mDiffSharedSynapses[k].getDevicePtr()));
 #endif
 
+#if CUDNN_VERSION >= 7000
+        if (groupMap() > 1) {
+            // Nothing to do!
+        }
+        else
+#endif
         if (!isFullMap()) {
             // Set the non-connected kernels diff to 0
             unsigned int offset = 0;

@@ -311,7 +311,10 @@ public:
     virtual void processFreeParameters(const std::function
                                        <double(const double&)>& /*func*/) {};
     bool isFullMap() const;
-    bool isUnitMap() const;
+    size_t groupMap() const;
+    bool isUnitMap() const {
+        return (mMaps.dimX() == mMaps.dimY() && groupMap() == mMaps.dimX());
+    };
     /// Destructor
     virtual ~Cell() {};
 
@@ -335,8 +338,8 @@ private:
 
     mutable bool mFullMap;
     mutable bool mFullMapInitialized;
-    mutable bool mUnitMap;
-    mutable bool mUnitMapInitialized;
+    mutable size_t mGroupMap;
+    mutable bool mGroupMapInitialized;
 };
 }
 
