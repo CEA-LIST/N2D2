@@ -28,7 +28,7 @@ TEST(IniParser, load)
     const std::string data = "[conv1]\n"
                              "KernelWidth=4\n"
                              "KernelHeight=4\n"
-                             "NbChannels=16\n"
+                             "NbOutputs=16\n"
                              "Stride=2\n"
                              "Test=1 2 3 4\n";
 
@@ -40,7 +40,7 @@ TEST(IniParser, load)
     iniConfig.currentSection("conv1");
 
     ASSERT_EQUALS(iniConfig.getProperty<int>("KernelWidth"), 4);
-    ASSERT_EQUALS(iniConfig.getProperty<int>("NbChannels"), 16);
+    ASSERT_EQUALS(iniConfig.getProperty<int>("NbOutputs"), 16);
     ASSERT_EQUALS(iniConfig.getProperty<int>("Stride"), 2);
     ASSERT_EQUALS(iniConfig.getProperty<int>("StrideX", 3), 3);
 

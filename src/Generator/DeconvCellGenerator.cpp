@@ -67,8 +67,8 @@ N2D2::DeconvCellGenerator::generate(Network& network,
         }
     }
 
-    const unsigned int nbChannels = iniConfig.getProperty
-                                    <unsigned int>("NbChannels");
+    const unsigned int nbOutputs = iniConfig.getProperty
+                                    <unsigned int>("NbOutputs");
 
     std::vector<unsigned int> strideDims;
 
@@ -125,7 +125,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
             ? Registrar<DeconvCell>::create<float>(model)(network,
                                                           section,
                                                           kernelDims,
-                                                          nbChannels,
+                                                          nbOutputs,
                                                           strideDims,
                                                           paddingDims,
                                                           activation)
@@ -133,14 +133,14 @@ N2D2::DeconvCellGenerator::generate(Network& network,
             ? Registrar<DeconvCell>::create<half_float::half>(model)(network,
                                                                     section,
                                                                     kernelDims,
-                                                                    nbChannels,
+                                                                    nbOutputs,
                                                                     strideDims,
                                                                     paddingDims,
                                                                     activation)
             : Registrar<DeconvCell>::create<double>(model)(network,
                                                            section,
                                                            kernelDims,
-                                                           nbChannels,
+                                                           nbOutputs,
                                                            strideDims,
                                                            paddingDims,
                                                            activation);
@@ -207,8 +207,8 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     MappingGenerator::Mapping defaultMapping
         = MappingGenerator::getMapping(iniConfig, section, "Mapping");
 
-    unsigned int nbInputChannels = 0;
-    std::vector<bool> outputConnection(nbChannels, false);
+    unsigned int nbChannels = 0;
+    std::vector<bool> outputConnection(nbOutputs, false);
 
     for (std::vector<std::shared_ptr<Cell> >::const_iterator it
          = parents.begin(),
@@ -216,14 +216,14 @@ N2D2::DeconvCellGenerator::generate(Network& network,
          it != itEnd;
          ++it) {
         const Matrix<bool> map = MappingGenerator::generate(
-            sp, (*it), nbChannels, iniConfig, section, defaultMapping);
+            sp, (*it), nbOutputs, iniConfig, section, defaultMapping);
 
-        nbInputChannels += map.rows();
+        nbChannels += map.rows();
 
-        for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-            const std::vector<bool>& row = map.col(channel);
-            outputConnection[channel]
-                = outputConnection[channel]
+        for (unsigned int output = 0; output < nbOutputs; ++output) {
+            const std::vector<bool>& row = map.col(output);
+            outputConnection[output]
+                = outputConnection[output]
                   || (std::find(row.begin(), row.end(), true) != row.end());
         }
 
@@ -233,9 +233,9 @@ N2D2::DeconvCellGenerator::generate(Network& network,
             cell->addInput((*it).get(), map);
     }
 
-    for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-        if (!outputConnection[channel]) {
-            std::cout << Utils::cwarning << "Warning: output map #" << channel
+    for (unsigned int output = 0; output < nbOutputs; ++output) {
+        if (!outputConnection[output]) {
+            std::cout << Utils::cwarning << "Warning: output map #" << output
                       << " of \"" << section << "\" has no input connection."
                       << Utils::cdef << std::endl;
         }
@@ -246,8 +246,8 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     const bool defaultNormalize = iniConfig.getProperty
                                   <bool>("Kernel.Normalize", false);
 
-    for (unsigned int channel = 0; channel < nbInputChannels; ++channel) {
-        for (unsigned int output = 0; output < nbChannels; ++output) {
+    for (unsigned int channel = 0; channel < nbChannels; ++channel) {
+        for (unsigned int output = 0; output < nbOutputs; ++output) {
             std::stringstream kernelIdx;
             kernelIdx << "Kernel[" << channel << "][" << output << "]";
 

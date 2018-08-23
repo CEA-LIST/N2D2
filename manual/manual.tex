@@ -427,7 +427,7 @@ Input=env
 Type=Conv
 KernelWidth=3
 KernelHeight=3
-NbChannels=32
+NbOutputs=32
 Stride=1
 
 ; Second layer: MAX pooling with pooling area 2x2
@@ -437,7 +437,7 @@ Type=Pool
 Pooling=Max
 PoolWidth=2
 PoolHeight=2
-NbChannels=32
+NbOutputs=32
 Stride=2
 Mapping.Size=1 ; one to one connection between convolution output maps and pooling input maps
 
@@ -1266,7 +1266,7 @@ If the \lstinline!inception_model.ini.tpl! template file content is:
 [{{SECTION_NAME}}_layer1]
 Input={{INPUT}}
 Type=Conv
-NbChannels={{SIZE}}
+NbOutputs={{SIZE}}
 
 [{{SECTION_NAME}}_layer2]
 Input={{SECTION_NAME}}_layer1
@@ -1286,7 +1286,7 @@ The resulting equivalent content for the main INI file will be:
 [inception_layer1]
 Input=layer_x
 Type=Conv
-NbChannels=32
+NbOutputs=32
 
 [inception_layer2]
 Input=inception_layer1
@@ -3290,13 +3290,13 @@ Type=Conv
 KernelWidth=1
 KernelHeight=1
 ; 18 channels for 9 anchors
-NbChannels=18
+NbOutputs=18
 ...
 
 [scores.softmax]
 Input=scores
 Type=Softmax
-NbOutputs=[scores]NbChannels
+NbOutputs=[scores]NbOutputs
 WithLoss=1
 
 ; RPN network: coordinates layer
@@ -3306,7 +3306,7 @@ Type=Conv
 KernelWidth=1
 KernelHeight=1
 ; 36 channels for 4 coordinates x 9 anchors
-NbChannels=36
+NbOutputs=36
 ...
 
 ; RPN network: anchors
@@ -3381,7 +3381,7 @@ Type=Conv
 KernelWidth=1
 KernelHeight=1
 ; 36 channels for 4 coordinates x 9 anchors
-NbChannels=36
+NbOutputs=36
 ...
 ConfigSection=coordinates.config
 
@@ -3408,7 +3408,7 @@ Convolutional layer.
   \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \cellcolor{requiredcolor}\lstinline!KernelDims! [] & List of space-separated dimensions for N-D kernels \\
   \hline
-  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output channels \\
   \hline
   \lstinline!SubSampleX! [1] & X-axis subsampling factor of the output
   feature maps \\
@@ -3606,7 +3606,7 @@ Deconvolutionlayer.
   \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \cellcolor{requiredcolor}\lstinline!KernelDims! [] & List of space-separated dimensions for N-D kernels \\
   \hline
-  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output channels \\
   \hline
   \lstinline!StrideX! [1] & X-axis stride of the kernels \\
   \lstinline!StrideY! [1] & Y-axis stride of the kernels \\
@@ -3734,7 +3734,7 @@ Type=Pool
 Model=Frame_EXT_CUDA
 PoolWidth=1
 PoolHeight=1
-NbChannels=4
+NbOutputs=4
 Pooling=Max
 Mapping.SizeY=2
 Mapping.StrideY=2
@@ -3777,7 +3777,7 @@ The layer connectivity is the following:
   \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \cellcolor{requiredcolor}\lstinline!PoolDims! [] & List of space-separated dimensions for N-D pooling area \\
   \hline
-  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output channels \\
   \hline
   \lstinline!StrideX! [1] & X-axis stride of the pooling area \\
   \lstinline!StrideY! [1] & Y-axis stride of the pooling area \\
@@ -3880,7 +3880,7 @@ Unpooling layer.
   \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \cellcolor{requiredcolor}\lstinline!PoolDims! [] & List of space-separated dimensions for N-D pooling area \\
   \hline
-  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output channels \\
   \cellcolor{requiredcolor}\lstinline!ArgMax! & Name of the associated pool
   layer for the argmax (the pool layer input and the unpool layer output
   dimension must match) \\
@@ -4008,7 +4008,7 @@ Sum of two inputs ($T_{out} = T_{1} + T_{2}$):
 [elemwise_sum]
 Input=layer1,layer2
 Type=ElemWise
-NbOutputs=[layer1]NbChannels
+NbOutputs=[layer1]NbOutputs
 Operation=Sum
 \end{lstlisting}
 
@@ -4018,7 +4018,7 @@ Weighted sum of two inputs, by a factor 0.5 for \lstinline!layer1! and 1.0 for \
 [elemwise_weighted_sum]
 Input=layer1,layer2
 Type=ElemWise
-NbOutputs=[layer1]NbChannels
+NbOutputs=[layer1]NbOutputs
 Operation=Sum
 Weights=0.5 1.0
 \end{lstlisting}
@@ -4029,7 +4029,7 @@ Single input scaling by a factor 0.5 and shifted by 0.1 ($T_{out} = 0.5 \times T
 [elemwise_scale]
 Input=layer1
 Type=ElemWise
-NbOutputs=[layer1]NbChannels
+NbOutputs=[layer1]NbOutputs
 Operation=Sum
 Weights=0.5
 Shifts=0.1
@@ -4041,7 +4041,7 @@ Absolute value of an input ($T_{out} = |T_{1}|$):
 [elemwise_abs]
 Input=layer1
 Type=ElemWise
-NbOutputs=[layer1]NbChannels
+NbOutputs=[layer1]NbOutputs
 Operation=Abs
 \end{lstlisting}
 
@@ -4055,7 +4055,7 @@ Fractional max pooling layer \citep{Graham2014}.
  \hline
  Option [default value] & Description\\
  \hline\hline
-  \cellcolor{requiredcolor}\lstinline!NbChannels! & Number of output channels \\
+  \cellcolor{requiredcolor}\lstinline!NbOutputs! & Number of output channels \\
   \cellcolor{requiredcolor}\lstinline!ScalingRatio! & Scaling ratio.
   The output size is $round\left(\frac{\text{input size}}
   {\text{scaling ratio}}\right)$. \\
@@ -4528,7 +4528,7 @@ Input=sp
 Type=Conv
 KernelWidth=5
 KernelHeight=5
-NbChannels=6
+NbOutputs=6
 \end{lstlisting}
 
 The next layer is a 2x2 MAX pooling layer, with a stride of 2 (non-overlapping
@@ -4540,7 +4540,7 @@ Input=conv1
 Type=Pool
 PoolWidth=2
 PoolHeight=2
-NbChannels=[conv1]NbChannels
+NbOutputs=[conv1]NbOutputs
 Stride=2
 Pooling=Max
 Mapping.Size=1 ; One to one connection between input and output channels
@@ -4554,7 +4554,7 @@ Input=pool1
 Type=Conv
 KernelWidth=5
 KernelHeight=5
-NbChannels=16
+NbOutputs=16
 \end{lstlisting}
 
 Note that in LeNet, the \lstinline![conv2]! layer is not fully connected to the
@@ -4580,7 +4580,7 @@ Input=conv2
 Type=Pool
 PoolWidth=2
 PoolHeight=2
-NbChannels=[conv2]NbChannels
+NbOutputs=[conv2]NbOutputs
 Stride=2
 Pooling=Max
 Mapping.Size=1
@@ -4590,7 +4590,7 @@ Input=pool2
 Type=Conv
 KernelWidth=5
 KernelHeight=5
-NbChannels=120
+NbOutputs=120
 \end{lstlisting}
 
 The network is composed of two fully-connected layers of 84 and 10 neurons
@@ -4824,7 +4824,7 @@ Type=Conv
 [drop2]
 Input=fc2
 Type=Dropout
-NbOutputs=[fc2]NbChannels
+NbOutputs=[fc2]NbOutputs
 \end{lstlisting}
 
 A full network description can be found in the \emph{IMDBWIKI.ini} file in the
@@ -4846,7 +4846,7 @@ Input=drop2
 Type=Conv
 KernelWidth=1
 KernelHeight=1
-NbChannels=1
+NbOutputs=1
 Stride=1
 ActivationFunction=LogisticWithLoss
 WeightsFiller=XavierFiller
@@ -4900,7 +4900,7 @@ Input=drop2
 Type=Conv
 KernelWidth=1
 KernelHeight=1
-NbChannels=1
+NbOutputs=1
 Stride=1
 ActivationFunction=LogisticWithLoss
 WeightsFiller=XavierFiller

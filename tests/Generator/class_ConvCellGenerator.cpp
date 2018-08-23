@@ -29,7 +29,7 @@ TEST(ConvCellGenerator, ConvCellGenerator)
     const std::string data = "[conv1]\n"
                              "KernelWidth=4\n"
                              "KernelHeight=4\n"
-                             "NbChannels=16\n"
+                             "NbOutputs=16\n"
                              "Stride=2\n";
 
     UnitTest::FileWriteContent("ConvCellGenerator.in", data);
@@ -68,13 +68,13 @@ TEST_DATASET(ConvCellGenerator,
     std::string data = "[conv1]\n"
                        "KernelWidth=4\n"
                        "KernelHeight=4\n"
-                       "NbChannels=16\n"
+                       "NbOutputs=16\n"
                        "Stride=2\n"
                        "\n"
                        "[conv2]\n"
                        "KernelWidth=5\n"
                        "KernelHeight=5\n"
-                       "NbChannels=24\n"
+                       "NbOutputs=24\n"
                        "Stride=2\n"
                        "Map(conv1)=\\\n"
                        "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 1 \\\n"

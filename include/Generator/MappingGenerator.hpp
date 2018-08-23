@@ -49,7 +49,7 @@ public:
 
     static Matrix<bool> generate(StimuliProvider& sp,
                                  std::shared_ptr<Cell> parent,
-                                 unsigned int nbChannels,
+                                 unsigned int nbOutputs,
                                  IniParser& iniConfig,
                                  const std::string& section,
                                  const Mapping& defaultMapping_

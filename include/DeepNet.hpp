@@ -564,7 +564,7 @@ double N2D2::DeepNet::Histogram::getBinValue(unsigned int binIdx) const
  *      <td>Height of the kernel</td>
  *  </tr>
  *  <tr>
- *      <td><tt>NbChannels</tt></td>
+ *      <td><tt>NbOutputs</tt></td>
  *      <td>[REQUIRED]</td>
  *      <td>Number of output channels</td>
  *  </tr>
@@ -754,7 +754,7 @@ double N2D2::DeepNet::Histogram::getBinValue(unsigned int binIdx) const
  *      <td>Height of the kernel</td>
  *  </tr>
  *  <tr>
- *      <td><tt>NbChannels</tt></td>
+ *      <td><tt>NbOutputs</tt></td>
  *      <td>[REQUIRED]</td>
  *      <td>Number of output channels</td>
  *  </tr>
@@ -944,7 +944,7 @@ double N2D2::DeepNet::Histogram::getBinValue(unsigned int binIdx) const
  *      <td>Height of the pooling area</td>
  *  </tr>
  *  <tr>
- *      <td><tt>NbChannels</tt></td>
+ *      <td><tt>NbOutputs</tt></td>
  *      <td>[REQUIRED]</td>
  *      <td>Number of output channels</td>
  *  </tr>

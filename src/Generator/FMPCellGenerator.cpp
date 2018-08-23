@@ -42,8 +42,8 @@ N2D2::FMPCellGenerator::generate(Network& network,
 
     std::cout << "Layer: " << section << " [FMP(" << model << ")]" << std::endl;
 
-    const unsigned int nbChannels = iniConfig.getProperty
-                                    <unsigned int>("NbChannels");
+    const unsigned int nbOutputs = iniConfig.getProperty
+                                    <unsigned int>("NbOutputs");
     const double scalingRatio = iniConfig.getProperty<double>("ScalingRatio");
 
     std::shared_ptr<Activation> activation
@@ -52,7 +52,7 @@ N2D2::FMPCellGenerator::generate(Network& network,
 
     // Cell construction
     std::shared_ptr<FMPCell> cell = Registrar<FMPCell>::create(model)(
-        network, section, scalingRatio, nbChannels, activation);
+        network, section, scalingRatio, nbOutputs, activation);
 
     if (!cell) {
         throw std::runtime_error(
@@ -70,8 +70,7 @@ N2D2::FMPCellGenerator::generate(Network& network,
     MappingGenerator::Mapping defaultMapping
         = MappingGenerator::getMapping(iniConfig, section, "Mapping");
 
-    unsigned int nbInputChannels = 0;
-    std::vector<bool> outputConnection(nbChannels, false);
+    std::vector<bool> outputConnection(nbOutputs, false);
 
     for (std::vector<std::shared_ptr<Cell> >::const_iterator it
          = parents.begin(),
@@ -79,14 +78,12 @@ N2D2::FMPCellGenerator::generate(Network& network,
          it != itEnd;
          ++it) {
         const Matrix<bool> map = MappingGenerator::generate(
-            sp, (*it), nbChannels, iniConfig, section, defaultMapping);
+            sp, (*it), nbOutputs, iniConfig, section, defaultMapping);
 
-        nbInputChannels += map.rows();
-
-        for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-            const std::vector<bool>& row = map.col(channel);
-            outputConnection[channel]
-                = outputConnection[channel]
+        for (unsigned int output = 0; output < nbOutputs; ++output) {
+            const std::vector<bool>& row = map.col(output);
+            outputConnection[output]
+                = outputConnection[output]
                   || (std::find(row.begin(), row.end(), true) != row.end());
         }
 
@@ -103,9 +100,9 @@ N2D2::FMPCellGenerator::generate(Network& network,
         }
     }
 
-    for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-        if (!outputConnection[channel]) {
-            std::cout << Utils::cwarning << "Warning: output map #" << channel
+    for (unsigned int output = 0; output < nbOutputs; ++output) {
+        if (!outputConnection[output]) {
+            std::cout << Utils::cwarning << "Warning: output map #" << output
                       << " of \"" << section << "\" has no input connection."
                       << Utils::cdef << std::endl;
         }

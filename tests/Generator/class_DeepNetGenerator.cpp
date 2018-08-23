@@ -69,7 +69,7 @@ TEST(DeepNetGenerator, DeepNetGenerator)
                              "Type=Conv\n"
                              "KernelWidth=4\n"
                              "KernelHeight=4\n"
-                             "NbChannels=16\n"
+                             "NbOutputs=16\n"
                              "Stride=2\n"
                              "ActivationFunction=TanhLeCun\n"
                              "\n"
