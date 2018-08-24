@@ -98,6 +98,8 @@ public:
     virtual ~BatchNormCell_Frame_CUDA();
 
 protected:
+    typedef typename Cuda::cudnn_scaling_type<T>::type ParamT;
+
     inline void setScale(unsigned int index, const BaseTensor& value);
     inline void setBias(unsigned int index, const BaseTensor& value);
     inline void setMean(unsigned int index, const BaseTensor& value);
@@ -105,14 +107,14 @@ protected:
 
     cudnnBatchNormMode_t mMode;
     unsigned int mNbPropagate;
-    std::shared_ptr<CudaTensor<T> > mScale;
-    std::shared_ptr<CudaTensor<T> > mBias;
-    CudaTensor<T> mDiffScale;
-    CudaTensor<T> mDiffBias;
-    std::shared_ptr<CudaTensor<T> > mMean;
-    std::shared_ptr<CudaTensor<T> > mVariance;
-    CudaTensor<T> mSavedMean;
-    CudaTensor<T> mSavedVariance;
+    std::shared_ptr<CudaTensor<ParamT> > mScale;
+    std::shared_ptr<CudaTensor<ParamT> > mBias;
+    CudaTensor<ParamT> mDiffScale;
+    CudaTensor<ParamT> mDiffBias;
+    std::shared_ptr<CudaTensor<ParamT> > mMean;
+    std::shared_ptr<CudaTensor<ParamT> > mVariance;
+    CudaTensor<ParamT> mSavedMean;
+    CudaTensor<ParamT> mSavedVariance;
     mutable bool mSynchronized;
 
 private:
@@ -124,7 +126,7 @@ template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::setScale(unsigned int index,
                                                  const BaseTensor& value)
 {
-    (*mScale)(index) = tensor_cast<T>(value)(0);
+    (*mScale)(index) = tensor_cast<ParamT>(value)(0);
 
     if (!mSynchronized)
         mScale->synchronizeHToD(index, 1);
@@ -138,14 +140,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::getScale(unsigned int index,
         mScale->synchronizeDToH(index, 1);
 
     value.resize({1});
-    value = Tensor<T>({1}, (*mScale)(index));
+    value = Tensor<ParamT>({1}, (*mScale)(index));
 }
 
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::setBias(unsigned int index,
                                                 const BaseTensor& value)
 {
-    (*mBias)(index) = tensor_cast<T>(value)(0);
+    (*mBias)(index) = tensor_cast<ParamT>(value)(0);
 
     if (!mSynchronized)
         mBias->synchronizeHToD(index, 1);
@@ -159,14 +161,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::getBias(unsigned int index,
         mBias->synchronizeDToH(index, 1);
 
     value.resize({1});
-    value = Tensor<T>({1}, (*mBias)(index));
+    value = Tensor<ParamT>({1}, (*mBias)(index));
 }
 
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::setMean(unsigned int index,
                                                 const BaseTensor& value)
 {
-    (*mMean)(index) = tensor_cast<T>(value)(0);
+    (*mMean)(index) = tensor_cast<ParamT>(value)(0);
 
     if (!mSynchronized)
         mMean->synchronizeHToD(index, 1);
@@ -180,14 +182,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::getMean(unsigned int index,
         mMean->synchronizeDToH(index, 1);
 
     value.resize({1});
-    value = Tensor<T>({1}, (*mMean)(index));
+    value = Tensor<ParamT>({1}, (*mMean)(index));
 }
 
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::setVariance(unsigned int index,
                                                     const BaseTensor& value)
 {
-    (*mVariance)(index) = tensor_cast<T>(value)(0);
+    (*mVariance)(index) = tensor_cast<ParamT>(value)(0);
 
     if (!mSynchronized)
         mVariance->synchronizeHToD(index, 1);
@@ -201,7 +203,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::getVariance(unsigned int index,
         mVariance->synchronizeDToH(index, 1);
 
     value.resize({1});
-    value = Tensor<T>({1}, (*mVariance)(index));
+    value = Tensor<ParamT>({1}, (*mVariance)(index));
 }
 
 #endif // N2D2_BATCHNORMCELL_FRAME_CUDA_H

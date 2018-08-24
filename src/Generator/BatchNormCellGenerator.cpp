@@ -84,7 +84,9 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
 
     // Set configuration parameters defined in the INI file
     std::shared_ptr<Solver> solvers
-        = SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
+        = (dataType == Float16) 
+            ? SolverGenerator::generate(iniConfig, section, model, Float32, "Solvers")
+            : SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
 
     if (solvers) {
         cell->setScaleSolver(solvers);
@@ -92,13 +94,17 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
     }
 
     std::shared_ptr<Solver> scaleSolver
-        = SolverGenerator::generate(iniConfig, section, model, dataType, "ScaleSolver");
+        = (dataType == Float16)
+            ? SolverGenerator::generate(iniConfig, section, model, Float32, "ScaleSolver")
+            : SolverGenerator::generate(iniConfig, section, model, dataType, "ScaleSolver");
 
     if (scaleSolver)
         cell->setScaleSolver(scaleSolver);
 
     std::shared_ptr<Solver> biasSolver
-        = SolverGenerator::generate(iniConfig, section, model, dataType, "BiasSolver");
+        = (dataType == Float16)
+            ? SolverGenerator::generate(iniConfig, section, model, Float32, "BiasSolver")
+            : SolverGenerator::generate(iniConfig, section, model, dataType, "BiasSolver");
 
     if (biasSolver)
         cell->setBiasSolver(biasSolver);
