@@ -592,6 +592,18 @@ namespace Utils {
     std::basic_istream<Char, Traits>&
     operator>>(std::basic_istream<Char, Traits>& is,
                             const quotedProxyType<Char, Traits, Alloc>& proxy);
+    // Scaling parameters are typically "alpha" and "beta".
+    // Their type must be "float" for HALF and FLOAT (default template)
+    // and "double" for DOUBLE (specialized template)
+    template <class T>
+    struct scaling_type {
+        typedef float type;
+    };
+
+    template <>
+    struct scaling_type<double> {
+        typedef double type;
+    };
 }
 
 template <class T>
