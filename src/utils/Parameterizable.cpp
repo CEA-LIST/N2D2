@@ -56,7 +56,8 @@ void N2D2::Parameterizable::setParameter(const std::string& name,
         valueStr.imbue(Utils::locale);
 
         if (!(valueStr >> *mParameters[name]) || !valueStr.eof())
-            throw std::runtime_error("Unreadable parameter: " + name);
+            throw std::runtime_error("Unreadable parameter: " + name
+                                     + " (value is \"" + value + "\")");
     } else
         throw std::runtime_error("Parameter does not exist: " + name);
 }
@@ -92,8 +93,8 @@ unsigned int N2D2::Parameterizable::setParameters(
             }
 
             if (!readOk || !value.eof())
-                throw std::runtime_error("Unreadable parameter: "
-                                         + (*it).first);
+                throw std::runtime_error("Unreadable parameter: " + (*it).first
+                                    + " (value is \"" + (*it).second + "\")");
 
             ++nbLoaded;
         } else {
@@ -144,7 +145,8 @@ N2D2::Parameterizable::setPrefixedParameters(std::map
 
                 if (!readOk || !value.eof())
                     throw std::runtime_error("Unreadable parameter: "
-                                             + (*it).first);
+                                             + (*it).first + " (value is \""
+                                             + (*it).second + "\")");
 
                 ++nbLoaded;
 

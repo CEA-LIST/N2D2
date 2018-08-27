@@ -35,8 +35,17 @@ N2D2::CellGenerator::generate(Network& network,
         throw std::runtime_error("Missing [" + section + "] section.");
 
     const std::string type = iniConfig.getProperty<std::string>("Type");
-    return Registrar
+    std::shared_ptr<Cell> cell = Registrar
         <CellGenerator>::create(type)(network, sp, parents, iniConfig, section);
+
+    iniConfig.setProperty("_NbChannels", cell->getNbChannels());
+    iniConfig.setProperty("_ChannelsWidth", cell->getChannelsWidth());
+    iniConfig.setProperty("_ChannelsHeight", cell->getChannelsHeight());
+    iniConfig.setProperty("_NbOutputs", cell->getNbOutputs());
+    iniConfig.setProperty("_OutputsWidth", cell->getOutputsWidth());
+    iniConfig.setProperty("_OutputsHeight", cell->getOutputsHeight());
+
+    return cell;
 }
 
 void N2D2::CellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,

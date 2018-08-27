@@ -89,14 +89,22 @@ void N2D2::IniParser::load(std::istream& data, const std::string& parentSection)
         if (line.empty())
             continue;
 
-        if (*(line.begin()) == '[' && *(line.rbegin()) == ']') {
+        size_t posCloseBracket;
+
+        if (*(line.begin()) == '['
+            && (posCloseBracket = line.find(']')) != std::string::npos)
+        {
             if (!tplIni.empty()) {
                 // Process templated sub INI
                 loadTplIni(tplIni);
                 tplIni.clear();
             }
 
-            std::string section = line.substr(1, line.size() - 2);
+            std::string section = line.substr(1, posCloseBracket - 1);
+
+            const std::string inherited = line.substr(posCloseBracket + 1);
+            const std::vector<std::string> inheritedSections
+                = Utils::split(inherited, " \t", true);
 
             // Check for templated sub INI
             const std::vector<std::string> sectionSplit
@@ -126,6 +134,27 @@ void N2D2::IniParser::load(std::istream& data, const std::string& parentSection)
             mIniData.push_back(std::map
                                <std::string, std::pair<std::string, bool> >());
 
+            for (std::vector<std::string>::const_iterator
+                it = inheritedSections.begin(), itEnd = inheritedSections.end();
+                it != itEnd; ++it)
+            {
+                std::vector<std::string>::const_iterator itInheritedSection
+                    = std::find(mIniSections.begin(), mIniSections.end(),
+                                (*it));
+
+                if (itInheritedSection == mIniSections.end()) {
+                    throw std::runtime_error("Inherited section [" + (*it)
+                        + "] does not exist for section [" + section
+                        + "] in INI file " + mFileName);
+                }
+
+                const unsigned int inheritedSectionIndex
+                    = itInheritedSection - mIniSections.begin();
+
+                mIniData.back().insert(mIniData[inheritedSectionIndex].begin(),
+                                       mIniData[inheritedSectionIndex].end());
+            }
+
             if (!parentSection.empty()) {
                 mIniData.back()["$PARENT_SECTION_NAME"]
                     = std::make_pair(parentSection, true);
@@ -151,10 +180,13 @@ void N2D2::IniParser::load(std::istream& data, const std::string& parentSection)
                                      + " in INI file " + mFileName);
 
         if (mIniData[mCurrentSection].find(property)
-            != mIniData[mCurrentSection].end()) {
-            throw std::runtime_error(
-                "Property " + property + " already exists in section ["
-                + mIniSections[mCurrentSection] + "] in INI file " + mFileName);
+            != mIniData[mCurrentSection].end())
+        {
+            std::cout << "Warning: overriding property " << property << " ("
+                "previous value was \""
+                << mIniData[mCurrentSection][property].first
+                << "\") in section [" << mIniSections[mCurrentSection] << "] in"
+                " INI file " << mFileName << std::endl;
         }
 
         std::string value = line.substr(posEq + 1);

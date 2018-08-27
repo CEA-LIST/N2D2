@@ -310,7 +310,9 @@ template <class T>
 void N2D2::IniParser::setProperty(const std::string& name, const T& value)
 {
     std::stringstream strVal;
-    strVal.imbue(Utils::locale);
+    // Don't use locale, to avoid "," thousands separator, which prevent the use
+    // of the value in expressions
+    //strVal.imbue(Utils::locale);
     strVal << std::showpoint << value;
 
     mIniData[mCurrentSection][name] = std::make_pair(strVal.str(), true);
