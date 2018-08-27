@@ -1347,26 +1347,26 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
     const unsigned int hiddenData = globalStats.nbNodes;
 
     logData << "[Memory]\n"
-               "Input data (int-8 bits): " << inputData / 1024.0
-            << " kBytes\n"
-               "Input data (float-16 bits): " << 2.0 * inputData / 1024.0
-            << " kBytes\n"
-               "Input data (float-32 bits): " << 4.0 * inputData / 1024.0
-            << " kBytes\n"
-               "Free parameters (int-8 bits): " << freeParameters / 1024.0
-            << " kBytes\n"
+               "Input data (int-8 bits): " << inputData / 1000.0
+            << " kB   (" << inputData / 1024.0 << " KiB)\n"
+               "Input data (float-16 bits): " << 2.0 * inputData / 1000.0
+            << " kB   (" << 2.0 * inputData / 1024.0 << " KiB)\n"
+               "Input data (float-32 bits): " << 4.0 * inputData / 1000.0
+            << " kB   (" << 4.0 * inputData / 1024.0 << " KiB)\n"
+               "Free parameters (int-8 bits): " << freeParameters / 1000.0
+            << " kB   (" << freeParameters / 1024.0 << " KiB)\n"
                "Free parameters (float-16 bits): " << 2.0 * freeParameters
-                                                      / 1024.0
-            << " kBytes\n"
+                                                      / 1000.0
+            << " kB   (" << 2.0 * freeParameters / 1024.0 << " KiB)\n"
                "Free parameters (float-32 bits): " << 4.0 * freeParameters
-                                                      / 1024.0
-            << " kBytes\n"
-               "Layers data (int-8 bits): " << hiddenData / 1024.0
-            << " kBytes\n"
-               "Layers data (float-16 bits): " << 2.0 * hiddenData / 1024.0
-            << " kBytes\n"
-               "Layers data (float-32 bits): " << 4.0 * hiddenData / 1024.0
-                                               << " kBytes\n\n";
+                                                      / 1000.0
+            << " kB   (" << 4.0 * freeParameters / 1024.0 << " KiB)\n"
+               "Layers data (int-8 bits): " << hiddenData / 1000.0
+            << " kB   (" << hiddenData / 1024.0 << " KiB)\n"
+               "Layers data (float-16 bits): " << 2.0 * hiddenData / 1000.0
+            << " kB   (" << 2.0 * hiddenData / 1024.0 << " KiB)\n"
+               "Layers data (float-32 bits): " << 4.0 * hiddenData / 1000.0
+            << " kB   (" << 4.0 * hiddenData / 1024.0 << " KiB)\n\n";
 
     logData << "[Computing]\n"
                "MACS / input data: " << globalStats.nbConnections / 1.0e6
