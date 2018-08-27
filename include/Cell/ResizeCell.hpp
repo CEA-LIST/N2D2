@@ -63,6 +63,10 @@ public:
     {
         return mResizeMode;
     };
+    bool isAlignedCorner() const
+    {
+        return mAlignCorners;
+    };
 
     void getStats(Stats& stats) const;
     virtual ~ResizeCell() {};
