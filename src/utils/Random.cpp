@@ -40,6 +40,10 @@ void N2D2::Random::mtSeed(unsigned int seed)
 // Extract a tempered pseudorandom number based on the index-th value,
 unsigned int N2D2::Random::mtRand()
 {
+    unsigned int y;
+
+#pragma omp critical(Random__mtRand)
+{
     if (_mt_index == 0) {
         // Generate an array of 624 untempered numbers
         for (unsigned int i = 0; i < 624; ++i) {
@@ -53,13 +57,14 @@ unsigned int N2D2::Random::mtRand()
         }
     }
 
-    unsigned int y = _mt[_mt_index];
+    y = _mt[_mt_index];
+    _mt_index = (_mt_index + 1) % 624;
+}
+
     y ^= y >> 11;
     y ^= (y << 7) & 0x9D2C5680;
     y ^= (y << 15) & 0xEFC60000;
     y ^= y >> 18;
-
-    _mt_index = (_mt_index + 1) % 624;
     return y;
 }
 
