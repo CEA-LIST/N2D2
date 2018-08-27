@@ -119,7 +119,7 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
                     }
 
                     if (subSample) {
-#pragma omp critical
+#pragma omp critical(ConvCell_Frame_Kernels__forward)
                         outputs(ox / desc.subSample[0],
                                 oy / desc.subSample[1],
                                 output,

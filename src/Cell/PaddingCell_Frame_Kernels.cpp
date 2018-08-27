@@ -54,7 +54,7 @@ void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor<Float_T>& inputs,
 
                     }
 
-#pragma omp critical
+#pragma omp critical(PaddingCell_Frame_Kernels__forward)
                     outputs(ox,
                             oy,
                             output + outputOffset,

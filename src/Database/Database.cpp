@@ -638,7 +638,7 @@ void N2D2::Database::extractSlices(unsigned int width,
 // Don't push_back to mStimuli directly, because if a reallocation occurs,
 // concurrent readings (for
 // example with getStimulusData()) will go wrong...
-#pragma omp critical
+#pragma omp critical(Database__extractSlices)
                         newStimuli.push_back(stimulus);
                     }
                 }
@@ -649,7 +649,7 @@ void N2D2::Database::extractSlices(unsigned int width,
                           Utils::Delete());
 
 // Progress bar
-#pragma omp critical
+#pragma omp critical(Database__extractSlices)
             {
                 progress = (unsigned int)(20.0 * (++sliced) / (double)toSlice);
 
@@ -1093,7 +1093,7 @@ cv::Mat N2D2::Database::getStimulusData(StimulusID id)
 {
     if (mLoadDataInMemory) {
         if (mStimuliData.empty()) {
-#pragma omp critical
+#pragma omp critical(Database__getStimulusData)
             mStimuliData.resize(mStimuli.size());
         }
 
@@ -1109,7 +1109,7 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
 {
     if (mLoadDataInMemory) {
         if (mStimuliLabelsData.empty()) {
-#pragma omp critical
+#pragma omp critical(Database__getStimulusLabelsData)
             mStimuliLabelsData.resize(mStimuli.size());
         }
 

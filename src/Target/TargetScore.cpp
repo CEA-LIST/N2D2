@@ -355,7 +355,7 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                 mBatchSuccess[batchPos] = (estimatedLabels(0) == target(0));
 
                 if (!mBatchSuccess[batchPos]) {
-#pragma omp critical
+#pragma omp critical(TargetScore__process)
                     misclassified.push_back(
                         std::make_pair(id, estimatedLabels(0)));
                 }
@@ -430,7 +430,7 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                     (successTopN / nbValidTargets) : 1.0;
             }
 
-#pragma omp critical
+#pragma omp critical(TargetScore__process)
             std::transform(confusionMatrix.begin(), confusionMatrix.end(),
                            confusion.begin(),
                            confusionMatrix.begin(),

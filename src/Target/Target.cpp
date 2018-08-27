@@ -381,7 +381,7 @@ void N2D2::Target::process(Database::StimuliSet set)
             if (target.size() == 1) {
                 if (target(0) >= 0) {
                     if (target(0) >= (int)nbTargets) {
-#pragma omp critical
+#pragma omp critical(Target__process)
                         {
                             std::cout << Utils::cwarning << "Stimulus #"
                                 << id << " has target " << target(0) << " but "
@@ -444,7 +444,7 @@ void N2D2::Target::process(Database::StimuliSet set)
                 for (unsigned int oy = 0; oy < value.dimY(); ++oy) {
                     for (unsigned int ox = 0; ox < value.dimX(); ++ox) {
                         if (target(ox, oy, 0) >= (int)nbTargets) {
-#pragma omp critical
+#pragma omp critical(Target__process)
                             {
                                 std::cout << Utils::cwarning << "Stimulus #"
                                     << id << " has target " << target(ox, oy, 0)

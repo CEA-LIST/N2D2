@@ -296,7 +296,7 @@ N2D2::DSP::stft(const std::vector<T>& x,
         yt = toComplex(xt);
         fft(yt);
 
-#pragma omp critical
+#pragma omp critical(DSP__stft)
         {
             for (unsigned int f = 0; f < nFft; ++f)
                 y[f][t] = yt[f];

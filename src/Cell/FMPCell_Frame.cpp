@@ -134,7 +134,7 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
 // For this output node, take the max. input across all connected channels
 // Critical section needed because channelMax can be the same for several
 // outputs
-#pragma omp critical
+#pragma omp critical(FMPCell_Frame__propagate)
                         mInputsBackProp(ixMax, iyMax, channelMax, batchPos)
                             .push_back(ox + oy * mOutputs.dimX()
                                        + output * mOutputs.dimX()
