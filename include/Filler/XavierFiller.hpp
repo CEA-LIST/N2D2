@@ -106,11 +106,15 @@ template <class T> void N2D2::XavierFiller<T>::apply(BaseTensor& baseData,
                     (*it) = (*it) < 0 ? 0 : (*it);
         }
     } else {
+        // randNormal() takes the std. dev., which is the square root of the
+        // variance
+        const T stdDev(std::sqrt(1.0 / n));
+
         for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
              it != itEnd;
              ++it) {
-                (*it) = Random::randNormal(0.0, 1.0 / n);
+                (*it) = Random::randNormal(0.0, stdDev);
                 if (restrictPositive)
                     (*it) = (*it) < 0 ? 0 : (*it);
         }
