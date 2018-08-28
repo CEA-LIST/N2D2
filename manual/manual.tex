@@ -3004,6 +3004,40 @@ Fill with a constant value.
 \end{tabular}
 \end{center}
 
+
+\paragraph{\label{par:HeFiller}\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!HeFiller!}{HeFiller}}
+Fill with an normal distribution with normalized variance taking into account
+the rectifier nonlinearity \citep{He2015}.
+This filler is sometimes referred as MSRA filler.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+    \emph{FillerName}\lstinline!.VarianceNorm! [\lstinline!FanIn!]
+    & Normalization, can be \lstinline!FanIn!, \lstinline!Average!
+    or \lstinline!FanOut! \\
+ \hline
+\end{tabular}
+\end{center}
+
+Use a normal distribution with standard deviation $\sqrt{\frac{2.0}{n}}$.
+
+\begin{myitemize}
+\item $n$ = $fan\mhyphen{}in$ with \lstinline!FanIn!, resulting in
+$Var(W)=\frac{2}{fan\mhyphen{}in}$ \\
+\item $n$ = $\frac{(fan\mhyphen{}in + fan\mhyphen{}out)}{2}$ with
+\lstinline!Average!, resulting in
+$Var(W)=\frac{4}{fan\mhyphen{}in + fan\mhyphen{}out}$ \\
+\item $n$ = $fan\mhyphen{}out$ with \lstinline!FanOut!, resulting in
+$Var(W)=\frac{2}{fan\mhyphen{}out}$
+\end{myitemize}
+
+
+
+
 \paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!NormalFiller!}{NormalFiller}}
 Fill with a normal distribution.
