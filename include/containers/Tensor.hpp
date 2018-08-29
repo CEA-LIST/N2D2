@@ -687,7 +687,7 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
     if (mat.channels() > 1)
         mDims.push_back(mat.channels());
 
-    computeSize();
+    (*mData)().reserve(computeSize());
 
     std::vector<cv::Mat> channels;
     cv::split(mat, channels);
@@ -734,22 +734,33 @@ void N2D2::Tensor<T>::convert(const cv::Mat& mat, std::vector<T>& data)
 {
     const CV_T srcRange = (std::numeric_limits<CV_T>::is_integer)
                               ? std::numeric_limits<CV_T>::max()
-                              : (CV_T)1.0;
+                              : CV_T(1.0);
     const T dstRange = (std::numeric_limits<T>::is_integer)
                            ? std::numeric_limits<T>::max()
-                           : (T)1.0;
+                           : T(1.0);
 
-    data.reserve(data.size() + mat.rows * mat.cols);
+    if (srcRange == dstRange) {
+        if (mat.isContinuous())
+            data.insert(data.end(), (CV_T*) mat.datastart, (CV_T*) mat.dataend);
+        else {
+            for (int i = 0; i < mat.rows; ++i) {
+                data.insert(data.end(),
+                            mat.ptr<CV_T>(i), mat.ptr<CV_T>(i) + mat.cols);
+            }
+        }
+    }
+    else {
+        for (int i = 0; i < mat.rows; ++i) {
+            const CV_T* rowPtr = mat.ptr<CV_T>(i);
 
-    for (int i = 0; i < mat.rows; ++i) {
-        const CV_T* rowPtr = mat.ptr<CV_T>(i);
-
-        for (int j = 0; j < mat.cols; ++j) {
-            data.push_back(static_cast<T>(
-                ((std::numeric_limits<CV_T>::is_integer && std::numeric_limits
-                  <T>::is_integer)
-                     ? static_cast<long long int>(dstRange)
-                     : static_cast<double>(dstRange)) * rowPtr[j] / srcRange));
+            for (int j = 0; j < mat.cols; ++j) {
+                data.push_back(static_cast<T>(
+                    ((std::numeric_limits<CV_T>::is_integer
+                      && std::numeric_limits<T>::is_integer)
+                         ? static_cast<long long int>(dstRange)
+                         : static_cast<double>(dstRange))
+                        * rowPtr[j] / srcRange));
+            }
         }
     }
 }
