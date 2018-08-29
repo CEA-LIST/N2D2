@@ -70,14 +70,15 @@ public:
                             unsigned int cls,
                             unsigned int node,
                             bool update = true);*/
-    bool classifySupervisedResponse(unsigned int target,
+    bool classifyRateBased(unsigned int target,
                                     unsigned int batch,
                                     std::vector<float> integrations,
                                     bool update=true);
-    bool classifySupervisedResponse(unsigned int target,
-                                    std::vector<float> activities,
+    bool classifyIntegrationBased(unsigned int target,
+                                    unsigned int batch,
                                     std::vector<float> integrations,
                                     bool update=true);
+
     bool checkLearningResponse(unsigned int batch, unsigned int cls,
                                bool update = true);
     unsigned int checkBatchLearningResponse(std::vector<unsigned int>& cls,

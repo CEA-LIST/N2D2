@@ -289,10 +289,10 @@ bool N2D2::CMonitor::classifyFirstSpike(unsigned int batch,
 }
 */
 
-bool N2D2::CMonitor::classifySupervisedResponse(unsigned int target,
-                                                unsigned int batch,
-                                                std::vector<float> integrations,
-                                                bool update)
+bool N2D2::CMonitor::classifyRateBased(unsigned int target,
+                                        unsigned int batch,
+                                        std::vector<float> integrations,
+                                        bool update)
 {
     if (mNbClasses == 0) {
         throw std::runtime_error("Error in "
@@ -331,8 +331,9 @@ bool N2D2::CMonitor::classifySupervisedResponse(unsigned int target,
     return success;
 }
 
-bool N2D2::CMonitor::classifySupervisedResponse(unsigned int target,
-                                                std::vector<float> activities,
+
+bool N2D2::CMonitor::classifyIntegrationBased(unsigned int target,
+                                                unsigned int /*batch*/,
                                                 std::vector<float> integrations,
                                                 bool update)
 {
@@ -346,17 +347,10 @@ bool N2D2::CMonitor::classifySupervisedResponse(unsigned int target,
     unsigned int maxNode = 0;
     double maxResponse = 0;
     for(unsigned int i=0; i<mNbClasses; ++i) {
-
-        if (activities[i] > maxResponse){
+        //std::cout << integrations[i] << std::endl;
+        if (integrations[i] > maxResponse){
             maxNode = i;
-            maxResponse = activities[i];
-        }
-        // If same number of spikes compare integrations. Same integration is very unlikely
-        // This also includes the case of no spikes in all neurons
-        else if (activities[i] == maxResponse) {
-            if (integrations[i] >= integrations[maxNode]) {
-                maxNode = i;
-            }
+            maxResponse = integrations[i];
         }
     }
     if(maxNode == target) {
@@ -373,6 +367,7 @@ bool N2D2::CMonitor::classifySupervisedResponse(unsigned int target,
 
     return success;
 }
+
 
 bool N2D2::CMonitor::checkLearningResponse(unsigned int batch, unsigned int cls,
                                           bool update)

@@ -447,7 +447,6 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
 
             (*it).second->clearActivity();
         }
-
         for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
              = mCMonitors.begin(),
              itEnd = mCMonitors.end();
@@ -466,10 +465,15 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
              itEnd = mCells.end();
              it != itEnd;
              ++it) {
+
             (*it).second->logFreeParameters((*it).first);
+
             if ((*it).second->getType() == ConvCell::Type) {
-                std::dynamic_pointer_cast<ConvCell_Spike>((*it).second)
-                    ->reconstructActivities((*it).first, start, stop);
+                std::shared_ptr<ConvCell_Spike> cellSpike =
+                    std::dynamic_pointer_cast<ConvCell_Spike>((*it).second);
+                    if (cellSpike){
+                        cellSpike->reconstructActivities((*it).first, start, stop);
+                    }
             }
             /*
             else if ((*it).second->getType() == LcCell::Type) {std::dynamic_pointer_cast<LcCell_Spike>((*it).second)->reconstructActivities((*it).first,
