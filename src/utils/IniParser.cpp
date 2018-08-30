@@ -680,11 +680,7 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
             = value.substr(startPos + 2, endPos - startPos - 2);
 
         std::stringstream cmdNameStr;
-#ifdef WIN32
-        cmdNameStr << "set /a " << cmdName;
-#else
-        cmdNameStr << "echo " << Utils::quoted(cmdName) << " | bc";
-#endif
+        cmdNameStr << "python -c " << Utils::quoted("print (" + cmdName + ")");
         std::string cmdValue = Utils::exec(cmdNameStr.str());
 
         // Left trim & right trim
