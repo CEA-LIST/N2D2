@@ -56,6 +56,38 @@ def graphMerge(graph, srcNode, dstNode):
 
     del graph[srcNode]
 
+def setFiller(name, filler):
+    iniTxt = ""
+
+    if filler.type == "msra":
+        iniTxt += name + "=HeFiller\n"
+    elif filler.type == "xavier":
+        iniTxt += name + "=XavierFiller\n"
+    elif filler.type == "gaussian":
+        iniTxt += name + "=NormalFiller\n"
+        iniTxt += name + ".Mean=" \
+            + str(filler.mean) + "\n"
+        iniTxt += name + ".StdDev=" \
+            + str(filler.std) + "\n"
+    elif filler.type == "constant":
+        iniTxt += name + "=ConstantFiller\n"
+        iniTxt += name + ".Value=" \
+            + str(filler.value) + "\n"
+    else:
+        iniTxt += name + "= ; TODO: unsupported: " + filler.type + "\n"
+
+    return iniTxt
+
+def setParamSpec(name, param):
+    config = ""
+
+    if param.lr_mult != 1:
+        config += name + ".LearningRate=$(" + str(param.lr_mult) + " * ${LR})\n"
+    if param.decay_mult != 1:
+        config += name + ".Decay=$(" + str(param.decay_mult) + " * ${WD})\n"
+
+    return config
+
 def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
     urllib.urlretrieve("https://github.com/BVLC/caffe/raw/master/"
         + "src/caffe/proto/caffe.proto", "caffe.proto")
@@ -83,6 +115,14 @@ def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
     attrs = {}
 
     for i, layer in enumerate(caffeNet.layer):
+        # Rename Data layer to "sp", which is the mandatory name for N2D2
+        if layer.type == "Data":
+            for other_layer in caffeNet.layer:
+                for b, val in enumerate(other_layer.bottom):
+                    if val == layer.name:
+                        other_layer.bottom[b] = "sp"
+            layer.name = "sp"
+
         # Parent nodes
         graph[layer.name] = layer.bottom
 
@@ -104,11 +144,13 @@ def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
         attrs[layer.name] = []
         parents = getParents(graph, layer.name)
 
-        if layer.type == "ReLU":
+        if layer.type == "ReLU" \
+          or layer.type == "TanH" \
+          or layer.type == "Sigmoid":
             # Merge with parents
             for parent in parents:
                 graphMerge(graph, layer.name, parent)
-                attrs[parent].append("ReLU")
+                attrs[parent].append(layer.type)
 
         elif layer.type == "Concat":
             # Merge with childs
@@ -210,44 +252,51 @@ def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
                 iniTxt += "NbGroups=" + str(layer.convolution_param.group) \
                     + "\n"
 
-            # Weights filler
-            if layer.convolution_param.weight_filler.type == "msra":
-                iniTxt += "WeightsFiller=HeFiller\n"
-            elif layer.convolution_param.weight_filler.type == "xavier":
-                iniTxt += "WeightsFiller=XavierFiller\n"
-            elif layer.convolution_param.weight_filler.type == "gaussian":
-                iniTxt += "WeightsFiller=NormalFiller\n"
-                iniTxt += "WeightsFiller.Mean=" \
-                    + str(layer.convolution_param.weight_filler.mean) + "\n"
-                iniTxt += "WeightsFiller.StdDev=" \
-                    + str(layer.convolution_param.weight_filler.std) + "\n"
+            # Fillers
+            if layer.convolution_param.HasField('weight_filler'):
+                iniTxt += setFiller("WeightsFiller",
+                    layer.convolution_param.weight_filler)
+            if layer.convolution_param.HasField('bias_filler'):
+                iniTxt += setFiller("BiasFiller",
+                    layer.convolution_param.bias_filler)
 
-            # Bias
+            # Bias?
             if not layer.convolution_param.bias_term:
                 config += "NoBias=1\n"
-            elif layer.convolution_param.HasField('bias_filler'):
-                if layer.convolution_param.bias_filler.type == "constant":
-                    iniTxt += "BiasFiller=ConstantFiller\n"
-                    iniTxt += "BiasFiller.Value=" \
-                        + str(layer.convolution_param.bias_filler.value) + "\n"
 
             if len(layer.param) > 0:
-                if layer.param[0].lr_mult != 1:
-                    config += "WeightsSolver.LearningRate=$(" \
-                        + str(layer.param[0].lr_mult) + " * ${LR})\n"
-                if layer.param[0].decay_mult != 1:
-                    config += "WeightsSolver.Decay=$(" \
-                        + str(layer.param[0].decay_mult) + " * ${LR})\n"
-
+                config += setParamSpec("WeightsSolver", layer.param[0])
             if len(layer.param) > 1:
-                if layer.param[1].lr_mult != 1:
-                    config += "BiasSolver.LearningRate=$(" \
-                        + str(layer.param[1].lr_mult) + " * ${LR})\n"
-                if layer.param[1].decay_mult != 1:
-                    config += "BiasSolver.Decay=$(" \
-                        + str(layer.param[1].decay_mult) + " * ${LR})\n"
+                config += setParamSpec("BiasSolver", layer.param[1])
 
             iniTxt += "NbOutputs=" + str(layer.convolution_param.num_output) \
+                + "\n"
+
+            commonConfig = True
+
+        elif layer.type == "InnerProduct":
+            iniTxt += "[" + layer.name + "]\n"
+            iniTxt += "Input=" + ",".join(graph[layer.name]) + "\n"
+            iniTxt += "Type=Fc\n"
+
+            # Fillers
+            if layer.inner_product_param.HasField('weight_filler'):
+                iniTxt += setFiller("WeightsFiller",
+                    layer.inner_product_param.weight_filler)
+            if layer.inner_product_param.HasField('bias_filler'):
+                iniTxt += setFiller("BiasFiller",
+                    layer.inner_product_param.bias_filler)
+
+            # Bias?
+            if not layer.inner_product_param.bias_term:
+                config += "NoBias=1\n"
+
+            if len(layer.param) > 0:
+                config += setParamSpec("WeightsSolver", layer.param[0])
+            if len(layer.param) > 1:
+                config += setParamSpec("BiasSolver", layer.param[1])
+
+            iniTxt += "NbOutputs=" + str(layer.inner_product_param.num_output) \
                 + "\n"
 
             commonConfig = True
@@ -297,12 +346,21 @@ def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
             iniTxt += "Input=" + ",".join(graph[layer.name]) + "\n"
             iniTxt += "Type=ElemWise\n"
 
-            if layer.eltwise_param.operation == "PROD":
+            operation = caffe_pb2.EltwiseParameter.EltwiseOp.Name(\
+                    layer.eltwise_param.operation)
+
+            if operation == "PROD":
                 iniTxt += "Operation=Prod\n"
-            elif layer.eltwise_param.operation == "MAX":
+            elif operation == "MAX":
                 iniTxt += "Operation=Max\n"
-            else:
+            elif operation == "SUM":
                 iniTxt += "Operation=Sum\n"
+            else:
+                iniTxt += "Operation= ; TODO: unsupported: " + operation + "\n"
+
+            if len(layer.eltwise_param.coeff) > 0:
+                iniTxt += "Weights=" + " ".join(layer.eltwise_param.coeff) \
+                    + "\n"
 
             iniTxt += "NbOutputs=[" + graph[layer.name][0] + "]NbOutputs\n"
 
@@ -318,6 +376,23 @@ def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
 
             # TODO: support with Caffe Accuracy layer
             iniTxt += "[" + layer.name + ".Target]\n"
+
+        elif layer.type == "LRN":
+            iniTxt += "[" + layer.name + "]\n"
+            iniTxt += "Input=" + graph[layer.name][0] + "\n"
+            iniTxt += "Type=LRN\n"
+            iniTxt += "NbOutputs=[" + graph[layer.name][0] + "]NbOutputs\n"
+
+            config += "N=" + str(layer.lrn_param.local_size) + "\n"
+            config += "Alpha=" + str(layer.lrn_param.alpha) + "\n"
+            config += "Beta=" + str(layer.lrn_param.beta) + "\n"
+            config += "K=" + str(layer.lrn_param.k) + "\n"
+
+            normRegion = caffe_pb2.LRNParameter.NormRegion.Name(\
+                    layer.lrn_param.norm_region)
+
+            if normRegion != "ACROSS_CHANNELS":
+                config += "; TODO: not supported: " + normRegion + "\n"
 
         elif layer.type == "Dropout":
             if len(graph[layer.name]) > 1:
@@ -352,6 +427,12 @@ def caffeToN2D2(netProtoFileName, solverProtoFileName = "", iniFileName = ""):
         # Attributes
         if "ReLU" in attrs[layer.name]:
             iniTxt += "ActivationFunction=Rectifier\n"
+        elif "TanH" in attrs[layer.name]:
+            iniTxt += "ActivationFunction=Tanh\n"
+        elif "Sigmoid" in attrs[layer.name]:
+            iniTxt += "ActivationFunction=Logistic\n"
+        elif layer.type == "Convolution":
+            iniTxt += "ActivationFunction=Linear\n"
 
         # Config section
         if commonConfig or config != "":
