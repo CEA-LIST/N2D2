@@ -90,40 +90,40 @@ TEST_DATASET(RangeAffineTransformation,
     cv::Mat img2 = img.clone();
     trans.apply(img2);
 
-    cv::Mat img64F;
-    img.convertTo(img64F, CV_64F);
+    cv::Mat imgF;
+    img.convertTo(imgF, opencv_data_type<Float_T>::value);
 
     switch (firstOperator) {
     case RangeAffineTransformation::Plus:
-        img64F += firstValue;
+        imgF += firstValue;
         break;
     case RangeAffineTransformation::Minus:
-        img64F -= firstValue;
+        imgF -= firstValue;
         break;
     case RangeAffineTransformation::Multiplies:
-        img64F *= firstValue;
+        imgF *= firstValue;
         break;
     case RangeAffineTransformation::Divides:
-        img64F /= firstValue;
+        imgF /= firstValue;
         break;
     }
 
     switch (secondOperator) {
     case RangeAffineTransformation::Plus:
-        img64F += secondValue;
+        imgF += secondValue;
         break;
     case RangeAffineTransformation::Minus:
-        img64F -= secondValue;
+        imgF -= secondValue;
         break;
     case RangeAffineTransformation::Multiplies:
-        img64F *= secondValue;
+        imgF *= secondValue;
         break;
     case RangeAffineTransformation::Divides:
-        img64F /= secondValue;
+        imgF /= secondValue;
         break;
     }
 
-    cv::Mat diff = img64F != img2;
+    cv::Mat diff = imgF != img2;
     ASSERT_EQUALS(cv::countNonZero(diff), 0);
 }
 
@@ -195,10 +195,10 @@ TEST_DATASET(RangeAffineTransformation,
     cv::Mat img2 = img.clone();
     trans.apply(img2);
 
-    cv::Mat img64F;
-    img.convertTo(img64F, CV_64F);
+    cv::Mat imgF;
+    img.convertTo(imgF, opencv_data_type<Float_T>::value);
 
-    cv::Mat diff = img64F != img2;
+    cv::Mat diff = imgF != img2;
     ASSERT_EQUALS(cv::countNonZero(diff), 0);
 }
 

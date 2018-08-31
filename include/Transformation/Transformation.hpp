@@ -51,7 +51,24 @@
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
+typedef float Float_T;
+
 class CompositeTransformation;
+
+template <class T>
+struct opencv_data_type {
+    static const int value = -1;  // Dummy value by default
+};
+
+template <>
+struct opencv_data_type<float> {
+    static const int value = CV_32F;
+};
+
+template <>
+struct opencv_data_type<double> {
+    static const int value = CV_64F;
+};
 
 class Transformation : public Parameterizable {
 public:

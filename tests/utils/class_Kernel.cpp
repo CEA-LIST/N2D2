@@ -73,7 +73,7 @@ TEST_DATASET(Kernel,
     ASSERT_THROW_ANY(const Kernel<double> kernel(kernelStr));
 }
 
-#if CV_MAJOR_VERSION >= 2 && CV_MINOR_VERSION >= 4
+#if CV_MAJOR_VERSION > 2 || (CV_MAJOR_VERSION >= 2 && CV_MINOR_VERSION >= 4)
 TEST(GaborKernel, GaborKernel)
 {
     const unsigned int sizeX = 5;

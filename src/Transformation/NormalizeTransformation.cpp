@@ -101,9 +101,9 @@ cv::Mat N2D2::NormalizeTransformation::normalize(cv::Mat& mat) const
                                                                ? cv::NORM_L2
                                                                : cv::NORM_INF;
 
-        cv::Mat mat64F;
-        mat.convertTo(mat64F, CV_64F, 1.0 / maxValue);
-        cv::normalize(mat64F, matNorm, mNormValue, 0.0, normType);
+        cv::Mat matF;
+        mat.convertTo(matF, opencv_data_type<Float_T>::value, 1.0 / maxValue);
+        cv::normalize(matF, matNorm, mNormValue, 0.0, normType);
     }
 
     return matNorm;

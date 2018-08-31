@@ -53,10 +53,10 @@ N2D2::RangeAffineTransformation::apply(cv::Mat& frame,
                                        <std::shared_ptr<ROI> >& /*labelsROI*/,
                                        int /*id*/)
 {
-    cv::Mat frame64F;
-    frame.convertTo(frame64F, CV_64F);
+    cv::Mat frameF;
+    frame.convertTo(frameF, opencv_data_type<Float_T>::value);
 
-    const unsigned int nbChannels = frame64F.channels();
+    const unsigned int nbChannels = frameF.channels();
 
     if (mFirstValue.size() > 1 && mFirstValue.size() != nbChannels) {
         throw std::runtime_error("RangeAffineTransformation::apply(): the "
@@ -72,7 +72,7 @@ N2D2::RangeAffineTransformation::apply(cv::Mat& frame,
     }
 
     std::vector<cv::Mat> channels;
-    cv::split(frame64F, channels);
+    cv::split(frameF, channels);
 
     for (unsigned int ch = 0; ch < nbChannels; ++ch) {
         const double firstValue = (mFirstValue.size() > 1)

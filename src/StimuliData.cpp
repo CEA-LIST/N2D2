@@ -396,6 +396,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
                 if (computeMeanData) {
                     cv::Mat matData;
+                    // Use double for maximum precision
                     ((cv::Mat)data).convertTo(matData, CV_64F);
 
                     if (meanData.empty())

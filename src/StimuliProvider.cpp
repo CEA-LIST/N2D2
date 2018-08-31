@@ -579,9 +579,9 @@ N2D2::StimuliProvider::readRawData(Database::StimulusID id) const
 {
     const cv::Mat mat = mDatabase.getStimulusData(id);
 
-    cv::Mat mat64F;
-    mat.convertTo(mat64F, CV_64F);
-    return Tensor<Float_T>(mat64F);
+    cv::Mat matF;
+    mat.convertTo(matF, opencv_data_type<Float_T>::value);
+    return Tensor<Float_T>(matF);
 }
 
 void N2D2::StimuliProvider::setCachePath(const std::string& path)
