@@ -144,7 +144,56 @@ else
       OPT:=$(OPT) -march=native
     endif
   else
-    OPT:=-g -pg -rdynamic
+    # Compile in debug with -O2
+    OPT:=-O2 -g -rdynamic
+
+    ifdef PROFILING
+      $(info Compiling with -pg flag can cause gdb to hang on __libc_fork call)
+      # !!! See note below !!!
+      OPT:=$(OPT) -pg
+    endif
+
+    # Debug with OpenMP by default. Call make with NOPARALLEL=1 to avoid OpenMP.
+    ifndef NOPARALLEL
+      OPT:=$(OPT) -fopenmp
+    endif
+
+    ############################################################################
+    # Note when using PROFILING:
+    # For possible future investigations...
+    # Debug with -pg cause gdb to hang over __libc_fork() (called by popen()):
+
+    # #0  0x00007fffe474ee34 in __libc_fork ()
+    #     at ../nptl/sysdeps/unix/sysv/linux/x86_64/../fork.c:130
+    # #1  0x00007fffe46f9928 in _IO_new_proc_open (fp=fp@entry=0x7ffefe122e90,
+    #     command=command@entry=0xde3906 "gnuplot", mode=<optimized out>,
+    #     mode@entry=0xe28fe6 "w") at iopopen.c:183
+    # #2  0x00007fffe46f9c8c in _IO_new_popen (command=0xde3906 "gnuplot",
+    #     mode=0xe28fe6 "w") at iopopen.c:301
+
+    # strace -p `pidof gdb` during hanging returns:
+    # (The SIGPROF interrupt signal seems to be related with the -pg option)
+
+    # --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_TRAPPED, si_pid=20987, si_status=SIGPROF, si_utime=71074, si_stime=4998742} ---
+    # rt_sigreturn()                          = -1 EINTR (Interrupted system call)
+    # wait4(-1, 0x7ffc778112f4, WNOHANG|__WCLONE, NULL) = 0
+    # wait4(-1, [{WIFSTOPPED(s) && WSTOPSIG(s) == SIGPROF}], WNOHANG, NULL) = 20987
+    # tkill(20987, SIG_0)                     = 0
+    # ptrace(PTRACE_CONT, 20987, 0x1, SIGPROF) = 0
+    # wait4(-1, 0x7ffc778112f4, WNOHANG|__WCLONE, NULL) = 0
+    # wait4(-1, 0x7ffc778112f4, WNOHANG, NULL) = 0
+    # open("/proc/20987/status", O_RDONLY|O_CLOEXEC) = 25
+    # fstat(25, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+    # mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f71844ce000
+    # read(25, "Name:\tn2d2\nState:\tR (running)\nTg"..., 1024) = 834
+    # close(25)                               = 0
+    # munmap(0x7f71844ce000, 4096)            = 0
+    # rt_sigsuspend([])                       = ? ERESTARTNOHAND (To be restarted if no handler)
+
+    # Tested environments:
+    # gcc version 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.4)
+    # gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.10)
+    ############################################################################
   endif
 
   CPPFLAGS:=$(CPPFLAGS) -Wall -Wextra -pedantic -fsigned-char -std=c++0x -fPIC $(OPT)
