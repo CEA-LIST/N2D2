@@ -497,7 +497,10 @@ namespace Utils {
     std::basic_ostream<charT, traits>& cdef(std::basic_ostream
                                             <charT, traits>& stream);
 
-    class numpunct : public std::numpunct<char> {
+    class commaNumpunct : public std::numpunct<char> {
+    public:
+        commaNumpunct(size_t refs = 0): numpunct(refs) {}
+
     protected:
         virtual char do_thousands_sep() const
         {
@@ -509,7 +512,27 @@ namespace Utils {
         }
     };
 
-    const std::locale locale(std::locale(), new numpunct());
+    const commaNumpunct commaNumpunctInst(1);
+    // For an unknown reason, a segfault can occur after an exception is thrown.
+    // Relevant stack trace:
+    // #3  0x00007fffe131437a in malloc_printerr (ar_ptr=<optimized out>,
+    //     ptr=<optimized out>,
+    //     str=0x7fffe1424f78 "free(): corrupted unsorted chunks", action=3)
+    //     at malloc.c:5006
+    // #4  _int_free (av=<optimized out>, p=<optimized out>, have_lock=0)
+    //     at malloc.c:3867
+    // #5  0x00007fffe131853c in __GI___libc_free (mem=<optimized out>)
+    //     at malloc.c:2968
+    // #6  0x00007fffe206a8f2 in std::__cxx11::numpunct<char>::~numpunct() ()
+    //    from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+    // #7  0x000000000044b997 in N2D2::Utils::numpunct::~numpunct (this=0x4cc49f0,
+    //     __in_chrg=<optimized out>) at N2D2/include/utils/Utils.hpp:500
+    //
+    // Tentative solution:
+    // Pass the numpunct by reference, with refs = 1 so that delete is not
+    // called by the implementation
+    // See https://stackoverflow.com/questions/22647584/segfault-when-imbueing-stringstream-with-custom-locale
+    const std::locale locale(std::locale(), &commaNumpunctInst);
 
     // streamIgnoreBase is necessary to ensure that "rc" get initialized before
     // the call to get_table() in the derived class
