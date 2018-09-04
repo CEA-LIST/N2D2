@@ -539,28 +539,29 @@ namespace Utils {
     // See the Base-from-Member C++ idiom
     struct streamIgnoreBase {
         streamIgnoreBase()
-            : rc(std::ctype<char>::table_size, std::ctype_base::mask())
+            : rc(std::ctype<char>::table_size, std::ctype<char>::mask())
         {
         }
 
-        std::vector<std::ctype_base::mask> rc;
+        std::ctype<char>::mask const* get_table(const std::string& ignore)
+        {
+            for (std::string::const_iterator it = ignore.begin(),
+                                             itEnd = ignore.end();
+                 it != itEnd;
+                 ++it)
+                rc[(*it)] = std::ctype<char>::space;
+
+            return &rc[0];
+        }
+
+        std::vector<std::ctype<char>::mask> rc;
+        virtual ~streamIgnoreBase() {}
     };
 
     struct streamIgnore : streamIgnoreBase, std::ctype<char> {
         streamIgnore(const std::string& ignore)
             : streamIgnoreBase(), std::ctype<char>(get_table(ignore))
         {
-        }
-
-        std::ctype_base::mask const* get_table(const std::string& ignore)
-        {
-            for (std::string::const_iterator it = ignore.begin(),
-                                             itEnd = ignore.end();
-                 it != itEnd;
-                 ++it)
-                rc[(*it)] = std::ctype_base::space;
-
-            return &rc[0];
         }
     };
 
