@@ -40,10 +40,18 @@ void N2D2::ChannelExtractionTransformation::apply(
 
     if (mChannel == Hue || mChannel == Saturation || mChannel == Value) {
         // RGB to HSV conversion
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2HSV);
+#else
         cv::cvtColor(frame, frameCvt, CV_BGR2HSV);
+#endif
     } else if (mChannel == Y || mChannel == Cb || mChannel == Cr) {
         // RGB to YUV conversion
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2YCrCb);
+#else
         cv::cvtColor(frame, frameCvt, CV_BGR2YCrCb);
+#endif
     } else
         frameCvt = frame;
 
@@ -78,7 +86,11 @@ void N2D2::ChannelExtractionTransformation::apply(
 
     case Gray:
     default:
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2GRAY);
+#else
         cv::cvtColor(frame, frameCvt, CV_BGR2GRAY);
+#endif
         break;
     }
 

@@ -37,7 +37,7 @@ N2D2::UnpoolCell_Frame::UnpoolCell_Frame(const std::string& name,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame(name, nbOutputs, activation),
+      Cell_Frame<Float_T>(name, nbOutputs, activation),
       mPoolDesc(poolDims.size(),
                 &poolDims[0],
                 &strideDims[0],
@@ -119,7 +119,7 @@ void N2D2::UnpoolCell_Frame::propagate(bool /*inference*/)
         offset += mInputs[k].dimZ();
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -128,7 +128,7 @@ void N2D2::UnpoolCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame::backPropagate();
+    Cell_Frame<Float_T>::backPropagate();
 
     const Float_T alpha = 1.0;
 

@@ -49,7 +49,12 @@ TEST_DATASET(ChannelExtractionTransformation,
 
     ChannelExtractionTransformation trans(channel);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(

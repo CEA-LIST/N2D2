@@ -33,7 +33,7 @@ N2D2::ObjectDetCell_Frame::ObjectDetCell_Frame(const std::string& name,
                                                 Float_T scoreThreshold)
     : Cell(name, nbOutputs),
       ObjectDetCell(name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<Float_T>(name, nbOutputs)
 {
     // ctor
 }
@@ -72,7 +72,7 @@ void N2D2::ObjectDetCell_Frame::propagate(bool /*inference*/)
 
                         if(value >= mScoreThreshold)
                         {
-                            const unsigned int offset = mNbAnchors*mNbClass; 
+                            const unsigned int offset = mNbAnchors*mNbClass;
 
                             const Float_T xbbEst = input(x, y, anchor + cls*mNbAnchors + offset, batchPos);
                             const Float_T ybbEst = input(x, y, anchor + cls*mNbAnchors + 2*offset, batchPos);
@@ -125,7 +125,7 @@ void N2D2::ObjectDetCell_Frame::propagate(bool /*inference*/)
                     }
                 }
             }
-            
+
             nbRoiDetected += ROIs[batchPos][cls].size();
         }
 
@@ -141,7 +141,7 @@ void N2D2::ObjectDetCell_Frame::propagate(bool /*inference*/)
                 mOutputs(1, n) = ROIs[batchPos][cls][i].y;
                 mOutputs(2, n) = ROIs[batchPos][cls][i].w;
                 mOutputs(3, n) = ROIs[batchPos][cls][i].h;
-                mOutputs(4, n) = (float) cls;                
+                mOutputs(4, n) = (float) cls;
 
                 totalIdxPerClass++;
             }
@@ -163,7 +163,7 @@ void N2D2::ObjectDetCell_Frame::propagate(bool /*inference*/)
 
 
     mDiffInputs.clearValid();
-    
+
 }
 
 void N2D2::ObjectDetCell_Frame::backPropagate()

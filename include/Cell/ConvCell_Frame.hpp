@@ -84,7 +84,8 @@ public:
     };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
-        value.resize({1});
+        // Need to specify std::initializer_list<size_t> for GCC 4.4
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, (*mBias)(output));
     };
     inline Interface<> getWeights()

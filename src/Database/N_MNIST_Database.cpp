@@ -58,7 +58,10 @@ void N2D2::N_MNIST_Database::load(const std::string& dataPath,
     unsigned int nbTestImages = 10000;
 
     for (unsigned int cls = 0; cls < nbClasses; ++cls) {
-        mLabelsName.push_back(std::to_string(cls));
+        std::stringstream clsStr;
+        clsStr << cls;
+        mLabelsName.push_back(clsStr.str());
+
         for (unsigned int i = 1; i <= nbTestImages; ++i) {
 
             std::ostringstream nameStr;

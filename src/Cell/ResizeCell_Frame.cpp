@@ -31,7 +31,7 @@ N2D2::ResizeCell_Frame::ResizeCell_Frame(const std::string& name,
                                                  ResizeMode resizeMode)
     : Cell(name, nbOutputs),
       ResizeCell(name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<Float_T>(name, nbOutputs)
 {
     // ctor
 }
@@ -39,7 +39,7 @@ N2D2::ResizeCell_Frame::ResizeCell_Frame(const std::string& name,
 void N2D2::ResizeCell_Frame::BilinearInterpolation(const int out_size,
                                                     const int in_size,
                                                     const Float_T scale,
-                                                    ResizeCell_Frame_Kernels::PreComputed* interpolation) 
+                                                    ResizeCell_Frame_Kernels::PreComputed* interpolation)
 {
   interpolation[out_size].low_index = 0;
   interpolation[out_size].hight_index = 0;
@@ -55,8 +55,8 @@ void N2D2::ResizeCell_Frame::BilinearInterpolation(const int out_size,
 void N2D2::ResizeCell_Frame::initialize()
 {
     for(unsigned int input = 1; input < mInputs.size(); ++input)
-        if (mInputs[input].dimX() != mInputs[0].dimX() || 
-            mInputs[input].dimY() != mInputs[0].dimY()) 
+        if (mInputs[input].dimX() != mInputs[0].dimX() ||
+            mInputs[input].dimY() != mInputs[0].dimY())
             throw std::runtime_error("Input must have the same dimensions in ResizeCell_Frame " + mName);
 
     if(mResizeMode == BilinearTF)
@@ -68,7 +68,7 @@ void N2D2::ResizeCell_Frame::initialize()
 
         mScaleX = mAlignCorners ? (inputDimX - 1) / (Float_T) (outputDimX - 1)
                     : (inputDimX) / (Float_T) (outputDimX);
-                    
+
         mScaleY = mAlignCorners ? (inputDimY - 1) / (Float_T) (outputDimY - 1)
                     : (inputDimY) / (Float_T) (outputDimY);
 
@@ -102,36 +102,36 @@ void N2D2::ResizeCell_Frame::propagate(bool /*inference*/)
                 for(int ox = 0; ox < (int) mOutputs.dimX(); ++ox)
                     for(int channel = 0; channel < (int) mOutputs.dimZ(); ++channel)
                     {
-                        const Float_T top_left = input( mXStride[ox].low_index, 
+                        const Float_T top_left = input( mXStride[ox].low_index,
                                                         mYStride[oy].low_index,
                                                         channel,
                                                         batchPos);
-                        const Float_T top_right = input( mXStride[ox].hight_index, 
+                        const Float_T top_right = input( mXStride[ox].hight_index,
                                                          mYStride[oy].low_index,
                                                          channel,
                                                          batchPos);
-                        const Float_T bottom_left = input( mXStride[ox].low_index, 
+                        const Float_T bottom_left = input( mXStride[ox].low_index,
                                                            mYStride[oy].hight_index,
                                                            channel,
                                                            batchPos);
-                        const Float_T bottom_right = input( mXStride[ox].hight_index, 
+                        const Float_T bottom_right = input( mXStride[ox].hight_index,
                                                             mYStride[oy].hight_index,
                                                             channel,
                                                             batchPos);
 
-                        const Float_T top = top_left 
+                        const Float_T top = top_left
                                                 + (top_right - top_left) * mXStride[ox].interpolation;
-                        const Float_T bottom = bottom_left 
+                        const Float_T bottom = bottom_left
                                                 + (bottom_right - bottom_left) * mXStride[ox].interpolation;
 
-                        mOutputs(ox, oy, channel, batchPos) 
+                        mOutputs(ox, oy, channel, batchPos)
                             = top + (bottom - top) * mYStride[oy].interpolation;
                     }
         }
     }
 
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -162,21 +162,21 @@ void N2D2::ResizeCell_Frame::backPropagate()
 
                 for (unsigned int channel = 0; channel < mDiffOutputs[0].dimZ(); ++channel) {
 
-                    diffOutput(left_x_index, 
-                                 top_y_index, 
-                                 channel, 
+                    diffOutput(left_x_index,
+                                 top_y_index,
+                                 channel,
                                  batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * inverse_x_lerp;
-                    diffOutput(right_x_index, 
-                                 top_y_index, 
-                                 channel, 
+                    diffOutput(right_x_index,
+                                 top_y_index,
+                                 channel,
                                  batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * x_lerp;
-                    diffOutput(left_x_index, 
-                                 bottom_y_index, 
-                                 channel, 
+                    diffOutput(left_x_index,
+                                 bottom_y_index,
+                                 channel,
                                  batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * inverse_x_lerp;
-                    diffOutput(right_x_index, 
-                                 bottom_y_index, 
-                                 channel, 
+                    diffOutput(right_x_index,
+                                 bottom_y_index,
+                                 channel,
                                  batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * x_lerp;
 
                 }

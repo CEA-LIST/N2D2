@@ -41,7 +41,7 @@
         #include "opencv2/core/core.hpp"
         #include "opencv2/imgproc/imgproc.hpp"
         #include "opencv2/highgui/highgui.hpp"
-    #elif CV_MAJOR_VERSION == 3
+    #elif CV_MAJOR_VERSION >= 3
         #include "opencv2/core.hpp"
         #include "opencv2/imgproc.hpp"
         #include "opencv2/highgui.hpp"
@@ -467,7 +467,7 @@ N2D2::Matrix<T>::Matrix(const cv::Mat& mat)
 
 template <class T> N2D2::Matrix<T>::operator cv::Mat() const
 {
-#if CV_MINOR_VERSION < 4
+#if CV_MAJOR_VERSION <= 2 && CV_MINOR_VERSION < 4
     // Segfault in some cases without copy...
     return cv::Mat(mData, true).reshape(0, mNbRows);
 #else

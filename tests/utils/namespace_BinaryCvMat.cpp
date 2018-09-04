@@ -26,9 +26,19 @@ using namespace N2D2;
 TEST(BinaryCvMat, read_write)
 {
     std::vector<cv::Mat> data;
-    data.push_back(cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_UNCHANGED));
-    data.push_back(cv::imread("tests_data/SIPI_Jelly_Beans_4.1.07.tiff",
+    data.push_back(cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+                              cv::IMREAD_UNCHANGED));
+#else
                               CV_LOAD_IMAGE_UNCHANGED));
+#endif
+
+    data.push_back(cv::imread("tests_data/SIPI_Jelly_Beans_4.1.07.tiff",
+#if CV_MAJOR_VERSION >= 3
+                              cv::IMREAD_UNCHANGED));
+#else
+                              CV_LOAD_IMAGE_UNCHANGED));
+#endif
 
     // Write
     const std::string fileName = "BinaryCvMat_read_write.bin";

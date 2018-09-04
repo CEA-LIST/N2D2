@@ -224,7 +224,11 @@ unsigned int N2D2::Aer::loadVideo(const std::string& fileName,
 
     cv::VideoCapture video(fileName);
     video.set(
+#if CV_MAJOR_VERSION >= 3
+        cv::CAP_PROP_POS_FRAMES,
+#else
         CV_CAP_PROP_POS_FRAMES,
+#endif
         0.0); // Bug in OpenCV 2.4.7 (see http://code.opencv.org/issues/3030)
 
     if (!video.isOpened())
@@ -273,7 +277,11 @@ unsigned int N2D2::Aer::loadVideo(const std::string& fileName,
 
     for (; video.grab(); ++f) {
         video.retrieve(retFrame);
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(retFrame, grayRetFrame, cv::COLOR_RGB2GRAY);
+#else
         cv::cvtColor(retFrame, grayRetFrame, CV_RGB2GRAY);
+#endif
         grayRetFrame.convertTo(grayRetFrame,
                                CV_32FC1,
                                1.0 / 255.0); // Assuming input frame is 8 bits
@@ -430,7 +438,11 @@ void N2D2::Aer::viewer(const std::string& fileName,
 
     if (!videoName.empty()) {
         video.open(videoName,
+#if CV_MAJOR_VERSION >= 3
+                   cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'),
+#else
                    CV_FOURCC('H', 'F', 'Y', 'U'),
+#endif
                    50.0,
                    cv::Size(width, height));
 

@@ -36,7 +36,7 @@ N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const std::string& name,
                operation,
                weights,
                shifts),
-      Cell_Frame(name, nbOutputs, activation)
+      Cell_Frame<Float_T>(name, nbOutputs, activation)
 {
     // ctor
 }
@@ -139,7 +139,7 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
                                  "unknown operation type.");
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -151,7 +151,7 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
 
-    Cell_Frame::backPropagate();
+    Cell_Frame<Float_T>::backPropagate();
 
     std::vector<Tensor<Float_T> > inputs;
 

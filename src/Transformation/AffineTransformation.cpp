@@ -42,7 +42,11 @@ N2D2::AffineTransformation::AffineTransformation(Operator firstOperator,
     if (Utils::fileExtension(firstValue) == "bin")
         BinaryCvMat::read(firstValue, mFirstValue);
     else {
+#if CV_MAJOR_VERSION >= 3
+        mFirstValue = cv::imread(firstValue, cv::IMREAD_UNCHANGED);
+#else
         mFirstValue = cv::imread(firstValue, CV_LOAD_IMAGE_UNCHANGED);
+#endif
 
         if (!mFirstValue.data)
             throw std::runtime_error(
@@ -53,7 +57,11 @@ N2D2::AffineTransformation::AffineTransformation(Operator firstOperator,
         if (Utils::fileExtension(secondValue) == "bin")
             BinaryCvMat::read(secondValue, mSecondValue);
         else {
+#if CV_MAJOR_VERSION >= 3
+            mSecondValue = cv::imread(secondValue, cv::IMREAD_UNCHANGED);
+#else
             mSecondValue = cv::imread(secondValue, CV_LOAD_IMAGE_UNCHANGED);
+#endif
 
             if (!mSecondValue.data)
                 throw std::runtime_error(

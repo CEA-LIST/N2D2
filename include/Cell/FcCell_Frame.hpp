@@ -56,12 +56,13 @@ public:
     inline void getWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const
     {
-        value.resize({1});
+        // Need to specify std::initializer_list<size_t> for GCC 4.4
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
     };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
-        value.resize({1});
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, mBias(output));
     };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);

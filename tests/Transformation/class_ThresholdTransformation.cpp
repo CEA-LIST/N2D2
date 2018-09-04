@@ -45,7 +45,12 @@ TEST_DATASET(ThresholdTransformation,
     trans.setParameter("Operation", operation);
     trans.setParameter("MaxValue", maxValue);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_GRAYSCALE);
+#else
+        CV_LOAD_IMAGE_GRAYSCALE);
+#endif
 
     if (!img.data)
         throw std::runtime_error(

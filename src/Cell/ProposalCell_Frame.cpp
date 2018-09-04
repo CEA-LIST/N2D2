@@ -37,7 +37,7 @@ N2D2::ProposalCell_Frame::ProposalCell_Frame(const std::string& name,
                                             std::vector<unsigned int> numTemplates)
     : Cell(name, nbOutputs),
       ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor, numParts, numTemplates),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<Float_T>(name, nbOutputs)
 {
     // ctor
 }

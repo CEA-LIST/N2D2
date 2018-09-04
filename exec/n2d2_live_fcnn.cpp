@@ -107,14 +107,22 @@ cv::Mat drawTimings(const std::vector<std::pair<std::string, double> >& timings,
                     0.35,
                     cv::Scalar(0, 0, 0),
                     1,
+#if CV_MAJOR_VERSION >= 3
+                    cv::LINE_AA);
+#else
                     CV_AA);
+#endif
         cv::rectangle(mat,
                       cv::Point(labelWidth + margin, i * cellHeight + margin),
                       cv::Point(labelWidth + margin
                                 + relTime * (width - labelWidth - 2.0 * margin),
                                 (i + 1) * cellHeight - margin),
                       cv::Scalar(255, 255, 0),
+#if CV_MAJOR_VERSION >= 3
+                      cv::FILLED);
+#else
                       CV_FILLED);
+#endif
 
         std::stringstream valueStr;
         valueStr << std::fixed << std::setprecision(2) << (100.0 * relTime)
@@ -131,7 +139,11 @@ cv::Mat drawTimings(const std::vector<std::pair<std::string, double> >& timings,
                     0.35,
                     cv::Scalar(0, 0, 0),
                     1,
+#if CV_MAJOR_VERSION >= 3
+                    cv::LINE_AA);
+#else
                     CV_AA);
+#endif
     }
 
     return mat;
@@ -196,7 +208,11 @@ unsigned int process(unsigned int frameId,
                         fontScale,
                         cv::Scalar(0, 0, 255),
                         1,
+#if CV_MAJOR_VERSION >= 3
+                        cv::LINE_AA);
+#else
                         CV_AA);
+#endif
 
             std::cout << "  |-Class: " << estimatedLabelName
                       << "(" << estimatedLabelValue << ")" << std::endl;
@@ -258,7 +274,11 @@ unsigned int process(unsigned int frameId,
                             fontScale,
                             cv::Scalar(0, 255, 0),
                             1,
+#if CV_MAJOR_VERSION >= 3
+                            cv::LINE_AA);
+#else
                             CV_AA);
+#endif
                 textOffset += textSize.height + 5;
 
                 std::cout << " " << estimatedLabelNameSub << "("
@@ -368,28 +388,52 @@ int main(int argc, char* argv[])
         capWidth = img.cols;
         capHeight = img.rows;
     } else {
+#if CV_MAJOR_VERSION >= 3
+        video.open(cv::CAP_ANY);
+#else
         video.open(CV_CAP_ANY);
+#endif
 
         if (!video.isOpened())
             throw std::runtime_error("Could not open video stream.");
 
+#if CV_MAJOR_VERSION >= 3
+        video.set(cv::CAP_PROP_FRAME_WIDTH, 1920);
+        video.set(cv::CAP_PROP_FRAME_HEIGHT, 1080);
+
+        capWidth = video.get(cv::CAP_PROP_FRAME_WIDTH);
+        capHeight = video.get(cv::CAP_PROP_FRAME_HEIGHT);
+#else
         video.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
         video.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
 
         capWidth = video.get(CV_CAP_PROP_FRAME_WIDTH);
         capHeight = video.get(CV_CAP_PROP_FRAME_HEIGHT);
+#endif
     }
 
     std::cout << "Capture resolution: " << capWidth << "x" << capHeight
               << std::endl;
 
+#if CV_MAJOR_VERSION >= 3
+    cv::namedWindow(frameWindow.c_str(), cv::WINDOW_NORMAL);
+    cv::namedWindow(labelsWindow.c_str(), cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(timingsWindow.c_str(), cv::WINDOW_AUTOSIZE);
+
+    cv::moveWindow(frameWindow.c_str(), 0, 0);
+    cv::resizeWindow(frameWindow.c_str(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    cv::moveWindow(labelsWindow.c_str(), DISPLAY_WIDTH + 50, 0);
+    cv::moveWindow(timingsWindow.c_str(), DISPLAY_WIDTH + 50, 400 + 50);
+#else
     cv::namedWindow(frameWindow.c_str(), CV_WINDOW_NORMAL);
     cv::namedWindow(labelsWindow.c_str(), CV_WINDOW_AUTOSIZE);
     cv::namedWindow(timingsWindow.c_str(), CV_WINDOW_AUTOSIZE);
+
     cvMoveWindow(frameWindow.c_str(), 0, 0);
     cvResizeWindow(frameWindow.c_str(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
     cvMoveWindow(labelsWindow.c_str(), DISPLAY_WIDTH + 50, 0);
     cvMoveWindow(timingsWindow.c_str(), DISPLAY_WIDTH + 50, 400 + 50);
+#endif
 
     // Network topology construction
     Network net;
@@ -418,7 +462,11 @@ int main(int argc, char* argv[])
 
     if (!recordFileName.empty()) {
         videoWriter.open(recordFileName,
+#if CV_MAJOR_VERSION >= 3
+                         cv::VideoWriter::fourcc('X', 'V', 'I', 'D'),
+#else
                          CV_FOURCC('X', 'V', 'I', 'D'),
+#endif
                          25.0,
                          cv::Size(capWidth, capHeight));
 
@@ -500,7 +548,11 @@ int main(int argc, char* argv[])
                     0.5,
                     cv::Scalar(255, 255, 255),
                     1,
+#if CV_MAJOR_VERSION >= 3
+                    cv::LINE_AA);
+#else
                     CV_AA);
+#endif
 
         if (videoWriter.isOpened())
             videoWriter << img;

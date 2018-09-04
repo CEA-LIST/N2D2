@@ -149,8 +149,13 @@ int main(int argc, char *argv[]) {
     cv::VideoCapture video(0); // open the default camera
     if(!video.isOpened())  // check if we succeeded
         return -1;
+#if CV_MAJOR_VERSION >= 3
+    video.set(cv::CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH);
+    video.set(cv::CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT);
+#else
     video.set(CV_CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH);
     video.set(CV_CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT);
+#endif
 
     cv::Mat frame;
 
@@ -159,9 +164,13 @@ int main(int argc, char *argv[]) {
 
     if(!noDisplay){
         cv::namedWindow(frameWindow.c_str(), CV_WINDOW_NORMAL);
+#if CV_MAJOR_VERSION >= 3
+        cv::moveWindow(frameWindow.c_str(), 0, 0);
+        cv::resizeWindow(frameWindow.c_str(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
+#else
         cvMoveWindow(frameWindow.c_str(), 0, 0);
         cvResizeWindow(frameWindow.c_str(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
-
+#endif
     }
     cv::Size display_size(DISPLAY_WIDTH,DISPLAY_HEIGHT);
 
@@ -221,7 +230,11 @@ int main(int argc, char *argv[]) {
 
             cv::resize(img, img_save, display_size);
             std::vector<int> compression_params;
+#if CV_MAJOR_VERSION >= 3
+            compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+#else
             compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+#endif
             compression_params.push_back(9);
             try {
                 cv::imwrite(pathToSave +  "output_picture.png",
@@ -258,7 +271,11 @@ int main(int argc, char *argv[]) {
                         0.5,
                         cv::Scalar(255, 0, 0),
                         1,
+#if CV_MAJOR_VERSION >= 3
+                        cv::LINE_AA);
+#else
                         CV_AA);
+#endif
 
             unsigned int width = 240; unsigned int height = 180;
             const unsigned int margin = 2;
@@ -300,7 +317,11 @@ int main(int argc, char *argv[]) {
                             0.70,
                             cv::Scalar(0, 0, 255),
                             1,
+#if CV_MAJOR_VERSION >= 3
+                            cv::LINE_AA);
+#else
                             CV_AA);
+#endif
 
                 cv::rectangle(img_display,
                               cv::Point(margin, i*cellHeight +
@@ -311,8 +332,12 @@ int main(int argc, char *argv[]) {
                                                      - labelWidth
                                                      - 2.0*margin),
                               i*cellHeight - margin + cellHeight/2),
-                              cv::Scalar(255, 255, 0), CV_FILLED);
-
+                              cv::Scalar(255, 255, 0),
+#if CV_MAJOR_VERSION >= 3
+                              cv::FILLED);
+#else
+                              CV_FILLED);
+#endif
 
                 std::stringstream valueStr;
                 valueStr << std::fixed << std::setprecision(2)
@@ -333,7 +358,11 @@ int main(int argc, char *argv[]) {
                     0.70,
                     cv::Scalar(255, 255, 255),
                             1,
+#if CV_MAJOR_VERSION >= 3
+                            cv::LINE_AA);
+#else
                             CV_AA);
+#endif
             }
         }
 

@@ -34,7 +34,7 @@ N2D2::AnchorCell_Frame_CUDA::AnchorCell_Frame_CUDA(
     unsigned int scoresCls)
     : Cell(name, 6*anchors.size()),
       AnchorCell(name, sp, anchors, scoresCls),
-      Cell_Frame_CUDA(name, 6*anchors.size()),
+      Cell_Frame_CUDA<Float_T>(name, 6*anchors.size()),
       mCudaGT(NULL),
       mNbLabelsMax(16)
 {
@@ -301,7 +301,7 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                          GPU_BLOCK_GRID[0],
                          GPU_THREAD_GRID[0]);
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 

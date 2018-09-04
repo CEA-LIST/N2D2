@@ -40,7 +40,7 @@ N2D2::PaddingCell_Frame_CUDA::PaddingCell_Frame_CUDA(const std::string& name,
                   botPad,
                   leftPad,
                   rightPad),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
 {
     // ctor
 }
@@ -121,7 +121,7 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool /*inference*/)
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
 
     mDiffInputs.clearValid();
 
@@ -133,7 +133,7 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
         return;
 
     unsigned int outputOffset = 0;
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<Float_T>::backPropagate();
 
     for(unsigned int k = 0; k < mInputs.size(); ++k)
     {

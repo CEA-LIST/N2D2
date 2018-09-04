@@ -30,7 +30,7 @@ N2D2::TransformationCell_Frame::TransformationCell_Frame(
     const std::shared_ptr<Transformation>& transformation)
     : Cell(name, nbOutputs),
       TransformationCell(name, nbOutputs, transformation),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<Float_T>(name, nbOutputs)
 {
     // ctor
 }

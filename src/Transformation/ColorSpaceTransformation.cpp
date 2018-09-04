@@ -37,40 +37,85 @@ N2D2::ColorSpaceTransformation::apply(cv::Mat& frame,
 
     if (mColorSpace == BGR) {
         if (frame.channels() == 1) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_GRAY2BGR);
+#else
             cv::cvtColor(frame, frameCvt, CV_GRAY2BGR);
+#endif
             frame = frameCvt;
         } else if (frame.channels() == 4) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGRA2BGR);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGRA2BGR);
+#endif
             frame = frameCvt;
         }
     }
     else if (mColorSpace == RGB) {
         if (frame.channels() == 1) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_GRAY2RGB);
+#else
             cv::cvtColor(frame, frameCvt, CV_GRAY2RGB);
+#endif
             frame = frameCvt;
         }
         else if (frame.channels() == 3) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2RGB);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGR2RGB);
+#endif
             frame = frameCvt;
         }
         else if (frame.channels() == 4) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_RGBA2BGR);
+#else
             cv::cvtColor(frame, frameCvt, CV_RGBA2BGR);
+#endif
             frame = frameCvt;
         }
 
     }
 
     else if (frame.channels() > 1) {
-        if (mColorSpace == HSV)
+        if (mColorSpace == HSV) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2HSV);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGR2HSV);
-        else if (mColorSpace == HLS)
+#endif
+        }
+        else if (mColorSpace == HLS) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2HLS);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGR2HLS);
-        else if (mColorSpace == YCrCb)
+#endif
+        }
+        else if (mColorSpace == YCrCb) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2YCrCb);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGR2YCrCb);
-        else if (mColorSpace == CIELab)
+#endif
+        }
+        else if (mColorSpace == CIELab) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2Lab);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGR2Lab);
-        else if (mColorSpace == CIELuv)
+#endif
+        }
+        else if (mColorSpace == CIELuv) {
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(frame, frameCvt, cv::COLOR_BGR2Luv);
+#else
             cv::cvtColor(frame, frameCvt, CV_BGR2Luv);
+#endif
+        }
 
         frame = frameCvt;
     }

@@ -37,7 +37,7 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const std::string& name
                                                 Float_T scoreThreshold)
     : Cell(name, nbOutputs),
       ObjectDetCell(name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
 {
     // ctor
 }
@@ -51,14 +51,14 @@ void N2D2::ObjectDetCell_Frame_CUDA::initialize()
     GPU_THREAD_GRID.push_back(dim3(32,1,1));
 
     mPixelMap.resize({mInputs[0].dimX(),
-                      mInputs[0].dimY(), 
-                      mNbAnchors, 
+                      mInputs[0].dimY(),
+                      mNbAnchors,
                       mNbClass,
                       mInputs.dimB()}, -1);
 
     mPixelMapSorted.resize({mInputs[0].dimX(),
-                            mInputs[0].dimY(), 
-                            mNbAnchors, 
+                            mInputs[0].dimY(),
+                            mNbAnchors,
                             mNbClass,
                             mInputs.dimB()}, -1);
 
@@ -76,10 +76,10 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
 
     mPixelMap.synchronizeDToH();
 
-    mPixelMap.assign({mInputs[0].dimX(), 
-                      mInputs[0].dimY(), 
-                      mNbAnchors, 
-                      mNbClass, 
+    mPixelMap.assign({mInputs[0].dimX(),
+                      mInputs[0].dimY(),
+                      mNbAnchors,
+                      mNbClass,
                       mInputs.dimB()}, -1);
 
     mPixelMapSorted.assign({mInputs[0].dimX(),
@@ -109,7 +109,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
         for(unsigned int cls = 0; cls < mNbClass; ++cls)
         {
             copy_if( mPixelMap.getDevicePtr() + pixelOffset,
-                     mPixelMapSorted.getDevicePtr() + pixelOffset, 
+                     mPixelMapSorted.getDevicePtr() + pixelOffset,
                      mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors);
 
             pixelOffset += mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors;
@@ -117,7 +117,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
     }
 
     mPixelMapSorted.synchronizeDToH();
-    std::vector<std::vector <unsigned int> > count(mInputs[0].dimB(), 
+    std::vector<std::vector <unsigned int> > count(mInputs[0].dimB(),
                                                    std::vector<unsigned int>(mNbClass));
     unsigned int totalValidPixel = 0;
     for(unsigned int cls = 0; cls < mNbClass; ++cls)
@@ -139,8 +139,8 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
 
                     }
                 }
-            }        
-            restartLoop: 
+            }
+            restartLoop:
             totalValidPixel += count[batchPos][cls];
         }
     }
@@ -152,15 +152,15 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
         for(unsigned int batchPos = 0; batchPos < mInputs.dimB(); ++batchPos)
         {
             const int batchOffset = batchPos*inputBatchOffset;
-          
+
             unsigned int totalIdxPerClass = 0;
             if(count[batchPos][cls] > 0)
             {
                 const int offsetBase = mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY();
 
                 mPixelMapSorted.synchronizeHToD(0,
-                                                0, 
-                                                0, 
+                                                0,
+                                                0,
                                                 cls,
                                                 batchPos, mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY());
 
@@ -185,29 +185,29 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                 mW_index.synchronizeHToD();
                 mH_index.synchronizeHToD();
 
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
                             input->getDevicePtr() + offsetBase + offset + batchOffset,
-                            mX_index.getDevicePtr(), 
+                            mX_index.getDevicePtr(),
                             count[batchPos][cls],
                             0,
                             0);
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
                             input->getDevicePtr() + 2*offsetBase + offset + batchOffset,
-                            mY_index.getDevicePtr(), 
+                            mY_index.getDevicePtr(),
                             count[batchPos][cls],
                             0,
                             0);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
                             input->getDevicePtr() + 3*offsetBase + offset + batchOffset,
-                            mW_index.getDevicePtr(), 
+                            mW_index.getDevicePtr(),
                             count[batchPos][cls],
                             0,
                             0);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
                             input->getDevicePtr() + 4*offsetBase + offset + batchOffset,
-                            mH_index.getDevicePtr(), 
+                            mH_index.getDevicePtr(),
                             count[batchPos][cls],
                             0,
                             0);
@@ -216,7 +216,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                 mY_index.synchronizeDToH();
                 mW_index.synchronizeDToH();
                 mH_index.synchronizeDToH();
-                
+
 
                 std::vector<BBox_T> ROIs;
                 for(unsigned int idx = 0; idx < count[batchPos][cls]; ++idx)
@@ -270,11 +270,11 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                     mOutputs(1, n) = ROIs[i].y;
                     mOutputs(2, n) = ROIs[i].w;
                     mOutputs(3, n) = ROIs[i].h;
-                    mOutputs(4, n) = (float) cls;  
-                    ++totalIdxPerClass;       
+                    mOutputs(4, n) = (float) cls;
+                    ++totalIdxPerClass;
 
                 }
-            }     
+            }
             for(unsigned int rest = totalIdxPerClass; rest < mNbProposals; ++rest)
             {
                     const unsigned int n = rest + cls*mNbProposals + batchPos*mNbProposals*mNbClass;
@@ -284,7 +284,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                     mOutputs(3, n) = 0.0;
                     mOutputs(4, n) = 0.0;
 
-            } 
+            }
 
         }
     }
@@ -301,7 +301,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
         {
             for(unsigned int i = 0; i < mPixelMapSorted.size(); ++i)
             {
-                if(mPixelMapSorted(i) > -1) 
+                if(mPixelMapSorted(i) > -1)
                     ++count;
                 else
                     break;
@@ -335,29 +335,29 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                 mW_index.synchronizeHToD();
                 mH_index.synchronizeHToD();
 
-                thrust_gather(mPixelMapSorted.getDevicePtr(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr(),
                             mInputs[0].getDevicePtr() + offsetBase + offset,
-                            mX_index.getDevicePtr(), 
+                            mX_index.getDevicePtr(),
                             count,
                             0,
                             0);
-                thrust_gather(mPixelMapSorted.getDevicePtr(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr(),
                             mInputs[0].getDevicePtr() + 2*offsetBase + offset,
-                            mY_index.getDevicePtr(), 
+                            mY_index.getDevicePtr(),
                             count,
                             0,
                             0);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr(),
                             mInputs[0].getDevicePtr() + 3*offsetBase + offset,
-                            mW_index.getDevicePtr(), 
+                            mW_index.getDevicePtr(),
                             count,
                             0,
                             0);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr(), 
+                thrust_gather(mPixelMapSorted.getDevicePtr(),
                             mInputs[0].getDevicePtr() + 4*offsetBase + offset,
-                            mH_index.getDevicePtr(), 
+                            mH_index.getDevicePtr(),
                             count,
                             0,
                             0);
@@ -366,7 +366,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                 mY_index.synchronizeDToH();
                 mW_index.synchronizeDToH();
                 mH_index.synchronizeDToH();
-                
+
 
                 std::vector<BBox_T> ROIs;
                 for(unsigned int idx = 0; idx < count; ++idx)
@@ -420,11 +420,11 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                     mOutputs(1, n) = ROIs[i].y;
                     mOutputs(2, n) = ROIs[i].w;
                     mOutputs(3, n) = ROIs[i].h;
-                    mOutputs(4, n) = (float) cls;  
-                    ++totalIdxPerClass;       
+                    mOutputs(4, n) = (float) cls;
+                    ++totalIdxPerClass;
 
                 }
-            }     
+            }
             for(unsigned int rest = totalIdxPerClass; rest < mNbProposals; ++rest)
             {
                     const unsigned int n = rest + cls*mNbProposals;
@@ -434,7 +434,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                     mOutputs(3, n) = 0.0;
                     mOutputs(4, n) = 0.0;
 
-            }   
+            }
         }
         mOutputs.synchronizeHToD();
 

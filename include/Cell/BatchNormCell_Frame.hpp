@@ -60,22 +60,23 @@ public:
     virtual void update();
     inline void getScale(unsigned int index, BaseTensor& value) const
     {
-        value.resize({1});
+        // Need to specify std::initializer_list<size_t> for GCC 4.4
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<ParamT>({1}, (*mScale)(index));
     }
     inline void getBias(unsigned int index, BaseTensor& value) const
     {
-        value.resize({1});
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<ParamT>({1}, (*mBias)(index));
     }
     inline void getMean(unsigned int index, BaseTensor& value) const
     {
-        value.resize({1});
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<ParamT>({1}, (*mMean)(index));
     }
     inline void getVariance(unsigned int index, BaseTensor& value) const
     {
-        value.resize({1});
+        value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<ParamT>({1}, (*mVariance)(index));
     }
     inline std::shared_ptr<BaseTensor> getScales() const

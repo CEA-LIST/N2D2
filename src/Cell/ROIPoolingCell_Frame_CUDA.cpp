@@ -35,7 +35,7 @@ N2D2::ROIPoolingCell_Frame_CUDA::ROIPoolingCell_Frame_CUDA(const std::string& na
                                                  ROIPooling pooling)
     : Cell(name, nbOutputs),
       ROIPoolingCell(name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
 {
     // ctor
     mInputs.matchingDims({});
@@ -185,7 +185,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
         outputOffset += mInputs[k].dimZ();
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -194,7 +194,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<Float_T>::backPropagate();
 
     const Float_T alpha = 1.0;
     const Float_T beta = 1.0;

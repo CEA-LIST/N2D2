@@ -1249,8 +1249,13 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
     if (mStimuli[id].label == -1) {
         // Composite stimulus
         // Construct the labels matrix with the ROIs
+#if CV_MAJOR_VERSION >= 3
+        const cv::Mat stimulus
+            = cv::imread(mStimuli[id].name, cv::IMREAD_UNCHANGED);
+#else
         const cv::Mat stimulus
             = cv::imread(mStimuli[id].name, CV_LOAD_IMAGE_UNCHANGED);
+#endif
 
         if (!stimulus.data)
             throw std::runtime_error(

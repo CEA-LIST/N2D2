@@ -30,7 +30,7 @@ N2D2::RPCell_Frame::RPCell_Frame(const std::string& name,
                                  unsigned int IoUIndex)
     : Cell(name, 4),
       RPCell(name, nbAnchors, nbProposals, scoreIndex, IoUIndex),
-      Cell_Frame(name, 4)
+      Cell_Frame<Float_T>(name, 4)
 {
     // ctor
 }

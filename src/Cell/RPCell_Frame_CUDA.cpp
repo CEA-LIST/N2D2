@@ -31,7 +31,7 @@ N2D2::RPCell_Frame_CUDA::RPCell_Frame_CUDA(const std::string& name,
                                  unsigned int IoUIndex)
     : Cell(name, 4),
       RPCell(name, nbAnchors, nbProposals, scoreIndex, IoUIndex),
-      Cell_Frame_CUDA(name, 4)
+      Cell_Frame_CUDA<Float_T>(name, 4)
 {
     // ctor
 }
@@ -239,7 +239,7 @@ void N2D2::RPCell_Frame_CUDA::propagate(bool inference)
         }
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
 
     mDiffInputs.clearValid();
 }

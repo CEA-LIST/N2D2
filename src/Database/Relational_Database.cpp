@@ -48,7 +48,7 @@ N2D2::Relational_Database::loadRelationSample(double* triple)
 
         std::pair<std::vector<double>, double> stimulusVariable;
         double variableValue = Random::randUniform(0.0, 1.0);
-        if (!(triple==nullptr)) {
+        if (triple != NULL) {
             variableValue = triple[k];
         }
         if (k == numberVariables-1){

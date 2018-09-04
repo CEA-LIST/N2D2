@@ -257,7 +257,11 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
     img.convertTo(img8U, CV_8U);
 
     cv::Mat imgBB;
+#if CV_MAJOR_VERSION >= 3
+    cv::cvtColor(img8U, imgBB, cv::COLOR_GRAY2BGR);
+#else
     cv::cvtColor(img8U, imgBB, CV_GRAY2BGR);
+#endif
 
     // Draw targets ROIs
     const std::vector<std::shared_ptr<ROI> >& labelROIs
@@ -290,7 +294,11 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
                         0.25,
                         cv::Scalar(255, 0, 0),
                         1,
+#if CV_MAJOR_VERSION >= 3
+                        cv::LINE_AA);
+#else
                         CV_AA);
+#endif
         }
     }
 
@@ -371,7 +379,11 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
                         0.25,
                         color,
                         1,
+#if CV_MAJOR_VERSION >= 3
+                        cv::LINE_AA);
+#else
                         CV_AA);
+#endif
         }
     }
 

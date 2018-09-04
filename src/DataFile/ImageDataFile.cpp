@@ -46,7 +46,11 @@ N2D2::ImageDataFile::mRegistrar({// Windows bitmaps
 
 cv::Mat N2D2::ImageDataFile::read(const std::string& fileName)
 {
+#if CV_MAJOR_VERSION >= 3
+    cv::Mat data = cv::imread(fileName, cv::IMREAD_UNCHANGED);
+#else
     cv::Mat data = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);
+#endif
 
     if (!data.data)
         throw std::runtime_error("ImageDataFile::read(): unable to read image: "

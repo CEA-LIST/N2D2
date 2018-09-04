@@ -77,9 +77,8 @@ struct Registrar {
               F func,
               const Type<T>& /*type*/ = Type<T>())
     {
-        for (std::initializer_list<std::string>::const_iterator
-            keyIt = keys.begin(), keyItEnd = keys.end(); keyIt != keyItEnd;
-            ++keyIt)
+        for (auto keyIt = keys.begin(), keyItEnd = keys.end();
+            keyIt != keyItEnd; ++keyIt)
         {
             RegistryMap_T::iterator it;
             bool newInsert;

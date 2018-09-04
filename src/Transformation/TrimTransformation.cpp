@@ -45,8 +45,13 @@ void N2D2::TrimTransformation::apply(cv::Mat& frame,
 {
     cv::Mat frameRed;
 
-    if (frame.channels() > 1)
+    if (frame.channels() > 1) {
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(frame, frameRed, cv::COLOR_BGR2GRAY);
+#else
         cv::cvtColor(frame, frameRed, CV_BGR2GRAY);
+#endif
+    }
     else
         frameRed = frame.clone();
 

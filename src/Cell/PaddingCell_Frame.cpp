@@ -37,7 +37,7 @@ N2D2::PaddingCell_Frame::PaddingCell_Frame(const std::string& name,
                   botPad,
                   leftPad,
                   rightPad),
-      Cell_Frame(name, nbOutputs),
+      Cell_Frame<Float_T>(name, nbOutputs),
       mPaddingDesc(mLeftPad, mRightPad, mTopPad, mBotPad)
 
 {
@@ -90,7 +90,7 @@ void N2D2::PaddingCell_Frame::propagate(bool /*inference*/)
         offset += mInputs[k].dimZ();
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -99,7 +99,7 @@ void N2D2::PaddingCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame::backPropagate();
+    Cell_Frame<Float_T>::backPropagate();
 
     unsigned int offset = 0;
 

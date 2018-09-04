@@ -149,7 +149,11 @@ int main(int argc, char* argv[])
     // Create a nice animation (but takes time)
     if (frames.size() > 0) {
         cv::VideoWriter video("aer_cars.weights.avi",
+#if CV_MAJOR_VERSION >= 3
+                              cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'),
+#else
                               CV_FOURCC('H', 'F', 'Y', 'U'),
+#endif
                               10.0,
                               cv::Size(512, 512));
 

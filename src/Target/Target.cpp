@@ -637,11 +637,19 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         inputImg.convertTo(inputImg8U, CV_8U);
 
         cv::Mat inputImgColor;
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(inputImg8U, inputImgColor, cv::COLOR_GRAY2BGR);
+#else
         cv::cvtColor(inputImg8U, inputImgColor, CV_GRAY2BGR);
+#endif
 
         // Target image
         cv::Mat imgColor;
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(targetImgHsv, imgColor, cv::COLOR_HSV2BGR);
+#else
         cv::cvtColor(targetImgHsv, imgColor, CV_HSV2BGR);
+#endif
 
         cv::Mat imgSampled;
         cv::resize(imgColor,
@@ -663,7 +671,11 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             throw std::runtime_error("Unable to write image: " + fileName);
 
         // Estimated image
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(estimatedImgHsv, imgColor, cv::COLOR_HSV2BGR);
+#else
         cv::cvtColor(estimatedImgHsv, imgColor, CV_HSV2BGR);
+#endif
 
         cv::resize(imgColor,
                    imgSampled,
@@ -711,7 +723,11 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
             cv::Point(cellWidth - margin, (target + 1) * cellHeight - margin),
             cv::Scalar((180 * target / nbTargets + mLabelsHueOffset) % 180,
                         255, 255),
+#if CV_MAJOR_VERSION >= 3
+            cv::FILLED);
+#else
             CV_FILLED);
+#endif
 
         std::stringstream legendStr;
         legendStr << target << " " << labelsName[target];
@@ -731,7 +747,11 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
     }
 
     cv::Mat imgColor;
+#if CV_MAJOR_VERSION >= 3
+    cv::cvtColor(legendImg, imgColor, cv::COLOR_HSV2BGR);
+#else
     cv::cvtColor(legendImg, imgColor, CV_HSV2BGR);
+#endif
 
     if (!cv::imwrite(mName + "/" + fileName, imgColor))
         throw std::runtime_error("Unable to write image: " + mName + "/"

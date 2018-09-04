@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <vector>
 #include <map>
+#include <numeric>
 
 #ifdef OPENCV_USE_OLD_HEADERS       //  before OpenCV 2.2.0
     #include "cv.h"
@@ -46,7 +47,7 @@
         #include "opencv2/core/core.hpp"
         #include "opencv2/imgproc/imgproc.hpp"
         #include "opencv2/highgui/highgui.hpp"
-    #elif CV_MAJOR_VERSION == 3
+    #elif CV_MAJOR_VERSION >= 3
         #include "opencv2/core.hpp"
         #include "opencv2/imgproc.hpp"
         #include "opencv2/highgui.hpp"

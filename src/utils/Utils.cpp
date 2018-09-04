@@ -172,7 +172,11 @@ void N2D2::Utils::colorReduce(cv::Mat& img, unsigned int nbColors)
         // -- since we will be clustering using k-means which is
         // based on the euclidean distance, we'll use the L*a*b* color space
         // where the euclidean distance implies perceptual meaning
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(imgFloat, imgLab, cv::COLOR_BGR2Lab);
+#else
         cv::cvtColor(imgFloat, imgLab, CV_BGR2Lab);
+#endif
     } else
         imgLab = imgFloat;
 
@@ -182,8 +186,13 @@ void N2D2::Utils::colorReduce(cv::Mat& img, unsigned int nbColors)
     // apply k-means using the specified number of clusters and then create the
     // quantized image based on the predictions
     cv::Mat bestLabels;
+#if CV_MAJOR_VERSION >= 3
+    const cv::TermCriteria criteria(
+        cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 1.0);
+#else
     const cv::TermCriteria criteria(
         CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 10, 1.0);
+#endif
     const int attempts = 3;
     const int flags = cv::KMEANS_PP_CENTERS;
     cv::Mat centers;
@@ -215,8 +224,13 @@ void N2D2::Utils::colorReduce(cv::Mat& img, unsigned int nbColors)
         }
     }
 
-    if (img.channels() > 1)
+    if (img.channels() > 1) {
+#if CV_MAJOR_VERSION >= 3
+        cv::cvtColor(imgLab, imgFloat, cv::COLOR_Lab2BGR);
+#else
         cv::cvtColor(imgLab, imgFloat, CV_Lab2BGR);
+#endif
+    }
     else
         imgFloat = imgLab;
 
@@ -643,7 +657,7 @@ double N2D2::Utils::normalizedAngle(double angle, AngularRange range)
     return ang;
 }
 
-#if CV_MINOR_VERSION < 2
+#if CV_MAJOR_VERSION < 2 || (CV_MAJOR_VERSION == 2 && CV_MINOR_VERSION < 2)
 void cv::vconcat(const std::vector<cv::Mat>& src, cv::Mat& dst)
 {
     if (src.empty())

@@ -40,7 +40,7 @@ N2D2::UnpoolCell_Frame_CUDA::UnpoolCell_Frame_CUDA(const std::string& name,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame_CUDA(name, nbOutputs, activation),
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs, activation),
       mPoolDesc(NULL)
 {
     // ctor
@@ -161,7 +161,7 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool /*inference*/)
         }
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -170,7 +170,7 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<Float_T>::backPropagate();
 
     const Float_T alpha = 1.0;
 

@@ -43,7 +43,12 @@ TEST(CircularROI, draw)
 {
     CircularROI<int> roi(1, cv::Point(256, 128), 128);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -60,7 +65,12 @@ TEST(CircularROI, extract)
 {
     CircularROI<int> roi(1, cv::Point(256, 128), 128);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -110,7 +120,12 @@ TEST(EllipticROI, draw)
 {
     EllipticROI<int> roi(1, cv::Point(256, 128), 128, 64, M_PI / 4.0);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -127,7 +142,12 @@ TEST(EllipticROI, extract)
 {
     EllipticROI<int> roi(1, cv::Point(256, 128), 128, 64, M_PI / 4.0);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -213,7 +233,12 @@ TEST(PolygonalROI, draw)
 
     PolygonalROI<int> roi(1, pts);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -235,7 +260,12 @@ TEST(PolygonalROI, extract)
 
     PolygonalROI<int> roi(1, pts);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -310,7 +340,12 @@ TEST(RectangularROI, draw)
 {
     RectangularROI<int> roi(1, cv::Point(128, 0), 256, 256);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -327,7 +362,12 @@ TEST(RectangularROI, extract)
 {
     RectangularROI<int> roi(1, cv::Point(128, 0), 256, 256);
 
-    cv::Mat img = cv::imread("tests_data/Lenna.png", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
 
     if (!img.data)
         throw std::runtime_error(

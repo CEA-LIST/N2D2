@@ -511,7 +511,11 @@ cv::Mat N2D2::NodeNeuron::reconstructPattern(bool normalize, bool multiLayer)
                         filterHsv = (*itOrientation).second;
 
                     cv::Mat filter;
+#if CV_MAJOR_VERSION >= 3
+                    cv::cvtColor(filterHsv, filter, cv::COLOR_HSV2BGR);
+#else
                     cv::cvtColor(filterHsv, filter, CV_HSV2BGR);
+#endif
                     filter *= 2.0 / (*it).second.size();
                     maps[scale] += filter;
                 }
@@ -546,7 +550,11 @@ cv::Mat N2D2::NodeNeuron::reconstructPattern(bool normalize, bool multiLayer)
 
             if (singleOrientation) {
                 cv::Mat imgGray;
+#if CV_MAJOR_VERSION >= 3
+                cv::cvtColor(img, imgGray, cv::COLOR_RGB2GRAY);
+#else
                 cv::cvtColor(img, imgGray, CV_RGB2GRAY);
+#endif
                 img = imgGray;
             }
         }
@@ -750,7 +758,11 @@ cv::Mat N2D2::NodeNeuron::reconstructActivity(
                 }
 
                 cv::Mat filter;
+#if CV_MAJOR_VERSION >= 3
+                cv::cvtColor((*itOrientation).second, filter, cv::COLOR_HSV2BGR);
+#else
                 cv::cvtColor((*itOrientation).second, filter, CV_HSV2BGR);
+#endif
                 filter /= (*it).second.size();
                 maps[scale] += filter;
             }
@@ -785,7 +797,11 @@ cv::Mat N2D2::NodeNeuron::reconstructActivity(
 
         if (singleOrientation) {
             cv::Mat imgGray;
+#if CV_MAJOR_VERSION >= 3
+            cv::cvtColor(img, imgGray, cv::COLOR_RGB2GRAY);
+#else
             cv::cvtColor(img, imgGray, CV_RGB2GRAY);
+#endif
             img = imgGray;
         }
     }

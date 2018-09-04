@@ -38,7 +38,7 @@ N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const std::string& name,
                                             std::vector<unsigned int> numTemplates)
     : Cell(name, nbOutputs),
       ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor, numParts, numTemplates),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
 {
     // ctor
 }
@@ -372,7 +372,7 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         nbThread,
                         nbBlocks);
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
 
     mDiffInputs.clearValid();
 }

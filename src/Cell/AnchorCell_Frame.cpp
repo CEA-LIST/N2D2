@@ -30,7 +30,7 @@ N2D2::AnchorCell_Frame::AnchorCell_Frame(
     unsigned int scoresCls)
     : Cell(name, 6*anchors.size()),
       AnchorCell(name, sp, anchors, scoresCls),
-      Cell_Frame(name, 6*anchors.size()),
+      Cell_Frame<Float_T>(name, 6*anchors.size()),
       mAnchors(anchors)
 {
     // ctor
@@ -182,9 +182,9 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
     const double yRatio = std::ceil(mFeatureMapHeight
                                     / (double)mOutputsDims[1]);
 
-    const float xOutputRatio = mStimuliProvider.getSizeX() 
+    const float xOutputRatio = mStimuliProvider.getSizeX()
                                     / (float) mFeatureMapWidth;
-    const float yOutputRatio = mStimuliProvider.getSizeY() 
+    const float yOutputRatio = mStimuliProvider.getSizeY()
                                     / (float) mFeatureMapHeight;
 
 #pragma omp parallel for if (mOutputs.dimB() > 4)
@@ -518,7 +518,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
         }
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 

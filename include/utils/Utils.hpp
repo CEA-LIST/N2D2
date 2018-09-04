@@ -74,7 +74,7 @@ template <class T> double log2(T x)
         #include "opencv2/core/core.hpp"
         #include "opencv2/imgproc/imgproc.hpp"
         #include "opencv2/highgui/highgui.hpp"
-    #elif CV_MAJOR_VERSION == 3
+    #elif CV_MAJOR_VERSION >= 3
         #include "opencv2/core.hpp"
         #include "opencv2/imgproc.hpp"
         #include "opencv2/highgui.hpp"
@@ -499,7 +499,7 @@ namespace Utils {
 
     class commaNumpunct : public std::numpunct<char> {
     public:
-        commaNumpunct(size_t refs = 0): numpunct(refs) {}
+        commaNumpunct(size_t refs = 0): std::numpunct<char>(refs) {}
 
     protected:
         virtual char do_thousands_sep() const
@@ -644,7 +644,7 @@ inline std::istream& operator>>(std::istream& is,
                                 std::vector<std::string>& vec);
 }
 
-#if CV_MINOR_VERSION < 2
+#if CV_MAJOR_VERSION < 2 || (CV_MAJOR_VERSION == 2 && CV_MINOR_VERSION < 2)
 namespace cv {
 void vconcat(const std::vector<cv::Mat>& src, cv::Mat& dst);
 }

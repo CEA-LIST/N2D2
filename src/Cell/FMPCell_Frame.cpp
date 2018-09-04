@@ -30,7 +30,7 @@ N2D2::FMPCell_Frame::FMPCell_Frame(const std::string& name,
                                    <Activation>& activation)
     : Cell(name, nbOutputs),
       FMPCell(name, scalingRatio, nbOutputs),
-      Cell_Frame(name, nbOutputs, activation),
+      Cell_Frame<Float_T>(name, nbOutputs, activation),
       mLockRandom(false)
 {
     // ctor
@@ -148,7 +148,7 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
         }
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -157,7 +157,7 @@ void N2D2::FMPCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame::backPropagate();
+    Cell_Frame<Float_T>::backPropagate();
 
     const unsigned int size = mInputs.dimB() * getNbChannels();
 

@@ -35,7 +35,11 @@ TEST_DATASET(FilterTransformation,
 
     cv::Mat img
         = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+                     (color) ? cv::IMREAD_COLOR : cv::IMREAD_GRAYSCALE);
+#else
                      (color) ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE);
+#endif
 
     if (!img.data)
         throw std::runtime_error(
@@ -70,7 +74,11 @@ TEST_DATASET(FilterTransformation,
 
     cv::Mat img
         = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+                     (color) ? cv::IMREAD_COLOR : cv::IMREAD_GRAYSCALE);
+#else
                      (color) ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE);
+#endif
 
     if (!img.data)
         throw std::runtime_error(

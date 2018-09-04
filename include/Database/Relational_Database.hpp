@@ -32,7 +32,7 @@ public:
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     std::vector<std::pair<std::vector<double>, double>> loadRelationSample(
-                                                 double* triple = nullptr);
+                                                 double* triple = NULL);
     virtual ~Relational_Database() {};
 
 protected:

@@ -40,7 +40,7 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
                operation,
                weights,
                shifts),
-      Cell_Frame_CUDA(name, nbOutputs, activation)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs, activation)
 {
     // ctor
 }
@@ -224,7 +224,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
                                  "unknown operation type.");
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -236,7 +236,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
 
-    Cell_Frame_CUDA::backPropagate();
+    Cell_Frame_CUDA<Float_T>::backPropagate();
 
     for (unsigned int k = 0; k < nbInputs; ++k) {
         const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;

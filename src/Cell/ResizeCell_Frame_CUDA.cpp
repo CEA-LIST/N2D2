@@ -33,7 +33,7 @@ N2D2::ResizeCell_Frame_CUDA::ResizeCell_Frame_CUDA(const std::string& name,
                                                  ResizeMode resizeMode)
     : Cell(name, nbOutputs),
       ResizeCell(name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
 {
     // ctor
 }
@@ -43,7 +43,7 @@ void N2D2::ResizeCell_Frame_CUDA::BilinearInterpolation(const int out_size,
                                                         const float scale,
                                                         CudaTensor<unsigned int>& LowIndex,
                                                         CudaTensor<unsigned int>& HightIndex,
-                                                        CudaTensor<Float_T>& Interpolation) 
+                                                        CudaTensor<Float_T>& Interpolation)
 {
   LowIndex(out_size) = 0;
   HightIndex(out_size) = 0;
@@ -59,10 +59,10 @@ void N2D2::ResizeCell_Frame_CUDA::BilinearInterpolation(const int out_size,
 
 void N2D2::ResizeCell_Frame_CUDA::initialize()
 {
-    
+
     for(unsigned int input = 1; input < mInputs.size(); ++input)
-        if (mInputs[input].dimX() != mInputs[0].dimX() || 
-            mInputs[input].dimY() != mInputs[0].dimY()) 
+        if (mInputs[input].dimX() != mInputs[0].dimX() ||
+            mInputs[input].dimY() != mInputs[0].dimY())
             throw std::runtime_error("Input must have the same dimensions in ResizeCell_Frame_CUDA " + mName);
 
     if(mResizeMode == BilinearTF)
@@ -74,7 +74,7 @@ void N2D2::ResizeCell_Frame_CUDA::initialize()
 
         mScaleX = mAlignCorners ? (inputDimX - 1) / (float) (outputDimX - 1)
                     : (inputDimX) / (float) (outputDimX);
-                    
+
         mScaleY = mAlignCorners ? (inputDimY - 1) / (float) (outputDimY - 1)
                     : (inputDimY) / (float) (outputDimY);
 
@@ -153,7 +153,7 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool /*inference*/)
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
     }
 
-    Cell_Frame_CUDA::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate();
 
     mDiffInputs.clearValid();
 

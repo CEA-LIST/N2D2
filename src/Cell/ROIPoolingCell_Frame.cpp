@@ -32,7 +32,7 @@ N2D2::ROIPoolingCell_Frame::ROIPoolingCell_Frame(const std::string& name,
                                                  ROIPooling pooling)
     : Cell(name, nbOutputs),
       ROIPoolingCell(name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
-      Cell_Frame(name, nbOutputs)
+      Cell_Frame<Float_T>(name, nbOutputs)
 {
     // ctor
     mInputs.matchingDims({});
@@ -385,7 +385,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
         outputOffset += input.dimZ();
     }
 
-    Cell_Frame::propagate();
+    Cell_Frame<Float_T>::propagate();
     mDiffInputs.clearValid();
 }
 
@@ -394,7 +394,7 @@ void N2D2::ROIPoolingCell_Frame::backPropagate()
     if (mDiffOutputs.empty())
         return;
 
-    Cell_Frame::backPropagate();
+    Cell_Frame<Float_T>::backPropagate();
 
     const Float_T alpha = 1.0;
 

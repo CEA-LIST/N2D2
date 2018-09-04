@@ -32,7 +32,7 @@ N2D2::TransformationCell_Frame_CUDA::TransformationCell_Frame_CUDA(
     const std::shared_ptr<Transformation>& transformation)
     : Cell(name, nbOutputs),
       TransformationCell(name, nbOutputs, transformation),
-      Cell_Frame_CUDA(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
 {
     // ctor
 }

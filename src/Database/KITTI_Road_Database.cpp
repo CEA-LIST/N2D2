@@ -148,8 +148,13 @@ void N2D2::KITTI_Road_Database::loadKITTIRoadStimuli(const std::string& dirPath,
         std::cout << "Loading labels ground truth: " << labels[frame]
                   << "\n    (datafile: " << files[frame] << ")" << std::endl;
 
+#if CV_MAJOR_VERSION >= 3
+        cv::Mat gtLabels = cv::imread(labels[frame], cv::IMREAD_COLOR)
+                               .clone(); // Read the ground truth label file
+#else
         cv::Mat gtLabels = cv::imread(labels[frame], CV_LOAD_IMAGE_COLOR)
                                .clone(); // Read the ground truth label file
+#endif
 
         if (!gtLabels.data)
             throw std::runtime_error("KITTI_Road_Database::"

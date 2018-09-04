@@ -60,7 +60,11 @@ TEST_DATASET(TrimTransformation,
 
     cv::Mat img
         = cv::imread("tests_data/SIPI_Jelly_Beans_4.1.07.tiff",
+#if CV_MAJOR_VERSION >= 3
+                     (color) ? cv::IMREAD_COLOR : cv::IMREAD_GRAYSCALE);
+#else
                      (color) ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE);
+#endif
 
     if (!img.data)
         throw std::runtime_error("Could not open or find image: "
