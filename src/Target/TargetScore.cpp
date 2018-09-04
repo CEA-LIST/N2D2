@@ -96,6 +96,9 @@ double N2D2::TargetScore::getAverageSuccess(Database::StimuliSet set,
 {
     const std::deque<double>& success = (*mScoreSet.find(set)).second.success;
 
+    if (success.empty())
+        return 0.0;
+
     return (avgWindow > 0 && success.size() > avgWindow)
                ? std::accumulate(success.end() - avgWindow, success.end(), 0.0)
                  / (double)avgWindow
@@ -106,18 +109,20 @@ double N2D2::TargetScore::getAverageSuccess(Database::StimuliSet set,
 double N2D2::TargetScore::getAverageTopNSuccess(Database::StimuliSet set,
                                                 unsigned int avgWindow) const
 {
-    if (mTargetTopN > 1) {
-        const std::deque<double>& success
-            = (*mScoreTopNSet.find(set)).second.success;
-
-        return (avgWindow > 0 && success.size() > avgWindow)
-                   ? std::accumulate(success.end() - avgWindow,
-                                     success.end(),
-                                     0.0) / (double)avgWindow
-                   : std::accumulate(success.begin(), success.end(), 0.0)
-                     / (double)success.size();
-    } else
+    if (!(mTargetTopN > 1))
         return 0.0;
+
+    const std::deque<double>& success
+        = (*mScoreTopNSet.find(set)).second.success;
+
+    if (success.empty())
+        return 0.0;
+
+    return (avgWindow > 0 && success.size() > avgWindow)
+               ? std::accumulate(success.end() - avgWindow, success.end(), 0.0)
+                 / (double)avgWindow
+               : std::accumulate(success.begin(), success.end(), 0.0)
+                 / (double)success.size();
 }
 
 void N2D2::TargetScore::logSuccess(const std::string& fileName,
@@ -145,12 +150,13 @@ void N2D2::TargetScore::logSuccess(const std::string& fileName,
         dataFile.close();
 
         // Plot validation
-        const double minFinalRate
-            = std::min(mValidationScore.back().second,
-                       getScore(Database::Learn).success.back());
-        const double maxFinalRate
-            = std::max(mValidationScore.back().second,
-                       getScore(Database::Learn).success.back());
+        const double lastValidation = (!mValidationScore.empty())
+            ? mValidationScore.back().second : 0.0;
+        const double lastLearn = (!getScore(Database::Learn).success.empty())
+            ? getScore(Database::Learn).success.back() : 0.0;
+
+        const double minFinalRate = std::min(lastValidation, lastLearn);
+        const double maxFinalRate = std::max(lastValidation, lastLearn);
 
         std::ostringstream label;
         label << "\"Best validation: " << 100.0 * mMaxValidationScore
@@ -208,12 +214,14 @@ void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
             dataFile.close();
 
             // Plot validation
-            const double minFinalRate
-                = std::min(mValidationTopNScore.back().second,
-                           getTopNScore(Database::Learn).success.back());
-            const double maxFinalRate
-                = std::max(mValidationTopNScore.back().second,
-                           getTopNScore(Database::Learn).success.back());
+            const double lastValidation = (!mValidationTopNScore.empty())
+                ? mValidationTopNScore.back().second : 0.0;
+            const double lastLearn
+                = (!getTopNScore(Database::Learn).success.empty())
+                    ? getTopNScore(Database::Learn).success.back() : 0.0;
+
+            const double minFinalRate = std::min(lastValidation, lastLearn);
+            const double maxFinalRate = std::max(lastValidation, lastLearn);
 
             std::ostringstream label;
             label << "\"Best top-" << mTargetTopN

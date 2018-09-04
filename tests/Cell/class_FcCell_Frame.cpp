@@ -1525,7 +1525,8 @@ TEST_DATASET(FcCell_Frame_half,
 
     env.readRandomBatch(Database::Test);
 
-    Tensor<Float_T>& in = env.getData();
+    const Tensor<half_float::half>& in
+        = tensor_cast<half_float::half>(env.getData());
 
     ASSERT_EQUALS(in.dimZ(), 1U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -1557,9 +1558,10 @@ TEST_DATASET(FcCell_Frame_half,
     ASSERT_EQUALS(out.dimX(), 1U);
     ASSERT_EQUALS(out.dimY(), 1U);
 
-    const half_float::half sum(std::accumulate(in.begin(),
-                                  in.begin() + inputSize,
-                                  0.0f));
+    const half_float::half sum
+        = std::accumulate(in.begin(),
+                          in.begin() + inputSize,
+                          half_float::half(0.0f));
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
         ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
