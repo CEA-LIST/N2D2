@@ -360,6 +360,7 @@ int main(int argc, char* argv[]) try
 
         std::chrono::high_resolution_clock::time_point startTime
             = std::chrono::high_resolution_clock::now();
+        std::chrono::high_resolution_clock::time_point startTimeSp, endTimeSp;
         double minTimeElapsed = 0.0;
         unsigned int nextLog = log;
         unsigned int nextReport = report;
@@ -382,7 +383,10 @@ int main(int argc, char* argv[]) try
                                     (bench) ? &timings : NULL);
 
             sp.future();
+            startTimeSp = std::chrono::high_resolution_clock::now();
             sp.readRandomBatch(Database::Learn);
+            endTimeSp = std::chrono::high_resolution_clock::now();
+
             learnThread.join();
 
             if (logOutputs && i == 0) {
@@ -395,6 +399,11 @@ int main(int argc, char* argv[]) try
             }
 
             if (bench) {
+                timings.push_back(std::make_pair(
+                    "sp", std::chrono::duration_cast
+                    <std::chrono::duration<double> >(endTimeSp - startTimeSp)
+                                                 .count()));
+
                 if (!cumTimings.empty()) {
                     std::transform(timings.begin(),
                                    timings.end(),
@@ -639,6 +648,8 @@ int main(int argc, char* argv[]) try
             // Static testing
             unsigned int nextLog = log;
             unsigned int nextReport = report;
+            std::chrono::high_resolution_clock::time_point startTimeSp,
+                                                           endTimeSp;
 
             const unsigned int nbTest
                 = (testIdx >= 0) ? 1 : database.getNbStimuli(Database::Test);
@@ -649,8 +660,12 @@ int main(int argc, char* argv[]) try
                 const unsigned int i = b * batchSize;
                 const unsigned int idx = (testIdx >= 0) ? testIdx : i;
 
+                startTimeSp = std::chrono::high_resolution_clock::now();
                 sp.readBatch(Database::Test, idx);
+                endTimeSp = std::chrono::high_resolution_clock::now();
+
                 deepNet->test(Database::Test, &timings);
+
                 deepNet->reportOutputsRange(outputsRange);
                 deepNet->reportOutputsHistogram(outputsHistogram);
                 deepNet->logEstimatedLabels(testName);
@@ -662,6 +677,11 @@ int main(int argc, char* argv[]) try
                               << sp.getLabelsData()[0](0) << std::endl;
                     deepNet->logOutputs("outputs_" + testName);
                 }
+
+                timings.push_back(std::make_pair(
+                    "sp", std::chrono::duration_cast
+                    <std::chrono::duration<double> >(endTimeSp - startTimeSp)
+                                                 .count()));
 
                 if (!cumTimings.empty()) {
                     std::transform(timings.begin(),
