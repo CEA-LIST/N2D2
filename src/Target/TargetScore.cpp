@@ -94,6 +94,8 @@ double N2D2::TargetScore::getBatchAverageTopNSuccess() const
 double N2D2::TargetScore::getAverageSuccess(Database::StimuliSet set,
                                             unsigned int avgWindow) const
 {
+    assert(mScoreSet.find(set) != mScoreSet.end());
+
     const std::deque<double>& success = (*mScoreSet.find(set)).second.success;
 
     if (success.empty())
@@ -109,6 +111,8 @@ double N2D2::TargetScore::getAverageSuccess(Database::StimuliSet set,
 double N2D2::TargetScore::getAverageTopNSuccess(Database::StimuliSet set,
                                                 unsigned int avgWindow) const
 {
+    assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
+
     if (!(mTargetTopN > 1))
         return 0.0;
 
@@ -129,9 +133,13 @@ void N2D2::TargetScore::logSuccess(const std::string& fileName,
                                    Database::StimuliSet set,
                                    unsigned int avgWindow) const
 {
+    assert(mScoreSet.find(set) != mScoreSet.end());
+
     const std::string dataFileName = mName + "/Success_" + fileName + ".dat";
 
     if (set == Database::Validation) {
+        assert(mScoreSet.find(Database::Learn) != mScoreSet.end());
+
         // Save validation scores file
         std::ofstream dataFile(dataFileName);
 
@@ -179,23 +187,28 @@ void N2D2::TargetScore::logSuccess(const std::string& fileName,
         multiplot
             << ("replot \"" + dataFileName
                 + "\" using 1:2 with linespoints lt 7 title \"Validation\"");
-    } else
+    }
+    else {
         Monitor::logDataRate((*mScoreSet.find(set)).second.success,
                              dataFileName,
                              avgWindow,
                              true);
+    }
 }
 // Top-n log success
 void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
                                        Database::StimuliSet set,
                                        unsigned int avgWindow) const
 {
+    assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
 
     if (mTargetTopN > 1) {
         const std::string dataFileName = mName + "/SuccessTopN_" + fileName
                                          + ".dat";
 
         if (set == Database::Validation) {
+            assert(mScoreTopNSet.find(Database::Learn) != mScoreTopNSet.end());
+
             // Save validation scores file
             std::ofstream dataFile(dataFileName);
 
@@ -257,6 +270,8 @@ void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
 void N2D2::TargetScore::logConfusionMatrix(const std::string& fileName,
                                            Database::StimuliSet set) const
 {
+    assert(mScoreSet.find(set) != mScoreSet.end());
+
     (*mScoreSet.find(set)).second.confusionMatrix.log(
         mName + "/ConfusionMatrix_" + fileName + ".dat", getTargetLabelsName());
 }
@@ -264,6 +279,8 @@ void N2D2::TargetScore::logConfusionMatrix(const std::string& fileName,
 void N2D2::TargetScore::logMisclassified(const std::string& fileName,
                                          Database::StimuliSet set) const
 {
+    assert(mScoreSet.find(set) != mScoreSet.end());
+
     std::ofstream data((mName + "/Misclassified_" + fileName + ".dat").c_str());
 
     if (!data.good())

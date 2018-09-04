@@ -982,6 +982,8 @@ sortedLabels.end(); it != itEnd; ++it) {
 
 std::string N2D2::Database::getStimulusName(StimulusID id) const
 {
+    assert(id < mStimuli.size());
+
     if (mStimuli[id].slice != NULL) {
         const cv::Rect bbRect = mStimuli[id].slice->getBoundingRect();
 
@@ -997,6 +999,8 @@ std::string N2D2::Database::getStimulusName(StimulusID id) const
 std::vector<std::shared_ptr<N2D2::ROI> >
 N2D2::Database::getStimulusROIs(StimulusID id) const
 {
+    assert(id < mStimuli.size());
+
     std::vector<std::shared_ptr<ROI> > stimulusROIs;
     std::transform(mStimuli[id].ROIs.begin(),
                    mStimuli[id].ROIs.end(),
@@ -1091,6 +1095,8 @@ int N2D2::Database::getDefaultLabelID() const {
 
 cv::Mat N2D2::Database::getStimulusData(StimulusID id)
 {
+    assert(id < mStimuli.size());
+
     if (mLoadDataInMemory) {
         if (mStimuliData.empty()) {
 #pragma omp critical(Database__getStimulusData)
@@ -1107,6 +1113,8 @@ cv::Mat N2D2::Database::getStimulusData(StimulusID id)
 
 cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
 {
+    assert(id < mStimuli.size());
+
     if (mLoadDataInMemory) {
         if (mStimuliLabelsData.empty()) {
 #pragma omp critical(Database__getStimulusLabelsData)

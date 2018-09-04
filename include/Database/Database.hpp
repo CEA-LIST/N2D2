@@ -402,18 +402,21 @@ std::string& newName) {
 void N2D2::Database::setStimulusLabel(StimulusID id,
                                       const std::string& labelName)
 {
+    assert(id < mStimuli.size());
     mStimuli[id].label = getLabelID(labelName);
 }
 
 void N2D2::Database::setStimulusROIs(StimulusID id,
                                      const std::vector<ROI*>& ROIs)
 {
+    assert(id < mStimuli.size());
     mStimuli[id].ROIs = ROIs;
 }
 
 N2D2::Database::StimulusID
 N2D2::Database::getStimulusID(StimuliSet set, unsigned int index) const
 {
+    assert(index < mStimuliSets(set).size());
     return mStimuliSets(set)[index];
 }
 
@@ -425,6 +428,7 @@ std::string N2D2::Database::getStimulusName(StimuliSet set,
 
 int N2D2::Database::getStimulusLabel(StimulusID id) const
 {
+    assert(id < mStimuli.size());
     return mStimuli[id].label;
 }
 
