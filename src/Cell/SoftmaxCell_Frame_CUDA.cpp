@@ -97,15 +97,19 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::propagate(bool /*inference*/)
     if(mGroupSize > 0)
     {
         for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
+        {
+            const unsigned int offset = step*mInputs[0].dimX()*mInputs[0].dimY();
+
             CHECK_CUDNN_STATUS(cudnnSoftmaxForward(CudaContext::cudnnHandle(),
                                                 CUDNN_SOFTMAX_ACCURATE,
                                                 CUDNN_SOFTMAX_MODE_CHANNEL,
                                                 &alpha,
                                                 mGroupTensor,
-                                                input0->getDevicePtr() + step,
+                                                input0->getDevicePtr() + offset,
                                                 &beta,
                                                 mGroupTensor,
-                                                mOutputs.getDevicePtr() + step));
+                                                mOutputs.getDevicePtr() + offset));
+        }
 
     }
     else
@@ -144,18 +148,21 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagate()
 
         if(mGroupSize > 0) {
             for(unsigned int step = 0; step < getNbOutputs(); step += mGroupSize)
+            {
+                const unsigned int offset = step*mInputs[0].dimX()*mInputs[0].dimY();
                 CHECK_CUDNN_STATUS(
                     cudnnSoftmaxBackward(CudaContext::cudnnHandle(),
                                         CUDNN_SOFTMAX_ACCURATE,
                                         CUDNN_SOFTMAX_MODE_CHANNEL,
                                         &alpha,
                                         mGroupTensor,
-                                        mOutputs.getDevicePtr() + step,
+                                        mOutputs.getDevicePtr() + offset,
                                         mGroupTensor,
-                                        mDiffInputs.getDevicePtr() + step,
+                                        mDiffInputs.getDevicePtr() + offset,
                                         &beta,
                                         mGroupTensor,
-                                        diffOutput0->getDevicePtr() + step));
+                                        diffOutput0->getDevicePtr() + offset));
+            }
 
         }
         else {
