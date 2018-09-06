@@ -42,5 +42,7 @@ void N2D2::ElemWiseCell::getStats(Stats& stats) const
 
 void N2D2::ElemWiseCell::setOutputsDims()
 {
-    mOutputsDims = mInputsDims;
+    mOutputsDims[1] = mInputsDims[1];
+    mOutputsDims[0] = mInputsDims[0];
+
 }
