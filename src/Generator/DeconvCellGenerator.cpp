@@ -53,8 +53,8 @@ N2D2::DeconvCellGenerator::generate(Network& network,
         kernelDims = iniConfig.getProperty
                                      <std::vector<unsigned int> >("KernelDims");
     }
-    else if (iniConfig.isProperty("Kernel"))
-        kernelDims.resize(2, iniConfig.getProperty<unsigned int>("Kernel"));
+    else if (iniConfig.isProperty("KernelSize"))
+        kernelDims.resize(2, iniConfig.getProperty<unsigned int>("KernelSize"));
     else {
         kernelDims.push_back(iniConfig.getProperty
                                      <unsigned int>("KernelWidth"));

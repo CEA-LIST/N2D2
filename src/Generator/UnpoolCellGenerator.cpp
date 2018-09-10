@@ -53,8 +53,8 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
         poolDims = iniConfig.getProperty
                                      <std::vector<unsigned int> >("PoolDims");
     }
-    else if (iniConfig.isProperty("Pool"))
-        poolDims.resize(2, iniConfig.getProperty<unsigned int>("Pool"));
+    else if (iniConfig.isProperty("PoolSize"))
+        poolDims.resize(2, iniConfig.getProperty<unsigned int>("PoolSize"));
     else {
         poolDims.push_back(iniConfig.getProperty
                                      <unsigned int>("PoolWidth"));
