@@ -101,14 +101,21 @@ __global__ void cudaSAnchorPropagate_kernel(
                 const float xac = xa0 + wa / 2.0;
                 const float yac = ya0 + ha / 2.0;
 
-                const unsigned int addrBase = batchOffset
-                    + xa + (ya + k * outputsHeight) * outputsWidth;
-
-                const unsigned int addrCoordBase = batchCoordOffset + k * outputsWidth * outputsHeight + ya * outputsWidth + xa;
-
-                const unsigned int addrClsBase = batchClsOffset + k * outputsWidth * outputsHeight + ya * outputsWidth + xa;
-
                 const unsigned int addrStep = outputsHeight * outputsWidth;
+
+                const unsigned int addrBase = batchOffset + xa + (ya + k * outputsHeight) * outputsWidth;
+
+                const unsigned int addrCoordBase = batchCoordOffset 
+                                                    + k * addrStep
+                                                    + ya * outputsWidth 
+                                                    + xa;
+
+                const unsigned int addrClsBase = batchClsOffset 
+                                                    + scoresCls * addrStep
+                                                    + k * addrStep 
+                                                    + ya * outputsWidth 
+                                                    + xa;
+
 
 
                 /**
@@ -135,11 +142,10 @@ __global__ void cudaSAnchorPropagate_kernel(
                     // Score
                     const float cls = inputsCls[addrClsBase];
                     // Parameterized coordinates
-                   
-                    const float txbb = inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep];
-                    const float tybb = inputsCoord[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep];
-                    const float twbb = inputsCoord[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep];
-                    const float thbb = inputsCoord[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep];
+                    const float txbb = inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep ];
+                    const float tybb = inputsCoord[addrCoordBase + (1 + scoresCls) * nbAnchors * addrStep];
+                    const float twbb = inputsCoord[addrCoordBase + (2 + scoresCls) * nbAnchors * addrStep];
+                    const float thbb = inputsCoord[addrCoordBase + (3 + scoresCls ) * nbAnchors * addrStep];
 
                     // Predicted box center coordinates
                     const float xbbc = ((flip) ? -txbb : txbb) * wa
@@ -230,7 +236,11 @@ __global__ void cudaSAnchorPropagate_kernel(
                     outputs[addrBase + 4 * nbAnchors * addrStep] = hbb;
                     outputs[addrBase + 5 * nbAnchors * addrStep] = maxIoU_;
 
-                    argMaxIoU[addrBase] = argMaxIoU_;
+                    argMaxIoU[batchClsOffset 
+                                + k * addrStep 
+                                + ya * outputsWidth 
+                                + xa] = argMaxIoU_;
+                                
                     globalMaxIoU = max(globalMaxIoU, maxIoU_);
                     
                 }

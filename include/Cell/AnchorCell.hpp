@@ -73,6 +73,9 @@ public:
         return flipStatus;
     };
     unsigned int getScoreCls() { return mScoresCls; };
+    unsigned int getFeatureMapWidth() { return mFeatureMapWidth; };
+    unsigned int getFeatureMapHeight() { return mFeatureMapHeight; };
+
     virtual ~AnchorCell() {};
 
 protected:
