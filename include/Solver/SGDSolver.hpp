@@ -76,6 +76,8 @@ protected:
     Parameter<unsigned int> mLearningRateStepSize;
     /// Learning rate decay
     Parameter<double> mLearningRateDecay;
+    /// Quantization levels (0 = no quantization)
+    Parameter<unsigned int> mQuantizationLevels;
     /// If true, don't clamp the weights between -1 and 1 during learning
     Parameter<bool> mClamping;
 

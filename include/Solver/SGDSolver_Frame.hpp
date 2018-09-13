@@ -42,9 +42,6 @@ public:
     virtual ~SGDSolver_Frame() {};
 
 protected:
-    /// Quantization levels (0 = no quantization)
-    Parameter<unsigned int> mQuantizationLevels;
-
     Tensor<T> mMomentumData;
     Tensor<T> mContinuousData;
 
@@ -60,17 +57,14 @@ private:
 
 template <class T>
 N2D2::SGDSolver_Frame<T>::SGDSolver_Frame()
-    : SGDSolver(),
-      mQuantizationLevels(this, "QuantizationLevels", 0U)
+    : SGDSolver()
 {
     // ctor
 }
 
 template <class T>
 N2D2::SGDSolver_Frame<T>::SGDSolver_Frame(const SGDSolver_Frame<T>& solver)
-    : SGDSolver(solver),
-      mQuantizationLevels(this, "QuantizationLevels",
-                          solver.mQuantizationLevels)
+    : SGDSolver(solver)
 {
     // copy-ctor
 }

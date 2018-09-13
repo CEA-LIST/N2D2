@@ -166,6 +166,12 @@ N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
             if (mapping.nbIterations == 0)
                 mapping.nbIterations = std::max(nbOutputs, nbChannels);
 
+            if (mapping.sizeY == 0)
+                mapping.sizeY = nbChannels;
+
+            if (mapping.sizeX == 0)
+                mapping.sizeX = nbOutputs;
+
             for (unsigned int x = mapping.offsetX, y = mapping.offsetY, i = 0;
                  i < mapping.nbIterations;
                  x += mapping.strideX, y += mapping.strideY, ++i) {

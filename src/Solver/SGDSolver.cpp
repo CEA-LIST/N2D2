@@ -30,6 +30,7 @@ N2D2::SGDSolver::SGDSolver()
       mLearningRatePolicy(this, "LearningRatePolicy", None),
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
+      mQuantizationLevels(this, "QuantizationLevels", 0U),
       mClamping(this, "Clamping", false),
       mIterationPass(0),
       mNbIterations(0)
@@ -49,6 +50,8 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
       mLearningRateStepSize(this, "LearningRateStepSize",
                             solver.mLearningRateStepSize),
       mLearningRateDecay(this, "LearningRateDecay", solver.mLearningRateDecay),
+      mQuantizationLevels(this, "QuantizationLevels",
+                          solver.mQuantizationLevels),
       mClamping(this, "Clamping", solver.mClamping),
       mIterationPass(solver.mIterationPass),
       mNbIterations(solver.mNbIterations)

@@ -53,9 +53,6 @@ protected:
     // inline void setMomentum(unsigned int output, unsigned int channel,
     // unsigned int sx, unsigned int sy, float value);
 
-    /// Quantization levels (0 = no quantization)
-    Parameter<unsigned int> mQuantizationLevels;
-
     CudaTensor<T> mMomentumData;
     CudaTensor<T> mContinuousData;
 
@@ -71,8 +68,7 @@ private:
 
 template <class T>
 N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA()
-    : SGDSolver(),
-      mQuantizationLevels(this, "QuantizationLevels", 0U)
+    : SGDSolver()
 {
     // ctor
 }
@@ -80,9 +76,7 @@ N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA()
 template <class T>
 N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA(
     const SGDSolver_Frame_CUDA<T>& solver)
-    : SGDSolver(solver),
-      mQuantizationLevels(this, "QuantizationLevels",
-                          solver.mQuantizationLevels)
+    : SGDSolver(solver)
 {
     // copy-ctor
 }

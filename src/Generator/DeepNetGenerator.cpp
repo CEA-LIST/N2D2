@@ -146,18 +146,23 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     while (nbOrderedLayers < nbOrderedLayersNext) {
         nbOrderedLayers = nbOrderedLayersNext;
 
-        for (std::map<std::string, std::vector<std::string> >::const_iterator it
-             = parentLayers.begin(),
-             itEnd = parentLayers.end();
-             it != itEnd;
-             ++it)
+        // Iterate over sections instead of parentLayers to keep INI file order
+        for (std::vector<std::string>::const_iterator it = sections.begin(),
+             itEnd = sections.end(); it != itEnd; ++it)
         {
+            const std::map<std::string, std::vector<std::string> >
+                ::const_iterator itParents = parentLayers.find(*it);
+
+            // Skip standalone sections
+            if (itParents == parentLayers.end())
+                continue;
+
             unsigned int order = 0;
             bool knownOrder = true;
 
             for (std::vector<std::string>::const_iterator itParent
-                 = (*it).second.begin();
-                 itParent != (*it).second.end();
+                 = (*itParents).second.begin();
+                 itParent != (*itParents).second.end();
                  ++itParent)
             {
                 const std::map
@@ -173,16 +178,16 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
             }
 
             if (knownOrder) {
-                layersOrder.insert(std::make_pair((*it).first, order + 1));
+                layersOrder.insert(std::make_pair((*it), order + 1));
 
                 if (order + 1 >= layers.size())
                     layers.resize(order + 2);
 
                 if (std::find(layers[order + 1].begin(),
                               layers[order + 1].end(),
-                              (*it).first) == layers[order + 1].end()) {
-                    layers[order + 1].push_back((*it).first);
-                    // std::cout << "  " << (*it).first << " = " << order + 1 <<
+                              (*it)) == layers[order + 1].end()) {
+                    layers[order + 1].push_back((*it));
+                    // std::cout << "  " << (*it) << " = " << order + 1 <<
                     // std::endl;
 
                     ++nbOrderedLayersNext;

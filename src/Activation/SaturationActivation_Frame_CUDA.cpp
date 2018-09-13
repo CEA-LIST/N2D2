@@ -69,7 +69,7 @@ void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
     cudaSSaturation_propagate(data.getDevicePtr(),
                               data.size(),
                               (int)mShifting,
-                              (double)mThreshold);
+                              (float)mThreshold);
 }
 
 template <>
@@ -101,7 +101,7 @@ void SaturationActivation_Frame_CUDA
                                   diffData.getDevicePtr(),
                                   data.size(),
                                   (int)mShifting,
-                                  (double)mThreshold);
+                                  (float)mThreshold);
 }
 
 template <>
