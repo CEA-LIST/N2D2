@@ -35,22 +35,30 @@ N2D2::HeFillerGenerator::generate(IniParser& iniConfig,
         const HeFiller<float>::VarianceNorm varianceNorm
             = iniConfig.getProperty<HeFiller<float>::VarianceNorm>(
                 name + ".VarianceNorm", HeFiller<float>::FanIn);
+        const float meanNorm
+            = iniConfig.getProperty<float>(name + ".MeanNorm", 0.0);
 
-        return std::make_shared<HeFiller<float> >(varianceNorm);
+        return std::make_shared<HeFiller<float> >(varianceNorm, meanNorm);
     }
     else if (dataType == Float16) {
         const HeFiller<half_float::half>::VarianceNorm varianceNorm
             = iniConfig.getProperty<HeFiller<half_float::half>
                 ::VarianceNorm>(name + ".VarianceNorm",
                                 HeFiller<half_float::half>::FanIn);
+        const half_float::half meanNorm
+            = iniConfig.getProperty<half_float::half>(name + ".MeanNorm",
+                                                      half_float::half(0.0f));
 
-        return std::make_shared<HeFiller<half_float::half> >(varianceNorm);
+        return std::make_shared<HeFiller<half_float::half> >(varianceNorm,
+                                                             meanNorm);
     }
     else {
         const HeFiller<double>::VarianceNorm varianceNorm
             = iniConfig.getProperty<HeFiller<double>::VarianceNorm>(
                 name + ".VarianceNorm", HeFiller<double>::FanIn);
+        const double meanNorm
+            = iniConfig.getProperty<double>(name + ".MeanNorm", 0.0);
 
-        return std::make_shared<HeFiller<double> >(varianceNorm);
+        return std::make_shared<HeFiller<double> >(varianceNorm, meanNorm);
     }
 }
