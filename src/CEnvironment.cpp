@@ -218,9 +218,10 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
                                  " sub stimuli!");
     }
     StimuliProvider::readStimulus(id, set, batchPos);
-    mRelationalData.clear();
-    mRelationalData.push_back(&mData);
-
+    //mRelationalData.clear();
+    for (unsigned int i=0; i<mData.size(); ++i) {
+        mRelationalData[0](i) = mData(i);
+    }
 }
 
 
