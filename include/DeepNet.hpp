@@ -132,6 +132,7 @@ public:
     void cTicks(Time_T start, Time_T stop, Time_T timestep, bool record=false);
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
+    void initializeCMonitors(unsigned int nbTimesteps);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
     void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeOutputsRange(const std::map

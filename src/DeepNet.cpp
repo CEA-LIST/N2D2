@@ -2038,15 +2038,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
         throw std::runtime_error("DeepNet::cTicks(): stop < start");
     }
 
-    if ((stop-start)%timestep != 0){
-        throw std::runtime_error("DeepNet::cTicks(): stop-start not multiple "
-        "of timestep");
-    }
-    unsigned int nbTimesteps = (stop-start)/timestep+1;
-    if (nbTimesteps > std::numeric_limits<unsigned int>::max()) {
-        throw std::runtime_error("DeepNet::cTicks(): nbTimesteps overflow!");
-    }
-
 
     for (Time_T t = start; t <= stop; t += timestep) {
         cEnv->tick(t, start, stop);
@@ -2091,10 +2082,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
 
                         continue;
                     }
-
-                    (*itMonitor).second->initialize(nbTimesteps,
-                            mStimuliProvider->getDatabase().getNbLabels());
-
 
                     (*itMonitor).second->tick(t);
                 }
@@ -2160,6 +2147,33 @@ void N2D2::DeepNet::cReset(Time_T timestamp)
                 "DeepNet::cReset(): requires Cell_CSpike cells");
 
         cellCSpike->reset(timestamp);
+    }
+}
+
+void N2D2::DeepNet::initializeCMonitors(unsigned int nbTimesteps)
+{
+    for (std::vector<std::vector<std::string> >::const_iterator it
+    = mLayers.begin(),
+    itBegin = mLayers.begin(),
+    itEnd = mLayers.end();
+    it != itEnd;
+    ++it) {
+        for (std::vector<std::string>::const_iterator
+            itCell = (*it).begin(),
+            itCellEnd = (*it).end();
+        itCell != itCellEnd;
+        ++itCell) {
+            const std::map
+                <std::string, std::shared_ptr<CMonitor> >::const_iterator
+            itMonitor = mCMonitors.find(*itCell);
+
+            if (itMonitor == mCMonitors.end()){
+                continue;
+            }
+
+            (*itMonitor).second->initialize(nbTimesteps+1,
+                    mStimuliProvider->getDatabase().getNbLabels());
+        }
     }
 }
 
