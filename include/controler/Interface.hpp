@@ -97,12 +97,18 @@ struct tensor_t<void> {
     typedef BaseTensor type;
 };
 
+class BaseInterface {
+public:
+    virtual ~BaseInterface() {};
+};
+
 /**
  * @class   Interface
  * @brief   Merge virtually several Tensor through an unified data interface.
 */
 template <class T = void, int STACKING_DIM = -2>
-class Interface : public TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T> {
+class Interface : public BaseInterface,
+            public TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T> {
 public:
     typedef typename tensor_t<T>::type tensor_type;
     typedef typename std::vector<tensor_type*>::iterator iterator;

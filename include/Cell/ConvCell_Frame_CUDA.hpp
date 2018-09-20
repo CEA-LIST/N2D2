@@ -80,12 +80,12 @@ public:
                           unsigned int channel,
                           BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
-    inline Interface<> getWeights()
+    inline BaseInterface* getWeights()
     {
-        return Interface<>(mSharedSynapses);
+        return &mSharedSynapses;
     };
     void setWeights(unsigned int k,
-                    const Interface<>& weights,
+                    BaseInterface* weights,
                     unsigned int offset);
     inline std::shared_ptr<BaseTensor> getBiases()
     {
@@ -124,7 +124,7 @@ protected:
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     CudaInterface<T> mSharedSynapses;
     std::map<unsigned int,
-        std::pair<CudaInterface<T>, unsigned int> > mExtSharedSynapses;
+        std::pair<CudaInterface<T>*, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<CudaTensor<T> > mBias;
     CudaInterface<T> mDiffSharedSynapses;
     CudaTensor<T> mDiffBias;

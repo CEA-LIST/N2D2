@@ -152,9 +152,9 @@ public:
                    unsigned int channel,
                    const Matrix<double>& value,
                    bool normalize);
-    virtual Interface<> getWeights() { return Interface<>(); };
+    virtual BaseInterface* getWeights() { return NULL; };
     virtual void setWeights(unsigned int /*k*/,
-                    Interface<> /*weights*/,
+                    BaseInterface* /*weights*/,
                     unsigned int /*offset*/) {};
     virtual std::shared_ptr<BaseTensor> getBiases()
     {

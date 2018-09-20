@@ -84,12 +84,12 @@ public:
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, (*mBias)(output));
     };
-    inline Interface<> getWeights()
+    inline BaseInterface* getWeights()
     {
-        return Interface<>(mSharedSynapses);
+        return &mSharedSynapses;
     };
     void setWeights(unsigned int k,
-                    const Interface<>& weights,
+                    BaseInterface* weights,
                     unsigned int offset);
     inline std::shared_ptr<BaseTensor> getBiases()
     {
@@ -130,7 +130,7 @@ protected:
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     Interface<T,-1> mSharedSynapses;
     std::map<unsigned int,
-        std::pair<Interface<T>, unsigned int> > mExtSharedSynapses;
+        std::pair<Interface<T>*, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<Tensor<T> > mBias;
     Interface<T,-1> mDiffSharedSynapses;
     Tensor<T> mDiffBias;

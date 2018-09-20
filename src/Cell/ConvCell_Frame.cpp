@@ -116,7 +116,7 @@ void N2D2::ConvCell_Frame<T>::initialize()
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
         typename std::map<unsigned int,
-            std::pair<Interface<T>, unsigned int> >::iterator
+            std::pair<Interface<T>*, unsigned int> >::iterator
                 it = mExtSharedSynapses.find(k);
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
@@ -125,7 +125,7 @@ void N2D2::ConvCell_Frame<T>::initialize()
 
         if (it != mExtSharedSynapses.end()) {
             Tensor<T>* extWeights
-                = &((*it).second.first[(*it).second.second]);
+                = &((*(*it).second.first)[(*it).second.second]);
 
             if (!std::equal(kernelDims.begin(), kernelDims.end(),
                             extWeights->dims().begin()))
@@ -142,11 +142,11 @@ void N2D2::ConvCell_Frame<T>::initialize()
             mSharedSynapses.push_back(extWeights);
         }
         else {
-            mSharedSynapses.push_back(new Tensor<T>(kernelDims));
+            mSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
             mWeightsFiller->apply(mSharedSynapses.back());
         }
 
-        mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims));
+        mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
     }
 }
 
@@ -260,10 +260,17 @@ void N2D2::ConvCell_Frame<T>::update()
 
 template <class T>
 void N2D2::ConvCell_Frame<T>::setWeights(unsigned int k,
-                                      const Interface<>& weights,
+                                      BaseInterface* weights,
                                       unsigned int offset)
 {
-    mExtSharedSynapses[k] = std::make_pair(weights, offset);
+    Interface<T>* weightsInterface = dynamic_cast<Interface<T>*>(weights);
+
+    if (!weightsInterface) {
+        throw std::runtime_error("ConvCell_Frame<T>::setWeights(): "
+                                 "incompatible types.");
+    }
+
+    mExtSharedSynapses[k] = std::make_pair(weightsInterface, offset);
 }
 
 template <class T>
@@ -374,8 +381,7 @@ void N2D2::ConvCell_Frame<T>::loadFreeParameters(const std::string& fileName,
 template <class T>
 N2D2::ConvCell_Frame<T>::~ConvCell_Frame()
 {
-    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
-        delete &mSharedSynapses[k];
+    //dtor
 }
 
 namespace N2D2 {

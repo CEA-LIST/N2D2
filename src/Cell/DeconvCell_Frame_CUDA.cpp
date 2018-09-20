@@ -126,7 +126,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
         typename std::map<unsigned int,
-            std::pair<CudaInterface<T>, unsigned int> >::iterator
+            std::pair<CudaInterface<T>*, unsigned int> >::iterator
                 it = mExtSharedSynapses.find(k);
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
@@ -142,7 +142,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
 
         if (it != mExtSharedSynapses.end()) {
             CudaTensor<T>* extWeights
-                = &((*it).second.first[(*it).second.second]);
+                = &((*(*it).second.first)[(*it).second.second]);
 
             if (!std::equal(kernelDims.begin(), kernelDims.end(),
                             extWeights->dims().begin()))
@@ -169,7 +169,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
             // Inverse dimZ and dimB for Deconv
             sharedSynapses->reshape(kernelDims);
 
-            mSharedSynapses.push_back(sharedSynapses);
+            mSharedSynapses.push_back(sharedSynapses, 0);
 
 #if CUDNN_VERSION >= 7000
             if (groupMap() > 1)
@@ -191,7 +191,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
             mSharedSynapses.back().synchronizeHToD();
         }
 
-        mDiffSharedSynapses.push_back(new CudaTensor<T>(kernelDims));
+        mDiffSharedSynapses.push_back(new CudaTensor<T>(kernelDims), 0);
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
@@ -519,13 +519,18 @@ void N2D2::DeconvCell_Frame_CUDA<T>::update()
 
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::setWeights(unsigned int k,
-                                                const Interface<>& weights,
+                                                BaseInterface* weights,
                                                 unsigned int offset)
 {
-    const CudaInterface<>& cudaWeights
-        = dynamic_cast<const CudaInterface<>&>(weights);
+    CudaInterface<T>* cudaWeightsInterface
+        = dynamic_cast<CudaInterface<T>*>(weights);
 
-    mExtSharedSynapses[k] = std::make_pair(cudaWeights, offset);
+    if (!cudaWeightsInterface) {
+        throw std::runtime_error("DeconvCell_Frame_CUDA<T>::setWeights(): "
+                                 "incompatible types.");
+    }
+
+    mExtSharedSynapses[k] = std::make_pair(cudaWeightsInterface, offset);
 }
 
 template <class T>
@@ -735,9 +740,6 @@ void N2D2::DeconvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
 template <class T>
 N2D2::DeconvCell_Frame_CUDA<T>::~DeconvCell_Frame_CUDA()
 {
-    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
-        delete &mSharedSynapses[k];
-
     for (unsigned int k = 0, size = mFilterDesc.size(); k < size; ++k)
         CHECK_CUDNN_STATUS(cudnnDestroyFilterDescriptor(mFilterDesc[k]));
 
