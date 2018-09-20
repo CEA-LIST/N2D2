@@ -119,20 +119,39 @@ public:
     {
         return mData.empty();
     }
-    /// Historically, for Interface, dimZ is always the stacking dimension
-    unsigned int dimZ() const
+    size_t dimX() const
     {
-        return mDataOffset.size();
+        return (!mData.empty() && mData.back()->nbDims() > 0) ? dataDim(0) : 0;
     }
-    unsigned int dimB() const
+    size_t dimY() const
     {
-        return (!mData.empty()) ? mData.back()->dimB() : 0;
+        return (!mData.empty() && mData.back()->nbDims() > 1) ? dataDim(1) : 0;
     }
-    unsigned int size() const
+    size_t dimD() const
+    {
+        return (!mData.empty() && mData.back()->nbDims() > 2) ? dataDim(2) : 0;
+    }
+    /// See Tensor for the special meaning of dimZ()
+    size_t dimZ() const
+    {
+        return (!mData.empty() && mData.back()->nbDims() > 1)
+            ? dataDim(
+                (mData.back()->nbDims() > 3)    ? mData.back()->nbDims() - 2 :
+                (mData.back()->nbDims() == 3)   ? 2
+                                                : 0)
+            : 0;
+    }
+    /// See Tensor for the special meaning of dimB()
+    size_t dimB() const
+    {
+        return (!mData.empty() && mData.back()->nbDims() > 0)
+            ? dataDim(mData.back()->nbDims() - 1) : 0;
+    }
+    size_t size() const
     {
         return mData.size();
     }
-    unsigned int dataSize() const;
+    size_t dataSize() const;
     iterator begin()
     {
         return mData.begin();
@@ -149,13 +168,14 @@ public:
     {
         return mData.end();
     }
-    inline virtual void push_back(tensor_type* tensor);
+    inline virtual void push_back(tensor_type* tensor, size_t refs = 1);
     inline void clear();
 
     virtual tensor_type& back();
     virtual const tensor_type& back() const;
     virtual tensor_type& operator[](unsigned int t);
     virtual const tensor_type& operator[](unsigned int t) const;
+    virtual void replace(unsigned int t, tensor_type* tensor, size_t refs = 1);
     virtual tensor_type& getTensor(unsigned int k, unsigned int* offset = NULL);
     virtual const tensor_type& getTensor(unsigned int k,
                                        unsigned int* offset = NULL) const;
@@ -170,7 +190,7 @@ public:
 
     inline void setValid();
     inline void clearValid();
-    virtual ~Interface() {};
+    virtual ~Interface();
 
 protected:
     template <typename... Args, size_t... Ns>
@@ -179,9 +199,22 @@ protected:
     template <typename... Args, size_t... Ns>
     void translateIndexesSynchronizeHToD(unsigned int tensorOffset, indices<Ns...>,
                          Args... args) const;
+    size_t dataDim(unsigned int dim) const {
+        assert(!mData.empty());
+        assert(dim < mData.back()->nbDims());
+
+        const unsigned int stackingDim = (STACKING_DIM >= 0)
+            ? STACKING_DIM : mData.back()->nbDims() + STACKING_DIM;
+
+        return (stackingDim == dim) ? mDataOffset.size() :
+            (mMatchingDim.size() > dim && mMatchingDim[dim])
+                ? mData.back()->dims()[dim]
+            : 0;
+    }
 
     std::vector<bool> mMatchingDim;
     std::vector<tensor_type*> mData;
+    std::vector<size_t> mDataRefs;
     std::vector<std::pair<unsigned int, unsigned int> > mDataOffset;
 
     friend class TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T>;
@@ -197,11 +230,8 @@ N2D2::Interface<T, STACKING_DIM>::Interface(
       mDataOffset(interface.mDataOffset)
 {
     // copy-ctor
-    for (typename Interface<U, V>::const_iterator
-        it = interface.begin(), itEnd = interface.end();
-        it != itEnd; ++it)
-    {
-        tensor_type* tensor = dynamic_cast<tensor_type*>(*it);
+    for (size_t k = 0; k < interface.size(); ++k) {
+        tensor_type* tensor = dynamic_cast<tensor_type*>(interface[k]);
 
         if (tensor == NULL) {
             throw std::runtime_error("Interface::Interface(): "
@@ -209,6 +239,7 @@ N2D2::Interface<T, STACKING_DIM>::Interface(
         }
 
         mData.push_back(tensor);
+        mDataRefs.push_back(interface.mDataRefs[k] + 1);
     }
 }
 
@@ -221,9 +252,9 @@ N2D2::Interface<T, STACKING_DIM>::Interface(
 }
 
 template <class T, int STACKING_DIM>
-unsigned int N2D2::Interface<T, STACKING_DIM>::dataSize() const
+size_t N2D2::Interface<T, STACKING_DIM>::dataSize() const
 {
-    unsigned int size = 0;
+    size_t size = 0;
 
     for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
                                                             itEnd = mData.end();
@@ -252,7 +283,8 @@ void N2D2::TypedInterface<SELF, STACKING_DIM, T>::fill(const T& value)
 }
 
 template <class T, int STACKING_DIM>
-void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor)
+void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor,
+                                                 size_t refs)
 {
     if (!mData.empty()) {
         if (tensor->nbDims() != mData.back()->nbDims()) {
@@ -282,12 +314,19 @@ void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor)
         mDataOffset.push_back(std::make_pair(tensorOffset, indexOffset));
 
     mData.push_back(tensor);
+    mDataRefs.push_back(refs);
 }
 
 template <class T, int STACKING_DIM>
 void N2D2::Interface<T, STACKING_DIM>::clear()
 {
+    for (size_t k = 0; k < mData.size(); ++k) {
+        if (mDataRefs[k] == 0)
+            delete mData[k];
+    }
+
     mData.clear();
+    mDataRefs.clear();
     mDataOffset.clear();
 }
 
@@ -462,6 +501,26 @@ const typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T,
 }
 
 template <class T, int STACKING_DIM>
+void N2D2::Interface<T, STACKING_DIM>::replace(unsigned int t,
+                                               tensor_type* tensor,
+                                               size_t refs)
+{
+    if (!std::equal(tensor->dims().begin(),
+                     tensor->dims().end(), mData.at(t)->dims().begin()))
+    {
+        throw std::runtime_error("Interface::replace(): the new tensor must "
+                                 "have the same dimensions as the replaced "
+                                 "one.");
+    }
+
+    if (mDataRefs[t] == 0)
+        delete mData[t];
+
+    mData[t] = tensor;
+    mDataRefs[t] = refs;
+}
+
+template <class T, int STACKING_DIM>
 typename N2D2::Interface<T, STACKING_DIM>::tensor_type& N2D2::Interface<T, STACKING_DIM>::getTensor(unsigned int k,
                                                         unsigned int* offset)
 {
@@ -566,6 +625,12 @@ void N2D2::Interface<T, STACKING_DIM>::clearValid()
          it != itEnd;
          ++it)
         (*it)->clearValid();
+}
+
+template <class T, int STACKING_DIM>
+N2D2::Interface<T, STACKING_DIM>::~Interface()
+{
+    clear();
 }
 
 #endif // N2D2_INTERFACE_H

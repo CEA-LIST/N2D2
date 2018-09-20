@@ -310,7 +310,9 @@ public:
     };
     virtual void processFreeParameters(const std::function
                                        <double(const double&)>& /*func*/) {};
-    bool isFullMap() const;
+    bool isFullMap() const {
+        return (groupMap() == 1);
+    }
     size_t groupMap() const;
     bool isUnitMap() const {
         return (mMaps.dimX() == mMaps.dimY() && groupMap() == mMaps.dimX());
@@ -336,8 +338,6 @@ protected:
 private:
     static unsigned int mIdCnt;
 
-    mutable bool mFullMap;
-    mutable bool mFullMapInitialized;
     mutable size_t mGroupMap;
     mutable bool mGroupMapInitialized;
 };

@@ -55,14 +55,15 @@ public:
     template <class U> CudaInterface(const CudaInterface<U, STACKING_DIM>&
                                         interface);
 
-    void push_back(typename Interface<T, STACKING_DIM>::tensor_type* tensor);
+    void push_back(typename Interface<T, STACKING_DIM>::tensor_type* tensor,
+                   size_t refs = 1);
 
     /**
     * Add a CudaTensor to the interface
     *
     * @param tensor   tensor to add to the interface.
     */
-    void push_back(cuda_tensor_type* tensor);
+    void push_back(cuda_tensor_type* tensor, size_t refs = 1);
 
     /** Synchronize Device To Host-based data  */
     void synchronizeDToHBased() const;
@@ -111,20 +112,21 @@ N2D2::CudaInterface<T, STACKING_DIM>::CudaInterface(
 
 template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::push_back(
-    typename Interface<T, STACKING_DIM>::tensor_type* tensor)
+    typename Interface<T, STACKING_DIM>::tensor_type* tensor, size_t refs)
 {
     cuda_tensor_type* cudaTensor = dynamic_cast<cuda_tensor_type*>(tensor);
 
     if (cudaTensor != NULL)
-        Interface<T, STACKING_DIM>::push_back(tensor);
+        Interface<T, STACKING_DIM>::push_back(tensor, refs);
     else
-        Interface<T, STACKING_DIM>::push_back(tensor->newCuda());
+        Interface<T, STACKING_DIM>::push_back(tensor->newCuda(), 0);
 }
 
 template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::push_back(cuda_tensor_type* tensor)
+void N2D2::CudaInterface<T, STACKING_DIM>::push_back(cuda_tensor_type* tensor,
+                                                     size_t refs)
 {
-    Interface<T, STACKING_DIM>::push_back(tensor);
+    Interface<T, STACKING_DIM>::push_back(tensor, refs);
 }
 
 template <class T, int STACKING_DIM>

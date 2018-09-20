@@ -26,8 +26,6 @@ N2D2::Cell::Cell(const std::string& name, unsigned int nbOutputs)
     : mId(mIdCnt++),
       mName(name),
       mOutputsDims(std::vector<size_t>({1U, 1U, nbOutputs})),
-      mFullMap(true),
-      mFullMapInitialized(false),
       mGroupMap(0),
       mGroupMapInitialized(false)
 {
@@ -143,29 +141,6 @@ void N2D2::Cell::setInputsDims(const std::vector<size_t>& dims)
 
         mInputsDims.back() += dims.back();
     }
-}
-
-bool N2D2::Cell::isFullMap() const
-{
-    if (!mFullMapInitialized) {
-        for (size_t output = 0,
-                    nbOutputs = mMaps.dimX(),
-                    nbChannels = mMaps.dimY();
-             output < nbOutputs;
-             ++output)
-        {
-            for (size_t channel = 0; channel < nbChannels; ++channel) {
-                if (!mMaps(output, channel)) {
-                    mFullMap = false;
-                    break;
-                }
-            }
-        }
-
-        mFullMapInitialized = true;
-    }
-
-    return mFullMap;
 }
 
 size_t N2D2::Cell::groupMap() const
