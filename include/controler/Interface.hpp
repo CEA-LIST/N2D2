@@ -212,10 +212,19 @@ protected:
         const unsigned int stackingDim = (STACKING_DIM >= 0)
             ? STACKING_DIM : mData.back()->nbDims() + STACKING_DIM;
 
+        return (stackingDim == dim) ? mDataOffset.size()
+                                    : mData.back()->dims()[dim];
+
+        // TODO: preferred behavior should be to return 0 if the dim is not a
+        // matching dim. However, this is incompatible with current
+        // ROIPoolingCell implementation, which rely on this behavior in
+        // Cell_Frame*::addInput() (which uses mInputs.dimB())
+/*
         return (stackingDim == dim) ? mDataOffset.size() :
             (mMatchingDim.size() > dim && mMatchingDim[dim])
                 ? mData.back()->dims()[dim]
             : 0;
+*/
     }
 
     std::vector<bool> mMatchingDim;
