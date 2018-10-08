@@ -41,18 +41,21 @@
 
 #include "Activation/RectifierActivation.hpp"
 #include "Activation/SaturationActivation.hpp"
-#include "Cell/BatchNormCell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/Cell_Frame.hpp"
 #include "Cell/Cell_Spike.hpp"
+#include "Cell/BatchNormCell.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
+#include "Cell/DeconvCell.hpp"
+#include "Cell/ElemWiseCell.hpp"
 #include "Cell/FMPCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/UnpoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
+#include "Cell/TransformationCell.hpp"
 #include "Target/Target.hpp"
 
 #ifdef CUDA

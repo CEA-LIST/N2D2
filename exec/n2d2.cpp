@@ -299,6 +299,7 @@ int main(int argc, char* argv[]) try
     }
 
     if (!afterCalibration) {
+        DrawNet::drawGraph(*deepNet, Utils::baseName(iniConfig));
         DrawNet::draw(*deepNet, Utils::baseName(iniConfig) + ".svg");
         deepNet->logStats("stats");
         deepNet->logLabelsMapping("labels_mapping.log");

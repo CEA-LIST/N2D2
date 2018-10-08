@@ -380,3 +380,149 @@ void N2D2::DrawNet::draw(DeepNet& deepNet, const std::string& fileName)
 
     svg << "</svg>";
 }
+
+
+void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
+{
+
+
+    GraphViz graph("network_graph", fileName, true);
+    graph.attr("network_graph", "color", "lightblue");
+    graph.attr("network_graph", "style", "filled");
+    graph.attr("network_graph", "labeljust", "l");
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+
+    for (std::vector<std::vector<std::string> >::const_iterator itLayer
+         = layers.begin() + 1,
+         itLayerEnd = layers.end();
+         itLayer != itLayerEnd;
+         ++itLayer) {
+
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+                                                      itEnd = (*itLayer).end();
+             it != itEnd;
+             ++it) {
+            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+            std::vector<std::shared_ptr<Cell> > parentCells
+                = deepNet.getParentCells((*it));
+            parentCells.erase(std::remove(parentCells.begin(), parentCells.end(),
+                                    std::shared_ptr<Cell>()), parentCells.end());
+            std::vector<std::string> parentNames;
+            std::transform(parentCells.begin(), parentCells.end(),
+                std::back_inserter(parentNames),
+                std::bind(&Cell::getName, std::placeholders::_1));
+            const std::string cellType = cell->getType();
+            const std::string cellName = cell->getName();
+            std::stringstream nodeLabel;
+            nodeLabel << cellType << " Layer \n" 
+                        << cellName << "\n"
+                        << cell->getNbOutputs() << "x"
+                        << cell->getOutputsHeight() << "x"
+                        << cell->getOutputsWidth();
+            const std::shared_ptr<ConvCell> cellConv
+                = std::dynamic_pointer_cast<ConvCell>(cell);
+            const std::shared_ptr<DeconvCell> cellDeconv
+                = std::dynamic_pointer_cast<DeconvCell>(cell);
+            const std::shared_ptr<PoolCell> cellPool
+                = std::dynamic_pointer_cast<PoolCell>(cell);
+            const std::shared_ptr<TransformationCell> cellTransfo
+                = std::dynamic_pointer_cast<TransformationCell>(cell);
+            const std::shared_ptr<ElemWiseCell> cellElemWise
+                = std::dynamic_pointer_cast<ElemWiseCell>(cell);
+
+
+            if (cellConv || cellDeconv) { 
+                const unsigned int kernelWidth = (cellConv)
+                    ? cellConv->getKernelWidth()
+                    : cellDeconv->getKernelWidth();
+                const unsigned int kernelHeight = (cellConv)
+                    ? cellConv->getKernelHeight()
+                    : cellDeconv->getKernelHeight();
+                const unsigned int strideX = (cellConv)
+                    ? cellConv->getStrideX()
+                    : cellDeconv->getStrideX();
+                const unsigned int strideY = (cellConv)
+                    ? cellConv->getStrideY()
+                    : cellDeconv->getStrideY();
+                const int padX = (cellConv)
+                    ? cellConv->getPaddingX()
+                    : cellDeconv->getPaddingX();
+                const int padY = (cellConv)
+                    ? cellConv->getPaddingY()
+                    : cellDeconv->getPaddingY();
+
+
+                const int inputX = (itLayer == layers.begin() + 1) ? (int) deepNet.getStimuliProvider()->getSizeX()
+                                                    : (int) parentCells[0]->getOutputsWidth();
+                const int inputY = (itLayer == layers.begin() + 1) ? (int) deepNet.getStimuliProvider()->getSizeY()
+                                                    : (int) parentCells[0]->getOutputsHeight();
+
+                const int oH = std::ceil((float)inputY / (float)strideY);
+                const int oW = std::ceil((float)inputX / (float)strideX);
+                const int padH = std::max((int) (oH - 1) * (int)strideY 
+                                                + (int)kernelHeight - inputY, 
+                                                0);
+                const int padW = std::max( (int) (oW - 1) * (int)strideX 
+                                                + (int)kernelWidth - inputX, 
+                                                0);
+                const int padTop = padH / 2;
+                const int padBot = padH - padTop;
+                const int padLeft = padW / 2;
+                const int padRight = padW - padLeft;
+
+                nodeLabel << "\n{" << kernelWidth 
+                            << ", " << kernelHeight << "}\n";
+                if(padTop != padBot || padLeft != padRight
+                    || padLeft != padX || padRight != padX
+                    || padBot != padY || padTop != padY)
+                    nodeLabel << "Asymetric PADDING! H: {" << padTop << ", " 
+                        << padBot << "} W:{" << padLeft << ", " << padRight << "}\n";
+            }
+            if (cellPool) {
+                const unsigned int poolWidth = cellPool->getPoolWidth();
+                const unsigned int poolHeight = cellPool->getPoolHeight();
+
+                nodeLabel << "\n{" << poolWidth 
+                            << ", " << poolHeight << "}\n"
+                            << cellPool->getPooling() << " Pooling\n";
+                const unsigned int strideX = cellPool->getStrideX();
+                const unsigned int strideY =  cellPool->getStrideY();
+
+                const int inputX = (itLayer == layers.begin() + 1) ? (int) deepNet.getStimuliProvider()->getSizeX()
+                                                    : (int) parentCells[0]->getOutputsWidth();
+                const int inputY = (itLayer == layers.begin() + 1) ? (int) deepNet.getStimuliProvider()->getSizeY()
+                                                    : (int) parentCells[0]->getOutputsHeight();
+
+                const int oH = std::ceil((float)inputY / (float)strideY);
+                const int oW = std::ceil((float)inputX / (float)strideX);
+                const int padH = std::max((int) (oH - 1) * (int)strideY 
+                                                + (int)poolHeight - inputY, 
+                                                0);
+                const int padW = std::max( (int) (oW - 1) * (int)strideX 
+                                                + (int)poolWidth - inputX, 
+                                                0);
+                const int padTop = padH / 2;
+                const int padBot = padH - padTop;
+                const int padLeft = padW / 2;
+                const int padRight = padW - padLeft;
+
+                if(padTop != padBot || padLeft != padRight)
+                    nodeLabel << "Asymetric PADDING! H: {" << padTop << ", " 
+                        << padBot << "} W:{" << padLeft << ", " << padRight << "}\n";
+
+            }
+            if(cellTransfo)
+                nodeLabel << "\n" << cellTransfo->getType() << "\n";
+            if(cellElemWise)
+                nodeLabel << "\n" << cellElemWise->getOperation() << "\n";
+
+            
+            graph.node(cellName, nodeLabel.str());
+            graph.attr(cellName, "style", "filled");
+            graph.attr(cellName, "shape", "rect");
+            graph.edges(parentNames, cellName);
+
+        }
+    }
+    graph.render(fileName + ".dot");
+}
