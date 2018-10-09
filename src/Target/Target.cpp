@@ -96,11 +96,33 @@ void N2D2::Target::labelsMapping(const std::string& fileName)
         int output;
 
         std::stringstream value(line);
+        std::stringstream classNameStr;
 
-        if (!(value >> Utils::quoted(className)) || !(value >> output)
-            || (output < 0 && output != -1) || !value.eof())
+        int wordInString = std::count_if(line.begin(), line.end(), [](char ch) { return isspace(ch); });
+
+        for(int idx = 0; idx < wordInString; ++idx)
+        {
+            std::string str;
+            if (!(value >> Utils::quoted(str)))
+                throw std::runtime_error("Unreadable class name: " + line + " in file "
+                                         + fileName);
+             if(idx > 0)
+                classNameStr << " ";
+
+             classNameStr << str;
+        }
+
+        className = classNameStr.str();
+
+        //if (!(value >> Utils::quoted(className)) || !(value >> output)
+        //    || (output < 0 && output != -1) || !value.eof())
+        //    throw std::runtime_error("Unreadable value: " + line + " in file "
+         //                            + fileName);
+
+        if (!(value >> output) || (output < 0 && output != -1) || !value.eof())
             throw std::runtime_error("Unreadable value: " + line + " in file "
                                      + fileName);
+
 
         if (className == "default") {
             if (mDefaultTarget >= -1)
