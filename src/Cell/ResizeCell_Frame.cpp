@@ -139,46 +139,55 @@ void N2D2::ResizeCell_Frame::backPropagate()
 {
     if (mDiffOutputs.empty())
         return;
+
+    Cell_Frame<Float_T>::backPropagate();
+
     Tensor<Float_T> diffOutput
             = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+    for (int idx = 0; idx < (int)diffOutput.size(); ++idx)
+        diffOutput(idx) = 0.0f;
 
+#pragma omp parallel for if (mInputs.dimB() > 1)
     for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
+        if(mResizeMode == BilinearTF)
+        {
+            for (int oy = 0; oy < (int)mDiffInputs.dimY(); ++oy) {
 
-        for (unsigned int oy = 0; oy < mOutputs.dimY(); ++oy) {
 
-            const Float_T in_y = oy * mScaleY;
-            const int top_y_index = (int)(floorf(in_y));
-            const int bottom_y_index =
-                std::min((int)(ceilf(in_y)), (int) (mInputs[0].dimY() - 1) ) ;
-            const Float_T y_lerp = in_y - top_y_index;
-            const Float_T inverse_y_lerp = (1.0f - y_lerp);
+                const Float_T in_y = oy * mScaleY;
+                const int top_y_index = (int)(floorf(in_y));
+                const int bottom_y_index =
+                    std::min((int)(ceilf(in_y)), (int) (mInputs[0].dimY() - 1) ) ;
+                const Float_T y_lerp = in_y - top_y_index;
+                const Float_T inverse_y_lerp = (1.0f - y_lerp);
 
-            for (unsigned int ox = 0; ox < mOutputs.dimX(); ++ox) {
-                const Float_T in_x = ox * mScaleX;
-                const int left_x_index = (int)(floorf(in_x));
-                const int right_x_index = std::min((int)(ceilf(in_x)), (int)(mInputs[0].dimX() - 1));
-                const Float_T x_lerp = in_x - left_x_index;
-                const Float_T inverse_x_lerp = (1.0f - x_lerp);
+                for (int ox = 0; ox < (int)mDiffInputs.dimX(); ++ox) {
+                    const Float_T in_x = ox * mScaleX;
+                    const int left_x_index = (int)(floorf(in_x));
+                    const int right_x_index = std::min((int)(ceilf(in_x)), (int)(mInputs[0].dimX() - 1));
+                    const Float_T x_lerp = in_x - left_x_index;
+                    const Float_T inverse_x_lerp = (1.0f - x_lerp);
 
-                for (unsigned int channel = 0; channel < mDiffOutputs[0].dimZ(); ++channel) {
+#pragma omp parallel for if (mDiffInputs.dimZ() > 2)
+                    for (int channel = 0; channel < (int)mDiffInputs.dimZ(); ++channel) {
+                       diffOutput(left_x_index,
+                                     top_y_index,
+                                     channel,
+                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * inverse_x_lerp;
+                        diffOutput(right_x_index,
+                                     top_y_index,
+                                     channel,
+                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * x_lerp;
+                        diffOutput(left_x_index,
+                                     bottom_y_index,
+                                     channel,
+                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * inverse_x_lerp;
+                        diffOutput(right_x_index,
+                                     bottom_y_index,
+                                     channel,
+                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * x_lerp;
 
-                    diffOutput(left_x_index,
-                                 top_y_index,
-                                 channel,
-                                 batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * inverse_x_lerp;
-                    diffOutput(right_x_index,
-                                 top_y_index,
-                                 channel,
-                                 batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * x_lerp;
-                    diffOutput(left_x_index,
-                                 bottom_y_index,
-                                 channel,
-                                 batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * inverse_x_lerp;
-                    diffOutput(right_x_index,
-                                 bottom_y_index,
-                                 channel,
-                                 batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * x_lerp;
-
+                    }
                 }
             }
         }

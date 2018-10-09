@@ -133,22 +133,25 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool /*inference*/)
         std::shared_ptr<CudaDeviceTensor<Float_T> > input
             = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
 
-        cudaSResizeBilinearTF(  mOutputs.dimX(),
-                                mOutputs.dimY(),
-                                mInputs[k].dimZ(),
-                                mOutputs.dimB(),
-                                mInputs[k].dimX(),
-                                mInputs[k].dimY(),
-                                mYStrideLowIndex.getDevicePtr(),
-                                mYStrideHightIndex.getDevicePtr(),
-                                mYStrideInterpolation.getDevicePtr(),
-                                mXStrideLowIndex.getDevicePtr(),
-                                mXStrideHightIndex.getDevicePtr(),
-                                mXStrideInterpolation.getDevicePtr(),
-                                input->getDevicePtr(),
-                                mOutputs.getDevicePtr() + outputOffset,
-                                GPU_BLOCK_GRID[k],
-                                GPU_THREAD_GRID[k]);
+        if(mResizeMode == BilinearTF)
+        {
+            cudaSResizeFWBilinearTF(  mOutputs.dimX(),
+                                    mOutputs.dimY(),
+                                    mInputs[k].dimZ(),
+                                    mOutputs.dimB(),
+                                    mInputs[k].dimX(),
+                                    mInputs[k].dimY(),
+                                    mYStrideLowIndex.getDevicePtr(),
+                                    mYStrideHightIndex.getDevicePtr(),
+                                    mYStrideInterpolation.getDevicePtr(),
+                                    mXStrideLowIndex.getDevicePtr(),
+                                    mXStrideHightIndex.getDevicePtr(),
+                                    mXStrideInterpolation.getDevicePtr(),
+                                    input->getDevicePtr(),
+                                    mOutputs.getDevicePtr() + outputOffset,
+                                    GPU_BLOCK_GRID[k],
+                                    GPU_THREAD_GRID[k]);
+        }
 
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
     }
@@ -161,8 +164,51 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool /*inference*/)
 
 void N2D2::ResizeCell_Frame_CUDA::backPropagate()
 {
-    throw std::runtime_error(
-        "ResizeCell_Frame_CUDA::backPropagate(): not implemented.");
+    //throw std::runtime_error(
+    //    "ResizeCell_Frame_CUDA::backPropagate(): not implemented.");
+
+    if (mDiffOutputs.empty())
+        return;
+
+    Cell_Frame_CUDA<Float_T>::backPropagate();
+    unsigned int outputOffset = 0;
+
+    for(unsigned int k = 0; k < mInputs.size(); ++k)
+    {
+
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
+            = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
+
+        diffOutput->fill(0.0f);
+
+        if(mResizeMode == BilinearTF)
+        {
+            cudaSResizeBWBilinearTF(   mDiffInputs.dimX(),
+                                       mDiffInputs.dimY(),
+                                       mDiffInputs.dimZ(),
+                                       mDiffInputs.dimB(),
+                                       mDiffOutputs[k].dimX(),
+                                       mDiffOutputs[k].dimY(),
+                                       mScaleX,
+                                       mScaleY,
+                                       mDiffInputs.getDevicePtr() + outputOffset,
+                                       diffOutput->getDevicePtr(),
+                                       GPU_BLOCK_GRID[k],
+                                       GPU_THREAD_GRID[k]);
+        }
+
+        mDiffOutputs[k].deviceTensor() = *diffOutput;
+        mDiffOutputs[k].setValid();
+
+        outputOffset += mDiffOutputs[k].dimZ()
+                            *mDiffInputs.dimX()
+                            *mDiffInputs.dimY()
+                            *mDiffInputs.dimB();
+
+    }
+
+    mDiffOutputs.synchronizeDToHBased();
+
 }
 
 void N2D2::ResizeCell_Frame_CUDA::update()

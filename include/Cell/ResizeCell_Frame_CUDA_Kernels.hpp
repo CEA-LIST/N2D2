@@ -29,7 +29,7 @@
 #include "CudaUtils.hpp"
 namespace N2D2 {
 // Forward
-void cudaSResizeBilinearTF(unsigned int outputSizeX,
+void cudaSResizeFWBilinearTF(unsigned int outputSizeX,
                            unsigned int outputSizeY,
                            unsigned int outputNbChannels,
                            unsigned int batchSize,
@@ -45,6 +45,19 @@ void cudaSResizeBilinearTF(unsigned int outputSizeX,
                            float* outputs,
                            const dim3 blocksPerGrid,
                            const dim3 threadsPerBlock);
+
+void cudaSResizeBWBilinearTF(   unsigned int outputSizeX,
+                               unsigned int outputSizeY,
+                               unsigned int outputNbChannels,
+                               unsigned int batchSize,
+                               unsigned int inputSizeX,
+                               unsigned int inputSizeY,
+                               const float scaleX,
+                               const float scaleY,
+                               const float* input,
+                               float* outputs,
+                               const dim3 blocksPerGrid,
+                               const dim3 threadsPerBlock);
 }
 
 #endif // N2D2_RESIZECELL_FRAME_CUDA_KERNELS_H
