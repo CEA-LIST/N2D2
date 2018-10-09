@@ -58,7 +58,7 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
     return 0;
 }
 
-long long int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
+long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double value)
 {
     const double scaling = (double)(std::pow(2, mPrecision - 1) - 1);
     const bool sat = (std::abs(value) > 1.0);
@@ -73,7 +73,7 @@ long long int N2D2::CellExport::getIntFreeParameter(Cell& cell, double value)
     return getIntApprox(scaling * value, mIntApprox);
 }
 
-bool N2D2::CellExport::generateFreeParameter(Cell& cell,
+bool N2D2::CellExport::generateFreeParameter(const Cell& cell,
                                              double value,
                                              std::ostream& stream,
                                              bool typeAccuracy)

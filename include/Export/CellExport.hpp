@@ -80,9 +80,9 @@ public:
     generate(Cell& cell, const std::string& dirName, const std::string& type);
 
     static bool
-    generateFreeParameter(Cell& cell, double value, std::ostream& stream, bool typeAccuracy = true);
+    generateFreeParameter(const Cell& cell, double value, std::ostream& stream, bool typeAccuracy = true);
     static long long int getIntApprox(double value, IntApprox method = Round);
-    static long long int getIntFreeParameter(Cell& cell, double value);
+    static long long int getIntFreeParameter(const Cell& cell, double value);
 };
 }
 
