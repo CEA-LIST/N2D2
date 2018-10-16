@@ -205,7 +205,7 @@
 %% DOCUMENT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Neural Network Design \& Deployment}
-\author{Olivier Bichler, David Briand, Victor Gacoin, Benjamin Bertelone}
+\author{Olivier Bichler, David Briand, Victor Gacoin, Benjamin Bertelone, Thibault Allenet}
 
 
 \newif\iffullmanual
@@ -4367,6 +4367,100 @@ The response-normalized activity $b_{x,y}^{i}$ is given by the expression:
  \hline
 \end{longtable}
 \end{center}
+
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!LSTM!}{LSTM } }
+Long Short Term Memory Layer \citep{LSTM1997}.
+
+\paragraph{Global layer parameters (\emph{Frame\_CUDA} models)}
+
+\begin{center}
+ \begin{longtable}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \cellcolor{requiredcolor}\lstinline!SeqLength! & Maximum sequence length that the LSTM can take as an input.\\
+  \cellcolor{requiredcolor}\lstinline!BatchSize! & Number of sequences used for a single weights actualisation process : size of the batch. \\
+  \cellcolor{requiredcolor}\lstinline!InputDim! & Dimension of every element composing a sequence. \\
+  \cellcolor{requiredcolor}\lstinline!HiddenSize! & Dimension of the LSTM inner state and output.\\
+  \lstinline!SingleBackpropFeeding! [1] & If disabled return the full output sequence.\\
+  \lstinline!Bidirectional! [0] & If enabled, build a bidirectional structure.\\
+  \lstinline!AllGatesWeightsFiller! & All Gates weights initial values filler.\\
+  \lstinline!AllGatesBiasFiller! & All Gates bias initial values filler.\\
+  \lstinline!WeightsInputGateFiller! & Input gate previous layer and recurrent weights initial values filler. Take precedence over AllGatesWeightsFiller parameter.\\
+  \lstinline!WeightsForgetGateFiller! & Forget gate previous layer and recurrent weights initial values filler. Take precedence over AllGatesWeightsFiller parameter.\\
+  \lstinline!WeightsCellGateFiller! & Cell gate (or new memory) previous layer and recurrent weights initial values filler. Take precedence over AllGatesWeightsFiller parameter.\\
+  \lstinline!WeightsOutputGateFiller! & Output gate previous layer and recurrent weights initial values filler. Take precedence over AllGatesWeightsFiller parameter.\\
+  \lstinline!BiasInputGateFiller! & Input gate previous layer and recurrent bias initial values filler. Take precedence over AllGatesBiasFiller parameter.\\
+  \lstinline!BiasRecurrentForgetGateFiller! & Forget gate recurrent bias initial values filler. Take precedence over AllGatesBiasFiller parameter. Often set to 1.0 to show better convergence performance.\\
+  \lstinline!BiasPreviousLayerForgetGateFiller! & Forget gate previous layer bias initial values filler. Take precedence over AllGatesBiasFiller parameter.\\
+  \lstinline!BiasCellGateFiller! & Cell gate (or new memory) previous layer and recurrent bias initial values filler. Take precedence over AllGatesBiasFiller parameter.\\
+  \lstinline!BiasOutputGateFiller! & Output gate previous layer and recurrent bias initial values filler. Take precedence over AllGatesBiasFiller parameter.\\
+  \lstinline!HxFiller! & Recurrent previous state initialisation. Often set to 0.0\\
+  \lstinline!CxFiller! & Recurrent previous LSTM inner state initialisation. Often set to 0.0\\
+  \hline
+\end{longtable}
+\end{center}
+
+\paragraph{Configuration parameters (\emph{Frame\_CUDA} models)}
+
+\begin{center}
+ \begin{longtable}{| p{4cm} | p{3cm} | p{9cm} | }
+ \hline
+ Option [default value] & Model(s) & Description\\
+ \hline\hline
+  \lstinline!Solvers.!* & \emph{all Frame} & Any solver parameters \\
+  \lstinline!Dropout! [0.0] & \emph{all Frame} & The probability with which the value from input would be dropped. \\
+  \lstinline!InputMode! [] & \emph{all Frame} & If enabled, drop the matrix multiplication of the input data.\\
+  \lstinline!Algo! [0] & \emph{all Frame} & Allow to choose different cuDNN implementation. Can be 0 : STANDARD, 1 : STATIC, 2 : DYNAMIC. Case 1 and 2 aren't supported yet. \\
+ \hline
+\end{longtable}
+\end{center}
+
+
+\paragraph{Current restrictions}:
+\begin{itemize}
+\item Only Frame\_Cuda version is supported yet.
+\item The implementation only support input sequences with a fixed length associated with a single label.
+\item CuDNN structures requires the input data to be ordered as [1, InputDim, BatchSize, SeqLength]. Depending on the use case (like sequential-MNIST), the input data would need to be shuffled between the stimuli provisder and the RNN in order to process batches of data. No shuffling layer is yet operational. In that case, set batch to one for first experiments.
+\end{itemize}
+
+\paragraph{Further development requirements}:\\
+When it comes to RNN, two main factors needs to be considered to build proper interfaces :
+\begin{enumerate}
+\item Whether the input data has a variable or a fixed length over the data base, that is to say whether the input data will have a variable or fixed Sequence length. Of course the main strength of a RNN is to process variable length data.
+\item Labelling granularity of the input data, that is to say wheteher every elements of a sequence is labelled or the sequence itself has only one label.
+\end{enumerate}
+For instance, let's consider sentences as sequences of words in which every word would be part of a vocabulary. Sentences could have a variable length and every element/word would have a label. In that case, every relevant element of the output sequence from the recurrent structure is turned into a prediction throught a fully connected layer with a linear activation fonction and a softmax.\\
+On the opposite, using sequential-MNIST database, the sequence length would be the same regarding every image and there is only one label for an image. In that case, the last element of the output sequence is the most relevant one to be turned into a prediction as it carries the information of the entire input sequence.\\
+
+
+To provide flexibility according to these factors, the first implementation choice is to set a maximum sequence length emph{SeqLength} as an hyperparameter that the User provide. Variable length senquences can be processed by padding the remaining steps of the input sequence.\\
+Then two cases occur as the labeling granularity is scaled at each element of the sequence or scaled at the sequence itself:
+\begin{enumerate}
+\item The sequence itself has only one label :
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/Tvar_P1.png}
+  \caption{RNN model : variable sequence length and labeling scaled at the sequence}
+  \label{fig:TvarP1}
+\end{figure}
+The model has a fixed size with one fully connected mapped to the relevant element of the output sequence according to the input sequence.\\
+\item Every elements of a sequence is labelled :
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/Tvar_Pi.png}
+  \caption{RNN model : variable sequence length and labeling scaled at each element of the sequence}
+  \label{fig:TvarPi}
+\end{figure}
+\end{enumerate}
+The model has a fixed size with one big fully connected (or Tmax fully connected) mapped to the relevant elements of the output sequence according to the input sequence. The remaining elements need to be masked so it doesn't influence longer sequences.\\
+\paragraph{Development guidance}:
+\begin{itemize}
+\item Replace the inner local variables of LSTMCell\_Frame\_Cuda with a generic layer of shuffling (on device) to enable the the process of data batch.
+\item Develop some kind of label embedding within the layer to better articulate the labeling granularity of the input data.
+\item Adapt structures to support the STATIC and DYNAMIC algorithm of cuDNN functions.
+\end{itemize}
 
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!Dropout!}{Dropout}}

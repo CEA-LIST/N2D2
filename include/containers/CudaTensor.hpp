@@ -77,6 +77,10 @@ public:
     {
         return mDataDevice;
     }
+     void setDevicePtr(T* dataDevice)
+    {
+        mDataDevice = dataDevice;
+    }
     bool isOwner() const
     {
         return mDataDeviceOwner;
@@ -216,6 +220,10 @@ public:
     T* getDevicePtr() const
     {
         return mDeviceTensor->getDevicePtr();
+    }
+    void setDevicePtr(T* dataDevice)
+    {
+        mDeviceTensor->setDevicePtr(dataDevice);
     }
     const cudnnTensorDescriptor_t& getCudnnTensorDesc() const
     {
