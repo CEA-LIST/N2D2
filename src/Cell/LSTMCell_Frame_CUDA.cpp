@@ -123,6 +123,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::initialize(){
 		throw std::runtime_error("LSTMCell_Frame_CUDA InputMode invalid, LSTM name : " + mName + " should be 0 to skip or 1 for Linear");
 	}
 
+#if CUDNN_VERSION >= 6000
 	if (mAlgo == 1){
 		mCudnnAlgo = CUDNN_RNN_ALGO_PERSIST_STATIC;
 	} else if (mAlgo == 0){
@@ -131,7 +132,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::initialize(){
 		throw std::runtime_error("LSTMCell_Frame_CUDA Algo invalid, LSTM name : " + mName + " should be 0 for Standard or 1 for STATIC");
 	}
 
-#if CUDNN_VERSION >= 6000
+
 	CHECK_CUDNN_STATUS(cudnnSetRNNDescriptor_v6(CudaContext::cudnnHandle(),
 							mLSTMDesc,
 							mHiddenSize,
