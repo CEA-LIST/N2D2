@@ -1091,6 +1091,7 @@ private :
 	size_t mStatesize;
 
 	cudnnDropoutDescriptor_t mDropoutDesc;
+#if CUDNN_VERSION >= 5000
 
 	// -----------------------
 	// Declare options for LSTM
@@ -1100,7 +1101,7 @@ private :
 	cudnnRNNMode_t mMode;
 	cudnnRNNDescriptor_t mLSTMDesc;
 	cudnnRNNAlgo_t mCudnnAlgo;
-
+#endif
 	// ---------------
 	// Declare Weights
 	// ---------------
