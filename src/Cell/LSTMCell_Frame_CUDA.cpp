@@ -131,6 +131,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::initialize(){
 		throw std::runtime_error("LSTMCell_Frame_CUDA Algo invalid, LSTM name : " + mName + " should be 0 for Standard or 1 for STATIC");
 	}
 
+#if CUDNN_VERSION >= 6000
 	CHECK_CUDNN_STATUS(cudnnSetRNNDescriptor_v6(CudaContext::cudnnHandle(),
 							mLSTMDesc,
 							mHiddenSize,
@@ -141,6 +142,16 @@ void N2D2::LSTMCell_Frame_CUDA<T>::initialize(){
 							CUDNN_LSTM,
 							mCudnnAlgo,
 							CudaContext::data_type<T>::value));
+#else
+	CHECK_CUDNN_STATUS(cudnnSetRNNDescriptor(mLSTMDesc,
+							mHiddenSize,
+							mNumberLayers,
+							mDropoutDesc,
+							mInput_Mode,
+							(mBidirectional ? CUDNN_BIDIRECTIONAL : CUDNN_UNIDIRECTIONAL),
+							CUDNN_LSTM,
+							CudaContext::data_type<T>::value));
+#endif
 
 	//----------------------------------------------------------------
 	//Descriptors for Input and output + gradients for cudnn functions

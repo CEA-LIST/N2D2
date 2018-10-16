@@ -1100,8 +1100,12 @@ private :
 	cudnnRNNInputMode_t mInput_Mode;
 	cudnnRNNMode_t mMode;
 	cudnnRNNDescriptor_t mLSTMDesc;
+#endif
+
+#if CUDNN_VERSION >= 6000
 	cudnnRNNAlgo_t mCudnnAlgo;
 #endif
+
 	// ---------------
 	// Declare Weights
 	// ---------------
