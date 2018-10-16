@@ -18,8 +18,9 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#include <cudnn.h>
 #ifdef CUDA
+#include <cudnn.h>
+#if CUDNN_VERSION >= 5000
 
 #include "Cell/LSTMCell_Frame_CUDA.hpp"
 
@@ -1340,5 +1341,5 @@ namespace N2D2 {
     template class LSTMCell_Frame_CUDA<float>;
     template class LSTMCell_Frame_CUDA<double>;
 }
-
+#endif
 #endif
