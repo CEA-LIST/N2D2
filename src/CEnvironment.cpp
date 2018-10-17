@@ -37,7 +37,6 @@ N2D2::CEnvironment::CEnvironment(Database& database,
       mNbSubStimuli(nbSubStimuli)
 {
     // ctor
-
     for (unsigned int k=0; k<mNbSubStimuli; k++){
 #ifdef CUDA
         mRelationalData.push_back(new CudaTensor<Float_T>({size[0],

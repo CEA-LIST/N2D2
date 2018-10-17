@@ -35,13 +35,27 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 
 {
     // ctor
+    mCurandStates.resize(mRelationalData.size());
+
+
     for (unsigned int k=0; k<mRelationalData.size(); k++){
         mNextEventTime.push_back(new CudaTensor<Time_T>(
                                                 mRelationalData[k].dims()));
         mNextEventType.push_back(new CudaTensor<char>(
                                                 mRelationalData[k].dims()));
+        curandState* state;
+        // Allocate global memory on device for curand states
+        cudaMalloc((void **)&state, mRelationalData[k].dimB()*16*
+                                sizeof(curandState));
+        // Setup the initial curand states with the global seed value
+        cudaSetupRng(state,
+                    Random::_mt[0],
+                    mRelationalData[k].dimB());
+
+        mCurandStates[k] = state;
     }
-    mCurandStates.resize(mRelationalData.size());
+    // TODO: Do we have to free this memory if the program terminates?
+
 }
 
 
@@ -56,26 +70,16 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
          mTickOutputs.assign(
                              {mRelationalData[0].dimX(),
                             mRelationalData[0].dimY(),
-                            mRelationalData[0].dimZ()*mNbSubStimuli,
+                            /*mRelationalData[0].dimZ()*mNbSubStimuli,*/
+                            mRelationalData[0].dimZ(),
                             mRelationalData[0].dimB()}, 0);
+
 
         for (unsigned int k=0; k<mRelationalData.size(); k++){
             mRelationalData[k].synchronizeHToD();
             mNextEventTime[k].assign(mRelationalData[k].dims(), start);
             mNextEventType[k].assign(mRelationalData[k].dims(), 0);
             mTickData[k].assign(mRelationalData[k].dims(), 0);
-
-            curandState* state;
-            // Allocate global memory on device for curand states
-            cudaMalloc((void **)&state, mRelationalData[k].dimB()*16*
-                                    sizeof(curandState));
-            // Setup the initial curand states with the global seed value
-            cudaSetupRng(state,
-                        Random::_mt[0],
-                        mRelationalData[k].dimB());
-
-            mCurandStates[k] = state;
-
 
             cudaGenerateInitialSpikes(mRelationalData[k].getDevicePtr(),
                                 mNextEventTime[k].getDevicePtr(),
