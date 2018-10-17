@@ -314,6 +314,7 @@ void N2D2::CMonitor_CUDA::clearActivity(unsigned int nbTimesteps)
     for (unsigned int k=0; k<mNbTimesteps; k++) {
         if (k >= oldNbTimesteps) {
              mActivity.push_back(new CudaTensor<char>(mInputs[0].dims()));
+             std::cout << "Extended mActivity" << std::endl;
         }
         mActivity[k].assign(mInputs[0].dims(),0);
         mActivity.back().synchronizeHToD();
