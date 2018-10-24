@@ -35,8 +35,6 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 
 {
     // ctor
-    mCurandStates.resize(mRelationalData.size());
-
 
     for (unsigned int k=0; k<mRelationalData.size(); k++){
         mNextEventTime.push_back(new CudaTensor<Time_T>(
@@ -52,7 +50,7 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
                     Random::_mt[0],
                     mRelationalData[k].dimB());
 
-        mCurandStates[k] = state;
+        mCurandStates.push_back(state);
     }
     // TODO: Do we have to free this memory if the program terminates?
 
@@ -97,6 +95,11 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
                                 mPeriodMin,
                                 mRelationalData[k].dimB(),
                                 mCurandStates[k]);
+            // Setup the initial curand states with the global seed value
+            cudaSetupRng(mCurandStates[k],
+                    Random::_mt[0],
+                    mRelationalData[k].dimB());
+
         }
         mInitialized = true;
     }
