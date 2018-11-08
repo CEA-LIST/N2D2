@@ -100,8 +100,8 @@ void N2D2::PoolCell_Frame_EXT_CUDA<T>::initialize()
         if (mInputMap.size() == k) {
             mInputMap.push_back(NULL);
 
-            if (!mMaps.empty()) {
-                const Tensor<bool> inputMap = mMaps.rows(offset,
+            if (!mMapping.empty()) {
+                const Tensor<bool> inputMap = mMapping.rows(offset,
                                                            mInputs[k].dimZ());
 
                 std::vector<char> inputMapData;

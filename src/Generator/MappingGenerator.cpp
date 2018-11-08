@@ -76,23 +76,24 @@ N2D2::MappingGenerator::getMapping(IniParser& iniConfig,
     return mapping;
 }
 
-N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
+N2D2::Tensor<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
                                                     std::shared_ptr
                                                     <Cell> parent,
                                                     unsigned int nbOutputs,
                                                     IniParser& iniConfig,
                                                     const std::string& section,
+                                                    const std::string& name,
                                                     const Mapping
                                                     & defaultMapping)
 {
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    if (iniConfig.isProperty("Mapping.NbGroups")
-        && iniConfig.isProperty("Mapping.ChannelsPerGroup"))
+    if (iniConfig.isProperty(name + ".NbGroups")
+        && iniConfig.isProperty(name + ".ChannelsPerGroup"))
     {
         throw std::runtime_error(
-            "Mapping.NbGroups and Mapping.ChannelsPerGroup are mutually"
+            name + ".NbGroups and " + name + ".ChannelsPerGroup are mutually"
             " exclusive in section [" + section + "] in network"
             " configuration file: " + iniConfig.getFileName());
     }
@@ -101,38 +102,35 @@ N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
     const unsigned int nbChannels = (!parent) ? sp.getNbChannels()
                                               : parent->getNbOutputs();
 
-    const bool isMappingFunction = iniConfig.isProperty("Mapping.*");
-    const std::string mappingPrefix = "Mapping(" + parentName + ")";
-    const bool isFunction = isMappingFunction
-                            || iniConfig.isProperty(mappingPrefix + ".*");
+    Tensor<bool> map;
 
-    Matrix<bool> map = Matrix<bool>(nbChannels, nbOutputs, !isFunction);
-
-    if (iniConfig.isProperty("Mapping.NbGroups")
-        || iniConfig.isProperty("Mapping.ChannelsPerGroup"))
+    if (iniConfig.isProperty(name + ".NbGroups")
+        || iniConfig.isProperty(name + ".ChannelsPerGroup"))
     {
         unsigned int nbGroups;
         unsigned int nbChannelsPerGroup;
 
-        if (iniConfig.isProperty("Mapping.NbGroups")) {
-            nbGroups = iniConfig.getProperty<unsigned int>("Mapping.NbGroups");
+        if (iniConfig.isProperty(name + ".NbGroups")) {
+            nbGroups = iniConfig.getProperty<unsigned int>(name + ".NbGroups");
             nbChannelsPerGroup = nbChannels / nbGroups;
         }
         else {
             nbChannelsPerGroup = iniConfig.getProperty
-                                    <unsigned int>("Mapping.ChannelsPerGroup");
+                                    <unsigned int>(name + ".ChannelsPerGroup");
             nbGroups = nbChannels / nbChannelsPerGroup;
         }
 
         if (nbChannels % nbGroups != 0) {
             throw std::runtime_error(
-                "Mapping.NbGroups must be a multiple of the number of input"
+                name + ".NbGroups must be a multiple of the number of input"
                 " channels in section [" + section + "] in network"
                 " configuration file: " + iniConfig.getFileName());
         }
 
         size_t outputGroupOffset = 0;
         size_t channelGroupOffset = 0;
+
+        map.resize({nbOutputs, nbChannels}, false);
 
         for (size_t group = 0; group < nbGroups; ++group) {
             const size_t outputGroupSize = (nbOutputs - outputGroupOffset)
@@ -145,7 +143,7 @@ N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
                     channel < channelGroupOffset + nbChannelsPerGroup;
                     ++channel)
                 {
-                    map(channel, output) = true;
+                    map(output, channel) = true;
                 }
             }
 
@@ -153,12 +151,23 @@ N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
             channelGroupOffset += nbChannelsPerGroup;
         }
     }
+    else if (iniConfig.isProperty(name + "(" + parentName + ")")) {
+        // Hand-made mapping matrix
+        map << iniConfig.getProperty<std::string>(name + "("
+                                                  + parentName + ")");
+
+        // No new line in INI array => need to reshape
+        map.reshape({nbOutputs, nbChannels});
+    }
     else {
-        if (iniConfig.isProperty("Map(" + parentName + ")")) {
-            // Hand-made mapping matrix
-            map << iniConfig.getProperty<std::string>("Map(" + parentName + ")");
-        }
-        else if (isFunction && !map.empty()) {
+        const bool isMappingFunction = iniConfig.isProperty(name + ".*");
+        const std::string mappingPrefix = name + "(" + parentName + ")";
+        const bool isFunction = isMappingFunction
+                                || iniConfig.isProperty(mappingPrefix + ".*");
+
+        map.resize({nbOutputs, nbChannels}, !isFunction);
+
+        if (isFunction && !map.empty()) {
             // Mapping function
             Mapping mapping
                 = getMapping(iniConfig, section, mappingPrefix, defaultMapping);
@@ -180,8 +189,8 @@ N2D2::Matrix<bool> N2D2::MappingGenerator::generate(StimuliProvider& sp,
                     for (unsigned int patchY = 0; patchY < mapping.sizeY;
                         ++patchY)
                     {
-                        map((y + patchY) % nbChannels,
-                            (x + patchX) % nbOutputs) = true;
+                        map((x + patchX) % nbOutputs,
+                            (y + patchY) % nbChannels) = true;
                     }
                 }
             }

@@ -119,7 +119,7 @@ void N2D2::PoolCell_Frame<T>::propagate(bool /*inference*/)
                                                     mOutputs,
                                                     mArgMax[k],
                                                     false,
-                                                    mMaps.rows(offset,
+                                                    mMapping.rows(offset,
                                                                 mInputs[k].dimZ()));
         }
         else {
@@ -129,7 +129,7 @@ void N2D2::PoolCell_Frame<T>::propagate(bool /*inference*/)
                                                    &beta,
                                                    mOutputs,
                                                    true,
-                                                   mMaps.rows(offset,
+                                                   mMapping.rows(offset,
                                                         mInputs[k].dimZ()));
         }
 
@@ -166,7 +166,7 @@ void N2D2::PoolCell_Frame<T>::backPropagate()
                                                 &beta,
                                                 diffOutput,
                                                 mArgMax[k],
-                                                mMaps.rows(offset,
+                                                mMapping.rows(offset,
                                                            mInputs[k].dimZ()));
         }
         else {
@@ -176,7 +176,7 @@ void N2D2::PoolCell_Frame<T>::backPropagate()
                                                     &beta,
                                                     diffOutput,
                                                     true,
-                                                    mMaps.rows(offset,
+                                                    mMapping.rows(offset,
                                                           mInputs[k].dimZ()));
         }
 

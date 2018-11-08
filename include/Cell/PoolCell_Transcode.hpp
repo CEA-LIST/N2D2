@@ -78,14 +78,14 @@ public:
                   unsigned int y0,
                   unsigned int width,
                   unsigned int height,
-                  const std::vector<bool>& mapping = std::vector<bool>());
+                  const Tensor<bool>& mapping = Tensor<bool>());
     void addInput(StimuliProvider& sp,
                   unsigned int x0 = 0,
                   unsigned int y0 = 0,
                   unsigned int width = 0,
                   unsigned int height = 0,
-                  const Matrix<bool>& mapping = Matrix<bool>());
-    void addInput(Cell* cell, const Matrix<bool>& mapping = Matrix<bool>());
+                  const Tensor<bool>& mapping = Tensor<bool>());
+    void addInput(Cell* cell, const Tensor<bool>& mapping = Tensor<bool>());
     void addInput(Cell* cell,
                   unsigned int x0,
                   unsigned int y0,
@@ -147,18 +147,18 @@ void N2D2::PoolCell_Transcode
                              unsigned int y0,
                              unsigned int width,
                              unsigned int height,
-                             const std::vector<bool>& mapping)
+                             const Tensor<bool>& mapping)
 {
     FRAME::addInput(sp, channel, x0, y0, width, height, mapping);
     const std::vector<size_t> inputsDims = FRAME::mInputsDims;
-    const Tensor<bool> maps = FRAME::mMaps.clone();
+    const Tensor<bool> frameMapping = FRAME::mMapping.clone();
 
     FRAME::mInputsDims.clear();
-    FRAME::mMaps.clear();
+    FRAME::mMapping.clear();
     SPIKE::addInput(sp, channel, x0, y0, width, height, mapping);
 
     assert(inputsDims == SPIKE::mInputsDims);
-    assert(maps.data() == SPIKE::mMaps.data());
+    assert(frameMapping.data() == SPIKE::mMapping.data());
 }
 
 template <class FRAME, class SPIKE>
@@ -168,34 +168,34 @@ void N2D2::PoolCell_Transcode
                              unsigned int y0,
                              unsigned int width,
                              unsigned int height,
-                             const Matrix<bool>& mapping)
+                             const Tensor<bool>& mapping)
 {
     FRAME::addInput(sp, x0, y0, width, height, mapping);
     const std::vector<size_t> inputsDims = FRAME::mInputsDims;
-    const Tensor<bool> maps = FRAME::mMaps.clone();
+    const Tensor<bool> frameMapping = FRAME::mMapping.clone();
 
     FRAME::mInputsDims.clear();
-    FRAME::mMaps.clear();
+    FRAME::mMapping.clear();
     SPIKE::addInput(sp, x0, y0, width, height, mapping);
 
     assert(inputsDims == SPIKE::mInputsDims);
-    assert(maps.data() == SPIKE::mMaps.data());
+    assert(frameMapping.data() == SPIKE::mMapping.data());
 }
 
 template <class FRAME, class SPIKE>
 void N2D2::PoolCell_Transcode
-    <FRAME, SPIKE>::addInput(Cell* cell, const Matrix<bool>& mapping)
+    <FRAME, SPIKE>::addInput(Cell* cell, const Tensor<bool>& mapping)
 {
     FRAME::addInput(cell, mapping);
     const std::vector<size_t> inputsDims = FRAME::mInputsDims;
-    const Tensor<bool> maps = FRAME::mMaps.clone();
+    const Tensor<bool> frameMapping = FRAME::mMapping.clone();
 
     FRAME::mInputsDims.clear();
-    FRAME::mMaps.clear();
+    FRAME::mMapping.clear();
     SPIKE::addInput(cell, mapping);
 
     assert(inputsDims == SPIKE::mInputsDims);
-    assert(maps.data() == SPIKE::mMaps.data());
+    assert(frameMapping.data() == SPIKE::mMapping.data());
 }
 
 template <class FRAME, class SPIKE>
@@ -207,14 +207,14 @@ void N2D2::PoolCell_Transcode<FRAME, SPIKE>::addInput(Cell* cell,
 {
     FRAME::addInput(cell, x0, y0, width, height);
     const std::vector<size_t> inputsDims = FRAME::mInputsDims;
-    const Tensor<bool> maps = FRAME::mMaps.clone();
+    const Tensor<bool> frameMapping = FRAME::mMapping.clone();
 
     FRAME::mInputsDims.clear();
-    FRAME::mMaps.clear();
+    FRAME::mMapping.clear();
     SPIKE::addInput(cell, x0, y0, width, height);
 
     assert(inputsDims == SPIKE::mInputsDims);
-    assert(maps.data() == SPIKE::mMaps.data());
+    assert(frameMapping.data() == SPIKE::mMapping.data());
 }
 
 template <class FRAME, class SPIKE>

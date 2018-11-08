@@ -31,7 +31,7 @@
 
 using namespace N2D2;
 
-template <class T> 
+template <class T>
 class PoolCell_Frame_CUDA_Test : public PoolCell_Frame_CUDA<T>  {
 public:
     PoolCell_Frame_CUDA_Test(const std::string& name,
@@ -371,9 +371,9 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping(nbOutputs, nbOutputs);
-    mapping << "1 0 0 "
-               "0 1 0 "
+    Tensor<bool> mapping;
+    mapping << "1 0 0\n"
+               "0 1 0\n"
                "0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping);
@@ -511,14 +511,14 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping1(3, 6);
-    mapping1 << "1 0 0 0 0 0 "
-                "0 1 0 0 0 0 "
+    Tensor<bool> mapping1;
+    mapping1 << "1 0 0 0 0 0\n"
+                "0 1 0 0 0 0\n"
                 "0 0 1 0 0 0";
 
-    Matrix<bool> mapping2(3, 6);
-    mapping2 << "0 0 0 1 0 0 "
-                "0 0 0 0 1 0 "
+    Tensor<bool> mapping2;
+    mapping2 << "0 0 0 1 0 0\n"
+                "0 0 0 0 1 0\n"
                 "0 0 0 0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping1);
@@ -826,9 +826,9 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping(nbOutputs, nbOutputs);
-    mapping << "1 0 0 "
-               "0 1 0 "
+    Tensor<bool> mapping;
+    mapping << "1 0 0\n"
+               "0 1 0\n"
                "0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping);
@@ -968,14 +968,14 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping1(3, 6);
-    mapping1 << "1 0 0 0 0 0 "
-                "0 1 0 0 0 0 "
+    Tensor<bool> mapping1;
+    mapping1 << "1 0 0 0 0 0\n"
+                "0 1 0 0 0 0\n"
                 "0 0 1 0 0 0";
 
-    Matrix<bool> mapping2(3, 6);
-    mapping2 << "0 0 0 1 0 0 "
-                "0 0 0 0 1 0 "
+    Tensor<bool> mapping2;
+    mapping2 << "0 0 0 1 0 0\n"
+                "0 0 0 0 1 0\n"
                 "0 0 0 0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping1);
@@ -1287,9 +1287,9 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping(nbOutputs, nbOutputs);
-    mapping << "1 0 0 "
-               "0 1 0 "
+    Tensor<bool> mapping;
+    mapping << "1 0 0\n"
+               "0 1 0\n"
                "0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping);
@@ -1326,7 +1326,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
                     // For each output, compute the pool value
                     half_float::half poolValue = std::numeric_limits<half_float::half>::lowest();
-                    
+
                     for (unsigned int channel = 0;
                          channel < pool1.getNbChannels();
                          ++channel) {
@@ -1348,7 +1348,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                     }
 
                     half_float::half resultValue = out(ox, oy, output, batch);
-                    if( !std::isinf(resultValue) && 
+                    if( !std::isinf(resultValue) &&
                             resultValue > std::numeric_limits<half_float::half>::lowest() )
                         ASSERT_EQUALS_DELTA(
                             out(ox, oy, output, batch), poolValue, 1e-3);
@@ -1432,14 +1432,14 @@ TEST_DATASET(PoolCell_Frame_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping1(3, 6);
-    mapping1 << "1 0 0 0 0 0 "
-                "0 1 0 0 0 0 "
+    Tensor<bool> mapping1;
+    mapping1 << "1 0 0 0 0 0\n"
+                "0 1 0 0 0 0\n"
                 "0 0 1 0 0 0";
 
-    Matrix<bool> mapping2(3, 6);
-    mapping2 << "0 0 0 1 0 0 "
-                "0 0 0 0 1 0 "
+    Tensor<bool> mapping2;
+    mapping2 << "0 0 0 1 0 0\n"
+                "0 0 0 0 1 0\n"
                 "0 0 0 0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping1);
@@ -1499,7 +1499,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                     }
 
                     half_float::half resultValue = out(ox, oy, output, batch);
-                    if( !std::isinf(resultValue) && 
+                    if( !std::isinf(resultValue) &&
                             resultValue > std::numeric_limits<half_float::half>::lowest() )                        ASSERT_EQUALS_DELTA(
                             out(ox, oy, output, batch), poolValue, 1e-3);
                 }

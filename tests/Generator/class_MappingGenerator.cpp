@@ -46,10 +46,11 @@ TEST(MappingGenerator, MappingGenerator)
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
         new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
 
-    Matrix<bool> mapping
-        = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2");
+    Tensor<bool> mapping
+        = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2",
+                                     "Mapping");
 
-    Matrix<bool> mappingCheck(10, 10);
+    Tensor<bool> mappingCheck;
     mappingCheck << "0 0 0 0 0 0 0 0 0 0 "
                     "0 0 1 0 0 0 0 0 0 0 "
                     "0 0 1 0 1 0 0 0 0 0 "
@@ -60,9 +61,10 @@ TEST(MappingGenerator, MappingGenerator)
                     "0 0 0 0 0 0 0 0 0 0 "
                     "0 0 0 0 0 0 0 0 0 0 "
                     "0 0 0 0 0 0 0 0 0 0";
+    mappingCheck.reshape({10, 10});
 
-    ASSERT_EQUALS(mapping.rows(), mappingCheck.rows());
-    ASSERT_EQUALS(mapping.cols(), mappingCheck.cols());
+    ASSERT_EQUALS(mapping.dimY(), mappingCheck.dimY());
+    ASSERT_EQUALS(mapping.dimX(), mappingCheck.dimX());
 
     for (unsigned int i = 0; i < mapping.size(); ++i) {
         ASSERT_EQUALS(mapping(i), mappingCheck(i));
@@ -72,7 +74,7 @@ TEST(MappingGenerator, MappingGenerator)
 TEST(MappingGenerator, MappingGenerator_bis)
 {
     const std::string data = "[conv2]\n"
-                             "Map(conv1)=\\\n"
+                             "Mapping(conv1)=\\\n"
                              "0 0 0 0 0 0 0 0 0 0 \\\n"
                              "0 0 1 0 0 0 0 0 0 0 \\\n"
                              "0 0 1 0 1 0 0 0 0 0 \\\n"
@@ -94,10 +96,11 @@ TEST(MappingGenerator, MappingGenerator_bis)
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
         new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
 
-    Matrix<bool> mapping
-        = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2");
+    Tensor<bool> mapping
+        = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2",
+                                     "Mapping");
 
-    Matrix<bool> mappingCheck(10, 10);
+    Tensor<bool> mappingCheck;
     mappingCheck << "0 0 0 0 0 0 0 0 0 0 "
                     "0 0 1 0 0 0 0 0 0 0 "
                     "0 0 1 0 1 0 0 0 0 0 "
@@ -108,9 +111,10 @@ TEST(MappingGenerator, MappingGenerator_bis)
                     "0 0 0 0 0 0 0 0 0 0 "
                     "0 0 0 0 0 0 0 0 0 0 "
                     "0 0 0 0 0 0 0 0 0 0";
+    mappingCheck.reshape({10, 10});
 
-    ASSERT_EQUALS(mapping.rows(), mappingCheck.rows());
-    ASSERT_EQUALS(mapping.cols(), mappingCheck.cols());
+    ASSERT_EQUALS(mapping.dimY(), mappingCheck.dimY());
+    ASSERT_EQUALS(mapping.dimX(), mappingCheck.dimX());
 
     for (unsigned int i = 0; i < mapping.size(); ++i) {
         ASSERT_EQUALS(mapping(i), mappingCheck(i));
@@ -131,12 +135,13 @@ TEST(MappingGenerator, MappingGenerator_ter)
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
         new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
 
-    Matrix<bool> mapping
-        = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2");
+    Tensor<bool> mapping
+        = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2",
+                                     "Mapping");
 
-    Matrix<bool> mappingCheck(10, 10, true);
-    ASSERT_EQUALS(mapping.rows(), mappingCheck.rows());
-    ASSERT_EQUALS(mapping.cols(), mappingCheck.cols());
+    Tensor<bool> mappingCheck({10, 10}, true);
+    ASSERT_EQUALS(mapping.dimY(), mappingCheck.dimY());
+    ASSERT_EQUALS(mapping.dimX(), mappingCheck.dimX());
 
     for (unsigned int i = 0; i < mapping.size(); ++i) {
         ASSERT_EQUALS(mapping(i), mappingCheck(i));
@@ -154,12 +159,12 @@ TEST(MappingGenerator, MappingGenerator_env_ter)
 
     Network net;
     Environment env(net, EmptyDatabase, {24, 24, 1});
-    Matrix<bool> mapping = MappingGenerator::generate(
-        env, std::shared_ptr<Cell>(), 10, iniConfig, "conv1");
+    Tensor<bool> mapping = MappingGenerator::generate(
+        env, std::shared_ptr<Cell>(), 10, iniConfig, "conv1", "Mapping");
 
-    Matrix<bool> mappingCheck(1, 10, true);
-    ASSERT_EQUALS(mapping.rows(), mappingCheck.rows());
-    ASSERT_EQUALS(mapping.cols(), mappingCheck.cols());
+    Tensor<bool> mappingCheck({10, 1}, true);
+    ASSERT_EQUALS(mapping.dimY(), mappingCheck.dimY());
+    ASSERT_EQUALS(mapping.dimX(), mappingCheck.dimX());
 
     for (unsigned int i = 0; i < mapping.size(); ++i) {
         ASSERT_EQUALS(mapping(i), mappingCheck(i));

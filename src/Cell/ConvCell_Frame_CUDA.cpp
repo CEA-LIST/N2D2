@@ -124,10 +124,14 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
                                         CudaContext::data_type<T>::value));
 
     size_t workspaceSize = 0;
+    unsigned int nbChannels = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);
+
+        mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
+                                                   mInputs[k].dimZ())));
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
@@ -138,8 +142,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
 
 #if CUDNN_VERSION >= 7000
-        if (groupMap() > 1)
-            kernelDims.push_back(mInputs[k].dimZ() / groupMap());
+        if (mNbGroups[k] > 1)
+            kernelDims.push_back(mInputs[k].dimZ() / mNbGroups[k]);
         else
 #endif
             kernelDims.push_back(mInputs[k].dimZ());
@@ -169,17 +173,17 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
             mWeightsFiller->apply(mSharedSynapses.back());
 
 #if CUDNN_VERSION >= 7000
-            if (groupMap() > 1)
-                cudnnSetConvolutionGroupCount(mConvDesc, groupMap());
+            if (mNbGroups[k] > 1)
+                cudnnSetConvolutionGroupCount(mConvDesc, mNbGroups[k]);
             else
 #endif
-            if (!isFullMap()) {
+            if (mNbGroups[k] == 0) {
                 // Set the non-connected kernels coefficients to 0
                 for (unsigned int output = 0; output < getNbOutputs(); ++output)
                 {
                     for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                          ++channel) {
-                        if (!isConnection(channel, output)) {
+                        if (!isConnection(nbChannels + channel, output)) {
                             mSharedSynapses.back()[output][channel]
                                                                 .fill(T(0.0));
                         }
@@ -296,6 +300,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
         if (workspaceSize > mWorkspaceSize)
             mWorkspaceSize = workspaceSize;
+
+        nbChannels += mInputs[k].dimZ();
     }
 
     if (mWorkspaceSize > 0)
@@ -379,6 +385,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
                           1U, std::multiplies<unsigned int>())
         : 0U;
 
+    unsigned int nbChannels = 0;
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const typename Cuda::cudnn_scaling_type<T>::type beta
             = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
@@ -416,19 +424,19 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 #endif
 
 #if CUDNN_VERSION >= 7000
-        if (groupMap() > 1) {
+        if (mNbGroups[k] > 1) {
             // Nothing to do!
         }
         else
 #endif
-        if (!isFullMap()) {
+        if (mNbGroups[k] == 0) {
             // Set the non-connected kernels diff to 0
             unsigned int offset = 0;
 
             for (unsigned int output = 0; output < getNbOutputs(); ++output) {
                 for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                      ++channel) {
-                    if (!isConnection(channel, output)) {
+                    if (!isConnection(nbChannels + channel, output)) {
                         thrust_fill<T>(mDiffSharedSynapses[k].getDevicePtr()
                                             + offset,
                                        kernelSize,
@@ -439,6 +447,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
                 }
             }
         }
+
+        nbChannels += mInputs[k].dimZ();
     }
 
     if (!mNoBias) {

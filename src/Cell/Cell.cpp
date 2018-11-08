@@ -37,7 +37,7 @@ void N2D2::Cell::addMultiscaleInput(HeteroStimuliProvider& sp,
                                     unsigned int y0,
                                     unsigned int width,
                                     unsigned int height,
-                                    const Matrix<bool>& mapping)
+                                    const Tensor<bool>& mapping)
 {
     const unsigned int nbMaps = sp.size();
 
@@ -47,11 +47,10 @@ void N2D2::Cell::addMultiscaleInput(HeteroStimuliProvider& sp,
         for (unsigned int map = 0; map < nbMaps; ++map)
             nbChannels += sp[map]->getNbChannels();
 
-        if (mapping.rows() != nbChannels) {
+        if (mapping.dimY() != nbChannels) {
             throw std::runtime_error("Cell::addMultiscaleInput(): number of "
                                      "mapping rows must be equal to the total "
-                                     "number of"
-                                     " input filters");
+                                     "number of input filters");
         }
     }
 
@@ -79,8 +78,8 @@ void N2D2::Cell::addMultiscaleInput(HeteroStimuliProvider& sp,
             scaledWidth,
             scaledHeight,
             (mapping.empty())
-                ? Matrix<bool>()
-                : mapping.block(mappingOffset, 0, nbChannels, mapping.cols()));
+                ? Tensor<bool>()
+                : mapping.rows(mappingOffset, nbChannels));
         mappingOffset += nbChannels;
     }
 }
@@ -146,64 +145,70 @@ void N2D2::Cell::setInputsDims(const std::vector<size_t>& dims)
 size_t N2D2::Cell::groupMap() const
 {
     if (!mGroupMapInitialized) {
-        const size_t nbOutputs = mMaps.dimX();
-        const size_t nbChannels = mMaps.dimY();
-
-        // Determine the number of groups
-        size_t nbChannelsPerGroup = 0;
-        for (; nbChannelsPerGroup < nbChannels && mMaps(0, nbChannelsPerGroup);
-            ++nbChannelsPerGroup) {}
-
-        mGroupMap = 0;
-
-        if (nbChannels % nbChannelsPerGroup == 0)
-            mGroupMap = nbChannels / nbChannelsPerGroup;
-
-        // Check that there are really only groups, with mGroupMap groups
-        size_t outputGroupOffset = 0;
-        size_t channelGroupOffset = 0;
-
-        for (size_t group = 0; group < mGroupMap; ++group) {
-            const size_t outputGroupSize = (nbOutputs - outputGroupOffset)
-                                                / (mGroupMap - group);
-
-            for (size_t output = outputGroupOffset;
-                output < outputGroupOffset + outputGroupSize; ++output)
-            {
-                size_t channel = 0;
-
-                for (; channel < channelGroupOffset; ++channel) {
-                    if (mMaps(output, channel)) {
-                        mGroupMap = 0;
-                        goto loops_break;
-                    }
-                }
-
-                for (; channel < channelGroupOffset + nbChannelsPerGroup;
-                    ++channel)
-                {
-                    if (!mMaps(output, channel)) {
-                        mGroupMap = 0;
-                        goto loops_break;
-                    }
-                }
-
-                for (; channel < nbChannels; ++channel)
-                {
-                    if (mMaps(output, channel)) {
-                        mGroupMap = 0;
-                        goto loops_break;
-                    }
-                }
-            }
-
-            outputGroupOffset += outputGroupSize;
-            channelGroupOffset += nbChannelsPerGroup;
-        }
-
-loops_break:
+        mGroupMap = getNbGroups(mMapping);
         mGroupMapInitialized = true;
     }
 
     return mGroupMap;
+}
+
+size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
+{
+    const size_t nbOutputs = map.dimX();
+    const size_t nbChannels = map.dimY();
+
+    // Determine the number of groups
+    size_t nbChannelsPerGroup = 0;
+    for (; nbChannelsPerGroup < nbChannels && map(0, nbChannelsPerGroup);
+        ++nbChannelsPerGroup) {}
+
+    size_t nbGroups = 0;
+
+    if (nbChannels % nbChannelsPerGroup == 0)
+        nbGroups = nbChannels / nbChannelsPerGroup;
+
+    // Check that there are really only groups, with nbGroups groups
+    size_t outputGroupOffset = 0;
+    size_t channelGroupOffset = 0;
+
+    for (size_t group = 0; group < nbGroups; ++group) {
+        const size_t outputGroupSize = (nbOutputs - outputGroupOffset)
+                                            / (nbGroups - group);
+
+        for (size_t output = outputGroupOffset;
+            output < outputGroupOffset + outputGroupSize; ++output)
+        {
+            size_t channel = 0;
+
+            for (; channel < channelGroupOffset; ++channel) {
+                if (map(output, channel)) {
+                    nbGroups = 0;
+                    goto loops_break;
+                }
+            }
+
+            for (; channel < channelGroupOffset + nbChannelsPerGroup;
+                ++channel)
+            {
+                if (!map(output, channel)) {
+                    nbGroups = 0;
+                    goto loops_break;
+                }
+            }
+
+            for (; channel < nbChannels; ++channel)
+            {
+                if (map(output, channel)) {
+                    nbGroups = 0;
+                    goto loops_break;
+                }
+            }
+        }
+
+        outputGroupOffset += outputGroupSize;
+        channelGroupOffset += nbChannelsPerGroup;
+    }
+
+loops_break:
+    return nbGroups;
 }

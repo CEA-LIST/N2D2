@@ -102,7 +102,7 @@ void N2D2::UnpoolCell_Frame::propagate(bool /*inference*/)
                                                 &beta,
                                                 mOutputs,
                                                 mArgMax[k],
-                                                mMaps.rows(offset,
+                                                mMapping.rows(offset,
                                                            mInputs[k].dimZ()));
         }
         else {
@@ -112,7 +112,7 @@ void N2D2::UnpoolCell_Frame::propagate(bool /*inference*/)
                                                     &beta,
                                                     mOutputs,
                                                     true,
-                                                    mMaps.rows(offset,
+                                                    mMapping.rows(offset,
                                                         mInputs[k].dimZ()));
         }
 
@@ -149,7 +149,7 @@ void N2D2::UnpoolCell_Frame::backPropagate()
                                                diffOutput,
                                                mArgMax[k],
                                                true,
-                                               mMaps.rows(offset,
+                                               mMapping.rows(offset,
                                                           mInputs[k].dimZ()));
         }
         else {
@@ -159,7 +159,7 @@ void N2D2::UnpoolCell_Frame::backPropagate()
                                                    &beta,
                                                    diffOutput,
                                                    true,
-                                                   mMaps.rows(offset,
+                                                   mMapping.rows(offset,
                                                        mInputs[k].dimZ()));
         }
 

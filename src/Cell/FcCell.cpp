@@ -64,7 +64,7 @@ void N2D2::FcCell::logFreeParameters(const std::string& dirName) const
     }
 }
 
-// TODO: handle mMaps
+// TODO: handle mMapping
 unsigned long long int N2D2::FcCell::getNbSynapses() const
 {
     return getNbOutputs() * (getInputsSize() + !mNoBias);

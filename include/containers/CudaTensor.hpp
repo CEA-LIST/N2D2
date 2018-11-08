@@ -178,8 +178,11 @@ public:
                        const T& value);
     inline void assign(const std::vector<size_t>& dims,
                        const T& value);
+    inline void push_back(const T& value);
     inline void push_back(const std::vector<T>& vec);
     inline void push_back(const Tensor<T>& frame);
+    inline void append(const std::vector<T>& vec);
+    inline void append(const Tensor<T>& frame);
     inline void clear();
     inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
@@ -626,6 +629,15 @@ void N2D2::CudaTensor<T>::syncFill(typename std::enable_if<!std::is_pod<U>::valu
 }
 
 template <typename T>
+void N2D2::CudaTensor<T>::push_back(const T& value)
+{
+    Tensor<T>::push_back(value);
+
+    reserve(mDims); // Resize device tensor accordingly
+    synchronizeHToD(); // Copy data into device memory
+}
+
+template <typename T>
 void N2D2::CudaTensor<T>::push_back(const std::vector<T>& vec)
 {
     Tensor<T>::push_back(vec);
@@ -638,6 +650,24 @@ template <typename T>
 void N2D2::CudaTensor<T>::push_back(const Tensor<T>& frame)
 {
     Tensor<T>::push_back(frame);
+
+    reserve(mDims); // Resize device tensor accordingly
+    synchronizeHToD(); // Copy data into device memory
+}
+
+template <typename T>
+void N2D2::CudaTensor<T>::append(const std::vector<T>& vec)
+{
+    Tensor<T>::append(vec);
+
+    reserve(mDims); // Resize device tensor accordingly
+    synchronizeHToD(); // Copy data into device memory
+}
+
+template <typename T>
+void N2D2::CudaTensor<T>::append(const Tensor<T>& frame)
+{
+    Tensor<T>::append(frame);
 
     reserve(mDims); // Resize device tensor accordingly
     synchronizeHToD(); // Copy data into device memory

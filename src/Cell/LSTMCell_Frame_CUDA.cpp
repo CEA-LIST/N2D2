@@ -1016,7 +1016,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError
 /* Surcharge de la fonction addInput pour le cas LSTM afin de mapper les éventuels hx et dhx sur sa cellule parente (hy et dhy) en plus de l'appel classique qui mappe
 **/
 template <class T>
-void N2D2::LSTMCell_Frame_CUDA<T>::addInput(N2D2::Cell* cell, const Matrix<bool>& mapping){
+void N2D2::LSTMCell_Frame_CUDA<T>::addInput(N2D2::Cell* cell, const Tensor<bool>& mapping){
 
 	N2D2::Cell_Frame_CUDA<T>::addInput(cell,mapping);
 
@@ -1073,7 +1073,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::addInput( 	StimuliProvider& sp,
                             				unsigned int y0,
 											unsigned int width,
 											unsigned int height,
-											const Matrix<bool>& mapping){
+											const Tensor<bool>& mapping){
 
 	N2D2::Cell_Frame_CUDA<T>::addInput(sp, x0, y0, width, height, mapping);
 

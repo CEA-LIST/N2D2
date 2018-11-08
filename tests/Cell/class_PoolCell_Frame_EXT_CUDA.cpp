@@ -30,7 +30,7 @@
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
-template <class T> 
+template <class T>
 class PoolCell_Frame_EXT_CUDA_Test : public PoolCell_Frame_EXT_CUDA<T> {
 public:
     PoolCell_Frame_EXT_CUDA_Test(const std::string& name,
@@ -306,9 +306,9 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping(nbOutputs, nbOutputs);
-    mapping << "1 0 0 "
-               "0 1 0 "
+    Tensor<bool> mapping;
+    mapping << "1 0 0\n"
+               "0 1 0\n"
                "0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping);
@@ -447,14 +447,14 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping1(3, 6);
-    mapping1 << "1 0 0 0 0 0 "
-                "0 1 0 0 0 0 "
+    Tensor<bool> mapping1;
+    mapping1 << "1 0 0 0 0 0\n"
+                "0 1 0 0 0 0\n"
                 "0 0 1 0 0 0";
 
-    Matrix<bool> mapping2(3, 6);
-    mapping2 << "0 0 0 1 0 0 "
-                "0 0 0 0 1 0 "
+    Tensor<bool> mapping2;
+    mapping2 << "0 0 0 1 0 0\n"
+                "0 0 0 0 1 0\n"
                 "0 0 0 0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping1);
@@ -818,9 +818,9 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping(nbOutputs, nbOutputs);
-    mapping << "1 0 0 "
-               "0 1 0 "
+    Tensor<bool> mapping;
+    mapping << "1 0 0\n"
+               "0 1 0\n"
                "0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping);
@@ -958,14 +958,14 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping1(3, 6);
-    mapping1 << "1 0 0 0 0 0 "
-                "0 1 0 0 0 0 "
+    Tensor<bool> mapping1;
+    mapping1 << "1 0 0 0 0 0\n"
+                "0 1 0 0 0 0\n"
                 "0 0 1 0 0 0";
 
-    Matrix<bool> mapping2(3, 6);
-    mapping2 << "0 0 0 1 0 0 "
-                "0 0 0 0 1 0 "
+    Tensor<bool> mapping2;
+    mapping2 << "0 0 0 1 0 0\n"
+                "0 0 0 0 1 0\n"
                 "0 0 0 0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping1);
@@ -1289,9 +1289,9 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping(nbOutputs, nbOutputs);
-    mapping << "1 0 0 "
-               "0 1 0 "
+    Tensor<bool> mapping;
+    mapping << "1 0 0\n"
+               "0 1 0\n"
                "0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping);
@@ -1430,14 +1430,14 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
-    Matrix<bool> mapping1(3, 6);
-    mapping1 << "1 0 0 0 0 0 "
-                "0 1 0 0 0 0 "
+    Tensor<bool> mapping1;
+    mapping1 << "1 0 0 0 0 0\n"
+                "0 1 0 0 0 0\n"
                 "0 0 1 0 0 0";
 
-    Matrix<bool> mapping2(3, 6);
-    mapping2 << "0 0 0 1 0 0 "
-                "0 0 0 0 1 0 "
+    Tensor<bool> mapping2;
+    mapping2 << "0 0 0 1 0 0\n"
+                "0 0 0 0 1 0\n"
                 "0 0 0 0 0 1";
 
     pool1.addInput(env, 0, 0, 0, 0, mapping1);

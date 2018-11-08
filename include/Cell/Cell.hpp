@@ -145,7 +145,7 @@ public:
     */
     bool isConnection(unsigned int channel, unsigned int output) const
     {
-        return mMaps(output, channel);
+        return mMapping(output, channel);
     };
 
     /**
@@ -167,8 +167,7 @@ public:
                           unsigned int y0,
                           unsigned int width,
                           unsigned int height,
-                          const std::vector<bool>& mapping = std::vector
-                          <bool>()) = 0;
+                          const Tensor<bool>& mapping = Tensor<bool>()) = 0;
 
     /**
      * Connect an input map from the environment to the cell
@@ -188,7 +187,7 @@ public:
                           unsigned int y0 = 0,
                           unsigned int width = 0,
                           unsigned int height = 0,
-                          const Matrix<bool>& mapping = Matrix<bool>()) = 0;
+                          const Tensor<bool>& mapping = Tensor<bool>()) = 0;
 
     /**
      * Connect all the input maps from the environment to the cell
@@ -208,7 +207,7 @@ public:
                             unsigned int y0 = 0,
                             unsigned int width = 0,
                             unsigned int height = 0,
-                            const Matrix<bool>& mapping = Matrix<bool>());
+                            const Tensor<bool>& mapping = Tensor<bool>());
 
     /**
      * Connect an input cell to the cell
@@ -220,7 +219,7 @@ public:
      *output maps (input channels) [rows])
     */
     virtual void addInput(Cell* cell,
-                          const Matrix<bool>& mapping = Matrix<bool>()) = 0;
+                          const Tensor<bool>& mapping = Tensor<bool>()) = 0;
 
     /**
      * Connect an input cell to the cell
@@ -315,7 +314,8 @@ public:
     }
     size_t groupMap() const;
     bool isUnitMap() const {
-        return (mMaps.dimX() == mMaps.dimY() && groupMap() == mMaps.dimX());
+        return (mMapping.dimX() == mMapping.dimY()
+                && groupMap() == mMapping.dimX());
     };
     /// Destructor
     virtual ~Cell() {};
@@ -324,6 +324,7 @@ protected:
     void setInputsDims(std::initializer_list<size_t> dims);
     virtual void setInputsDims(const std::vector<size_t>& dims);
     virtual void setOutputsDims() = 0;
+    size_t getNbGroups(const Tensor<bool>& map) const;
 
     const CellId_T mId;
     const std::string mName;
@@ -333,7 +334,7 @@ protected:
     // Output dims
     std::vector<size_t> mOutputsDims;
     // Input-output mapping
-    Tensor<bool> mMaps;
+    Tensor<bool> mMapping;
 
 private:
     static unsigned int mIdCnt;

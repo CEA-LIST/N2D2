@@ -151,14 +151,15 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
          itEnd = parents.end();
          it != itEnd;
          ++it) {
-        const Matrix<bool> map = MappingGenerator::generate(
-            sp, (*it), nbOutputs, iniConfig, section, defaultMapping);
+        const Tensor<bool> map = MappingGenerator::generate(
+            sp, (*it), nbOutputs, iniConfig, section, "Mapping",
+                                                            defaultMapping);
 
         for (unsigned int output = 0; output < nbOutputs; ++output) {
-            const std::vector<bool>& row = map.col(output);
-            outputConnection[output]
-                = outputConnection[output]
-                  || (std::find(row.begin(), row.end(), true) != row.end());
+            for (unsigned int channel = 0; channel < map.dimX(); ++channel) {
+                outputConnection[output] = outputConnection[output]
+                                            || map(output, channel);
+            }
         }
 
         if (!(*it))

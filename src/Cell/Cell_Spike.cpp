@@ -42,7 +42,7 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
                                 unsigned int y0,
                                 unsigned int width,
                                 unsigned int height,
-                                const std::vector<bool>& mapping)
+                                const Tensor<bool>& mapping)
 {
     Environment* env = dynamic_cast<Environment*>(&sp);
 
@@ -60,16 +60,16 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
     setOutputsDims();
 
     // Define input-output connections
-    if (!mapping.empty() && mapping.size() != getNbOutputs())
+    if (!mapping.empty() && (mapping.dimX() != getNbOutputs()
+                             || mapping.dimY() != 1))
+    {
         throw std::runtime_error("Cell_Spike::addInput(): mapping length must "
                                  "be equal to the number of outputs");
-
-    mMaps.resize({getNbOutputs(), getNbChannels()});
-
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        mMaps(output, getNbChannels() - 1)
-            = (!mapping.empty()) ? mapping[output] : true;
     }
+
+    mMapping.append((!mapping.empty())
+        ? mapping
+        : Tensor<bool>({getNbOutputs(), 1}, true));
 
     mInputs.reserve(getInputsSize());
 
@@ -92,7 +92,7 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
                                 unsigned int y0,
                                 unsigned int width,
                                 unsigned int height,
-                                const Matrix<bool>& mapping)
+                                const Tensor<bool>& mapping)
 {
     const unsigned int nbChannels = sp.getNbChannels();
 
@@ -101,7 +101,7 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
     if (height == 0)
         height = sp.getSizeY() - y0;
 
-    if (!mapping.empty() && mapping.rows() != nbChannels)
+    if (!mapping.empty() && mapping.dimY() != nbChannels)
         throw std::runtime_error("Cell_Spike::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "filters");
@@ -114,12 +114,12 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
                              y0,
                              width,
                              height,
-                             (mapping.empty()) ? std::vector<bool>()
-                                               : mapping.row(channel));
+                             (mapping.empty()) ? Tensor<bool>()
+                                               : mapping[channel]);
     }
 }
 
-void N2D2::Cell_Spike::addInput(Cell* cell, const Matrix<bool>& mapping)
+void N2D2::Cell_Spike::addInput(Cell* cell, const Tensor<bool>& mapping)
 {
     Cell_Spike* cellSpike = dynamic_cast<Cell_Spike*>(cell);
 
@@ -134,20 +134,14 @@ void N2D2::Cell_Spike::addInput(Cell* cell, const Matrix<bool>& mapping)
     // Define input-output connections
     const unsigned int cellNbOutputs = cellSpike->getNbOutputs();
 
-    if (!mapping.empty() && mapping.rows() != cellNbOutputs)
+    if (!mapping.empty() && mapping.dimX() != cellNbOutputs)
         throw std::runtime_error("Cell_Spike::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
 
-    mMaps.resize({getNbOutputs(), getNbChannels()});
-    const unsigned int channelOffset = getNbChannels() - cellNbOutputs;
-
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < cellNbOutputs; ++channel) {
-            mMaps(output, channelOffset + channel)
-                = (!mapping.empty()) ? mapping(channel, output) : true;
-        }
-    }
+    mMapping.append((!mapping.empty())
+        ? mapping
+        : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
 
     mInputs.reserve(getInputsSize());
 
@@ -189,7 +183,7 @@ void N2D2::Cell_Spike::addInput(Cell* cell,
     setOutputsDims();
 
     // Define input-output connections
-    mMaps.resize({getNbOutputs(), getNbChannels()}, true);
+    mMapping.resize({getNbOutputs(), getNbChannels()}, true);
 
     mInputs.reserve(getInputsSize());
 

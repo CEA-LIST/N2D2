@@ -36,16 +36,15 @@ public:
                           unsigned int y0,
                           unsigned int width,
                           unsigned int height,
-                          const std::vector<bool>& mapping = std::vector
-                          <bool>());
+                          const Tensor<bool>& mapping = Tensor<bool>());
     virtual void addInput(StimuliProvider& sp,
                           unsigned int x0 = 0,
                           unsigned int y0 = 0,
                           unsigned int width = 0,
                           unsigned int height = 0,
-                          const Matrix<bool>& mapping = Matrix<bool>());
+                          const Tensor<bool>& mapping = Tensor<bool>());
     virtual void addInput(Cell* cell,
-                          const Matrix<bool>& mapping = Matrix<bool>());
+                          const Tensor<bool>& mapping = Tensor<bool>());
     virtual void addInput(Cell* cell,
                           unsigned int x0,
                           unsigned int y0,

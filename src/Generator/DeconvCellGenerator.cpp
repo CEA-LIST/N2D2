@@ -215,22 +215,23 @@ N2D2::DeconvCellGenerator::generate(Network& network,
          itEnd = parents.end();
          it != itEnd;
          ++it) {
-        const Matrix<bool> map = MappingGenerator::generate(
-            sp, (*it), nbOutputs, iniConfig, section, defaultMapping);
-
-        nbChannels += map.rows();
+        const Tensor<bool> map = MappingGenerator::generate(
+            sp, (*it), nbOutputs, iniConfig, section, "Mapping",
+                                                            defaultMapping);
 
         for (unsigned int output = 0; output < nbOutputs; ++output) {
-            const std::vector<bool>& row = map.col(output);
-            outputConnection[output]
-                = outputConnection[output]
-                  || (std::find(row.begin(), row.end(), true) != row.end());
+            for (unsigned int channel = 0; channel < map.dimX(); ++channel) {
+                outputConnection[output] = outputConnection[output]
+                                            || map(output, channel);
+            }
         }
 
         if (!(*it))
             cell->addInput(sp, 0, 0, sp.getSizeX(), sp.getSizeY(), map);
         else
             cell->addInput((*it).get(), map);
+
+        nbChannels += map.dimY();
     }
 
     for (unsigned int output = 0; output < nbOutputs; ++output) {

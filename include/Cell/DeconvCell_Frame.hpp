@@ -71,12 +71,12 @@ public:
                           unsigned int channel,
                           BaseTensor& value) const
     {
-        unsigned int tensorChannel;
         const Tensor<T>& sharedSynapses
-            = mSharedSynapses.getTensor(channel, &tensorChannel);
+            = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
+        channel -= mSharedSynapses.getTensorDataOffset(channel);
 
-        value.resize(sharedSynapses[channel - tensorChannel][output].dims());
-        value = sharedSynapses[channel - tensorChannel][output];
+        value.resize(sharedSynapses[channel][output].dims());
+        value = sharedSynapses[channel][output];
     };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
@@ -115,10 +115,11 @@ protected:
                           unsigned int channel,
                           const BaseTensor& value)
     {
-        unsigned int tensorChannel;
         Tensor<T>& sharedSynapses
-            = mSharedSynapses.getTensor(channel, &tensorChannel);
-        sharedSynapses[channel - tensorChannel][output] = tensor_cast<T>(value);
+            = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
+        channel -= mSharedSynapses.getTensorDataOffset(channel);
+
+        sharedSynapses[channel][output] = tensor_cast<T>(value);
     }
     inline void setBias(unsigned int output, const BaseTensor& value)
     {

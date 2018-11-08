@@ -99,14 +99,14 @@ using Cell_Frame_CUDA<T>::mInputs;
 	virtual void compareChecksum(double value, double refValue, double maxError, std::string varName);
 
 	virtual void addInput(	Cell* cell,
-							const Matrix<bool>& mapping = Matrix<bool>());
+							const Tensor<bool>& mapping = Tensor<bool>());
 
 	virtual void addInput(  StimuliProvider& sp,
 							unsigned int x0,
                             unsigned int y0,
                             unsigned int width,
                             unsigned int height,
-                            const Matrix<bool>& mapping);
+                            const Tensor<bool>& mapping);
 
     void checkGradient(double /*epsilon*/ = 1.0e-4,
                        double /*maxError*/ = 1.0e-6);

@@ -32,7 +32,7 @@ void N2D2::Cell_CSpike::addInput(StimuliProvider& /*sp*/,
                                  unsigned int /*y0*/,
                                  unsigned int /*width*/,
                                  unsigned int /*height*/,
-                                 const std::vector<bool>& /*mapping*/)
+                                 const Tensor<bool>& /*mapping*/)
 {
     throw std::runtime_error("Cell_CSpike::addInput(): adding a single "
                              "environment channel as input is not supported");
@@ -43,7 +43,7 @@ void N2D2::Cell_CSpike::addInput(StimuliProvider& sp,
                                  unsigned int y0,
                                  unsigned int width,
                                  unsigned int height,
-                                 const Matrix<bool>& mapping)
+                                 const Tensor<bool>& mapping)
 {
     if (width == 0)
         width = sp.getSizeX() - x0;
@@ -61,22 +61,15 @@ void N2D2::Cell_CSpike::addInput(StimuliProvider& sp,
     setOutputsDims();
 
     // Define input-output connections
-    if (!mapping.empty() && mapping.rows() != sp.getNbChannels()) {
+    if (!mapping.empty() && mapping.dimY() != sp.getNbChannels()) {
         throw std::runtime_error("Cell_CSpike::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
     }
 
-    mMaps.resize({getNbOutputs(), getNbChannels()});
-    const unsigned int channelOffset = getNbChannels() - sp.getNbChannels();
-
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < sp.getNbChannels();
-             ++channel) {
-            mMaps(output, channelOffset + channel)
-                = (!mapping.empty()) ? mapping(channel, output) : true;
-        }
-    }
+    mMapping.append((!mapping.empty())
+        ? mapping
+        : Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
 
     CEnvironment* cEnv = dynamic_cast<CEnvironment*>(&sp);
 
@@ -99,7 +92,7 @@ void N2D2::Cell_CSpike::addInput(StimuliProvider& sp,
     }
 }
 
-void N2D2::Cell_CSpike::addInput(Cell* cell, const Matrix<bool>& mapping)
+void N2D2::Cell_CSpike::addInput(Cell* cell, const Tensor<bool>& mapping)
 {
     Cell_CSpike* cellCSpike = dynamic_cast<Cell_CSpike*>(cell);
 
@@ -114,22 +107,15 @@ void N2D2::Cell_CSpike::addInput(Cell* cell, const Matrix<bool>& mapping)
     // Define input-output connections
     const unsigned int cellNbOutputs = cellCSpike->getNbOutputs();
 
-    if (!mapping.empty() && mapping.rows() != cellNbOutputs) {
+    if (!mapping.empty() && mapping.dimY() != cellNbOutputs) {
         throw std::runtime_error("Cell_CSpike::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
     }
 
-    mMaps.resize({getNbOutputs(), getNbChannels()});
-    const unsigned int channelOffset = getNbChannels() - cellNbOutputs;
-
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < cellNbOutputs;
-             ++channel) {
-            mMaps(output, channelOffset + channel)
-                = (!mapping.empty()) ? mapping(channel, output) : true;
-        }
-    }
+    mMapping.append((!mapping.empty())
+        ? mapping
+        : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
 
     mInputs.push_back(&cellCSpike->mOutputs);
 

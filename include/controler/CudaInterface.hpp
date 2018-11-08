@@ -81,10 +81,6 @@ public:
     virtual const cuda_tensor_type& back() const;
     virtual cuda_tensor_type& operator[](unsigned int t);
     virtual const cuda_tensor_type& operator[](unsigned int t) const;
-    virtual cuda_tensor_type& getTensor(unsigned int k,
-                                     unsigned int* offset = NULL);
-    virtual const cuda_tensor_type& getTensor(unsigned int k,
-                                           unsigned int* offset = NULL) const;
     ~CudaInterface() {};
 
 private:
@@ -189,36 +185,6 @@ const typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::Cud
 operator[](unsigned int t) const
 {
     return *dynamic_cast<cuda_tensor_type*>(mData.at(t));
-}
-
-template <class T, int STACKING_DIM>
-typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
-    unsigned int k,
-    unsigned int* offset)
-{
-    assert(k < mDataOffset.size());
-
-    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
-
-    if (offset != NULL)
-        (*offset) = dataOffset.second;
-
-    return *dynamic_cast<cuda_tensor_type*>(mData[dataOffset.first]);
-}
-
-template <class T, int STACKING_DIM>
-const typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::CudaInterface<T, STACKING_DIM>::getTensor(
-    unsigned int k,
-    unsigned int* offset) const
-{
-    assert(k < mDataOffset.size());
-
-    const std::pair<unsigned int, unsigned int>& dataOffset = mDataOffset.at(k);
-
-    if (offset != NULL)
-        (*offset) = dataOffset.second;
-
-    return *dynamic_cast<cuda_tensor_type*>(mData[dataOffset.first]);
 }
 
 #endif // N2D2_CUDAINTERFACE_H

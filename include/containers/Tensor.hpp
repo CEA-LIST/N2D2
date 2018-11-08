@@ -337,9 +337,11 @@ public:
     inline virtual void assign(const std::vector<size_t>& dims,
                                const T& value);
     inline virtual void fill(const T& value);
-    inline void push_back(const T& value);
+    inline virtual void push_back(const T& value);
     inline virtual void push_back(const std::vector<T>& vec);
     inline virtual void push_back(const Tensor<T>& frame);
+    inline virtual void append(const std::vector<T>& vec);
+    inline virtual void append(const Tensor<T>& frame);
     inline virtual void clear();
     inline void swap(Tensor<T>& tensor);
     inline Tensor<T> clone() const;
@@ -912,6 +914,65 @@ template <class T> void N2D2::Tensor<T>::push_back(const Tensor<T>& frame)
     }
 
     ++mDims.back();
+    computeSize();
+    (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
+}
+
+template <class T> void N2D2::Tensor<T>::append(const std::vector<T>& vec)
+{
+    assert(mData.unique());
+
+    if (mDims.empty() || std::all_of(mDims.begin(), mDims.end(),
+                                     Utils::IsZero<size_t>()))
+    {
+        mDims.resize(1, 0);
+    }
+    else if (mDims.size() != 1) {
+        std::stringstream errorStr;
+        errorStr << "Tensor<T>::append(): tensor must be 1D to append a"
+            " vector, but tensor dimension is " << mDims << std::endl;
+
+        throw std::runtime_error(errorStr.str());
+    }
+
+    mDims.back() += vec.size();
+    computeSize();
+    (*mData)().insert((*mData)().end(), vec.begin(), vec.end());
+}
+
+template <class T> void N2D2::Tensor<T>::append(const Tensor<T>& frame)
+{
+    assert(mData.unique());
+
+    if (mDims.empty() || std::all_of(mDims.begin(), mDims.end(),
+                                     Utils::IsZero<size_t>()))
+    {
+        mDims = frame.dims();
+    }
+    else if (mDims.size() != frame.nbDims()) {
+        std::stringstream errorStr;
+        errorStr << "Tensor<T>::append(): tensor must be "
+            << frame.nbDims() << "D to append a " << frame.nbDims()
+            << "D tensor, but tensor dimension is " << mDims << std::endl;
+
+        throw std::runtime_error(errorStr.str());
+    }
+    else {
+        for (unsigned int dim = 0; dim < frame.nbDims() - 1; ++dim) {
+            if (mDims[dim] != frame.dims()[dim]) {
+                std::stringstream errorStr;
+                errorStr << "Tensor<T>::append(): tensors dimension #"
+                    << dim << " must match, but tensor dimension is "
+                    << mDims << " and tensor to append is "
+                    << frame.dims() << std::endl;
+
+                throw std::runtime_error(errorStr.str());
+            }
+        }
+
+        mDims.back() += frame.dims().back();
+    }
+
     computeSize();
     (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
 }

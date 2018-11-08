@@ -47,11 +47,12 @@ public:
                               const std::string& name,
                               const Mapping& defaultMapping_ = defaultMapping);
 
-    static Matrix<bool> generate(StimuliProvider& sp,
+    static Tensor<bool> generate(StimuliProvider& sp,
                                  std::shared_ptr<Cell> parent,
                                  unsigned int nbOutputs,
                                  IniParser& iniConfig,
                                  const std::string& section,
+                                 const std::string& name,
                                  const Mapping& defaultMapping_
                                  = defaultMapping);
 };

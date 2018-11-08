@@ -175,7 +175,7 @@ void N2D2::DeconvCell_Frame<T>::propagate(bool /*inference*/)
                                              mConvDesc,
                                              &beta,
                                              mOutputs,
-                                             mMaps.rows(offset,
+                                             mMapping.rows(offset,
                                                         mInputs[k].dimZ()));
 
         offset += mInputs[k].dimZ();
@@ -209,7 +209,7 @@ void N2D2::DeconvCell_Frame<T>::backPropagate()
                                                mConvDesc,
                                                &beta,
                                                mDiffSharedSynapses[k],
-                                               mMaps.rows(offset,
+                                               mMapping.rows(offset,
                                                           mInputs[k].dimZ()));
 
         offset += mInputs[k].dimZ();
@@ -238,7 +238,7 @@ void N2D2::DeconvCell_Frame<T>::backPropagate()
                                             mConvDesc,
                                             &beta,
                                             diffOutput,
-                                            mMaps.rows(offset,
+                                            mMapping.rows(offset,
                                                        mInputs[k].dimZ()));
 
             offset += mInputs[k].dimZ();
