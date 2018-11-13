@@ -60,6 +60,20 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     bool unsignedData;
     std::tie(scaling, unsignedData) = getScaling(sp, dirName, set, normalize);
 
+    generate(sp, dirName, set, scaling, unsignedData, nbStimuliMax, deepNet);
+}
+
+
+void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
+                                           const std::string& dirName,
+                                           Database::StimuliSet set,
+                                           double scaling,
+                                           bool unsignedData,
+                                           int nbStimuliMax,
+                                           DeepNet* deepNet)
+{
+    Utils::createDirectories(dirName);
+
     const unsigned int envSizeX = sp.getSizeX();
     const unsigned int envSizeY = sp.getSizeY();
     const unsigned int nbChannels = sp.getNbChannels();
@@ -69,11 +83,10 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         : sp.getDatabase().getNbStimuli(set);
     const unsigned int zeroPad = (size > 0) ? std::ceil(std::log10(size)) : 0;
 
-    std::ofstream stimuliList((dirName + ".list").c_str());
-
+    const std::string stimuliListName = dirName + "/../stimuli.list";
+    std::ofstream stimuliList(stimuliListName);
     if (!stimuliList.good()) {
-        throw std::runtime_error("Could not create stimuli list file: "
-                                 + dirName + ".list");
+        throw std::runtime_error("Could not create stimuli list file: " + stimuliListName + ".");
     }
 
     std::cout << "Exporting " << set << " dataset to \"" << dirName << "\""
@@ -232,7 +245,6 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         const std::vector<std::shared_ptr<Target> > outputTargets
                                                     =  deepNet->getTargets();
         const unsigned int netNbTarget = outputTargets.size();
-
         for(unsigned int t = 0; t < netNbTarget; ++t) {
             for (unsigned int y = 0; y < label.dimY(); ++y) {
                 for (unsigned int x = 0; x < label.dimX(); ++x) {

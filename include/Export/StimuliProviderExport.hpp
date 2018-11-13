@@ -50,12 +50,22 @@ public:
                          int nbStimuliMax = -1,
                          bool normalize = false,
                          DeepNet* deepNet = NULL);
+
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
                          Database::StimuliSet set,
                          int nbStimuliMax = -1,
                          bool normalize = false,
                          DeepNet* deepNet = NULL);
+
+    static void generate(StimuliProvider& sp,
+                         const std::string& dirName,
+                         Database::StimuliSet set,
+                         double scaling,
+                         bool unsignedData,
+                         int nbStimuliMax = -1,
+                         DeepNet* deepNet = NULL);
+
     static double getStimuliRange(StimuliProvider& sp,
                                   const std::string& dirName,
                                   Database::StimuliSet set);
