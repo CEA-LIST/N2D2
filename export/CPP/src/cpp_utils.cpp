@@ -21,8 +21,8 @@
 
 #include "cpp_utils.hpp"
 
-void getFilesList(const std::string dir,
-                                           std::vector<std::string>& files)
+void getFilesList(const std::string& dir,
+                  std::vector<std::string>& files)
 {
     struct dirent* pFile;
     DIR* pDir = opendir(dir.c_str());
