@@ -46,3 +46,16 @@ void envRead(const std::string& fileName, unsigned int size,
              int32_t* outputTargets);
 
 void confusion_print(unsigned int nbOutputs, unsigned int* confusion);
+
+template<class T>
+const T& clamp(const T& v, const T& lo, const T& hi) {
+    if(v < lo) {
+        return lo;
+    }
+
+    if(v > hi) {
+        return hi;
+    }
+
+    return v;
+}
