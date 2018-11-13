@@ -72,10 +72,10 @@ void N2D2::ResizeCell_Frame_CUDA::initialize()
         const unsigned int inputDimX = mInputs[0].dimX();
         const unsigned int inputDimY = mInputs[0].dimY();
 
-        mScaleX = mAlignCorners ? (inputDimX - 1) / (float) (outputDimX - 1)
+        mScaleX = (mAlignCorners && outputDimX > 1) ? (inputDimX - 1) / (float) (outputDimX - 1)
                     : (inputDimX) / (float) (outputDimX);
 
-        mScaleY = mAlignCorners ? (inputDimY - 1) / (float) (outputDimY - 1)
+        mScaleY = (mAlignCorners && outputDimY > 1) ? (inputDimY - 1) / (float) (outputDimY - 1)
                     : (inputDimY) / (float) (outputDimY);
 
         mYStrideLowIndex.resize({outputDimY + 1});

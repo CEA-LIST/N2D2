@@ -66,10 +66,12 @@ void N2D2::ResizeCell_Frame::initialize()
         const unsigned int inputDimX = mInputs[0].dimX();
         const unsigned int inputDimY = mInputs[0].dimY();
 
-        mScaleX = mAlignCorners ? (inputDimX - 1) / (Float_T) (outputDimX - 1)
+        mScaleX = (mAlignCorners && outputDimX > 1) ? 
+                      (inputDimX - 1) / (Float_T) (outputDimX - 1)
                     : (inputDimX) / (Float_T) (outputDimX);
 
-        mScaleY = mAlignCorners ? (inputDimY - 1) / (Float_T) (outputDimY - 1)
+        mScaleY = (mAlignCorners && outputDimY > 1) ? 
+                      (inputDimY - 1) / (Float_T) (outputDimY - 1)
                     : (inputDimY) / (Float_T) (outputDimY);
 
         mYStride.resize(outputDimY + 1);
