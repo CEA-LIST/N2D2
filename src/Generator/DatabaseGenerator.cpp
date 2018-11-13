@@ -31,6 +31,10 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
 
     if (iniConfig.isProperty("Type")) {
         const std::string type = iniConfig.getProperty<std::string>("Type");
+        if (!Registrar<DatabaseGenerator>::exists(type)) {
+            throw std::runtime_error("Unknown database " + type + ".");
+        }
+
         database = Registrar<DatabaseGenerator>::create(type)(iniConfig,
                                                               section);
     }
