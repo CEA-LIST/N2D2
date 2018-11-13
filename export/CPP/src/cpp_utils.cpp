@@ -19,6 +19,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include "cpp_utils.hpp"
 
 void getFilesList(const std::string& dir,
