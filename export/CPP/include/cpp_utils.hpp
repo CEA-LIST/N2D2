@@ -38,6 +38,7 @@
 
 
 void getFilesList(const std::string& dir, std::vector<std::string>& files);
+std::vector<std::string> getFilesList(const std::string& dir);
 
 void envRead(const std::string& fileName, unsigned int size,
              unsigned int channelsHeight, unsigned int channelsWidth,

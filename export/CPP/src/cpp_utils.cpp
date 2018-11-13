@@ -45,13 +45,20 @@ void getFilesList(const std::string& dir,
     std::sort(files.begin(), files.end());
 }
 
+std::vector<std::string> getFilesList(const std::string& dir) {
+    std::vector<std::string> files;
+    getFilesList(dir, files);
+
+    return files;
+}
+
 void envRead(const std::string& fileName,
-                                      unsigned int size,
-                                      unsigned int channelsHeight,
-                                      unsigned int channelsWidth,
-                                      DATA_T* data,
-                                      unsigned int outputsSize,
-                                      int32_t* outputTargets)
+             unsigned int size,
+             unsigned int channelsHeight,
+             unsigned int channelsWidth,
+             DATA_T* data,
+             unsigned int outputsSize,
+             int32_t* outputTargets)
 {
     std::ifstream stimuli(fileName.c_str(), std::fstream::binary);
 
