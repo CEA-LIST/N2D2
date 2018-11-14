@@ -128,13 +128,15 @@ void N2D2::CPP_ConvCellExport::generateHeaderBias(ConvCell& cell,
 {
     generateHeaderBiasVariable(cell, header);
     generateHeaderBiasValues(cell, header);
+    header << "\n";
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
                                                           std::ofstream& header)
 {
-    header << "const std::vector<WDATA_T> "
-        << Utils::CIdentifier(cell.getName()) << "_biases = ";
+    const std::string indentifier = Utils::CIdentifier(cell.getName());
+    header << "static const WDATA_T "
+        << indentifier << "_biases[" << Utils::upperCase(indentifier) << "_NB_OUTPUTS] = ";
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
@@ -163,111 +165,48 @@ void N2D2::CPP_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
 void N2D2::CPP_ConvCellExport::generateHeaderWeights(ConvCell& cell,
                                                      std::ofstream& header)
 {
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < cell.getNbChannels();
-             ++channel) {
-            if (!cell.isConnection(channel, output))
-                continue;
-
-            generateHeaderKernelWeightsVariable(cell, header, output, channel);
-            generateHeaderKernelWeightsValues(
-                cell, header, output, channel);
-        }
-    }
-
-    generateHeaderWeightsVariable(cell, header);
-    generateHeaderWeightsValues(cell, header);
-}
-
-void N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsVariable(
-    ConvCell& cell,
-    std::ofstream& header,
-    unsigned int output,
-    unsigned int channel)
-{
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
-    header << "const std::vector<std::vector<WDATA_T> > "
-        << identifier
-        << "_weights_" << output << "_" << channel << " = ";
-}
 
+    header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+           << prefix << "_NB_OUTPUTS*" 
+           << prefix << "_NB_CHANNELS*" 
+           << prefix << "_KERNEL_WIDTH*" 
+           << prefix << "_KERNEL_HEIGHT)\n\n";
 
-void
-N2D2::CPP_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
-                                                          std::ofstream& header,
-                                                          unsigned int output,
-                                                          unsigned int channel)
-{
-    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
-                                                        cell.getName()));
+    header << "// Flatten weights with the order[NB_OUTPUTS][NB_CHANNELS][KERNEL_WIDTH][KERNEL_HEIGHT]\n";
+    header << "static const WDATA_T " << identifier << "_weights["
+           << prefix << "_WEIGHTS_SIZE] = {";
 
-    Tensor<Float_T> kernel;
-    cell.getWeight(output, channel, kernel);
+    std::size_t i = 0;
+    for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
+        for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+            Tensor<Float_T> kernel;
+            cell.getWeight(o, ch, kernel);
 
-    header << "{\n";
+            for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
+                for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
+                    if(o > 0 || ch > 0 || sy > 0 || sx > 0) {
+                        header << ", ";
+                    }
 
-    for (unsigned int sy = 0; sy < cell.getKernelHeight(); ++sy) {
-        if (sy > 0)
-            header << ",\n";
+                    if(i % 24 == 0) {
+                        header << "\n";
+                    }
 
-        header << "    {";
+                    if(!cell.isConnection(ch, o)) {
+                        header << "0";
+                    }
+                    else {
+                        CellExport::generateFreeParameter(cell, kernel(sx, sy), header);
+                    }
 
-        for (unsigned int sx = 0; sx < cell.getKernelWidth(); ++sx) {
-            if (sx > 0)
-                header << ", ";
-
-            CellExport::generateFreeParameter(cell, kernel(sx, sy), header);
+                    i++;
+                }
+            }
         }
-
-        header << "}";
     }
 
-    header << "};\n";
-}
-
-void N2D2::CPP_ConvCellExport::generateHeaderWeightsVariable(ConvCell& cell,
-                                                             std::ofstream
-                                                             & header)
-{
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
-
-    header << "typedef const std::vector<std::vector<WDATA_T> > " << prefix
-           << "_KERNEL_T;\n";
-    header << "const std::vector<std::vector<" << prefix << "_KERNEL_T*> > "
-           << identifier << "_weights = ";
-}
-
-void N2D2::CPP_ConvCellExport::generateHeaderWeightsValues(ConvCell& cell,
-                                                         std::ofstream& header)
-{
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
-
-    header << "{\n";
-
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        if (output > 0)
-            header << ",\n";
-
-        header << "    {";
-
-        for (unsigned int channel = 0; channel < cell.getNbChannels();
-             ++channel) {
-            if (channel > 0)
-                header << ", ";
-
-            if (!cell.isConnection(channel, output))
-                header << "NULL";
-            else
-                header << "&" << identifier
-                    << "_weights_" << output << "_" << channel;
-        }
-
-        header << "}";
-    }
-
-    header << "};\n\n";
+    header << "\n};\n\n";
 }

@@ -47,18 +47,6 @@ public:
                                                       std::ofstream& header);
 
     static void generateHeaderWeights(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderKernelWeightsVariable(ConvCell& cell,
-                                                    std::ofstream& header,
-                                                    unsigned int output,
-                                                    unsigned int channel);
-    static void generateHeaderWeightsVariable(ConvCell& cell,
-                                              std::ofstream& header);
-    static void generateHeaderKernelWeightsValues(ConvCell& cell,
-                                                  std::ofstream& header,
-                                                  unsigned int output,
-                                                  unsigned int channel);
-    static void generateHeaderWeightsValues(ConvCell& cell,
-                                            std::ofstream& header);
 
 private:
     static Registrar<ConvCellExport> mRegistrar;
