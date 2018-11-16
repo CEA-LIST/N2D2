@@ -273,9 +273,30 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
     for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
         batchRef[batchPos] = getRandomID(set);
 
+    unsigned int exceptCatch = 0;
+
 #pragma omp parallel for if (mBatchSize > 1)
-    for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos)
-        readStimulus(batchRef[batchPos], set, batchPos);
+    for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
+        try {
+            readStimulus(batchRef[batchPos], set, batchPos);
+        }
+        catch (const std::exception& e)
+        {
+            #pragma omp critical(StimuliProvider__readRandomBatch)
+            {
+                std::cout << Utils::cwarning << e.what() << Utils::cdef
+                    << std::endl;
+                ++exceptCatch;
+            }
+        }
+    }
+
+    if (exceptCatch > 0) {
+        std::cout << "Retry without multi-threading..." << std::endl;
+
+        for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos)
+            readStimulus(batchRef[batchPos], set, batchPos);
+    }
 }
 
 N2D2::Database::StimulusID
