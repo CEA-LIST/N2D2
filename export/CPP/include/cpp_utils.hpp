@@ -19,26 +19,16 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifndef CPP_UTILS_H
+#define CPP_UTILS_H
+
 #include "typedefs.h"
-#include "utils.h"
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <stdlib.h>
-#include <iterator>
-#include <vector>
 #include <string>
-#include <algorithm> // std::sort
-#include <cmath>
-#include <cstdlib>
-#include <dirent.h>
-#include <iomanip>
-#include <stdexcept>
+#include <vector>
 
 
 void getFilesList(const std::string& dir, std::vector<std::string>& files);
-std::vector<std::string> getFilesList(const std::string& dir);
+                  std::vector<std::string> getFilesList(const std::string& dir);
 
 void envRead(const std::string& fileName, unsigned int size,
              unsigned int channelsHeight, unsigned int channelsWidth,
@@ -59,3 +49,5 @@ const T& clamp(const T& v, const T& lo, const T& hi) {
 
     return v;
 }
+
+#endif

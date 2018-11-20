@@ -21,12 +21,17 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include <sys/types.h>
+#include <dirent.h>
+
 #include "cpp_utils.hpp"
+#include "utils.h"
 
 void getFilesList(const std::string& dir,
                   std::vector<std::string>& files)
