@@ -22,6 +22,7 @@
 
 #include "Database/Database.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -192,6 +193,8 @@ TEST_DATASET(Database,
              std::make_tuple(10, 4),
              std::make_tuple(10, 5))
 {
+    Utils::createDirectories("Database");
+    
     Database_Test db(nbStimuli, nbLabels);
     db.load("");
 

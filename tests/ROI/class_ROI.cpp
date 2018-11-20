@@ -23,6 +23,7 @@
 #include "ROI/PolygonalROI.hpp"
 #include "ROI/RectangularROI.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -56,6 +57,7 @@ TEST(CircularROI, draw)
 
     roi.draw(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/CircularROI_draw.png", img))
         throw std::runtime_error(
             "Unable to write image: ROI/CircularROI_draw.png");
@@ -78,6 +80,7 @@ TEST(CircularROI, extract)
 
     cv::Mat extracted = roi.extract(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/CircularROI_extract.png", extracted))
         throw std::runtime_error(
             "Unable to write image: ROI/CircularROI_extract.png");
@@ -93,6 +96,7 @@ TEST(CircularROI, append)
     cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(0));
     roi.append(labels);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/CircularROI_append.png", labels))
         throw std::runtime_error(
             "Unable to write image: ROI/CircularROI_append.png");
@@ -133,6 +137,7 @@ TEST(EllipticROI, draw)
 
     roi.draw(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/EllipticROI_draw.png", img))
         throw std::runtime_error(
             "Unable to write image: ROI/EllipticROI_draw.png");
@@ -155,6 +160,7 @@ TEST(EllipticROI, extract)
 
     cv::Mat extracted = roi.extract(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/EllipticROI_extract.png", extracted))
         throw std::runtime_error(
             "Unable to write image: ROI/EllipticROI_extract.png");
@@ -170,6 +176,7 @@ TEST(EllipticROI, append)
     cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(0));
     roi.append(labels);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/EllipticROI_append.png", labels))
         throw std::runtime_error(
             "Unable to write image: ROI/EllipticROI_append.png");
@@ -246,6 +253,7 @@ TEST(PolygonalROI, draw)
 
     roi.draw(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/PolygonalROI_draw.png", img))
         throw std::runtime_error(
             "Unable to write image: ROI/PolygonalROI_draw.png");
@@ -273,6 +281,7 @@ TEST(PolygonalROI, extract)
 
     cv::Mat extracted = roi.extract(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/PolygonalROI_extract.png", extracted))
         throw std::runtime_error(
             "Unable to write image: ROI/PolygonalROI_extract.png");
@@ -293,6 +302,7 @@ TEST(PolygonalROI, append)
     cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(0));
     roi.append(labels);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/PolygonalROI_append.png", labels))
         throw std::runtime_error(
             "Unable to write image: ROI/PolygonalROI_append.png");
@@ -353,6 +363,7 @@ TEST(RectangularROI, draw)
 
     roi.draw(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/RectangularROI_draw.png", img))
         throw std::runtime_error(
             "Unable to write image: ROI/RectangularROI_draw.png");
@@ -375,6 +386,7 @@ TEST(RectangularROI, extract)
 
     cv::Mat extracted = roi.extract(img);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/RectangularROI_extract.png", extracted))
         throw std::runtime_error(
             "Unable to write image: ROI/RectangularROI_extract.png");
@@ -390,6 +402,7 @@ TEST(RectangularROI, append)
     cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(0));
     roi.append(labels);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/RectangularROI_append.png", labels))
         throw std::runtime_error(
             "Unable to write image: ROI/RectangularROI_append.png");
@@ -406,6 +419,7 @@ TEST(RectangularROI, append__margin)
     cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(backgroundLabel));
     roi.append(labels, 10, backgroundLabel);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/RectangularROI_append__margin.png", labels))
         throw std::runtime_error(
             "Unable to write image: ROI/RectangularROI_append__margin.png");
@@ -424,6 +438,7 @@ TEST(RectangularROI, append__overlap)
     roi1.append(labels, 10, backgroundLabel);
     roi2.append(labels, 10, backgroundLabel);
 
+    Utils::createDirectories("ROI");
     if (!cv::imwrite("ROI/RectangularROI_append__overlap.png", labels))
         throw std::runtime_error(
             "Unable to write image: ROI/RectangularROI_append__overlap.png");
