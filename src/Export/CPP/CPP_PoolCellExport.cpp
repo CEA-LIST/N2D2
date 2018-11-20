@@ -87,6 +87,11 @@ void N2D2::CPP_PoolCellExport::generateHeaderConstants(PoolCell& cell,
                << ((cellFrame->getActivation())
                        ? cellFrame->getActivation()->getType()
                        : "Linear") << "\n";
+
+        header << "#define " << prefix << "_SHIFT "
+           << ((cellFrame->getActivation())
+                   ? cellFrame->getActivation()->getParameter<int>("Shifting")
+                   : 0) << "\n";
     }
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
