@@ -35,6 +35,10 @@ N2D2::CellGenerator::generate(Network& network,
         throw std::runtime_error("Missing [" + section + "] section.");
 
     const std::string type = iniConfig.getProperty<std::string>("Type");
+    if(!Registrar<CellGenerator>::exists(type)) {
+        throw std::runtime_error("No cell generator for type '" + type + "'.");
+    }
+
     std::shared_ptr<Cell> cell = Registrar
         <CellGenerator>::create(type)(network, sp, parents, iniConfig, section);
 
