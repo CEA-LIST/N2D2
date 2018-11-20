@@ -52,11 +52,9 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
 #endif
     const int ret = system(cmd.c_str());
 
-    if (ret < 0) {
-        std::cout << Utils::cwarning << "Warning: could not import files for "
-                  << type << " export "
-                             "(return code: " << ret << ")" << Utils::cdef
-                  << std::endl;
+    if (ret != 0) {
+        throw std::runtime_error("Warning: could not import files for " + type + " export "
+                                 "(copy return code: " + std::to_string(ret) + ").");
     }
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
