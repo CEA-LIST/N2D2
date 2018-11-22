@@ -32,7 +32,7 @@ N2D2::ObjectDetCell::ObjectDetCell(const std::string& name,
                                 std::vector<Float_T> scoreThreshold,
                                  std::vector<unsigned int> numParts,
                                  std::vector<unsigned int> numTemplates,
-                                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
+                                const std::vector<AnchorCell_Frame_Kernels::Anchor>& /*anchors*/)
     : Cell(name, nbOutputs),
       mStimuliProvider(sp),
       mForegroundRate(this, "ForegroundRate", 0.25),
