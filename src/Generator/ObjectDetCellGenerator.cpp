@@ -47,14 +47,132 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/,
 
     const Float_T nmsThreshold = iniConfig.getProperty
                                    <Float_T>("NMS_Threshold", 0.5);
-    const Float_T scoreThreshold = iniConfig.getProperty
-                                   <Float_T>("Score_Threshold");
 
-    const unsigned int nbOutputs = 5;
+    std::vector<Float_T> scoreThresholds;
+
+    if (iniConfig.isProperty("Score_Threshold")) {
+        scoreThresholds = iniConfig.getProperty
+                                     <std::vector<Float_T> >("Score_Threshold");
+    }
+
+    if(scoreThresholds.size() > nbCls)
+    {
+        throw std::runtime_error(
+            "Cell model \"" + model + "\" is not valid in section [Score_Threshold] in network configuration file: " 
+            + iniConfig.getFileName());
+    }
+
+    if(scoreThresholds.size() == 1)
+        scoreThresholds.resize(nbCls, scoreThresholds[0]);
+
+    const std::vector<unsigned int> partsPerCls = iniConfig.getProperty
+                <std::vector<unsigned int> >("NumParts", std::vector<unsigned int>(0, 0));
+
+    const std::vector<unsigned int> templatesPerCls = iniConfig.getProperty
+                <std::vector<unsigned int> >("NumTemplates", std::vector<unsigned int>(0, 0));
+
+    unsigned int nbOutputParts = 0;
+    unsigned int nbOutputTemplates = 0;
+
+    if(partsPerCls.size() > 0)
+        nbOutputParts = (*std::max_element(partsPerCls.begin(), partsPerCls.end()));
+
+    if(templatesPerCls.size() > 0)
+        nbOutputTemplates = (*std::max_element(templatesPerCls.begin(), templatesPerCls.end()));
+
+    //const unsigned int nbOutputs = 5 + nbOutputParts*2 + nbOutputTemplates*3;
+    const unsigned int nbOutputs = 6 + nbOutputParts*2 + nbOutputTemplates*3;
+
+    std::vector<AnchorCell_Frame_Kernels::Anchor> anchors;
+
+    if(templatesPerCls.size() > 0 || partsPerCls.size() > 0)
+    {
+
+        unsigned int nextAnchor = 0;
+        std::stringstream nextProperty;
+        nextProperty << "Anchor[" << nextAnchor << "]";
+
+        while (iniConfig.isProperty(nextProperty.str())) {
+            std::stringstream anchorValues(
+                iniConfig.getProperty<std::string>(nextProperty.str()));
+
+            unsigned int rootArea;
+            double ratio;
+
+            if (!(anchorValues >> rootArea) || !(anchorValues >> ratio)) {
+                throw std::runtime_error(
+                    "Unreadable anchor in section [" + section
+                    + "] in network configuration file: "
+                    + iniConfig.getFileName());
+            }
+
+            anchors.push_back(AnchorCell_Frame_Kernels::Anchor(rootArea*rootArea,
+                                                            ratio,
+                                                            1.0,
+                                                            AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft));
+
+            ++nextAnchor;
+            nextProperty.str(std::string());
+            nextProperty << "Anchor[" << nextAnchor << "]";
+        }
+        
+        nextProperty.str(std::string());
+        nextProperty << "AnchorBBOX[" << nextAnchor << "]";
+
+        while (iniConfig.isProperty(nextProperty.str())) {
+            std::stringstream anchorValues(
+                iniConfig.getProperty<std::string>(nextProperty.str()));
+
+            float x0;
+            float y0;
+            float w;
+            float h;
+
+            if (!(anchorValues >> x0) || !(anchorValues >> y0)
+                    || !(anchorValues >> w) || !(anchorValues >> h)) {
+                throw std::runtime_error(
+                    "Unreadable anchor in section [" + section
+                    + "] in network configuration file: "
+                    + iniConfig.getFileName());
+            }
+
+            anchors.push_back(AnchorCell_Frame_Kernels::Anchor( x0,
+                                                                y0,
+                                                                w,
+                                                                h));
+
+            ++nextAnchor;
+            nextProperty.str(std::string());
+            nextProperty << "AnchorBBOX[" << nextAnchor << "]";
+        }
+
+        // Second method: specify a base root area and a list of ratios and scales
+        // Both methods can be used simultaneously
+        const double rootArea = iniConfig.getProperty<double>("RootArea", 16);
+        const std::vector<double> ratios = iniConfig.getProperty
+            <std::vector<double> >("Ratios", std::vector<double>());
+        const std::vector<double> scales = iniConfig.getProperty
+            <std::vector<double> >("Scales", std::vector<double>(1, 1.0));
+
+        for (std::vector<double>::const_iterator itRatios = ratios.begin(),
+            itRatiosEnd = ratios.end(); itRatios != itRatiosEnd; ++itRatios)
+        {
+            for (std::vector<double>::const_iterator itScales = scales.begin(),
+                itScalesEnd = scales.end(); itScales != itScalesEnd; ++itScales)
+            {
+                anchors.push_back(AnchorCell_Frame_Kernels::Anchor(
+                    rootArea*rootArea,
+                    (*itRatios),
+                    (*itScales),
+                    AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft));
+            }
+        }
+
+    }
 
     std::cout << "Layer: " << section << " [ObjectDet(" << model << ")]" 
               << std::endl;   
-    
+
     // Cell construction
     std::shared_ptr<ObjectDetCell> cell = Registrar
         <ObjectDetCell>::create(model)(section,
@@ -64,7 +182,10 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/,
                                 nbProposals,
                                 nbCls,
                                 nmsThreshold,
-                                scoreThreshold);
+                                scoreThresholds,
+                                partsPerCls,
+                                templatesPerCls,
+                                anchors);
 
     if (!cell) {
         throw std::runtime_error(

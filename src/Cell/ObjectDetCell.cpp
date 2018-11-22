@@ -29,15 +29,28 @@ N2D2::ObjectDetCell::ObjectDetCell(const std::string& name,
                                 unsigned int nbProposals,
                                 unsigned int nbClass,
                                 Float_T nmsThreshold,
-                                Float_T scoreThreshold)
+                                std::vector<Float_T> scoreThreshold,
+                                 std::vector<unsigned int> numParts,
+                                 std::vector<unsigned int> numTemplates,
+                                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
     : Cell(name, nbOutputs),
-      mStimuliProvider(sp), 
+      mStimuliProvider(sp),
+      mForegroundRate(this, "ForegroundRate", 0.25),
+      mForegroundMinIoU(this, "ForegroundMinIoU", 0.5),
+      mBackgroundMaxIoU(this, "BackgroundMaxIoU", 0.5),
+      mBackgroundMinIoU(this, "BackgroundMinIoU", 0.1),
+      mFeatureMapWidth(this, "FeatureMapWidth", 0U),
+      mFeatureMapHeight(this, "FeatureMapHeight", 0U),
       mNbAnchors(nbAnchors),     
       mNbProposals(nbProposals),
       mNbClass(nbClass),
       mNMS_IoU_Threshold(nmsThreshold),
-      mScoreThreshold(scoreThreshold)
+      mScoreThreshold(scoreThreshold),
+      mNumParts(numParts),
+      mNumTemplates(numTemplates)
 {
+    mMaxParts = 0;
+    mMaxTemplates = 0;
 }
 
 void N2D2::ObjectDetCell::getStats(Stats& /*stats*/) const

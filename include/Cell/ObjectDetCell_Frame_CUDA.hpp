@@ -37,17 +37,6 @@
 namespace N2D2 {
 class ObjectDetCell_Frame_CUDA : public virtual ObjectDetCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    struct BBox_T {
-        float x;
-        float y;
-        float w;
-        float h;
-
-        BBox_T() {}
-        BBox_T(float x_, float y_, float w_, float h_):
-            x(x_), y(y_), w(w_), h(h_) {}
-    };
-
     ObjectDetCell_Frame_CUDA(const std::string& name,
                             StimuliProvider& sp,
                             const unsigned int nbOutputs,
@@ -55,7 +44,14 @@ public:
                             unsigned int nbProposals,
                             unsigned int nbClass,
                             Float_T nmsThreshold = 0.5,
-                            Float_T scoreThreshold = 0.0);
+                            std::vector<Float_T> scoreThreshold 
+                                                    = std::vector<Float_T>(1, 0.5),
+                            std::vector<unsigned int> numParts
+                                    = std::vector<unsigned int>(),
+                            std::vector<unsigned int> numTemplates
+                                    = std::vector<unsigned int>(),
+                            const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
+                                                    = std::vector<AnchorCell_Frame_Kernels::Anchor>());
 
     static std::shared_ptr<ObjectDetCell> create(const std::string& name,
                                                 StimuliProvider& sp,
@@ -64,7 +60,14 @@ public:
                                                 unsigned int nbProposals,
                                                 unsigned int nbClass,
                                                 Float_T nmsThreshold = 0.5,
-                                                Float_T scoreThreshold = 0.0)
+                                                std::vector<Float_T> scoreThreshold 
+                                                    = std::vector<Float_T>(1, 0.5),
+                                                std::vector<unsigned int> numParts
+                                                        = std::vector<unsigned int>(),
+                                                std::vector<unsigned int> numTemplates
+                                                        = std::vector<unsigned int>(),
+                                                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
+                                                                        = std::vector<AnchorCell_Frame_Kernels::Anchor>())
     {
         return std::make_shared<ObjectDetCell_Frame_CUDA>(name,
                                                             sp,
@@ -73,8 +76,13 @@ public:
                                                             nbProposals,
                                                             nbClass,
                                                             nmsThreshold,
-                                                            scoreThreshold);
+                                                            scoreThreshold,
+                                                            numParts,
+                                                            numTemplates,
+                                                            anchors);
     }
+    virtual std::vector<Float_T> getAnchor(const unsigned int idx) const;
+
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -90,11 +98,28 @@ protected:
     virtual void setOutputsDims();
     CudaTensor<int> mPixelMap;
     CudaTensor<int> mPixelMapSorted;
+    CudaTensor<int> mIdxForParts;
+
+    CudaTensor<int> mScoresIndex;
+    CudaTensor<Float_T> mScoresFiltered;
+    CudaTensor<Float_T> mScores;
+
+    CudaTensor<Float_T> mROIsBBOxFinal;
+    CudaTensor<Float_T> mROIsMapAnchorsFinal;
+    CudaTensor<unsigned int> mROIsIndexFinal;
 
     CudaTensor<Float_T> mX_index;
     CudaTensor<Float_T> mY_index;
     CudaTensor<Float_T> mW_index;
     CudaTensor<Float_T> mH_index;
+    CudaTensor<Float_T> mThreshPerClass;
+
+    CudaTensor<Float_T> mPartsPrediction;
+    CudaTensor<int> mNumPartsPerClass;
+    CudaTensor<Float_T> mTemplatesPrediction;
+    CudaTensor<int> mNumTemplatesPerClass;
+    std::vector<AnchorCell_Frame_Kernels::Anchor> mAnchors;
+    CudaTensor<Float_T> mGPUAnchors;
 
     std::vector<dim3> GPU_BLOCK_GRID;
     std::vector<dim3> GPU_THREAD_GRID;

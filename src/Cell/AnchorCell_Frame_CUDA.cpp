@@ -285,7 +285,9 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                          inference,
                          inputCls->getDevicePtr(),
                          inputCoords->getDevicePtr(),
-                         mScoresCls,
+                         (mInputs.size() > 1)
+                            ? 0
+                            : mScoresCls,
                          mAnchors.getDevicePtr(),
                          mCudaGT,
                          mNbLabels.getDevicePtr(),

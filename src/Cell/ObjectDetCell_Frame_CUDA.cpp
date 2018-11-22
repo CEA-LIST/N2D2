@@ -34,12 +34,27 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const std::string& name
                                                 unsigned int nbProposals,
                                                 unsigned int nbClass,
                                                 Float_T nmsThreshold,
-                                                Float_T scoreThreshold)
+                                                std::vector<Float_T> scoreThreshold,
+                                                std::vector<unsigned int> numParts,
+                                                std::vector<unsigned int> numTemplates,
+                                                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
+
     : Cell(name, nbOutputs),
-      ObjectDetCell(name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+      ObjectDetCell(name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
+      Cell_Frame_CUDA<Float_T>(name, nbOutputs),
+      mAnchors(anchors)
 {
     // ctor
+}
+
+std::vector<N2D2::Float_T> N2D2::ObjectDetCell_Frame_CUDA::getAnchor(unsigned int idx) const
+{
+    std::vector<Float_T> vect_anchor;
+    vect_anchor.push_back(mAnchors[idx].x0);
+    vect_anchor.push_back(mAnchors[idx].y0);
+    vect_anchor.push_back(mAnchors[idx].x1);
+    vect_anchor.push_back(mAnchors[idx].y1);
+    return vect_anchor;
 }
 
 void N2D2::ObjectDetCell_Frame_CUDA::initialize()
@@ -63,16 +78,132 @@ void N2D2::ObjectDetCell_Frame_CUDA::initialize()
                             mInputs.dimB()}, -1);
 
     mPixelMap.synchronizeHToD();
+
+    mThreshPerClass.resize({mNbClass}, 0.0);
+
+    for(unsigned int i = 0; i < mNbClass; ++i)
+        mThreshPerClass(i) = mScoreThreshold[i];
+
+    mThreshPerClass.synchronizeHToD();
+    if(mFeatureMapWidth == 0)
+        mFeatureMapWidth = mStimuliProvider.getSizeX();
+
+    if(mFeatureMapHeight == 0)
+        mFeatureMapHeight = mStimuliProvider.getSizeY();
+
+    mScores.resize({mInputs[0].dimX(),
+                        mInputs[0].dimY(),
+                        mNbAnchors,
+                        mNbClass,
+                        mInputs.dimB()});
+    mScoresIndex.resize({mInputs[0].dimX(),
+                        mInputs[0].dimY(),
+                        mNbAnchors,
+                        mNbClass,
+                        mInputs.dimB()});
+    mScoresFiltered.resize({mInputs[0].dimX(),
+                        mInputs[0].dimY(),
+                        mNbAnchors,
+                        mNbClass,
+                        mInputs.dimB()});
+    mScores.synchronizeHToD();
+    mScoresIndex.synchronizeHToD();
+    mScoresFiltered.synchronizeHToD();
+
+    mROIsBBOxFinal.resize({5, mNbProposals, mInputs.dimB(), mNbClass});
+    mROIsMapAnchorsFinal.resize({5, mNbProposals, mInputs.dimB(),  mNbClass});
+    mROIsIndexFinal.resize({mInputs.dimB(),  mNbClass});
+
+    mX_index.resize({mInputs[0].dimX() * mInputs[0].dimY() * mNbAnchors * mNbClass * mInputs[0].dimB()}, 0.0);
+    mX_index.synchronizeHToD();
+    mY_index.resize({mInputs[0].dimX() * mInputs[0].dimY() * mNbAnchors * mNbClass * mInputs[0].dimB()}, 0.0);
+    mY_index.synchronizeHToD();
+    mW_index.resize({mInputs[0].dimX() * mInputs[0].dimY() * mNbAnchors * mNbClass * mInputs[0].dimB()}, 0.0);
+    mW_index.synchronizeHToD();
+    mH_index.resize({mInputs[0].dimX() * mInputs[0].dimY() * mNbAnchors * mNbClass * mInputs[0].dimB()}, 0.0);
+    mH_index.synchronizeHToD();
+
+    if(mInputs.size() == 3)
+    {
+        if(mNumParts.size() != mNbClass)
+            throw std::runtime_error("Specified NumParts must "
+                                        "have the same size than NbClass in "
+                                        " ProposalCell::Frame_CUDA " + mName);
+
+        mMaxParts = *std::max_element(mNumParts.begin(), mNumParts.end());
+
+        //Parts predictions need 2 output per detection
+        mPartsPrediction.resize({2,
+                                //std::accumulate( mNumParts.begin(), mNumParts.end(), 0),
+                                mMaxParts,
+                                mNbClass,
+                                mOutputs.dimB()});
+
+
+        if(mNumTemplates.size() != mNbClass)
+            throw std::runtime_error("Specified mNumTemplates must have"
+                                        " the same size than NbClass in "
+                                        " ProposalCell::Frame_CUDA " + mName);
+
+        mMaxTemplates = *std::max_element(mNumTemplates.begin(),
+                                            mNumTemplates.end());
+
+        //Templates predictions need 3 output per detection
+        mTemplatesPrediction.resize({3,
+                                    //std::accumulate( mNumTemplates.begin(), mNumTemplates.end(), 0),
+                                    mMaxTemplates,
+                                    mNbClass,
+                                    mOutputs.dimB()});
+        std::cout << "Layer ProposalCell::Frame_CUDA: "
+            << mName << ": Provide parts and templates prediction" << std::endl;
+
+        mNumPartsPerClass.resize({mNbClass});
+        mNumTemplatesPerClass.resize({mNbClass});
+        for(unsigned int i = 0 ; i < mNbClass; ++i)
+        {
+            mNumPartsPerClass(i) = mNumParts[i];
+            mNumTemplatesPerClass(i) = mNumTemplates[i];
+        }
+        mNumPartsPerClass.synchronizeHToD();
+        mNumTemplatesPerClass.synchronizeHToD();
+        mPartsPrediction.synchronizeHToD();
+        mTemplatesPrediction.synchronizeHToD();
+
+        mGPUAnchors.resize({4,mNbAnchors});
+        for(unsigned int i = 0; i< mNbAnchors; ++i)
+        {
+            mGPUAnchors(0, i) = mAnchors[i].x0;
+            mGPUAnchors(1, i) = mAnchors[i].y0;
+            mGPUAnchors(2, i) = mAnchors[i].x1;
+            mGPUAnchors(3, i) = mAnchors[i].y1;
+        }
+        mGPUAnchors.synchronizeHToD();
+
+    }
 }
 
 void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
 {
     mInputs.synchronizeHBasedToD();
-    std::shared_ptr<CudaDeviceTensor<Float_T> > input
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input_templates 
+        = mNumTemplates.size() > 0 ? cuda_device_tensor_cast_nocopy<Float_T>(mInputs[1])  
+                                    : std::shared_ptr<CudaDeviceTensor<Float_T> >();
+
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input_parts 
+        = mNumParts.size() > 0 ? cuda_device_tensor_cast_nocopy<Float_T>(mInputs[2]) 
+                                : std::shared_ptr<CudaDeviceTensor<Float_T> >();
+
+    std::shared_ptr<CudaDeviceTensor<Float_T> > input0
             = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
 
-    mOutputs.synchronizeDToH();
     const unsigned int inputBatchOffset = mInputs[0].dimX()*mInputs[0].dimY()*mInputs[0].dimZ();
+
+    const double xRatio = std::ceil(mFeatureMapWidth / mInputs[0].dimX());
+    const double yRatio = std::ceil(mFeatureMapHeight / mInputs[0].dimY());
+    const float xOutputRatio = mStimuliProvider.getSizeX() / (float) mFeatureMapWidth;
+    const float yOutputRatio = mStimuliProvider.getSizeY() / (float) mFeatureMapHeight;
+
+
 
     mPixelMap.synchronizeDToH();
 
@@ -96,54 +227,44 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
     cudaSReduceIndex(  mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors,
                        inputBatchOffset,
                        mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors*mNbClass,
-                       mScoreThreshold,
-                       input->getDevicePtr(),
+                       mThreshPerClass.getDevicePtr(),
+                       input0->getDevicePtr(),
                        mPixelMap.getDevicePtr(),
+                       mScores.getDevicePtr(),
                        GPU_BLOCK_GRID[0],
                        GPU_THREAD_GRID[0]);
+    std::vector<std::vector <unsigned int> > count(mInputs.dimB(),
+                                                   std::vector<unsigned int>(mNbClass));
 
     for(unsigned int batchPos = 0; batchPos < mInputs.dimB(); ++batchPos)
     {
-        unsigned int pixelOffset = mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors*mNbClass*batchPos;
 
         for(unsigned int cls = 0; cls < mNbClass; ++cls)
         {
-            copy_if( mPixelMap.getDevicePtr() + pixelOffset,
-                     mPixelMapSorted.getDevicePtr() + pixelOffset,
-                     mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors);
 
-            pixelOffset += mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors;
+            const int pixelOffset = cls*mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors 
+                                        + batchPos*mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors*mNbClass;
+
+            const int nbMapDet = copy_if_INT32( mPixelMap.getDevicePtr() + pixelOffset,
+                                            mPixelMapSorted.getDevicePtr() + pixelOffset,
+                                            mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors);
+
+            const int nbScoreDet = copy_if_FP32(mScores.getDevicePtr() + pixelOffset,
+                                                mScoresFiltered.getDevicePtr() + pixelOffset,
+                                                mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors);
+
+            if (nbScoreDet != nbMapDet)
+                throw std::runtime_error(
+                    "Dont find the same number of valid boxes");
+
+            count[batchPos][cls] = nbMapDet;
         }
     }
+    std::vector< std::vector< std::vector<BBox_T >>> ROIs(  mNbClass, 
+                                                            std::vector< std::vector <BBox_T>>(mInputs.dimB()));
 
-    mPixelMapSorted.synchronizeDToH();
-    std::vector<std::vector <unsigned int> > count(mInputs[0].dimB(),
-                                                   std::vector<unsigned int>(mNbClass));
-    unsigned int totalValidPixel = 0;
-    for(unsigned int cls = 0; cls < mNbClass; ++cls)
-    {
-        for(unsigned int batchPos = 0; batchPos < mInputs.dimB(); ++batchPos)
-        {
-            for(unsigned int anchor = 0; anchor < mNbAnchors; ++anchor)
-            {
-                for(unsigned int y = 0; y < mInputs[0].dimY(); ++y)
-                {
-                    for(unsigned int x = 0; x < mInputs[0].dimX(); ++x)
-                    {
-                        if(mPixelMapSorted(x, y, anchor, cls, batchPos) > -1)
-                        {
-                            ++count[batchPos][cls];
-                        }
-                        else
-                            goto restartLoop;
-
-                    }
-                }
-            }
-            restartLoop:
-            totalValidPixel += count[batchPos][cls];
-        }
-    }
+    std::vector< std::vector< std::vector<BBox_T >>> ROIsAnchors(   mNbClass, 
+                                                                    std::vector< std::vector <BBox_T>>(mInputs.dimB()));
 
     for(unsigned int cls = 0; cls < mNbClass; ++cls)
     {
@@ -153,296 +274,222 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
         {
             const int batchOffset = batchPos*inputBatchOffset;
 
-            unsigned int totalIdxPerClass = 0;
             if(count[batchPos][cls] > 0)
             {
                 const int offsetBase = mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY();
 
-                mPixelMapSorted.synchronizeHToD(0,
-                                                0,
-                                                0,
-                                                cls,
-                                                batchPos, mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY());
+                const int offsetCpy = cls*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY()
+                                        + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY();
 
-                mX_index.synchronizeDToH();
-                mX_index.resize({count[batchPos][cls]}, -1);
-                mX_index.assign({count[batchPos][cls]}, -1);
+                unsigned int nbElementNMS =  count[batchPos][cls];
 
-                mY_index.synchronizeDToH();
-                mY_index.resize({count[batchPos][cls]}, -1);
-                mY_index.assign({count[batchPos][cls]}, -1);
+                thrust_sort_keys_INT32(     mScoresFiltered.getDevicePtr() + offsetCpy,
+                                            mPixelMapSorted.getDevicePtr() + offsetCpy,
+                                            nbElementNMS,
+                                            0);
 
-                mW_index.synchronizeDToH();
-                mW_index.resize({count[batchPos][cls]}, -1);
-                mW_index.assign({count[batchPos][cls]}, -1);
+                thrust_gather_INT32(mPixelMapSorted.getDevicePtr() + offsetCpy,
+                                    input0->getDevicePtr() + offsetBase + offset + batchOffset,
+                                    mX_index.getDevicePtr(),
+                                    count[batchPos][cls],
+                                    0,
+                                    0);
 
-                mH_index.synchronizeDToH();
-                mH_index.resize({count[batchPos][cls]}, -1);
-                mH_index.assign({count[batchPos][cls]}, -1);
+                thrust_gather_INT32(mPixelMapSorted.getDevicePtr() + offsetCpy,
+                                    input0->getDevicePtr() + 2*offsetBase + offset + batchOffset,
+                                    mY_index.getDevicePtr(),
+                                    count[batchPos][cls],
+                                    0,
+                                    0);
 
-                mX_index.synchronizeHToD();
-                mY_index.synchronizeHToD();
-                mW_index.synchronizeHToD();
-                mH_index.synchronizeHToD();
+                thrust_gather_INT32(mPixelMapSorted.getDevicePtr() + offsetCpy,
+                                    input0->getDevicePtr() + 3*offsetBase + offset + batchOffset,
+                                    mW_index.getDevicePtr(),
+                                    count[batchPos][cls],
+                                    0,
+                                    0);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
-                            input->getDevicePtr() + offsetBase + offset + batchOffset,
-                            mX_index.getDevicePtr(),
-                            count[batchPos][cls],
-                            0,
-                            0);
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
-                            input->getDevicePtr() + 2*offsetBase + offset + batchOffset,
-                            mY_index.getDevicePtr(),
-                            count[batchPos][cls],
-                            0,
-                            0);
+                thrust_gather_INT32(mPixelMapSorted.getDevicePtr() + offsetCpy,
+                                    input0->getDevicePtr() + 4*offsetBase + offset + batchOffset,
+                                    mH_index.getDevicePtr(),
+                                    count[batchPos][cls],
+                                    0,
+                                    0);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
-                            input->getDevicePtr() + 3*offsetBase + offset + batchOffset,
-                            mW_index.getDevicePtr(),
-                            count[batchPos][cls],
-                            0,
-                            0);
+                mX_index.synchronizeDToH(0, nbElementNMS);
+                mY_index.synchronizeDToH(0, nbElementNMS);
+                mW_index.synchronizeDToH(0, nbElementNMS);
+                mH_index.synchronizeDToH(0, nbElementNMS);
 
-                thrust_gather(mPixelMapSorted.getDevicePtr() + offset + batchPos*mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY(),
-                            input->getDevicePtr() + 4*offsetBase + offset + batchOffset,
-                            mH_index.getDevicePtr(),
-                            count[batchPos][cls],
-                            0,
-                            0);
+                mPixelMapSorted.synchronizeDToH(offsetCpy, nbElementNMS);
+                mScoresFiltered.synchronizeDToH(offsetCpy, nbElementNMS);
 
-                mX_index.synchronizeDToH();
-                mY_index.synchronizeDToH();
-                mW_index.synchronizeDToH();
-                mH_index.synchronizeDToH();
-
-
-                std::vector<BBox_T> ROIs;
-                for(unsigned int idx = 0; idx < count[batchPos][cls]; ++idx)
+                for(unsigned int idx = 0; idx < nbElementNMS; ++idx)
                 {
-                    ROIs.push_back(BBox_T(  mX_index(idx),
-                                            mY_index(idx),
-                                            mW_index(idx),
-                                            mH_index(idx)));
+
+                    ROIs[cls][batchPos].push_back(BBox_T(  mX_index(idx),
+                                                           mY_index(idx),
+                                                           mW_index(idx),
+                                                           mH_index(idx),
+                                                           mScoresFiltered(idx + offsetCpy)));
+
+                    ROIsAnchors[cls][batchPos].push_back(BBox_T(  mPixelMapSorted(idx + offsetCpy)%mInputs[0].dimX(),
+                                                                  (mPixelMapSorted(idx + offsetCpy)/mInputs[0].dimX())%mInputs[0].dimY(),
+                                                                  (mPixelMapSorted(idx + offsetCpy)/(mInputs[0].dimX()*mInputs[0].dimY()))%mNbAnchors,
+                                                                  0.0,
+                                                                  0.0));
                 }
+                std::vector<BBox_T> final_rois;
+                std::vector<BBox_T> final_anchors;
 
-                // Non-Maximum Suppression (NMS)
-                for (unsigned int i = 0; i < ROIs.size() - 1; ++i)
-                {
-                    const Float_T x0 = ROIs[i].x;
-                    const Float_T y0 = ROIs[i].y;
-                    const Float_T w0 = ROIs[i].w;
-                    const Float_T h0 = ROIs[i].h;
+                BBox_T next_candidate;
+                BBox_T next_anchors;
+                std::reverse(ROIs[cls][batchPos].begin(),ROIs[cls][batchPos].end());
+                std::reverse(ROIsAnchors[cls][batchPos].begin(),ROIsAnchors[cls][batchPos].end());
 
-                    for (unsigned int j = i + 1; j < ROIs.size(); ) {
+                while (final_rois.size() < mNbProposals && !ROIs[cls][batchPos].empty()) {
+                    next_candidate = ROIs[cls][batchPos].back();
+                    ROIs[cls][batchPos].pop_back();
+                    next_anchors = ROIsAnchors[cls][batchPos].back();
+                    ROIsAnchors[cls][batchPos].pop_back();
 
-                        const Float_T x = ROIs[j].x;
-                        const Float_T y = ROIs[j].y;
-                        const Float_T w = ROIs[j].w;
-                        const Float_T h = ROIs[j].h;
+                    bool should_select = true;
+                    const float x0 = next_candidate.x;
+                    const float y0 = next_candidate.y;
+                    const float w0 = next_candidate.w;
+                    const float h0 = next_candidate.h;
 
-                        const Float_T interLeft = std::max(x0, x);
-                        const Float_T interRight = std::min(x0 + w0, x + w);
-                        const Float_T interTop = std::max(y0, y);
-                        const Float_T interBottom = std::min(y0 + h0, y + h);
+                    for (int j = static_cast<int>(final_rois.size()) - 1; j >= 0; --j) {
+
+                        const float x = final_rois[j].x;
+                        const float y = final_rois[j].y;
+                        const float w = final_rois[j].w;
+                        const float h = final_rois[j].h;
+                        const float interLeft = std::max(x0, x);
+                        const float interRight = std::min(x0 + w0, x + w);
+                        const float interTop = std::max(y0, y);
+                        const float interBottom = std::min(y0 + h0, y + h);
 
                         if (interLeft < interRight && interTop < interBottom) {
-                            const Float_T interArea = (interRight - interLeft)
+                            const float interArea = (interRight - interLeft)
                                                         * (interBottom - interTop);
-                            const Float_T unionArea = w0 * h0 + w * h - interArea;
-                            const Float_T IoU = interArea / unionArea;
+                            const float unionArea = w0 * h0 + w * h - interArea;
+                            const float IoU = interArea / unionArea;
 
                             if (IoU > mNMS_IoU_Threshold) {
-                                // Suppress ROI
-                                ROIs.erase(ROIs.begin() + j);
-                                continue;
+                                should_select = false;
+                                break;
+
                             }
                         }
-                        ++j;
+
+                    }
+
+                    if (should_select) {
+                        final_rois.push_back(next_candidate);
+                        final_anchors.push_back(next_anchors);
                     }
                 }
+                ROIs[cls][batchPos].resize(final_rois.size());
+                ROIsAnchors[cls][batchPos].resize(final_anchors.size());
 
-                for(unsigned int i = 0; i < ROIs.size() && i < mNbProposals; ++i)
+                for(unsigned int proposal = 0; proposal < final_rois.size(); ++ proposal )
                 {
-                    const unsigned int n = i + cls*mNbProposals + batchPos*mNbProposals*mNbClass;
-                    mOutputs(0, n) = ROIs[i].x;
-                    mOutputs(1, n) = ROIs[i].y;
-                    mOutputs(2, n) = ROIs[i].w;
-                    mOutputs(3, n) = ROIs[i].h;
-                    mOutputs(4, n) = (float) cls;
-                    ++totalIdxPerClass;
-
+                    mROIsBBOxFinal({0, proposal, batchPos, cls}) = final_rois[proposal].x;
+                    mROIsBBOxFinal({1, proposal, batchPos, cls}) = final_rois[proposal].y;
+                    mROIsBBOxFinal({2, proposal, batchPos, cls}) = final_rois[proposal].w;
+                    mROIsBBOxFinal({3, proposal, batchPos, cls}) = final_rois[proposal].h;
+                    mROIsBBOxFinal({4, proposal, batchPos, cls}) = final_rois[proposal].s;
+                    mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = final_anchors[proposal].x;
+                    mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = final_anchors[proposal].y;
+                    mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = final_anchors[proposal].w;
+                    mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = final_anchors[proposal].h;
+                    mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = final_anchors[proposal].s;
                 }
-            }
-            for(unsigned int rest = totalIdxPerClass; rest < mNbProposals; ++rest)
-            {
-                    const unsigned int n = rest + cls*mNbProposals + batchPos*mNbProposals*mNbClass;
-                    mOutputs(0, n) = 0.0;
-                    mOutputs(1, n) = 0.0;
-                    mOutputs(2, n) = 0.0;
-                    mOutputs(3, n) = 0.0;
-                    mOutputs(4, n) = 0.0;
+                for(unsigned int proposal = final_rois.size(); proposal < mNbProposals; ++ proposal )
+                {
+                    mROIsBBOxFinal({0, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({1, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({2, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({3, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({4, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = 0.0;
+                }
 
+                mROIsIndexFinal(batchPos, cls) = final_rois.size();
+
+            }
+            else{
+                mROIsIndexFinal(batchPos, cls) = 0;
+                for(unsigned int proposal = 0; proposal < mNbProposals; ++ proposal )
+                {
+                    mROIsBBOxFinal({0, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({1, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({2, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({3, proposal, batchPos, cls}) = 0.0;
+                    mROIsBBOxFinal({4, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = 0.0;
+                    mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = 0.0;
+                }
             }
 
         }
     }
 
-    mOutputs.synchronizeHToD();
 
-    mDiffInputs.clearValid();
-/*
+    mROIsIndexFinal.synchronizeHToD();
+    mROIsBBOxFinal.synchronizeHToD();
+    mROIsMapAnchorsFinal.synchronizeHToD();
+
     for(unsigned int cls = 0; cls < mNbClass; ++cls)
     {
-        const int offset = cls*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY();
 
-        for(unsigned int batchPos = 0; batchPos < mInputs.dimB(); ++batchPos)
-        {
-            for(unsigned int i = 0; i < mPixelMapSorted.size(); ++i)
-            {
-                if(mPixelMapSorted(i) > -1)
-                    ++count;
-                else
-                    break;
-            }
-            unsigned int totalIdxPerClass = 0;
-            if(count > 0)
-            {
-                const int offsetBase = mNbClass*mNbAnchors*mInputs[0].dimX()*mInputs[0].dimY();
+        dim3 outputs_blocks = { (unsigned int) std::ceil((float)mNbProposals/32.0),
+                                std::max(mNumParts[cls], mNumTemplates[cls]),
+                                (unsigned int) mInputs[0].dimB() };
 
-                mPixelMapSorted.resize({count});
-                mPixelMapSorted.synchronizeHToD();
+        dim3 outputs_threads = {32, 1, 1};
 
-                mX_index.synchronizeDToH();
-                mX_index.resize({count}, -1);
-                mX_index.assign({count}, -1);
-
-                mY_index.synchronizeDToH();
-                mY_index.resize({count}, -1);
-                mY_index.assign({count}, -1);
-
-                mW_index.synchronizeDToH();
-                mW_index.resize({count}, -1);
-                mW_index.assign({count}, -1);
-
-                mH_index.synchronizeDToH();
-                mH_index.resize({count}, -1);
-                mH_index.assign({count}, -1);
-
-                mX_index.synchronizeHToD();
-                mY_index.synchronizeHToD();
-                mW_index.synchronizeHToD();
-                mH_index.synchronizeHToD();
-
-                thrust_gather(mPixelMapSorted.getDevicePtr(),
-                            mInputs[0].getDevicePtr() + offsetBase + offset,
-                            mX_index.getDevicePtr(),
-                            count,
-                            0,
-                            0);
-                thrust_gather(mPixelMapSorted.getDevicePtr(),
-                            mInputs[0].getDevicePtr() + 2*offsetBase + offset,
-                            mY_index.getDevicePtr(),
-                            count,
-                            0,
-                            0);
-
-                thrust_gather(mPixelMapSorted.getDevicePtr(),
-                            mInputs[0].getDevicePtr() + 3*offsetBase + offset,
-                            mW_index.getDevicePtr(),
-                            count,
-                            0,
-                            0);
-
-                thrust_gather(mPixelMapSorted.getDevicePtr(),
-                            mInputs[0].getDevicePtr() + 4*offsetBase + offset,
-                            mH_index.getDevicePtr(),
-                            count,
-                            0,
-                            0);
-
-                mX_index.synchronizeDToH();
-                mY_index.synchronizeDToH();
-                mW_index.synchronizeDToH();
-                mH_index.synchronizeDToH();
-
-
-                std::vector<BBox_T> ROIs;
-                for(unsigned int idx = 0; idx < count; ++idx)
-                {
-                    ROIs.push_back(BBox_T(  mX_index(idx),
-                                            mY_index(idx),
-                                            mW_index(idx),
-                                            mH_index(idx)));
-                }
-
-                // Non-Maximum Suppression (NMS)
-                for (unsigned int i = 0; i < ROIs.size() - 1; ++i)
-                {
-                    const Float_T x0 = ROIs[i].x;
-                    const Float_T y0 = ROIs[i].y;
-                    const Float_T w0 = ROIs[i].w;
-                    const Float_T h0 = ROIs[i].h;
-
-                    for (unsigned int j = i + 1; j < ROIs.size(); ) {
-
-                        const Float_T x = ROIs[j].x;
-                        const Float_T y = ROIs[j].y;
-                        const Float_T w = ROIs[j].w;
-                        const Float_T h = ROIs[j].h;
-
-                        const Float_T interLeft = std::max(x0, x);
-                        const Float_T interRight = std::min(x0 + w0, x + w);
-                        const Float_T interTop = std::max(y0, y);
-                        const Float_T interBottom = std::min(y0 + h0, y + h);
-
-                        if (interLeft < interRight && interTop < interBottom) {
-                            const Float_T interArea = (interRight - interLeft)
-                                                        * (interBottom - interTop);
-                            const Float_T unionArea = w0 * h0 + w * h - interArea;
-                            const Float_T IoU = interArea / unionArea;
-
-                            if (IoU > mNMS_IoU_Threshold) {
-                                // Suppress ROI
-                                ROIs.erase(ROIs.begin() + j);
-                                continue;
-                            }
-                        }
-                        ++j;
-                    }
-                }
-
-                for(unsigned int i = 0; i < ROIs.size() && i < mNbProposals; ++i)
-                {
-                    const unsigned int n = i + cls*mNbProposals;
-                    mOutputs(0, n) = ROIs[i].x;
-                    mOutputs(1, n) = ROIs[i].y;
-                    mOutputs(2, n) = ROIs[i].w;
-                    mOutputs(3, n) = ROIs[i].h;
-                    mOutputs(4, n) = (float) cls;
-                    ++totalIdxPerClass;
-
-                }
-            }
-            for(unsigned int rest = totalIdxPerClass; rest < mNbProposals; ++rest)
-            {
-                    const unsigned int n = rest + cls*mNbProposals;
-                    mOutputs(0, n) = 0.0;
-                    mOutputs(1, n) = 0.0;
-                    mOutputs(2, n) = 0.0;
-                    mOutputs(3, n) = 0.0;
-                    mOutputs(4, n) = 0.0;
-
-            }
-        }
-        mOutputs.synchronizeHToD();
+        cudaS_SSD_output_gathering( mInputs.dimB(),
+                                    mNbClass,
+                                    mNbAnchors,
+                                    mInputs[0].dimX(),
+                                    mInputs[0].dimY(),
+                                    mNbProposals,
+                                    mROIsIndexFinal.getDevicePtr() + cls*mInputs.dimB(),
+                                    cls,
+                                    std::accumulate(mNumParts.begin(), mNumParts.end(), 0),
+                                    std::accumulate(mNumTemplates.begin(), mNumTemplates.end(), 0),
+                                    mMaxParts,
+                                    mMaxTemplates,
+                                    std::accumulate(mNumParts.begin(), mNumParts.begin() + cls, 0) * 2 * mNbAnchors,
+                                    std::accumulate(mNumTemplates.begin(), mNumTemplates.begin() + cls, 0) * 3 * mNbAnchors,
+                                    mNumParts[cls],
+                                    mNumTemplates[cls],
+                                    xRatio,
+                                    yRatio,
+                                    xOutputRatio,
+                                    yOutputRatio,
+                                    mROIsBBOxFinal.getDevicePtr() + cls*mInputs.dimB()*5*mNbProposals,
+                                    mROIsMapAnchorsFinal.getDevicePtr() + cls*mInputs.dimB()*5*mNbProposals,
+                                    mGPUAnchors.getDevicePtr(),
+                                    input_parts->getDevicePtr(),
+                                    input_templates->getDevicePtr(),
+                                    mOutputs.getDevicePtr(),
+                                    outputs_blocks,
+                                    outputs_threads);
 
     }
-
-
+    Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();
-*/
+
 }
 
 void N2D2::ObjectDetCell_Frame_CUDA::backPropagate()

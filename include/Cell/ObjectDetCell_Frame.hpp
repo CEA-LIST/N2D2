@@ -31,18 +31,6 @@
 namespace N2D2 {
 class ObjectDetCell_Frame : public virtual ObjectDetCell, public Cell_Frame<Float_T> {
 public:
-    struct BBox_T {
-        float x;
-        float y;
-        float w;
-        float h;
-
-        BBox_T() {}
-        BBox_T(float x_, float y_, float w_, float h_):
-            x(x_), y(y_), w(w_), h(h_) {}
-    };
-
-
     ObjectDetCell_Frame(const std::string& name,
                         StimuliProvider& sp,
                         const unsigned int nbOutputs,
@@ -50,7 +38,14 @@ public:
                         unsigned int nbProposals,
                         unsigned int nbClass,
                         Float_T nmsThreshold = 0.5,
-                        Float_T scoreThreshold = 0.0);
+                        std::vector<Float_T> scoreThreshold 
+                                                    = std::vector<Float_T>(1, 0.5),
+                        std::vector<unsigned int> numParts
+                                                = std::vector<unsigned int>(),
+                        std::vector<unsigned int> numTemplates
+                                                = std::vector<unsigned int>(),
+                        const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
+                                                = std::vector<AnchorCell_Frame_Kernels::Anchor>());
 
     static std::shared_ptr<ObjectDetCell> create(const std::string& name,
                                                 StimuliProvider& sp,
@@ -59,7 +54,14 @@ public:
                                                 unsigned int nbProposals,
                                                 unsigned int nbClass,
                                                 Float_T nmsThreshold = 0.5,
-                                                Float_T scoreThreshold = 0.0)
+                                                std::vector<Float_T> scoreThreshold 
+                                                    = std::vector<Float_T>(1, 0.5),
+                                                std::vector<unsigned int> numParts
+                                                        = std::vector<unsigned int>(),
+                                                std::vector<unsigned int> numTemplates
+                                                        = std::vector<unsigned int>(),
+                                                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
+                                                                        = std::vector<AnchorCell_Frame_Kernels::Anchor>())
     {
         return std::make_shared<ObjectDetCell_Frame>(name,
                                                     sp,
@@ -68,8 +70,13 @@ public:
                                                     nbProposals,
                                                     nbClass,
                                                     nmsThreshold,
-                                                    scoreThreshold);
+                                                    scoreThreshold,
+                                                    numParts,
+                                                    numTemplates,
+                                                    anchors);
     }
+    virtual std::vector<Float_T> getAnchor(const unsigned int idx) const;
+
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -83,6 +90,9 @@ public:
 
 protected:
     virtual void setOutputsDims();
+    Tensor<Float_T> mPartsPrediction;
+    Tensor<Float_T> mTemplatesPrediction;
+    std::vector<AnchorCell_Frame_Kernels::Anchor> mAnchors;
 
 private:
     static Registrar<ObjectDetCell> mRegistrar;

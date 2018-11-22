@@ -39,7 +39,7 @@ namespace AnchorCell_Frame_Kernels {
         CUDA_HOSTDEV BBox_T(float x_, float y_, float w_, float h_):
             x(x_), y(y_), w(w_), h(h_) {}
     };
-
+    
     struct Anchor {
         enum Anchoring {
             TopLeft,

@@ -111,7 +111,6 @@ __global__ void cudaSAnchorPropagate_kernel(
                                                     + xa;
 
                 const unsigned int addrClsBase = batchClsOffset 
-                                                    + scoresCls * addrStep
                                                     + k * addrStep 
                                                     + ya * outputsWidth 
                                                     + xa;
@@ -142,10 +141,10 @@ __global__ void cudaSAnchorPropagate_kernel(
                     // Score
                     const float cls = inputsCls[addrClsBase];
                     // Parameterized coordinates
-                    const float txbb = inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep ];
-                    const float tybb = inputsCoord[addrCoordBase + (1 + scoresCls) * nbAnchors * addrStep];
-                    const float twbb = inputsCoord[addrCoordBase + (2 + scoresCls) * nbAnchors * addrStep];
-                    const float thbb = inputsCoord[addrCoordBase + (3 + scoresCls ) * nbAnchors * addrStep];
+                    const float txbb = inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep];
+                    const float tybb = inputsCoord[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep];
+                    const float twbb = inputsCoord[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep];
+                    const float thbb = inputsCoord[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep];
 
                     // Predicted box center coordinates
                     const float xbbc = ((flip) ? -txbb : txbb) * wa
@@ -236,7 +235,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                     outputs[addrBase + 4 * nbAnchors * addrStep] = hbb;
                     outputs[addrBase + 5 * nbAnchors * addrStep] = maxIoU_;
 
-                    argMaxIoU[batchClsOffset 
+                    argMaxIoU[batchClsOffset/nbTotalCls 
                                 + k * addrStep 
                                 + ya * outputsWidth 
                                 + xa] = argMaxIoU_;
