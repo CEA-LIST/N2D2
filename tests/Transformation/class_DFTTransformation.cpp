@@ -21,6 +21,7 @@
 #include "Transformation/DFTTransformation.hpp"
 #include "containers/Tensor.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -92,6 +93,7 @@ TEST(DFTTransformation, apply__2D)
     std::ostringstream fileName;
     fileName << "DFTTransformation_apply__2D.png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), magNorm))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

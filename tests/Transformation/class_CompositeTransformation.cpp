@@ -24,6 +24,7 @@
 #include "Transformation/FlipTransformation.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -61,6 +62,7 @@ TEST(CompositeTransformation, apply)
     std::ostringstream fileName;
     fileName << "CompositeTransformation_apply[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());
@@ -111,6 +113,7 @@ TEST(CompositeTransformation, apply__random)
     std::ostringstream fileName;
     fileName << "CompositeTransformation_apply__random[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

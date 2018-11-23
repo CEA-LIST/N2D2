@@ -21,6 +21,7 @@
 #include "ROI/RectangularROI.hpp"
 #include "Transformation/PadCropTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -75,6 +76,7 @@ TEST_DATASET(PadCropTransformation,
     fileName << "PadCropTransformation_apply(W" << width << "_H" << height
              << "_P" << paddingBackground << ")[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

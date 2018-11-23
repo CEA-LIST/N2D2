@@ -21,6 +21,7 @@
 #include "ROI/RectangularROI.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -63,6 +64,7 @@ TEST_DATASET(RescaleTransformation,
     fileName << "RescaleTransformation_apply(W" << width << "_H" << height
              << "_K" << keepAspectRatio << ")[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

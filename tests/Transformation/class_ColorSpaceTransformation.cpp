@@ -21,6 +21,7 @@
 #include "ROI/RectangularROI.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -65,6 +66,7 @@ TEST_DATASET(ColorSpaceTransformation,
     fileName << "ColorSpaceTransformation_apply(C" << colorSpace
              << ")[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

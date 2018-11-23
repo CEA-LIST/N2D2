@@ -21,6 +21,7 @@
 #include "ROI/RectangularROI.hpp"
 #include "Transformation/FlipTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -63,6 +64,7 @@ TEST_DATASET(FlipTransformation,
     fileName << "FlipTransformation_apply(H" << horizontalFlip << "_V"
              << verticalFlip << ")[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

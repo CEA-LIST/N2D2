@@ -20,6 +20,7 @@
 
 #include "Transformation/NormalizeTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -61,6 +62,7 @@ TEST_DATASET(NormalizeTransformation,
     fileName << "NormalizeTransformation_apply(C" << color << "_N" << norm
              << "_NV" << normValue << ").png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());
@@ -101,6 +103,7 @@ TEST_DATASET(NormalizeTransformation,
     fileName << "NormalizeTransformation_apply__MinMax(C" << color << "_NMIN"
              << normMin << "_NMAX" << normMax << ").png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

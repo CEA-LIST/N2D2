@@ -21,6 +21,7 @@
 #include "ROI/RectangularROI.hpp"
 #include "Transformation/TrimTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -76,6 +77,7 @@ TEST_DATASET(TrimTransformation,
     fileName << "TrimTransformation_apply(C" << color << "_N" << nbLevels
              << "_M" << method << ")[frame].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

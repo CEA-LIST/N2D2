@@ -20,6 +20,7 @@
 
 #include "Transformation/ThresholdTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -62,6 +63,7 @@ TEST_DATASET(ThresholdTransformation,
     fileName << "ThresholdTransformation_apply(T" << threshold << "_O"
              << operation << "_M" << maxValue << ").png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

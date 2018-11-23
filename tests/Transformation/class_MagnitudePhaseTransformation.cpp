@@ -22,6 +22,7 @@
 #include "Transformation/MagnitudePhaseTransformation.hpp"
 #include "containers/Tensor.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -94,6 +95,7 @@ TEST(MagnitudePhaseTransformation, apply__2D)
     std::ostringstream fileName;
     fileName << "MagnitudePhaseTransformation_apply__2D[mag].png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), magNorm))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());

@@ -20,6 +20,7 @@
 
 #include "Transformation/FilterTransformation.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -54,6 +55,7 @@ TEST_DATASET(FilterTransformation,
     fileName << "FilterTransformation_apply__GaborKernel(C" << color << "_T"
              << theta << ").png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());
@@ -93,6 +95,7 @@ TEST_DATASET(FilterTransformation,
     fileName << "FilterTransformation_apply__GaussianKernel(C" << color << "_S"
              << sigma << ").png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());
