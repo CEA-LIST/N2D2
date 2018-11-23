@@ -20,6 +20,9 @@
 */
 
 #include "n2d2_cudnn_inference.hpp"
+#include <iostream>
+#include <stdexcept>
+#include <vector>
 
 n2d2_cudnn_inference::n2d2_cudnn_inference( unsigned int batchSize,
                                                   unsigned int devID,
