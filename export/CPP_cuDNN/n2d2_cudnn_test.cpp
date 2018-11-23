@@ -20,10 +20,15 @@
 */
 
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <dirent.h>
+#include <fstream>
 #include <iomanip>
-#include <sys/time.h>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 // For the Windows version of dirent.h (http://www.softagalleria.net/dirent.php)
 #undef min
