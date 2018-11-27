@@ -21,6 +21,7 @@
 #include "Generator/ChannelExtractionTransformationGenerator.hpp"
 #include "Generator/TransformationGenerator.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 
@@ -64,6 +65,7 @@ TEST(TransformationGenerator,
     std::ostringstream fileName;
     fileName << "TransformationGenerator_ChannelExtractionTransformation.png";
 
+    Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
         throw std::runtime_error("Unable to write image: Transformation/"
                                  + fileName.str());
