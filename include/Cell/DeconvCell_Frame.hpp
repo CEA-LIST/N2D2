@@ -108,7 +108,6 @@ public:
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
-    void exportSolverParameters(const std::string& fileName) const;
     virtual ~DeconvCell_Frame();
 
 protected:
