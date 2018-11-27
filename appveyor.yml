@@ -51,8 +51,8 @@ before_build:
   - cmd: SET PATH=%OPENCV_BIN%;%PATH%
 
 build_script:
-  - cmake --build . --config %CONFIGURATION%
-  - cmake --build . --config %CONFIGURATION% --target tests
+  - cmake --build . --config %CONFIGURATION% -- -m
+  - cmake --build . --config %CONFIGURATION% --target tests -- -m
 
 test_script:
   - ctest -j 4 -C %CONFIGURATION% --output-on-failure
