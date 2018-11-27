@@ -34,22 +34,22 @@ namespace N2D2 {
     class RNNInOutType {
         public:
 
-        RNNInOutType(
-                    size_t n,
-                    const std::vector<int>& dim,
-                    const std::vector<int>& stride){
+        RNNInOutType(size_t n,
+                     const std::vector<int>& dim,
+                     const std::vector<int>& stride)
+        {
             descs.resize(n);
-            for (auto i = 0; i < abs(n); ++i) {
-            cudnnCreateTensorDescriptor(&descs[i]);
-            cudnnSetTensorNdDescriptor(
-                                        descs[i],
-                                        CudaContext::data_type<T>::value,
-                                        dim.size(),
-                                        dim.data(),
-                                        stride.data());
+            for (size_t i = 0; i < n; ++i) {
+                cudnnCreateTensorDescriptor(&descs[i]);
+                cudnnSetTensorNdDescriptor(descs[i],
+                                           CudaContext::data_type<T>::value,
+                                           dim.size(),
+                                           dim.data(),
+                                           stride.data());
             }
         };
-        ~RNNInOutType(){
+
+        ~RNNInOutType() {
             for (auto desc : descs) {
                 cudnnDestroyTensorDescriptor(desc);
             }
