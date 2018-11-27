@@ -25,15 +25,6 @@ platform: x64
 environment:
   DIRENT_INCLUDE_DIR: C:\projects\dirent\include
   matrix:
-#  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-#    BUILD_TARGET: Visual Studio 12 2013 Win64
-#    OPENCV_BIN: C:\tools\opencv\build\x64\vc12\bin
-#    OpenCV_DIR: C:\tools\opencv\build
-#  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-#    BUILD_TARGET: Visual Studio 12 2013 Win64
-#    OPENCV_BIN: C:\tools\opencv\build\x64\vc12\bin
-#    OpenCV_DIR: C:\tools\opencv\build
-#    USE_CUDA: 1
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     BUILD_TARGET: Visual Studio 14 2015 Win64
     OPENCV_BIN: C:\tools_vc14\opencv\build\x64\vc14\bin
@@ -56,12 +47,16 @@ before_build:
   - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
   - mkdir build
   - cd build
-  - cmake .. -G"%BUILD_TARGET%"
+  - cmake -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G"%BUILD_TARGET%" .. 
   - cmd: SET PATH=%OPENCV_BIN%;%PATH%
+
+build_script:
+  - cmake --build . --config %CONFIGURATION%
+  - cmake --build . --config %CONFIGURATION% --target tests
+
+test_script:
+  - ctest -j 4 -C %CONFIGURATION%
 
 matrix:
   fast_finish: true
 
-build:
-  parallel: true
-  verbosity: minimal

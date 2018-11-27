@@ -23,9 +23,15 @@ if [ -n "$USE_CMAKE" ] ; then
     mkdir build
     cd build
     if [ -n "$CHECK_COVERAGE" ] ; then
-        cmake .. -DCHECK_COVERAGE=ON && make -j $NUM_THREADS
+        cmake -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_FLAGS="-Werror" ..
+        make -j $NUM_THREADS
+        make -j $NUM_THREADS tests
+        ctest -j 4
     else
-        cmake .. && make -j $NUM_THREADS
+        cmake -DCMAKE_CXX_FLAGS="-Werror" ..
+        make -j $NUM_THREADS
+        make -j $NUM_THREADS tests
+        ctest -j 4
     fi
 else
     ARGS=""
