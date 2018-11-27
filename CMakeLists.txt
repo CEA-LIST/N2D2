@@ -145,7 +145,7 @@ if(MSVC)
     endif()
 
     include(CheckIncludeFile)
-    check_include_file_cxx(dirent.h HAVE_DIRENT_H)
+    check_include_file(dirent.h HAVE_DIRENT_H)
 
     if (NOT HAVE_DIRENT_H)
         message(FATAL_ERROR "dirent.h required - you can download it and "
