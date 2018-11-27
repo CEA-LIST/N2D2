@@ -2,7 +2,7 @@
 include(FindPackageHandleStandardArgs)
 
 find_path(CUDNN_INCLUDE_DIRS cudnn.h HINTS ${CUDA_TOOLKIT_ROOT_DIR} PATH_SUFFIXES include)
-find_library(CUDNN_LIBRARY NAMES cudnn HINTS ${CUDA_TOOLKIT_ROOT_DIR} PATH_SUFFIXES lib lib64)
+find_library(CUDNN_LIBRARY NAMES cudnn HINTS ${CUDA_TOOLKIT_ROOT_DIR} PATH_SUFFIXES lib lib64 lib/x64)
 
 find_package_handle_standard_args(CuDNN DEFAULT_MSG CUDNN_INCLUDE_DIRS CUDNN_LIBRARY)
     
