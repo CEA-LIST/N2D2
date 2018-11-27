@@ -904,7 +904,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::checksum(std::vector<double> &values, bool di
 		double checksumdw = 0.;
 
 
-		for (unsigned int i = 0; i < abs(mWeightsSize / sizeof(float)); ++i) {
+		for (std::size_t i = 0; i < mWeightsSize/sizeof(float); ++i) {
 			checksumdw += mDiffWeights(0,0,0,i);
 			if (display)
 				std::cout << " mDiffWeights_Frame_Cuda(0,0,0,"<< i <<")= "<<  mDiffWeights(0,0,0,i) << std::endl;
