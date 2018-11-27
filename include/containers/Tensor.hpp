@@ -725,7 +725,7 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
         }
     }
 
-    assert((*mData)().size() == mat.rows * mat.cols * mat.channels());
+    assert((*mData)().size() == static_cast<std::size_t>(mat.rows * mat.cols * mat.channels()));
     assert((*mData)().size() == size());
 }
 

@@ -330,9 +330,8 @@ cv::Mat N2D2::NodeNeuron::reconstructPattern(bool normalize, bool multiLayer)
                 const Area& area = (*it).first->getArea();
                 wSum += (*it).second->getRelativeWeight();
 
-                for (unsigned int x = area.x; x < area.x + area.width; ++x) {
-                    for (unsigned int y = area.y; y < area.y + area.height;
-                         ++y) {
+                for (int x = area.x; x < area.x + area.width; ++x) {
+                    for (int y = area.y; y < area.y + area.height; ++y) {
                         ++mask[x][y];
 
                         if (mask[x][y] > max)
@@ -624,8 +623,8 @@ cv::Mat N2D2::NodeNeuron::reconstructActivity(
              ++it) {
             const Area& area = (*it).first->getArea();
 
-            for (unsigned int x = area.x; x < area.x + area.width; ++x) {
-                for (unsigned int y = area.y; y < area.y + area.height; ++y) {
+            for (int x = area.x; x < area.x + area.width; ++x) {
+                for (int y = area.y; y < area.y + area.height; ++y) {
                     ++mask[x][y];
 
                     if (mask[x][y] > max)
