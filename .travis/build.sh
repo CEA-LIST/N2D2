@@ -26,12 +26,12 @@ if [ -n "$USE_CMAKE" ] ; then
         cmake -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_FLAGS="-Werror" ..
         make -j $NUM_THREADS
         make -j $NUM_THREADS tests
-        ctest -j 4
+        ctest -j 4 --output-on-failure
     else
         cmake -DCMAKE_CXX_FLAGS="-Werror" ..
         make -j $NUM_THREADS
         make -j $NUM_THREADS tests
-        ctest -j 4
+        ctest -j 4 --output-on-failure
     fi
 else
     ARGS=""

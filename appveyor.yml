@@ -55,7 +55,7 @@ build_script:
   - cmake --build . --config %CONFIGURATION% --target tests
 
 test_script:
-  - ctest -j 4 -C %CONFIGURATION%
+  - ctest -j 4 -C %CONFIGURATION% --output-on-failure
 
 matrix:
   fast_finish: true
