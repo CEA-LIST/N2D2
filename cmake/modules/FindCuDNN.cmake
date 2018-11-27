@@ -2,6 +2,8 @@
 
 include(FindPackageHandleStandardArgs)
 
+get_filename_component(CUDA_LIB_DIR "${CUDA_CUBLAS_LIBRARIES}" DIRECTORY)
+
 find_path(CUDNN_INCLUDE_DIRS cudnn.h HINTS ${CUDA_INCLUDE_DIRS} ${CUDA_TOOLKIT_INCLUDE})
 find_library(CUDNN_LIBRARY NAMES cudnn HINTS ${CUDNN_INCLUDE_DIRS} ${CUDA_LIB_DIR})
 
