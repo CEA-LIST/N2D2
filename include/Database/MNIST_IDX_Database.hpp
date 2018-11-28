@@ -30,10 +30,14 @@ public:
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
+    std::vector<unsigned int> loadRelationSample(Database::StimuliSet set);
     virtual ~MNIST_IDX_Database() {};
 
 protected:
     double mValidation;
+
+    std::map<unsigned int, std::vector<unsigned int>> mStimuliPerLabelTrain;
+    std::map<unsigned int, std::vector<unsigned int>> mStimuliPerLabelTest;
 };
 }
 

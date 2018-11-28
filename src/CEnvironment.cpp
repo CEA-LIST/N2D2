@@ -29,7 +29,6 @@ N2D2::CEnvironment::CEnvironment(Database& database,
     : StimuliProvider(database, size, batchSize, compositeStimuli),
       SpikeGenerator(),
       mInitialized(false),
-      mRelationalTargets(nbSubStimuli),
       mTickOutputs({size[0], size[1], size[2]*nbSubStimuli, batchSize}),
       mNextAerEventTime(0),
       mReadAerData(this, "ReadAerData", false),
@@ -37,13 +36,13 @@ N2D2::CEnvironment::CEnvironment(Database& database,
       mNbSubStimuli(nbSubStimuli)
 {
     // ctor
+    mRelationalTargets.resize({mNbSubStimuli});
     for (unsigned int k=0; k<mNbSubStimuli; k++){
 #ifdef CUDA
         mRelationalData.push_back(new CudaTensor<Float_T>({size[0],
                                                           size[1],
                                                           size[2],
                                                           batchSize}));
-        mRelationalData.back().synchronizeHToD();
 #else
         mRelationalData.push_back(new Tensor<Float_T>({size[0],
                                                       size[1],
@@ -54,9 +53,13 @@ N2D2::CEnvironment::CEnvironment(Database& database,
     for (unsigned int k=0; k<mRelationalData.size(); k++){
 #ifdef CUDA
         mTickData.push_back(new CudaTensor<char>(mRelationalData[k].dims()));
+        mCurrentFiringRate.push_back(new CudaTensor<Float_T>(mRelationalData[k].dims()));
+        mAccumulatedTickOutputs.push_back(new CudaTensor<Float_T>(mRelationalData[k].dims()));
 
 #else
         mTickData.push_back(new Tensor<char>(mRelationalData[k].dims()));
+        mCurrentFiringRate.push_back(new Tensor<Float_T>(mRelationalData[k].dims()));
+        mAccumulatedTickOutputs.push_back(new Tensor<Float_T>(mRelationalData[k].dims()));
 #endif
         mNextEvent.push_back(new Tensor<std::pair<Time_T, char>>(
                                                     mRelationalData[k].dims()));
@@ -99,44 +102,22 @@ void N2D2::CEnvironment::addChannel(const CompositeTransformation
 
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
-
     if (!mReadAerData) {
 
         SpikeGenerator::checkParameters();
-
-        if (!mInitialized) {
-
-            for (unsigned int k=0; k<mRelationalData.size(); ++k){
-
-                mTickData[k].assign(mRelationalData[k].dims(), 0);
-
-                mNextEvent[k].assign(mRelationalData[k].dims(),
-                                    std::make_pair(start, 0));
-
-                for (unsigned int idx = 0, size = mRelationalData[k].size();
-                idx < size; ++idx){
-                    SpikeGenerator::nextEvent(mNextEvent[k](idx),
-                                              mRelationalData[k](idx),
-                                              start,
-                                              stop);
-                }
-            }
-
-            mInitialized = true;
-
-        }
 
         for (unsigned int k=0; k<mRelationalData.size(); k++){
             for (unsigned int idx = 0, size = mRelationalData[k].size(); idx < size; ++idx) {
                 // If next event is valid set mTickData to spiking and search next event,
                 // else set to non spiking
                 if (mNextEvent[k](idx).second != 0 && mNextEvent[k](idx).first <= timestamp) {
-                    mTickData[k](idx) = mNextEvent[k](idx).second;
                     std::pair<Time_T, char> event;
+                    mTickData[k](idx) = mNextEvent[k](idx).second;
+
 
                     // Search for next event and check how many events are emitted in time window
-                    for (unsigned int ev = 0; mNextEvent[k](idx).second != 0
-                                             && mNextEvent[k](idx).first <= timestamp; ++ev) {
+                    for (unsigned int ev = 0; mNextEvent[k](idx).second != 0 &&
+                                             mNextEvent[k](idx).first <= timestamp; ++ev) {
                         // If ev>0 a spike is lost
                         if (ev > 0) {
                             std::cout << Utils::cwarning << "cenv(" << idx
@@ -149,10 +130,17 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                         event = mNextEvent[k](idx);
                         SpikeGenerator::nextEvent(
                             mNextEvent[k](idx), mRelationalData[k](idx), start, stop);
+
                     }
+
                 }
                 else {
                     mTickData[k](idx) = 0;
+                }
+
+                if (mTickData[k](idx) != 0) {
+                    mCurrentFiringRate[k](idx) += 1.0;
+                    mAccumulatedTickOutputs[k](idx) += (int)mTickData[k](idx);
                 }
             }
         }
@@ -165,11 +153,6 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                                      " based databases yet");
         }
 
-        if (!mInitialized) {
-
-             mEventIterator = mAerData.begin();
-             mInitialized = true;
-        }
 
         mTickData[0].assign(
             mTickData[0].dims(), 0);
@@ -207,19 +190,18 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
     }
 }
 
-
+// TODO: Adapt this to select subparts of mRelationalData
 void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
                                          Database::StimuliSet set,
                                          unsigned int batchPos)
 {
-    if (mTickData.size() > 1){
-        throw std::runtime_error("Error: readStimulus is not compatible with"
-                                 " sub stimuli!");
-    }
     StimuliProvider::readStimulus(id, set, batchPos);
-    //mRelationalData.clear();
-    for (unsigned int i=0; i<mData.size(); ++i) {
-        mRelationalData[0](i) = mData(i);
+
+    if (mTickData.size() == 1){
+        //mRelationalData.clear();
+        for (unsigned int i=0; i<mData.size(); ++i) {
+            mRelationalData[0](i) = mData(i);
+        }
     }
 }
 
@@ -312,48 +294,144 @@ void N2D2::CEnvironment::readAerStream(std::string dataPath,
 }
 
 
-/*
-void N2D2::CEnvironment::readRelationalStimulus(bool test, Float_T constantInput)
+void N2D2::CEnvironment::readRelationalStimulus()
+{
+    // Note: this assumes at the moment that all sub stimuli have same size
+    int stimulusSize = mRelationalData[0].size();
+    double maxValue = 1.0*stimulusSize/100;
+    unsigned int numberVariables = 3;
+    std::vector<std::pair<std::vector<double>, double>> sample;
+    for (unsigned int k=0; k<numberVariables; k++){
+
+        std::pair<std::vector<double>, double> stimulusVariable;
+        double variableValue = Random::randUniform(0.0, 1.0);
+
+        if (k == numberVariables-1){
+            double sum = 0;
+            for (unsigned int p=0; p<numberVariables-1; p++){
+                sum += sample[p].second;
+            }
+            variableValue = sum;
+        }
+        if (variableValue >= 1.0){
+            variableValue = variableValue - 1.0;
+        }
+        stimulusVariable = std::make_pair(std::vector<double>(stimulusSize), variableValue);
+
+        double slope = 0.02;//2*maxValue/stimulusSize;
+        int centerVal = std::round(variableValue*stimulusSize);
+
+        for (int x=0; x<stimulusSize; x++){
+            double diffVal = (double)(x - centerVal);
+            double yVal = maxValue - slope*std::fabs(diffVal);
+            yVal =  yVal < 0 ? -yVal : yVal;
+            stimulusVariable.first[x] = yVal;
+            //std::cout << yVal << std::endl;
+        }
+        //std::cout << std::endl;
+
+        sample.push_back(stimulusVariable);
+    }
+
+    for (unsigned int k=0; k<sample.size(); k++){
+        for (unsigned int i=0; i<sample[k].first.size(); ++i){
+            mRelationalData[k](i) = sample[k].first[i];
+        }
+        mRelationalTargets(k) = sample[k].second;
+        mRelationalData.back().synchronizeHToD();
+    }
+
+}
+
+/// STDP based relational network
+void N2D2::CEnvironment::readRelationalStimulus(bool test, bool sleep, Float_T constantInput)
+{
+    double maxValue = 1.0;
+    unsigned int stimulusSize = mRelationalData[0].size();;
+    unsigned int numberVariables = 3;
+    std::vector<std::pair<std::vector<double>, double>> sample;
+    for (unsigned int k=0; k<numberVariables; k++){
+
+        std::pair<std::vector<double>, double> stimulusVariable;
+        double variableValue = Random::randUniform(0.0, 1.0);
+
+        if (k == numberVariables-1){
+            double sum = 0;
+            for (unsigned int p=0; p<numberVariables-1; p++){
+                sum += sample[p].second;
+            }
+            variableValue = sum;
+        }
+        if (variableValue >= 1.0){
+            variableValue = variableValue - 1.0;
+        }
+        stimulusVariable = std::make_pair(std::vector<double>(stimulusSize), variableValue);
+
+        double slope = 2*maxValue/stimulusSize;
+        double centerVal = variableValue*stimulusSize;
+
+        for (unsigned int x=0; x<stimulusSize; x++){
+            double diffVal = (double)x - centerVal;
+            double yVal = maxValue - slope*std::fabs(diffVal);
+            yVal =  yVal < 0 ? -yVal : yVal;
+            stimulusVariable.first[x] = yVal;
+        }
+
+        sample.push_back(stimulusVariable);
+
+    }
+
+
+    unsigned int population = Random::randUniform(0,2);
+    for (unsigned int k=0; k<sample.size(); k++){
+
+
+        for (unsigned int i=0; i<sample[k].first.size(); ++i){
+            if (sleep || (test && k==sample.size()-1)){
+                mRelationalData[k](i) = Random::randNormal(constantInput,0.1);
+                if (sleep && k != population){
+                    mRelationalData[k](i) = 0.0;
+                }
+            }
+            else {
+                mRelationalData[k](i) = sample[k].first[i];
+            }
+        }
+        mRelationalTargets(k) = sample[k].second;
+        mRelationalData.back().synchronizeHToD();
+    }
+
+}
+
+
+
+void N2D2::CEnvironment::readDatabaseRelationalStimulus(Database::StimuliSet set)
 {
     Database * base = &mDatabase;
-    Relational_Database * relDatabase = dynamic_cast<Relational_Database*>(base);
+    MNIST_IDX_Database * relDatabase = dynamic_cast<MNIST_IDX_Database*>(base);
 
     if (relDatabase) {
-        //double triple [] = {0.2, 0.4, 0.6};
-        std::vector<std::pair<std::vector<double>, double>> sample;
-        sample = relDatabase->loadRelationSample();
-        //sample = relDatabase->loadRelationSample(triple);
-        //mData.resize(mSizeX*mSizeY*sample.size());
+        std::vector<unsigned int> sample
+             = relDatabase->loadRelationSample(set);
         for (unsigned int k=0; k<sample.size(); k++){
-            if (sample[k].first.size() != mSizeX*mSizeY*mNbChannels*mBatchSize){
-                throw std::runtime_error("CEnvironment::readRelationalStimulus: "
-                                        "StimulusSize does not match!");
+
+            // TODO: Adapt to batch
+            StimuliProvider::readStimulus(set, sample[k], 0);
+            for (unsigned int i=0; i<mData.size(); ++i) {
+                mRelationalData[k](i) = mData(i);
             }
-            //CudaTensor4d<Float_T> variableValues;
-            //variableValues.resize(sample[k].first.size());
-            for (unsigned int i=0; i<sample[k].first.size(); ++i){
-                if (test && k==sample.size()-1){
-                    mRelationalData[k](i) = constantInput;
-                }
-                else {
-                    mRelationalData[k](i) = sample[k].first[i];
-                }
-                //variableValues(i) = sample[k].first[i];
-                //mData(i + k*mSizeX*mSizeY) = sample[k].first[i];;
-                //std::cout << variableValues(i) << std::endl;
-            }
-            mRelationalTargets[k] = sample[k].second;
-            //mRelationalData[k](&variableValues);
-            mRelationalData.back().synchronizeHToD();
+
+            mRelationalTargets(k) = relDatabase->getStimulusLabel(set, sample[k]);
         }
+        mRelationalData.back().synchronizeHToD();
     }
     else {
         throw std::runtime_error("CEnvironment::readRelationalStimulus: "
                                         "Dynamic cast failed!");
     }
-
 }
 
+/*
 N2D2::Tensor4d<N2D2::Float_T> N2D2::CEnvironment::makeInputIdentity(unsigned int subStimulus,
                                                                     double scalingFactor)
 {
@@ -400,9 +478,39 @@ void N2D2::CEnvironment::produceRandomInput(Float_T mean, Float_T dev)
 */
 
 
-void N2D2::CEnvironment::reset(Time_T /*timestamp*/)
+void N2D2::CEnvironment::reset(Time_T timestamp)
 {
-    mInitialized = false;
+    for (unsigned int k=0; k<mRelationalData.size(); ++k){
+
+        mTickData[k].assign(mRelationalData[k].dims(), 0);
+        mCurrentFiringRate[k].assign(mRelationalData[k].dims(), 0);
+        mAccumulatedTickOutputs[k].assign(mRelationalData[k].dims(), 0);
+
+        // This is usually overwritten immediately by initialize()
+        mNextEvent[k].assign(mRelationalData[k].dims(),
+                            std::make_pair(timestamp, 0));
+
+    }
+}
+
+
+void N2D2::CEnvironment::initialize(Time_T start, Time_T stop)
+{
+    for (unsigned int k=0; k<mRelationalData.size(); ++k){
+
+        for (unsigned int idx = 0, size = mRelationalData[k].size();
+        idx < size; ++idx){
+            SpikeGenerator::nextEvent(mNextEvent[k](idx),
+                                      mRelationalData[k](idx),
+                                      start,
+                                      stop);
+            //mTickData[k](idx) = mNextEvent[k](idx).second;
+        }
+    }
+
+    if (mReadAerData) {
+        mEventIterator = mAerData.begin();
+    }
 }
 
 N2D2::CEnvironment::~CEnvironment()

@@ -37,6 +37,8 @@
 #include "Aer.hpp"
 #include "AerEvent.hpp"
 #include "Database/AER_Database.hpp"
+#include "Database/MNIST_IDX_Database.hpp"
+
 #ifdef CUDA
 #include "controler/CudaInterface.hpp"
 #else
@@ -92,20 +94,32 @@ public:
                             Time_T stop,
                             unsigned int repetitions);
 
-    /*
-    void readRelationalStimulus(bool test=false, Float_T constantInput=0);
 
+    void readRelationalStimulus();
+
+    void readRelationalStimulus(bool test,
+                                bool sleep=false,
+                                Float_T constantInput=0);
+
+    void readDatabaseRelationalStimulus(Database::StimuliSet set);
+
+    /*
     Tensor4d<Float_T> makeInputIdentity(unsigned int subStimulus,
                                         double scalingFactor);
     void produceConstantInput(Float_T constantInput);
-    void produceRandomInput(Float_T mean, Float_T dev);
+    void produceRandomInput(Float_T mean, Float_T dev);*/
     double getRelationalTarget(unsigned int subStimulus)
     {
-        return mRelationalTargets[subStimulus];
+        return mRelationalTargets(subStimulus);
     };
-    */
+    const Tensor<Float_T>& getRelationalTargets() const
+    {
+        return mRelationalTargets;
+    };
 
     virtual void reset(Time_T timestamp);
+    virtual void initialize(Time_T start, Time_T stop);
+
     virtual Tensor<char>& getTickData(unsigned int subIdx)
     {
         return mTickData[subIdx];
@@ -117,6 +131,14 @@ public:
     virtual Interface<char>& getTickData()
     {
         return mTickData;
+    };
+    virtual Interface<Float_T>& getCurrentFiringRate()
+    {
+        return mCurrentFiringRate;
+    };
+    virtual Interface<Float_T>& getAccumulatedTickOutputs()
+    {
+        return mAccumulatedTickOutputs;
     };
     virtual Tensor<char>& getTickOutputs()
     {
@@ -141,14 +163,18 @@ protected:
     Interface<Float_T> mRelationalData;
 #endif
 
-    std::vector<double> mRelationalTargets;
+    Tensor<Float_T> mRelationalTargets;
 
 #ifdef CUDA
     CudaInterface<char> mTickData;
     CudaTensor<char> mTickOutputs;
+    CudaInterface<Float_T> mCurrentFiringRate;
+    CudaInterface<Float_T> mAccumulatedTickOutputs;
 #else
     Interface<char> mTickData;
     Tensor<char> mTickOutputs;
+    Interface<Float_T> mCurrentFiringRate;
+    Interface<Float_T> mAccumulatedTickOutputs;
 #endif
     Interface<std::pair<Time_T, char> > mNextEvent;
 

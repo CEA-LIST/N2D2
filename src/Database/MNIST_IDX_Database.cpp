@@ -57,4 +57,64 @@ void N2D2::MNIST_IDX_Database::load(const std::string& dataPath,
     partitionStimuli(0.0, 0.0, 1.0);
 
     assert(getNbLabels() == 10);
+
+
+    for (unsigned int i=0; i<getNbLabels(); ++i) {
+        std::vector<unsigned int> stimuliIds =
+            getLabelStimuliSetIndexes(i, Database::Learn);
+        mStimuliPerLabelTrain.insert(
+                    std::make_pair(i, stimuliIds));
+    }
+
+    for (unsigned int i=0; i<getNbLabels(); ++i) {
+        std::vector<unsigned int> stimuliIds =
+            getLabelStimuliSetIndexes(i, Database::Test);
+        mStimuliPerLabelTest.insert(
+                    std::make_pair(i, stimuliIds));
+    }
 }
+
+std::vector<unsigned int>
+N2D2::MNIST_IDX_Database::loadRelationSample(Database::StimuliSet set)
+{
+    unsigned int numberVariables = 3;
+    //unsigned int maxNumber = 10;
+    unsigned int maxNumber = 2;
+    std::vector<unsigned int> sample;
+    std::vector<unsigned int> stimulusVariables;
+    for (unsigned int k=0; k<numberVariables; k++){
+        if (k == numberVariables-1){
+            unsigned int sum = 0;
+            for (unsigned int p=0; p<numberVariables-1; p++){
+                sum += stimulusVariables[p];
+            }
+            stimulusVariables.push_back(sum % maxNumber);
+        }
+        else {
+            stimulusVariables.push_back(Random::randUniform(0, maxNumber-1));
+        }
+
+        std::cout << "Var " << k << ": " << stimulusVariables.back()
+        << " " << getLabelName(stimulusVariables.back()) << std::endl;
+
+        if (set == Database::Learn) {
+            sample.push_back(
+                mStimuliPerLabelTrain.at(stimulusVariables.back())
+                [Random::randUniform(0, mStimuliPerLabelTrain.at(stimulusVariables.back()).size()-1)]);
+                //             [0]);
+
+        }
+        else if (set == Database::Test) {
+            sample.push_back(
+                mStimuliPerLabelTest.at(stimulusVariables.back())
+                [Random::randUniform(0, mStimuliPerLabelTest.at(stimulusVariables.back()).size()-1)]);
+        }
+        else {
+            throw std::runtime_error(
+                "MNIST_IDX_Database::loadRelationSample: unknown stimuli set");
+        }
+    }
+    return sample;
+
+}
+
