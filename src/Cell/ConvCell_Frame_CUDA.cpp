@@ -309,7 +309,39 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 }
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool /*inference*/)
+void N2D2::ConvCell_Frame_CUDA<T>::save(const std::string& dirName) const
+{
+    Cell_Frame_CUDA<T>::save(dirName);
+
+    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+        std::stringstream solverName;
+        solverName << "WeightsSolver-" << k;
+
+        mWeightsSolvers[k]->save(dirName + "/" + solverName.str());
+    }
+
+    if (!mNoBias)
+        mBiasSolver->save(dirName + "/BiasSolver");
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::load(const std::string& dirName)
+{
+    Cell_Frame_CUDA<T>::load(dirName);
+
+    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+        std::stringstream solverName;
+        solverName << "WeightsSolver-" << k;
+
+        mWeightsSolvers[k]->load(dirName + "/" + solverName.str());
+    }
+
+    if (!mNoBias)
+        mBiasSolver->load(dirName + "/BiasSolver");
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -369,7 +401,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 #endif
     }
 
-    Cell_Frame_CUDA<T>::propagate();
+    Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
@@ -515,10 +547,15 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::update()
 {
-
-    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
+    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
         mWeightsSolvers[k]->update(
             mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+    }
+
+    double minVal, maxVal;
+    //TODO: implement common scaling for all the solvers in the cell
+    std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
+    mActivation->setPreQuantizeScaling(maxVal);
 
     if (!mNoBias)
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
@@ -644,21 +681,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::saveFreeParameters(const std::string
 
     mSharedSynapses.synchronizeDToH();
 
-    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (typename std::vector<T>::const_iterator it
-             = mSharedSynapses[k].begin();
-             it != mSharedSynapses[k].end();
-             ++it)
-            syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-    }
+    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k)
+        mSharedSynapses[k].save(syn);
 
     if (!mNoBias) {
         mBias->synchronizeDToH();
-
-        for (typename std::vector<T>::const_iterator it = mBias->begin();
-             it != mBias->end();
-             ++it)
-            syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+        mBias->save(syn);
     }
 
     if (!syn.good())
@@ -682,23 +710,15 @@ void N2D2::ConvCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileNam
                                      + fileName);
     }
 
-    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (typename std::vector<T>::iterator it = mSharedSynapses[k].begin();
-             it != mSharedSynapses[k].end();
-             ++it)
-            syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
+    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k)
+        mSharedSynapses[k].load(syn);
 
     mSharedSynapses.synchronizeHToD();
 
     if (!mNoBias) {
-        for (typename std::vector<T>::iterator it = mBias->begin();
-             it != mBias->end();
-             ++it)
-            syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+        mBias->load(syn);
+        mBias->synchronizeHToD();
     }
-
-    mBias->synchronizeHToD();
 
     if (syn.eof())
         throw std::runtime_error(
@@ -724,14 +744,6 @@ void N2D2::ConvCell_Frame_CUDA<T>::exportFreeParameters(const std::string
     mSynchronized = true;
     ConvCell::exportFreeParameters(fileName);
     mSynchronized = false;
-}
-
-template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::exportSolverParameters(const std::string
-                                                       & fileName) const
-{
-    for (unsigned int i = 0; i < mSharedSynapses.size(); ++i)
-        mWeightsSolvers[i]->exportFreeParameters(fileName);
 }
 
 template <class T>

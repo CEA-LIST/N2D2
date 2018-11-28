@@ -34,6 +34,20 @@ N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const std::string& name,
 }
 
 template <class T>
+void N2D2::Cell_Frame_CUDA<T>::save(const std::string& dirName) const
+{
+    Cell::save(dirName);
+    Cell_Frame_Top::save(dirName);
+}
+
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::load(const std::string& dirName)
+{
+    Cell::load(dirName);
+    Cell_Frame_Top::load(dirName);
+}
+
+template <class T>
 void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& /*sp*/,
                                      unsigned int /*channel*/,
                                      unsigned int /*x0*/,
@@ -180,10 +194,10 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
 }
 
 template <class T>
-void N2D2::Cell_Frame_CUDA<T>::propagate(bool /*inference*/)
+void N2D2::Cell_Frame_CUDA<T>::propagate(bool inference)
 {
     if (mActivation)
-        mActivation->propagate(mOutputs);
+        mActivation->propagate(mOutputs, inference);
 }
 
 template <class T>

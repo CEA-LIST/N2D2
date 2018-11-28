@@ -52,6 +52,8 @@ public:
                unsigned int nbOutputs,
                const std::shared_ptr<Activation>& activation
                = std::shared_ptr<Activation>());
+    virtual void save(const std::string& fileName) const;
+    virtual void load(const std::string& fileName);
 
     /**
      * Manage inputs, in particular the transmission input(i) = output(i-1)

@@ -149,7 +149,7 @@ void N2D2::PoolCell_Frame_CUDA<T>::initialize()
 }
 
 template <class T>
-void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool /*inference*/)
+void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -175,7 +175,7 @@ void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool /*inference*/)
         offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
     }
 
-    Cell_Frame_CUDA<T>::propagate();
+    Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

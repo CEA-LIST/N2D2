@@ -81,7 +81,7 @@ void N2D2::ROIPoolingCell_Frame::initialize()
     mParentProposals = mInputs[kRef-1].dimB()/mInputs[kRef].dimB();
 }
 
-void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
+void N2D2::ROIPoolingCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
@@ -385,7 +385,7 @@ void N2D2::ROIPoolingCell_Frame::propagate(bool /*inference*/)
         outputOffset += input.dimZ();
     }
 
-    Cell_Frame<Float_T>::propagate();
+    Cell_Frame<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

@@ -21,6 +21,8 @@
 #ifndef N2D2_TANHACTIVATION_FRAME_CUDA_H
 #define N2D2_TANHACTIVATION_FRAME_CUDA_H
 
+#include "Activation/Activation_Kernels.hpp"
+#include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/TanhActivation.hpp"
 
 #include "CudaContext.hpp"
@@ -36,8 +38,9 @@ public:
     }
 
     TanhActivation_Frame_CUDA();
-    inline virtual void propagate(BaseTensor& data);
+    inline virtual void propagate(BaseTensor& data, bool inference = false);
     inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    void propagate(CudaTensor<T>& data, bool inference = false);
     virtual ~TanhActivation_Frame_CUDA();
 
 protected:
@@ -65,7 +68,8 @@ N2D2::TanhActivation_Frame_CUDA<T>::TanhActivation_Frame_CUDA()
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data)
+void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
+                                                   bool inference)
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
@@ -80,6 +84,22 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data)
                                               &beta,
                                               cudaData.getCudnnTensorDesc(),
                                               cudaData.getDevicePtr()));
+
+    propagate(cudaData, inference);
+}
+
+namespace N2D2 {
+template <>
+void TanhActivation_Frame_CUDA<half_float::half>::propagate(
+    CudaTensor<half_float::half>& data, bool inference);
+
+template <>
+void TanhActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
+                                                 bool inference);
+
+template <>
+void TanhActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
+                                                  bool inference);
 }
 
 template <class T>

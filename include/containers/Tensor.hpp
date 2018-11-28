@@ -184,6 +184,8 @@ public:
     inline virtual void reshape(std::initializer_list<size_t> dims);
     inline virtual void reshape(const std::vector<size_t>& dims);
     virtual void clear() = 0;
+    virtual void save(std::ostream& data) const = 0;
+    virtual void load(std::istream& data) = 0;
 
     /** Synchronize Device To Host */
     virtual void synchronizeDToH() const {};
@@ -343,6 +345,8 @@ public:
     inline virtual void append(const std::vector<T>& vec);
     inline virtual void append(const Tensor<T>& frame);
     inline virtual void clear();
+    inline virtual void save(std::ostream& stream) const;
+    inline virtual void load(std::istream& stream);
     inline void swap(Tensor<T>& tensor);
     inline Tensor<T> clone() const;
     // Return type should be "reference" (not T&), in order to ensure it works
@@ -985,6 +989,60 @@ template <class T> void N2D2::Tensor<T>::clear()
     mSize = 0;
     mSizeM1 = 0;
     (*mData)().clear();
+}
+
+template <class T> void N2D2::Tensor<T>::save(std::ostream& stream) const
+{
+    const size_t dimsSize = mDims.size();
+    stream.write(reinterpret_cast<const char*>(&dimsSize), sizeof(dimsSize));
+
+    for (std::vector<size_t>::const_iterator it = mDims.begin();
+        it != mDims.end(); ++it)
+    {
+        stream.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+    }
+
+    stream.write(reinterpret_cast<const char*>(&mSize), sizeof(mSize));
+
+    for (typename std::vector<T>::const_iterator it = (*mData)().begin();
+        it != (*mData)().end(); ++it)
+    {
+        const T value = (*it);
+        stream.write(reinterpret_cast<const char*>(&value), sizeof(value));
+    }
+}
+
+template <class T> void N2D2::Tensor<T>::load(std::istream& stream)
+{
+    size_t dimsSize;
+    stream.read(reinterpret_cast<char*>(&dimsSize), sizeof(dimsSize));
+
+    std::vector<size_t> dims(dimsSize);
+
+    for (std::vector<size_t>::iterator it = dims.begin();
+        it != dims.end(); ++it)
+    {
+        stream.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    }
+
+    // Only call resize() if the stored size is different, as resize() implies
+    // mData shared_ptr unicity
+    if (dims != mDims)
+        resize(dims);
+
+    size_t dataSize;
+    stream.read(reinterpret_cast<char*>(&dataSize), sizeof(dataSize));
+
+    if (dataSize != mSize)
+        throw std::runtime_error("Tensor<T>::load(): mismatch in tensor size!");
+
+    for (typename std::vector<T>::iterator it = (*mData)().begin();
+        it != (*mData)().end(); ++it)
+    {
+        T value;
+        stream.read(reinterpret_cast<char*>(&value), sizeof(value));
+        (*it) = value;
+    }
 }
 
 template <class T> void N2D2::Tensor<T>::swap(Tensor<T>& tensor)

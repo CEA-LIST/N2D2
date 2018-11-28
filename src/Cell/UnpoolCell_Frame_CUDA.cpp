@@ -113,7 +113,7 @@ void N2D2::UnpoolCell_Frame_CUDA::initialize()
     }
 }
 
-void N2D2::UnpoolCell_Frame_CUDA::propagate(bool /*inference*/)
+void N2D2::UnpoolCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -161,7 +161,7 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool /*inference*/)
         }
     }
 
-    Cell_Frame_CUDA<Float_T>::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

@@ -96,7 +96,7 @@ void N2D2::PoolCell_Frame<T>::initialize()
 }
 
 template <class T>
-void N2D2::PoolCell_Frame<T>::propagate(bool /*inference*/)
+void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
@@ -136,7 +136,7 @@ void N2D2::PoolCell_Frame<T>::propagate(bool /*inference*/)
         offset += mInputs[k].dimZ();
     }
 
-    Cell_Frame<T>::propagate();
+    Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

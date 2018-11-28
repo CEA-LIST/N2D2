@@ -24,7 +24,12 @@
 #include <cuda_runtime_api.h>
 #include <cuda_fp16.h>
 
+#include <thrust/device_ptr.h>
+#include <thrust/extrema.h>
+#include <thrust/device_vector.h>
+
 #include "CudaUtils.hpp"
+#include "utils/Utils.hpp"
 #include "third_party/half.hpp"
 
 namespace N2D2 {
@@ -32,18 +37,31 @@ void cudaHclamp(half_float::half* x, unsigned int size,
                 half_float::half minVal, half_float::half maxVal);
 void cudaSclamp(float* x, unsigned int size, float minVal, float maxVal);
 void cudaDclamp(double* x, unsigned int size, double minVal, double maxVal);
-void cudaHquantize(half_float::half* y,
-                   half_float::half* x,
+std::pair<half_float::half, half_float::half>
+cudaHminMax(half_float::half* x, unsigned int size);
+std::pair<float, float> cudaSminMax(float* x, unsigned int size);
+std::pair<double, double> cudaDminMax(double* x, unsigned int size);
+void cudaHquantize(half_float::half* x,
+                   half_float::half* y,
                    unsigned int size,
-                   unsigned int quantizationLevels);
-void cudaSquantize(float* y,
-                   float* x,
+                   half_float::half minVal,
+                   half_float::half maxVal,
+                   unsigned int quantizationLevels,
+                   bool truncate = false);
+void cudaSquantize(float* x,
+                   float* y,
                    unsigned int size,
-                   unsigned int quantizationLevels);
-void cudaDquantize(double* y,
-                   double* x,
+                   float minVal,
+                   float maxVal,
+                   unsigned int quantizationLevels,
+                   bool truncate = false);
+void cudaDquantize(double* x,
+                   double* y,
                    unsigned int size,
-                   unsigned int quantizationLevels);
+                   double minVal,
+                   double maxVal,
+                   unsigned int quantizationLevels,
+                   bool truncate = false);
 void cudaHscal(unsigned int size,
                half_float::half alpha,
                half_float::half *x);

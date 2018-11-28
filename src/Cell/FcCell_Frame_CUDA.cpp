@@ -96,9 +96,41 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
     }
 }
 
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::save(const std::string& dirName) const
+{
+    Cell_Frame_CUDA<T>::save(dirName);
+
+    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+        std::stringstream solverName;
+        solverName << "WeightsSolver-" << k;
+
+        mWeightsSolvers[k]->save(dirName + "/" + solverName.str());
+    }
+
+    if (!mNoBias)
+        mBiasSolver->save(dirName + "/BiasSolver");
+}
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::load(const std::string& dirName)
+{
+    Cell_Frame_CUDA<T>::load(dirName);
+
+    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+        std::stringstream solverName;
+        solverName << "WeightsSolver-" << k;
+
+        mWeightsSolvers[k]->load(dirName + "/" + solverName.str());
+    }
+
+    if (!mNoBias)
+        mBiasSolver->load(dirName + "/BiasSolver");
+}
+
 namespace N2D2 {
 template <>
-void N2D2::FcCell_Frame_CUDA<half_float::half>::propagate(bool /*inference*/)
+void N2D2::FcCell_Frame_CUDA<half_float::half>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -151,12 +183,12 @@ void N2D2::FcCell_Frame_CUDA<half_float::half>::propagate(bool /*inference*/)
             mOutputs.dimZ()));
     }
 
-    Cell_Frame_CUDA<half_float::half>::propagate();
+    Cell_Frame_CUDA<half_float::half>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
 template <>
-void N2D2::FcCell_Frame_CUDA<float>::propagate(bool /*inference*/)
+void N2D2::FcCell_Frame_CUDA<float>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -208,12 +240,12 @@ void N2D2::FcCell_Frame_CUDA<float>::propagate(bool /*inference*/)
                                         mOutputs.dimZ()));
     }
 
-    Cell_Frame_CUDA<float>::propagate();
+    Cell_Frame_CUDA<float>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
 template <>
-void N2D2::FcCell_Frame_CUDA<double>::propagate(bool /*inference*/)
+void N2D2::FcCell_Frame_CUDA<double>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -265,7 +297,7 @@ void N2D2::FcCell_Frame_CUDA<double>::propagate(bool /*inference*/)
                                         mOutputs.dimZ()));
     }
 
-    Cell_Frame_CUDA<double>::propagate();
+    Cell_Frame_CUDA<double>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
@@ -552,9 +584,15 @@ void N2D2::FcCell_Frame_CUDA<double>::backPropagate()
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::update()
 {
-    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
+    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
         mWeightsSolvers[k]
             ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+    }
+
+    double minVal, maxVal;
+    //TODO: implement common scaling for all the solvers in the cell
+    std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
+    mActivation->setPreQuantizeScaling(maxVal);
 
     if (!mNoBias)
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
@@ -630,19 +668,13 @@ void N2D2::FcCell_Frame_CUDA<T>::saveFreeParameters(const std::string
 
     mSynapses.synchronizeDToH();
 
-    for (unsigned int k = 0; k < mSynapses.size(); ++k) {
-        for (typename std::vector<T>::const_iterator it = mSynapses[k].begin();
-             it != mSynapses[k].end();
-             ++it)
-            syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+    for (unsigned int k = 0; k < mSynapses.size(); ++k)
+        mSynapses[k].save(syn);
+
+    if (!mNoBias) {
+        mBias.synchronizeDToH();
+        mBias.save(syn);
     }
-
-    mBias.synchronizeDToH();
-
-    for (typename std::vector<T>::const_iterator it = mBias.data().begin();
-         it != mBias.data().end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
 
     if (!syn.good())
         throw std::runtime_error("Error writing synaptic file: " + fileName);
@@ -665,21 +697,15 @@ void N2D2::FcCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileName,
                                      + fileName);
     }
 
-    for (unsigned int k = 0; k < mSynapses.size(); ++k) {
-        for (typename std::vector<T>::iterator it = mSynapses[k].begin();
-             it != mSynapses[k].end();
-             ++it)
-            syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
+    for (unsigned int k = 0; k < mSynapses.size(); ++k)
+        mSynapses[k].load(syn);
 
     mSynapses.synchronizeHToD();
 
-    for (typename std::vector<T>::iterator it = mBias.data().begin();
-         it != mBias.data().end();
-         ++it)
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-
-    mBias.synchronizeHToD();
+    if (!mNoBias) {
+        mBias.load(syn);
+        mBias.synchronizeHToD();
+    }
 
     if (syn.eof())
         throw std::runtime_error(
@@ -703,14 +729,6 @@ void N2D2::FcCell_Frame_CUDA<T>::exportFreeParameters(const std::string
     mSynchronized = true;
     FcCell::exportFreeParameters(fileName);
     mSynchronized = false;
-}
-
-template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::exportSolverParameters(const std::string
-                                                     & fileName) const
-{
-    for (unsigned int i = 0; i < mSynapses.size(); ++i)
-        mWeightsSolvers[i]->exportFreeParameters(fileName);
 }
 
 template <class T>

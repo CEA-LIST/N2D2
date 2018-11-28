@@ -39,6 +39,7 @@
 #include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Random.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
 
 namespace N2D2 {
 typedef float Float_T;
@@ -65,6 +66,7 @@ public:
                     const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
                     bool compositeStimuli = false);
+    StimuliProvider(const StimuliProvider& sp);
     virtual void addChannel(const CompositeTransformation& /*transformation*/);
 
     /// Add global CACHEABLE transformations, before applying any channel
@@ -307,6 +309,13 @@ protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
+
+    /// Quantization levels (0 = no quantization)
+    Parameter<unsigned int> mQuantizationLevels;
+    /// Min. value for quantization
+    Parameter<Float_T> mQuantizationMin;
+    /// Max. value for quantization
+    Parameter<Float_T> mQuantizationMax;
 
     // Internal variables
     Database& mDatabase;

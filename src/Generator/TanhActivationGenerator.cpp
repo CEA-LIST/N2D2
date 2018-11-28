@@ -39,13 +39,9 @@ N2D2::TanhActivationGenerator::generate(IniParser& iniConfig,
             : Registrar<TanhActivation>::create<double>(model)();
 
     const std::string type = iniConfig.getProperty<std::string>(name);
-    const bool leCun = (type == "TanhLeCun");
 
-    if (leCun)
+    if (type == "TanhLeCun")
         activation->setParameter("Alpha", TanhActivation::AlphaLeCun);
-    else
-        activation->setParameter("Alpha",
-                                 iniConfig.getProperty(name + ".Alpha", 1.0));
 
     return activation;
 }

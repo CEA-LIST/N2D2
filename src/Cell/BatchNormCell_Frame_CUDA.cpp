@@ -216,7 +216,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
     if (!inference)
         ++mNbPropagate;
 
-    Cell_Frame_CUDA<T>::propagate();
+    Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
@@ -371,32 +371,13 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::saveFreeParameters(const std::string
                                  + fileName);
 
     mScale->synchronizeDToH();
-
-    for (typename std::vector<ParamT>::const_iterator it = mScale->begin();
-         it != mScale->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-
+    mScale->save(syn);
     mBias->synchronizeDToH();
-
-    for (typename std::vector<ParamT>::const_iterator it = mBias->begin();
-         it != mBias->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-
+    mBias->save(syn);
     mMean->synchronizeDToH();
-
-    for (typename std::vector<ParamT>::const_iterator it = mMean->begin();
-         it != mMean->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-
+    mMean->save(syn);
     mVariance->synchronizeDToH();
-
-    for (typename std::vector<ParamT>::const_iterator it = mVariance->begin();
-         it != mVariance->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+    mVariance->save(syn);
 
     if (!syn.good())
         throw std::runtime_error("Error writing parameter file: " + fileName);
@@ -420,36 +401,13 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::loadFreeParameters(const std::string
                                      + fileName);
     }
 
-    for (typename std::vector<ParamT>::iterator it = mScale->begin();
-        it != mScale->end(); ++it)
-    {
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
-
+    mScale->load(syn);
     mScale->synchronizeHToD();
-
-    for (typename std::vector<ParamT>::iterator it = mBias->begin();
-        it != mBias->end(); ++it)
-    {
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
-
+    mBias->load(syn);
     mBias->synchronizeHToD();
-
-    for (typename std::vector<ParamT>::iterator it = mMean->begin();
-        it != mMean->end(); ++it)
-    {
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
-
+    mMean->load(syn);
     mMean->synchronizeHToD();
-
-    for (typename std::vector<ParamT>::iterator it = mVariance->begin();
-         it != mVariance->end(); ++it)
-    {
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
-
+    mVariance->load(syn);
     mVariance->synchronizeHToD();
 
     if (syn.eof())

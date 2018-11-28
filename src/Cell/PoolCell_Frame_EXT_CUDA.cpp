@@ -129,7 +129,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA<T>::initialize()
 
 //Half type propagate for PoolCell_Frame_EXT_CUDA
 template <>
-void N2D2::PoolCell_Frame_EXT_CUDA<half_float::half>::propagate(bool /*inference*/)
+void N2D2::PoolCell_Frame_EXT_CUDA<half_float::half>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -178,12 +178,12 @@ void N2D2::PoolCell_Frame_EXT_CUDA<half_float::half>::propagate(bool /*inference
         }
     }
 
-    Cell_Frame_CUDA<half_float::half>::propagate();
+    Cell_Frame_CUDA<half_float::half>::propagate(inference);
     mDiffInputs.clearValid();
 }
 //Float type propagate for PoolCell_Frame_EXT_CUDA
 template <>
-void N2D2::PoolCell_Frame_EXT_CUDA<float>::propagate(bool /*inference*/)
+void N2D2::PoolCell_Frame_EXT_CUDA<float>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -232,12 +232,12 @@ void N2D2::PoolCell_Frame_EXT_CUDA<float>::propagate(bool /*inference*/)
         }
     }
 
-    Cell_Frame_CUDA<float>::propagate();
+    Cell_Frame_CUDA<float>::propagate(inference);
     mDiffInputs.clearValid();
 }
 //Double type propagate for PoolCell_Frame_EXT_CUDA
 template <>
-void N2D2::PoolCell_Frame_EXT_CUDA<double>::propagate(bool /*inference*/)
+void N2D2::PoolCell_Frame_EXT_CUDA<double>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -286,7 +286,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA<double>::propagate(bool /*inference*/)
         }
     }
 
-    Cell_Frame_CUDA<double>::propagate();
+    Cell_Frame_CUDA<double>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

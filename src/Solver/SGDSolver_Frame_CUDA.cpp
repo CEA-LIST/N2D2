@@ -72,6 +72,13 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
     // Normalize in function of the iteration size
     const half_float::half rateDiff(rate / (batchSize * (float)mIterationSize));
 
+    if (mQuantizationLevels > 0) {
+        cudaHclamp(diffData.getDevicePtr(),
+                   diffData.size(),
+                   half_float::half(-1.0f),
+                   half_float::half(1.0f));
+    }
+
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // data = data + diffData*rate
         cudaHaxpy(diffData.size(), // size of data
@@ -119,9 +126,18 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
     }
 
     if (mQuantizationLevels > 0) {
-        cudaHquantize(data.getDevicePtr(),
-                      cudaContinuousData.getDevicePtr(),
+        std::tie(mMinVal, mMaxVal)
+            = cudaHminMax(cudaContinuousData.getDevicePtr(),
+                          cudaContinuousData.size());
+
+        rangeZeroAlign(mMinVal, mMaxVal,
+                       mMinValQuant, mMaxValQuant, mQuantizationLevels);
+
+        cudaHquantize(cudaContinuousData.getDevicePtr(),
+                      data.getDevicePtr(),
                       data.size(),
+                      half_float::half(mMinValQuant),
+                      half_float::half(mMaxValQuant),
                       mQuantizationLevels);
     }
 }
@@ -149,6 +165,9 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
 
     // Normalize in function of the iteration size
     const float rateDiff = rate / (batchSize * (float)mIterationSize);
+
+    if (mQuantizationLevels > 0)
+        cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
 
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // data = data + diffData*rate
@@ -208,11 +227,21 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
     if (mClamping)
         cudaSclamp(cudaContinuousData.getDevicePtr(), data.size(), -1.0, 1.0);
 
-    if (mQuantizationLevels > 0)
-        cudaSquantize(data.getDevicePtr(),
-                      cudaContinuousData.getDevicePtr(),
+    if (mQuantizationLevels > 0) {
+        std::tie(mMinVal, mMaxVal)
+            = cudaSminMax(cudaContinuousData.getDevicePtr(),
+                          cudaContinuousData.size());
+
+        rangeZeroAlign(mMinVal, mMaxVal,
+                       mMinValQuant, mMaxValQuant, mQuantizationLevels);
+
+        cudaSquantize(cudaContinuousData.getDevicePtr(),
+                      data.getDevicePtr(),
                       data.size(),
+                      mMinValQuant,
+                      mMaxValQuant,
                       mQuantizationLevels);
+    }
 }
 
 template <>
@@ -238,6 +267,9 @@ void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
 
     // Normalize in function of the iteration size
     const double rateDiff = rate / (batchSize * (double)mIterationSize);
+
+    if (mQuantizationLevels > 0)
+        cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
 
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // data = data + diffData*rate
@@ -297,11 +329,21 @@ void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
     if (mClamping)
         cudaDclamp(cudaContinuousData.getDevicePtr(), data.size(), -1.0, 1.0);
 
-    if (mQuantizationLevels > 0)
-        cudaDquantize(data.getDevicePtr(),
-                      cudaContinuousData.getDevicePtr(),
+    if (mQuantizationLevels > 0) {
+        std::tie(mMinVal, mMaxVal)
+            = cudaDminMax(cudaContinuousData.getDevicePtr(),
+                          cudaContinuousData.size());
+
+        rangeZeroAlign(mMinVal, mMaxVal,
+                       mMinValQuant, mMaxValQuant, mQuantizationLevels);
+
+        cudaDquantize(cudaContinuousData.getDevicePtr(),
+                      data.getDevicePtr(),
                       data.size(),
+                      mMinValQuant,
+                      mMaxValQuant,
                       mQuantizationLevels);
+    }
 }
 }
 

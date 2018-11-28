@@ -310,7 +310,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
 }
 
 template <class T>
-void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool /*inference*/)
+void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -384,7 +384,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 #endif
     }
 
-    Cell_Frame_CUDA<T>::propagate();
+    Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
@@ -641,21 +641,12 @@ void N2D2::DeconvCell_Frame_CUDA<T>::saveFreeParameters(const std::string
 
     mSharedSynapses.synchronizeDToH();
 
-    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (typename std::vector<T>::const_iterator it
-             = mSharedSynapses[k].begin();
-             it != mSharedSynapses[k].end();
-             ++it)
-            syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-    }
+    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k)
+        mSharedSynapses[k].save(syn);
 
     if (!mNoBias) {
         mBias->synchronizeDToH();
-
-        for (typename std::vector<T>::const_iterator it = mBias->begin();
-             it != mBias->end();
-             ++it)
-            syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+        mBias->save(syn);
     }
 
     if (!syn.good())
@@ -680,23 +671,15 @@ void N2D2::DeconvCell_Frame_CUDA<T>::loadFreeParameters(const std::string
                                      + fileName);
     }
 
-    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k) {
-        for (typename std::vector<T>::iterator it = mSharedSynapses[k].begin();
-             it != mSharedSynapses[k].end();
-             ++it)
-            syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-    }
+    for (unsigned int k = 0; k < mSharedSynapses.size(); ++k)
+        mSharedSynapses[k].load(syn);
 
     mSharedSynapses.synchronizeHToD();
 
     if (!mNoBias) {
-        for (typename std::vector<T>::iterator it = mBias->begin();
-             it != mBias->end();
-             ++it)
-            syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+        mBias->load(syn);
+        mBias->synchronizeHToD();
     }
-
-    mBias->synchronizeHToD();
 
     if (syn.eof())
         throw std::runtime_error(

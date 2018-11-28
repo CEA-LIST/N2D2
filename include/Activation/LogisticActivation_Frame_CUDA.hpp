@@ -21,6 +21,8 @@
 #ifndef N2D2_LOGISTICACTIVATION_FRAME_CUDA_H
 #define N2D2_LOGISTICACTIVATION_FRAME_CUDA_H
 
+#include "Activation/Activation_Kernels.hpp"
+#include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/LogisticActivation.hpp"
 
 #include "CudaContext.hpp"
@@ -37,8 +39,9 @@ public:
     }
 
     LogisticActivation_Frame_CUDA(bool withLoss = false);
-    virtual void propagate(BaseTensor& data);
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    inline virtual void propagate(BaseTensor& data, bool inference = false);
+    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    void propagate(CudaTensor<T>& data, bool inference = false);
     virtual ~LogisticActivation_Frame_CUDA();
 
 protected:
@@ -70,24 +73,40 @@ N2D2::LogisticActivation_Frame_CUDA
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(BaseTensor& data)
+void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
+                                                       bool inference)
 {
-    if (LogisticActivationDisabled)
-        return;
-
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
-    const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
-    const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
+    if (!LogisticActivationDisabled) {
+        const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
+        const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
-    CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
-                                              mActivationDesc,
-                                              &alpha,
-                                              cudaData.getCudnnTensorDesc(),
-                                              cudaData.getDevicePtr(),
-                                              &beta,
-                                              cudaData.getCudnnTensorDesc(),
-                                              cudaData.getDevicePtr()));
+        CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
+                                                  mActivationDesc,
+                                                  &alpha,
+                                                  cudaData.getCudnnTensorDesc(),
+                                                  cudaData.getDevicePtr(),
+                                                  &beta,
+                                                  cudaData.getCudnnTensorDesc(),
+                                                  cudaData.getDevicePtr()));
+    }
+
+    propagate(cudaData, inference);
+}
+
+namespace N2D2 {
+template <>
+void LogisticActivation_Frame_CUDA<half_float::half>::propagate(
+    CudaTensor<half_float::half>& data, bool inference);
+
+template <>
+void LogisticActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
+                                                     bool inference);
+
+template <>
+void LogisticActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
+                                                      bool inference);
 }
 
 template <class T>

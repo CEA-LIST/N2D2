@@ -113,9 +113,9 @@ int main(int argc, char* argv[]) try
         = opts.parse("-test-idx", -1, "test a single specific frame index");
     const bool check
         = opts.parse("-check", "enable gradient computation checking");
-    const bool logOutputs
-        = opts.parse("-log-outputs", "log layers outputs for the first "
-                     "stimulus");
+    const unsigned int logOutputs
+        = opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
+                     "stimulus (0 = no log)");
     const bool genConfig
         = opts.parse("-cfg", "save base configuration and exit");
     const std::string genExport
@@ -135,10 +135,11 @@ int main(int argc, char* argv[]) try
                      "integer exports");
     const double timeStep
         = opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
-    const std::string weights = opts.parse<std::string>(
-        "-w",
-        "",
-        "import initial weights from a specific location for the learning");
+    const std::string load = opts.parse<std::string>("-l", "",
+        "start with a previously saved state from a specified location");
+    const std::string weights = opts.parse<std::string>("-w", "",
+        "start with weights imported from a specified location (even when "
+        "loading a previously saved state)");
     const int exportNbStimuliMax = opts.parse("-db-export", -1,
         "max. number of stimuli to export (0 = no dataset export, "
         "-1 = unlimited)");
@@ -188,15 +189,26 @@ int main(int argc, char* argv[]) try
 
     StimuliProvider& sp = *deepNet->getStimuliProvider();
 
+    if (!load.empty())
+        deepNet->load(load);
+
     bool afterCalibration = false;
 
     if (!genExport.empty()) {
-        if (!weights.empty())
-            deepNet->importNetworkFreeParameters(weights);
-        else if (database.getNbStimuli(Database::Validation) > 0)
-            deepNet->importNetworkFreeParameters("weights_validation");
-        else
-            deepNet->importNetworkFreeParameters("weights");
+        try {
+            if (!weights.empty())
+                deepNet->importNetworkFreeParameters(weights);
+            else if (load.empty()) {
+                if (database.getNbStimuli(Database::Validation) > 0)
+                    deepNet->importNetworkFreeParameters("weights_validation");
+                else
+                    deepNet->importNetworkFreeParameters("weights");
+            }
+        }
+        catch (const std::exception& e) {
+            std::cout << Utils::cwarning << e.what()
+                << Utils::cdef << std::endl;
+        }
 
         std::stringstream exportDir;
         exportDir << "export_" << genExport << "_"
@@ -390,13 +402,22 @@ int main(int argc, char* argv[]) try
 
             learnThread.join();
 
-            if (logOutputs && i == 0) {
-                std::cout << "First stimulus ID: " << sp.getBatch()[0]
+            if (logOutputs > 0 && b == (logOutputs - 1) / batchSize) {
+                const unsigned int batchPos = (logOutputs - 1) % batchSize;
+
+                std::cout << "Outputs log for stimulus #" << logOutputs
+                    << " (" << (batchPos + 1) << "/" << batchSize
+                    << " in batch #" << b << "):" << std::endl;
+                std::cout << "  Stimulus ID: " << sp.getBatch()[batchPos]
                           << std::endl;
-                std::cout << "First stimulus label: "
-                          << sp.getLabelsData()[0](0) << std::endl;
-                deepNet->logOutputs("outputs_init");
-                deepNet->logDiffInputs("diffinputs_init");
+                std::cout << "  Stimulus label: "
+                          << sp.getLabelsData()[batchPos](0) << std::endl;
+
+                std::stringstream numStr;
+                numStr << logOutputs;
+
+                deepNet->logOutputs("outputs_" + numStr.str(), batchPos);
+                deepNet->logDiffInputs("diffinputs_" + numStr.str(), batchPos);
             }
 
             if (bench) {
@@ -566,7 +587,9 @@ int main(int argc, char* argv[]) try
                             deepNet->log("validation", Database::Validation);
                             deepNet->exportNetworkFreeParameters(
                                 "weights_validation");
-                        } else {
+                            deepNet->save("net_state_validation");
+                        }
+                        else {
                             std::cout << "\n--- LOWER validation score: "
                                       << (100.0
                                           * target->getLastValidationScore())
@@ -600,8 +623,11 @@ int main(int argc, char* argv[]) try
                     }
 
                     deepNet->clear(Database::Validation);
-                } else
+                }
+                else {
                     deepNet->exportNetworkFreeParameters("weights");
+                    deepNet->save("net_state");
+                }
             }
         }
 
@@ -611,11 +637,20 @@ int main(int argc, char* argv[]) try
         sp.synchronize();
     }
 
-    if (!afterCalibration && (weights.empty() || learn > 0)) {
-        if (database.getNbStimuli(Database::Validation) > 0)
-            deepNet->importNetworkFreeParameters("weights_validation");
-        else
-            deepNet->importNetworkFreeParameters("weights");
+    if (!afterCalibration) {
+        if (learn > 0) {
+            // Reload best state after learning
+            if (database.getNbStimuli(Database::Validation) > 0)
+                deepNet->load("net_state_validation");
+            else
+                deepNet->load("net_state");
+        }
+        else if (load.empty() && weights.empty()) {
+            if (database.getNbStimuli(Database::Validation) > 0)
+                deepNet->importNetworkFreeParameters("weights_validation");
+            else
+                deepNet->importNetworkFreeParameters("weights");
+        }
     }
 
     const std::string testName = (afterCalibration) ? "export" : "test";

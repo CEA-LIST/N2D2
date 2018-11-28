@@ -39,19 +39,48 @@ cudaHclamp_kernel(__half* x, unsigned int size, __half minVal, __half maxVal)
     }
 }
 
-__global__ void cudaHquantize_kernel(__half* y,
-                                     __half* x,
+__global__ void cudaHquantize_kernel(__half* x,
+                                     __half* y,
                                      unsigned int size,
-                                     unsigned int quantizationLevels)
+                                     __half minVal,
+                                     __half maxVal,
+                                     unsigned int quantizationLevels,
+                                     bool truncate)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        y[i] = (quantizationLevels > 1)
-                       ? __float2half((int)round((quantizationLevels - 1) * __half2float(x[i]))
-                         / (float)(quantizationLevels - 1))
-                       : __float2half((__half2float(x[i]) >= 0.0f) ? 1.0f : -1.0f);
+    if (quantizationLevels > 1) {
+        const float scaling = (__half2float(maxVal) - __half2float(minVal))
+            / (float)(quantizationLevels - 1);
+
+        for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+            const __half clamped = (__hlt(x[i], minVal)) ? minVal :
+                                   (__hgt(x[i], maxVal)) ? maxVal :
+                                                           x[i];
+#else
+            const __half clamped
+                = (__half2float(x[i]) < __half2float(minVal)) ? minVal :
+                  (__half2float(x[i]) > __half2float(maxVal)) ? maxVal :
+                                                                x[i];
+#endif
+
+            if (truncate) {
+                y[i] = __float2half(
+                    (int)((__half2float(clamped) - __half2float(minVal))
+                               / scaling) * scaling + __half2float(minVal));
+            }
+            else {
+                y[i] = __float2half(
+                    (int)round((__half2float(clamped) - __half2float(minVal))
+                               / scaling) * scaling + __half2float(minVal));
+            }
+        }
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            y[i] = __float2half((__half2float(x[i]) >= 0.0f) ? 1.0f : -1.0f);
     }
 }
 
@@ -68,19 +97,37 @@ cudaSclamp_kernel(float* x, unsigned int size, float minVal, float maxVal)
     }
 }
 
-__global__ void cudaSquantize_kernel(float* y,
-                                     float* x,
+__global__ void cudaSquantize_kernel(float* x,
+                                     float* y,
                                      unsigned int size,
-                                     unsigned int quantizationLevels)
+                                     float minVal,
+                                     float maxVal,
+                                     unsigned int quantizationLevels,
+                                     bool truncate)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        y[i] = (quantizationLevels > 1)
-                       ? (int)round((quantizationLevels - 1) * x[i])
-                         / (float)(quantizationLevels - 1)
-                       : ((x[i] >= 0) ? 1 : -1);
+    if (quantizationLevels > 1) {
+        const float scaling = (maxVal - minVal)
+            / (float)(quantizationLevels - 1);
+
+        for (unsigned int i = index; i < size; i += stride) {
+            const float clamped = (x[i] < minVal) ? minVal :
+                                  (x[i] > maxVal) ? maxVal :
+                                                    x[i];
+
+            if (truncate)
+                y[i] = (int)((clamped - minVal) / scaling) * scaling + minVal;
+            else {
+                y[i] = (int)round((clamped - minVal) / scaling)
+                        * scaling + minVal;
+            }
+        }
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            y[i] = ((x[i] >= 0.0f) ? 1.0f : -1.0f);
     }
 }
 
@@ -97,19 +144,37 @@ cudaDclamp_kernel(double* x, unsigned int size, double minVal, double maxVal)
     }
 }
 
-__global__ void cudaDquantize_kernel(double* y,
-                                     double* x,
+__global__ void cudaDquantize_kernel(double* x,
+                                     double* y,
                                      unsigned int size,
-                                     unsigned int quantizationLevels)
+                                     double minVal,
+                                     double maxVal,
+                                     unsigned int quantizationLevels,
+                                     bool truncate)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        y[i] = (quantizationLevels > 1)
-                       ? (int)round((quantizationLevels - 1) * x[i])
-                         / (double)(quantizationLevels - 1)
-                       : ((x[i] >= 0) ? 1 : -1);
+    if (quantizationLevels > 1) {
+        const double scaling = (maxVal - minVal)
+            / (double)(quantizationLevels - 1);
+
+        for (unsigned int i = index; i < size; i += stride) {
+            const double clamped = (x[i] < minVal) ? minVal :
+                                  (x[i] > maxVal) ? maxVal :
+                                                    x[i];
+
+            if (truncate)
+                y[i] = (int)((clamped - minVal) / scaling) * scaling + minVal;
+            else {
+                y[i] = (int)round((clamped - minVal) / scaling)
+                        * scaling + minVal;
+            }
+        }
+    }
+    else {
+        for (unsigned int i = index; i < size; i += stride)
+            y[i] = ((x[i] >= 0.0) ? 1.0 : -1.0);
     }
 }
 
@@ -157,15 +222,35 @@ void N2D2::cudaHclamp(half_float::half* x, unsigned int size,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaHquantize(half_float::half* y,
-                         half_float::half* x,
+std::pair<half_float::half, half_float::half>
+N2D2::cudaHminMax(half_float::half* x,
+                  unsigned int size)
+{
+    // Compute global min & max value on the full tensor
+    thrust::device_ptr<half_float::half> thrustPtr(x);
+    thrust::pair<thrust::device_vector<half_float::half>::iterator,
+                 thrust::device_vector<half_float::half>::iterator> minMaxPair
+        = thrust::minmax_element(thrustPtr, thrustPtr + size);
+
+    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
+}
+
+void N2D2::cudaHquantize(half_float::half* x,
+                         half_float::half* y,
                          unsigned int size,
-                         unsigned int quantizationLevels)
+                         half_float::half minVal,
+                         half_float::half maxVal,
+                         unsigned int quantizationLevels,
+                         bool truncate)
 {
     cudaHquantize_kernel<<<(size + 255) / 256, 256>>>
-        (reinterpret_cast<__half*>(y),
-         reinterpret_cast<__half*>(x),
-         size, quantizationLevels);
+        (reinterpret_cast<__half*>(x),
+         reinterpret_cast<__half*>(y),
+         size,
+         reinterpret_cast<__half&>(minVal),
+         reinterpret_cast<__half&>(maxVal),
+         quantizationLevels,
+         truncate);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -175,13 +260,29 @@ void N2D2::cudaSclamp(float* x, unsigned int size, float minVal, float maxVal)
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSquantize(float* y,
-                         float* x,
+std::pair<float, float>
+N2D2::cudaSminMax(float* x,
+                  unsigned int size)
+{
+    // Compute global min & max value on the full tensor
+    thrust::device_ptr<float> thrustPtr(x);
+    thrust::pair<thrust::device_vector<float>::iterator,
+                 thrust::device_vector<float>::iterator> minMaxPair
+        = thrust::minmax_element(thrustPtr, thrustPtr + size);
+
+    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
+}
+
+void N2D2::cudaSquantize(float* x,
+                         float* y,
                          unsigned int size,
-                         unsigned int quantizationLevels)
+                         float minVal,
+                         float maxVal,
+                         unsigned int quantizationLevels,
+                         bool truncate)
 {
     cudaSquantize_kernel<<<(size + 255) / 256, 256>>>
-        (y, x, size, quantizationLevels);
+        (x, y, size, minVal, maxVal, quantizationLevels, truncate);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -193,13 +294,29 @@ N2D2::cudaDclamp(double* x, unsigned int size, double minVal, double maxVal)
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaDquantize(double* y,
-                         double* x,
+std::pair<double, double>
+N2D2::cudaDminMax(double* x,
+                  unsigned int size)
+{
+    // Compute global min & max value on the full tensor
+    thrust::device_ptr<double> thrustPtr(x);
+    thrust::pair<thrust::device_vector<double>::iterator,
+                 thrust::device_vector<double>::iterator> minMaxPair
+        = thrust::minmax_element(thrustPtr, thrustPtr + size);
+
+    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
+}
+
+void N2D2::cudaDquantize(double* x,
+                         double* y,
                          unsigned int size,
-                         unsigned int quantizationLevels)
+                         double minVal,
+                         double maxVal,
+                         unsigned int quantizationLevels,
+                         bool truncate)
 {
     cudaDquantize_kernel<<<(size + 255) / 256, 256>>>
-        (y, x, size, quantizationLevels);
+        (x, y, size, minVal, maxVal, quantizationLevels, truncate);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 

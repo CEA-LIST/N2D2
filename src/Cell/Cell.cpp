@@ -86,14 +86,16 @@ void N2D2::Cell::addMultiscaleInput(HeteroStimuliProvider& sp,
 
 void N2D2::Cell::save(const std::string& dirName) const
 {
+    Utils::createDirectories(dirName);
+
     // Save parameters
     std::ostringstream fileName;
-    fileName << dirName << "/cell_" << mId << "_" << getType() << ".cfg";
+    fileName << dirName << "/" << getType() << ".cfg";
     saveParameters(fileName.str());
 
     // Save free parameters
     fileName.str(std::string());
-    fileName << dirName << "/cell_" << mId << "_" << getType() << ".syn";
+    fileName << dirName << "/" << getType() << ".syn";
     saveFreeParameters(fileName.str());
 }
 
@@ -101,12 +103,12 @@ void N2D2::Cell::load(const std::string& dirName)
 {
     // Load parameters
     std::ostringstream fileName;
-    fileName << dirName << "/cell_" << mId << "_" << getType() << ".cfg";
+    fileName << dirName << "/" << getType() << ".cfg";
     loadParameters(fileName.str());
 
     // Load free parameters
     fileName.str(std::string());
-    fileName << dirName << "/cell_" << mId << "_" << getType() << ".syn";
+    fileName << dirName << "/" << getType() << ".syn";
     loadFreeParameters(fileName.str());
 }
 

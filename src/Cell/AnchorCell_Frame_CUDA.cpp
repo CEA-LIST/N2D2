@@ -303,7 +303,7 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                          GPU_BLOCK_GRID[0],
                          GPU_THREAD_GRID[0]);
 
-    Cell_Frame_CUDA<Float_T>::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

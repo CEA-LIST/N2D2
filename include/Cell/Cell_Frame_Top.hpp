@@ -48,6 +48,14 @@ public:
         : mActivation(activation)
     {
     }
+    virtual void save(const std::string& dirName) const {
+        if (mActivation)
+            mActivation->save(dirName + "/Activation");
+    }
+    virtual void load(const std::string& dirName) {
+        if (mActivation)
+            mActivation->load(dirName + "/Activation");
+    }
     virtual void addInput(BaseTensor& inputs,
                           BaseTensor& diffOutputs) = 0;
     virtual void propagate(bool inference = false) = 0;

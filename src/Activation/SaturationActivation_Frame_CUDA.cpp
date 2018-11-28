@@ -55,30 +55,123 @@ N2D2::SaturationActivation_Frame_CUDA<double>::mRegistrar(
 namespace N2D2 {
 template <>
 void SaturationActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data)
+    CudaTensor<half_float::half>& data,
+    bool inference)
 {
     cudaHSaturation_propagate(data.getDevicePtr(),
+                              data.getDevicePtr(),
                               data.size(),
                               (int)mShifting,
                               half_float::half(mThreshold));
+
+    if (mQuantizationLevels > 0) {
+        if (!inference) {
+            half_float::half minVal, maxVal;
+            std::tie(minVal, maxVal) = cudaHminMax(data.getDevicePtr(),
+                                                   data.size());
+
+            rangeAveraging(minVal, maxVal, mMinValMA, mMaxValMA,
+                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
+            rangeZeroAlign(mMinValMA, mMaxValMA, mMinValAligned, mMaxValAligned,
+                           mQuantizationLevels);
+
+            if (mLog2RoundingRate > 0.0) {
+                mMinValQuant = log2Round(mMinValAligned / mPreQuantizeScaling,
+                                         mLog2RoundingRate, mLog2RoundingPower)
+                                            * mPreQuantizeScaling;
+                mMaxValQuant = (mMinValQuant / mMinValAligned) * mMaxValAligned;
+            }
+        }
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            cudaHquantize(data.getDevicePtr(),
+                          data.getDevicePtr(),
+                          data.size(),
+                          half_float::half(mMinValQuant),
+                          half_float::half(mMaxValQuant),
+                          mQuantizationLevels);
+        }
+    }
 }
 
 template <>
-void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data)
+void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
+                                                       bool inference)
 {
     cudaSSaturation_propagate(data.getDevicePtr(),
+                              data.getDevicePtr(),
                               data.size(),
                               (int)mShifting,
                               (float)mThreshold);
+
+    if (mQuantizationLevels > 0) {
+        if (!inference) {
+            float minVal, maxVal;
+            std::tie(minVal, maxVal) = cudaSminMax(data.getDevicePtr(),
+                                                   data.size());
+
+            rangeAveraging(minVal, maxVal, mMinValMA, mMaxValMA,
+                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
+            rangeZeroAlign(mMinValMA, mMaxValMA, mMinValAligned, mMaxValAligned,
+                           mQuantizationLevels);
+
+            if (mLog2RoundingRate > 0.0) {
+                mMinValQuant = log2Round(mMinValAligned / mPreQuantizeScaling,
+                                         mLog2RoundingRate, mLog2RoundingPower)
+                                            * mPreQuantizeScaling;
+                mMaxValQuant = (mMinValQuant / mMinValAligned) * mMaxValAligned;
+            }
+        }
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            cudaSquantize(data.getDevicePtr(),
+                          data.getDevicePtr(),
+                          data.size(),
+                          mMinValQuant,
+                          mMaxValQuant,
+                          mQuantizationLevels);
+        }
+    }
 }
 
 template <>
-void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data)
+void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
+                                                        bool inference)
 {
     cudaDSaturation_propagate(data.getDevicePtr(),
+                              data.getDevicePtr(),
                               data.size(),
                               (int)mShifting,
                               (double)mThreshold);
+
+    if (mQuantizationLevels > 0) {
+        if (!inference) {
+            double minVal, maxVal;
+            std::tie(minVal, maxVal) = cudaDminMax(data.getDevicePtr(),
+                                                   data.size());
+
+            rangeAveraging(minVal, maxVal, mMinValMA, mMaxValMA,
+                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
+            rangeZeroAlign(mMinValMA, mMaxValMA, mMinValAligned, mMaxValAligned,
+                           mQuantizationLevels);
+
+            if (mLog2RoundingRate > 0.0) {
+                mMinValQuant = log2Round(mMinValAligned / mPreQuantizeScaling,
+                                         mLog2RoundingRate, mLog2RoundingPower)
+                                            * mPreQuantizeScaling;
+                mMaxValQuant = (mMinValQuant / mMinValAligned) * mMaxValAligned;
+            }
+        }
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            cudaDquantize(data.getDevicePtr(),
+                          data.getDevicePtr(),
+                          data.size(),
+                          mMinValQuant,
+                          mMaxValQuant,
+                          mQuantizationLevels);
+        }
+    }
 }
 
 template <>
@@ -86,6 +179,13 @@ void SaturationActivation_Frame_CUDA
     <half_float::half>::backPropagate(CudaTensor<half_float::half>& data,
                                       CudaTensor<half_float::half>& diffData)
 {
+    if (mQuantizationLevels > 0) {
+        cudaHclamp(diffData.getDevicePtr(),
+                   diffData.size(),
+                   half_float::half(-1.0f),
+                   half_float::half(1.0f));
+    }
+
     cudaHSaturation_backPropagate(data.getDevicePtr(),
                                   diffData.getDevicePtr(),
                                   data.size(),
@@ -97,6 +197,9 @@ template <>
 void SaturationActivation_Frame_CUDA
     <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData)
 {
+    if (mQuantizationLevels > 0)
+        cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
+
     cudaSSaturation_backPropagate(data.getDevicePtr(),
                                   diffData.getDevicePtr(),
                                   data.size(),
@@ -108,6 +211,9 @@ template <>
 void SaturationActivation_Frame_CUDA
     <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData)
 {
+    if (mQuantizationLevels > 0)
+        cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
+
     cudaDSaturation_backPropagate(data.getDevicePtr(),
                                   diffData.getDevicePtr(),
                                   data.size(),

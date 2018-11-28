@@ -524,6 +524,12 @@ template <class T> std::istream& N2D2::Parameter_T::read(std::istream& is) const
     return Utils::signChecked<T>(is) >> *((T*)mValue);
 }
 
+namespace N2D2 {
+// Special case to allow empty string as a valid value for a string
+template <> std::istream& Parameter_T::read<std::string>(std::istream& is)
+    const;
+}
+
 template <class T>
 void N2D2::Parameterizable::setParameter(const std::string& name, T value)
 {

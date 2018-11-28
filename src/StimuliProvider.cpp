@@ -25,6 +25,9 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
                                        unsigned int batchSize,
                                        bool compositeStimuli)
     : // Variables
+      mQuantizationLevels(this, "QuantizationLevels", 0U),
+      mQuantizationMin(this, "QuantizationMin", 0.0),
+      mQuantizationMax(this, "QuantizationMax", 1.0),
       mDatabase(database),
       mSize(size),
       mBatchSize(batchSize),
@@ -58,6 +61,32 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
     labelSize.push_back(batchSize);
     mLabelsData.resize(labelSize);
     mFutureLabelsData.resize(labelSize);
+}
+
+N2D2::StimuliProvider::StimuliProvider(const StimuliProvider& sp)
+    : Parameterizable(sp),
+      // Variables
+      mQuantizationLevels(this, "QuantizationLevels", sp.mQuantizationLevels),
+      mQuantizationMin(this, "QuantizationMin", sp.mQuantizationMin),
+      mQuantizationMax(this, "QuantizationMax", sp.mQuantizationMax),
+      mDatabase(sp.mDatabase),
+      mSize(sp.mSize),
+      mBatchSize(sp.mBatchSize),
+      mCompositeStimuli(sp.mCompositeStimuli),
+      mCachePath(sp.mCachePath),
+      mTransformations(sp.mTransformations),
+      mChannelsTransformations(sp.mChannelsTransformations),
+      mBatch(sp.mBatch),
+      mFutureBatch(sp.mFutureBatch),
+      mData(sp.mData),
+      mFutureData(sp.mFutureData),
+      mLabelsData(sp.mLabelsData),
+      mFutureLabelsData(sp.mFutureLabelsData),
+      mLabelsROI(sp.mLabelsROI),
+      mFutureLabelsROI(sp.mFutureLabelsROI),
+      mFuture(sp.mFuture)
+{
+    // copy-ctor
 }
 
 void N2D2::StimuliProvider::addChannel(const CompositeTransformation
@@ -467,6 +496,15 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                 << data.dims();
 
             throw std::runtime_error(msg.str());
+        }
+
+        if (mQuantizationLevels > 0) {
+            quantize(data,
+                     data,
+                     (Float_T)mQuantizationMin,
+                     (Float_T)mQuantizationMax,
+                     mQuantizationLevels,
+                     true);
         }
 
         dataRef[batchPos] = data;

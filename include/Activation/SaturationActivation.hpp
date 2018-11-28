@@ -44,8 +44,18 @@ public:
     virtual ~SaturationActivation() {};
 
 protected:
+    void saveInternal(std::ostream& state, std::ostream& log) const;
+    void loadInternal(std::istream& state);
+
     /// Threshold
     Parameter<double> mThreshold;
+
+    double mMinValMA;
+    double mMaxValMA;
+    double mMinValAligned;
+    double mMaxValAligned;
+    double mMinValQuant;
+    double mMaxValQuant;
 };
 }
 

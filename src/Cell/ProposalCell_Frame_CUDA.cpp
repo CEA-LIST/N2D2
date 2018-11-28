@@ -194,7 +194,7 @@ void N2D2::ProposalCell_Frame_CUDA::initialize()
             << std::endl;
 }
 
-void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
+void N2D2::ProposalCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
     const Float_T normX = 1.0 / (mStimuliProvider.getSizeX() - 1) ;
@@ -372,8 +372,7 @@ void N2D2::ProposalCell_Frame_CUDA::propagate(bool /*inference*/)
                         nbThread,
                         nbBlocks);
 
-    Cell_Frame_CUDA<Float_T>::propagate();
-
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

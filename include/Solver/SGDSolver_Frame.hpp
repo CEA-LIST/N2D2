@@ -22,6 +22,7 @@
 #define N2D2_SGDSOLVER_FRAME_H
 
 #include "Solver/SGDSolver.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
 
 namespace N2D2 {
 template <class T> class SGDSolver_Frame : public SGDSolver {
@@ -34,7 +35,6 @@ public:
     SGDSolver_Frame();
     SGDSolver_Frame(const SGDSolver_Frame<T>& solver);
     void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
-    void exportFreeParameters(const std::string& fileName) const;
     std::shared_ptr<SGDSolver_Frame<T> > clone() const
     {
         return std::shared_ptr<SGDSolver_Frame<T> >(doClone());
@@ -42,6 +42,9 @@ public:
     virtual ~SGDSolver_Frame() {};
 
 protected:
+    void saveInternal(std::ostream& state, std::ostream& log) const;
+    void loadInternal(std::istream& state);
+
     Tensor<T> mMomentumData;
     Tensor<T> mContinuousData;
 
@@ -93,6 +96,14 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
     // Normalize in function of the iteration size
     const T rateDiff(rate / (batchSize * (T)mIterationSize));
 
+    if (mQuantizationLevels > 0) {
+#pragma omp parallel for if (data.size() > 1024)
+        for (int index = 0; index < (int)data.size(); ++index) {
+            diffData(index) = Utils::clamp<T>(diffData(index),
+                                              T(-1.0f), T(1.0f));
+        }
+    }
+
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // if outside the loop for better performance
         if (mClamping) {
@@ -140,36 +151,36 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
     }
 
     if (mQuantizationLevels > 0) {
-        //#pragma omp parallel for
-        for (int index = 0; index < (int)data.size(); ++index) {
-            data(index) = (mQuantizationLevels > 1)
-               ? (int)Utils::round((mQuantizationLevels - 1)
-                 * continuousData(index)) / (T)(mQuantizationLevels - 1)
-               : ((continuousData(index) >= 0) ? 1 : -1);
-        }
+        std::tie(mMinVal, mMaxVal) = minMax(continuousData);
+
+        rangeZeroAlign(mMinVal, mMaxVal,
+                       mMinValQuant, mMaxValQuant, mQuantizationLevels);
+
+        quantize(data,
+                 continuousData,
+                 T(mMinValQuant),
+                 T(mMaxValQuant),
+                 mQuantizationLevels);
     }
 }
 
 template <class T>
-void N2D2::SGDSolver_Frame<T>::exportFreeParameters(const std::string& fileName)
-    const
+void N2D2::SGDSolver_Frame<T>::saveInternal(std::ostream& state,
+                                            std::ostream& log) const
 {
-    if (mMomentum != 0.0) {
-        std::ofstream syn(fileName.c_str());
+    SGDSolver::saveInternal(state, log);
 
-        if (!syn.good())
-            throw std::runtime_error("Could not create synaptic file : "
-                                     + fileName);
+    mMomentumData.save(state);
+    mContinuousData.save(state);
+}
 
-        for (typename std::vector<T>::const_iterator it = mMomentumData.begin();
-             it != mMomentumData.end();
-             ++it)
-            syn << (*it) << " ";
+template <class T>
+void N2D2::SGDSolver_Frame<T>::loadInternal(std::istream& state)
+{
+    SGDSolver::loadInternal(state);
 
-        if (!syn.good())
-            throw std::runtime_error("Error writing synaptic file: "
-                                     + fileName);
-    }
+    mMomentumData.load(state);
+    mContinuousData.load(state);
 }
 
 #endif // N2D2_SGDSOLVER_FRAME_H

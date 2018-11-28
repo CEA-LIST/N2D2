@@ -37,6 +37,7 @@ public:
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
     FcCell_Frame_CUDA(const std::string& name,
@@ -55,6 +56,8 @@ public:
     }
 
     virtual void initialize();
+    virtual void save(const std::string& dirName) const;
+    virtual void load(const std::string& dirName);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
@@ -72,7 +75,6 @@ public:
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
-    void exportSolverParameters(const std::string& fileName) const;
     void discretizeFreeParameters(unsigned int nbLevels);
     std::pair<Float_T, Float_T> getFreeParametersRange() const;
     void processFreeParameters(const std::function

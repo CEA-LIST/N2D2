@@ -20,6 +20,8 @@
 
 #include "Solver/SGDSolver.hpp"
 
+const char* N2D2::SGDSolver::Type = "SGD";
+
 N2D2::SGDSolver::SGDSolver()
     : mLearningRate(this, "LearningRate", 0.01),
       mMomentum(this, "Momentum", 0.0),
@@ -33,7 +35,11 @@ N2D2::SGDSolver::SGDSolver()
       mQuantizationLevels(this, "QuantizationLevels", 0U),
       mClamping(this, "Clamping", false),
       mIterationPass(0),
-      mNbIterations(0)
+      mNbIterations(0),
+      mMinVal(0.0),
+      mMaxVal(0.0),
+      mMinValQuant(0.0),
+      mMaxValQuant(0.0)
 {
     // ctor
 }
@@ -54,7 +60,11 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
                           solver.mQuantizationLevels),
       mClamping(this, "Clamping", solver.mClamping),
       mIterationPass(solver.mIterationPass),
-      mNbIterations(solver.mNbIterations)
+      mNbIterations(solver.mNbIterations),
+      mMinVal(solver.mMinVal),
+      mMaxVal(solver.mMaxVal),
+      mMinValQuant(solver.mMinValQuant),
+      mMaxValQuant(solver.mMaxValQuant)
 {
     // copy-ctor
 }
@@ -114,4 +124,27 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize)
         ++mNbIterations;
 
     return rate;
+}
+
+void N2D2::SGDSolver::saveInternal(std::ostream& state,
+                                   std::ostream& log) const
+{
+    state.write(reinterpret_cast<const char*>(&mMinVal), sizeof(mMinVal));
+    state.write(reinterpret_cast<const char*>(&mMaxVal), sizeof(mMaxVal));
+    state.write(reinterpret_cast<const char*>(&mMinValQuant),
+                sizeof(mMinValQuant));
+    state.write(reinterpret_cast<const char*>(&mMaxValQuant),
+                sizeof(mMaxValQuant));
+
+    log << "Range: [" << mMinVal << ", " << mMaxVal << "]\n"
+        << "Quantization range (*Quant): [" << mMinValQuant << ", "
+            << mMaxValQuant << "]" << std::endl;
+}
+
+void N2D2::SGDSolver::loadInternal(std::istream& state)
+{
+    state.read(reinterpret_cast<char*>(&mMinVal), sizeof(mMinVal));
+    state.read(reinterpret_cast<char*>(&mMaxVal), sizeof(mMaxVal));
+    state.read(reinterpret_cast<char*>(&mMinValQuant), sizeof(mMinValQuant));
+    state.read(reinterpret_cast<char*>(&mMaxValQuant), sizeof(mMaxValQuant));
 }

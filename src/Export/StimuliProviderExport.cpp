@@ -74,6 +74,12 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
 {
     Utils::createDirectories(dirName);
 
+    // Truncate is the natural approx. method for the input, as it is generally
+    // already originating from INT8 images.
+    // Truncate is the appropriate method when using the QuantizationLevels
+    // option in StimuliProvider
+    const CellExport::IntApprox approxMethod = CellExport::Truncate;
+
     const unsigned int envSizeX = sp.getSizeX();
     const unsigned int envSizeY = sp.getSizeY();
     const unsigned int nbChannels = sp.getNbChannels();
@@ -147,7 +153,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                     }
                     else if (CellExport::mPrecision <= 8) {
                         const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y));
+                            = CellExport::getIntApprox(scaling * frame(x, y),
+                                                       approxMethod);
 
                         if (unsignedData) {
                             const uint8_t value
@@ -172,7 +179,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                     }
                     else if (CellExport::mPrecision <= 16) {
                         const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y));
+                            = CellExport::getIntApprox(scaling * frame(x, y),
+                                                       approxMethod);
 
                         if (unsignedData) {
                             const uint16_t value
@@ -197,7 +205,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                     }
                     else if (CellExport::mPrecision <= 32) {
                         const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y));
+                            = CellExport::getIntApprox(scaling * frame(x, y),
+                                                       approxMethod);
 
                         if (unsignedData) {
                             const uint32_t value
@@ -222,7 +231,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                     }
                     else {
                         const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y));
+                            = CellExport::getIntApprox(scaling * frame(x, y),
+                                                       approxMethod);
 
                         if (unsignedData) {
                             const uint64_t value = approxValue;

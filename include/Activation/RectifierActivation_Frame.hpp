@@ -22,6 +22,7 @@
 #define N2D2_RECTIFIERACTIVATION_FRAME_H
 
 #include "Activation/RectifierActivation.hpp"
+#include "Activation/Activation_Kernels.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -32,7 +33,8 @@ public:
         return std::make_shared<RectifierActivation_Frame<T> >();
     }
 
-    virtual void propagate(BaseTensor& data);
+    RectifierActivation_Frame();
+    virtual void propagate(BaseTensor& data, bool inference = false);
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~RectifierActivation_Frame() {};
 
@@ -42,7 +44,15 @@ private:
 }
 
 template <class T>
-void N2D2::RectifierActivation_Frame<T>::propagate(BaseTensor& baseData)
+N2D2::RectifierActivation_Frame<T>::RectifierActivation_Frame():
+    RectifierActivation()
+{
+    //ctor
+}
+
+template <class T>
+void N2D2::RectifierActivation_Frame<T>::propagate(BaseTensor& baseData,
+                                                   bool inference)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
@@ -72,6 +82,28 @@ void N2D2::RectifierActivation_Frame<T>::propagate(BaseTensor& baseData)
                 : (T)mLeakSlope * data(index);
         }
     }
+
+    if (mQuantizationLevels > 0) {
+        if (!inference) {
+            T minVal, maxVal;
+            std::tie(minVal, maxVal) = minMax(data);
+
+            double minValMA_unused;
+            rangeAveraging(T(0.0f), maxVal, minValMA_unused, mMaxValMA,
+                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
+
+            if (mLog2RoundingRate > 0.0) {
+                mMaxValQuant = log2Round(mMaxValMA / mPreQuantizeScaling,
+                                         mLog2RoundingRate, mLog2RoundingPower)
+                                            * mPreQuantizeScaling;
+            }
+        }
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            quantize(data, data, T(0.0f), T(mMaxValQuant),
+                     (unsigned int)mQuantizationLevels);
+        }
+    }
 }
 
 template <class T>
@@ -80,6 +112,14 @@ void N2D2::RectifierActivation_Frame
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
+    if (mQuantizationLevels > 0) {
+#pragma omp parallel for if (diffData.size() > 1024)
+        for (int index = 0; index < (int)diffData.size(); ++index) {
+            diffData(index) = Utils::clamp<T>(diffData(index),
+                                              T(-1.0f), T(1.0f));
+        }
+    }
 
     if (mShifting > 0) {
 #pragma omp parallel for if (data.size() > 1024)

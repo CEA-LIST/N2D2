@@ -486,6 +486,26 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
     return activity;
 }
 
+void N2D2::DeepNet::save(const std::string& dirName) const
+{
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(),
+         itEnd = mCells.end();
+         it != itEnd;
+         ++it)
+        (*it).second->save(dirName + "/" + (*it).first);
+}
+
+void N2D2::DeepNet::load(const std::string& dirName)
+{
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(),
+         itEnd = mCells.end();
+         it != itEnd;
+         ++it)
+        (*it).second->load(dirName + "/" + (*it).first);
+}
+
 void N2D2::DeepNet::saveNetworkParameters() const
 {
     for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
@@ -1176,49 +1196,14 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 appliedFactor = prevScalingFactor
                                             * (remainingFactor / shiftedFactor);
 
-                if (activationType == "Linear") {
-                    if (cellFrame->isCuda()) {
-#ifdef CUDA
-                        if (std::dynamic_pointer_cast
-                            <Cell_Frame_CUDA<float> >(cell))
-                        {
-                            cellFrame->setActivation(std::make_shared
-                                <SaturationActivation_Frame_CUDA<float> >());
-                        }
-                        else if (std::dynamic_pointer_cast
-                            <Cell_Frame_CUDA<half_float::half> >(cell))
-                        {
-                            cellFrame->setActivation(std::make_shared
-                                <SaturationActivation_Frame_CUDA
-                                    <half_float::half> >());
-                        }
-                        else {
-                            cellFrame->setActivation(std::make_shared
-                                <SaturationActivation_Frame_CUDA<double> >());
-                        }
-#endif
-                    }
-                    else {
-                        if (std::dynamic_pointer_cast<Cell_Frame<float> >(cell))
-                        {
-                            cellFrame->setActivation(std::make_shared
-                                <SaturationActivation_Frame<float> >());
-                        }
-                        else if (std::dynamic_pointer_cast
-                            <Cell_Frame<half_float::half> >(cell))
-                        {
-                            cellFrame->setActivation(std::make_shared
-                                <SaturationActivation_Frame
-                                    <half_float::half> >());
-                        }
-                        else {
-                            cellFrame->setActivation(std::make_shared
-                                <SaturationActivation_Frame<double> >());
-                        }
-                    }
+                if (activation)
+                    activation->setParameter<int>("Shifting", shifting);
+                else {
+                    std::cout << Utils::cwarning
+                        << "DeepNet::normalizeOutputsRange(): no activation "
+                        "for cell " << (*itCell) << ", unable to add Shifting"
+                        << Utils::cdef << std::endl;
                 }
-
-                activation->setParameter<int>("Shifting", shifting);
 
                 if (activationType == "Rectifier")
                     activation->setParameter<double>("Clipping", 1.0);

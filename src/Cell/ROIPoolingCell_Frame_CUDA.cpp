@@ -84,7 +84,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::initialize()
     mParentProposals = mInputs[kRef-1].dimB()/mInputs[kRef].dimB();
 }
 
-void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
+void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -185,7 +185,7 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool /*inference*/)
         outputOffset += mInputs[k].dimZ();
     }
 
-    Cell_Frame_CUDA<Float_T>::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

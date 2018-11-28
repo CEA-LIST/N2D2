@@ -244,7 +244,7 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
         outputOffset += input.dimZ();
     }
 
-    Cell_Frame<T>::propagate();
+    Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
@@ -337,7 +337,7 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
                                   + (T)mDiffSavedMean(output) / (T)size);
 
                             diffOutput(ox, oy, channel, batchPos)
-                                = (gradient 
+                                = (gradient
                                 + isValid * diffOutput(ox, oy, channel, batchPos));
                         }
                     }
@@ -405,25 +405,10 @@ void N2D2::BatchNormCell_Frame<T>::saveFreeParameters(const std::string
         throw std::runtime_error("Could not create parameter file (.SYN): "
                                  + fileName);
 
-    for (typename std::vector<ParamT>::const_iterator it = mScale->begin();
-         it != mScale->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-
-    for (typename std::vector<ParamT>::const_iterator it = mBias->begin();
-         it != mBias->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-
-    for (typename std::vector<ParamT>::const_iterator it = mMean->begin();
-         it != mMean->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
-
-    for (typename std::vector<ParamT>::const_iterator it = mVariance->begin();
-         it != mVariance->end();
-         ++it)
-        syn.write(reinterpret_cast<const char*>(&(*it)), sizeof(*it));
+    mScale->save(syn);
+    mBias->save(syn);
+    mMean->save(syn);
+    mVariance->save(syn);
 
     if (!syn.good())
         throw std::runtime_error("Error writing parameter file: " + fileName);
@@ -446,22 +431,10 @@ void N2D2::BatchNormCell_Frame<T>::loadFreeParameters(const std::string& fileNam
                                      + fileName);
     }
 
-    for (typename std::vector<ParamT>::iterator it = mScale->begin(); it != mScale->end();
-         ++it)
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-
-    for (typename std::vector<ParamT>::iterator it = mBias->begin(); it != mBias->end();
-         ++it)
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-
-    for (typename std::vector<ParamT>::iterator it = mMean->begin(); it != mMean->end();
-         ++it)
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
-
-    for (typename std::vector<ParamT>::iterator it = mVariance->begin();
-         it != mVariance->end();
-         ++it)
-        syn.read(reinterpret_cast<char*>(&(*it)), sizeof(*it));
+    mScale->load(syn);
+    mBias->load(syn);
+    mMean->load(syn);
+    mVariance->load(syn);
 
     if (syn.eof())
         throw std::runtime_error(

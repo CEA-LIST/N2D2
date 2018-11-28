@@ -29,16 +29,25 @@
 namespace N2D2 {
 class Solver : public Parameterizable {
 public:
+    virtual const char* getType() const = 0;
     virtual void update(BaseTensor& data,
                         BaseTensor& diffData,
                         unsigned int batchSize) = 0;
-    virtual void exportFreeParameters(const std::string& fileName) const = 0;
     std::shared_ptr<Solver> clone() const
     {
         return std::shared_ptr<Solver>(doClone());
     }
     virtual bool isNewIteration() const = 0;
+    virtual void save(const std::string& dirName) const;
+    virtual void load(const std::string& dirName);
+    virtual std::pair<double, double> getRange() const = 0;
+    virtual std::pair<double, double> getQuantizedRange() const = 0;
     virtual ~Solver() {};
+
+protected:
+    virtual void saveInternal(std::ostream& /*state*/,
+                              std::ostream& /*log*/) const {};
+    virtual void loadInternal(std::istream& /*state*/) {};
 
 private:
     virtual Solver* doClone() const = 0;

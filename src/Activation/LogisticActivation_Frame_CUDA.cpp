@@ -52,4 +52,64 @@ N2D2::LogisticActivation_Frame_CUDA<double>::mRegistrar(
     N2D2::LogisticActivation_Frame_CUDA<double>::create,
     N2D2::Registrar<N2D2::LogisticActivation>::Type<double>());
 
+namespace N2D2 {
+template <>
+void LogisticActivation_Frame_CUDA<half_float::half>::propagate(
+    CudaTensor<half_float::half>& data,
+    bool inference)
+{
+    if (mQuantizationLevels > 0) {
+        ++mNbSteps;
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            cudaHquantize(data.getDevicePtr(),
+                          data.getDevicePtr(),
+                          data.size(),
+                          half_float::half(0.0f),
+                          half_float::half(1.0f),
+                          mQuantizationLevels);
+
+        }
+    }
+}
+
+template <>
+void LogisticActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
+                                                     bool inference)
+{
+    if (mQuantizationLevels > 0) {
+        ++mNbSteps;
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            cudaSquantize(data.getDevicePtr(),
+                          data.getDevicePtr(),
+                          data.size(),
+                          0.0f,
+                          1.0f,
+                          mQuantizationLevels);
+
+        }
+    }
+}
+
+template <>
+void LogisticActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
+                                                      bool inference)
+{
+    if (mQuantizationLevels > 0) {
+        ++mNbSteps;
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            cudaDquantize(data.getDevicePtr(),
+                          data.getDevicePtr(),
+                          data.size(),
+                          0.0,
+                          1.0,
+                          mQuantizationLevels);
+
+        }
+    }
+}
+}
+
 #endif

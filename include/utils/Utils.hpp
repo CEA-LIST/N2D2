@@ -362,6 +362,21 @@ namespace Utils {
     */
     template <class T> T gcd(T x, T y, T precision = 1.0e-6);
 
+    /**
+     * Make sure 0.0 is exactly represented in the quantized range.
+     * roundingRule behavior:
+     * - HalfAwayFromZero: symmetrical range [-a a] with even levels
+     *                     becomes [-a-delta a] (default, will match signed INT
+     *                                           representation)
+     * - HalfTowardsZero: symmetrical range [-a a] with even levels
+     *                    becomes [-a a+delta]
+    */
+    template <class T>
+    std::pair<T, T> zeroAlignedQuantizedRange(T minVal,
+                                              T maxVal,
+                                              unsigned int levels,
+                                    Rounding roundingRule = HalfAwayFromZero);
+
     template <class T> T quantize(double x, T vmin, T vmax);
 
     /**
@@ -727,16 +742,18 @@ bool N2D2::Utils::isBigEndian()
 
 template <class T> T N2D2::Utils::round(T x, Rounding rule)
 {
+    using namespace std;    // allow using half_float too
+
     switch (rule) {
     case HalfUp:
-        return std::floor(x + 0.5);
+        return floor(x + T(0.5f));
     case HalfDown:
-        return std::ceil(x - 0.5);
+        return ceil(x - T(0.5f));
     case HalfTowardsZero:
-        return (x < 0.0) ? std::floor(x + 0.5) : std::ceil(x - 0.5);
+        return (x < T(0.0f)) ? floor(x + T(0.5f)) : ceil(x - T(0.5f));
     case HalfAwayFromZero:
     default:
-        return (x < 0.0) ? std::ceil(x - 0.5) : std::floor(x + 0.5);
+        return (x < T(0.0f)) ? ceil(x - T(0.5f)) : floor(x + T(0.5f));
     }
 }
 
@@ -750,6 +767,65 @@ template <class T> T N2D2::Utils::gcd(T x, T y, T precision)
     while (std::fabs(a) > precision);
 
     return b;
+}
+
+template <class T> std::pair<T, T>
+N2D2::Utils::zeroAlignedQuantizedRange(T minVal,
+                                       T maxVal,
+                                       unsigned int levels,
+                                       Rounding roundingRule)
+{
+    if (maxVal <= minVal) {
+        throw std::domain_error("Utils::zeroAlignedQuantizedRange(): "
+                                "maxVal must be > minVal.");
+    }
+
+    if (levels < 2) {
+        throw std::domain_error("Utils::zeroAlignedQuantizedRange(): "
+                                "levels must be > 1.");
+    }
+
+    // Scaling with base range
+    double scaling = (maxVal - minVal) / (double)(levels - 1);
+    // zero: position of 0.0 in the quantized scale. If zero is not an INT,
+    // zero alignment is necessary.
+    const double zero = (0.0 - minVal) / scaling;
+    // quantizedZero: target position of 0.0 in the quantized scale.
+    const int quantizedZero = (int)round(zero, roundingRule);
+
+    // New range so that 0.0 is exactly representable as an INT
+    // Meaning zero == quantizedZero
+    const int zeroLevel = quantizedZero - (levels - 1);
+
+    // When 0.0 is outside the initial range, the current behavior is to extend
+    // the range to include 0.0.
+    if (quantizedZero < 0) {
+        // 0.0 is below range => minVal is decreased to 0.0
+        minVal = 0.0;
+    }
+    else if (zeroLevel > 0) {
+        // 0.0 is above range => maxVal is increased to 0.0
+        maxVal = 0.0;
+    }
+    else {
+        // else: this should be the normal condition when calling this function
+        if (quantizedZero <= zero) {
+            // Increase maxVal
+            if (quantizedZero > 0)
+                maxVal = zeroLevel * minVal / (double)quantizedZero;
+            else
+                minVal = 0.0;
+        }
+        else {
+            // Decrease minVal
+            if (zeroLevel < 0)
+                minVal = quantizedZero * maxVal / (double)zeroLevel;
+            else
+                maxVal = 0.0;
+        }
+    }
+
+    return std::make_pair(minVal, maxVal);
 }
 
 template <class T> T N2D2::Utils::quantize(double x, T vmin, T vmax)

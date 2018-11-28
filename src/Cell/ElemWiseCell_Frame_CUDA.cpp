@@ -67,7 +67,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
         mInterTerm.resize(mOutputs.dims());
 }
 
-void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
+void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 {
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
@@ -224,7 +224,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool /*inference*/)
                                  "unknown operation type.");
     }
 
-    Cell_Frame_CUDA<Float_T>::propagate();
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

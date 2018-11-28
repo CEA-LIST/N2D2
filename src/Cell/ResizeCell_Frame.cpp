@@ -66,11 +66,11 @@ void N2D2::ResizeCell_Frame::initialize()
         const unsigned int inputDimX = mInputs[0].dimX();
         const unsigned int inputDimY = mInputs[0].dimY();
 
-        mScaleX = (mAlignCorners && outputDimX > 1) ? 
+        mScaleX = (mAlignCorners && outputDimX > 1) ?
                       (inputDimX - 1) / (Float_T) (outputDimX - 1)
                     : (inputDimX) / (Float_T) (outputDimX);
 
-        mScaleY = (mAlignCorners && outputDimY > 1) ? 
+        mScaleY = (mAlignCorners && outputDimY > 1) ?
                       (inputDimY - 1) / (Float_T) (outputDimY - 1)
                     : (inputDimY) / (Float_T) (outputDimY);
 
@@ -88,7 +88,7 @@ void N2D2::ResizeCell_Frame::initialize()
 
 }
 
-void N2D2::ResizeCell_Frame::propagate(bool /*inference*/)
+void N2D2::ResizeCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
     const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[0]);
@@ -133,7 +133,7 @@ void N2D2::ResizeCell_Frame::propagate(bool /*inference*/)
     }
 
 
-    Cell_Frame<Float_T>::propagate();
+    Cell_Frame<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

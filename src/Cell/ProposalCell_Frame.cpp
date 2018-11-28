@@ -83,7 +83,7 @@ void N2D2::ProposalCell_Frame::initialize()
             << std::endl;
 }
 
-void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
+void N2D2::ProposalCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
 
@@ -404,6 +404,7 @@ void N2D2::ProposalCell_Frame::propagate(bool /*inference*/)
         }
     }
 
+    Cell_Frame<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

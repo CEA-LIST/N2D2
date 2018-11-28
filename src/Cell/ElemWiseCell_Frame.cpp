@@ -63,7 +63,7 @@ void N2D2::ElemWiseCell_Frame::initialize()
         mInterTerm.resize(mOutputs.dims());
 }
 
-void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
+void N2D2::ElemWiseCell_Frame::propagate(bool inference)
 {
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
@@ -139,7 +139,7 @@ void N2D2::ElemWiseCell_Frame::propagate(bool /*inference*/)
                                  "unknown operation type.");
     }
 
-    Cell_Frame<Float_T>::propagate();
+    Cell_Frame<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

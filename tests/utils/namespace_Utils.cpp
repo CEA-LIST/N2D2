@@ -249,4 +249,47 @@ TEST_DATASET(Utils,
     ASSERT_EQUALS(Utils::median(vec), median);
 }
 
+TEST_DATASET(Utils,
+             zeroAlignedQuantizedRange,
+             (double minVal, double maxVal, unsigned int levels,
+              double minAlignedVal, double maxAlignedVal),
+             // 2 levels
+             std::make_tuple(0.0, 1.0, 2, 0.0, 1.0),
+             std::make_tuple(-1.0, 1.0, 2, -1.0, 0.0),
+             std::make_tuple(-0.8, 1.0, 2, 0.0, 1.0),
+             std::make_tuple(-1.0, 0.0, 2, -1.0, 0.0),
+             std::make_tuple(-1.0, 0.8, 2, -1.0, 0.0),
+             // 0.0 outside range => range extended to include 0.0:
+             std::make_tuple(1.0, 2.0, 2, 0.0, 2.0),
+             std::make_tuple(-2.0, -1.0, 2, -2.0, 0.0),
+             // 3 levels
+             std::make_tuple(-1.0, 1.0, 3, -1.0, 1.0),
+             std::make_tuple(-1.0, 0.8, 3, -1.0, 1.0),
+             std::make_tuple(-0.8, 1.0, 3, -1.0, 1.0),
+             // > 3 levels
+             std::make_tuple(-2.0, 2.0, 4, -4.0, 2.0),
+             std::make_tuple(-1.99, 2.0, 4, -1.99, 3.98),
+             std::make_tuple(-2.0, 1.99, 4, -3.98, 1.99),
+             std::make_tuple(-1.0, 1.0, 11, -1.0, 1.0),
+             std::make_tuple(-1.0, 1.01, 11, -1.01, 1.01),
+             std::make_tuple(-1.01, 1.0, 11, -1.01, 1.01),
+             std::make_tuple(-4.0, 4.0, 10, -5.0, 4.0),
+             std::make_tuple(-3.6, 4.0, 10, -3.6, 4.5),
+             std::make_tuple(-4.0, 3.6, 10, -4.5, 3.6),
+             std::make_tuple(0.0, 4.2167, 13, 0.0, 4.2167),
+             std::make_tuple(-2.4473, 0.0, 7, -2.4473, 0.0))
+{
+    double minAlignedVal_, maxAlignedVal_;
+    std::tie(minAlignedVal_, maxAlignedVal_)
+        = Utils::zeroAlignedQuantizedRange(minVal, maxVal, levels);
+
+    ASSERT_EQUALS_DELTA(minAlignedVal_, minAlignedVal, 1.0e-12);
+    ASSERT_EQUALS_DELTA(maxAlignedVal_, maxAlignedVal, 1.0e-12);
+
+    const double scale = (maxAlignedVal_ - minAlignedVal_) / (levels - 1);
+    const double zero = (0.0 - minAlignedVal_) / scale;
+
+    ASSERT_EQUALS_DELTA(zero, (double)(int)zero, 1.0e-12);
+}
+
 RUN_TESTS()

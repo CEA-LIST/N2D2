@@ -22,6 +22,7 @@
 #define N2D2_SGDSOLVER_FRAME_CUDA_H
 
 #include "Solver/SGDSolver.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
 #include "Solver/SGDSolver_CUDA_Kernels.hpp"
 
 #include "CudaContext.hpp"
@@ -41,8 +42,6 @@ public:
     void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
     void update(CudaTensor<T>& data, CudaTensor<T>& diffData,
                 unsigned int batchSize);
-    void exportFreeParameters(const std::string& fileName) const;
-
     std::shared_ptr<SGDSolver_Frame_CUDA<T> > clone() const
     {
         return std::shared_ptr<SGDSolver_Frame_CUDA<T> >(doClone());
@@ -50,9 +49,11 @@ public:
     virtual ~SGDSolver_Frame_CUDA() {};
 
 protected:
+    void saveInternal(std::ostream& state, std::ostream& log) const;
+    void loadInternal(std::istream& state);
+
     // inline void setMomentum(unsigned int output, unsigned int channel,
     // unsigned int sx, unsigned int sy, float value);
-
     CudaTensor<T> mMomentumData;
     CudaTensor<T> mContinuousData;
 
@@ -92,29 +93,26 @@ void N2D2::SGDSolver_Frame_CUDA<T>::update(BaseTensor& data,
 }
 
 template <class T>
-void N2D2::SGDSolver_Frame_CUDA<T>::exportFreeParameters(
-    const std::string& fileName) const
+void N2D2::SGDSolver_Frame_CUDA<T>::saveInternal(std::ostream& state,
+                                                 std::ostream& log) const
 {
-    if (mMomentum != 0.0 && mMomentumData.size() > 0) {
-        std::ofstream syn(fileName);
+    SGDSolver::saveInternal(state, log);
 
-        if (!syn.good())
-            throw std::runtime_error("Could not create synaptic file : "
-                                     + fileName);
+    mMomentumData.synchronizeDToH();
+    mMomentumData.save(state);
+    mContinuousData.synchronizeDToH();
+    mContinuousData.save(state);
+}
 
-        mMomentumData.synchronizeDToH();
+template <class T>
+void N2D2::SGDSolver_Frame_CUDA<T>::loadInternal(std::istream& state)
+{
+    SGDSolver::loadInternal(state);
 
-        for (typename std::vector<T>::const_iterator it = mMomentumData.begin();
-             it != mMomentumData.end();
-             ++it) {
-            syn << (*it) << " ";
-            syn << "\n";
-        }
-
-        if (!syn.good())
-            throw std::runtime_error("Error writing synaptic file: "
-                                     + fileName);
-    }
+    mMomentumData.load(state);
+    mMomentumData.synchronizeHToD();
+    mContinuousData.load(state);
+    mContinuousData.synchronizeHToD();
 }
 
 namespace N2D2 {

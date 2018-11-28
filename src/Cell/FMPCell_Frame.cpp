@@ -148,7 +148,7 @@ void N2D2::FMPCell_Frame::propagate(bool inference)
         }
     }
 
-    Cell_Frame<Float_T>::propagate();
+    Cell_Frame<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

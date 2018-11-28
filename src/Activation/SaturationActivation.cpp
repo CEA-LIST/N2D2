@@ -23,7 +23,50 @@
 const char* N2D2::SaturationActivation::Type = "Saturation";
 
 N2D2::SaturationActivation::SaturationActivation()
-    : mThreshold(this, "Threshold", 1.0)
+    : mThreshold(this, "Threshold", 1.0),
+      mMinValMA(0.0),
+      mMaxValMA(0.0),
+      mMinValAligned(0.0),
+      mMaxValAligned(0.0),
+      mMinValQuant(0.0),
+      mMaxValQuant(0.0)
 {
     // ctor
+}
+
+void N2D2::SaturationActivation::saveInternal(std::ostream& state,
+                                              std::ostream& log) const
+{
+    state.write(reinterpret_cast<const char*>(&mMinValMA), sizeof(mMinValMA));
+    state.write(reinterpret_cast<const char*>(&mMaxValMA), sizeof(mMaxValMA));
+    state.write(reinterpret_cast<const char*>(&mMinValAligned),
+                sizeof(mMinValAligned));
+    state.write(reinterpret_cast<const char*>(&mMaxValAligned),
+                sizeof(mMaxValAligned));
+    state.write(reinterpret_cast<const char*>(&mMinValQuant),
+                sizeof(mMinValQuant));
+    state.write(reinterpret_cast<const char*>(&mMaxValQuant),
+                sizeof(mMaxValQuant));
+
+    log << "Range after moving average (*MA): [" << mMinValMA << ", "
+            << mMaxValMA << "]\n"
+        << "Range after zero-alignment (*Aligned): [" << mMinValAligned << ", "
+            << mMaxValAligned << "]\n"
+        << "Quantization range (*Quant): [" << mMinValQuant << ", "
+            << mMaxValQuant << "]\n"
+        << "Quantization range after rescaling: ["
+            << (mMinValQuant / mPreQuantizeScaling) << ", "
+            << (mMaxValQuant / mPreQuantizeScaling) << "]" << std::endl;
+}
+
+void N2D2::SaturationActivation::loadInternal(std::istream& state)
+{
+    state.read(reinterpret_cast<char*>(&mMinValMA), sizeof(mMinValMA));
+    state.read(reinterpret_cast<char*>(&mMaxValMA), sizeof(mMaxValMA));
+    state.read(reinterpret_cast<char*>(&mMinValAligned),
+               sizeof(mMinValAligned));
+    state.read(reinterpret_cast<char*>(&mMaxValAligned),
+               sizeof(mMaxValAligned));
+    state.read(reinterpret_cast<char*>(&mMinValQuant), sizeof(mMinValQuant));
+    state.read(reinterpret_cast<char*>(&mMaxValQuant), sizeof(mMaxValQuant));
 }

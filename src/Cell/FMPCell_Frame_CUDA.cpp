@@ -52,7 +52,7 @@ void N2D2::FMPCell_Frame_CUDA::initialize()
             "FMPCell_Frame_CUDA::initialize(): only unit maps are supported.");
 }
 
-void N2D2::FMPCell_Frame_CUDA::propagate(bool /*inference*/)
+void N2D2::FMPCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
@@ -81,6 +81,9 @@ void N2D2::FMPCell_Frame_CUDA::propagate(bool /*inference*/)
                       mOutputs.dimY(),
                       mInputs.dimB(),
                       mOverlapping);
+
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
+    mDiffInputs.clearValid();
 }
 
 void N2D2::FMPCell_Frame_CUDA::backPropagate()

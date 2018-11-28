@@ -35,11 +35,14 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
     if (iniConfig.isProperty(name)) {
         const std::string type = iniConfig.getProperty<std::string>(name);
 
-        if (type == "Linear")
-            return std::shared_ptr<Activation>();
-        else
-            return Registrar<ActivationGenerator>::create(type)(
+        std::shared_ptr<Activation> activation
+            = Registrar<ActivationGenerator>::create(type)(
                 iniConfig, section, model, dataType, name);
-    } else
+
+        activation->setPrefixedParameters(iniConfig.getSection(section),
+                                          name + ".");
+        return activation;
+    }
+    else
         return defaultActivation;
 }

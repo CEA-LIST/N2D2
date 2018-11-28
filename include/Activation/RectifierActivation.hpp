@@ -44,10 +44,16 @@ public:
     virtual ~RectifierActivation() {};
 
 protected:
+    void saveInternal(std::ostream& state, std::ostream& log) const;
+    void loadInternal(std::istream& state);
+
     /// Leak slope
     Parameter<double> mLeakSlope;
     /// Clipping
     Parameter<double> mClipping;
+
+    double mMaxValMA;
+    double mMaxValQuant;
 };
 }
 

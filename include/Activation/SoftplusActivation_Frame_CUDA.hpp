@@ -38,9 +38,9 @@ public:
     }
 
     SoftplusActivation_Frame_CUDA();
-    inline virtual void propagate(BaseTensor& data);
+    inline virtual void propagate(BaseTensor& data, bool inference = false);
     inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
-    void propagate(CudaTensor<T>& data);
+    void propagate(CudaTensor<T>& data, bool inference = false);
     void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
     virtual ~SoftplusActivation_Frame_CUDA() {};
 
@@ -57,8 +57,10 @@ N2D2::SoftplusActivation_Frame_CUDA<T>::SoftplusActivation_Frame_CUDA()
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame_CUDA<T>::propagate(BaseTensor& data) {
-    propagate(dynamic_cast<CudaTensor<T>&>(data));
+void N2D2::SoftplusActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
+                                                       bool inference)
+{
+    propagate(dynamic_cast<CudaTensor<T>&>(data), inference);
 }
 
 template <class T>
@@ -71,19 +73,22 @@ void N2D2::SoftplusActivation_Frame_CUDA<T>::backPropagate(BaseTensor& data,
 
 namespace N2D2 {
 template <>
-void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(CudaTensor<half_float::half>& data);
+void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(
+    CudaTensor<half_float::half>& data, bool inference);
 template <>
 void SoftplusActivation_Frame_CUDA
     <half_float::half>::backPropagate(CudaTensor<half_float::half>& data, CudaTensor<half_float::half>& diffData);
 
 template <>
-void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data);
+void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
+                                                     bool inference);
 template <>
 void SoftplusActivation_Frame_CUDA
     <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData);
 
 template <>
-void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data);
+void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
+                                                      bool inference);
 template <>
 void SoftplusActivation_Frame_CUDA
     <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData);

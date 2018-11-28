@@ -32,7 +32,7 @@ public:
         return std::make_shared<SoftplusActivation_Frame<T> >();
     }
 
-    virtual void propagate(BaseTensor& data);
+    virtual void propagate(BaseTensor& data, bool inference = false);
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~SoftplusActivation_Frame() {};
 
@@ -42,7 +42,8 @@ private:
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData)
+void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData,
+                                                  bool /*inference*/)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
@@ -62,6 +63,10 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData)
 #endif
     }
 
+    if (mQuantizationLevels > 0) {
+        throw std::runtime_error("SoftplusActivation_Frame::propagate: "
+                                 "quantization is not yet supported.");
+    }
 }
 
 template <class T>
@@ -70,6 +75,14 @@ void N2D2::SoftplusActivation_Frame
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
+    if (mQuantizationLevels > 0) {
+#pragma omp parallel for if (diffData.size() > 1024)
+        for (int index = 0; index < (int)diffData.size(); ++index) {
+            diffData(index) = Utils::clamp<T>(diffData(index),
+                                              T(-1.0f), T(1.0f));
+        }
+    }
 
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)diffData.size(); ++index)

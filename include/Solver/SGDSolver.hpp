@@ -34,6 +34,8 @@ public:
         return rMap;
     }
 
+    static const char* Type;
+
     enum LearningRatePolicy {
         None,
         StepDecay,
@@ -44,6 +46,10 @@ public:
     };
 
     SGDSolver();
+    const char* getType() const
+    {
+        return Type;
+    };
     SGDSolver(const SGDSolver& solver);
     std::shared_ptr<SGDSolver> clone() const
     {
@@ -53,10 +59,20 @@ public:
     {
         return (mIterationPass == 0);
     }
+    std::pair<double, double> getRange() const
+    {
+        return std::make_pair(mMinVal, mMaxVal);
+    }
+    std::pair<double, double> getQuantizedRange() const
+    {
+        return std::make_pair(mMinValQuant, mMaxValQuant);
+    }
     virtual ~SGDSolver() {};
 
 protected:
     double getLearningRate(unsigned int batchSize);
+    virtual void saveInternal(std::ostream& state, std::ostream& log) const;
+    virtual void loadInternal(std::istream& state);
 
     /// Initial learning rate
     Parameter<double> mLearningRate;
@@ -83,6 +99,10 @@ protected:
 
     unsigned int mIterationPass;
     unsigned int mNbIterations;
+    double mMinVal;
+    double mMaxVal;
+    double mMinValQuant;
+    double mMaxValQuant;
 
 private:
     virtual SGDSolver* doClone() const = 0;

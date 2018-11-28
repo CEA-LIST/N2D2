@@ -239,8 +239,7 @@ void N2D2::RPCell_Frame_CUDA::propagate(bool inference)
         }
     }
 
-    Cell_Frame_CUDA<Float_T>::propagate();
-
+    Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

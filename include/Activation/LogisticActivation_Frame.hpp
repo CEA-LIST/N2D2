@@ -22,6 +22,7 @@
 #define N2D2_LOGISTICACTIVATION_FRAME_H
 
 #include "Activation/LogisticActivation.hpp"
+#include "Activation/Activation_Kernels.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -33,7 +34,7 @@ public:
     }
 
     LogisticActivation_Frame(bool withLoss = false);
-    virtual void propagate(BaseTensor& data);
+    virtual void propagate(BaseTensor& data, bool inference = false);
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
     virtual ~LogisticActivation_Frame() {};
 
@@ -50,7 +51,8 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData)
+void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData,
+                                                  bool inference)
 {
     if (LogisticActivationDisabled)
         return;
@@ -70,6 +72,15 @@ void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData)
         feenableexcept(excepts);
 #endif
     }
+
+    if (mQuantizationLevels > 0) {
+        ++mNbSteps;
+
+        if (mNbSteps > mQuantizationDelay || inference) {
+            quantize(data, data, T(0.0f), T(1.0f),
+                     (unsigned int)mQuantizationLevels);
+        }
+    }
 }
 
 template <class T>
@@ -81,6 +92,14 @@ void N2D2::LogisticActivation_Frame
 
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+
+    if (mQuantizationLevels > 0) {
+#pragma omp parallel for if (diffData.size() > 1024)
+        for (int index = 0; index < (int)diffData.size(); ++index) {
+            diffData(index) = Utils::clamp<T>(diffData(index),
+                                              T(-1.0f), T(1.0f));
+        }
+    }
 
     if (!this->mWithLoss) {
 #pragma omp parallel for if (data.size() > 1024)
