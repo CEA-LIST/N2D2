@@ -253,6 +253,7 @@ void N2D2::CMonitor_CUDA::update(Time_T start, Time_T stop)
 
     }
 
+    //TODO: This is slow. Move to CUDA kernel!
     for (unsigned int i=0; i<mExampleActivity.size(); ++i){
         mLastExampleActivity(i) = mExampleActivity(i);
     }
@@ -292,8 +293,6 @@ void N2D2::CMonitor_CUDA::clearAll(unsigned int nbTimesteps)
     mSuccess.clear();
     clearFastSuccess();
 
-
-    std::cout << "CMonitor_CUDA cleared" << std::endl;
 }
 
 

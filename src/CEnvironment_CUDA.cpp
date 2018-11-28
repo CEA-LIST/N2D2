@@ -57,8 +57,7 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 }
 
 
-
-
+//TODO: Check that this has save behavior as CEnvironment!
 void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
     SpikeGenerator::checkParameters();

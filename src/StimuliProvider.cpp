@@ -930,12 +930,12 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
 
          if (minValue < 0.0) {
             cbRangeStr << minValue;
-            paletteStr << minValue << " \"black\", ";
+            paletteStr << minValue << " \"cyan\", ";
         } else
             cbRangeStr << 0.0;
 
         cbRangeStr << ":";
-        paletteStr << "0 \"grey\"";
+        paletteStr << "0 \"black\"";
 
         if (maxValue > 0.0 || !(minValue < 0)) {
             cbRangeStr << maxValue;

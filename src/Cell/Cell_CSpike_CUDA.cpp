@@ -255,7 +255,6 @@ N2D2::Tensor<N2D2::Float_T>& N2D2::Cell_CSpike_CUDA::getOutputsActivity()
     return mOutputsActivity;
 }
 
-//TODO: Check where this is used
 N2D2::Tensor<char>& N2D2::Cell_CSpike_CUDA::getOutputs()
 {
     mOutputs.synchronizeDToH();
