@@ -3195,6 +3195,49 @@ The learning rate decay policies are identical to the ones in the \lstinline!SGD
 
 
 
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!AdamSolver\_Frame!}{AdamSolver\_Frame}}
+Adam Solver for \lstinline!Frame! models \citep{KingmaB14}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+   \emph{SolverName}\lstinline!.LearningRate! [0.001] & Learning rate (stepsize) \\
+   \emph{SolverName}\lstinline!.Beta1! [0.9] & Exponential decay rate of these moving
+average of the first moment \\
+   \emph{SolverName}\lstinline!.Beta2! [0.999] & Exponential decay rate of these moving
+average of the second moment \\
+   \emph{SolverName}\lstinline!.Epsilon! [1.0e-8] & Epsilon \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!AdamSolver\_Frame\_CUDA!}
+{AdamSolver\_Frame\_CUDA}}
+Adam Solver for \lstinline!Frame_CUDA! models \citep{KingmaB14}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+   \emph{SolverName}\lstinline!.LearningRate! [0.001] & Learning rate (stepsize) \\
+   \emph{SolverName}\lstinline!.Beta1! [0.9] & Exponential decay rate of these moving
+average of the first moment \\
+   \emph{SolverName}\lstinline!.Beta2! [0.999] & Exponential decay rate of these moving
+average of the second moment \\
+   \emph{SolverName}\lstinline!.Epsilon! [1.0e-8] & Epsilon \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
 \subsubsection{Activation functions}
 Activation function to be used at the output of layers.
 

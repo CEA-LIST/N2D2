@@ -212,6 +212,167 @@ __global__ void cudaHaxpy_kernel(unsigned int size,
     }
 }
 
+__global__ void cudaHpow_kernel(unsigned int size,
+                                 __half power,
+                                 const __half *x,
+                                 __half *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = __float2half(powf(__half2float(x[i]), __half2float(power)));
+    }
+}
+
+__global__ void cudaSpow_kernel(unsigned int size,
+                                 float power,
+                                 const float *x,
+                                 float *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = powf(x[i], power);
+    }
+}
+
+__global__ void cudaDpow_kernel(unsigned int size,
+                                 double power,
+                                 const double *x,
+                                 double *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = powf(x[i], power);
+    }
+}
+
+__global__ void cudaHadd_kernel(unsigned int size,
+                                 __half value,
+                                 const __half *x,
+                                 __half *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+        y[i] = __hadd(x[i], value);
+#else
+        y[i] = __float2half(__half2float(x[i]) + __half2float(value));
+#endif
+    }
+}
+
+__global__ void cudaSadd_kernel(unsigned int size,
+                                 float value,
+                                 const float *x,
+                                 float *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = x[i] + value;
+    }
+}
+
+__global__ void cudaDadd_kernel(unsigned int size,
+                                 double value,
+                                 const double *x,
+                                 double *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = x[i] + value;
+    }
+}
+
+__global__ void cudaHmult_kernel(unsigned int size,
+                                 const __half *x1,
+                                 const __half *x2,
+                                 __half *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+        y[i] = __hmul(x1[i], x2[i]);
+#else
+        y[i] = __float2half(__half2float(x1[i]) + __half2float(x2[i]));
+#endif
+    }
+}
+
+__global__ void cudaSmult_kernel(unsigned int size,
+                                 const float *x1,
+                                 const float *x2,
+                                 float *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = x1[i] * x2[i];
+    }
+}
+
+__global__ void cudaDmult_kernel(unsigned int size,
+                                 const double *x1,
+                                 const double *x2,
+                                 double *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = x1[i] * x2[i];
+    }
+}
+
+__global__ void cudaHinv_kernel(unsigned int size,
+                                 const __half *x,
+                                 __half *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = __float2half(1.0f / __half2float(x[i]));
+    }
+}
+
+__global__ void cudaSinv_kernel(unsigned int size,
+                                 const float *x,
+                                 float *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = 1.0f / x[i];
+    }
+}
+
+__global__ void cudaDinv_kernel(unsigned int size,
+                                 const double *x,
+                                 double *y)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = 1.0 / x[i];
+    }
+}
+
 void N2D2::cudaHclamp(half_float::half* x, unsigned int size,
                       half_float::half minVal, half_float::half maxVal)
 {
@@ -341,5 +502,126 @@ void N2D2::cudaHaxpy(unsigned int size,
          reinterpret_cast<__half&>(alpha),
          reinterpret_cast<const __half*>(x),
          reinterpret_cast<__half*>(y));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHpow(unsigned int size,
+                      half_float::half power,
+                      const half_float::half *x,
+                      half_float::half *y)
+{
+    cudaHpow_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+        reinterpret_cast<__half&>(power),
+        reinterpret_cast<const __half*>(x),
+        reinterpret_cast<__half*>(y));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSpow(unsigned int size,
+                      float power,
+                      const float *x,
+                      float *y)
+{
+    cudaSpow_kernel<<<(size + 255) / 256, 256>>>(size, power, x, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaDpow(unsigned int size,
+                      double power,
+                      const double *x,
+                      double *y)
+{
+    cudaDpow_kernel<<<(size + 255) / 256, 256>>>(size, power, x, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHadd(unsigned int size,
+                    half_float::half value,
+                    const half_float::half *x,
+                    half_float::half *y)
+{
+    cudaHadd_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+        reinterpret_cast<__half&>(value),
+        reinterpret_cast<const __half*>(x),
+        reinterpret_cast<__half*>(y));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSadd(unsigned int size,
+                      float value,
+                      const float *x,
+                      float *y)
+{
+    cudaSadd_kernel<<<(size + 255) / 256, 256>>>(size, value, x, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaDadd(unsigned int size,
+                      double value,
+                      const double *x,
+                      double *y)
+{
+    cudaDadd_kernel<<<(size + 255) / 256, 256>>>(size, value, x, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+void N2D2::cudaHmult(unsigned int size,
+                      const half_float::half *x1,
+                      const half_float::half *x2,
+                      half_float::half *y)
+{
+    cudaHmult_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+        reinterpret_cast<const __half*>(x1),
+        reinterpret_cast<const __half*>(x2),
+        reinterpret_cast<__half*>(y));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSmult(unsigned int size,
+                      const float *x1,
+                      const float *x2,
+                      float *y)
+{
+    cudaSmult_kernel<<<(size + 255) / 256, 256>>>(size, x1, x2, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaDmult(unsigned int size,
+                      const double *x1,
+                      const double *x2,
+                      double *y)
+{
+    cudaDmult_kernel<<<(size + 255) / 256, 256>>>(size, x1, x2, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHinv(unsigned int size,
+                    const half_float::half *x,
+                    half_float::half *y)
+{
+    cudaHinv_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+        reinterpret_cast<const __half*>(x),
+        reinterpret_cast<__half*>(y));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSinv(unsigned int size,
+                      const float *x,
+                      float *y)
+{
+    cudaSinv_kernel<<<(size + 255) / 256, 256>>>(size, x, y);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaDinv(unsigned int size,
+                      const double *x,
+                      double *y)
+{
+    cudaDinv_kernel<<<(size + 255) / 256, 256>>>(size, x, y);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

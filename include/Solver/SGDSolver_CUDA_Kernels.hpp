@@ -69,6 +69,51 @@ void cudaHaxpy(unsigned int size,
                half_float::half alpha,
                const half_float::half *x,
                half_float::half *y);
+void cudaHpow(unsigned int size,
+               half_float::half power,
+               const half_float::half *x,
+               half_float::half *y);
+void cudaSpow(unsigned int size,
+               float power,
+               const float *x,
+               float *y);
+void cudaDpow(unsigned int size,
+               double power,
+               const double *x,
+               double *y);
+void cudaHadd(unsigned int size,
+               half_float::half value,
+               const half_float::half *x,
+               half_float::half *y);
+void cudaSadd(unsigned int size,
+               float value,
+               const float *x,
+               float *y);
+void cudaDadd(unsigned int size,
+               double value,
+               const double *x,
+               double *y);
+void cudaHmult(unsigned int size,
+               const half_float::half *x1,
+               const half_float::half *x2,
+               half_float::half *y);
+void cudaSmult(unsigned int size,
+               const float *x1,
+               const float *x2,
+               float *y);
+void cudaDmult(unsigned int size,
+               const double *x1,
+               const double *x2,
+               double *y);
+void cudaHinv(unsigned int size,
+               const half_float::half *x,
+               half_float::half *y);
+void cudaSinv(unsigned int size,
+               const float *x,
+               float *y);
+void cudaDinv(unsigned int size,
+               const double *x,
+               double *y);
 }
 
 #endif // N2D2_SGDSOLVER_CUDA_KERNELS_H
