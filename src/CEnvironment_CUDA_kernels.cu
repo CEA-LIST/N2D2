@@ -53,6 +53,7 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
     for (unsigned int idx = threadIdx.x; idx < inputSize; idx += inputStride) {
 
         float value = data[idx + batchOffset];
+        char sign = value < 0 ? -1 : 1;
 
         unsigned long long int eventTime = nextEventTime[idx + batchOffset];
         char eventType = nextEventType[idx + batchOffset];
@@ -72,7 +73,7 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
                     (unsigned long long int )(start + delay
                                               * (stop - start));
                     eventTime = t;
-                    eventType = 1;
+                    eventType = sign;
                 }
                 else {
                     eventTime = 0;
@@ -116,7 +117,7 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
 
                 if (t < stop) {
                     eventTime = t;
-                    eventType = 1;
+                    eventType = sign;
                 }
                 else {
                     eventTime = 0;
@@ -170,6 +171,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
     for (unsigned int idx = threadIdx.x; idx < inputSize; idx += inputStride) {
 
         float value = data[idx + batchOffset];
+        char sign = value < 0 ? -1 : 1;
 
         if (nextEventType[idx + batchOffset] != 0 &&
         nextEventTime[idx + batchOffset] <= timestamp) {
@@ -199,7 +201,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
                             (unsigned long long int )(start + delay
                                                       * (stop - start));
                             eventTime = t;
-                            eventType = 1;
+                            eventType = sign;
                         }
                         else {
                             eventTime = 0;
@@ -225,6 +227,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
                             dt = (unsigned long long int)
                                     (-logf(curand_uniform(&local_state))*periodMean);
                         }
+                        //TODO: Implement Linear
                         else {
                             dt = (unsigned long long int) (curand_normal(&local_state) *
                                 (periodMean * periodRelStdDev)+periodMean);
@@ -244,7 +247,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
 
                         if (t < stop) {
                             eventTime = t;
-                            eventType = 1;
+                            eventType = sign;
                         }
 
                         else {

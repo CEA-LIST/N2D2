@@ -29,7 +29,8 @@ N2D2::SpikeGenerator::SpikeGenerator()
       mPeriodMeanMin(this, "PeriodMeanMin", 50 * TimeMs),
       mPeriodMeanMax(this, "PeriodMeanMax", 12 * TimeS),
       mPeriodRelStdDev(this, "PeriodRelStdDev", 0.1),
-      mPeriodMin(this, "PeriodMin", 11 * TimeMs)
+      mPeriodMin(this, "PeriodMin", 11 * TimeMs),
+      mMaxFrequency(this, "MaxFrequency", 1.0 / TimeNs)
 {
     // ctor
 }
@@ -58,6 +59,8 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
     const double delay = 1.0 - std::fabs(value);
     const bool negSpike = (value < 0);
 
+    const double freq = std::fabs(value) * mMaxFrequency / TimeNs;
+
     if (delay > mDiscardedLateStimuli)
         return;
 
@@ -80,6 +83,16 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
 
         if (mStimulusType == Poissonian)
             dt = (Time_T)Random::randExponential(periodMean);
+        else if (mStimulusType == Linear) {
+            if (freq >= 1.0/(end-start)){
+                dt = (Time_T) std::llround(1.0/freq);
+                /*if (t == 0) {
+                    dt = (Time_T) std::llround(0.5/freq);
+                }*/
+            }
+            else
+                dt = end + 1;
+        }
         else {
             dt = (Time_T)Random::randNormal(periodMean,
                                             periodMean * mPeriodRelStdDev);
@@ -93,7 +106,7 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
 
         t += dt;
 
-        if (t < end)
+        if (t <= end)
             event = std::make_pair(t, (negSpike) ? -1 : 1);
         else
             event = std::make_pair(0, 0);

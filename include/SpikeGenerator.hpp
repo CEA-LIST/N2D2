@@ -40,7 +40,8 @@ public:
         SingleBurst,
         Periodic,
         JitteredPeriodic,
-        Poissonian
+        Poissonian,
+        Linear
     };
 
     SpikeGenerator();
@@ -76,13 +77,15 @@ protected:
     /// Absolute minimum period, or spiking interval, used for periodic temporal
     /// codings, for any pixel
     Parameter<Time_T> mPeriodMin;
+
+    Parameter<double> mMaxFrequency;
 };
 }
 
 namespace {
 template <>
 const char* const EnumStrings<N2D2::SpikeGenerator::StimulusType>::data[]
-    = {"SingleBurst", "Periodic", "JitteredPeriodic", "Poissonian"};
+    = {"SingleBurst", "Periodic", "JitteredPeriodic", "Poissonian", "Linear"};
 }
 
 #endif // N2D2_SPIKEGENERATOR_H
