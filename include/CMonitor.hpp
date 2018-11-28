@@ -83,6 +83,13 @@ public:
                                bool update = true);
     unsigned int checkBatchLearningResponse(std::vector<unsigned int>& cls,
                                bool update = true);
+    double inferRelation(unsigned int batch);
+    void inferRelation(const std::string& fileName,
+                       Tensor<Float_T>& relationalTargets,
+                        unsigned int targetVariable,
+                        unsigned int batch,
+                        bool plot);
+
     void updateSuccess (bool success);
 
     NodeId_T getMostActiveNeuronId(unsigned int batch) const
@@ -211,6 +218,7 @@ public:
                         const unsigned int logInterval,
                         bool plot = false);
 
+
 protected:
     /// The network that is monitored.
     Network& mNet;
@@ -285,6 +293,7 @@ protected:
 
     std::map<Time_T, unsigned int> mTimeIndex;
     std::deque<bool> mSuccess;
+    std::deque<Tensor<Float_T>> relationalInferences;
 
 };
 }
@@ -332,12 +341,16 @@ void N2D2::CMonitor::logDataRate(const std::deque<T>& data,
     if (data.empty())
         std::cout << "Notice: no data rate recorded." << std::endl;
     else if (plot) {
-        const double finalRate = (avgWindow > 0)
+        /*const double finalRate = (avgWindow > 0)
                                      ? accSum / (double)accWindow.size()
-                                     : accSuccess / (double)data.size();
+                                     : accSuccess / (double)data.size();*/
+        const double finalRate = std::sqrt((avgWindow > 0)
+                                     ? accSum / (double)accWindow.size()
+                                     : accSuccess / (double)data.size());
 
         std::ostringstream label;
-        label << "\"Final: " << 100.0 * finalRate << "%";
+        //label << "\"Final: " << 100.0 * finalRate << "%";
+        label << "\"RMSE: " << finalRate;
 
         if (avgWindow > 0)
             label << " (last " << avgWindow << ")";
@@ -373,6 +386,7 @@ void N2D2::CMonitor::logPoints(const std::deque<T>& data,
                                  + fileName);
 
     double maxRate = 0.0;
+    //double averageRate = 0.0;
 
     dataFile.precision(4);
 
@@ -385,6 +399,7 @@ void N2D2::CMonitor::logPoints(const std::deque<T>& data,
         if (*it > maxRate) {
             maxRate = (double)*it;
         }
+        //averageRate += (double)*it;
         // Data file can become very big for deepnet, with >1,000,000 patterns,
         // that why we have to keep it minimal
         dataFile << i*logInterval << " " << *it << "\n";
@@ -399,6 +414,7 @@ void N2D2::CMonitor::logPoints(const std::deque<T>& data,
 
         std::ostringstream label;
         label << "\"Maximal: " << maxRate;
+        //label << " Average: " << maxRate/data.size();
 
         label << "\" at graph 0.5, graph 0.1 front";
 

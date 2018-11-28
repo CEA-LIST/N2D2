@@ -432,6 +432,124 @@ void N2D2::CMonitor::updateSuccess(bool success)
 }
 
 
+
+double N2D2::CMonitor::inferRelation(unsigned int batch)
+{
+    unsigned int outputSize = mLastExampleActivity.size();
+    Tensor<Float_T> reconstruction({1, 1, outputSize});
+
+    Float_T maxValue = 0;
+
+    for (unsigned int i = 0; i < outputSize; ++i) {
+        reconstruction(i) += mLastExampleActivity(i, batch);
+        if (reconstruction(i) > maxValue) {
+            maxValue = reconstruction(i);
+        }
+    }
+
+    Float_T maxPeriodMean = 0;
+    int prediction = 0;
+    for (unsigned int mean = 0; mean < outputSize; ++mean){
+        Float_T periodMean = 0;
+        for (unsigned int x = 0; x < outputSize; ++x){
+            int distance = (int)x - (int)mean;
+
+            if (distance > (int)outputSize/2) {
+                distance = outputSize - distance;
+            }
+            if (distance < -(int)outputSize/2) {
+                distance = outputSize + distance;
+            }
+
+            Float_T value = reconstruction(x);
+            periodMean += value*(outputSize - 2*std::abs(distance));
+        }
+        if (periodMean > maxPeriodMean){
+            maxPeriodMean = periodMean;
+            prediction = mean;
+        }
+    }
+    return prediction/(Float_T)outputSize;
+
+}
+
+
+void N2D2::CMonitor::inferRelation(const std::string& fileName,
+                                    Tensor<Float_T>& relationalTargets,
+                                    unsigned int targetVariable,
+                                    unsigned int batch,
+                                    bool plot)
+{
+    Float_T prediction = inferRelation(batch);
+    Float_T target = relationalTargets(targetVariable);
+
+    Float_T error = 0.0;
+
+    Float_T diff = target-prediction;
+    if (std::fabs(diff) > 0.5) {
+        Float_T higher = std::fmax(target, prediction);
+        Float_T lower = std::fmin(target, prediction);
+        diff = 1.0 + lower - higher;
+    }
+    error += diff*diff;
+
+    Tensor<Float_T> inferredRelation({relationalTargets.size()+3});
+    for (unsigned int i=0; i<relationalTargets.size(); ++i){
+        inferredRelation(i) = relationalTargets(i);
+    }
+    inferredRelation(relationalTargets.size()) = target;
+    inferredRelation(relationalTargets.size()+1) = prediction;
+    inferredRelation(relationalTargets.size()+2) = error;
+
+    relationalInferences.push_back(inferredRelation);
+
+    if (plot) {
+
+        std::ofstream dataFile(fileName.c_str());
+
+        if (!dataFile.good())
+            throw std::runtime_error("Could not create data rate log file: "
+                                     + fileName);
+        dataFile.precision(4);
+
+        Float_T averageError = 0.0;
+
+        for (unsigned int k=0; k<relationalInferences.size(); ++k) {
+
+            for (unsigned int i=0; i<relationalInferences[k].size(); ++i){
+                dataFile << relationalInferences[k](i) << " ";
+            }
+            dataFile << "\n";
+
+            averageError +=
+                relationalInferences[k](relationalInferences[k].size()-1);
+
+        }
+        dataFile.close();
+
+
+        std::ostringstream label;
+        label << "\"MSE: "
+            << averageError/relationalInferences.size() << " RMSE: "
+            << std::sqrt(averageError/relationalInferences.size());
+        label << "\" at graph 0.5, graph 0.1 front";
+
+        Gnuplot gnuplot;
+        gnuplot.set("grid").set("key off");
+        gnuplot.setYlabel("y");
+        gnuplot.setXlabel("x");
+
+        gnuplot.set("label", label.str());
+        gnuplot.saveToFile(fileName);
+
+        std::ostringstream plotIndices;
+        plotIndices << "using " << relationalTargets.size()+1
+            << ":" << relationalTargets.size()+2 << " with points";
+        gnuplot.plot(fileName, plotIndices.str());
+    }
+}
+
+
 unsigned int N2D2::CMonitor::getActivity(unsigned int x,
                                            unsigned int y,
                                            unsigned int z,
@@ -835,8 +953,8 @@ void N2D2::CMonitor::clearAll(unsigned int nbTimesteps)
 
     mSuccess.clear();
     clearFastSuccess();
+    relationalInferences.clear();
 
-    std::cout << "Monitor cleared" << std::endl;
 }
 
 void N2D2::CMonitor::clearActivity(unsigned int nbTimesteps)
