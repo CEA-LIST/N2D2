@@ -111,10 +111,10 @@ double N2D2::TargetScore::getAverageSuccess(Database::StimuliSet set,
 double N2D2::TargetScore::getAverageTopNSuccess(Database::StimuliSet set,
                                                 unsigned int avgWindow) const
 {
-    assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
-
     if (!(mTargetTopN > 1))
         return 0.0;
+
+    assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
 
     const std::deque<double>& success
         = (*mScoreTopNSet.find(set)).second.success;
@@ -200,9 +200,9 @@ void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
                                        Database::StimuliSet set,
                                        unsigned int avgWindow) const
 {
-    assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
-
     if (mTargetTopN > 1) {
+        assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
+
         const std::string dataFileName = mName + "/SuccessTopN_" + fileName
                                          + ".dat";
 
