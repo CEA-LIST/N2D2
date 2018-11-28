@@ -466,7 +466,7 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
              it != itEnd;
              ++it) {
 
-            (*it).second->logFreeParameters((*it).first);
+            //(*it).second->logFreeParameters((*it).first);
 
             if ((*it).second->getType() == ConvCell::Type) {
                 std::shared_ptr<ConvCell_Spike> cellSpike =
@@ -540,6 +540,16 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
                                            + ".syntxt");
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
                                                + ".distrib.dat");
+#ifdef CUDA
+        std::shared_ptr<FcCell_CSpike_LIF_CUDA> cellCSpike =
+            std::dynamic_pointer_cast<FcCell_CSpike_LIF_CUDA>((*it).second);
+        if (cellCSpike != nullptr) {
+            cellCSpike->exportRecFreeParameters(dirName + "/" + (*it).first
+                                           + "_rec.syntxt");
+            cellCSpike->exportTopDownFreeParameters(dirName + "/" + (*it).first
+                                           + "_TopDown.syntxt");
+        }
+#endif
     }
 }
 
@@ -570,6 +580,16 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          ++it){
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
                                            + ".syntxt", ignoreNotExists);
+#ifdef CUDA
+        std::shared_ptr<FcCell_CSpike_LIF_CUDA> cellCSpike =
+            std::dynamic_pointer_cast<FcCell_CSpike_LIF_CUDA>((*it).second);
+        if (cellCSpike != nullptr) {
+            cellCSpike->importRecFreeParameters(dirName + "/" + (*it).first
+                                           + "_rec.syntxt");
+            cellCSpike->importTopDownFreeParameters(dirName + "/" + (*it).first
+                                           + "_TopDown.syntxt");
+        }
+#endif
     }
 }
 
@@ -2023,8 +2043,36 @@ void N2D2::DeepNet::cTicks(Time_T start,
         throw std::runtime_error("DeepNet::cTicks(): stop < start");
     }
 
+    cEnv->initialize(start, stop);
 
-    for (Time_T t = start; t <= stop; t += timestep) {
+    if (record) {
+        for (std::vector<std::vector<std::string> >::const_iterator it
+        = mLayers.begin(),
+        itBegin = mLayers.begin(),
+        itEnd = mLayers.end();
+        it != itEnd;
+        ++it) {
+            for (std::vector<std::string>::const_iterator
+                itCell = (*it).begin(),
+                itCellEnd = (*it).end();
+            itCell != itCellEnd;
+            ++itCell) {
+                const std::map
+                    <std::string, std::shared_ptr<CMonitor> >::const_iterator
+                itMonitor = mCMonitors.find(*itCell);
+
+                if (itMonitor == mCMonitors.end()){
+
+                    continue;
+                }
+
+                (*itMonitor).second->tick(start);
+            }
+        }
+    }
+
+
+    for (Time_T t = start+timestep; t <= stop; t += timestep) {
         cEnv->tick(t, start, stop);
 
         for (unsigned int l = 1; l < nbLayers; ++l) {
@@ -2040,7 +2088,7 @@ void N2D2::DeepNet::cTicks(Time_T start,
                 if (!cellCSpike)
                     throw std::runtime_error(
                         "DeepNet::cTicks(): requires Cell_CSpike cells");
-
+                //std::cout << mCells[(*itCell)]->getName() << std::endl;
                 if (cellCSpike->tick(t))
                     return;
             }

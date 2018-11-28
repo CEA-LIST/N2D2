@@ -28,7 +28,8 @@ N2D2::SaturationActivation_Frame_CUDA<half_float::half>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",
     "CSpike_CUDA",
-    "CSpike_BP_CUDA"},
+    "CSpike_BP_CUDA",
+    "CSpike_LIF_CUDA"},
     N2D2::SaturationActivation_Frame_CUDA<half_float::half>::create,
     N2D2::Registrar<N2D2::SaturationActivation>::Type<half_float::half>());
 
@@ -38,7 +39,8 @@ N2D2::SaturationActivation_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",
     "CSpike_CUDA",
-    "CSpike_BP_CUDA"},
+    "CSpike_BP_CUDA",
+    "CSpike_LIF_CUDA"},
     N2D2::SaturationActivation_Frame_CUDA<float>::create,
     N2D2::Registrar<N2D2::SaturationActivation>::Type<float>());
 
@@ -48,7 +50,8 @@ N2D2::SaturationActivation_Frame_CUDA<double>::mRegistrar(
     {"Frame_CUDA",
     "Transcode_CUDA",
     "CSpike_CUDA",
-    "CSpike_BP_CUDA"},
+    "CSpike_BP_CUDA",
+    "CSpike_LIF_CUDA"},
     N2D2::SaturationActivation_Frame_CUDA<double>::create,
     N2D2::Registrar<N2D2::SaturationActivation>::Type<double>());
 

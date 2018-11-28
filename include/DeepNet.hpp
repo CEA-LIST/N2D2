@@ -63,6 +63,7 @@
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "CMonitor_CUDA.hpp"
 #include "Cell/Cell_CSpike_CUDA.hpp"
+#include "Cell/FcCell_CSpike_LIF_CUDA.hpp"
 #endif
 
 namespace N2D2 {
