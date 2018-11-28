@@ -44,6 +44,6 @@ else
         ARGS="$ARGS CHECK_COVERAGE=1"
     fi
 
-    make -j $NUM_THREADS $ARGS
+    make all -j $NUM_THREADS $ARGS
 fi
 

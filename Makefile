@@ -25,10 +25,11 @@ endif
 EXT=cpp
 EXT_CUDA=cu
 BIN:=$(foreach path,$(PARENT), \
-   $(subst .$(EXT),,$(wildcard $(path)/tests/*.$(EXT))) \
-   $(subst .$(EXT),,$(wildcard $(path)/tests/*/*.$(EXT))) \
    $(subst .$(EXT),,$(wildcard $(path)/exec/*.$(EXT))) \
    $(subst .$(EXT),,$(wildcard $(path)/exec/*/*.$(EXT))))
+BIN_TESTS:=$(foreach path,$(PARENT), \
+   $(subst .$(EXT),,$(wildcard $(path)/tests/*.$(EXT))) \
+   $(subst .$(EXT),,$(wildcard $(path)/tests/*/*.$(EXT))))
 
 ifndef CXX
   CXX=g++
@@ -245,18 +246,25 @@ define make-depend
 	 $1
 endef
 
-define copy-and-run
-	@rsync -av $1/exec $(N2D2_BINDIR)/$1/ --exclude *.cpp \
+define copy-resources-to-bin
+	@rsync -av $1/$2 $(N2D2_BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
-	@rsync -av $1/tests $(N2D2_BINDIR)/$1/ --exclude *.cpp \
-	    > /dev/null 2>&1 || :
-	@if [ -f "$(N2D2_BINDIR)/$1/tests/run_all.sh" ]; then \
-	    $(N2D2_BINDIR)/$1/tests/run_all.sh || exit 1; \
+endef
+
+define run-if-exists
+	@if [ -f "$(N2D2_BINDIR)/$1" ]; then \
+	    $(N2D2_BINDIR)/$1 || exit 1; \
 	fi
 endef
 
-all : $(addprefix $(N2D2_BINDIR)/, $(BIN))
-	$(foreach path,$(PARENT),$(call copy-and-run,$(path));)
+exec : $(addprefix $(N2D2_BINDIR)/, $(BIN))
+	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),exec);)
+
+tests : $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS))
+	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
+	$(foreach path,$(PARENT),$(call run-if-exists,$(path)/tests/run_all.sh);)
+
+all : exec tests
 
 debug :
 	$(MAKE) all "DEBUG=1"
@@ -296,7 +304,7 @@ doc : $(SRC) $(SRC_CUDA) $(wildcard include/*.hpp) doxygen.cfg
 .PHONY : clean
 
 clean :
-	@rm -rf $(OBJDIR) $(addprefix $(N2D2_BINDIR)/, $(BIN)) doc/
+	@rm -rf $(OBJDIR) $(addprefix $(N2D2_BINDIR)/, $(BIN)) $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS)) doc/
 
 .PHONY : clean-all
 
