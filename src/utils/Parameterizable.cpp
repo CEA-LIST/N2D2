@@ -30,6 +30,24 @@ N2D2::Parameter_T& N2D2::Parameter_T::operator=(const N2D2::Parameter_T& value)
 }
 
 namespace N2D2 {
+// Special case to allow empty string as a valid value for a string
+template <> std::istream& Parameter_T::read<std::string>(std::istream& is)
+    const
+{
+    const bool readStatus = (is >> *((std::string*)mValue));
+
+    if (!readStatus && !is.bad() && is.eof()) {
+        // value is an empty string
+        *((std::string*)mValue) = "";
+        // it's good for the upper handlers...
+        is.clear(std::ios_base::eofbit);
+    }
+
+    return is;
+}
+}
+
+namespace N2D2 {
 std::ostream& operator<<(std::ostream& os, const Parameter_T& value)
 {
     return (value.mPrint != NULL) ? (value.*(value.mPrint))(os) : (os << "nil");
@@ -136,17 +154,19 @@ N2D2::Parameterizable::setPrefixedParameters(std::map
                 catch (const std::exception& /*e*/)
                 {
                     std::cout << Utils::cwarning
-                              << "Unreadable value for parameter \""
-                              << (*it).first << "\":\n"
-                                                "\"" << (*it).second << "\""
+                              << "Unreadable value for parameter " <<(*it).first
+                              << ": \"" << (*it).second << "\""
                               << Utils::cdef << std::endl;
                     throw;
                 }
 
-                if (!readOk || !value.eof())
-                    throw std::runtime_error("Unreadable parameter: "
-                                             + (*it).first + " (value is \""
-                                             + (*it).second + "\")");
+                if (!readOk || !value.eof()) {
+                    std::stringstream msgStr;
+                    msgStr << "Error reading value for parameter "
+                           << (*it).first << ": \"" << (*it).second << "\"";
+
+                    throw std::runtime_error(msgStr.str());
+                }
 
                 ++nbLoaded;
 
@@ -264,16 +284,20 @@ unsigned int N2D2::Parameterizable::loadParameters(const std::string& fileName,
             catch (const std::exception& /*e*/)
             {
                 std::cout << Utils::cwarning
-                          << "Unreadable value for parameter \"" << name
-                          << "\" in config file " << fileName << ":\n"
-                                                                 "\""
+                          << "Unreadable value for parameter " << name
+                          << " in config file " << fileName << ": \""
                           << value.str() << "\"" << Utils::cdef << std::endl;
                 throw;
             }
 
-            if (!readOk || !value.eof())
-                throw std::runtime_error("Unreadable parameter: " + name
-                                         + " in config file " + fileName);
+            if (!readOk || !value.eof()) {
+                std::stringstream msgStr;
+                msgStr << "Error reading value for parameter " << name
+                          << " in config file " << fileName << ": \""
+                          << value.str() << "\"";
+
+                throw std::runtime_error(msgStr.str());
+            }
 
             ++nbLoaded;
         } else {
