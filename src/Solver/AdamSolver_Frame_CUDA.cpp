@@ -76,10 +76,10 @@ void AdamSolver_Frame_CUDA<half_float::half>::update(
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     const half_float::half alpha(mLearningRate
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps))
-            / (1.0 - std::pow(mBeta1, mNbSteps)));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
+            / (1.0 - std::pow((double)mBeta1, (double)mNbSteps)));
     const half_float::half epsilon(mEpsilon
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps)));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps)));
 
     // Update biased first moment estimate
     const half_float::half beta1(mBeta1);
@@ -200,10 +200,10 @@ void AdamSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     const float alpha = mLearningRate
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps))
-            / (1.0 - std::pow(mBeta1, mNbSteps));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
+            / (1.0 - std::pow((double)mBeta1, (double)mNbSteps));
     const float epsilon = mEpsilon
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps));
 
     // Update biased first moment estimate
     const float beta1 = mBeta1;
@@ -333,10 +333,10 @@ void AdamSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     const double alpha = mLearningRate
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps))
-            / (1.0 - std::pow(mBeta1, mNbSteps));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
+            / (1.0 - std::pow((double)mBeta1, (double)mNbSteps));
     const double epsilon = mEpsilon
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps));
 
     // Update biased first moment estimate
     const double beta1 = mBeta1;
