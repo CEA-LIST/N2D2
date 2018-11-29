@@ -34,7 +34,7 @@ namespace N2D2 {
 template <> std::istream& Parameter_T::read<std::string>(std::istream& is)
     const
 {
-    const bool readStatus = (is >> *((std::string*)mValue));
+    const bool readStatus = static_cast<bool>(is >> *((std::string*)mValue));
 
     if (!readStatus && !is.bad() && is.eof()) {
         // value is an empty string

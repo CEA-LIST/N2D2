@@ -98,10 +98,10 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     const double alpha = mLearningRate
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps))
-            / (1.0 - std::pow(mBeta1, mNbSteps));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
+            / (1.0 - std::pow((double)mBeta1, (double)mNbSteps));
     const double epsilon = mEpsilon
-        * std::sqrt(1.0 - std::pow(mBeta2, mNbSteps));
+        * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps));
 
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)data.size(); ++index) {

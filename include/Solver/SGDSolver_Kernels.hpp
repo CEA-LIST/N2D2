@@ -97,7 +97,7 @@ void N2D2::quantize(Tensor<T>& y,
         const T scaling = (maxVal - minVal) / (T)(quantizationLevels - 1);
 
 #pragma omp parallel for if (x.size() > 1024)
-        for (size_t i = 0; i < (size_t)x.size(); ++i) {
+        for (int i = 0; i < (int)x.size(); ++i) {
             const T clamped = (x(i) < minVal) ? minVal :
                               (x(i) > maxVal) ? maxVal :
                                                 x(i);
@@ -112,7 +112,7 @@ void N2D2::quantize(Tensor<T>& y,
     }
     else {
 #pragma omp parallel for if (x.size() > 1024)
-        for (size_t i = 0; i < (size_t)x.size(); ++i) {
+        for (int i = 0; i < (int)x.size(); ++i) {
             y(i) = ((x(i) >= 0.0) ? 1.0 : -1.0);
         }
     }
