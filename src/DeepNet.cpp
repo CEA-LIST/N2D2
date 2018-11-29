@@ -540,16 +540,6 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
                                            + ".syntxt");
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
                                                + ".distrib.dat");
-#ifdef CUDA
-        std::shared_ptr<FcCell_CSpike_LIF_CUDA> cellCSpike =
-            std::dynamic_pointer_cast<FcCell_CSpike_LIF_CUDA>((*it).second);
-        if (cellCSpike != nullptr) {
-            cellCSpike->exportRecFreeParameters(dirName + "/" + (*it).first
-                                           + "_rec.syntxt");
-            cellCSpike->exportTopDownFreeParameters(dirName + "/" + (*it).first
-                                           + "_TopDown.syntxt");
-        }
-#endif
     }
 }
 
@@ -580,16 +570,6 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          ++it){
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
                                            + ".syntxt", ignoreNotExists);
-#ifdef CUDA
-        std::shared_ptr<FcCell_CSpike_LIF_CUDA> cellCSpike =
-            std::dynamic_pointer_cast<FcCell_CSpike_LIF_CUDA>((*it).second);
-        if (cellCSpike != nullptr) {
-            cellCSpike->importRecFreeParameters(dirName + "/" + (*it).first
-                                           + "_rec.syntxt");
-            cellCSpike->importTopDownFreeParameters(dirName + "/" + (*it).first
-                                           + "_TopDown.syntxt");
-        }
-#endif
     }
 }
 

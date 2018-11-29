@@ -66,8 +66,7 @@ public:
 protected:
     // Forward
     CudaInterface<char> mInputs;
-    //Necessary for IF class
-    //CudaInterface<float> mFilteredInputs;
+
     CudaTensor<char> mOutputs;
     CudaTensor<Float_T> mOutputsActivity;
 
