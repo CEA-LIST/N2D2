@@ -365,6 +365,13 @@ public:
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);
 
+    /**
+     * Return true if `other` has the same dimensions and the same data
+     * as the current Tensor.
+     */
+    bool operator==(const Tensor& other) const;
+
+
     inline operator cv::Mat() const;
     inline std::vector<T>& data()
     {
@@ -1334,6 +1341,21 @@ N2D2::Tensor<T>& N2D2::Tensor<T>::operator=(const Tensor<U>& tensor)
 
     return *this;
 }
+
+template <class T>
+bool N2D2::Tensor<T>::operator==(const Tensor& other) const {
+    if(mDims != other.mDims) {
+        return false;
+    }
+
+    if(mData.get() == other.mData.get() && mDataOffset == other.mDataOffset) {
+        return true;
+    }
+    
+    assert(mData.size() == other.mData.size());
+    return std::equal(begin(), end(), other.begin());
+}
+
 
 namespace N2D2 {
 template <class T>
