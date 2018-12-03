@@ -47,11 +47,11 @@ void N2D2::ResizeCell_Frame::BilinearInterpolation(const int out_size,
                                                     ResizeCell_Frame_Kernels::PreComputed* interpolation)
 {
   interpolation[out_size].low_index = 0;
-  interpolation[out_size].hight_index = 0;
+  interpolation[out_size].high_index = 0;
   for (int i = out_size - 1; i >= 0; --i) {
     const Float_T in = i * scale;
     interpolation[i].low_index = static_cast<int> (in);
-    interpolation[i].hight_index = std::min(interpolation[i].low_index + 1, in_size - 1);
+    interpolation[i].high_index = std::min(interpolation[i].low_index + 1, in_size - 1);
     interpolation[i].interpolation = in - interpolation[i].low_index;
   }
 
@@ -129,16 +129,16 @@ void N2D2::ResizeCell_Frame::propagateBilinearTF(bool /*inference*/)
                                                     mYStride[oy].low_index,
                                                     channel,
                                                     batchPos);
-                    const Float_T top_right = input( mXStride[ox].hight_index,
+                    const Float_T top_right = input( mXStride[ox].high_index,
                                                         mYStride[oy].low_index,
                                                         channel,
                                                         batchPos);
                     const Float_T bottom_left = input( mXStride[ox].low_index,
-                                                        mYStride[oy].hight_index,
+                                                        mYStride[oy].high_index,
                                                         channel,
                                                         batchPos);
-                    const Float_T bottom_right = input( mXStride[ox].hight_index,
-                                                        mYStride[oy].hight_index,
+                    const Float_T bottom_right = input( mXStride[ox].high_index,
+                                                        mYStride[oy].high_index,
                                                         channel,
                                                         batchPos);
 

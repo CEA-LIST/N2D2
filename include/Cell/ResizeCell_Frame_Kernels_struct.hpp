@@ -31,7 +31,7 @@ namespace N2D2 {
 namespace ResizeCell_Frame_Kernels {
         struct PreComputed {
         int low_index;  
-        int hight_index;  
+        int high_index;  
         Float_T interpolation;
     };
 }
