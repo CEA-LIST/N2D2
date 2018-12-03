@@ -158,8 +158,6 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
                                              mOutputs.dimZ(), mOutputs.dimB(),
                                              GPU_BLOCK_GRID[k], GPU_THREAD_GRID[k]);
                 break;
-            case NearestNeighborTF:
-                throw std::runtime_error("ResizeCell_Frame_CUDA: NearestNeighbor resize not supported yet.");
             default:
                 throw std::runtime_error("ResizeCell_Frame_CUDA: Unknown resize mode.");
         }
@@ -204,8 +202,6 @@ void N2D2::ResizeCell_Frame_CUDA::backPropagate()
                                              mDiffInputs.dimZ(), mDiffInputs.dimB(), 
                                              GPU_BLOCK_GRID[k], GPU_THREAD_GRID[k]);
                 break;
-            case NearestNeighborTF:
-                throw std::runtime_error("ResizeCell_Frame_CUDA: NearestNeighbor resize not supported yet.");
             default:
                 throw std::runtime_error("ResizeCell_Frame_CUDA: Unknown resize mode.");
         }
