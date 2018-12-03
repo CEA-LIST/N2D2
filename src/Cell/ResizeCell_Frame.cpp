@@ -19,16 +19,21 @@
 */
 
 #include "Cell/ResizeCell_Frame.hpp"
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 N2D2::Registrar<N2D2::ResizeCell>
 N2D2::ResizeCell_Frame::mRegistrar("Frame",
                                        N2D2::ResizeCell_Frame::create);
 
 N2D2::ResizeCell_Frame::ResizeCell_Frame(const std::string& name,
-                                                 unsigned int outputsWidth,
-                                                 unsigned int outputsHeight,
-                                                 unsigned int nbOutputs,
-                                                 ResizeMode resizeMode)
+                                         unsigned int outputsWidth,
+                                         unsigned int outputsHeight,
+                                         unsigned int nbOutputs,
+                                         ResizeMode resizeMode)
     : Cell(name, nbOutputs),
       ResizeCell(name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
       Cell_Frame<Float_T>(name, nbOutputs)
@@ -54,10 +59,13 @@ void N2D2::ResizeCell_Frame::BilinearInterpolation(const int out_size,
 
 void N2D2::ResizeCell_Frame::initialize()
 {
-    for(unsigned int input = 1; input < mInputs.size(); ++input)
+    for(unsigned int input = 1; input < mInputs.size(); ++input) {
         if (mInputs[input].dimX() != mInputs[0].dimX() ||
             mInputs[input].dimY() != mInputs[0].dimY())
+        {
             throw std::runtime_error("Input must have the same dimensions in ResizeCell_Frame " + mName);
+        }
+    }
 
     if(mResizeMode == BilinearTF)
     {
@@ -81,60 +89,75 @@ void N2D2::ResizeCell_Frame::initialize()
         BilinearInterpolation(outputDimY, inputDimY, mScaleY, mYStride.data());
         BilinearInterpolation(outputDimX, inputDimX, mScaleX, mXStride.data());
     }
-    else if (mResizeMode == Bilinear)
-        throw std::runtime_error(
-        "ResizeCell_Frame_CUDA Bilinear interpolation is not yet implemented.");
-
-
+    else if (mResizeMode == Bilinear) {
+        throw std::runtime_error("ResizeCell_Frame: Bilinear interpolation is not yet implemented.");
+    }
 }
 
 void N2D2::ResizeCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDToH();
+
+    switch(mResizeMode) {
+        case Bilinear:
+            throw std::runtime_error("ResizeCell_Frame: Bilinear interpolation is not yet implemented.");
+        case BilinearTF:
+            propagateBilinearTF(inference);
+            break;
+        case NearestNeighbor:
+            propagateNearestNeighbor(inference);
+            break;
+        default:
+            throw std::runtime_error("ResizeCell_Frame: Unknown resize mode.");
+    }
+
+    Cell_Frame<Float_T>::propagate();
+    mDiffInputs.clearValid();
+}
+
+void N2D2::ResizeCell_Frame::propagateBilinearTF(bool /*inference*/) 
+{
     const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[0]);
 
 #pragma omp parallel for if (mOutputs.dimB() > 3)
-    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos)
-    {
-        if(mResizeMode == BilinearTF)
-        {
+    for (std::size_t batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
 #pragma omp parallel for if (mOutputs.size() > 2)
-
-            for(int oy = 0; oy < (int) mOutputs.dimY(); ++oy)
-                for(int ox = 0; ox < (int) mOutputs.dimX(); ++ox)
-                    for(int channel = 0; channel < (int) mOutputs.dimZ(); ++channel)
-                    {
-                        const Float_T top_left = input( mXStride[ox].low_index,
+        for(std::size_t oy = 0; oy < mOutputs.dimY(); ++oy) {
+            for(std::size_t ox = 0; ox < mOutputs.dimX(); ++ox) {
+                for(std::size_t channel = 0; channel < mOutputs.dimZ(); ++channel) {
+                    const Float_T top_left = input( mXStride[ox].low_index,
+                                                    mYStride[oy].low_index,
+                                                    channel,
+                                                    batchPos);
+                    const Float_T top_right = input( mXStride[ox].hight_index,
                                                         mYStride[oy].low_index,
                                                         channel,
                                                         batchPos);
-                        const Float_T top_right = input( mXStride[ox].hight_index,
-                                                         mYStride[oy].low_index,
-                                                         channel,
-                                                         batchPos);
-                        const Float_T bottom_left = input( mXStride[ox].low_index,
-                                                           mYStride[oy].hight_index,
-                                                           channel,
-                                                           batchPos);
-                        const Float_T bottom_right = input( mXStride[ox].hight_index,
-                                                            mYStride[oy].hight_index,
-                                                            channel,
-                                                            batchPos);
+                    const Float_T bottom_left = input( mXStride[ox].low_index,
+                                                        mYStride[oy].hight_index,
+                                                        channel,
+                                                        batchPos);
+                    const Float_T bottom_right = input( mXStride[ox].hight_index,
+                                                        mYStride[oy].hight_index,
+                                                        channel,
+                                                        batchPos);
 
-                        const Float_T top = top_left
-                                                + (top_right - top_left) * mXStride[ox].interpolation;
-                        const Float_T bottom = bottom_left
-                                                + (bottom_right - bottom_left) * mXStride[ox].interpolation;
+                    const Float_T top = top_left
+                                            + (top_right - top_left) * mXStride[ox].interpolation;
+                    const Float_T bottom = bottom_left
+                                            + (bottom_right - bottom_left) * mXStride[ox].interpolation;
 
-                        mOutputs(ox, oy, channel, batchPos)
-                            = top + (bottom - top) * mYStride[oy].interpolation;
-                    }
+                    mOutputs(ox, oy, channel, batchPos)
+                        = top + (bottom - top) * mYStride[oy].interpolation;
+                }
+            }
         }
     }
+}
 
-
-    Cell_Frame<Float_T>::propagate(inference);
-    mDiffInputs.clearValid();
+void N2D2::ResizeCell_Frame::propagateNearestNeighbor(bool /*inference*/) {
+    assert(mInputs.size() == 1);
+    nearestNeighbor(tensor_cast_nocopy<Float_T>(mInputs[0]), mOutputs);
 }
 
 void N2D2::ResizeCell_Frame::backPropagate()
@@ -144,62 +167,81 @@ void N2D2::ResizeCell_Frame::backPropagate()
 
     Cell_Frame<Float_T>::backPropagate();
 
+    switch(mResizeMode) {
+        case Bilinear:
+            throw std::runtime_error("ResizeCell_Frame: Bilinear interpolation is not yet implemented.");
+        case BilinearTF:
+            backPropagateBilinearTF();
+            break;
+        case NearestNeighbor:
+            backPropagateNearestNeighbor();
+            break;
+        default:
+            throw std::runtime_error("ResizeCell_Frame: Unknown resize mode.");
+    }
+
+    mDiffOutputs.setValid();
+    mDiffOutputs.synchronizeHToD();
+}
+
+void N2D2::ResizeCell_Frame::backPropagateBilinearTF() 
+{
     Tensor<Float_T> diffOutput
             = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
-    for (int idx = 0; idx < (int)diffOutput.size(); ++idx)
+    for (std::size_t idx = 0; idx < diffOutput.size(); ++idx) {
         diffOutput(idx) = 0.0f;
+    }
 
-#pragma omp parallel for if (mInputs.dimB() > 1)
-    for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
-        if(mResizeMode == BilinearTF)
-        {
-            for (int oy = 0; oy < (int)mDiffInputs.dimY(); ++oy) {
+    #pragma omp parallel for if (mInputs.dimB() > 1)
+    for (std::size_t batchPos = 0; batchPos < mInputs.dimB(); ++batchPos) {
+        for (std::size_t oy = 0; oy < mDiffInputs.dimY(); ++oy) {
+            const Float_T in_y = oy * mScaleY;
+            const int top_y_index = (int)(floorf(in_y));
+            const int bottom_y_index =
+                std::min((int)(ceilf(in_y)), (int) (mInputs[0].dimY() - 1) ) ;
+            const Float_T y_lerp = in_y - top_y_index;
+            const Float_T inverse_y_lerp = (1.0f - y_lerp);
 
+            for (std::size_t ox = 0; ox < mDiffInputs.dimX(); ++ox) {
+                const Float_T in_x = ox * mScaleX;
+                const int left_x_index = (int)(floorf(in_x));
+                const int right_x_index = std::min((int)(ceilf(in_x)), (int)(mInputs[0].dimX() - 1));
+                const Float_T x_lerp = in_x - left_x_index;
+                const Float_T inverse_x_lerp = (1.0f - x_lerp);
 
-                const Float_T in_y = oy * mScaleY;
-                const int top_y_index = (int)(floorf(in_y));
-                const int bottom_y_index =
-                    std::min((int)(ceilf(in_y)), (int) (mInputs[0].dimY() - 1) ) ;
-                const Float_T y_lerp = in_y - top_y_index;
-                const Float_T inverse_y_lerp = (1.0f - y_lerp);
+                #pragma omp parallel for if (mDiffInputs.dimZ() > 2)
+                for (std::size_t channel = 0; channel < mDiffInputs.dimZ(); ++channel) {
+                    diffOutput(left_x_index,
+                                    top_y_index,
+                                    channel,
+                                    batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * inverse_x_lerp;
+                    diffOutput(right_x_index,
+                                    top_y_index,
+                                    channel,
+                                    batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * x_lerp;
+                    diffOutput(left_x_index,
+                                    bottom_y_index,
+                                    channel,
+                                    batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * inverse_x_lerp;
+                    diffOutput(right_x_index,
+                                    bottom_y_index,
+                                    channel,
+                                    batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * x_lerp;
 
-                for (int ox = 0; ox < (int)mDiffInputs.dimX(); ++ox) {
-                    const Float_T in_x = ox * mScaleX;
-                    const int left_x_index = (int)(floorf(in_x));
-                    const int right_x_index = std::min((int)(ceilf(in_x)), (int)(mInputs[0].dimX() - 1));
-                    const Float_T x_lerp = in_x - left_x_index;
-                    const Float_T inverse_x_lerp = (1.0f - x_lerp);
-
-#pragma omp parallel for if (mDiffInputs.dimZ() > 2)
-                    for (int channel = 0; channel < (int)mDiffInputs.dimZ(); ++channel) {
-                       diffOutput(left_x_index,
-                                     top_y_index,
-                                     channel,
-                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * inverse_x_lerp;
-                        diffOutput(right_x_index,
-                                     top_y_index,
-                                     channel,
-                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * inverse_y_lerp * x_lerp;
-                        diffOutput(left_x_index,
-                                     bottom_y_index,
-                                     channel,
-                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * inverse_x_lerp;
-                        diffOutput(right_x_index,
-                                     bottom_y_index,
-                                     channel,
-                                     batchPos) += mDiffInputs(ox, oy, channel, batchPos) * y_lerp * x_lerp;
-
-                    }
                 }
             }
         }
     }
 
     mDiffOutputs[0] = diffOutput;
-    mDiffOutputs.setValid();
-    mDiffOutputs.synchronizeHToD();
+}
 
-
+void N2D2::ResizeCell_Frame::backPropagateNearestNeighbor() {
+    assert(mDiffOutputs.size() == 1);
+    Tensor<Float_T> diffOutput = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+    nearestNeighbor(mDiffInputs, diffOutput);
+    
+    mDiffOutputs[0] = diffOutput;
 }
 
 void N2D2::ResizeCell_Frame::update()
@@ -227,5 +269,30 @@ void N2D2::ResizeCell_Frame::checkGradient(double epsilon, double maxError)
         std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
                   << ", could not check the gradient!" << Utils::cdef
                   << std::endl;
+    }
+}
+
+void N2D2::ResizeCell_Frame::nearestNeighbor(const Tensor<Float_T>& inputs, Tensor<Float_T>& outputs) {
+    assert(inputs.dimB() == outputs.dimB());
+    assert(inputs.dimZ() == outputs.dimZ());
+    assert(inputs.nbDims() == outputs.nbDims());
+    assert(inputs.nbDims() == 4);
+
+    const Float_T multy = ((Float_T) inputs.dimY())/((Float_T) outputs.dimY());
+    const Float_T multx = ((Float_T) inputs.dimX())/((Float_T) outputs.dimX());
+
+    #pragma omp parallel for if (outputs.dimB() > 1)
+    for(std::size_t batch = 0; batch < outputs.dimB(); batch++) {
+        #pragma omp parallel for if (outputs.dimZ() > 3)
+        for(std::size_t channel = 0; channel < outputs.dimZ(); channel++) {
+            for(std::size_t oy = 0; oy < outputs.dimY(); oy++) {
+                for(std::size_t ox = 0; ox < outputs.dimX(); ox++) {
+                    const std::size_t iy = static_cast<std::size_t>(oy*multy);
+                    const std::size_t ix = static_cast<std::size_t>(ox*multx);
+
+                    outputs(ox, oy, channel, batch) = inputs(ix, iy, channel, batch);
+                }
+            }
+        }
     }
 }

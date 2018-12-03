@@ -58,6 +58,16 @@ void cudaSResizeBWBilinearTF(   unsigned int outputSizeX,
                                float* outputs,
                                const dim3 blocksPerGrid,
                                const dim3 threadsPerBlock);
+
+void cudaSResizeFWNearestNeighbor(const float* input, size_t inputSizeX, size_t inputSizeY,
+                                  float* output, size_t outputSizeX, size_t outputSizeY,
+                                  size_t nbChannels, size_t batchSize,
+                                  const dim3 blocksPerGrid, const dim3 threadsPerBlock);
+
+void cudaSResizeBWNearestNeighbor(const float* input, size_t inputSizeX, size_t inputSizeY,
+                                  float* output, size_t outputSizeX, size_t outputSizeY,
+                                  size_t nbChannels, size_t batchSize,
+                                  const dim3 blocksPerGrid, const dim3 threadsPerBlock);
 }
 
 #endif // N2D2_RESIZECELL_FRAME_CUDA_KERNELS_H

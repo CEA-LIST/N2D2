@@ -61,11 +61,22 @@ public:
     virtual void update();
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     virtual ~ResizeCell_Frame() {};
+
+protected:
+    void propagateBilinearTF(bool inference);
+    void backPropagateBilinearTF();
+
+    void propagateNearestNeighbor(bool inference);
+    void backPropagateNearestNeighbor();
+
+    void nearestNeighbor(const Tensor<Float_T>& inputs, Tensor<Float_T>& outputs);
+
 protected:
     std::vector<ResizeCell_Frame_Kernels::PreComputed> mYStride;
     std::vector<ResizeCell_Frame_Kernels::PreComputed> mXStride;
     Float_T mScaleX;
     Float_T mScaleY;
+
 private:
     static Registrar<ResizeCell> mRegistrar;
 };

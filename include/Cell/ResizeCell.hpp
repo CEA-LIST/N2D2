@@ -32,7 +32,8 @@ class ResizeCell : public virtual Cell {
 public:
     enum ResizeMode {
         Bilinear,   // Compatible with OpenCV resize() [INTER_LINEAR] function
-        BilinearTF  // Compatible with TensorFlow crop_and_resize() function
+        BilinearTF,  // Compatible with TensorFlow crop_and_resize() function
+        NearestNeighbor,  // Compatible with OpenCV resize() [INTER_NEAREST] function
     };
 
     typedef std::function
@@ -88,7 +89,7 @@ protected:
 namespace {
 template <>
 const char* const EnumStrings<N2D2::ResizeCell::ResizeMode>::data[]
-    = {"Bilinear", "BilinearTF"};
+    = {"Bilinear", "BilinearTF", "NearestNeighbor"};
 }
 
 #endif // N2D2_RESIZECELL_H

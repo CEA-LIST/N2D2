@@ -18,9 +18,14 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 #ifdef CUDA
-#include <cudnn.h>
 
 #include "Cell/ResizeCell_Frame_CUDA.hpp"
+
+#include <cudnn.h>
+#include <algorithm>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 N2D2::Registrar<N2D2::ResizeCell>
 N2D2::ResizeCell_Frame_CUDA::mRegistrar("Frame_CUDA",
@@ -59,11 +64,13 @@ void N2D2::ResizeCell_Frame_CUDA::BilinearInterpolation(const int out_size,
 
 void N2D2::ResizeCell_Frame_CUDA::initialize()
 {
-
-    for(unsigned int input = 1; input < mInputs.size(); ++input)
+    for(unsigned int input = 1; input < mInputs.size(); ++input) {
         if (mInputs[input].dimX() != mInputs[0].dimX() ||
             mInputs[input].dimY() != mInputs[0].dimY())
+        {
             throw std::runtime_error("Input must have the same dimensions in ResizeCell_Frame_CUDA " + mName);
+        }
+    }
 
     if(mResizeMode == BilinearTF)
     {
@@ -133,24 +140,28 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
         std::shared_ptr<CudaDeviceTensor<Float_T> > input
             = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
 
-        if(mResizeMode == BilinearTF)
-        {
-            cudaSResizeFWBilinearTF(  mOutputs.dimX(),
-                                    mOutputs.dimY(),
-                                    mInputs[k].dimZ(),
-                                    mOutputs.dimB(),
-                                    mInputs[k].dimX(),
-                                    mInputs[k].dimY(),
-                                    mYStrideLowIndex.getDevicePtr(),
-                                    mYStrideHightIndex.getDevicePtr(),
-                                    mYStrideInterpolation.getDevicePtr(),
-                                    mXStrideLowIndex.getDevicePtr(),
-                                    mXStrideHightIndex.getDevicePtr(),
-                                    mXStrideInterpolation.getDevicePtr(),
-                                    input->getDevicePtr(),
-                                    mOutputs.getDevicePtr() + outputOffset,
-                                    GPU_BLOCK_GRID[k],
-                                    GPU_THREAD_GRID[k]);
+        switch(mResizeMode) {
+            case Bilinear:
+                throw std::runtime_error("ResizeCell_Frame_CUDA: Bilinear resize not supported yet.");
+            case BilinearTF:
+                cudaSResizeFWBilinearTF(mOutputs.dimX(), mOutputs.dimY(), mInputs[k].dimZ(), mOutputs.dimB(),
+                                        mInputs[k].dimX(), mInputs[k].dimY(),
+                                        mYStrideLowIndex.getDevicePtr(), mYStrideHightIndex.getDevicePtr(),
+                                        mYStrideInterpolation.getDevicePtr(), mXStrideLowIndex.getDevicePtr(),
+                                        mXStrideHightIndex.getDevicePtr(), mXStrideInterpolation.getDevicePtr(),
+                                        input->getDevicePtr(), mOutputs.getDevicePtr() + outputOffset,
+                                        GPU_BLOCK_GRID[k], GPU_THREAD_GRID[k]);
+                break;
+            case NearestNeighbor:
+                cudaSResizeFWNearestNeighbor(input->getDevicePtr(), mInputs[k].dimX(), mInputs[k].dimY(),
+                                             mOutputs.getDevicePtr() + outputOffset, mOutputs.dimX(), mOutputs.dimY(), 
+                                             mOutputs.dimZ(), mOutputs.dimB(),
+                                             GPU_BLOCK_GRID[k], GPU_THREAD_GRID[k]);
+                break;
+            case NearestNeighborTF:
+                throw std::runtime_error("ResizeCell_Frame_CUDA: NearestNeighbor resize not supported yet.");
+            default:
+                throw std::runtime_error("ResizeCell_Frame_CUDA: Unknown resize mode.");
         }
 
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
@@ -164,15 +175,12 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::ResizeCell_Frame_CUDA::backPropagate()
 {
-    //throw std::runtime_error(
-    //    "ResizeCell_Frame_CUDA::backPropagate(): not implemented.");
-
     if (mDiffOutputs.empty())
         return;
 
     Cell_Frame_CUDA<Float_T>::backPropagate();
-    unsigned int outputOffset = 0;
-
+    unsigned int diffInputOffset = 0;
+    
     for(unsigned int k = 0; k < mInputs.size(); ++k)
     {
 
@@ -181,26 +189,31 @@ void N2D2::ResizeCell_Frame_CUDA::backPropagate()
 
         diffOutput->fill(0.0f);
 
-        if(mResizeMode == BilinearTF)
-        {
-            cudaSResizeBWBilinearTF(   mDiffInputs.dimX(),
-                                       mDiffInputs.dimY(),
-                                       mDiffInputs.dimZ(),
-                                       mDiffInputs.dimB(),
-                                       mDiffOutputs[k].dimX(),
-                                       mDiffOutputs[k].dimY(),
-                                       mScaleX,
-                                       mScaleY,
-                                       mDiffInputs.getDevicePtr() + outputOffset,
-                                       diffOutput->getDevicePtr(),
-                                       GPU_BLOCK_GRID[k],
-                                       GPU_THREAD_GRID[k]);
+        switch(mResizeMode) {
+            case Bilinear:
+                throw std::runtime_error("ResizeCell_Frame_CUDA: Bilinear resize not supported yet.");
+            case BilinearTF:
+                cudaSResizeBWBilinearTF(mDiffInputs.dimX(), mDiffInputs.dimY(), mDiffInputs.dimZ(),
+                                        mDiffInputs.dimB(), mDiffOutputs[k].dimX(), mDiffOutputs[k].dimY(),
+                                        mScaleX, mScaleY, mDiffInputs.getDevicePtr() + diffInputOffset,
+                                        diffOutput->getDevicePtr(), GPU_BLOCK_GRID[k], GPU_THREAD_GRID[k]);
+                break;
+            case NearestNeighbor:
+                cudaSResizeBWNearestNeighbor(mDiffInputs.getDevicePtr() + diffInputOffset, mDiffInputs.dimX(), mDiffInputs.dimY(), 
+                                             diffOutput->getDevicePtr(), mDiffOutputs[k].dimX(), mDiffOutputs[k].dimY(),
+                                             mDiffInputs.dimZ(), mDiffInputs.dimB(), 
+                                             GPU_BLOCK_GRID[k], GPU_THREAD_GRID[k]);
+                break;
+            case NearestNeighborTF:
+                throw std::runtime_error("ResizeCell_Frame_CUDA: NearestNeighbor resize not supported yet.");
+            default:
+                throw std::runtime_error("ResizeCell_Frame_CUDA: Unknown resize mode.");
         }
 
         mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
 
-        outputOffset += mDiffOutputs[k].dimZ()
+        diffInputOffset += mDiffOutputs[k].dimZ()
                             *mDiffInputs.dimX()
                             *mDiffInputs.dimY()
                             *mDiffInputs.dimB();
