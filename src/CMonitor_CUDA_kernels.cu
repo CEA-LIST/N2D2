@@ -154,7 +154,7 @@ __global__ void cudaUpdateBatchFiringRate_kernel(unsigned int * firingRate,
 }
 
 
-
+/*
 __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleIds,
                                         unsigned int * exampleFiringRate,
                                         unsigned int * mostActiveId,
@@ -200,8 +200,57 @@ __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleIds,
        mostActiveId[blockIdx.x+gridDim.x*blockIdx.z] = partialActiveIdx[0];
     }
 
-}
+}*/
 
+__global__ void cudaUpdateMostActive_kernel(unsigned int * exampleFiringRate,
+                                        unsigned int * mostActiveId,
+                                        unsigned int inputsDimX,
+                                        unsigned int inputsDimY,
+                                        unsigned int inputsDimZ)
+{
+
+    const unsigned int inputSize = inputsDimZ * inputsDimX * inputsDimY;
+
+    const unsigned int batchInputOffset = blockIdx.z * inputSize;
+
+    extern __shared__ unsigned int partialActiveIdx[];
+
+    // For case that threadIdx.x > inputSize
+    partialActiveIdx[threadIdx.x] = 0;
+
+    // TODO: Index 0 has a slight advantage here
+    for (unsigned int i=threadIdx.x; i<inputSize; i+=blockDim.x) {
+        partialActiveIdx[threadIdx.x] = threadIdx.x;
+    }
+
+    // Search for max ID in each thread
+    for (unsigned int i=threadIdx.x; i<inputSize; i+=blockDim.x) {
+        if (exampleFiringRate[i + batchInputOffset] >
+            exampleFiringRate[partialActiveIdx[threadIdx.x] + batchInputOffset]) {
+                partialActiveIdx[threadIdx.x] = i;
+        }
+    }
+
+    __syncthreads();
+
+    // Reduction over neurons
+    for (int offset = blockDim.x/2; offset > 0; offset >>= 1) {
+        if (threadIdx.x < offset){
+            if (exampleFiringRate[partialActiveIdx[threadIdx.x] + batchInputOffset] <
+                exampleFiringRate[partialActiveIdx[threadIdx.x + offset] + batchInputOffset]) {
+                    partialActiveIdx[threadIdx.x] =
+                            partialActiveIdx[threadIdx.x + offset];
+            }
+        }
+
+        __syncthreads();
+    }
+
+    if (threadIdx.x == 0) {
+       mostActiveId[blockIdx.z] = partialActiveIdx[0];
+    }
+
+}
 
 
 void N2D2::cudaUpdateActivity(char * inputs,
@@ -238,6 +287,8 @@ void N2D2::cudaUpdateActivity(char * inputs,
                 inputsDimY,
                 inputsDimZ,
                 timestamp);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 }
 
 
@@ -271,6 +322,8 @@ void N2D2::cudaUpdateFiringRate(unsigned int * firingRate,
         inputsDimX,
         inputsDimY,
         inputsDimZ);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 
     cudaDeviceSynchronize();
 
@@ -286,6 +339,8 @@ void N2D2::cudaUpdateFiringRate(unsigned int * firingRate,
         nbBlocks,
         1,
         1);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 
 
     cudaFree(blockSum);
@@ -317,10 +372,12 @@ void N2D2::cudaUpdateBatchFiringRate(unsigned int * firingRate,
         inputsDimY,
         inputsDimZ,
         batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 }
 
 
-
+/* //This does not work for batch size > 1!
 void N2D2::cudaUpdateMostActive(unsigned int * exampleIds,
                             unsigned int * exampleFiringRate,
                             unsigned int * mostActiveId,
@@ -338,6 +395,7 @@ void N2D2::cudaUpdateMostActive(unsigned int * exampleIds,
         nbBlocks*=2;
     }
 
+    // Distribute search for max in each batch over several blocks
     const dim3 blocksPerGrid = {nbBlocks, 1, batchSize};
     const dim3 threadsPerBlocks = {numElem, 1, 1};
     size_t sharedSize = sizeof(unsigned int) * threadsPerBlocks.x;
@@ -353,6 +411,8 @@ void N2D2::cudaUpdateMostActive(unsigned int * exampleIds,
         inputsDimX,
         inputsDimY,
         inputsDimZ);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 
     // Perform second sum over the partial sum in all blocks
 
@@ -367,8 +427,39 @@ void N2D2::cudaUpdateMostActive(unsigned int * exampleIds,
         nbBlocks,
         1,
         1);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 
     cudaFree(blockActiveIds);
+
+
+}*/
+
+void N2D2::cudaUpdateMostActive(unsigned int * exampleFiringRate,
+                            unsigned int * mostActiveId,
+                            unsigned int inputsDimX,
+                            unsigned int inputsDimY,
+                            unsigned int inputsDimZ,
+                            unsigned int batchSize,
+                            unsigned int maxNbThreads,
+                            unsigned int warpSize)
+{
+    unsigned int numElem = findPower(inputsDimX * inputsDimY * inputsDimZ);
+    while (numElem > maxNbThreads){
+        numElem = numElem / 2;
+    }
+
+    const dim3 blocksPerGrid = {1, 1, batchSize};
+    const dim3 threadsPerBlocks = {numElem, 1, 1};
+    size_t sharedSize = sizeof(unsigned int) * threadsPerBlocks.x;
+
+    cudaUpdateMostActive_kernel <<<blocksPerGrid, threadsPerBlocks, sharedSize>>> (
+        exampleFiringRate,
+        mostActiveId,
+        inputsDimX,
+        inputsDimY,
+        inputsDimZ);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 

@@ -289,16 +289,22 @@ bool N2D2::CMonitor::classifyFirstSpike(unsigned int batch,
 }
 */
 
-bool N2D2::CMonitor::classifyRateBased(unsigned int target,
-                                        unsigned int batch,
-                                        std::vector<float> integrations,
-                                        bool update)
+bool N2D2::CMonitor::classifyRateBased(int target,
+                                    Tensor<float> integrations,
+                                    unsigned int batch,
+                                    bool update)
 {
     if (mNbClasses == 0) {
         throw std::runtime_error("Error in "
             "N2D2::CMonitor::checkLearningResponse: "
             "Number of classes not specified in Monitor");
     }
+
+    if (target < 0) {
+        std::cout << "Skipping target < 0" << std::endl;
+        return false;
+    }
+
     bool success = false;
 
     unsigned int maxNode = 0;
@@ -311,12 +317,12 @@ bool N2D2::CMonitor::classifyRateBased(unsigned int target,
         // If same number of spikes compare integrations. Same integration is very unlikely
         // This also includes the case of no spikes in all neurons
         else if (mLastExampleActivity(i,batch) == maxResponse) {
-            if (integrations[i] >= integrations[maxNode]) {
+            if (integrations(i,batch) >= integrations(maxNode,batch)) {
                 maxNode = i;
             }
         }
     }
-    if(maxNode == target) {
+    if((int)maxNode == target) {
         success = true;
         if (update) {
             mSuccessCounter++;
@@ -332,28 +338,51 @@ bool N2D2::CMonitor::classifyRateBased(unsigned int target,
 }
 
 
-bool N2D2::CMonitor::classifyIntegrationBased(unsigned int target,
-                                                unsigned int /*batch*/,
-                                                std::vector<float> integrations,
+
+unsigned int N2D2::CMonitor::classifyBatchRateBased(Tensor<int> targets,
+                                                Tensor<float> integrations,
                                                 bool update)
 {
-    if (mNbClasses == 0) {
-        throw std::runtime_error("Error in "
-            "N2D2::CMonitor::checkLearningResponse: "
-            "Number of classes not specified in Monitor");
+    unsigned int success = 0;
+
+    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+        success += static_cast<unsigned int>(
+            classifyRateBased(targets(batch), integrations, batch, update));
     }
+
+
+    return success;
+}
+
+
+bool N2D2::CMonitor::classifyIntegrationBased(int target,
+                                            Tensor<float> integrations,
+                                            unsigned int batch,
+                                            bool update)
+{
+    if (target >= (int)(integrations.size()/integrations.dimB())) {
+        throw std::runtime_error("Error in "
+            "N2D2::CMonitor::classifyIntegrationBased: "
+            "target index larger than number of of neurons");
+    }
+
+    if (target < 0) {
+        std::cout << "Skipping target < 0" << std::endl;
+        return false;
+    }
+
     bool success = false;
 
     unsigned int maxNode = 0;
     double maxResponse = 0;
     for(unsigned int i=0; i<mNbClasses; ++i) {
         //std::cout << integrations[i] << std::endl;
-        if (integrations[i] > maxResponse){
+        if (integrations(i, batch) > maxResponse){
             maxNode = i;
-            maxResponse = integrations[i];
+            maxResponse = integrations(i, batch);
         }
     }
-    if(maxNode == target) {
+    if((int)maxNode == target) {
         success = true;
         if (update) {
             mSuccessCounter++;
@@ -364,6 +393,23 @@ bool N2D2::CMonitor::classifyIntegrationBased(unsigned int target,
         mNbEvaluations++;
         mSuccess.push_back(success);
     }
+
+    return success;
+}
+
+
+unsigned int N2D2::CMonitor::classifyBatchIntegrationBased(Tensor<int> targets,
+                                                Tensor<float> integrations,
+                                                bool update)
+{
+    unsigned int success = 0;
+
+    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+        success += static_cast<unsigned int>(
+            classifyIntegrationBased(
+                                targets(batch), integrations, batch, update));
+    }
+
 
     return success;
 }

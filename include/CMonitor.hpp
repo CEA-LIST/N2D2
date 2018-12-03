@@ -70,14 +70,23 @@ public:
                             unsigned int cls,
                             unsigned int node,
                             bool update = true);*/
-    bool classifyRateBased(unsigned int target,
-                                    unsigned int batch,
-                                    std::vector<float> integrations,
-                                    bool update=true);
-    bool classifyIntegrationBased(unsigned int target,
-                                    unsigned int batch,
-                                    std::vector<float> integrations,
-                                    bool update=true);
+    bool classifyRateBased(int target,
+                            Tensor<float> integrations,
+                            unsigned int batch,
+                            bool update=true);
+
+    unsigned int classifyBatchRateBased(Tensor<int> targets,
+                                        Tensor<float> integrations,
+                                        bool update=true);
+
+    bool classifyIntegrationBased(int target,
+                                Tensor<float> integrations,
+                                unsigned int batch,
+                                bool update=true);
+
+    unsigned int classifyBatchIntegrationBased(Tensor<int> targets,
+                                        Tensor<float> integrations,
+                                        bool update=true);
 
     bool checkLearningResponse(unsigned int batch, unsigned int cls,
                                bool update = true);

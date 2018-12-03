@@ -23,6 +23,8 @@
 #define N2D2_CMONITOR_CUDA_KERNELS_H
 
 #include <curand_kernel.h>
+#include "CudaUtils.hpp"
+
 
 namespace N2D2 {
 
@@ -58,6 +60,16 @@ void cudaUpdateBatchFiringRate(unsigned int * firingRate,
                                     unsigned int maxNbThreads,
                                     unsigned int warpSize);
 
+void cudaUpdateMostActive(unsigned int * exampleFiringRate,
+                            unsigned int * mostActiveId,
+                            unsigned int inputsDimX,
+                            unsigned int inputsDimY,
+                            unsigned int inputsDimZ,
+                            unsigned int batchSize,
+                            unsigned int maxNbThreads,
+                            unsigned int warpSize);
+
+/*
 void cudaUpdateMostActive(unsigned int * exampleIds,
                             unsigned int * exampleFiringRate,
                             unsigned int * mostActiveId,
@@ -66,7 +78,7 @@ void cudaUpdateMostActive(unsigned int * exampleIds,
                             unsigned int inputsDimZ,
                             unsigned int batchSize,
                             unsigned int maxNbThreads,
-                            unsigned int warpSize);
+                            unsigned int warpSize);*/
 
 }
 
