@@ -1281,7 +1281,19 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
                                                itEnd = mStimuli[id].ROIs.end();
              it != itEnd;
              ++it)
-            (*it)->append(labels, mROIsMargin, defaultLabel);
+        {
+            try {
+                (*it)->append(labels, mROIsMargin, defaultLabel);
+            }
+            catch (const std::exception& e)
+            {
+                std::cout << Utils::cwarning << "Could not append ROI #"
+                    << (it - mStimuli[id].ROIs.begin()) << " to stimulus "
+                    << mStimuli[id].name << " (" << stimulus.cols
+                    << "x" << stimulus.rows << "):\n" << Utils::cdef
+                    << e.what() << std::endl;
+            }
+        }
 
         return labels;
     } else {

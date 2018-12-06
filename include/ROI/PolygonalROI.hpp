@@ -97,11 +97,17 @@ void N2D2::PolygonalROI<T>::append(cv::Mat& labels,
     const cv::Rect bb = cv::boundingRect(points);
     const int x0 = std::max(0, bb.x - 2 * (int)outsideMargin);
     const int y0 = std::max(0, bb.y - 2 * (int)outsideMargin);
-    cv::Rect workArea(
-        x0,
-        y0,
-        std::min(labels.cols - x0, bb.width + 4 * (int)outsideMargin),
-        std::min(labels.rows - y0, bb.height + 4 * (int)outsideMargin));
+    const int width = std::min(labels.cols - x0,
+                               bb.width + 4 * (int)outsideMargin);
+    const int height = std::min(labels.rows - y0,
+                                bb.height + 4 * (int)outsideMargin);
+
+    if (width <= 0 || height <= 0) {
+        std::cout << Utils::cwarning << "PolygonalROI::append(): ROI bounding "
+            "rect outside image area: " << bb << Utils::cdef << std::endl;
+    }
+
+    cv::Rect workArea(x0, y0, width, height);
 
     std::vector<typename Geometric::Polygon<T>::Point_T> newPoints;
 
