@@ -311,7 +311,7 @@ public:
     Tensor(const std::vector<size_t>& dims,
              InputIterator first,
              InputIterator last);
-    Tensor(const cv::Mat& mat);
+    Tensor(const cv::Mat& mat, bool signedMapping = false);
     iterator begin()
     {
         return (*mData)().begin() + mDataOffset;
@@ -398,7 +398,9 @@ protected:
              size_t size,
              size_t sizeM1);
     template <class CV_T>
-    static void convert(const cv::Mat& mat, std::vector<T>& data);
+    static void convert(const cv::Mat& mat,
+                        std::vector<T>& data,
+                        bool signedMapping = false);
 
     const std::shared_ptr<DataTensor<T> > mData;
     const size_t mDataOffset;
@@ -688,7 +690,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
 }
 
 template <class T>
-N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
+N2D2::Tensor<T>::Tensor(const cv::Mat& mat, bool signedMapping)
     : BaseTensor(std::vector<size_t>(), std::make_shared<bool>(true)),
       mData(std::make_shared<DataTensor<T> >(std::vector<T>())),
       mDataOffset(0)
@@ -712,13 +714,13 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
     {
         switch ((*itChannel).depth()) {
         case CV_8U:
-            convert<unsigned char>(*itChannel, (*mData)());
+            convert<unsigned char>(*itChannel, (*mData)(), signedMapping);
             break;
         case CV_8S:
             convert<char>(*itChannel, (*mData)());
             break;
         case CV_16U:
-            convert<unsigned short>(*itChannel, (*mData)());
+            convert<unsigned short>(*itChannel, (*mData)(), signedMapping);
             break;
         case CV_16S:
             convert<short>(*itChannel, (*mData)());
@@ -742,12 +744,29 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat)
     assert((*mData)().size() == size());
 }
 
+template<typename T, typename Enable = void>
+struct try_make_signed {
+    typedef typename std::make_signed<T>::type type;
+};
+
+template<typename T>
+struct try_make_signed<T,
+    typename std::enable_if<std::is_floating_point<T>::value>::type> {
+    typedef T type;
+};
+
 template <class T>
 template <class CV_T>
-void N2D2::Tensor<T>::convert(const cv::Mat& mat, std::vector<T>& data)
+void N2D2::Tensor<T>::convert(const cv::Mat& mat,
+                              std::vector<T>& data,
+                              bool signedMapping)
 {
     const CV_T srcRange = (std::numeric_limits<CV_T>::is_integer)
-                              ? std::numeric_limits<CV_T>::max()
+                              ? ((signedMapping)
+                                    ? static_cast<CV_T>(std::numeric_limits
+                                        <typename try_make_signed<CV_T>::type>
+                                                                        ::max())
+                                    : std::numeric_limits<CV_T>::max())
                               : CV_T(1.0);
     const T dstRange = (std::numeric_limits<T>::is_integer)
                            ? std::numeric_limits<T>::max()
@@ -768,12 +787,24 @@ void N2D2::Tensor<T>::convert(const cv::Mat& mat, std::vector<T>& data)
             const CV_T* rowPtr = mat.ptr<CV_T>(i);
 
             for (int j = 0; j < mat.cols; ++j) {
-                data.push_back(static_cast<T>(
-                    ((std::numeric_limits<CV_T>::is_integer
-                      && std::numeric_limits<T>::is_integer)
-                         ? static_cast<long long int>(dstRange)
-                         : static_cast<double>(dstRange))
-                        * rowPtr[j] / srcRange));
+                if (std::numeric_limits<CV_T>::is_integer && signedMapping) {
+                    data.push_back(static_cast<T>(
+                        ((std::numeric_limits<CV_T>::is_integer
+                          && std::numeric_limits<T>::is_integer)
+                             ? static_cast<long long int>(dstRange)
+                             : static_cast<double>(dstRange))
+                            * (rowPtr[j] + std::numeric_limits<
+                                  typename try_make_signed<CV_T>::type>::min())
+                            / srcRange));
+                }
+                else {
+                    data.push_back(static_cast<T>(
+                        ((std::numeric_limits<CV_T>::is_integer
+                          && std::numeric_limits<T>::is_integer)
+                             ? static_cast<long long int>(dstRange)
+                             : static_cast<double>(dstRange))
+                            * rowPtr[j] / srcRange));
+                }
             }
         }
     }
@@ -1351,7 +1382,7 @@ bool N2D2::Tensor<T>::operator==(const Tensor& other) const {
     if(mData.get() == other.mData.get() && mDataOffset == other.mDataOffset) {
         return true;
     }
-    
+
     assert(mData.size() == other.mData.size());
     return std::equal(begin(), end(), other.begin());
 }

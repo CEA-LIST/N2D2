@@ -310,6 +310,9 @@ protected:
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
 
+    /// Map unsigned integer range to signed before convertion to Float_T
+    /// 8 bits image pixels will be converted from [0,255] to [-0.5, 0.5]
+    Parameter<bool> mDataSignedMapping;
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
     /// Min. value for quantization

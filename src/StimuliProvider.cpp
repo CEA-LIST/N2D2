@@ -25,6 +25,7 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
                                        unsigned int batchSize,
                                        bool compositeStimuli)
     : // Variables
+      mDataSignedMapping(this, "DataSignedMapping", false),
       mQuantizationLevels(this, "QuantizationLevels", 0U),
       mQuantizationMin(this, "QuantizationMin", 0.0),
       mQuantizationMax(this, "QuantizationMax", 1.0),
@@ -66,6 +67,7 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
 N2D2::StimuliProvider::StimuliProvider(const StimuliProvider& sp)
     : Parameterizable(sp),
       // Variables
+      mDataSignedMapping(this, "DataSignedMapping", sp.mDataSignedMapping),
       mQuantizationLevels(this, "QuantizationLevels", sp.mQuantizationLevels),
       mQuantizationMin(this, "QuantizationMin", sp.mQuantizationMin),
       mQuantizationMax(this, "QuantizationMax", sp.mQuantizationMax),
@@ -423,8 +425,8 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
             rawChannelsData[0], rawChannelsLabels[0], labelsROI, id);
 
     Tensor<Float_T> data = (mChannelsTransformations.empty())
-                        ? Tensor<Float_T>(rawChannelsData[0])
-                        : Tensor<Float_T>(std::vector<size_t>(mSize.size(), 0));
+                       ? Tensor<Float_T>(rawChannelsData[0], mDataSignedMapping)
+                       : Tensor<Float_T>(std::vector<size_t>(mSize.size(), 0));
     Tensor<int> labels = (mChannelsTransformations.empty())
                         ? Tensor<int>(rawChannelsLabels[0])
                         : Tensor<int>(std::vector<size_t>(mSize.size(), 0));
@@ -463,7 +465,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
 
             (*it)(set).onTheFly.apply(channelDataMat, channelLabelsMat, id);
 
-            Tensor<Float_T> channelData(channelDataMat);
+            Tensor<Float_T> channelData(channelDataMat, mDataSignedMapping);
             Tensor<int> channelLabels(channelLabelsMat);
 
             if (channelData.nbDims() < mSize.size() - 1) {
