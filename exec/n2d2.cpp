@@ -87,8 +87,32 @@ void validationThreadWrapper(const std::shared_ptr<DeepNet>& deepNet)
     deepNet->test(Database::Validation);
 }
 
+#if defined(__GNUC__) && !defined(NDEBUG)
+#include <dlfcn.h>
+
+void sigUsr1Handler(int /*sig*/)
+{
+    std::cerr << "Exiting on SIGUSR1" << std::endl;
+
+    void (*_mcleanup)(void);
+
+    _mcleanup = (void (*)(void))dlsym(RTLD_DEFAULT, "_mcleanup");
+
+    if (_mcleanup == NULL)
+        std::cerr << "Unable to find gprof exit hook" << std::endl;
+    else
+        _mcleanup();
+
+    _exit(0);
+}
+#endif
+
 int main(int argc, char* argv[]) try
 {
+#if defined(__GNUC__) && !defined(NDEBUG)
+    signal(SIGINT, sigUsr1Handler);
+#endif
+
     // Program command line options
     ProgramOptions opts(argc, argv);
     unsigned int seed

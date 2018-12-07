@@ -151,7 +151,7 @@ else
     ifdef PROFILING
       $(info Compiling with -pg flag can cause gdb to hang on __libc_fork call)
       # !!! See note below !!!
-      OPT:=$(OPT) -pg
+      OPT:=$(OPT) -Wl,--no-as-needed -ldl -pg
     endif
 
     # Debug with OpenMP by default. Call make with NOPARALLEL=1 to avoid OpenMP.
