@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef CUDA
+#ifdef CUDA
 
 #include "N2D2.hpp"
 
