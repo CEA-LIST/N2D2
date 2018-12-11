@@ -59,6 +59,9 @@ TEST(DOTA_Database, loadAllStimuli)
     ASSERT_EQUALS(db.getNbROIsWithLabel(1), 21356U);
     ASSERT_EQUALS(db.getLabelName(14), "helicopter");
     ASSERT_EQUALS(db.getNbROIsWithLabel(14), 703U);
+
+    db.logROIsStats("DOTA_Database_ROIs_size.dat",
+                    "DOTA_Database_ROIs_label.dat");
 }
 
 

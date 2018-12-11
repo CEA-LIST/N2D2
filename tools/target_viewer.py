@@ -44,7 +44,7 @@ class Viewer(TargetViewer.TargetViewer):
         self.imgEstimated = []
         self.imgTarget = []
         self.imgLegend = cv2.imread(os.path.join(os.getcwd(),
-            "labels_legend.png"));
+            "labels_legend.png"))
         self.imgEstimatedHsv = []
         self.imgTargetHsv = []
 
@@ -55,8 +55,10 @@ class Viewer(TargetViewer.TargetViewer):
 
     # PRIVATE
     def _run(self):
-        cv2.destroyWindow(self.estimatedWindow)
-        cv2.destroyWindow(self.targetWindow)
+        if self.estimatedWindow != "":
+            cv2.destroyWindow(self.estimatedWindow)
+        if self.targetWindow != "":
+            cv2.destroyWindow(self.targetWindow)
 
         estimatedName = self.files[self.index]
         targetName = self._replace_last_of(estimatedName,
@@ -68,7 +70,7 @@ class Viewer(TargetViewer.TargetViewer):
         cv2.namedWindow(self.targetWindow, cv2.WINDOW_NORMAL)
         cv2.setMouseCallback(self.targetWindow, self._mouseCallback, False)
 
-        self.imgTarget = cv2.imread(targetName);
+        self.imgTarget = cv2.imread(targetName)
         self.imgTargetHsv = cv2.cvtColor(self.imgTarget, cv2.COLOR_BGR2HSV)
         cv2.imshow(self.targetWindow, self.imgTarget)
         cv2.resizeWindow(self.targetWindow, 1024, 512)
@@ -81,7 +83,7 @@ class Viewer(TargetViewer.TargetViewer):
         if numpy.all([v < 20 for v in self.imgTargetHsv[:,:,1]]):
             skippable = True
 
-        self.imgEstimated = cv2.imread(estimatedName);
+        self.imgEstimated = cv2.imread(estimatedName)
         self.imgEstimatedHsv = cv2.cvtColor(self.imgEstimated,
             cv2.COLOR_BGR2HSV)
         cv2.imshow(self.estimatedWindow, self.imgEstimated)

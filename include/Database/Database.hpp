@@ -147,6 +147,9 @@ public:
                              int depth = 0);
     virtual void saveROIs(const std::string& fileName,
                           const std::string& header = "") const;
+    void logStats(const std::string& sizeFileName,
+                  const std::string& labelFileName,
+                  StimuliSetMask setMask = All) const;
     void logROIsStats(const std::string& sizeFileName,
                       const std::string& labelFileName,
                       StimuliSetMask setMask = All) const;
@@ -295,6 +298,17 @@ protected:
                           StimuliSet set);
     void removeIndexesFromSet(std::vector<unsigned int>& indexes,
                               StimuliSet set);
+    void plotStats(
+        const std::string& sizeFileName,
+        const std::string& labelFileName,
+        unsigned int totalCount,
+        unsigned int minWidth,
+        unsigned int maxWidth,
+        unsigned int minHeight,
+        unsigned int maxHeight,
+        const std::map<std::pair<unsigned int, unsigned int>,
+                                                        unsigned int>& sizeStats,
+        const std::map<int, unsigned int>& labelStats) const;
 
     /// Default label for composite image (for areas outside the ROIs). If
     /// empty, no default label is created and label ID is -1

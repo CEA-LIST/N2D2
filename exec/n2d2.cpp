@@ -140,6 +140,8 @@ int main(int argc, char* argv[]) try
     const unsigned int logOutputs
         = opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
                      "stimulus (0 = no log)");
+    const bool logDbStats
+        = opts.parse("-log-db-stats", "log database stimuli and ROIs stats");
     const bool genConfig
         = opts.parse("-cfg", "save base configuration and exit");
     const std::string genExport
@@ -207,9 +209,16 @@ int main(int argc, char* argv[]) try
     std::cout << "Testing database size: "
               << database.getNbStimuli(Database::Test) << " images"
               << std::endl;
-    database.logROIsStats("database-roi-size.dat", "database-roi-label.dat");
-    database.logROIsStats(
-        "testset-roi-size.dat", "testset-roi-label.dat", Database::TestOnly);
+
+    if (logDbStats) {
+        // Log stats
+        database.logStats("database-size.dat", "database-label.dat");
+        database.logStats("testset-size.dat", "testset-label.dat",
+                          Database::TestOnly);
+        database.logROIsStats("database-roi-size.dat", "database-roi-label.dat");
+        database.logROIsStats("testset-roi-size.dat", "testset-roi-label.dat",
+                              Database::TestOnly);
+    }
 
     StimuliProvider& sp = *deepNet->getStimuliProvider();
 

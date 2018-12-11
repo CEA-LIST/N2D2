@@ -59,9 +59,11 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
         const double learn = iniConfig.getProperty<double>("Learn");
         const double validation = iniConfig.getProperty<double>("Validation",
                                                                 0.0);
-        const double test = (perLabel)
-            ? iniConfig.getProperty<double>("Test", 1.0 - learn - validation)
-            : iniConfig.getProperty<double>("Test", 0.0);
+
+        double test = 0.0;
+
+        if (iniConfig.isProperty("Test"))
+            test = iniConfig.getProperty<double>("Test");
 
         if (iniConfig.isProperty("ValidExtensions")) {
             database->setValidExtensions(
@@ -79,9 +81,15 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
             database->loadROIs(roiFile, "", true);
 
         if (perLabel) {
+            if (!iniConfig.isProperty("Test"))
+                test = 1.0 - learn - validation;
+
             database->partitionStimuliPerLabel(learn, validation, test, true);
             database->partitionStimuli(0.0, 0.0, 1.0);
         } else {
+            if (!iniConfig.isProperty("Test"))
+                test = database->getNbStimuli() - learn - validation;
+
             database->partitionStimuli(learn, Database::Learn);
             database->partitionStimuli(validation, Database::Validation);
             database->partitionStimuli(test, Database::Test);

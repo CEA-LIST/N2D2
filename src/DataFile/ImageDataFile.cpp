@@ -24,6 +24,8 @@ N2D2::Registrar<N2D2::DataFile>
 N2D2::ImageDataFile::mRegistrar({// Windows bitmaps
                                 "bmp",
                                 "dib",
+                                // BMP with custom headers
+                                "xim",
                                 // JPEG files
                                 "jpeg",
                                 "jpg",

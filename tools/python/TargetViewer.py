@@ -37,6 +37,8 @@ class TargetViewer(object):
         self.imgLegend = []
         self.labelsHueOffset = 0
 
+        self.initialDir = "~"
+
     def run(self):
         self.newIndex = 0
         skipUp = False
@@ -73,23 +75,25 @@ class TargetViewer(object):
             skipUp = False
             skipDown = False
 
-            key = cv2.waitKey(0)
+            key = cv2.waitKey(0) & 0xFF
 
-            if key == (0x10FF00 | 80):
+            print key
+
+            if key == 80:
                 # KEY_HOME
                 self.newIndex = 0
-            elif key == (0x10FF00 | 87):
+            elif key == 87:
                 # KEY_END
                 self.newIndex = len(self.files)-1
-            elif key == (0x10FF00 | 81):
+            elif key == 81:
                 # KEY_LEFT
                 if self.newIndex > 0:
                     self.newIndex-= 1
-            elif key == (0x10FF00 | 83):
+            elif key == 83:
                 # KEY_RIGHT
                 if self.newIndex < len(self.files)-1:
                     self.newIndex+= 1
-            elif key == (0x10FF00 | 82):
+            elif key == 82:
                 # KEY_UP
                 if self.newIndex > 0:
                     self.newIndex-= 1
@@ -98,7 +102,7 @@ class TargetViewer(object):
                 #    self.newIndex-= 10
                 #else:
                 #    self.newIndex = 0
-            elif key == (0x10FF00 | 84):
+            elif key == 84:
                 # KEY_DOWN
                 if self.newIndex < len(self.files)-1:
                     self.newIndex+= 1
@@ -107,25 +111,25 @@ class TargetViewer(object):
                 #    self.newIndex+= 10
                 #else:
                 #    self.newIndex = len(self.files)-1
-            elif key == (0x10FF00 | 85):
+            elif key == 85:
                 # KEY_PAGEUP
                 if self.newIndex > 100:
                     self.newIndex-= 100
                 else:
                     self.newIndex = 0
-            elif key == (0x10FF00 | 86):
+            elif key == 86:
                 # KEY_PAGEDOWN
                 if self.newIndex < (len(self.files)-1)-100:
                     self.newIndex+= 100
                 else:
                     self.newIndex = len(self.files)-1
-            elif key == (0x100000 | 9):
+            elif key == 9:
                 # KEY_TAB
                 if self.newIndex < (len(self.files)-1)-1000:
                     self.newIndex+= 1000
                 else:
                     self.newIndex = len(self.files)-1
-            elif key == (0x100000 | ord('f')):
+            elif key == ord('f'):
                 subString = raw_input("Find image: ")
 
                 try:
@@ -133,7 +137,22 @@ class TargetViewer(object):
                         enumerate(self.files) if subString in string)
                 except StopIteration:
                     print "No match found!"
-            elif key == (0x100000 | 27):
+            elif key == ord('s'):
+                import Tkinter
+                import tkFileDialog
+
+                root = Tkinter.Tk()
+                root.withdraw()
+                saveName = tkFileDialog.asksaveasfilename(
+                  initialdir=self.initialDir,
+                  initialfile=os.path.basename(self.files[self.index]) + ".jpg")
+                root.destroy()
+
+                self.initialDir = os.path.dirname(saveName)
+
+                img = cv2.imread(self.files[self.index])
+                cv2.imwrite(saveName, img)
+            elif key == 27:
                 # KEY_ESC
                 break
 

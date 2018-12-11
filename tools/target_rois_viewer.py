@@ -59,7 +59,7 @@ class RoisViewer(TargetViewer.TargetViewer):
 
         if self.estimatedPath is not None:
             self.imgLegend = cv2.imread(os.path.join(
-                os.path.dirname(self.estimatedPath), "labels_legend.png"));
+                os.path.dirname(self.estimatedPath), "labels_legend.png"))
 
             if self.imgLegend is not None:
                 imgLegendHsv = cv2.cvtColor(self.imgLegend, cv2.COLOR_BGR2HSV)
@@ -68,7 +68,8 @@ class RoisViewer(TargetViewer.TargetViewer):
 
     # PRIVATE
     def _run(self):
-        cv2.destroyWindow(self.roiWindow)
+        if self.roiWindow != "":
+            cv2.destroyWindow(self.roiWindow)
 
         roiName = self.files[self.index]
         self.roiWindow = os.path.basename(roiName)
@@ -109,7 +110,7 @@ class RoisViewer(TargetViewer.TargetViewer):
             cv2.setMouseCallback(self.estimatedWindow,
                 self._mouseCallback, False)
 
-            self.imgEstimated = cv2.imread(estimatedName);
+            self.imgEstimated = cv2.imread(estimatedName)
             self.imgEstimatedHsv = cv2.cvtColor(self.imgEstimated,
                 cv2.COLOR_BGR2HSV)
             cv2.imshow(self.estimatedWindow, self.imgEstimated)

@@ -254,6 +254,77 @@ void N2D2::Database::saveROIs(const std::string& fileName,
                   << "\": " << (*it).second << " patterns" << std::endl;
 }
 
+void N2D2::Database::logStats(const std::string& sizeFileName,
+                              const std::string& labelFileName,
+                              StimuliSetMask setMask) const
+{
+    // Stats collection
+    std::map<std::pair<unsigned int, unsigned int>, unsigned int> sizeStats;
+    unsigned int minWidth = std::numeric_limits<int>::max();
+    unsigned int minHeight = std::numeric_limits<int>::max();
+    unsigned int maxWidth = 0;
+    unsigned int maxHeight = 0;
+    unsigned int nbStimuli = 0;
+    std::map<int, unsigned int> labelStats;
+
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+         = stimuliSets.begin(),
+         itSetEnd = stimuliSets.end();
+         itSet != itSetEnd;
+         ++itSet)
+    {
+        for (unsigned int i = 0, size = mStimuliSets(*itSet).size(); i < size;
+             ++i)
+        {
+            const StimulusID id = mStimuliSets(*itSet)[i];
+
+            // Read stimuli
+            std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
+            std::transform(fileExtension.begin(),
+                           fileExtension.end(),
+                           fileExtension.begin(),
+                           ::tolower);
+
+            std::shared_ptr<DataFile> dataFile = Registrar
+                <DataFile>::create(fileExtension)();
+            cv::Mat stimulus = dataFile->read(mStimuli[id].name);
+
+            // Stats
+            std::map<std::pair<unsigned int, unsigned int>,
+                     unsigned int>::iterator itSizeStats;
+            std::tie(itSizeStats, std::ignore) = sizeStats.insert(
+                std::make_pair(std::make_pair(stimulus.cols, stimulus.rows), 0U));
+            ++(*itSizeStats).second;
+
+            if (stimulus.cols > (int)maxWidth)
+                maxWidth = stimulus.cols;
+            if (stimulus.rows > (int)maxHeight)
+                maxHeight = stimulus.rows;
+            if (stimulus.cols < (int)minWidth)
+                minWidth = stimulus.cols;
+            if (stimulus.rows < (int)minHeight)
+                minHeight = stimulus.rows;
+
+            std::map<int, unsigned int>::iterator itLabelStats;
+            std::tie(itLabelStats, std::ignore) = labelStats.insert(
+                std::make_pair(mStimuli[id].label, 0U));
+            ++(*itLabelStats).second;
+
+            ++nbStimuli;
+        }
+    }
+
+    if (nbStimuli > 0) {
+        plotStats(sizeFileName, labelFileName, nbStimuli,
+                  minWidth, maxWidth, minHeight, maxHeight,
+                  sizeStats, labelStats);
+    }
+    else
+        std::cout << "Database::logStats(): no stimulus" << std::endl;
+}
+
 void N2D2::Database::logROIsStats(const std::string& sizeFileName,
                                   const std::string& labelFileName,
                                   StimuliSetMask setMask) const
@@ -310,11 +381,27 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
         }
     }
 
-    if (nbROIs == 0) {
-        std::cout << "Database::logROIsStats(): no ROI" << std::endl;
-        return;
+    if (nbROIs > 0) {
+        plotStats(sizeFileName, labelFileName, nbROIs,
+                  minWidth, maxWidth, minHeight, maxHeight,
+                  sizeStats, labelStats);
     }
+    else
+        std::cout << "Database::logROIsStats(): no ROI" << std::endl;
+}
 
+void N2D2::Database::plotStats(
+    const std::string& sizeFileName,
+    const std::string& labelFileName,
+    unsigned int totalCount,
+    unsigned int minWidth,
+    unsigned int maxWidth,
+    unsigned int minHeight,
+    unsigned int maxHeight,
+    const std::map<std::pair<unsigned int, unsigned int>,
+                                                    unsigned int>& sizeStats,
+    const std::map<int, unsigned int>& labelStats) const
+{
     // Save size stats
     std::ofstream sizeData(sizeFileName.c_str());
 
@@ -351,16 +438,16 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
     sizeGnuplot.set("size 1.1,1.1");
 
     std::stringstream labelStr;
-    labelStr << "ROIs width (range = [" << minWidth << ", " << maxWidth << "])";
+    labelStr << "Width (range = [" << minWidth << ", " << maxWidth << "])";
     sizeGnuplot.setXlabel(labelStr.str());
 
     labelStr.str(std::string());
-    labelStr << "ROIs height (range = [" << minHeight << ", " << maxHeight
+    labelStr << "Height (range = [" << minHeight << ", " << maxHeight
              << "])";
     sizeGnuplot.setYlabel(labelStr.str());
 
     labelStr.str(std::string());
-    labelStr << "title \"Total number of ROIs = " << nbROIs << "\"";
+    labelStr << "title \"Total number = " << totalCount << "\"";
     sizeGnuplot.set(labelStr.str());
 
     sizeGnuplot.saveToFile(sizeFileName);
@@ -372,7 +459,7 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
     sizeGnuplot.set("grid");
     sizeGnuplot.unset("key");
     sizeGnuplot.setYlabel("Number of stimuli (cumulative)");
-    sizeGnuplot.setXlabel("ROIs width (pixels)");
+    sizeGnuplot.setXlabel("Width (pixels)");
     sizeGnuplot.saveToFile(sizeFileName, "-width");
     sizeGnuplot.set("multiplot");
     sizeGnuplot.plot(sizeFileName,
@@ -394,7 +481,7 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
     sizeGnuplot.set("grid");
     sizeGnuplot.unset("key");
     sizeGnuplot.setYlabel("Number of stimuli (cumulative)");
-    sizeGnuplot.setXlabel("ROIs height (pixels)");
+    sizeGnuplot.setXlabel("Height (pixels)");
     sizeGnuplot.saveToFile(sizeFileName, "-height");
     sizeGnuplot.set("multiplot");
     sizeGnuplot.plot(sizeFileName,
@@ -442,11 +529,16 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
     labelGnuplot.set("style data histograms");
     labelGnuplot.set("style fill pattern 1.00 border");
     labelGnuplot.set("ytics nomirror");
-    labelGnuplot.setYlabel("ROIs label occurrence(s)");
+    labelGnuplot.setYlabel("Label occurrence(s)");
     labelGnuplot.set("grid");
     labelGnuplot.set("xtics rotate by 90 right");
     labelGnuplot.set("ytics textcolor lt 1");
-    labelGnuplot.set("ylabel textcolor lt 1");
+
+    std::stringstream yLabelStr;
+    yLabelStr << "ylabel \"Label name (total number of labels = "
+        << labelStats.size() << ")\" textcolor lt 1";
+
+    labelGnuplot.set(yLabelStr.str());
     labelGnuplot.set("bmargin 10");
     labelGnuplot.unset("key");
     labelGnuplot.saveToFile(labelFileName);
@@ -1256,19 +1348,16 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
 {
     if (mStimuli[id].label == -1) {
         // Composite stimulus
-        // Construct the labels matrix with the ROIs
-#if CV_MAJOR_VERSION >= 3
-        const cv::Mat stimulus
-            = cv::imread(mStimuli[id].name, cv::IMREAD_UNCHANGED);
-#else
-        const cv::Mat stimulus
-            = cv::imread(mStimuli[id].name, CV_LOAD_IMAGE_UNCHANGED);
-#endif
+        std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
+        std::transform(fileExtension.begin(),
+                       fileExtension.end(),
+                       fileExtension.begin(),
+                       ::tolower);
 
-        if (!stimulus.data)
-            throw std::runtime_error(
-                "Database::loadStimulusLabelsData(): unable to read image: "
-                + mStimuli[id].name);
+        // Construct the labels matrix with the ROIs
+        std::shared_ptr<DataFile> dataFile = Registrar
+            <DataFile>::create(fileExtension)();
+        cv::Mat stimulus = dataFile->read(mStimuli[id].name);
 
         const int defaultLabel = getDefaultLabelID();
         cv::Mat labels(
