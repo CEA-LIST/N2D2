@@ -115,14 +115,14 @@ void N2D2::ResizeCell_Frame::propagate(bool inference)
     mDiffInputs.clearValid();
 }
 
-void N2D2::ResizeCell_Frame::propagateBilinearTF(bool /*inference*/) 
+void N2D2::ResizeCell_Frame::propagateBilinearTF(bool /*inference*/)
 {
     const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[0]);
 
 #pragma omp parallel for if (mOutputs.dimB() > 3)
-    for (std::size_t batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
+    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
 #pragma omp parallel for if (mOutputs.size() > 2)
-        for(std::size_t oy = 0; oy < mOutputs.dimY(); ++oy) {
+        for(int oy = 0; oy < (int)mOutputs.dimY(); ++oy) {
             for(std::size_t ox = 0; ox < mOutputs.dimX(); ++ox) {
                 for(std::size_t channel = 0; channel < mOutputs.dimZ(); ++channel) {
                     const Float_T top_left = input( mXStride[ox].low_index,
@@ -184,7 +184,7 @@ void N2D2::ResizeCell_Frame::backPropagate()
     mDiffOutputs.synchronizeHToD();
 }
 
-void N2D2::ResizeCell_Frame::backPropagateBilinearTF() 
+void N2D2::ResizeCell_Frame::backPropagateBilinearTF()
 {
     Tensor<Float_T> diffOutput
             = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
@@ -193,7 +193,7 @@ void N2D2::ResizeCell_Frame::backPropagateBilinearTF()
     }
 
     #pragma omp parallel for if (mInputs.dimB() > 1)
-    for (std::size_t batchPos = 0; batchPos < mInputs.dimB(); ++batchPos) {
+    for (int batchPos = 0; batchPos < (int)mInputs.dimB(); ++batchPos) {
         for (std::size_t oy = 0; oy < mDiffInputs.dimY(); ++oy) {
             const Float_T in_y = oy * mScaleY;
             const int top_y_index = (int)(floorf(in_y));
@@ -210,7 +210,7 @@ void N2D2::ResizeCell_Frame::backPropagateBilinearTF()
                 const Float_T inverse_x_lerp = (1.0f - x_lerp);
 
                 #pragma omp parallel for if (mDiffInputs.dimZ() > 2)
-                for (std::size_t channel = 0; channel < mDiffInputs.dimZ(); ++channel) {
+                for (int channel = 0; channel < (int)mDiffInputs.dimZ(); ++channel) {
                     diffOutput(left_x_index,
                                     top_y_index,
                                     channel,
@@ -240,7 +240,7 @@ void N2D2::ResizeCell_Frame::backPropagateNearestNeighbor() {
     assert(mDiffOutputs.size() == 1);
     Tensor<Float_T> diffOutput = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
     nearestNeighbor(mDiffInputs, diffOutput);
-    
+
     mDiffOutputs[0] = diffOutput;
 }
 
@@ -282,9 +282,9 @@ void N2D2::ResizeCell_Frame::nearestNeighbor(const Tensor<Float_T>& inputs, Tens
     const Float_T multx = ((Float_T) inputs.dimX())/((Float_T) outputs.dimX());
 
     #pragma omp parallel for if (outputs.dimB() > 1)
-    for(std::size_t batch = 0; batch < outputs.dimB(); batch++) {
+    for(int batch = 0; batch < (int)outputs.dimB(); batch++) {
         #pragma omp parallel for if (outputs.dimZ() > 3)
-        for(std::size_t channel = 0; channel < outputs.dimZ(); channel++) {
+        for(int channel = 0; channel < (int)outputs.dimZ(); channel++) {
             for(std::size_t oy = 0; oy < outputs.dimY(); oy++) {
                 for(std::size_t ox = 0; ox < outputs.dimX(); ox++) {
                     const std::size_t iy = static_cast<std::size_t>(oy*multy);
