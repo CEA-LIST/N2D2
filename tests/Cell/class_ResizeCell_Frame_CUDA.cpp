@@ -43,10 +43,10 @@ public:
                                ResizeMode resizeMode):
         Cell(name, nbOutputs),
         ResizeCell(name, outputWidth, outputHeight, nbOutputs, resizeMode),
-        ResizeCell_Frame_CUDA(name, outputWidth, outputHeight, nbOutputs, resizeMode) 
-    {                                
+        ResizeCell_Frame_CUDA(name, outputWidth, outputHeight, nbOutputs, resizeMode)
+    {
     }
-    
+
     friend class UnitTest_ResizeCell_Frame_CUDA_nearestNeighbor;
 };
 
@@ -57,7 +57,7 @@ Tensor<Float_T> createBatchTensor(Iterator beginImg, Iterator endImg) {
         tensor.push_back(Tensor<Float_T>(*beginImg));
         ++beginImg;
     }
-    
+
     return tensor;
 }
 
@@ -75,25 +75,27 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
             std::make_tuple(32, 32, 96, 96, 4, 3),
             std::make_tuple(49, 31, 73, 85, 9, 5))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     cv::theRNG().state = std::numeric_limits<std::uint64_t>::max();
 
-    /** 
+    /**
      * Resize with OpenCV
      */
     std::vector<cv::Mat> inputs(batchSize, cv::Mat(inputHeight, inputWidth, CV_32FC(nbChannels)));
     std::vector<cv::Mat> outputsProp(batchSize, cv::Mat(outputHeight, outputWidth, CV_32FC(nbChannels)));
     std::vector<cv::Mat> outputsBackprop(batchSize, cv::Mat(inputHeight, inputWidth, CV_32FC(nbChannels)));
-    
+
     for(std::size_t i = 0; i < batchSize; i++) {
         cv::randu(inputs[i], -10, 10);
         cv::resize(inputs[i], outputsProp[i], outputsProp[i].size(), 0, 0, cv::INTER_NEAREST);
         cv::resize(outputsProp[i], outputsBackprop[i], outputsBackprop[i].size(), 0, 0, cv::INTER_NEAREST);
     }
 
-    /** 
+    /**
      * Resize input to outputsProp with N2D2 through propagate
      */
-    ResizeCell_Frame_CUDA_Test resize("r", outputWidth, outputHeight, nbChannels, 
+    ResizeCell_Frame_CUDA_Test resize("r", outputWidth, outputHeight, nbChannels,
                                       ResizeCell::ResizeMode::NearestNeighbor);
 
     Tensor<Float_T> inputTensor = createBatchTensor(inputs.begin(), inputs.end());
@@ -102,16 +104,16 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
     resize.addInput(inputTensor, diffOutputTensor);
     resize.initialize();
     resize.propagate();
-    
+
     ASSERT_EQUALS(tensor_cast_nocopy<Float_T>(resize.getOutputs()), createBatchTensor(outputsProp.begin(), outputsProp.end()));
 
-    /** 
+    /**
      * Resize outputsProp to outputsBackprop with N2D2 through backpropagate
      */
     resize.mDiffInputs = resize.getOutputs();
     resize.mDiffInputs.synchronizeHToD();
     resize.backPropagate();
-    
+
     ASSERT_EQUALS(diffOutputTensor, createBatchTensor(outputsBackprop.begin(), outputsBackprop.end()));
 }
 
