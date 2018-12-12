@@ -156,7 +156,7 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
                                                             defaultMapping);
 
         for (unsigned int output = 0; output < nbOutputs; ++output) {
-            for (unsigned int channel = 0; channel < map.dimX(); ++channel) {
+            for (unsigned int channel = 0; channel < map.dimY(); ++channel) {
                 outputConnection[output] = outputConnection[output]
                                             || map(output, channel);
             }
