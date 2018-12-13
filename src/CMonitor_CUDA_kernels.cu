@@ -68,7 +68,7 @@ __global__ void cudaUpdateActivity_kernel(char * inputs,
                     const unsigned int inputsIdx =
                         x + y*inputsDimX + channel*inputsDimX*inputsDimY;
                     char act = inputs[inputsIdx + batchInputOffset];
-                    int counter = (act != 0 ? 1 : 0);
+                    int counter = int(act);//(act != 0 ? 1 : 0);
 
                     activity[inputsIdx + batchInputOffset] = act;
                     firingRate[inputsIdx + batchInputOffset] += counter;

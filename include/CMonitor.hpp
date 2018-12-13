@@ -222,6 +222,11 @@ public:
                             unsigned int avgWindow = 0,
                             bool plot = false);
     template <class T>
+    static void logErrorRate(const std::deque<T>& data,
+                            const std::string& fileName,
+                            unsigned int avgWindow = 0,
+                            bool plot = false);
+    template <class T>
     static void logPoints(const std::deque<T>& data,
                         const std::string& fileName,
                         const unsigned int logInterval,
@@ -350,15 +355,82 @@ void N2D2::CMonitor::logDataRate(const std::deque<T>& data,
     if (data.empty())
         std::cout << "Notice: no data rate recorded." << std::endl;
     else if (plot) {
-        /*const double finalRate = (avgWindow > 0)
+        const double finalRate = (avgWindow > 0)
                                      ? accSum / (double)accWindow.size()
-                                     : accSuccess / (double)data.size();*/
+                                     : accSuccess / (double)data.size();
+
+        std::ostringstream label;
+        label << "\"Final: " << 100.0 * finalRate << "%";
+
+        if (avgWindow > 0)
+            label << " (last " << avgWindow << ")";
+
+        label << "\" at graph 0.5, graph 0.1 front";
+
+        Gnuplot gnuplot;
+        gnuplot.set("grid").set("key off");
+        gnuplot.setYlabel("Success rate");
+        gnuplot.setXlabel("# steps");
+        gnuplot.setYrange(
+            Utils::clamp(finalRate - (1.0 - finalRate), 0.0, 0.99),
+            Utils::clamp(2.0 * finalRate, 0.01, 1.0));
+        gnuplot.setY2range(0, 1);
+        gnuplot.set("label", label.str());
+        gnuplot.saveToFile(fileName);
+        gnuplot.plot(fileName,
+                     "using ($0+1):2 with lines, \"\" using ($0+1):2 "
+                     "with lines lc rgb \"light-gray\" axes x1y2");
+    }
+}
+
+
+template <class T>
+void N2D2::CMonitor::logErrorRate(const std::deque<T>& data,
+                                const std::string& fileName,
+                                unsigned int avgWindow,
+                                bool plot)
+{
+    std::ofstream dataFile(fileName.c_str());
+
+    if (!dataFile.good())
+        throw std::runtime_error("Could not create data rate log file: "
+                                 + fileName);
+
+    double accSuccess = 0.0;
+    std::deque<T> accWindow;
+    double accSum = 0.0;
+
+    dataFile.precision(4);
+
+    for (typename std::deque<T>::const_iterator it = data.begin(),
+                                                itEnd = data.end();
+         it != itEnd;
+         ++it) {
+        accSuccess += (*it);
+        accWindow.push_back(*it);
+        accSum += (*it);
+
+        if (avgWindow > 0 && accWindow.size() > avgWindow) {
+            accSum -= accWindow.front();
+            accWindow.pop_front();
+        }
+
+        // Data file can become very big for deepnet, with >1,000,000 patterns,
+        // that why we have to keep it minimal
+
+        dataFile << (*it) << " " << accSum / (double)accWindow.size() << "\n";
+    }
+
+    dataFile.close();
+
+    if (data.empty())
+        std::cout << "Notice: no data rate recorded." << std::endl;
+    else if (plot) {
         const double finalRate = std::sqrt((avgWindow > 0)
                                      ? accSum / (double)accWindow.size()
                                      : accSuccess / (double)data.size());
 
         std::ostringstream label;
-        //label << "\"Final: " << 100.0 * finalRate << "%";
         label << "\"RMSE: " << finalRate;
 
         if (avgWindow > 0)

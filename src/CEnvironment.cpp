@@ -326,9 +326,8 @@ void N2D2::CEnvironment::readRelationalStimulus()
             double yVal = maxValue - slope*std::fabs(diffVal);
             yVal =  yVal < 0 ? -yVal : yVal;
             stimulusVariable.first[x] = yVal;
-            //std::cout << yVal << std::endl;
         }
-        //std::cout << std::endl;
+        std::cout << "Var: " << k << " : " << variableValue << std::endl;
 
         sample.push_back(stimulusVariable);
     }
