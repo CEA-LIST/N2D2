@@ -222,6 +222,9 @@ void N2D2::GraphViz::render(const std::string& fileName) const
 
     const std::string cmd = "dot -Tpng " + fileName
         + " -o " + Utils::fileBaseName(fileName) + ".png";
+
+    std::thread(system, cmd.c_str()).detach();
+/*
     const int ret = system(cmd.c_str());
 
     if (ret < 0) {
@@ -229,6 +232,7 @@ void N2D2::GraphViz::render(const std::string& fileName) const
             "file " << fileName << " (return code: " << ret << ")"
             << Utils::cdef << std::endl;
     }
+*/
 }
 
 N2D2::GraphViz::~GraphViz()
