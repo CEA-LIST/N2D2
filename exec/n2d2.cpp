@@ -87,7 +87,9 @@ void validationThreadWrapper(const std::shared_ptr<DeepNet>& deepNet)
     deepNet->test(Database::Validation);
 }
 
-#if defined(__GNUC__) && !defined(NDEBUG)
+//#define GPROF_INTERRUPT
+
+#if defined(__GNUC__) && !defined(NDEBUG) && defined(GPROF_INTERRUPT)
 #include <dlfcn.h>
 
 void sigUsr1Handler(int /*sig*/)
@@ -109,7 +111,7 @@ void sigUsr1Handler(int /*sig*/)
 
 int main(int argc, char* argv[]) try
 {
-#if defined(__GNUC__) && !defined(NDEBUG)
+#if defined(__GNUC__) && !defined(NDEBUG) && defined(GPROF_INTERRUPT)
     signal(SIGINT, sigUsr1Handler);
 #endif
 
