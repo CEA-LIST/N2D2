@@ -135,6 +135,14 @@ public:
     };
     /// Fill cell stats
     virtual void getStats(Stats& stats) const = 0;
+    /// Get cells input receptive field for a given output area
+    virtual std::vector<unsigned int> getReceptiveField(
+                                const std::vector<unsigned int>& /*outputField*/
+                                        = std::vector<unsigned int>()) const
+    {
+        // return empty vector if not implemented
+        return std::vector<unsigned int>();
+    }
 
     /**
      * Check if an output map is connected to an input channel

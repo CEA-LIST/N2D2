@@ -101,6 +101,9 @@ public:
     };
     void writeMap(const std::string& fileName) const;
     void getStats(Stats& stats) const;
+    std::vector<unsigned int> getReceptiveField(
+                                const std::vector<unsigned int>& outputField
+                                        = std::vector<unsigned int>()) const;
     virtual Interface<PoolCell_Frame_Kernels::ArgMax>* getArgMax()
     {
         return NULL;

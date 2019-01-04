@@ -214,6 +214,9 @@ public:
     template <class T = Target>
     std::shared_ptr<T> getTarget(unsigned int index = 0) const;
     void getStats(Cell::Stats& stats) const;
+    std::vector<unsigned int> getReceptiveField(const std::string& name,
+                                const std::vector<unsigned int>& outputField
+                                        = std::vector<unsigned int>()) const;
 
     // Clear
     void clearAll(unsigned int nbTimesteps = 0);
@@ -238,6 +241,7 @@ public:
     void logTimings(const std::string& fileName,
                     const std::vector
                     <std::pair<std::string, double> >& timings) const;
+    void logReceptiveFields(const std::string& fileName) const;
     void reportOutputsRange(std::map
                             <std::string, RangeStats>& outputsRange) const;
     void reportOutputsHistogram(std::map

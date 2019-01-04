@@ -216,7 +216,8 @@ void N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets,
 
     const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
 
-    for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
+#pragma omp parallel for if (mOutputs.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
         if (targets(0, batchPos) >= 0) {
             if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
                 || (outputSize == 1 && (targets(0, batchPos) < 0

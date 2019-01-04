@@ -254,8 +254,22 @@ N2D2::Gnuplot& N2D2::Gnuplot::saveToFile(const std::string& fileName,
             << "if (!exists(\"multiplot\")) set term png size 800,600 enhanced";
     else {
         std::string cmdStr = "if (!exists(\"multiplot\")) set term ";
-        cmdStr += std::get<0>(mDefaultOutput) + " ";
-        cmdStr += std::get<1>(mDefaultOutput);
+
+        const char* terminal = std::getenv("N2D2_GNUPLOT_TERMINAL");
+        const char* options = std::getenv("N2D2_GNUPLOT_OPTIONS");
+        const char* format = std::getenv("N2D2_GNUPLOT_FORMAT");
+
+        if (terminal != NULL)
+            cmdStr += terminal;
+        else
+            cmdStr += std::get<0>(mDefaultOutput);
+
+        cmdStr += " ";
+
+        if (options != NULL)
+            cmdStr += options;
+        else
+            cmdStr += std::get<1>(mDefaultOutput);
 
         *this << cmdStr;
 
@@ -264,7 +278,11 @@ N2D2::Gnuplot& N2D2::Gnuplot::saveToFile(const std::string& fileName,
             newName = Utils::fileBaseName(newName);
 
         newName += ".";
-        newName += std::get<2>(mDefaultOutput);
+
+        if (format != NULL)
+            newName += format;
+        else
+            newName += std::get<2>(mDefaultOutput);
     }
 
     std::string cmdStr = "if (!exists(\"multiplot\")) set output \"";

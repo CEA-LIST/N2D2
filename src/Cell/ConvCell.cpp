@@ -820,6 +820,20 @@ void N2D2::ConvCell::getStats(Stats& stats) const
     stats.nbConnections += nbVirtualSynapses;
 }
 
+std::vector<unsigned int> N2D2::ConvCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    std::vector<unsigned int> receptiveField(outputField);
+    receptiveField.resize(mKernelDims.size(), 1);
+
+    for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        receptiveField[dim] = mSubSampleDims[dim] * (mKernelDims[dim]
+                                + (receptiveField[dim] - 1) * mStrideDims[dim]);
+    }
+
+    return receptiveField;
+}
+
 void N2D2::ConvCell::setOutputsDims()
 {
     if (mKernelDims.size() != mInputsDims.size() - 1) {

@@ -266,7 +266,8 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
 
     mOutputs.synchronizeDToH();
 
-    for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
+#pragma omp parallel for if (mOutputs.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
         const Tensor<int> target = targets[batchPos][0];
 
         std::vector<unsigned int> nbTargetOutputs(

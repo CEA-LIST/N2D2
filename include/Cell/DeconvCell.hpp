@@ -160,6 +160,9 @@ public:
     virtual std::pair<Float_T, Float_T> getFreeParametersRange() const;
     void randomizeFreeParameters(double stdDev);
     void getStats(Stats& stats) const;
+    std::vector<unsigned int> getReceptiveField(
+                                const std::vector<unsigned int>& outputField
+                                        = std::vector<unsigned int>()) const;
     virtual ~DeconvCell() {};
 
 protected:

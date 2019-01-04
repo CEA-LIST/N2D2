@@ -179,6 +179,20 @@ void N2D2::PoolCell::getStats(Stats& stats) const
     stats.nbConnections += getNbConnections();
 }
 
+std::vector<unsigned int> N2D2::PoolCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    std::vector<unsigned int> receptiveField(outputField);
+    receptiveField.resize(mPoolDims.size(), 1);
+
+    for (unsigned int dim = 0; dim < mPoolDims.size(); ++dim) {
+        receptiveField[dim] = mPoolDims[dim]
+                                 + (receptiveField[dim] - 1) * mStrideDims[dim];
+    }
+
+    return receptiveField;
+}
+
 void N2D2::PoolCell::setOutputsDims()
 {
     if (mPoolDims.size() != mInputsDims.size() - 1) {

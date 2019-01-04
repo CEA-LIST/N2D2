@@ -349,6 +349,7 @@ int main(int argc, char* argv[]) try
         DrawNet::drawGraph(*deepNet, Utils::baseName(iniConfig));
         DrawNet::draw(*deepNet, Utils::baseName(iniConfig) + ".svg");
         deepNet->logStats("stats");
+        deepNet->logReceptiveFields("receptive_fields.log");
         deepNet->logLabelsMapping("labels_mapping.log");
         deepNet->logLabelsLegend("labels_legend.png");
 

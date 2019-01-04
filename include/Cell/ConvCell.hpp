@@ -173,6 +173,9 @@ public:
     virtual void processFreeParameters(const std::function
                                <double(const double&)>& func);
     void getStats(Stats& stats) const;
+    std::vector<unsigned int> getReceptiveField(
+                                const std::vector<unsigned int>& outputField
+                                        = std::vector<unsigned int>()) const;
     virtual ~ConvCell() {};
 
 protected:

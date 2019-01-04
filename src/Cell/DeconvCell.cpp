@@ -79,9 +79,9 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& fileName,
         if (isConnection(channel, output))
             getWeight(output, channel, kernel);
         else
-            kernel.resize(std::vector<size_t>(mKernelDims.begin(), 
+            kernel.resize(std::vector<size_t>(mKernelDims.begin(),
                                               mKernelDims.end()), 0.0);
-            
+
         weights.push_back(kernel);
     }
 
@@ -778,6 +778,20 @@ void N2D2::DeconvCell::getStats(Stats& stats) const
     stats.nbSynapses += getNbSharedSynapses();
     stats.nbVirtualSynapses += nbVirtualSynapses;
     stats.nbConnections += nbVirtualSynapses;
+}
+
+std::vector<unsigned int> N2D2::DeconvCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    std::vector<unsigned int> receptiveField(outputField);
+    receptiveField.resize(mKernelDims.size(), 1);
+
+    for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        receptiveField[dim] = 1 + (receptiveField[dim] - mKernelDims[dim])
+                                        / mStrideDims[dim];
+    }
+
+    return receptiveField;
 }
 
 void N2D2::DeconvCell::setOutputsDims()

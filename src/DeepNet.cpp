@@ -667,6 +667,38 @@ void N2D2::DeepNet::getStats(Cell::Stats& stats) const
         (*it).second->getStats(stats);
 }
 
+std::vector<unsigned int> N2D2::DeepNet::getReceptiveField(
+    const std::string& name,
+    const std::vector<unsigned int>& outputField) const
+{
+    const std::map<std::string, std::shared_ptr<Cell> >::const_iterator itCell
+        = mCells.find(name);
+    const std::vector<unsigned int> cellReceptiveField
+        = (*itCell).second->getReceptiveField(outputField);
+
+    const std::vector<std::shared_ptr<Cell> > parents = getParentCells(name);
+    std::vector<unsigned int> maxReceptiveField(
+                                (*itCell).second->getOutputsDims().size(), 0);
+    bool hasParent = false;
+
+    for (std::vector<std::shared_ptr<Cell> >::const_iterator
+         it = parents.begin(), itEnd = parents.end(); it != itEnd; ++it)
+    {
+        if (*it) {
+            const std::vector<unsigned int> receptiveField
+                = getReceptiveField((*it)->getName(), cellReceptiveField);
+
+            std::transform(receptiveField.begin(), receptiveField.end(),
+                           maxReceptiveField.begin(), maxReceptiveField.begin(),
+                           Utils::max<unsigned int>());
+
+            hasParent = true;
+        }
+    }
+
+    return (hasParent) ? maxReceptiveField : cellReceptiveField;
+}
+
 void N2D2::DeepNet::clearAll(unsigned int nbTimesteps)
 {
     for (std::map<std::string, std::shared_ptr<Monitor> >::const_iterator it
@@ -2329,6 +2361,80 @@ void N2D2::DeepNet::logTimings(const std::string& fileName,
                   multiplot);
 
     multiplot.unsetMultiplot();
+}
+
+void N2D2::DeepNet::logReceptiveFields(const std::string& fileName) const
+{
+    std::ofstream receptiveFields(fileName.c_str());
+
+    if (!receptiveFields.good())
+        throw std::runtime_error("Could not open receptive field file: "
+                                 + fileName);
+
+    receptiveFields << "Name R.F. R.F./env\n";
+
+    Gnuplot gnuplot;
+    unsigned int objCount = 0;
+    unsigned int objMaxSize = 0;
+    const unsigned int maxObj = 10000;
+    const unsigned int objOffset = 5;
+
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
+    {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd; ++itCell)
+        {
+            const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            const std::vector<unsigned int> receptiveField
+                = getReceptiveField(*itCell);
+
+            receptiveFields << (*itCell)
+                << " " << cell->getReceptiveField()
+                << " " << receptiveField << "\n";
+
+            if (receptiveField.size() >= 2) {
+                std::stringstream objStr;
+                objStr << "object " << (maxObj - objCount) << " rect at "
+                    << (objOffset * objCount) << "," << (objOffset * objCount)
+                    << " size " << receptiveField[0] << "," << receptiveField[1]
+                    << " fc lt " << objCount << " lw 0"
+                    " fill transparent solid 0.33 behind";
+                gnuplot.set(objStr.str());
+
+                objStr.str(std::string());
+                objStr << "label \"" << (*itCell) << "\" at "
+                    << (objOffset * objCount + receptiveField[0] / 2.0 + 1)
+                    << "," << (objOffset * objCount);
+                gnuplot.set(objStr.str());
+
+                objStr.str(std::string());
+                objStr << "label \"" <<  receptiveField[0] << "x"
+                    << receptiveField[1] << "\" at "
+                    << (objOffset * objCount - receptiveField[0] / 2.0 + 1)
+                    << "," << (objOffset * objCount
+                               + receptiveField[1] / 2.0 - 3);
+                gnuplot.set(objStr.str());
+
+                const unsigned int maxSize = std::max(receptiveField[0],
+                                                      receptiveField[1]);
+                objMaxSize = std::max(objMaxSize,
+                                      objOffset * objCount + maxSize / 2);
+                ++objCount;
+            }
+        }
+    }
+
+    gnuplot.setXrange(0, 1.2 * objMaxSize);
+    gnuplot.setYrange(0, 1.2 * objMaxSize);
+    gnuplot.set("grid");
+    gnuplot.set("size square");
+    gnuplot.set("key off");
+    gnuplot.saveToFile(fileName);
+    gnuplot << "if (!exists(\"multiplot\")) "
+                "set term png size 800,600 enhanced small";
+    gnuplot << "plot 1/0";
 }
 
 void
