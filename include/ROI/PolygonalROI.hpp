@@ -43,6 +43,7 @@ public:
                        unsigned int outsideMargin = 0,
                        int outsideLabel = 0) const;
     inline void rescale(double xRatio, double yRatio);
+    inline void rotate(int centerX, int centerY, double angle);
     inline void
     padCrop(int offsetX, int offsetY, unsigned int width, unsigned int height);
     inline void
@@ -156,6 +157,19 @@ void N2D2::PolygonalROI<T>::rescale(double xRatio, double yRatio)
     for (unsigned int i = 0; i < points.size(); ++i) {
         points[i].x *= xRatio;
         points[i].y *= yRatio;
+    }
+}
+
+template <class T>
+void N2D2::PolygonalROI<T>::rotate(int centerX, int centerY, double angle)
+{
+    for (unsigned int i = 0; i < points.size(); ++i) {
+        const double px = centerX + (points[i].x - centerX) * std::cos(angle)
+                                  - (points[i].y - centerY) * std::sin(angle);
+        const double py = centerY + (points[i].x - centerX) * std::sin(angle)
+                                  + (points[i].y - centerY) * std::cos(angle);
+        points[i].x = Utils::round(px);
+        points[i].y = Utils::round(py);
     }
 }
 

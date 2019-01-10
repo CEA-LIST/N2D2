@@ -67,6 +67,7 @@ public:
                        unsigned int outsideMargin = 0,
                        int outsideLabel = 0) const;
     virtual void rescale(double xRatio, double yRatio) = 0;
+    virtual void rotate(int centerX, int centerY, double angle) = 0;
     virtual void
     padCrop(int offsetX, int offsetY, unsigned int width, unsigned int height)
         = 0;

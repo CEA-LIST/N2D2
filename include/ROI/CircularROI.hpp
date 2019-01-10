@@ -41,6 +41,7 @@ public:
                        unsigned int outsideMargin = 0,
                        int outsideLabel = 0) const;
     inline void rescale(double xRatio, double yRatio);
+    inline void rotate(int centerX, int centerY, double angle);
     inline void
     padCrop(int offsetX, int offsetY, unsigned int width, unsigned int height);
     inline void
@@ -105,6 +106,17 @@ void N2D2::CircularROI<T>::rescale(double xRatio, double yRatio)
                                  "instead)");
 
     radius *= xRatio;
+}
+
+template <class T>
+void N2D2::CircularROI<T>::rotate(int centerX, int centerY, double angle)
+{
+    const double cx = centerX + (center.x - centerX) * std::cos(angle)
+                              - (center.y - centerY) * std::sin(angle);
+    const double cy = centerY + (center.x - centerX) * std::sin(angle)
+                              + (center.y - centerY) * std::cos(angle);
+    center.x = Utils::round(cx);
+    center.y = Utils::round(cy);
 }
 
 template <class T>

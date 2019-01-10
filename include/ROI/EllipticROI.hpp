@@ -46,6 +46,7 @@ public:
                        unsigned int outsideMargin = 0,
                        int outsideLabel = 0) const;
     inline void rescale(double xRatio, double yRatio);
+    inline void rotate(int centerX, int centerY, double angle);
     inline void
     padCrop(int offsetX, int offsetY, unsigned int width, unsigned int height);
     inline void
@@ -175,6 +176,19 @@ void N2D2::EllipticROI<T>::rescale(double xRatio, double yRatio)
     minorRadius *= std::sqrt(std::pow(std::sin(angle) * xRatio, 2)
                              + std::pow(std::cos(angle) * yRatio, 2));
     angle = std::atan((yRatio / xRatio) * std::tan(angle));
+}
+
+template <class T>
+void N2D2::EllipticROI<T>::rotate(int centerX, int centerY, double angle_)
+{
+    const double cx = centerX + (center.x - centerX) * std::cos(angle_)
+                              - (center.y - centerY) * std::sin(angle_);
+    const double cy = centerY + (center.x - centerX) * std::sin(angle_)
+                              + (center.y - centerY) * std::cos(angle_);
+    center.x = Utils::round(cx);
+    center.y = Utils::round(cy);
+
+    angle = Utils::normalizedAngle(angle + angle_);
 }
 
 template <class T>

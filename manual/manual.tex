@@ -2882,12 +2882,13 @@ Extract a slice from an image.
   \lstinline!OffsetY! [0] & Y offset of the slice to extract \\
   \lstinline!RandomOffsetX! [0] & If true, the X offset is chosen randomly \\
   \lstinline!RandomOffsetY! [0] & If true, the Y offset is chosen randomly \\
+  \lstinline!RandomRotation! [0] & If true, extract randomly rotated slices \\
+  \lstinline!RandomRotationRange! [0.0 360.0] & Range of the random rotations, in degrees, counterclockwise (if \lstinline!RandomRotation! is enabled) \\
   \lstinline!AllowPadding! [0] & If true, zero-padding is allowed if the image
   is smaller than the slice to extract \\
  \hline
 \end{tabular}
 \end{center}
-
 
 
 \paragraph{\texorpdfstring{\lstinline[basicstyle=\ttfamily\bfseries]!ThresholdTransformation!}{ThresholdTransformation}}
