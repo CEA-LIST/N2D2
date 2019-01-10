@@ -1383,7 +1383,7 @@ bool N2D2::Tensor<T>::operator==(const Tensor& other) const {
         return true;
     }
 
-    assert((*mData)().size() == other.(*mData)().size());
+    assert((*mData)().size() == (*other.mData)().size());
     return std::equal(begin(), end(), other.begin());
 }
 
