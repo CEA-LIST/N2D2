@@ -383,17 +383,32 @@ void N2D2::cudaHclamp(half_float::half* x, unsigned int size,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
+struct HalfLess : public std::binary_function<__half, __half, bool> {
+    __device__ bool operator()(const __half& left, const __half& right) const
+    {
+#if __CUDA_ARCH__ >= 530
+        return __hlt(left, right);
+#else
+        return (__half2float(left) < __half2float(right));
+#endif
+    }
+};
+
 std::pair<half_float::half, half_float::half>
 N2D2::cudaHminMax(half_float::half* x,
                   unsigned int size)
 {
     // Compute global min & max value on the full tensor
-    thrust::device_ptr<half_float::half> thrustPtr(x);
-    thrust::pair<thrust::device_vector<half_float::half>::iterator,
-                 thrust::device_vector<half_float::half>::iterator> minMaxPair
-        = thrust::minmax_element(thrustPtr, thrustPtr + size);
+    thrust::device_ptr<__half> thrustPtr(reinterpret_cast<__half*>(x));
+    thrust::pair<thrust::device_vector<__half>::iterator,
+                 thrust::device_vector<__half>::iterator> minMaxPair
+        = thrust::minmax_element(thrustPtr, thrustPtr + size, HalfLess());
 
-    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
+    const __half minVal = *(minMaxPair.first);
+    const __half maxVal = *(minMaxPair.second);
+
+    return std::make_pair(reinterpret_cast<const half_float::half&>(minVal),
+                          reinterpret_cast<const half_float::half&>(maxVal));
 }
 
 void N2D2::cudaHquantize(half_float::half* x,
