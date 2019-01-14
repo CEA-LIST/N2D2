@@ -179,7 +179,15 @@ int main(int argc, char* argv[]) try
 
     const std::string iniConfig
         = opts.grab<std::string>("<net>", "network config file (INI)");
+    const bool version = opts.parse("-v", "display version information");
     opts.done();
+
+    if (version) {
+        std::cout << "N2D2 (" __DATE__ " " __TIME__ ")\n"
+            "(C) Copyright 2010-2019 CEA LIST. All Rights Reserved."
+            << std::endl;
+        std::exit(0);
+    }
 
 #ifdef CUDA
     CudaContext::setDevice(cudaDevice);

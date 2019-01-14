@@ -238,6 +238,16 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         const std::string cachePath = mProvider.getCachePath();
         mProvider.setCachePath();
 
+        unsigned int minSizeX = std::numeric_limits<unsigned int>::max();
+        unsigned int minSizeY = std::numeric_limits<unsigned int>::max();
+        unsigned int minSizeZ = std::numeric_limits<unsigned int>::max();
+        unsigned int maxSizeX = 0U;
+        unsigned int maxSizeY = 0U;
+        unsigned int maxSizeZ = 0U;
+
+        Float_T globalValueMin = std::numeric_limits<Float_T>::max();
+        Float_T globalValueMax = std::numeric_limits<Float_T>::min();
+
         long double sum = 0.0;
         long double sqSum = 0.0;
         unsigned long long int count = 0;
@@ -270,37 +280,25 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 = mProvider.getDatabase().getNbStimuli(*it);
             const bool rawData = (mProvider.getNbTransformations(*it) == 0);
 
-            mSize.reserve(mSize.size() + nbStimuli);
-            mValue.reserve(mValue.size() + nbStimuli);
+            const unsigned int sizeOffset = mSize.size();
+            const unsigned int valueOffset = mValue.size();
 
-            for (unsigned int index = 0; index < nbStimuli; ++index) {
+            mSize.resize(sizeOffset + nbStimuli);
+            mValue.resize(valueOffset + nbStimuli);
+
+#pragma omp parallel for reduction(+:sum,count) reduction(min:minSizeX,minSizeY,minSizeZ,globalValueMin) reduction(max:maxSizeX,maxSizeY,maxSizeZ,globalValueMax)
+            for (int index = 0; index < (int)nbStimuli; ++index) {
+                StimuliProvider provider(mProvider);
+
                 if (!rawData)
-                    mProvider.readStimulus(*it, index, 0);
+                    provider.readStimulus(*it, index, 0);
 
                 const Tensor<Float_T> data
-                    = (rawData) ? mProvider.readRawData(*it, index)
-                                : mProvider.getData()[0];
+                    = (rawData) ? provider.readRawData(*it, index)
+                                : provider.getData()[0];
 
                 assert(!data.empty());
 
-                // Size
-                const Size size(data.dimX(), data.dimY(), data.dimZ());
-
-                if (mSize.empty()) {
-                    mMinSize = size;
-                    mMaxSize = size;
-                } else {
-                    mMinSize.dimX = std::min<unsigned int>(mMinSize.dimX, data.dimX());
-                    mMinSize.dimY = std::min<unsigned int>(mMinSize.dimY, data.dimY());
-                    mMinSize.dimZ = std::min<unsigned int>(mMinSize.dimZ, data.dimZ());
-                    mMaxSize.dimX = std::max<unsigned int>(mMaxSize.dimX, data.dimX());
-                    mMaxSize.dimY = std::max<unsigned int>(mMaxSize.dimY, data.dimY());
-                    mMaxSize.dimZ = std::max<unsigned int>(mMaxSize.dimZ, data.dimZ());
-                }
-
-                mSize.push_back(size);
-
-                // Value
                 const std::pair<std::vector<Float_T>::const_iterator,
                                 std::vector<Float_T>::const_iterator> minMaxIt
                     = std::minmax_element(data.begin(), data.end());
@@ -309,37 +307,67 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 const std::pair<double, double> meanStdDev
                     = Utils::meanStdDev(data.begin(), data.end());
 
-                if (mValue.empty()) {
-                    mGlobalValue.minVal = *minMaxIt.first;
-                    mGlobalValue.maxVal = *minMaxIt.second;
-                } else {
-                    mGlobalValue.minVal
-                        = std::min(mGlobalValue.minVal, *minMaxIt.first);
-                    mGlobalValue.maxVal
-                        = std::max(mGlobalValue.maxVal, *minMaxIt.second);
-                }
+                // Size
+                const Size size(data.dimX(), data.dimY(), data.dimZ());
 
-                mValue.push_back(Value(*minMaxIt.first,
-                                       *minMaxIt.second,
-                                       meanStdDev.first,
-                                       meanStdDev.second));
+                // Value
+                const Value value(*minMaxIt.first, *minMaxIt.second,
+                                  meanStdDev.first, meanStdDev.second);
 
                 sum += meanStdDev.first * data.size();
                 count += data.size();
 
+                if (data.dimX() < minSizeX)
+                    minSizeX = data.dimX();
+
+                if (data.dimY() < minSizeY)
+                    minSizeY = data.dimY();
+
+                if (data.dimZ() < minSizeZ)
+                    minSizeZ = data.dimZ();
+
+                if (*minMaxIt.first < globalValueMin)
+                    globalValueMin = *minMaxIt.first;
+
+                if (data.dimX() > maxSizeX)
+                    maxSizeX = data.dimX();
+
+                if (data.dimY() > maxSizeY)
+                    maxSizeY = data.dimY();
+
+                if (data.dimZ() > maxSizeZ)
+                    maxSizeZ = data.dimZ();
+
+                if (*minMaxIt.second > globalValueMax)
+                    globalValueMax = *minMaxIt.second;
+
+                mSize[sizeOffset + index] = size;
+                mValue[valueOffset + index] = value;
+
                 // Progress bar
-                progress = (unsigned int)(20.0 * (++loaded) / (double)toLoad);
+#pragma omp atomic
+                ++loaded;
+
+                progress = (unsigned int)(20.0 * (loaded) / (double)toLoad);
 
                 if (progress > progressPrev) {
-                    std::cout << std::string(progress - progressPrev, '.')
-                              << std::flush;
-                    progressPrev = progress;
+#pragma omp critical(StimuliData__generate)
+                    {
+                        std::cout << std::string(progress - progressPrev, '.')
+                                  << std::flush;
+                        progressPrev = progress;
+                    }
                 }
             }
         }
 
         std::cout << std::endl;
 
+        mMinSize = Size(minSizeX, minSizeY, minSizeZ);
+        mMaxSize = Size(maxSizeX, maxSizeY, maxSizeZ);
+
+        mGlobalValue.minVal = globalValueMin;
+        mGlobalValue.maxVal = globalValueMax;
         mGlobalValue.mean = sum / count;
 
         const std::string& meanDataFile = mName + "/meanData.bin";
@@ -378,40 +406,56 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 = mProvider.getDatabase().getNbStimuli(*it);
             const bool rawData = (mProvider.getNbTransformations(*it) == 0);
 
-            for (unsigned int index = 0; index < nbStimuli; ++index) {
+#pragma omp parallel for reduction(+:sqSum)
+            for (int index = 0; index < (int)nbStimuli; ++index) {
+                StimuliProvider provider(mProvider);
+
                 if (!rawData)
-                    mProvider.readStimulus(*it, index, 0);
+                    provider.readStimulus(*it, index, 0);
 
                 const Tensor<Float_T> data
-                    = (rawData) ? mProvider.readRawData(*it, index)
-                                : mProvider.getData()[0];
+                    = (rawData) ? provider.readRawData(*it, index)
+                                : provider.getData()[0];
+
+                long double sqSumStimulus = 0.0;
 
                 for (std::vector<Float_T>::const_iterator it = data.begin(),
                                                           itEnd = data.end();
                      it != itEnd;
                      ++it) {
                     const double v = (*it) - mGlobalValue.mean;
-                    sqSum += v * v;
+                    sqSumStimulus += v * v;
                 }
+
+                sqSum += sqSumStimulus;
 
                 if (computeMeanData) {
                     cv::Mat matData;
                     // Use double for maximum precision
                     ((cv::Mat)data).convertTo(matData, CV_64F);
 
-                    if (meanData.empty())
-                        meanData = matData;
-                    else
-                        meanData += matData;
+#pragma omp critical(StimuliData__generate_1)
+                    {
+                        if (meanData.empty())
+                            meanData = matData;
+                        else
+                            meanData += matData;
+                    }
                 }
 
                 // Progress bar
-                progress = (unsigned int)(20.0 * (++loaded) / (double)toLoad);
+#pragma omp atomic
+                ++loaded;
+
+                progress = (unsigned int)(20.0 * (loaded) / (double)toLoad);
 
                 if (progress > progressPrev) {
-                    std::cout << std::string(progress - progressPrev, '.')
-                              << std::flush;
-                    progressPrev = progress;
+#pragma omp critical(StimuliData__generate_2)
+                    {
+                        std::cout << std::string(progress - progressPrev, '.')
+                                  << std::flush;
+                        progressPrev = progress;
+                    }
                 }
             }
         }

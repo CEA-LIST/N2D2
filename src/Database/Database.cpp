@@ -741,11 +741,14 @@ void N2D2::Database::extractSlices(unsigned int width,
                           Utils::Delete());
 
 // Progress bar
-#pragma omp critical(Database__extractSlices)
-            {
-                progress = (unsigned int)(20.0 * (++sliced) / (double)toSlice);
+#pragma omp atomic
+            ++sliced;
 
-                if (progress > progressPrev) {
+            progress = (unsigned int)(20.0 * (sliced) / (double)toSlice);
+
+            if (progress > progressPrev) {
+#pragma omp critical(Database__extractSlices)
+                {
                     std::cout << std::string(progress - progressPrev, '.')
                               << std::flush;
                     progressPrev = progress;
