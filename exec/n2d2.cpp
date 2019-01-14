@@ -58,6 +58,8 @@
 #include "Target/TargetScore.hpp"
 
 #ifdef CUDA
+#include <cudnn.h>
+
 #include "CudaContext.hpp"
 #endif
 
@@ -183,9 +185,79 @@ int main(int argc, char* argv[]) try
     opts.done();
 
     if (version) {
+        // N2D2 version
         std::cout << "N2D2 (" __DATE__ " " __TIME__ ")\n"
-            "(C) Copyright 2010-2019 CEA LIST. All Rights Reserved."
-            << std::endl;
+            "(C) Copyright 2010-2019 CEA LIST. All Rights Reserved.\n\n";
+
+        // Compiler version
+#if defined(__clang__)
+	/* Clang/LLVM. ---------------------------------------------- */
+        std::cout << "Clang/LLVM compiler version: " << __clang_major__ << "."
+            << __clang_minor__ << "." << __clang_patchlevel__ << "\n\n";
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+	/* Intel ICC/ICPC. ------------------------------------------ */
+        std::cout << "Intel ICC/ICPC compiler version: "
+            << __INTEL_COMPILER << "\n\n";
+#elif defined(__GNUC__) || defined(__GNUG__)
+	/* GNU GCC/G++. --------------------------------------------- */
+        std::cout << "GNU GCC/G++ compiler version: " << __GNUC__ << "."
+            << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n\n";
+#elif defined(__IBMC__) || defined(__IBMCPP__)
+	/* IBM XL C/C++. -------------------------------------------- */
+        std::cout << "IBM XL C/C++ compiler version: "
+            << std::hex <<  __IBMCPP__ << std::dec << "\n\n";
+#elif defined(_MSC_VER)
+	/* Microsoft Visual Studio. --------------------------------- */
+        std::cout << "Microsoft Visual Studio compiler version: "
+            << _MSC_VER << "\n\n";
+#else
+        std::cout << "Unknown compiler\n\n";
+#endif
+
+        // OpenCV version
+        std::cout << cv::getBuildInformation() << "\n\n";
+
+#ifdef CUDA
+        // CUDA version
+        int deviceCount = 0;
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&deviceCount));
+
+        if (deviceCount == 0) {
+            std::cout << "There are no available device(s) that support CUDA"
+                << std::endl;
+        }
+        else {
+            std::cout << "Detected " << deviceCount << " CUDA Capable device(s)"
+                << std::endl;
+        }
+
+        for (int dev = 0; dev < deviceCount; ++dev) {
+            cudaSetDevice(dev);
+            cudaDeviceProp deviceProp;
+            cudaGetDeviceProperties(&deviceProp, dev);
+
+            std::cout << "\nDevice #" << dev << ": \""
+                << deviceProp.name << "\"" << std::endl;
+
+            int driverVersion = 0;
+            int runtimeVersion = 0;
+            cudaDriverGetVersion(&driverVersion);
+            cudaRuntimeGetVersion(&runtimeVersion);
+
+            std::cout << "  CUDA Driver Version / Runtime Version:         "
+                << (driverVersion / 1000) << "." << ((driverVersion % 100) / 10)
+                << " / " << (runtimeVersion / 1000) << "."
+                << ((runtimeVersion % 100) / 10) << std::endl;
+            std::cout << "  CUDA Capability Major/Minor version number:    "
+                << deviceProp.major << "." << deviceProp.minor << std::endl;
+        }
+
+        std::cout << "\n";
+
+        std::cout << "CuDNN version: " << CUDNN_MAJOR << "."
+            << CUDNN_MINOR << "." << CUDNN_PATCHLEVEL << "\n\n";
+#endif
+
         std::exit(0);
     }
 
