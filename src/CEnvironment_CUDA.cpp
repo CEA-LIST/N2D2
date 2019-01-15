@@ -92,6 +92,7 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
                                 mPeriodMeanMax,
                                 mPeriodRelStdDev,
                                 mPeriodMin,
+                                mMaxFrequency,
                                 mRelationalData[k].dimB(),
                                 mCurandStates[k]);
             // Setup the initial curand states with the global seed value
@@ -121,13 +122,13 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
                             mPeriodMeanMax,
                             mPeriodRelStdDev,
                             mPeriodMin,
+                            mMaxFrequency,
                             mNbSubStimuli,
                             k,
                             mRelationalData[k].dimB(),
                             mCurandStates[k]);
 
     }
-
 }
 
 void N2D2::CEnvironment_CUDA::reset(Time_T /*timestamp*/)

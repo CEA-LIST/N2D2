@@ -59,7 +59,7 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
     const double delay = 1.0 - std::fabs(value);
     const bool negSpike = (value < 0);
 
-    const double freq = std::fabs(value) * mMaxFrequency / TimeNs;
+    const double freq = std::fabs(value) * mMaxFrequency;
 
     if (delay > mDiscardedLateStimuli)
         return;

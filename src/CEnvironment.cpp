@@ -138,6 +138,7 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                     mTickData[k](idx) = 0;
                 }
 
+
                 if (mTickData[k](idx) != 0) {
                     mCurrentFiringRate[k](idx) += 1.0;
                     mAccumulatedTickOutputs[k](idx) += (int)mTickData[k](idx);
@@ -188,6 +189,10 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
             }
         }
     }
+#ifdef CUDA
+    mTickOutputs.synchronizeHToD();
+#endif
+
 }
 
 // TODO: Adapt this to select subparts of mRelationalData

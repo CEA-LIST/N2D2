@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2010 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes Thiele (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
                     Damien QUERLIOZ (damien.querlioz@cea.fr)
@@ -35,16 +35,10 @@
 namespace N2D2 {
 /**
  * The CMonitor_CUDA class provides tools to monitor the activity of the network.
- * For example, it provides methods to automatically compute the recognition
- * rate of an unsupervised learning network.
- * Its aim is also to facilitate visual representation of the network's state
- * and its evolution.
 */
 class CMonitor_CUDA: public CMonitor {
 public:
-    CMonitor_CUDA(Network& net);
-    virtual void add(StimuliProvider& sp);
-    virtual void add(Cell* cell);
+    CMonitor_CUDA();
     virtual void initialize(unsigned int nbTimesteps,
                             unsigned int nbClasses=0);
     virtual bool tick(Time_T timestamp);
@@ -59,8 +53,6 @@ protected:
 
     unsigned int mDeviceMaxThreads;
     unsigned int mDeviceWarpSize;
-
-    bool mCudaInput;
 
 };
 }

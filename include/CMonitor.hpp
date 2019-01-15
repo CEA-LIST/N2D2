@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2010 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes Thiele (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
                     Damien QUERLIOZ (damien.querlioz@cea.fr)
@@ -57,9 +57,9 @@ namespace N2D2 {
 */
 class CMonitor {
 public:
-    CMonitor(Network& net);
-    virtual void add(StimuliProvider& sp);
-    virtual void add(Cell* cell);
+    CMonitor();
+
+    virtual void add(Tensor<char>& input);
 
     virtual void initialize(unsigned int nbTimesteps, unsigned int nbClasses=0);
     virtual bool tick(Time_T timestamp);
@@ -235,10 +235,9 @@ public:
 
 protected:
     /// The network that is monitored.
-    Network& mNet;
 
 #ifdef CUDA
-    CudaInterface<char> mInputs;
+    CudaTensor<char>* mInputs;
 
     CudaInterface<unsigned int> mStats;
     CudaTensor<unsigned int> mMaxClassResponse;
@@ -267,7 +266,7 @@ protected:
     CudaTensor<Time_T> mFirstEventTime;
     CudaTensor<Time_T> mLastEventTime;
 #else
-    Interface<char> mInputs;
+    Tensor<char>* mInputs;
 
     Interface<unsigned int> mStats;
     Tensor<unsigned int> mMaxClassResponse;

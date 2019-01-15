@@ -41,6 +41,7 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
                                             unsigned long long int periodMeanMax,
                                             float periodRelStdDev,
                                             unsigned long long int periodMin,
+                                            float maxFrequency,
                                             curandState * state)
 {
     const unsigned int inputStride = blockDim.x;
@@ -60,6 +61,8 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
 
         /// Include SpikeGenerator::nextEvent in the kernel
         const double delay = 1.0 - fabsf(value);
+
+        const double freq = std::fabs(value) * maxFrequency;
 
         // TODO: Check if singleBurst is really working properly
         if (delay <= discardedLateStimuli) {
@@ -99,6 +102,13 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
                     dt = (unsigned long long int)
                             (-logf(curand_uniform(&local_state))*periodMean);
                 }
+                else if (stimulusType == 4) {
+                    if (freq >= 1.0/(stop-start)){
+                        dt = (unsigned long long int) std::llround(1.0/freq);
+                    }
+                    else
+                        dt = stop + 1;
+                }
                 else {
                     dt = (unsigned long long int) (curand_normal(&local_state) *
                         (periodMean * periodRelStdDev)+periodMean);
@@ -115,7 +125,7 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
 
                 t += dt;
 
-                if (t < stop) {
+                if (t <= stop) {
                     eventTime = t;
                     eventType = sign;
                 }
@@ -155,6 +165,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
                                             unsigned long long int periodMeanMax,
                                             float periodRelStdDev,
                                             unsigned long long int periodMin,
+                                            float maxFrequency,
                                             unsigned int nbSubStimuli,
                                             unsigned int subStimulus,
                                             curandState * state)
@@ -192,6 +203,8 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
                 /// Include SpikeGenerator::nextEvent in the kernel
                 const float delay = 1.0 - fabsf(value);
 
+                const double freq = std::fabs(value) * maxFrequency;
+
                 if (delay <= discardedLateStimuli) {
                     // SingleBurst
                     if (stimulusType == 0) {
@@ -227,7 +240,13 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
                             dt = (unsigned long long int)
                                     (-logf(curand_uniform(&local_state))*periodMean);
                         }
-                        //TODO: Implement Linear
+                        else if (stimulusType == 4) {
+                            if (freq >= 1.0/(stop-start)){
+                                dt = (unsigned long long int) std::llround(1.0/freq);
+                            }
+                            else
+                                dt = stop + 1;
+                        }
                         else {
                             dt = (unsigned long long int) (curand_normal(&local_state) *
                                 (periodMean * periodRelStdDev)+periodMean);
@@ -245,7 +264,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
 
                         t += dt;
 
-                        if (t < stop) {
+                        if (t <= stop) {
                             eventTime = t;
                             eventType = sign;
                         }
@@ -294,6 +313,7 @@ void N2D2::cudaGenerateInitialSpikes(float * data,
                                 unsigned long long int periodMeanMax,
                                 float periodRelStdDev,
                                 unsigned long long int periodMin,
+                                float maxFrequency,
                                 unsigned int nbBatches,
                                 curandState * state)
 {
@@ -314,6 +334,7 @@ void N2D2::cudaGenerateInitialSpikes(float * data,
                                 periodMeanMax,
                                 periodRelStdDev,
                                 periodMin,
+                                maxFrequency,
                                 state);
 }
 
@@ -336,6 +357,7 @@ void N2D2::cudaGenerateSpikes(float * data,
                                 unsigned long long int periodMeanMax,
                                 float periodRelStdDev,
                                 unsigned long long int periodMin,
+                                float maxFrequency,
                                 unsigned int nbSubStimuli,
                                 unsigned int subStimulus,
                                 unsigned int nbBatches,
@@ -361,6 +383,7 @@ void N2D2::cudaGenerateSpikes(float * data,
                                 periodMeanMax,
                                 periodRelStdDev,
                                 periodMin,
+                                maxFrequency,
                                 nbSubStimuli,
                                 subStimulus,
                                 state);

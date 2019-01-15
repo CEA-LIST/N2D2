@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2010 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes Thiele (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
                     Damien QUERLIOZ (damien.querlioz@cea.fr)
@@ -26,52 +26,11 @@
 #include "CMonitor_CUDA.hpp"
 
 
-N2D2::CMonitor_CUDA::CMonitor_CUDA(Network& net)
-    : CMonitor(net),
-    mCudaInput(true)
+N2D2::CMonitor_CUDA::CMonitor_CUDA()
+    : CMonitor()
 
 {
     // ctor
-}
-
-void N2D2::CMonitor_CUDA::add(StimuliProvider& sp)
-{
-    CEnvironment* cenvCSpike = dynamic_cast<CEnvironment*>(&sp);
-
-    if (!cenvCSpike) {
-          throw std::runtime_error(
-            "CMonitor::add(): CMonitor models require CEnvironment");
-    }
-
-    mInputs.push_back(&(cenvCSpike->getTickOutputs()));
-    mInputs.back().setValid();
-
-
-    // This is necessary to make CMonitor_CUDA compatible
-    // with a non-Cuda CEnvironment
-    CEnvironment_CUDA* cenv_cuda = dynamic_cast<CEnvironment_CUDA*>(&sp);
-
-    if (!cenv_cuda) {
-        mCudaInput = false;
-    }
-
-}
-
-
-void N2D2::CMonitor_CUDA::add(Cell* cell)
-{
-
-    Cell_CSpike_CUDA* cellCSpike_CUDA = dynamic_cast<Cell_CSpike_CUDA*>(cell);
-
-    if (cellCSpike_CUDA) {
-        mInputs.push_back(&(cellCSpike_CUDA->getOutputs()));
-
-    }
-    else {
-         throw std::runtime_error("Error: CMonitor_CUDA could not add Cell."
-            " Note: Cell has to be a CSpike and CUDA type.");
-    }
-    mInputs.back().setValid();
 }
 
 
@@ -83,48 +42,48 @@ void N2D2::CMonitor_CUDA::initialize(unsigned int nbTimesteps,
 
         mNbClasses = nbClasses;
 
-        mActivitySize = mInputs[0].dimX()* mInputs[0].dimY()
-                              *mInputs[0].dimZ();
+        mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
+                              *(*mInputs).dimZ();
 
-        mMostActiveId.resize({1, 1, 1, mInputs.dimB()}, 0);
-        mMostActiveRate.resize({1, 1, 1, mInputs.dimB()}, 0);
-        mFirstEventTime.resize({1, 1, 1, mInputs.dimB()}, 0);
-        mLastEventTime.resize({1, 1, 1, mInputs.dimB()}, 0);
+        mMostActiveId.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mMostActiveRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mFirstEventTime.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mLastEventTime.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
 
-        mBatchActivity.resize({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                                mInputs[0].dimZ()}, 0);
-        mTotalActivity.resize({1, 1, 1, mInputs.dimB()}, 0);
+        mBatchActivity.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ()}, 0);
+        mTotalActivity.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
-        mFiringRate.resize(mInputs[0].dims(), 0);
-        mExampleActivity.resize(mInputs[0].dims(), 0);
-        mLastExampleActivity.resize(mInputs[0].dims(), 0);
-        /*mExampleIds.resize(mInputs[0].dims(), 0);
-        const unsigned int channelSize = mInputs[0].dimX()*
-            mInputs[0].dimY()* mInputs[0].dimZ();
-        for(unsigned int batch = 0; batch < mInputs.dimB(); ++batch){
+        mFiringRate.resize((*mInputs).dims(), 0);
+        mExampleActivity.resize((*mInputs).dims(), 0);
+        mLastExampleActivity.resize((*mInputs).dims(), 0);
+        /*mExampleIds.resize((*mInputs).dims(), 0);
+        const unsigned int channelSize = (*mInputs).dimX()*
+            (*mInputs).dimY()* (*mInputs).dimZ();
+        for(unsigned int batch = 0; batch < (*mInputs).dimB(); ++batch){
             for(unsigned int channel = 0; channel < channelSize; ++channel) {
                 mExampleIds(channel, batch) = channel + batch*channelSize;
             }
         }
         mExampleIds.synchronizeHToD();*/
 
-        mBatchFiringRate.resize({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                                mInputs[0].dimZ()}, 0);
-        mTotalFiringRate.resize({1, 1, 1, mInputs.dimB()}, 0);
+        mBatchFiringRate.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ()}, 0);
+        mTotalFiringRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
         for (unsigned int k=0; k<nbTimesteps; k++) {
-            mActivity.push_back(new CudaTensor<char>(mInputs[0].dims()));
+            mActivity.push_back(new CudaTensor<char>((*mInputs).dims()));
             mActivity.back().synchronizeHToD();
 
         }
 
         for (unsigned int k=0; k<nbClasses; k++) {
-            mStats.push_back(new CudaTensor<unsigned int> (mInputs[0].dims()));
+            mStats.push_back(new CudaTensor<unsigned int> ((*mInputs).dims()));
             mStats.back().synchronizeHToD();
 
         }
-        mMaxClassResponse.resize(mInputs[0].dims(), 0);
+        mMaxClassResponse.resize((*mInputs).dims(), 0);
 
         mInitialized = true;
 
@@ -138,20 +97,17 @@ void N2D2::CMonitor_CUDA::initialize(unsigned int nbTimesteps,
 
 bool N2D2::CMonitor_CUDA::tick(Time_T timestamp)
 {
-    if (!mCudaInput){
-        mInputs[0].synchronizeHToD();
-    }
-    cudaUpdateActivity(mInputs[0].getDevicePtr(),
+    cudaUpdateActivity((*mInputs).getDevicePtr(),
                         mActivity[mRelTimeIndex].getDevicePtr(),
                         mFiringRate.getDevicePtr(),
                         mExampleActivity.getDevicePtr(),
                         mFirstEventTime.getDevicePtr(),
                         mLastEventTime.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        mInputs[0].dimZ(),
+                        (*mInputs).dimX(),
+                        (*mInputs).dimY(),
+                        (*mInputs).dimZ(),
                         timestamp,
-                        mInputs[0].dimB(),
+                        (*mInputs).dimB(),
                         mDeviceMaxThreads,
                         mDeviceWarpSize);
 
@@ -190,39 +146,39 @@ void N2D2::CMonitor_CUDA::update(Time_T start, Time_T stop)
 
     cudaUpdateFiringRate(mFiringRate.getDevicePtr(),
                         mTotalFiringRate.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        mInputs[0].dimZ(),
-                        mInputs[0].dimB(),
+                        (*mInputs).dimX(),
+                        (*mInputs).dimY(),
+                        (*mInputs).dimZ(),
+                        (*mInputs).dimB(),
                         mDeviceMaxThreads,
                         mDeviceWarpSize);
 
     cudaUpdateFiringRate(mExampleActivity.getDevicePtr(),
                         mTotalActivity.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        mInputs[0].dimZ(),
-                        mInputs[0].dimB(),
+                        (*mInputs).dimX(),
+                        (*mInputs).dimY(),
+                        (*mInputs).dimZ(),
+                        (*mInputs).dimB(),
                         mDeviceMaxThreads,
                         mDeviceWarpSize);
 
 
     cudaUpdateBatchFiringRate(mFiringRate.getDevicePtr(),
                         mBatchFiringRate.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        mInputs[0].dimZ(),
-                        mInputs[0].dimB(),
+                        (*mInputs).dimX(),
+                        (*mInputs).dimY(),
+                        (*mInputs).dimZ(),
+                        (*mInputs).dimB(),
                         mDeviceMaxThreads,
                         mDeviceWarpSize);
 
 
     cudaUpdateMostActive(mExampleActivity.getDevicePtr(),
                         mMostActiveId.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        mInputs[0].dimZ(),
-                        mInputs[0].dimB(),
+                        (*mInputs).dimX(),
+                        (*mInputs).dimY(),
+                        (*mInputs).dimZ(),
+                        (*mInputs).dimB(),
                         mDeviceMaxThreads,
                         mDeviceWarpSize);
 
@@ -247,13 +203,13 @@ void N2D2::CMonitor_CUDA::update(Time_T start, Time_T stop)
 
 
 
-    for(unsigned int batch=0; batch<mInputs[0].dimB(); ++batch) {
+    for(unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         mTotalBatchFiringRate += mTotalFiringRate(batch);
         mTotalBatchActivity += mTotalActivity(batch);
         // Remove the batch offset
-        if (mMostActiveId(batch) >= mInputs[0].size()) {
+        if (mMostActiveId(batch) >= (*mInputs).size()) {
             std::cout << "Most active ID: " << mMostActiveId(batch) <<
-            "input: " << mInputs[0].size() << std::endl;
+            "input: " << (*mInputs).size() << std::endl;
             exit(0);
         }
 
@@ -279,23 +235,23 @@ void N2D2::CMonitor_CUDA::clearAll(unsigned int nbTimesteps)
     mRelTimeIndex = 0;
     mSuccessCounter = 0;
 
-    mActivitySize = mInputs[0].dimX()* mInputs[0].dimY()
-                          *mInputs[0].dimZ();
+    mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
+                          *(*mInputs).dimZ();
 
-    mMostActiveId.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mMostActiveRate.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mFirstEventTime.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mLastEventTime.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mMostActiveId.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mMostActiveRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mFirstEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mLastEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
 
-    mBatchActivity.assign({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                            mInputs[0].dimZ()}, 0);
-    mTotalActivity.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mBatchActivity.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                            (*mInputs).dimZ()}, 0);
+    mTotalActivity.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
-    mFiringRate.assign(mInputs[0].dims(), 0);
-    mBatchFiringRate.assign({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                            mInputs[0].dimZ()}, 0);
-    mTotalFiringRate.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mFiringRate.assign((*mInputs).dims(), 0);
+    mBatchFiringRate.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                            (*mInputs).dimZ()}, 0);
+    mTotalFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
     clearActivity(nbTimesteps);
 
@@ -310,8 +266,8 @@ void N2D2::CMonitor_CUDA::clearActivity(unsigned int nbTimesteps)
     //TODO: clear seems not properly defined
     //mActivity.clear();
     //for (unsigned int k=0; k<mNbTimesteps; k++) {
-    //    mActivity.push_back(new CudaTensor<char>(mInputs[0].dimX(),
-    //                mInputs[0].dimY(), mInputs[0].dimZ(), mInputs.dimB()));
+    //    mActivity.push_back(new CudaTensor<char>((*mInputs).dimX(),
+    //                (*mInputs).dimY(), (*mInputs).dimZ(), (*mInputs).dimB()));
     //}
     unsigned int oldNbTimesteps = mNbTimesteps;
 
@@ -321,10 +277,10 @@ void N2D2::CMonitor_CUDA::clearActivity(unsigned int nbTimesteps)
 
     for (unsigned int k=0; k<mNbTimesteps; k++) {
         if (k >= oldNbTimesteps) {
-             mActivity.push_back(new CudaTensor<char>(mInputs[0].dims()));
+             mActivity.push_back(new CudaTensor<char>((*mInputs).dims()));
              std::cout << "Extended mActivity" << std::endl;
         }
-        mActivity[k].assign(mInputs[0].dims(),0);
+        mActivity[k].assign((*mInputs).dims(),0);
         mActivity.back().synchronizeHToD();
     }
 

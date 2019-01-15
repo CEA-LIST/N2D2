@@ -2214,7 +2214,7 @@ void N2D2::DeepNet::initializeCMonitors(unsigned int nbTimesteps)
                 continue;
             }
 
-            (*itMonitor).second->initialize(nbTimesteps+1,
+            (*itMonitor).second->initialize(nbTimesteps,
                     mStimuliProvider->getDatabase().getNbLabels());
         }
     }

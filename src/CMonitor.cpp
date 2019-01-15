@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2010 CEA LIST. All Rights Reserved.
+    (C) Copyright 2018 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes Thiele (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
                     Damien QUERLIOZ (damien.querlioz@cea.fr)
@@ -24,9 +24,8 @@
 #include "CMonitor.hpp"
 
 
-N2D2::CMonitor::CMonitor(Network& net)
-    : mNet(net),
-    mTotalBatchActivity(0),
+N2D2::CMonitor::CMonitor()
+    : mTotalBatchActivity(0),
     mTotalBatchFiringRate(0),
     mNbEvaluations(0),
     mRelTimeIndex(0),
@@ -38,33 +37,18 @@ N2D2::CMonitor::CMonitor(Network& net)
 }
 
 
-void N2D2::CMonitor::add(StimuliProvider& sp)
+
+
+void N2D2::CMonitor::add(Tensor<char>& input)
 {
-    CEnvironment* cenvCSpike = dynamic_cast<CEnvironment*>(&sp);
-    if (!cenvCSpike) {
-          throw std::runtime_error(
-            "CMonitor::add(): CMonitor models require CEnvironment");
-    }
-
-    mInputs.push_back(&(cenvCSpike->getTickOutputs()));
-    mInputs.back().setValid();
-
+#ifdef CUDA
+    mInputs = dynamic_cast<CudaTensor<char>*>(&(input));
+#else
+    mInputs = &input;
+#endif
 }
 
 
-void N2D2::CMonitor::add(Cell* cell)
-{
-
-    Cell_CSpike* cellCSpike = dynamic_cast<Cell_CSpike*>(cell);
-    if (cellCSpike) {
-        mInputs.push_back(&(cellCSpike->getOutputs()));
-    }
-    else {
-        throw std::runtime_error(
-            "CMonitor::add(): CMonitor requires Cell_CSpike");
-    }
-    mInputs.back().setValid();
-}
 
 
 void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
@@ -76,36 +60,36 @@ void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
 
         mNbClasses = nbClasses;
 
-        mActivitySize = mInputs[0].dimX()* mInputs[0].dimY()
-                              *mInputs[0].dimZ();
+        mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
+                              *(*mInputs).dimZ();
 
-        mMostActiveId.resize({1, 1, 1, mInputs.dimB()}, 0);
-        mMostActiveRate.resize({1, 1, 1, mInputs.dimB()}, 0);
-        mFirstEventTime.resize({1, 1, 1, mInputs.dimB()}, 0);
-        mLastEventTime.resize({1, 1, 1, mInputs.dimB()}, 0);
+        mMostActiveId.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mMostActiveRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mFirstEventTime.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mLastEventTime.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
-        mLastExampleActivity.resize({mInputs[0].dimX(), mInputs[0].dimY(),
-                                mInputs[0].dimZ(), mInputs.dimB()}, 0);
+        mLastExampleActivity.resize({(*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ(), (*mInputs).dimB()}, 0);
 
-        mBatchActivity.resize({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                                mInputs[0].dimZ()}, 0);
-        mTotalActivity.resize({1, 1, 1, mInputs.dimB()}, 0);
+        mBatchActivity.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ()}, 0);
+        mTotalActivity.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
-        mFiringRate.resize({mInputs[0].dimX(), mInputs[0].dimY(),
-                                mInputs[0].dimZ(), mInputs.dimB()}, 0);
-        mBatchFiringRate.resize({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                                mInputs[0].dimZ()}, 0);
-        mTotalFiringRate.resize({1, 1, 1, mInputs.dimB()}, 0);
+        mFiringRate.resize({(*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ(), (*mInputs).dimB()}, 0);
+        mBatchFiringRate.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ()}, 0);
+        mTotalFiringRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
         for (unsigned int k=0; k<nbTimesteps; k++) {
-            mActivity.push_back(new Tensor<char>(mInputs[0].dims()));
+            mActivity.push_back(new Tensor<char>((*mInputs).dims()));
         }
         for (unsigned int k=0; k<nbClasses; k++) {
-            mStats.push_back(new Tensor<unsigned int> (mInputs[0].dims()));
+            mStats.push_back(new Tensor<unsigned int> ((*mInputs).dims()));
 
         }
 
-        mMaxClassResponse.resize(mInputs[0].dims(), 0);
+        mMaxClassResponse.resize((*mInputs).dims(), 0);
 
         mInitialized = true;
     }
@@ -115,13 +99,14 @@ void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
 // TODO: Parallelize with CUDA
 bool N2D2::CMonitor::tick(Time_T timestamp)
 {
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
-        for (unsigned int channel=0; channel<mInputs[0].dimZ(); ++channel) {
-            for (unsigned int y=0; y<mInputs[0].dimY(); ++y) {
-                for (unsigned int x=0; x<mInputs[0].dimX(); ++x) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
+        for (unsigned int channel=0; channel<(*mInputs).dimZ(); ++channel) {
+            for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
+                for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
 
-                    char activity = mInputs[0](x, y ,channel, batch);
+                    char activity = (*mInputs)(x, y ,channel, batch);
 
+                    //TODO: Adapt to negative spikes?
                     if ((int)activity > 0) {
                         if (mFirstEventTime(batch) == 0) {
                             mFirstEventTime(batch) = timestamp;
@@ -345,7 +330,7 @@ unsigned int N2D2::CMonitor::classifyBatchRateBased(Tensor<int> targets,
 {
     unsigned int success = 0;
 
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         success += static_cast<unsigned int>(
             classifyRateBased(targets(batch), integrations, batch, update));
     }
@@ -404,7 +389,7 @@ unsigned int N2D2::CMonitor::classifyBatchIntegrationBased(Tensor<int> targets,
 {
     unsigned int success = 0;
 
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         success += static_cast<unsigned int>(
             classifyIntegrationBased(
                                 targets(batch), integrations, batch, update));
@@ -462,7 +447,7 @@ unsigned int N2D2::CMonitor::checkBatchLearningResponse(std::vector<unsigned int
 
     unsigned int success = 0;
 
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         success += static_cast<unsigned int>(
                     checkLearningResponse(batch, cls[batch], update));
     }
@@ -688,7 +673,7 @@ unsigned int N2D2::CMonitor::getBatchActivity(unsigned int x,
                                                Time_T stop)
 {
     unsigned int batchActivity = 0;
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         batchActivity += getActivity(x, y, z, batch, start, stop);
     }
 
@@ -700,7 +685,7 @@ unsigned int N2D2::CMonitor::getBatchActivity(unsigned int index,
                                                Time_T stop)
 {
     unsigned int batchActivity = 0;
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         batchActivity += getActivity(index, batch, start, stop);
     }
 
@@ -715,17 +700,17 @@ unsigned int N2D2::CMonitor::calcTotalActivity(unsigned int batch,
 {
     unsigned int totalActivity = 0;
 
-    for (unsigned int channel=0; channel<mInputs[0].dimZ(); ++channel) {
-        for (unsigned int y=0; y<mInputs[0].dimY(); ++y) {
-            for (unsigned int x=0; x<mInputs[0].dimX(); ++x) {
+    for (unsigned int channel=0; channel<(*mInputs).dimZ(); ++channel) {
+        for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
+            for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
                 unsigned int activity =
                     getActivity(x, y, channel , batch, start, stop);
                 if (update) {
                     if (activity > mMostActiveRate(batch)){
                         mMostActiveRate(batch) = activity;
                         unsigned int nodeId =
-                            channel*mInputs[0].dimY()*mInputs[0].dimX() +
-                            y*mInputs[0].dimX() + x;
+                            channel*(*mInputs).dimY()*(*mInputs).dimX() +
+                            y*(*mInputs).dimX() + x;
                         mMostActiveId(batch) = nodeId;
                     }
                     mBatchActivity(0,x,y,channel) += activity;
@@ -750,7 +735,7 @@ unsigned int N2D2::CMonitor::calcTotalBatchActivity(Time_T start,
                                                     bool update)
 {
     unsigned int activitySum = 0;
-    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
         unsigned int activity = calcTotalActivity(batch, start, stop, update);
         activitySum += activity;
         if (update) {
@@ -814,14 +799,14 @@ void N2D2::CMonitor::logFiringRate(const std::string& fileName,
     unsigned int totalActivity = 0;
 
     if (start==0 && stop==0) {
-        for (unsigned int channel=0; channel<mInputs[0].dimZ(); ++channel) {
-            for (unsigned int y=0; y<mInputs[0].dimY(); ++y) {
-                for (unsigned int x=0; x<mInputs[0].dimX(); ++x) {
+        for (unsigned int channel=0; channel<(*mInputs).dimZ(); ++channel) {
+            for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
+                for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
                     unsigned int nodeId =
-                        channel*mInputs[0].dimY()*mInputs[0].dimX() +
-                        y*mInputs[0].dimX() + x;
+                        channel*(*mInputs).dimY()*(*mInputs).dimX() +
+                        y*(*mInputs).dimX() + x;
                     unsigned int rate = 0;
-                    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+                    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
                         rate += mFiringRate(x, y, channel, batch);
                     }
                     data << nodeId << " " << rate << "\n";
@@ -831,14 +816,14 @@ void N2D2::CMonitor::logFiringRate(const std::string& fileName,
         }
     }
     else {
-        for (unsigned int channel=0; channel<mInputs[0].dimZ(); ++channel) {
-            for (unsigned int y=0; y<mInputs[0].dimY(); ++y) {
-                for (unsigned int x=0; x<mInputs[0].dimX(); ++x) {
+        for (unsigned int channel=0; channel<(*mInputs).dimZ(); ++channel) {
+            for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
+                for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
                     unsigned int nodeId =
-                        channel*mInputs[0].dimY()*mInputs[0].dimX() +
-                        y*mInputs[0].dimX() + x;
+                        channel*(*mInputs).dimY()*(*mInputs).dimX() +
+                        y*(*mInputs).dimX() + x;
                     unsigned int rate = 0;
-                    for (unsigned int batch=0; batch<mInputs.dimB(); ++batch) {
+                    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
                         rate += getActivity(x,y,channel,batch,start,stop);
                     }
                     data << nodeId << " " << rate << "\n";
@@ -856,7 +841,7 @@ void N2D2::CMonitor::logFiringRate(const std::string& fileName,
         std::cout << "Notice: no firing rate recorded." << std::endl;
     else if (plot) {
         NodeId_T xmin = 0;
-        NodeId_T xmax = mInputs[0].dimY()*mInputs[0].dimX()*mInputs[0].dimZ() -1;
+        NodeId_T xmax = (*mInputs).dimY()*(*mInputs).dimX()*(*mInputs).dimZ() -1;
 
         std::ostringstream label;
         label << "\"Total: " << totalActivity << "\"";
@@ -910,11 +895,11 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
     data.precision(std::numeric_limits<double>::digits10 + 1);
 
     bool isEmpty = true;
-    for (unsigned int channel=0; channel<mInputs[0].dimZ(); ++channel) {
-        for (unsigned int y=0; y<mInputs[0].dimY(); ++y) {
-            for (unsigned int x=0; x<mInputs[0].dimX(); ++x) {
-                unsigned int nodeId = channel*mInputs[0].dimY()*mInputs[0].dimX() +
-                                        y*mInputs[0].dimX() + x;
+    for (unsigned int channel=0; channel<(*mInputs).dimZ(); ++channel) {
+        for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
+            for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
+                unsigned int nodeId = channel*(*mInputs).dimY()*(*mInputs).dimX() +
+                                        y*(*mInputs).dimX() + x;
                 bool hasData = false;
                 for (std::map<Time_T, unsigned int>::const_iterator it=mTimeIndex.find(start);
                 it!=mTimeIndex.find(stop); ++it) {
@@ -944,7 +929,7 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
     else if (plot) {
 
         NodeId_T ymin = 0;
-        NodeId_T ymax = mInputs[0].dimY()*mInputs[0].dimX()*mInputs[0].dimZ()-1;
+        NodeId_T ymax = (*mInputs).dimY()*(*mInputs).dimX()*(*mInputs).dimZ()-1;
 
         const double xmin = ((start>0) ? start : mFirstEventTime(batch)) /((double)TimeS);
         const double xmax = ((stop>0) ? stop : mLastEventTime(batch)) /((double)TimeS);
@@ -977,23 +962,23 @@ void N2D2::CMonitor::clearAll(unsigned int nbTimesteps)
     mRelTimeIndex = 0;
     mSuccessCounter = 0;
 
-    mActivitySize = mInputs[0].dimX()* mInputs[0].dimY()
-                          *mInputs[0].dimZ();
+    mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
+                          *(*mInputs).dimZ();
 
-    mMostActiveId.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mMostActiveRate.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mFirstEventTime.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mLastEventTime.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mMostActiveId.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mMostActiveRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mFirstEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mLastEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
 
-    mBatchActivity.assign({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                            mInputs[0].dimZ()}, 0);
-    mTotalActivity.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mBatchActivity.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                            (*mInputs).dimZ()}, 0);
+    mTotalActivity.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
-    mFiringRate.assign(mInputs[0].dims(), 0);
-    mBatchFiringRate.assign({1, mInputs[0].dimX(), mInputs[0].dimY(),
-                            mInputs[0].dimZ()}, 0);
-    mTotalFiringRate.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mFiringRate.assign((*mInputs).dims(), 0);
+    mBatchFiringRate.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                            (*mInputs).dimZ()}, 0);
+    mTotalFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
     clearActivity(nbTimesteps);
 
@@ -1008,8 +993,8 @@ void N2D2::CMonitor::clearActivity(unsigned int nbTimesteps)
     //TODO: clear seems not properly defined
     //mActivity.clear();
     //for (unsigned int k=0; k<mNbTimesteps; k++) {
-    //    mActivity.push_back(new CudaTensor4d<char>(mInputs[0].dimX(),
-    //                mInputs[0].dimY(), mInputs[0].dimZ(), mInputs.dimB()));
+    //    mActivity.push_back(new CudaTensor4d<char>((*mInputs).dimX(),
+    //                (*mInputs).dimY(), (*mInputs).dimZ(), (*mInputs).dimB()));
     //}
     //std::cout << "CMonitor clear activity" << std::endl;
     unsigned int oldNbTimesteps = mNbTimesteps;
@@ -1020,9 +1005,9 @@ void N2D2::CMonitor::clearActivity(unsigned int nbTimesteps)
 
     for (unsigned int k=0; k<mNbTimesteps; k++) {
         if (k >= oldNbTimesteps) {
-             mActivity.push_back(new Tensor<char>(mInputs[0].dims()));
+             mActivity.push_back(new Tensor<char>((*mInputs).dims()));
         }
-        mActivity[k].assign(mInputs[0].dims(),0);
+        mActivity[k].assign((*mInputs).dims(),0);
     }
 
 
@@ -1033,13 +1018,13 @@ void N2D2::CMonitor::clearActivity(unsigned int nbTimesteps)
 
 void N2D2::CMonitor::clearFiringRate()
 {
-    mFiringRate.assign(mInputs[0].dims(), 0);
+    mFiringRate.assign((*mInputs).dims(), 0);
 }
 
 void N2D2::CMonitor::clearMostActive()
 {
-    mMostActiveId.assign({1, 1, 1, mInputs.dimB()}, 0);
-    mMostActiveRate.assign({1, 1, 1, mInputs.dimB()}, 0);
+    mMostActiveId.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mMostActiveRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 }
 
 void N2D2::CMonitor::clearSuccess()
