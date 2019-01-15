@@ -1319,7 +1319,7 @@ double N2D2::Tensor<T>::sum() const
 {
     assert(mDims.size() > 1);
 
-    float sum = 0.0;
+    double sum = 0.0;
 
     for (typename std::vector<T>::iterator it = (*mData)().begin();
         it != (*mData)().end(); ++it)
