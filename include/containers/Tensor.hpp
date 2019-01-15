@@ -361,6 +361,8 @@ public:
     inline const Tensor<T> operator[](size_t i) const;
     inline Tensor<T> rows(size_t j0, size_t nb);
     inline const Tensor<T> rows(size_t j0, size_t nb) const;
+    inline double sum() const;
+    inline double mean() const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);
@@ -1309,6 +1311,29 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
     newDims.back() = nb;
     return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
                      nb * mSizeM1, mSizeM1);
+}
+
+//TODO: Generalize this to different data types and subtensors?
+template <class T>
+double N2D2::Tensor<T>::sum() const
+{
+    assert(mDims.size() > 1);
+
+    float sum = 0.0;
+
+    for (typename std::vector<T>::iterator it = (*mData)().begin();
+        it != (*mData)().end(); ++it)
+    {
+        sum += static_cast<double>(*it);
+    }
+    return sum;
+}
+
+//TODO: Generalize this to different data types and subtensors?
+template <class T>
+double N2D2::Tensor<T>::mean() const
+{
+    return sum()/(*mData)().size();
 }
 
 template <class T>
