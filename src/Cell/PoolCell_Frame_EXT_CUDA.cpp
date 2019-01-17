@@ -499,14 +499,14 @@ template <class T>
 N2D2::PoolCell_Frame_EXT_CUDA<T>::~PoolCell_Frame_EXT_CUDA()
 {
     if (mPoolDesc != NULL)
-        CHECK_CUDA_STATUS(cudaFree(mPoolDesc));
+        cudaFree(mPoolDesc);
 
     for (unsigned int k = 0, size = mArgMax.size(); k < size; ++k)
         delete &mArgMax[k];
 
     for (unsigned int k = 0, size = mInputMap.size(); k < size; ++k) {
         if (mInputMap[k] != NULL) {
-            CHECK_CUDA_STATUS(cudaFree(mInputMap[k]));
+            cudaFree(mInputMap[k]);
             mInputMap[k] = NULL;
         }
     }

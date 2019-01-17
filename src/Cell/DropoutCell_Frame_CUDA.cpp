@@ -216,15 +216,15 @@ template <class T>
 N2D2::DropoutCell_Frame_CUDA<T>::~DropoutCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
-        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mOutputDesc[k]));
+        cudnnDestroyTensorDescriptor(mOutputDesc[k]);
 
     for (unsigned int k = 0, size = mReserveSpace.size(); k < size; ++k)
-        CHECK_CUDA_STATUS(cudaFree(mReserveSpace[k]));
+        cudaFree(mReserveSpace[k]);
 
     if (mStatesSize > 0)
-        CHECK_CUDA_STATUS(cudaFree(mStates));
+        cudaFree(mStates);
 
-    CHECK_CUDNN_STATUS(cudnnDestroyDropoutDescriptor(mDropoutDesc));
+    cudnnDestroyDropoutDescriptor(mDropoutDesc);
 }
 
 namespace N2D2 {

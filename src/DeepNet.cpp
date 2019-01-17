@@ -2060,7 +2060,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
     if (record) {
         for (std::vector<std::vector<std::string> >::const_iterator it
         = mLayers.begin(),
-        itBegin = mLayers.begin(),
         itEnd = mLayers.end();
         it != itEnd;
         ++it) {

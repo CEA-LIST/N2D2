@@ -321,7 +321,7 @@ void N2D2::AnchorCell_Frame_CUDA::update()
 N2D2::AnchorCell_Frame_CUDA::~AnchorCell_Frame_CUDA()
 {
     if (mCudaGT != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mCudaGT));
+        cudaFree(mCudaGT);
 
         mCudaGT = NULL;
     }

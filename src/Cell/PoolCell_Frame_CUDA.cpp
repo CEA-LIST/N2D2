@@ -259,9 +259,9 @@ template <class T>
 N2D2::PoolCell_Frame_CUDA<T>::~PoolCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
-        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mOutputDesc[k]));
+        cudnnDestroyTensorDescriptor(mOutputDesc[k]);
 
-    CHECK_CUDNN_STATUS(cudnnDestroyPoolingDescriptor(mPoolingDesc));
+    cudnnDestroyPoolingDescriptor(mPoolingDesc);
 }
 
 namespace N2D2 {

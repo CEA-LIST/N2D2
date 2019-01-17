@@ -808,7 +808,7 @@ N2D2::FcCell_Frame_CUDA<T>::~FcCell_Frame_CUDA()
         delete &mSynapses[k];
 
     if (mOnesVector != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mOnesVector));
+        cudaFree(mOnesVector);
         mOnesVector = NULL;
     }
 }

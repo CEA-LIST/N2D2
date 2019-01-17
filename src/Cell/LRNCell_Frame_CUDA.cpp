@@ -170,9 +170,9 @@ template <class T>
 N2D2::LRNCell_Frame_CUDA<T>::~LRNCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
-        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mOutputDesc[k]));
+        cudnnDestroyTensorDescriptor(mOutputDesc[k]);
 
-    CHECK_CUDNN_STATUS(cudnnDestroyLRNDescriptor(mLRNDesc));
+    cudnnDestroyLRNDescriptor(mLRNDesc);
 }
 
 namespace N2D2 {

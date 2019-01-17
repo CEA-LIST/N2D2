@@ -261,11 +261,11 @@ void N2D2::UnpoolCell_Frame_CUDA::addArgMax(
 N2D2::UnpoolCell_Frame_CUDA::~UnpoolCell_Frame_CUDA()
 {
     if (mPoolDesc != NULL)
-        CHECK_CUDA_STATUS(cudaFree(mPoolDesc));
+        cudaFree(mPoolDesc);
 
     for (unsigned int k = 0, size = mInputMap.size(); k < size; ++k) {
         if (mInputMap[k] != NULL) {
-            CHECK_CUDA_STATUS(cudaFree(mInputMap[k]));
+            cudaFree(mInputMap[k]);
             mInputMap[k] = NULL;
         }
     }

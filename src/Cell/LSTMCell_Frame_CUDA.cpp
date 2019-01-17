@@ -1327,23 +1327,23 @@ template <class T>
 N2D2::LSTMCell_Frame_CUDA<T>::~LSTMCell_Frame_CUDA(){
 
 	/*if (mReserveSize > 0){
-		CHECK_CUDA_STATUS(cudaFree(mReserveSpace));
+		cudaFree(mReserveSpace);
 	}
 
     if (mWorkSize > 0){
-		CHECK_CUDA_STATUS(cudaFree(mWorkspace));
+		cudaFree(mWorkspace);
 	}
 
 	if (mStatesize > 0){
-		CHECK_CUDA_STATUS(cudaFree(mStates));
+		cudaFree(mStates);
 	}*/
 
-	CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&wDesc));
-	CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&dwDesc));
+	cudnnCreateFilterDescriptor(&wDesc);
+	cudnnCreateFilterDescriptor(&dwDesc);
 
-	CHECK_CUDNN_STATUS(cudnnDestroyDropoutDescriptor(mDropoutDesc));
+	cudnnDestroyDropoutDescriptor(mDropoutDesc);
 
-	CHECK_CUDNN_STATUS(cudnnDestroyRNNDescriptor(mLSTMDesc));
+	cudnnDestroyRNNDescriptor(mLSTMDesc);
 
 }
 

@@ -302,7 +302,7 @@ double N2D2::StimuliProviderExport::getStimuliRange(
     const std::string& dirName,
     Database::StimuliSet set)
 {
-    const StimuliData::Value& globalValue
+    StimuliData::Value globalValue
         = getStimuliData(sp, dirName, set).getGlobalValue();
     return std::max(std::abs(globalValue.minVal),
                     std::abs(globalValue.maxVal));
@@ -317,7 +317,7 @@ std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
     if (CellExport::mPrecision < 0 && !normalize)
         return std::make_pair(1.0, false);
 
-    const StimuliData::Value& globalValue
+    StimuliData::Value globalValue
         = getStimuliData(sp, dirName, set).getGlobalValue();
     const double dataRange = std::max(std::abs(globalValue.minVal),
                                       std::abs(globalValue.maxVal));

@@ -734,12 +734,12 @@ template <class T>
 N2D2::DeconvCell_Frame_CUDA<T>::~DeconvCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mFilterDesc.size(); k < size; ++k)
-        CHECK_CUDNN_STATUS(cudnnDestroyFilterDescriptor(mFilterDesc[k]));
+        cudnnDestroyFilterDescriptor(mFilterDesc[k]);
 
     if (mWorkspaceSize > 0)
-        CHECK_CUDA_STATUS(cudaFree(mWorkspace));
+        cudaFree(mWorkspace);
 
-    CHECK_CUDNN_STATUS(cudnnDestroyConvolutionDescriptor(mConvDesc));
+    cudnnDestroyConvolutionDescriptor(mConvDesc);
 }
 
 namespace N2D2 {

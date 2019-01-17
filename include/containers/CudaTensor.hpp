@@ -494,12 +494,12 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
 template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
 {
     if (mDataDeviceOwner && mDataDevice != NULL) {
-        CHECK_CUDA_STATUS(cudaFree(mDataDevice));
+        cudaFree(mDataDevice);
         mDataDevice = NULL;
     }
 
     if (mTensor != NULL)
-        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mTensor));
+        cudnnDestroyTensorDescriptor(mTensor);
 }
 
 N2D2::CudaBaseTensor::CudaBaseTensor(bool hostBased):

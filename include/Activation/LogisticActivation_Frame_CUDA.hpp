@@ -144,7 +144,7 @@ N2D2::LogisticActivation_Frame_CUDA<T>::~LogisticActivation_Frame_CUDA()
 {
 // dtor
 #if CUDNN_VERSION >= 5000
-    CHECK_CUDNN_STATUS(cudnnDestroyActivationDescriptor(mActivationDesc));
+    cudnnDestroyActivationDescriptor(mActivationDesc);
 #endif
 }
 

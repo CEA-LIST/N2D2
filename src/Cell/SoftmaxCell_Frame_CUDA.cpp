@@ -293,7 +293,7 @@ template <class T>
 N2D2::SoftmaxCell_Frame_CUDA<T>::~SoftmaxCell_Frame_CUDA()
 {
     if(mGroupSize > 0)
-        CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(mGroupTensor));
+        cudnnDestroyTensorDescriptor(mGroupTensor);
 
 }
 

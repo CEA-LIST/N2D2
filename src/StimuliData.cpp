@@ -246,7 +246,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         unsigned int maxSizeZ = 0U;
 
         Float_T globalValueMin = std::numeric_limits<Float_T>::max();
-        Float_T globalValueMax = std::numeric_limits<Float_T>::min();
+        Float_T globalValueMax = -std::numeric_limits<Float_T>::max();
 
         long double sum = 0.0;
         long double sqSum = 0.0;
