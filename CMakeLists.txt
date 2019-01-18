@@ -178,6 +178,7 @@ if(CUDA_FOUND)
     
     
     target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
+    target_link_libraries(n2d2_lib_cuda n2d2_lib)
     target_link_libraries(n2d2_lib n2d2_lib_cuda)
 endif()
 
