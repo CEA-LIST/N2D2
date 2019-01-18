@@ -174,6 +174,11 @@ if(CUDA_FOUND)
     target_link_libraries(n2d2_lib_cuda ${CUDNN_LIBRARY})
     
     # Cublas
+    # Work-around due to a bug in CMake < 3.12.2
+    if(CUDA_VERSION VERSION_GREATER 9.1 AND CMAKE_VERSION VERSION_LESS 3.12.2)
+         list(REMOVE_ITEM CUDA_CUBLAS_LIBRARIES "CUDA_cublas_device_LIBRARY-NOTFOUND")
+    endif()
+
     target_link_libraries(n2d2_lib_cuda ${CUDA_CUBLAS_LIBRARIES})
     
     
