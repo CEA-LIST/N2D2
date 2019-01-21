@@ -36,13 +36,14 @@ public:
         FanOut
     };
 
-    HeFiller(VarianceNorm varianceNorm = FanIn, T meanNorm=0.0);
+    HeFiller(VarianceNorm varianceNorm = FanIn, T meanNorm=0.0, T scaling = 1.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
     virtual ~HeFiller() {};
 
 private:
     VarianceNorm mVarianceNorm;
     T mMeanNorm;
+    T mScaling;
 };
 }
 
@@ -61,9 +62,10 @@ const char* const EnumStrings<N2D2::HeFiller<double>::VarianceNorm>::data[]
 
 template <class T>
 N2D2::HeFiller
-    <T>::HeFiller(VarianceNorm varianceNorm, T meanNorm)
+    <T>::HeFiller(VarianceNorm varianceNorm, T meanNorm, T scaling)
     : mVarianceNorm(varianceNorm),
-    mMeanNorm(meanNorm)
+    mMeanNorm(meanNorm),
+    mScaling(scaling)
 {
     // ctor
 }
@@ -87,11 +89,12 @@ template <class T> void N2D2::HeFiller<T>::apply(BaseTensor& baseData,
 
     for (typename Tensor<T>::iterator it = data.begin(),
                                         itEnd = data.end();
-         it != itEnd;
-         ++it) {
-            (*it) = Random::randNormal(mean, stdDev);
+         it != itEnd; ++it)
+    {
+            (*it) = mScaling * Random::randNormal(mean, stdDev);
+
             if (restrictPositive)
-                (*it) = (*it) < 0 ? 0 : (*it);
+                (*it) = ((*it) < 0) ? 0 : (*it);
     }
 }
 

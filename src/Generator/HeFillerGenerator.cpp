@@ -37,8 +37,12 @@ N2D2::HeFillerGenerator::generate(IniParser& iniConfig,
                 name + ".VarianceNorm", HeFiller<float>::FanIn);
         const float meanNorm
             = iniConfig.getProperty<float>(name + ".MeanNorm", 0.0);
+        const float scaling = iniConfig.getProperty<float>(name + ".Scaling",
+                                                           1.0f);
 
-        return std::make_shared<HeFiller<float> >(varianceNorm, meanNorm);
+        return std::make_shared<HeFiller<float> >(varianceNorm,
+                                                  meanNorm,
+                                                  scaling);
     }
     else if (dataType == Float16) {
         const HeFiller<half_float::half>::VarianceNorm varianceNorm
@@ -48,9 +52,13 @@ N2D2::HeFillerGenerator::generate(IniParser& iniConfig,
         const half_float::half meanNorm
             = iniConfig.getProperty<half_float::half>(name + ".MeanNorm",
                                                       half_float::half(0.0f));
+        const half_float::half scaling
+            = iniConfig.getProperty<half_float::half>(name + ".Scaling",
+                                                      half_float::half(1.0f));
 
         return std::make_shared<HeFiller<half_float::half> >(varianceNorm,
-                                                             meanNorm);
+                                                             meanNorm,
+                                                             scaling);
     }
     else {
         const HeFiller<double>::VarianceNorm varianceNorm
@@ -58,7 +66,11 @@ N2D2::HeFillerGenerator::generate(IniParser& iniConfig,
                 name + ".VarianceNorm", HeFiller<double>::FanIn);
         const double meanNorm
             = iniConfig.getProperty<double>(name + ".MeanNorm", 0.0);
+        const double scaling = iniConfig.getProperty<double>(name + ".Scaling",
+                                                           1.0);
 
-        return std::make_shared<HeFiller<double> >(varianceNorm, meanNorm);
+        return std::make_shared<HeFiller<double> >(varianceNorm,
+                                                   meanNorm,
+                                                   scaling);
     }
 }

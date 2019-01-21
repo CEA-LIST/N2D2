@@ -37,9 +37,12 @@ N2D2::XavierFillerGenerator::generate(IniParser& iniConfig,
         const XavierFiller<float>::Distribution distribution
             = iniConfig.getProperty<XavierFiller<float>::Distribution>(
                 name + ".Distribution", XavierFiller<float>::Uniform);
+        const float scaling = iniConfig.getProperty<float>(name + ".Scaling",
+                                                           1.0f);
 
         return std::make_shared<XavierFiller<float> >(varianceNorm,
-                                                      distribution);
+                                                      distribution,
+                                                      scaling);
     }
     else if (dataType == Float16) {
         const XavierFiller<half_float::half>::VarianceNorm varianceNorm
@@ -50,9 +53,13 @@ N2D2::XavierFillerGenerator::generate(IniParser& iniConfig,
             = iniConfig.getProperty<XavierFiller<half_float::half>
                 ::Distribution>(name + ".Distribution",
                                 XavierFiller<half_float::half>::Uniform);
+        const half_float::half scaling
+            = iniConfig.getProperty<half_float::half>(name + ".Scaling",
+                                                      half_float::half(1.0f));
 
         return std::make_shared<XavierFiller<half_float::half> >(varianceNorm,
-                                                      distribution);
+                                                      distribution,
+                                                      scaling);
     }
     else {
         const XavierFiller<double>::VarianceNorm varianceNorm
@@ -61,8 +68,11 @@ N2D2::XavierFillerGenerator::generate(IniParser& iniConfig,
         const XavierFiller<double>::Distribution distribution
             = iniConfig.getProperty<XavierFiller<double>::Distribution>(
                 name + ".Distribution", XavierFiller<double>::Uniform);
+        const double scaling = iniConfig.getProperty<double>(name + ".Scaling",
+                                                           1.0);
 
         return std::make_shared<XavierFiller<double> >(varianceNorm,
-                                                       distribution);
+                                                       distribution,
+                                                       scaling);
     }
 }

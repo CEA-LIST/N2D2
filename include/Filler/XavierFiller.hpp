@@ -38,13 +38,15 @@ public:
     };
 
     XavierFiller(VarianceNorm varianceNorm = FanIn,
-                 Distribution distribution = Uniform);
+                 Distribution distribution = Uniform,
+                 T scaling = 1.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
     virtual ~XavierFiller() {};
 
 private:
     VarianceNorm mVarianceNorm;
     Distribution mDistribution;
+    T mScaling;
 };
 }
 
@@ -73,8 +75,12 @@ const char* const EnumStrings<N2D2::XavierFiller<double>::Distribution>::data[]
 
 template <class T>
 N2D2::XavierFiller
-    <T>::XavierFiller(VarianceNorm varianceNorm, Distribution distribution)
-    : mVarianceNorm(varianceNorm), mDistribution(distribution)
+    <T>::XavierFiller(VarianceNorm varianceNorm,
+                      Distribution distribution,
+                      T scaling)
+    : mVarianceNorm(varianceNorm),
+      mDistribution(distribution),
+      mScaling(scaling)
 {
     // ctor
 }
@@ -99,11 +105,12 @@ template <class T> void N2D2::XavierFiller<T>::apply(BaseTensor& baseData,
 
         for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
-             it != itEnd;
-             ++it){
-                (*it) = Random::randUniform(-scale, scale);
+             it != itEnd; ++it)
+        {
+                (*it) = mScaling * Random::randUniform(-scale, scale);
+
                 if (restrictPositive)
-                    (*it) = (*it) < 0 ? 0 : (*it);
+                    (*it) = ((*it) < 0) ? 0 : (*it);
         }
     } else {
         // randNormal() takes the std. dev., which is the square root of the
@@ -112,11 +119,12 @@ template <class T> void N2D2::XavierFiller<T>::apply(BaseTensor& baseData,
 
         for (typename Tensor<T>::iterator it = data.begin(),
                                             itEnd = data.end();
-             it != itEnd;
-             ++it) {
-                (*it) = Random::randNormal(0.0, stdDev);
+             it != itEnd; ++it)
+        {
+                (*it) = mScaling * Random::randNormal(0.0, stdDev);
+
                 if (restrictPositive)
-                    (*it) = (*it) < 0 ? 0 : (*it);
+                    (*it) = ((*it) < 0) ? 0 : (*it);
         }
     }
 }
