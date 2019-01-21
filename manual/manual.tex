@@ -4689,6 +4689,39 @@ Size=3
 
 \section{Tutorials}
 
+\subsection{Learning deep neural networks: tips and tricks}
+
+
+\subsubsection{Choose the learning solver}
+
+Generally, you should use the SGD solver with a momemtum (typical value for the momentum: 0.9). It generalizes better, often significantly better, than adaptive methods like Adam \citep{2017arXiv170508292W}.
+
+Adaptive solvers, like Adam, may be used for fast exploration and prototyping, thanks to their fast convergence.
+
+
+\subsubsection{Choose the learning hyper-parameters}
+
+To start a learning from scratch, a learning rate of 0.1 or 0.01 may be considered, for large batch sizes (typically 256). Remind that if you scale the batch size ($N$) by a factor $k$, you should scale the learning rate accordingly. A simple linear scaling rule is recommanded \citep{DBLP:journals/corr/GoyalDGNWKTJH17}.
+
+Typical values for the \lstinline!SGDSolver! are:
+
+\begin{lstlisting}[language=ini]
+Solvers.LearningRate=0.1
+Solvers.Decay=0.0001
+Solvers.Momentum=0.9
+\end{lstlisting}
+
+
+\subsubsection{Convergence and normalization}
+
+Deep networks (> 30 layers) and especially residual networks usually don't converge without normalization. Indeed, batch normalization is almost always used.
+\emph{ZeroInit} is a method that can be used to overcome this issue without normalization \citep{zhang2018residual}.
+
+
+
+
+
+
 \subsection{\label{sec:BuildingClassifierNN}Building a classifier neural
 network}
 
