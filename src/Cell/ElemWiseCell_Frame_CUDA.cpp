@@ -51,9 +51,13 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
         if (mInputs[k].dimZ() != mOutputs.dimZ()
             || mInputs[k].dimB() != mOutputs.dimB())
         {
-            throw std::runtime_error("ElemWiseCell_Frame_CUDA::initialize(): "
-                                     "the input tensors dimensions must match "
-                                     "the output dimensions.");
+            std::stringstream errorMsg;
+            errorMsg << "ElemWiseCell_Frame_CUDA::initialize(): for cell "
+                << mName << ": the input tensor dimensions ("
+                << mInputs[k].dims() << ") must match the output dimensions ("
+                << mOutputs.dims() << ") for input #" << k << ".";
+
+            throw std::runtime_error(errorMsg.str());
         }
     }
 

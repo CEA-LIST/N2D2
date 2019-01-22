@@ -748,7 +748,7 @@ void N2D2::Database::extractSlices(unsigned int width,
 
             if (progress > progressPrev) {
 #pragma omp critical(Database__extractSlices)
-                {
+                if (progress > progressPrev) {
                     std::cout << std::string(progress - progressPrev, '.')
                               << std::flush;
                     progressPrev = progress;
@@ -1195,7 +1195,8 @@ cv::Mat N2D2::Database::getStimulusData(StimulusID id)
     if (mLoadDataInMemory) {
         if (mStimuliData.empty()) {
 #pragma omp critical(Database__getStimulusData)
-            mStimuliData.resize(mStimuli.size());
+            if (mStimuliData.empty())
+                mStimuliData.resize(mStimuli.size());
         }
 
         if (mStimuliData[id].empty())
@@ -1213,7 +1214,8 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
     if (mLoadDataInMemory) {
         if (mStimuliLabelsData.empty()) {
 #pragma omp critical(Database__getStimulusLabelsData)
-            mStimuliLabelsData.resize(mStimuli.size());
+            if (mStimuliLabelsData.empty())
+                mStimuliLabelsData.resize(mStimuli.size());
         }
 
         if (mStimuliLabelsData[id].empty())

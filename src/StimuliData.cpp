@@ -286,7 +286,9 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
             mSize.resize(sizeOffset + nbStimuli);
             mValue.resize(valueOffset + nbStimuli);
 
-#pragma omp parallel for reduction(+:sum,count) reduction(min:minSizeX,minSizeY,minSizeZ,globalValueMin) reduction(max:maxSizeX,maxSizeY,maxSizeZ,globalValueMax)
+#pragma omp parallel for reduction(+:sum,count)
+// min and max reduction not supported by MSVC, using double-checked locking instead.
+//reduction(min:minSizeX,minSizeY,minSizeZ,globalValueMin) reduction(max:maxSizeX,maxSizeY,maxSizeZ,globalValueMax)
             for (int index = 0; index < (int)nbStimuli; ++index) {
                 StimuliProvider provider(mProvider);
 
@@ -317,29 +319,53 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 sum += meanStdDev.first * data.size();
                 count += data.size();
 
-                if (data.dimX() < minSizeX)
-                    minSizeX = data.dimX();
+                if (data.dimX() < minSizeX) {
+#pragma omp critical(StimuliData__generate_1)
+                    if (data.dimX() < minSizeX)
+                        minSizeX = data.dimX();
+                }
 
-                if (data.dimY() < minSizeY)
-                    minSizeY = data.dimY();
+                if (data.dimY() < minSizeY) {
+#pragma omp critical(StimuliData__generate_2)
+                    if (data.dimY() < minSizeY)
+                        minSizeY = data.dimY();
+                }
 
-                if (data.dimZ() < minSizeZ)
-                    minSizeZ = data.dimZ();
+                if (data.dimZ() < minSizeZ) {
+#pragma omp critical(StimuliData__generate_3)
+                    if (data.dimZ() < minSizeZ)
+                        minSizeZ = data.dimZ();
+                }
 
-                if (*minMaxIt.first < globalValueMin)
-                    globalValueMin = *minMaxIt.first;
+                if (*minMaxIt.first < globalValueMin) {
+#pragma omp critical(StimuliData__generate_4)
+                    if (*minMaxIt.first < globalValueMin)
+                        globalValueMin = *minMaxIt.first;
+                }
 
-                if (data.dimX() > maxSizeX)
-                    maxSizeX = data.dimX();
+                if (data.dimX() > maxSizeX) {
+#pragma omp critical(StimuliData__generate_5)
+                    if (data.dimX() > maxSizeX)
+                        maxSizeX = data.dimX();
+                }
 
-                if (data.dimY() > maxSizeY)
-                    maxSizeY = data.dimY();
+                if (data.dimY() > maxSizeY) {
+#pragma omp critical(StimuliData__generate_6)
+                    if (data.dimY() > maxSizeY)
+                        maxSizeY = data.dimY();
+                }
 
-                if (data.dimZ() > maxSizeZ)
-                    maxSizeZ = data.dimZ();
+                if (data.dimZ() > maxSizeZ) {
+#pragma omp critical(StimuliData__generate_7)
+                    if (data.dimZ() > maxSizeZ)
+                        maxSizeZ = data.dimZ();
+                }
 
-                if (*minMaxIt.second > globalValueMax)
-                    globalValueMax = *minMaxIt.second;
+                if (*minMaxIt.second > globalValueMax) {
+#pragma omp critical(StimuliData__generate_8)
+                    if (*minMaxIt.second > globalValueMax)
+                        globalValueMax = *minMaxIt.second;
+                }
 
                 mSize[sizeOffset + index] = size;
                 mValue[valueOffset + index] = value;
@@ -352,7 +378,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
                 if (progress > progressPrev) {
 #pragma omp critical(StimuliData__generate)
-                    {
+                    if (progress > progressPrev) {
                         std::cout << std::string(progress - progressPrev, '.')
                                   << std::flush;
                         progressPrev = progress;
@@ -451,7 +477,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
                 if (progress > progressPrev) {
 #pragma omp critical(StimuliData__generate_2)
-                    {
+                    if (progress > progressPrev) {
                         std::cout << std::string(progress - progressPrev, '.')
                                   << std::flush;
                         progressPrev = progress;
