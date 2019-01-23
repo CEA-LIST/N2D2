@@ -372,6 +372,7 @@ public:
      * as the current Tensor.
      */
     bool operator==(const Tensor& other) const;
+    bool operator!=(const Tensor& other) const;
 
 
     inline operator cv::Mat() const;
@@ -1410,6 +1411,11 @@ bool N2D2::Tensor<T>::operator==(const Tensor& other) const {
 
     assert((*mData)().size() == (*other.mData)().size());
     return std::equal(begin(), end(), other.begin());
+}
+
+template <class T>
+bool N2D2::Tensor<T>::operator!=(const Tensor& other) const {
+    return !(*this == other);
 }
 
 
