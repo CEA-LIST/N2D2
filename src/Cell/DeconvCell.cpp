@@ -174,10 +174,10 @@ unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
 
             const int kernelExtent
                 = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
-            const unsigned int sMin = (unsigned int)std::max(
+            const int sMin = (int)std::max(
                 (int)mPaddingDims[dim] - (int)(iIndex[dim] * mStrideDims[dim]),
                 0);
-            const unsigned int sMax = Utils::clamp
+            const int sMax = Utils::clamp
                 <int>(mOutputsDims[dim] + mPaddingDims[dim] - iIndex[dim]
                                                             * mStrideDims[dim],
                       0,
