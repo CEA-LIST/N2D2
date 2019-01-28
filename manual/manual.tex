@@ -3042,6 +3042,7 @@ This filler is sometimes referred as MSRA filler.
     \emph{FillerName}\lstinline!.VarianceNorm! [\lstinline!FanIn!]
     & Normalization, can be \lstinline!FanIn!, \lstinline!Average!
     or \lstinline!FanOut! \\
+    \emph{FillerName}\lstinline!.Scaling! [1.0] & Scaling factor \\
  \hline
 \end{tabular}
 \end{center}
@@ -3107,6 +3108,7 @@ Fill with an uniform distribution with normalized variance \citep{Glorot2010}.
     or \lstinline!FanOut! \\
     \emph{FillerName}\lstinline!.Distribution! [\lstinline!Uniform!]
     & Distribution, can be \lstinline!Uniform! or \lstinline!Normal! \\
+    \emph{FillerName}\lstinline!.Scaling! [1.0] & Scaling factor \\
  \hline
 \end{tabular}
 \end{center}
@@ -3537,6 +3539,14 @@ Convolutional layer.
   \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!PaddingDims! [] & List of space-separated padding dimensions for N-D kernels \\
   \hline
+  \lstinline!DilationX! [1] & X-axis dilation of the kernels \\
+  \lstinline!DilationY! [1] & Y-axis dilation of the kernels \\
+  \lstinline!DilationZ! [] & Z-axis dilation of the kernels \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!Dilation! [1] & Dilation of the kernels \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!DilationDims! [] & List of space-separated dilation dimensions for N-D kernels \\
+  \hline
   \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
   \lstinline!Rectifier!, \lstinline!Softplus!, \lstinline!TanhLeCun!,
@@ -3727,6 +3737,14 @@ Deconvolutionlayer.
   \lstinline!Padding! [0] & Input padding \\
   \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
   \lstinline!PaddingDims! [] & List of space-separated padding dimensions for N-D kernels \\
+  \hline
+  \lstinline!DilationX! [1] & X-axis dilation of the kernels \\
+  \lstinline!DilationY! [1] & Y-axis dilation of the kernels \\
+  \lstinline!DilationZ! [] & Z-axis dilation of the kernels \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!Dilation! [1] & Dilation of the kernels \\
+  \multicolumn{2}{|c|}{\cellcolor{clrgray}\tiny OR} \\
+  \lstinline!DilationDims! [] & List of space-separated dilation dimensions for N-D kernels \\
   \hline
   \lstinline!ActivationFunction! [\lstinline!Tanh!] & Activation function.
   Can be any of \lstinline!Logistic!,  \lstinline!LogisticWithLoss!,
