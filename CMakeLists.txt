@@ -32,7 +32,7 @@ macro(set_globals)
 endmacro()
 
 function(target_link_libraries_whole_archive target linked_libs)
-    if(MSVC)  
+    if(MSVC)
         foreach(lib IN LISTS  linked_libs ARGN)
             set_property(TARGET ${target} APPEND PROPERTY LINK_FLAGS "/WHOLEARCHIVE:${lib}")
             target_link_libraries(${target} ${lib})
@@ -44,7 +44,7 @@ endfunction()
 
 function(add_n2d2_test file_path target linked_libs)
     get_filename_component(file_name ${file_path} NAME_WE)
-    
+
     add_executable(${file_name} EXCLUDE_FROM_ALL ${file_path})
     set_target_properties(${file_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     target_link_libraries_whole_archive(${file_name} ${linked_libs} ${ARGN})
@@ -54,7 +54,7 @@ endfunction()
 
 function(add_n2d2_executable file_path target linked_libs)
     get_filename_component(file_name ${file_path} NAME_WE)
-    
+
     add_executable(${file_name} EXCLUDE_FROM_ALL ${file_path})
     target_link_libraries_whole_archive(${file_name} ${linked_libs} ${ARGN})
     add_dependencies(${target} ${file_name})
@@ -63,7 +63,7 @@ endfunction()
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    
+
     list(APPEND CUDA_NVCC_FLAGS -std=c++11;-arch=sm_30;)
     if (MSVC)
         list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-MD;)
@@ -128,7 +128,7 @@ find_package(MongoDB QUIET)
 if (MongoDB_FOUND)
     find_package(Boost REQUIRED COMPONENTS filesystem program_options system thread)
     target_link_libraries(n2d2_lib ${Boost_LIBRARIES})
-    
+
     find_package(OpenSSL REQUIRED)
     target_link_libraries(n2d2_lib ${OPENSSL_LIBRARIES})
 
@@ -159,20 +159,20 @@ endif()
 find_package(CUDA)
 if(CUDA_FOUND)
     find_package(CuDNN REQUIRED)
-    
+
     file(GLOB_RECURSE src_files_cuda "src/*.cu")
     set_nvcc_flags()
     cuda_include_directories("${CMAKE_CURRENT_LIST_DIR}/include/")
     cuda_add_library(n2d2_lib_cuda STATIC ${src_files_cuda})
-    
+
     # CUDA
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
     target_link_libraries(n2d2_lib_cuda ${CUDA_LIBRARIES})
-    
+
     # CuDNN
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDNN_INCLUDE_DIRS})
     target_link_libraries(n2d2_lib_cuda ${CUDNN_LIBRARY})
-    
+
     # Cublas
     # Work-around due to a bug in CMake < 3.12.2
     if(CUDA_VERSION VERSION_GREATER 9.1 AND CMAKE_VERSION VERSION_LESS 3.12.2)
@@ -180,10 +180,12 @@ if(CUDA_FOUND)
     endif()
 
     target_link_libraries(n2d2_lib_cuda ${CUDA_CUBLAS_LIBRARIES})
-    
-    
+
+    # OpenCV
+    find_package(OpenCV REQUIRED)
+    target_link_libraries(n2d2_lib_cuda ${OpenCV_LIBS})
+
     target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
-    target_link_libraries(n2d2_lib_cuda n2d2_lib)
     target_link_libraries(n2d2_lib n2d2_lib_cuda)
 endif()
 
@@ -196,7 +198,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     add_executable(n2d2 "exec/n2d2.cpp")
     target_link_libraries_whole_archive(n2d2 n2d2_lib)
 
-    
+
     # exec target
     add_custom_target(exec)
     file(GLOB_RECURSE src_exec "exec/*.cpp")
@@ -209,7 +211,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     # tests target
     enable_testing()
     add_custom_target(tests)
-    add_custom_command(TARGET tests PRE_BUILD 
+    add_custom_command(TARGET tests PRE_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/tests/tests_data ${CMAKE_BINARY_DIR}/tests/tests_data)
 
     file(GLOB_RECURSE src_tests "tests/*.cpp")
