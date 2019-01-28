@@ -26,7 +26,8 @@ N2D2::DeconvCell::DeconvCell(const std::string& name,
                              const std::vector<unsigned int>& kernelDims,
                              unsigned int nbOutputs,
                              const std::vector<unsigned int>& strideDims,
-                             const std::vector<int>& paddingDims)
+                             const std::vector<int>& paddingDims,
+                             const std::vector<unsigned int>& dilationDims)
     : Cell(name, nbOutputs),
       mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
@@ -35,7 +36,8 @@ N2D2::DeconvCell::DeconvCell(const std::string& name,
       mOutputsRemap(this, "OutputsRemap", ""),
       mKernelDims(kernelDims),
       mStrideDims(strideDims),
-      mPaddingDims(paddingDims)
+      mPaddingDims(paddingDims),
+      mDilationDims(dilationDims)
 {
     // ctor
 }
@@ -170,6 +172,8 @@ unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
                     iIndex[dim] = 0;
             }
 
+            const int kernelExtent
+                = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
             const unsigned int sMin = (unsigned int)std::max(
                 (int)mPaddingDims[dim] - (int)(iIndex[dim] * mStrideDims[dim]),
                 0);
@@ -177,9 +181,10 @@ unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
                 <int>(mOutputsDims[dim] + mPaddingDims[dim] - iIndex[dim]
                                                             * mStrideDims[dim],
                       0,
-                      mKernelDims[dim]);
+                      kernelExtent);
 
-            nbSynapsesI *= (sMax - sMin);
+            nbSynapsesI *= (unsigned long long int)(std::floor((sMax - sMin - 1)
+                                             / (double)mDilationDims[dim]) + 1);
         }
 
         nbSynapsesPerConnection += nbSynapsesI;
@@ -787,7 +792,10 @@ std::vector<unsigned int> N2D2::DeconvCell::getReceptiveField(
     receptiveField.resize(mKernelDims.size(), 1);
 
     for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
-        receptiveField[dim] = 1 + (receptiveField[dim] - mKernelDims[dim])
+        const int kernelExtent
+            = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
+
+        receptiveField[dim] = 1 + (receptiveField[dim] - kernelExtent)
                                         / mStrideDims[dim];
     }
 
@@ -809,8 +817,11 @@ void N2D2::DeconvCell::setOutputsDims()
     mOutputsDims.resize(mInputsDims.size(), mOutputsDims.back());
 
     for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        const int kernelExtent
+            = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
+
         mOutputsDims[dim] = mInputsDims[dim] * mStrideDims[dim]
-                + mKernelDims[dim] - 2 * mPaddingDims[dim] - mStrideDims[dim];
+                + kernelExtent - 2 * mPaddingDims[dim] - mStrideDims[dim];
     }
 }
 

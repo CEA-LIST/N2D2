@@ -106,6 +106,26 @@ N2D2::DeconvCellGenerator::generate(Network& network,
         paddingDims.resize(kernelDims.size(), 0);
     }
 
+    std::vector<unsigned int> dilationDims;
+
+    if (iniConfig.isProperty("DilationDims")) {
+        dilationDims = iniConfig.getProperty
+                                <std::vector<unsigned int> >("DilationDims");
+    }
+    else if (iniConfig.isProperty("Dilation")) {
+        dilationDims.resize(kernelDims.size(),
+                             iniConfig.getProperty<unsigned int>("Dilation"));
+    }
+    else {
+        dilationDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("DilationX", 1));
+        dilationDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("DilationY", 1));
+        dilationDims.push_back(iniConfig.getProperty
+                                     <unsigned int>("DilationZ", 1));
+        dilationDims.resize(kernelDims.size(), 1);
+    }
+
     std::shared_ptr<Activation> activation
         = ActivationGenerator::generate(
             iniConfig,
@@ -128,6 +148,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
                                                           nbOutputs,
                                                           strideDims,
                                                           paddingDims,
+                                                          dilationDims,
                                                           activation)
           : (dataType == Float16)
             ? Registrar<DeconvCell>::create<half_float::half>(model)(network,
@@ -136,6 +157,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
                                                                     nbOutputs,
                                                                     strideDims,
                                                                     paddingDims,
+                                                                    dilationDims,
                                                                     activation)
             : Registrar<DeconvCell>::create<double>(model)(network,
                                                            section,
@@ -143,6 +165,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
                                                            nbOutputs,
                                                            strideDims,
                                                            paddingDims,
+                                                           dilationDims,
                                                            activation);
 
     if (!cell) {

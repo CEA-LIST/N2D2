@@ -48,6 +48,7 @@ N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
     const std::vector<unsigned int>& subSampleDims,
     const std::vector<unsigned int>& strideDims,
     const std::vector<int>& paddingDims,
+    const std::vector<unsigned int>& dilationDims,
     const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       ConvCell(name,
@@ -55,7 +56,8 @@ N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
                nbOutputs,
                subSampleDims,
                strideDims,
-               paddingDims),
+               paddingDims,
+               dilationDims),
       Cell_Frame_CUDA<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
@@ -71,6 +73,13 @@ N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
                                 " dimensions of the kernel.");
     }
 
+    if (std::count(subSampleDims.begin(), subSampleDims.end(), 1U)
+        != (int)subSampleDims.size())
+    {
+        throw std::domain_error("ConvCell_Frame_CUDA: subSample != 1 is"
+                                " currently not supported.");
+    }
+
     if (strideDims.size() != kernelDims.size()) {
         throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
                                 " of stride must match the number of"
@@ -80,6 +89,12 @@ N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
     if (paddingDims.size() != kernelDims.size()) {
         throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
                                 " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (dilationDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
+                                " of dilation must match the number of"
                                 " dimensions of the kernel.");
     }
 
@@ -112,7 +127,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
     const std::vector<int> strides(mStrideDims.rbegin(), mStrideDims.rend());
     const std::vector<int> paddings(mPaddingDims.rbegin(), mPaddingDims.rend());
-    const std::vector<int> upscales(mKernelDims.size(), 1);
+    const std::vector<int> upscales(mDilationDims.rbegin(),
+                                    mDilationDims.rend());
 
     CHECK_CUDNN_STATUS(
         cudnnSetConvolutionNdDescriptor(mConvDesc,

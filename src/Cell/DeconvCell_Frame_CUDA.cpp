@@ -47,13 +47,15 @@ N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
     const std::vector<int>& paddingDims,
+    const std::vector<unsigned int>& dilationDims,
     const std::shared_ptr<Activation>& activation)
     : Cell(name, nbOutputs),
       DeconvCell(name,
                  kernelDims,
                  nbOutputs,
                  strideDims,
-                 paddingDims),
+                 paddingDims,
+                 dilationDims),
       Cell_Frame_CUDA<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
@@ -72,6 +74,12 @@ N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
     if (paddingDims.size() != kernelDims.size()) {
         throw std::domain_error("DeconvCell_Frame_CUDA: the number of dimensions"
                                 " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (dilationDims.size() != kernelDims.size()) {
+        throw std::domain_error("DeconvCell_Frame_CUDA: the number of dimensions"
+                                " of dilation must match the number of"
                                 " dimensions of the kernel.");
     }
 
@@ -104,7 +112,8 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
 
     const std::vector<int> strides(mStrideDims.rbegin(), mStrideDims.rend());
     const std::vector<int> paddings(mPaddingDims.rbegin(), mPaddingDims.rend());
-    const std::vector<int> upscales(mKernelDims.size(), 1);
+    const std::vector<int> upscales(mDilationDims.rbegin(),
+                                    mDilationDims.rend());
 
     CHECK_CUDNN_STATUS(
         cudnnSetConvolutionNdDescriptor(mConvDesc,

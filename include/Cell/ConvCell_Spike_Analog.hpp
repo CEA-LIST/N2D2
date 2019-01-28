@@ -36,7 +36,9 @@ public:
                           const std::vector<unsigned int>& strideDims
                                 = std::vector<unsigned int>(2, 1U),
                           const std::vector<int>& paddingDims
-                                = std::vector<int>(2, 0));
+                                = std::vector<int>(2, 0),
+                          const std::vector<unsigned int>& dilationDims
+                                = std::vector<unsigned int>(2, 1U));
     static std::shared_ptr<ConvCell>
     create(Network& net,
            const std::string& name,
@@ -48,6 +50,8 @@ public:
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims
                 = std::vector<int>(2, 0),
+           const std::vector<unsigned int>& dilationDims
+                = std::vector<unsigned int>(2, 1U),
            const std::shared_ptr<Activation>& /*activation*/
            = std::shared_ptr<Activation>())
     {
@@ -57,7 +61,8 @@ public:
                                                        nbOutputs,
                                                        subSampleDims,
                                                        strideDims,
-                                                       paddingDims);
+                                                       paddingDims,
+                                                       dilationDims);
     }
 
     virtual void initialize();

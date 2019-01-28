@@ -45,6 +45,7 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const std::string& name,
                                  const std::vector<unsigned int>& subSampleDims,
                                  const std::vector<unsigned int>& strideDims,
                                  const std::vector<int>& paddingDims,
+                                 const std::vector<unsigned int>& dilationDims,
                                  const std::shared_ptr
                                  <Activation>& activation)
     : Cell(name, nbOutputs),
@@ -53,13 +54,14 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const std::string& name,
                nbOutputs,
                subSampleDims,
                strideDims,
-               paddingDims),
+               paddingDims,
+               dilationDims),
       Cell_Frame<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
-      mConvDesc(subSampleDims, strideDims, paddingDims)
+      mConvDesc(subSampleDims, strideDims, paddingDims, dilationDims)
 {
     // ctor
     if (kernelDims.size() != 2) {
@@ -83,6 +85,19 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const std::string& name,
         throw std::domain_error("ConvCell_Frame: the number of dimensions"
                                 " of padding must match the number of"
                                 " dimensions of the kernel.");
+    }
+
+    if (dilationDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Frame: the number of dimensions"
+                                " of dilation must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (std::count(dilationDims.begin(), dilationDims.end(), 1U)
+        != (int)dilationDims.size())
+    {
+        throw std::domain_error("ConvCell_Frame: dilation != 1 is currently not"
+                                " supported.");
     }
 
     mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);

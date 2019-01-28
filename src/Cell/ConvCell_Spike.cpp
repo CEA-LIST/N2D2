@@ -31,14 +31,16 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
                                  unsigned int nbOutputs,
                                  const std::vector<unsigned int>& subSampleDims,
                                  const std::vector<unsigned int>& strideDims,
-                                 const std::vector<int>& paddingDims)
+                                 const std::vector<int>& paddingDims,
+                                 const std::vector<unsigned int>& dilationDims)
     : Cell(name, nbOutputs),
       ConvCell(name,
                kernelDims,
                nbOutputs,
                subSampleDims,
                strideDims,
-               paddingDims),
+               paddingDims,
+               dilationDims),
       Cell_Spike(net, name, nbOutputs),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
@@ -68,8 +70,21 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
 
     if (paddingDims.size() != kernelDims.size()) {
         throw std::domain_error("ConvCell_Spike: the number of dimensions of"
-                                " passing must match the number of dimensions"
+                                " padding must match the number of dimensions"
                                 " of the kernel.");
+    }
+
+    if (dilationDims.size() != kernelDims.size()) {
+        throw std::domain_error("ConvCell_Spike: the number of dimensions of"
+                                " dilation must match the number of dimensions"
+                                " of the kernel.");
+    }
+
+    if (std::count(dilationDims.begin(), dilationDims.end(), 1U)
+        != (int)dilationDims.size())
+    {
+        throw std::domain_error("ConvCell_Spike: dilation != 1 is currently not"
+                                " supported.");
     }
 
     mWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);

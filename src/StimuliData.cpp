@@ -320,49 +320,49 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 count += data.size();
 
                 if (data.dimX() < minSizeX) {
-#pragma omp critical(StimuliData__generate_1)
+#pragma omp critical(StimuliData__generate_minSizeX)
                     if (data.dimX() < minSizeX)
                         minSizeX = data.dimX();
                 }
 
                 if (data.dimY() < minSizeY) {
-#pragma omp critical(StimuliData__generate_2)
+#pragma omp critical(StimuliData__generate_minSizeY)
                     if (data.dimY() < minSizeY)
                         minSizeY = data.dimY();
                 }
 
                 if (data.dimZ() < minSizeZ) {
-#pragma omp critical(StimuliData__generate_3)
+#pragma omp critical(StimuliData__generate_minSizeZ)
                     if (data.dimZ() < minSizeZ)
                         minSizeZ = data.dimZ();
                 }
 
                 if (*minMaxIt.first < globalValueMin) {
-#pragma omp critical(StimuliData__generate_4)
+#pragma omp critical(StimuliData__generate_globalValueMin)
                     if (*minMaxIt.first < globalValueMin)
                         globalValueMin = *minMaxIt.first;
                 }
 
                 if (data.dimX() > maxSizeX) {
-#pragma omp critical(StimuliData__generate_5)
+#pragma omp critical(StimuliData__generate_maxSizeX)
                     if (data.dimX() > maxSizeX)
                         maxSizeX = data.dimX();
                 }
 
                 if (data.dimY() > maxSizeY) {
-#pragma omp critical(StimuliData__generate_6)
+#pragma omp critical(StimuliData__generate_maxSizeY)
                     if (data.dimY() > maxSizeY)
                         maxSizeY = data.dimY();
                 }
 
                 if (data.dimZ() > maxSizeZ) {
-#pragma omp critical(StimuliData__generate_7)
+#pragma omp critical(StimuliData__generate_maxSizeZ)
                     if (data.dimZ() > maxSizeZ)
                         maxSizeZ = data.dimZ();
                 }
 
                 if (*minMaxIt.second > globalValueMax) {
-#pragma omp critical(StimuliData__generate_8)
+#pragma omp critical(StimuliData__generate_globalValueMax)
                     if (*minMaxIt.second > globalValueMax)
                         globalValueMax = *minMaxIt.second;
                 }

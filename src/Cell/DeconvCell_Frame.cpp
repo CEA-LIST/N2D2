@@ -44,6 +44,7 @@ N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const std::string& name,
                                  unsigned int nbOutputs,
                                  const std::vector<unsigned int>& strideDims,
                                  const std::vector<int>& paddingDims,
+                                 const std::vector<unsigned int>& dilationDims,
                                  const std::shared_ptr
                                          <Activation>& activation)
     : Cell(name, nbOutputs),
@@ -51,13 +52,15 @@ N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const std::string& name,
                  kernelDims,
                  nbOutputs,
                  strideDims,
-                 paddingDims),
+                 paddingDims,
+                 dilationDims),
       Cell_Frame<T>(name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
-      mConvDesc(std::vector<unsigned int>({1, 1}), strideDims, paddingDims)
+      mConvDesc(std::vector<unsigned int>({1, 1}), strideDims, paddingDims,
+                dilationDims)
 {
     // ctor
     if (kernelDims.size() != 2) {
@@ -74,6 +77,12 @@ N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const std::string& name,
     if (paddingDims.size() != kernelDims.size()) {
         throw std::domain_error("DeconvCell_Frame: the number of dimensions"
                                 " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    if (dilationDims.size() != kernelDims.size()) {
+        throw std::domain_error("DeconvCell_Frame: the number of dimensions"
+                                " of dilation must match the number of"
                                 " dimensions of the kernel.");
     }
 

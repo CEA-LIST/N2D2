@@ -45,6 +45,7 @@ public:
         const std::vector<unsigned int>&,
         const std::vector<unsigned int>&,
         const std::vector<int>&,
+        const std::vector<unsigned int>&,
         const std::shared_ptr<Activation>&)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -75,7 +76,9 @@ public:
                 = std::vector<unsigned int>(2, 1U),
              const std::vector<unsigned int>& strideDims
                 = std::vector<unsigned int>(2, 1U),
-             const std::vector<int>& paddingDims = std::vector<int>(2, 0));
+             const std::vector<int>& paddingDims = std::vector<int>(2, 0),
+             const std::vector<unsigned int>& dilationDims
+                = std::vector<unsigned int>(2, 1U));
     const char* getType() const
     {
         return Type;
@@ -135,6 +138,14 @@ public:
     int getPaddingY() const
     {
         return mPaddingDims[1];
+    };
+    unsigned int getDilationX() const
+    {
+        return mDilationDims[0];
+    };
+    unsigned int getDilationY() const
+    {
+        return mDilationDims[1];
     };
     std::shared_ptr<Solver> getWeightsSolver()
     {
@@ -202,6 +213,8 @@ protected:
     const std::vector<unsigned int> mStrideDims;
     // Padding for the convolution
     const std::vector<int> mPaddingDims;
+    // Dilation for the convolution
+    const std::vector<unsigned int> mDilationDims;
 
     std::shared_ptr<Filler> mWeightsFiller;
     std::shared_ptr<Filler> mBiasFiller;

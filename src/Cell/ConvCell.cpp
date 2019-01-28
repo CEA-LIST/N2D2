@@ -27,7 +27,8 @@ N2D2::ConvCell::ConvCell(const std::string& name,
                          unsigned int nbOutputs,
                          const std::vector<unsigned int>& subSampleDims,
                          const std::vector<unsigned int>& strideDims,
-                         const std::vector<int>& paddingDims)
+                         const std::vector<int>& paddingDims,
+                         const std::vector<unsigned int>& dilationDims)
     : Cell(name, nbOutputs),
       mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
@@ -37,7 +38,8 @@ N2D2::ConvCell::ConvCell(const std::string& name,
       mKernelDims(kernelDims),
       mSubSampleDims(subSampleDims),
       mStrideDims(strideDims),
-      mPaddingDims(paddingDims)
+      mPaddingDims(paddingDims),
+      mDilationDims(dilationDims)
 {
     // ctor
 }
@@ -154,8 +156,11 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
     std::vector<size_t> oSizes;
 
     for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        const int kernelExtent
+            = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
+
         oSizes.push_back((unsigned int)((mInputsDims[dim]
-                            + 2 * mPaddingDims[dim] - mKernelDims[dim]
+                            + 2 * mPaddingDims[dim] - kernelExtent
                             + mStrideDims[dim]) / (double)mStrideDims[dim]));
     }
 
@@ -179,6 +184,8 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
                     oIndex[dim] = 0;
             }
 
+            const int kernelExtent
+                = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
             const unsigned int sMin = (unsigned int)std::max(
                 (int)mPaddingDims[dim] - (int)(oIndex[dim] * mStrideDims[dim]),
                 0);
@@ -186,9 +193,10 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
                 <int>(mInputsDims[dim] + mPaddingDims[dim] - oIndex[dim]
                                                             * mStrideDims[dim],
                       0,
-                      mKernelDims[dim]);
+                      kernelExtent);
 
-            nbSynapsesO *= (sMax - sMin);
+            nbSynapsesO *= (unsigned long long int)(std::floor((sMax - sMin - 1)
+                                             / (double)mDilationDims[dim]) + 1);
         }
 
         nbSynapsesPerConnection += nbSynapsesO;
@@ -827,7 +835,10 @@ std::vector<unsigned int> N2D2::ConvCell::getReceptiveField(
     receptiveField.resize(mKernelDims.size(), 1);
 
     for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
-        receptiveField[dim] = mSubSampleDims[dim] * (mKernelDims[dim]
+        const int kernelExtent
+            = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
+
+        receptiveField[dim] = mSubSampleDims[dim] * (kernelExtent
                                 + (receptiveField[dim] - 1) * mStrideDims[dim]);
     }
 
@@ -849,9 +860,12 @@ void N2D2::ConvCell::setOutputsDims()
     mOutputsDims.resize(mInputsDims.size(), mOutputsDims.back());
 
     for (unsigned int dim = 0; dim < mKernelDims.size(); ++dim) {
+        const int kernelExtent
+            = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
+
         mOutputsDims[dim] = (unsigned int)std::ceil(
             std::floor((mInputsDims[dim] + 2 * mPaddingDims[dim]
-                        - mKernelDims[dim] + mStrideDims[dim])
+                        - kernelExtent + mStrideDims[dim])
                                / (double)mStrideDims[dim])
                                     / (double)mSubSampleDims[dim]);
     }

@@ -47,6 +47,8 @@ public:
                             = std::vector<unsigned int>(2, 1U),
                        const std::vector<int>& paddingDims
                             = std::vector<int>(2, 0),
+                       const std::vector<unsigned int>& dilationDims
+                            = std::vector<unsigned int>(2, 1U),
                        const std::shared_ptr<Activation>& activation
                        = std::make_shared<TanhActivation_Frame<Float_T> >());
     static std::shared_ptr<ConvCell> create(Network& net,
@@ -59,6 +61,8 @@ public:
                 = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims
                 = std::vector<int>(2, 0),
+           const std::vector<unsigned int>& dilationDims
+                = std::vector<unsigned int>(2, 1U),
            const std::shared_ptr<Activation>& activation
                 = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
@@ -69,6 +73,7 @@ public:
                                                     subSampleDims,
                                                     strideDims,
                                                     paddingDims,
+                                                    dilationDims,
                                                     activation);
     }
 
@@ -160,6 +165,7 @@ N2D2::ConvCell_Transcode
                                const std::vector<unsigned int>& subSampleDims,
                                const std::vector<unsigned int>& strideDims,
                                const std::vector<int>& paddingDims,
+                               const std::vector<unsigned int>& dilationDims,
                                const std::shared_ptr
                                <Activation>& activation)
     : Cell(name, nbOutputs),
@@ -168,13 +174,15 @@ N2D2::ConvCell_Transcode
                nbOutputs,
                subSampleDims,
                strideDims,
-               paddingDims),
+               paddingDims,
+               dilationDims),
       FRAME(name,
             kernelDims,
             nbOutputs,
             subSampleDims,
             strideDims,
             paddingDims,
+            dilationDims,
             activation),
       SPIKE(net,
             name,
@@ -182,7 +190,8 @@ N2D2::ConvCell_Transcode
             nbOutputs,
             subSampleDims,
             strideDims,
-            paddingDims),
+            paddingDims,
+            dilationDims),
       mTranscodeMode(Frame)
 {
     // ctor

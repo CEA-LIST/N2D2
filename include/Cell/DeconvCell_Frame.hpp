@@ -42,6 +42,8 @@ public:
                           = std::vector<unsigned int>(2, 1U),
                      const std::vector<int>& paddingDims
                         = std::vector<int>(2, 0),
+                     const std::vector<unsigned int>& dilationDims
+                          = std::vector<unsigned int>(2, 1U),
                        const std::shared_ptr<Activation>& activation
                      = std::make_shared<TanhActivation_Frame<T> >());
     static std::shared_ptr<DeconvCell>
@@ -52,6 +54,8 @@ public:
            const std::vector<unsigned int>& strideDims
                   = std::vector<unsigned int>(2, 1U),
            const std::vector<int>& paddingDims = std::vector<int>(2, 0),
+           const std::vector<unsigned int>& dilationDims
+                  = std::vector<unsigned int>(2, 1U),
            const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame<T> >())
     {
@@ -60,6 +64,7 @@ public:
                                                       nbOutputs,
                                                       strideDims,
                                                       paddingDims,
+                                                      dilationDims,
                                                       activation);
     }
 

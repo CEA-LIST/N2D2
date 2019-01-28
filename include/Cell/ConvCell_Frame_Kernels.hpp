@@ -29,13 +29,16 @@ namespace ConvCell_Frame_Kernels {
         const std::vector<unsigned int> subSample;
         const std::vector<unsigned int> stride;
         const std::vector<int> padding;
+        const std::vector<unsigned int> dilation;
 
         Descriptor(const std::vector<unsigned int>& subSample_,
                    const std::vector<unsigned int>& stride_,
-                   const std::vector<int>& padding_)
+                   const std::vector<int>& padding_,
+                   const std::vector<unsigned int>& dilation_)
             : subSample(subSample_),
               stride(stride_),
-              padding(padding_)
+              padding(padding_),
+              dilation(dilation_)
         {
         }
     };
