@@ -138,6 +138,7 @@ TEST_DATASET(BatchNormCell_Frame_float,
                          std::vector<unsigned int>({1, 1}),
                          std::vector<unsigned int>({1, 1}),
                          std::vector<int>({0, 0}),
+                         std::vector<unsigned int>({1U, 1U}),
                          std::make_shared<TanhActivation_Frame<Float_T> >());
 
     BatchNormCell_Frame_Test<float> bn1(

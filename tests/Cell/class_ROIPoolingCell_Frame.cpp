@@ -160,6 +160,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
         std::vector<unsigned int>({1, 1}),
         std::vector<unsigned int>({1, 1}),
         std::vector<int>({0, 0}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<Float_T> >());
     ROIPoolingCell_Frame_Test pool2("pool2",
                                     env,

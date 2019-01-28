@@ -150,6 +150,7 @@ TEST_DATASET(BatchNormCell_Frame_CUDA_float,
                               std::vector<unsigned int>({1, 1}),
                               std::vector<unsigned int>({1, 1}),
                               std::vector<int>({0, 0}),
+                              std::vector<unsigned int>({1U, 1U}),
                               std::make_shared
                               <TanhActivation_Frame_CUDA<float> >());
     BatchNormCell_Frame_CUDA_Test<float> bn1(

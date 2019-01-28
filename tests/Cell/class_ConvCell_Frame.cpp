@@ -37,6 +37,7 @@ public:
                         const std::vector<unsigned int>& subSampleDims,
                         const std::vector<unsigned int>& strideDims,
                         const std::vector<int>& paddingDims,
+                        const std::vector<unsigned int>& dilationDims,
                         const std::shared_ptr<Activation>& activation)
         : Cell(name, nbOutputs),
           ConvCell(name,
@@ -44,13 +45,15 @@ public:
                    nbOutputs,
                    subSampleDims,
                    strideDims,
-                   paddingDims),
+                   paddingDims,
+                   dilationDims),
           ConvCell_Frame<T>(name,
                          kernelDims,
                          nbOutputs,
                          subSampleDims,
                          strideDims,
                          paddingDims,
+                         dilationDims,
                          activation) {};
 
     friend class UnitTest_ConvCell_Frame_float_addInput__env;
@@ -121,6 +124,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<float> >());
 
     ASSERT_EQUALS(conv1.getName(), "conv1");
@@ -185,6 +189,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<float> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
@@ -316,6 +321,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({1, 1}),
         std::vector<unsigned int>({2, 2}),
         std::vector<int>({0, 0}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<float> >());
     ConvCell_Frame_Test<float> conv2("conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -323,6 +329,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<float> >());
 
     conv1.addInput(env);
@@ -419,6 +426,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -561,6 +569,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -704,6 +713,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<float> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
@@ -791,6 +801,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<double> >());
 
     ASSERT_EQUALS(conv1.getName(), "conv1");
@@ -855,6 +866,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<double> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
@@ -986,6 +998,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({1, 1}),
         std::vector<unsigned int>({2, 2}),
         std::vector<int>({0, 0}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<double> >());
     ConvCell_Frame_Test<double> conv2("conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -993,6 +1006,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<double> >());
 
     conv1.addInput(env);
@@ -1089,6 +1103,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -1231,6 +1246,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -1374,6 +1390,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<double> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
@@ -1461,6 +1478,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<half_float::half> >());
 
     ASSERT_EQUALS(conv1.getName(), "conv1");
@@ -1525,6 +1543,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<half_float::half> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
@@ -1656,6 +1675,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({1, 1}),
         std::vector<unsigned int>({2, 2}),
         std::vector<int>({0, 0}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<half_float::half> >());
     ConvCell_Frame_Test<half_float::half> conv2("conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -1663,6 +1683,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<half_float::half> >());
 
     conv1.addInput(env);
@@ -1759,6 +1780,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -1901,6 +1923,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -2044,6 +2067,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<half_float::half> >());
     conv1.setParameter("NoBias", true);
     conv1.addInput(env);
