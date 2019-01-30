@@ -162,6 +162,7 @@
 \usepackage{tikz}
 \usepackage{microtype}
 \usepackage{lastpage}
+\usepackage{subfig}
 
 \newenvironment{myitemize}
 { \begin{itemize}
@@ -2618,13 +2619,39 @@ Extract a slice from an image belonging to a given label.
   \cellcolor{requiredcolor}\lstinline!Width! & Width of the slice to extract \\
   \cellcolor{requiredcolor}\lstinline!Height! & Height of the slice to
   extract \\
-  \lstinline!RandomRotation! [0] & If true, extract randomly rotated slices \\
-  \lstinline!RandomRotationRange! [0.0 360.0] & Range of the random rotations, in degrees, counterclockwise (if \lstinline!RandomRotation! is enabled) \\
   \lstinline!Label! [-1] & Slice should belong to this label ID. If -1, the
   label ID is random \\
+  \lstinline!RandomRotation! [0] & If true, extract randomly rotated slices \\
+  \lstinline!RandomRotationRange! [0.0 360.0] & Range of the random rotations, in degrees, counterclockwise (if \lstinline!RandomRotation! is enabled) \\
+  \lstinline!SlicesMargin! [0] & Positive or negative, indicates the margin around objects that can be extracted in the slice \\
+  \lstinline!KeepComposite! [0] & If false, the 2D label image is reduced to a single value corresponding to the extracted object label (useful for patches classification tasks). Note that if \lstinline!SlicesMargin! is > 0, the 2D label image may contain other labels before reduction. For pixel-wise segmentation tasks, set \lstinline!KeepComposite! to true. \\
  \hline
 \end{tabular}
 \end{center}
+
+This transformation is useful to learn sparse object occurrences in a lot of background. If the dataset is very unbalanced towards background, this transformation will ensure that the learning is done on a more balanced set of every labels, regardless of their actual pixel-wise ratio.
+
+
+\begin{figure}[!htb]
+  \centering
+  \subfloat[Randomly extracted slices with label 0.]{{\includegraphics[width=0.4\linewidth]{figs/LabelSliceExtractionTransformation_apply__ter_W64_H64_S0.png} }}
+  \qquad
+  \subfloat[Randomly extracted slices with label 1.]{{\includegraphics[width=0.4\linewidth]{figs/LabelSliceExtractionTransformation_apply__quater_W64_H64_S0.png} }}
+  \caption{Illustration of the working behavior of \lstinline[basicstyle=\ttfamily\bfseries]!LabelSliceExtractionTransformation! with \lstinline!SlicesMargin! = 0.}
+  \label{fig:LabelSliceExtractionTransformation0}
+\end{figure}
+
+
+When \lstinline!SlicesMargin! is 0, only slices that fully include a given label are extracted, as shown in figure \ref{fig:LabelSliceExtractionTransformation0}. The behavior with \lstinline!SlicesMargin! < 0 is illustrated in figure \ref{fig:LabelSliceExtractionTransformation1}. Note that setting a negative \lstinline!SlicesMargin! larger in absolute value than \lstinline!Width!/2 or \lstinline!Height!/2 will lead in some (random) cases in incorrect slice labels in respect to the majority pixel label in the slice.
+
+\begin{figure}[!htb]
+  \centering
+  \subfloat[Randomly extracted slices including label 0.]{{\includegraphics[width=0.4\linewidth]{figs/LabelSliceExtractionTransformation_apply__ter_W64_H64_S-32.png} }}
+  \qquad
+  \subfloat[Randomly extracted slices including label 1.]{{\includegraphics[width=0.4\linewidth]{figs/LabelSliceExtractionTransformation_apply__quater_W64_H64_S-32.png} }}
+  \caption{Illustration of the working behavior of \lstinline[basicstyle=\ttfamily\bfseries]!LabelSliceExtractionTransformation! with \lstinline!SlicesMargin! = -32.}
+  \label{fig:LabelSliceExtractionTransformation1}
+\end{figure}
 
 
 

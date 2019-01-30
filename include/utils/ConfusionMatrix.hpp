@@ -188,23 +188,6 @@ private:
     T mFn;
 };
 
-namespace {
-template <>
-const char* const EnumStrings<N2D2::ConfusionTableMetric>::data[]
-    = {"Sensitivity",
-    "Specificity",
-    "Precision",
-    "NegativePredictiveValue",
-    "MissRate",
-    "FallOut",
-    "FalseDiscoveryRate",
-    "FalseOmissionRate",
-    "Accuracy",
-    "F1Score",
-    "Informedness",
-    "Markedness"};
-}
-
 template <class T>
 class ConfusionMatrix : public Matrix<T> {
 public:
@@ -229,6 +212,23 @@ public:
     {
     }
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::ConfusionTableMetric>::data[]
+    = {"Sensitivity",
+    "Specificity",
+    "Precision",
+    "NegativePredictiveValue",
+    "MissRate",
+    "FallOut",
+    "FalseDiscoveryRate",
+    "FalseOmissionRate",
+    "Accuracy",
+    "F1Score",
+    "Informedness",
+    "Markedness"};
 }
 
 template <class T>
