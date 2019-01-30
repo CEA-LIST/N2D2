@@ -693,37 +693,15 @@ int main(int argc, char* argv[]) try
                         if (!target)
                             continue;
 
-                        if (target->newValidationScore(
+                        const bool bestValidation = target->newValidationScore(
                                 target->getAverageScore(Database::Validation,
-                                                        validMetric)))
-                        {
-                            nbNoValid = 0;
+                                                        validMetric));
 
+                        if (bestValidation) {
                             std::cout << "\n+++ BEST validation score: "
                                       << (100.0
                                           * target->getMaxValidationScore())
                                       << "% [" << validMetric << "]\n";
-
-                            std::cout << "    Sensitivity: " << (100.0
-                                * target->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::Sensitivity))
-                                      << "% / Specificity: " << (100.0
-                                * target->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::Specificity))
-                                      << "% / Precision: " << (100.0
-                                * target->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::Precision))
-                                      << "%\n"
-                                      "    Accuracy: " << (100.0
-                                * target->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::Accuracy))
-                                      << "% / F1-score: " << (100.0
-                                * target->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::F1Score))
-                                      << "% / Informedness: " << (100.0
-                                * target->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::Informedness))
-                                      << "%\n" << std::endl;
 
                             deepNet->log("validation", Database::Validation);
                             deepNet->exportNetworkFreeParameters(
@@ -739,6 +717,30 @@ int main(int argc, char* argv[]) try
                                           * target->getMaxValidationScore())
                                       << "%)\n" << std::endl;
 
+                        }
+
+                        std::cout << "    Sensitivity: " << (100.0
+                            * target->getAverageScore(Database::Validation,
+                                        ConfusionTableMetric::Sensitivity))
+                                  << "% / Specificity: " << (100.0
+                            * target->getAverageScore(Database::Validation,
+                                        ConfusionTableMetric::Specificity))
+                                  << "% / Precision: " << (100.0
+                            * target->getAverageScore(Database::Validation,
+                                        ConfusionTableMetric::Precision))
+                                  << "%\n"
+                                  "    Accuracy: " << (100.0
+                            * target->getAverageScore(Database::Validation,
+                                        ConfusionTableMetric::Accuracy))
+                                  << "% / F1-score: " << (100.0
+                            * target->getAverageScore(Database::Validation,
+                                        ConfusionTableMetric::F1Score))
+                                  << "% / Informedness: " << (100.0
+                            * target->getAverageScore(Database::Validation,
+                                        ConfusionTableMetric::Informedness))
+                                  << "%\n" << std::endl;
+
+                        if (!bestValidation) {
                             ++nbNoValid;
 
                             if (stopValid > 0 && nbNoValid >= stopValid) {
@@ -750,6 +752,8 @@ int main(int argc, char* argv[]) try
                                 break;
                             }
                         }
+                        else
+                            nbNoValid = 0;
 
                         target->newValidationTopNScore(
                             target->getAverageTopNScore(
