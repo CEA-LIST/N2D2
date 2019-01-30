@@ -219,7 +219,7 @@ endif
 OBJDIR=$(N2D2_BINDIR).obj
 SRC=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name *.$(EXT)))
 SRC_CUDA=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name *.$(EXT_CUDA)))
-INCLUDES=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name *.hpp))
+INCLUDES=$(foreach path, $(PARENT), $(shell find $(path)/include/ -name *.hpp))
 
 OBJ:=$(SRC:%.$(EXT)=$(OBJDIR)/%.o)
 ifdef CUDA
