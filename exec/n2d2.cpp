@@ -127,6 +127,9 @@ int main(int argc, char* argv[]) try
         = opts.parse("-report", 100U, "number of steps between reportings");
     const unsigned int learn
         = opts.parse("-learn", 0U, "number of backprop learning steps");
+    const ConfusionTableMetric validMetric
+        = opts.parse("-valid-metric", ConfusionTableMetric::Sensitivity,
+                     "validation metric to use (default is Sensitivity)");
     const unsigned int stopValid = opts.parse(
         "-stop-valid", 0U, "max. number of successive lower score validation");
     const bool test = opts.parse("-test", "perform testing");
@@ -691,13 +694,35 @@ int main(int argc, char* argv[]) try
                             continue;
 
                         if (target->newValidationScore(
-                                target->getAverageSuccess(
-                                    Database::Validation))) {
+                                target->getAverageScore(Database::Validation,
+                                                        validMetric)))
+                        {
                             nbNoValid = 0;
 
                             std::cout << "\n+++ BEST validation score: "
                                       << (100.0
                                           * target->getMaxValidationScore())
+                                      << "% [" << validMetric << "]\n";
+
+                            std::cout << "    Sensitivity: " << (100.0
+                                * target->getAverageScore(Database::Validation,
+                                            ConfusionTableMetric::Sensitivity))
+                                      << "% / Specificity: " << (100.0
+                                * target->getAverageScore(Database::Validation,
+                                            ConfusionTableMetric::Specificity))
+                                      << "% / Precision: " << (100.0
+                                * target->getAverageScore(Database::Validation,
+                                            ConfusionTableMetric::Precision))
+                                      << "%\n"
+                                      "    Accuracy: " << (100.0
+                                * target->getAverageScore(Database::Validation,
+                                            ConfusionTableMetric::Accuracy))
+                                      << "% / F1-score: " << (100.0
+                                * target->getAverageScore(Database::Validation,
+                                            ConfusionTableMetric::F1Score))
+                                      << "% / Informedness: " << (100.0
+                                * target->getAverageScore(Database::Validation,
+                                            ConfusionTableMetric::Informedness))
                                       << "%\n" << std::endl;
 
                             deepNet->log("validation", Database::Validation);
@@ -709,7 +734,7 @@ int main(int argc, char* argv[]) try
                             std::cout << "\n--- LOWER validation score: "
                                       << (100.0
                                           * target->getLastValidationScore())
-                                      << "% (best was "
+                                      << "% [" << validMetric << "] (best was "
                                       << (100.0
                                           * target->getMaxValidationScore())
                                       << "%)\n" << std::endl;
@@ -727,8 +752,8 @@ int main(int argc, char* argv[]) try
                         }
 
                         target->newValidationTopNScore(
-                            target->getAverageTopNSuccess(
-                                Database::Validation)); // Top-N accuracy
+                            target->getAverageTopNScore(
+                                Database::Validation, validMetric));
                         target->logSuccess(
                             "validation", Database::Validation, avgBatchWindow);
                         target->logTopNSuccess(
@@ -919,6 +944,27 @@ int main(int argc, char* argv[]) try
                                   << 100.0 * (1.0 - target->getAverageSuccess(
                                                         Database::Test)) << "%)"
                                   << std::endl;
+
+                        std::cout << "    Sensitivity: " << (100.0
+                            * target->getAverageScore(Database::Test,
+                                        ConfusionTableMetric::Sensitivity))
+                                  << "% / Specificity: " << (100.0
+                            * target->getAverageScore(Database::Test,
+                                        ConfusionTableMetric::Specificity))
+                                  << "% / Precision: " << (100.0
+                            * target->getAverageScore(Database::Test,
+                                        ConfusionTableMetric::Precision))
+                                  << "%\n"
+                                  "    Accuracy: " << (100.0
+                            * target->getAverageScore(Database::Test,
+                                        ConfusionTableMetric::Accuracy))
+                                  << "% / F1-score: " << (100.0
+                            * target->getAverageScore(Database::Test,
+                                        ConfusionTableMetric::F1Score))
+                                  << "% / Informedness: " << (100.0
+                            * target->getAverageScore(Database::Test,
+                                        ConfusionTableMetric::Informedness))
+                                  << "%\n" << std::endl;
                     }
                 }
             }

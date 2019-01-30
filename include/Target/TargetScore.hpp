@@ -112,6 +112,10 @@ public:
     double getAverageTopNSuccess(Database::StimuliSet set,
                                  unsigned int avgWindow
                                  = 0) const; // top-N accuracy
+    double getAverageScore(Database::StimuliSet set,
+                           ConfusionTableMetric metric = Sensitivity) const;
+    double getAverageTopNScore(Database::StimuliSet set,
+                               ConfusionTableMetric metric = Sensitivity) const;
     void logSuccess(const std::string& fileName,
                     Database::StimuliSet set,
                     unsigned int avgWindow = 0) const;

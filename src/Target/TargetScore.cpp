@@ -129,6 +129,59 @@ double N2D2::TargetScore::getAverageTopNSuccess(Database::StimuliSet set,
                  / (double)success.size();
 }
 
+double N2D2::TargetScore::getAverageScore(Database::StimuliSet set,
+                                          ConfusionTableMetric metric) const
+{
+    assert(mScoreSet.find(set) != mScoreSet.end());
+
+    const unsigned int nbTargets = getNbTargets();
+    const ConfusionMatrix<unsigned long long int>& confusionMatrix
+        = (*mScoreSet.find(set)).second.confusionMatrix;
+
+    if (confusionMatrix.empty())
+        return 0.0;
+
+    const std::vector<ConfusionTable<unsigned long long int> > conf
+        = confusionMatrix.getConfusionTables();
+
+    double avgScore = 0.0;
+
+    for (unsigned int target = 0; target < nbTargets; ++target)
+        avgScore += conf[target].getMetric(metric);
+
+    avgScore /= nbTargets;
+
+    return avgScore;
+}
+
+double N2D2::TargetScore::getAverageTopNScore(Database::StimuliSet set,
+    ConfusionTableMetric metric) const
+{
+    if (!(mTargetTopN > 1))
+        return 0.0;
+
+    assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
+
+    const unsigned int nbTargets = getNbTargets();
+    const ConfusionMatrix<unsigned long long int>& confusionMatrix
+        = (*mScoreTopNSet.find(set)).second.confusionMatrix;
+
+    if (confusionMatrix.empty())
+        return 0.0;
+
+    const std::vector<ConfusionTable<unsigned long long int> > conf
+        = confusionMatrix.getConfusionTables();
+
+    double avgScore = 0.0;
+
+    for (unsigned int target = 0; target < nbTargets; ++target)
+        avgScore += conf[target].getMetric(metric);
+
+    avgScore /= nbTargets;
+
+    return avgScore;
+}
+
 void N2D2::TargetScore::logSuccess(const std::string& fileName,
                                    Database::StimuliSet set,
                                    unsigned int avgWindow) const

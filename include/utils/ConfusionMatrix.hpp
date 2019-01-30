@@ -27,45 +27,123 @@
 #include "utils/Gnuplot.hpp"
 
 namespace N2D2 {
-template <class T>
-class ConfusionMatrix : public Matrix<T> {
-public:
-    ConfusionMatrix() : Matrix<T>()
-    {
-    }
-    ConfusionMatrix(unsigned int nbRows) : Matrix<T>(nbRows)
-    {
-    }
-    ConfusionMatrix(unsigned int nbRows,
-                    unsigned int nbCols,
-                    const T& value = T())
-        : Matrix<T>(nbRows, nbCols, value)
-    {
-    }
-    void log(const std::string& fileName,
-             const std::vector<std::string>& labels = std::vector
-             <std::string>()) const;
-    virtual ~ConfusionMatrix()
-    {
-    }
+enum ConfusionTableMetric {
+    Sensitivity,
+    Specificity,
+    Precision,
+    NegativePredictiveValue,
+    MissRate,
+    FallOut,
+    FalseDiscoveryRate,
+    FalseOmissionRate,
+    Accuracy,
+    F1Score,
+    Informedness,
+    Markedness
 };
 
 template <class T>
 class ConfusionTable {
 public:
     ConfusionTable() : mTp(0), mTn(0), mFp(0), mFn(0) {};
+    // Base metrics
+    /// Sensitivity, recall, hit rate, or true positive rate (TPR)
+    double sensitivity() const
+    {
+        return (mTp > 0) ? (mTp / (double)(mTp + mFn)) : 0.0;
+    };
+    /// Specificity, selectivity or true negative rate (TNR)
+    double specificity() const
+    {
+        return (mTn > 0) ? (mTn / (double)(mTn + mFp)) : 0.0;
+    };
+    /// Precision or positive predictive value (PPV)
     double precision() const
     {
         return (mTp > 0) ? (mTp / (double)(mTp + mFp)) : 0.0;
     };
-    double recall() const
+    /// Negative predictive value (NPV)
+    double negativePredictiveValue() const
     {
-        return (mTp > 0) ? (mTp / (double)(mTp + mFn)) : 0.0;
+        return (mTn > 0) ? (mTn / (double)(mTn + mFn)) : 0.0;
     };
-    double F1Score() const
+    /// Miss rate or false negative rate (FNR)
+    double missRate() const
     {
-        return (mTp > 0) ? (2 * mTp / (double)(2 * mTp + mFp + mFn)) : 0.0;
+        return (1.0 - sensitivity());
     };
+    /// Fall-out or false positive rate (FPR)
+    double fallOut() const
+    {
+        return (1.0 - specificity());
+    };
+    /// False discovery rate (FDR)
+    double falseDiscoveryRate() const
+    {
+        return (1.0 - precision());
+    };
+    /// False omission rate (FOR)
+    double falseOmissionRate() const
+    {
+        return (1.0 - negativePredictiveValue());
+    };
+    // Combined metrics
+    /// Accuracy (ACC)
+    double accuracy() const
+    {
+        return ((mTp + mTn) > 0)
+            ? ((mTp + mTn) / (double)(mTp + mTn + mFp + mFn)) : 0.0;
+    };
+    /// F-score
+    double fScore(double beta = 1.0) const
+    {
+        return (mTp > 0) ? (1.0 + beta * beta) * (precision() * sensitivity())
+                            / (beta * beta * precision() + sensitivity()) : 0.0;
+    };
+    /// Informedness or Bookmaker Informedness (BM)
+    double informedness() const
+    {
+        return (sensitivity() + specificity() - 1.0);
+    };
+    /// Markedness (MK)
+    double markedness() const
+    {
+        return (precision() + negativePredictiveValue() - 1.0);
+    };
+    // Get any metric
+    double getMetric(ConfusionTableMetric metric) const {
+        switch (metric) {
+        // Base metrics
+        case Sensitivity:
+            return sensitivity();
+        case Specificity:
+            return specificity();
+        case Precision:
+            return precision();
+        case NegativePredictiveValue:
+            return negativePredictiveValue();
+        case MissRate:
+            return missRate();
+        case FallOut:
+            return fallOut();
+        case FalseDiscoveryRate:
+            return falseDiscoveryRate();
+        case FalseOmissionRate:
+            return falseOmissionRate();
+        // Combined metrics
+        case Accuracy:
+            return accuracy();
+        case F1Score:
+            return fScore();
+        case Informedness:
+            return informedness();
+        case Markedness:
+            return markedness();
+        default:
+            throw std::runtime_error("ConfusionTable::getMetric(): "
+                                     "unknown metric");
+        }
+    }
     void tp(T tp)
     {
         mTp += tp;
@@ -82,18 +160,22 @@ public:
     {
         mFn += fn;
     };
+    /// true positive (TP), eqv. with hit
     T tp() const
     {
         return mTp;
     };
+    /// true negative (TN), eqv. with correct rejection
     T tn() const
     {
         return mTn;
     };
+    /// false positive (FP), eqv. with false alarm, Type I error
     T fp() const
     {
         return mFp;
     };
+    /// false negative (FN), eqv. with miss, Type II error
     T fn() const
     {
         return mFn;
@@ -105,6 +187,90 @@ private:
     T mFp;
     T mFn;
 };
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::ConfusionTableMetric>::data[]
+    = {"Sensitivity",
+    "Specificity",
+    "Precision",
+    "NegativePredictiveValue",
+    "MissRate",
+    "FallOut",
+    "FalseDiscoveryRate",
+    "FalseOmissionRate",
+    "Accuracy",
+    "F1Score",
+    "Informedness",
+    "Markedness"};
+}
+
+template <class T>
+class ConfusionMatrix : public Matrix<T> {
+public:
+    ConfusionMatrix() : Matrix<T>()
+    {
+    }
+    ConfusionMatrix(unsigned int nbRows) : Matrix<T>(nbRows)
+    {
+    }
+    ConfusionMatrix(unsigned int nbRows,
+                    unsigned int nbCols,
+                    const T& value = T())
+        : Matrix<T>(nbRows, nbCols, value)
+    {
+    }
+    ConfusionTable<T> getConfusionTable(unsigned int target) const;
+    std::vector<ConfusionTable<T> > getConfusionTables() const;
+    void log(const std::string& fileName,
+             const std::vector<std::string>& labels = std::vector
+             <std::string>()) const;
+    virtual ~ConfusionMatrix()
+    {
+    }
+};
+}
+
+template <class T>
+N2D2::ConfusionTable<T>
+N2D2::ConfusionMatrix<T>::getConfusionTable(unsigned int target) const
+{
+    const unsigned int nbTargets = this->rows();
+    ConfusionTable<T> conf;
+
+    for (unsigned int estimated = 0; estimated < nbTargets; ++estimated) {
+        if (target == estimated) {
+            // True Positives
+            conf.tp((*this)(target, estimated));
+        }
+        else {
+            // False Negatives
+            conf.fn((*this)(target, estimated));
+            // False Positives
+            conf.fp((*this)(estimated, target));
+
+            // True Negatives
+            for (unsigned int other = 0; other < nbTargets; ++other) {
+                if (other != target)
+                    conf.tn((*this)(other, estimated));
+            }
+        }
+    }
+
+    return conf;
+}
+
+template <class T>
+std::vector<N2D2::ConfusionTable<T> >
+N2D2::ConfusionMatrix<T>::getConfusionTables() const
+{
+    const unsigned int nbTargets = this->rows();
+    std::vector<ConfusionTable<T> > confs;
+
+    for (unsigned int target = 0; target < nbTargets; ++target)
+        confs.push_back(getConfusionTable(target));
+
+    return confs;
 }
 
 template <class T>
@@ -126,7 +292,6 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     T totalCorrect = 0;
 
     const unsigned int nbTargets = this->rows();
-    std::vector<ConfusionTable<T> > conf(nbTargets, ConfusionTable<T>());
 
     for (unsigned int target = 0; target < nbTargets; ++target) {
         const std::vector<T>& row = this->row(target);
@@ -136,18 +301,6 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         totalCorrect += (*this)(target, target);
 
         for (unsigned int estimated = 0; estimated < nbTargets; ++estimated) {
-            if (target == estimated) {
-                conf[target].tp((*this)(target, estimated));
-            } else {
-                conf[target].fn((*this)(target, estimated));
-                conf[target].fp((*this)(estimated, target));
-
-                for (unsigned int other = 0; other < nbTargets; ++other) {
-                    if (other != target)
-                        conf[target].tn((*this)(other, estimated));
-                }
-            }
-
             confData << target << " " << estimated << " "
                      << (*this)(target, estimated) << " "
                      << ((targetCount > 0) ? ((*this)(target, estimated)
@@ -179,13 +332,49 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         throw std::runtime_error("Could not save confusion data file: "
                                  + confFile);
 
-    confData << "target precision recall F1-score\n";
+    confData << "Target Sensitivity Specificity Precision"
+                " Accuracy F1-score Informedness\n";
+
+    const std::vector<ConfusionTable<T> > conf = getConfusionTables();
+    double avgSensitivity = 0.0;
+    double avgSpecificity = 0.0;
+    double avgPrecision = 0.0;
+    double avgAccuracy = 0.0;
+    double avgF1Score = 0.0;
+    double avgInformedness = 0.0;
 
     for (unsigned int target = 0; target < nbTargets; ++target) {
-        confData << target << " " << conf[target].precision() << " "
-                 << conf[target].recall() << " " << conf[target].F1Score()
-                 << "\n";
+        avgSensitivity += conf[target].sensitivity();
+        avgSpecificity += conf[target].specificity();
+        avgPrecision += conf[target].precision();
+        avgAccuracy += conf[target].accuracy();
+        avgF1Score += conf[target].fScore();
+        avgInformedness += conf[target].informedness();
+
+        confData << target
+            << " " << conf[target].sensitivity()
+            << " " << conf[target].specificity()
+            << " " << conf[target].precision()
+            << " " << conf[target].accuracy()
+            << " " << conf[target].fScore()
+            << " " << conf[target].informedness() << "\n";
     }
+
+    avgSensitivity /= nbTargets;
+    avgSpecificity /= nbTargets;
+    avgPrecision /= nbTargets;
+    avgAccuracy /= nbTargets;
+    avgF1Score /= nbTargets;
+    avgInformedness /= nbTargets;
+
+    confData << "\n";
+    confData << "AVG"
+        << " " << avgSensitivity
+        << " " << avgSpecificity
+        << " " << avgPrecision
+        << " " << avgAccuracy
+        << " " << avgF1Score
+        << " " << avgInformedness << "\n";
 
     confData.close();
 
