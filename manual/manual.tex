@@ -2618,6 +2618,8 @@ Extract a slice from an image belonging to a given label.
   \cellcolor{requiredcolor}\lstinline!Width! & Width of the slice to extract \\
   \cellcolor{requiredcolor}\lstinline!Height! & Height of the slice to
   extract \\
+  \lstinline!RandomRotation! [0] & If true, extract randomly rotated slices \\
+  \lstinline!RandomRotationRange! [0.0 360.0] & Range of the random rotations, in degrees, counterclockwise (if \lstinline!RandomRotation! is enabled) \\
   \lstinline!Label! [-1] & Slice should belong to this label ID. If -1, the
   label ID is random \\
  \hline

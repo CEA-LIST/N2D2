@@ -99,11 +99,12 @@ public:
     virtual ~Transformation() {};
 
 protected:
-    inline void padCropLabelsROI(std::vector<std::shared_ptr<ROI> >& labelsROI,
-                                 int offsetX,
-                                 int offsetY,
-                                 unsigned int width,
-                                 unsigned int height) const;
+    inline static void padCropLabelsROI(
+        std::vector<std::shared_ptr<ROI> >& labelsROI,
+        int offsetX,
+        int offsetY,
+        unsigned int width,
+        unsigned int height);
 
 private:
     virtual Transformation* doClone() const = 0;
@@ -156,7 +157,7 @@ N2D2::Transformation::padCropLabelsROI(std::vector<std::shared_ptr<ROI> >&
                                        int offsetX,
                                        int offsetY,
                                        unsigned int width,
-                                       unsigned int height) const
+                                       unsigned int height)
 {
     for (std::vector<std::shared_ptr<ROI> >::iterator it = labelsROI.begin();
          it != labelsROI.end();)
