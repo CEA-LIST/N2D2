@@ -324,51 +324,54 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     tics << ")";
     confData.close();
 
-    Gnuplot::setDefaultOutput("png", "size 800,600 tiny", "png");
+    {
+        Gnuplot::setDefaultOutput("png", "size 800,600 tiny", "png");
 
-    Gnuplot gnuplot;
-    gnuplot.set("key off").unset("colorbox");
+        Gnuplot gnuplot;
+        gnuplot.set("key off").unset("colorbox");
 
-    typedef typename std::make_signed<T>::type T_Signed;
+        typedef typename std::make_signed<T>::type T_Signed;
 
-    std::stringstream xlabel;
-    xlabel << "Estimated class ("
-              "total correct: " << totalCorrect << ", "
-              "total misclassified: "
-            << ((T_Signed)total - (T_Signed)totalCorrect)
-           << ", error rate: " << std::fixed << std::setprecision(2)
-           << ((total > 0.0)
-               ? (100.0 * (1.0 - (T_Signed)totalCorrect / (double)total))
-               : 0.0) << "%)";
+        std::stringstream xlabel;
+        xlabel << "Estimated class ("
+                  "total correct: " << totalCorrect << ", "
+                  "total misclassified: "
+                << ((T_Signed)total - (T_Signed)totalCorrect)
+               << ", error rate: " << std::fixed << std::setprecision(2)
+               << ((total > 0.0)
+                   ? (100.0 * (1.0 - (T_Signed)totalCorrect / (double)total))
+                   : 0.0) << "%)";
 
-    gnuplot.setXlabel(xlabel.str());
-    gnuplot.setYlabel("Target (actual) class");
-    gnuplot.set("xtics rotate by 90", tics.str());
-    gnuplot.set("ytics", tics.str());
-    gnuplot.set(
-        "palette",
-        "defined (-2 'red', -1.01 '#FFEEEE', -1 'white', 0 'red', 1 'cyan')");
-    gnuplot.set("yrange", "[] reverse");
-    gnuplot.set("cbrange", "[-2:1]");
+        gnuplot.setXlabel(xlabel.str());
+        gnuplot.setYlabel("Target (actual) class");
+        gnuplot.set("xtics rotate by 90", tics.str());
+        gnuplot.set("ytics", tics.str());
+        gnuplot.set(
+            "palette",
+            "defined (-2 'red', -1.01 '#FFEEEE', -1 'white',"
+                " 0 'red', 1 'cyan')");
+        gnuplot.set("yrange", "[] reverse");
+        gnuplot.set("cbrange", "[-2:1]");
 
-    std::stringstream plotCmd;
-    //plotCmd << "every ::1 using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
-    plotCmd << "using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
+        std::stringstream plotCmd;
+        //plotCmd << "every ::1 using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
+        plotCmd << "using 2:1:($1==$2 ? $4 : (-1.0-$4)) with image";
 
-    if (nbTargets <= 10) {
-        plotCmd << ", \"\" using 2:1:($3 > 0 ? "
-                   "sprintf(\"%.f\\n%.02f%%\",$3,100.0*$4) : \"\") "
-                   "with labels";
+        if (nbTargets <= 10) {
+            plotCmd << ", \"\" using 2:1:($3 > 0 ? "
+                       "sprintf(\"%.f\\n%.02f%%\",$3,100.0*$4) : \"\") "
+                       "with labels";
+        }
+        else if (nbTargets <= 50) {
+            plotCmd << ", \"\" using 2:1:($3 > 0 ? sprintf(\"%.f\",$3) : \"\") "
+                       "with labels";
+        }
+
+        gnuplot.saveToFile(fileName);
+        gnuplot.plot(fileName, plotCmd.str());
+
+        Gnuplot::setDefaultOutput();
     }
-    else if (nbTargets <= 50) {
-        plotCmd << ", \"\" using 2:1:($3 > 0 ? sprintf(\"%.f\",$3) : \"\") "
-                   "with labels";
-    }
-
-    gnuplot.saveToFile(fileName);
-    gnuplot.plot(fileName, plotCmd.str());
-
-    Gnuplot::setDefaultOutput();
 
     const std::string confFile = Utils::fileBaseName(fileName) + "_score."
                                  + Utils::fileExtension(fileName);
@@ -435,39 +438,42 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
     confData.close();
 
-    std::stringstream outputStr;
-    outputStr << "size " << ((nbTargets + 1) * 100 + 150) << ",600 enhanced";
+    {
+        std::stringstream outputStr;
+        outputStr << "size " << ((nbTargets + 1) * 100 + 150)
+                            << ",600 enhanced";
 
-    Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
+        Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
 
-    Gnuplot gnuplot(fileName + ".gnu");
-    gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
-               "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
-    gnuplot << "unset colorbox";
-    gnuplot.set("style histogram cluster gap 1");
-    gnuplot.set("style data histograms");
-    gnuplot.set("style fill pattern 1.00 border");
-    gnuplot.set("ytics 0.1 nomirror");
-    gnuplot.set("mytics 10");
-    gnuplot.set("grid");
-    gnuplot.set("tmargin", 4);
-    gnuplot.set("bmargin", (maxLabelSize / 2) + 2);
-    gnuplot.set("xtics rotate");
-    gnuplot.set("boxwidth 1.0");}
+        Gnuplot gnuplot(fileName + ".gnu");
+        gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
+                   "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
+        gnuplot << "unset colorbox";
+        gnuplot.set("style histogram cluster gap 1");
+        gnuplot.set("style data histograms");
+        gnuplot.set("style fill pattern 1.00 border");
+        gnuplot.set("ytics 0.1 nomirror");
+        gnuplot.set("mytics 10");
+        gnuplot.set("grid");
+        gnuplot.set("tmargin", 4);
+        gnuplot.set("bmargin", (maxLabelSize / 2) + 2);
+        gnuplot.set("xtics rotate");
+        gnuplot.set("boxwidth 1.0");
 
-    std::stringstream plotCmd;
-    plotCmd << "i 0 using 3:xticlabels(wrap(stringcolumn(2),"
-            << maxLabelSize << ") ti col, "
-                 "'' i 0 using 4 ti col, "
-                 "'' i 0 using 5 ti col, "
-                 "'' i 0 using 6 ti col, "
-                 "'' i 0 using 7 ti col, "
-                 "'' i 0 using 8 ti col";
+        std::stringstream plotCmd;
+        plotCmd << "i 0 using 3:xticlabels(wrap(stringcolumn(2),"
+                << maxLabelSize << ") ti col, "
+                     "'' i 0 using 4 ti col, "
+                     "'' i 0 using 5 ti col, "
+                     "'' i 0 using 6 ti col, "
+                     "'' i 0 using 7 ti col, "
+                     "'' i 0 using 8 ti col";
 
-    gnuplot.saveToFile(fileName);
-    gnuplot.plot(fileName, plotCmd.str());
+        gnuplot.saveToFile(fileName);
+        gnuplot.plot(fileName, plotCmd.str());
 
-    Gnuplot::setDefaultOutput();
+        Gnuplot::setDefaultOutput();
+    }
 }
 
 #endif // N2D2_CONFUSIONMATRIX_H
