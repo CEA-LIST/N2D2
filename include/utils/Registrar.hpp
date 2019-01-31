@@ -40,14 +40,13 @@ public:
 };
 
 typedef std::map<std::string,
-                 std::map<const std::type_info*, BaseCommand*> > RegistryMap_T;
+                 std::map<std::type_index, std::unique_ptr<BaseCommand>> > RegistryMap_T;
 
 template <typename C, typename F = typename C::RegistryCreate_T>
 struct Registrar {
     struct Command : public BaseCommand {
         F mFunc;
-        Command(F func) : mFunc(func)
-        {
+        Command(F func) : mFunc(func) {
         }
     };
 
@@ -63,14 +62,13 @@ struct Registrar {
         bool newInsert;
         std::tie(it, std::ignore)
             = C::registry().insert(std::make_pair(key,
-                        std::map<const std::type_info*, BaseCommand*>()));
+                        std::map<std::type_index, std::unique_ptr<BaseCommand>>()));
         std::tie(std::ignore, newInsert)
-            = (*it).second.insert(std::make_pair(&typeid(T),
-                                                 new Command(func)));
+            = (*it).second.insert(std::make_pair(std::type_index(typeid(T)),
+                                                 std::unique_ptr<BaseCommand>(new Command(func))));
 
         if (!newInsert) {
-            throw std::runtime_error("Registrar \"" + key
-                                     + "\" already exists");
+            throw std::runtime_error("Registrar \"" + key + "\" already exists");
         }
     }
 
@@ -86,14 +84,13 @@ struct Registrar {
             bool newInsert;
             std::tie(it, std::ignore)
                 = C::registry().insert(std::make_pair(*keyIt,
-                            std::map<const std::type_info*, BaseCommand*>()));
+                            std::map<std::type_index, std::unique_ptr<BaseCommand>>()));
             std::tie(std::ignore, newInsert)
-                = (*it).second.insert(std::make_pair(&typeid(T),
-                                                     new Command(func)));
+                = (*it).second.insert(std::make_pair(std::type_index(typeid(T)),
+                                                     std::unique_ptr<BaseCommand>(new Command(func))));
 
             if (!newInsert) {
-                throw std::runtime_error("Registrar \"" + (*keyIt)
-                                         + "\" already exists");
+                throw std::runtime_error("Registrar \"" + (*keyIt) + "\" already exists");
             }
         }
     }
@@ -111,7 +108,7 @@ struct Registrar {
         if (it == C::registry().end())
             return false;
 
-        return (it->second.find(&typeid(T)) != it->second.end());
+        return (it->second.find(std::type_index(typeid(T))) != it->second.end());
     }
 
     template <class T = void>
@@ -130,8 +127,8 @@ struct Registrar {
 #endif
         }
 
-        const std::map<const std::type_info*, BaseCommand*>::const_iterator
-            itType = it->second.find(&typeid(T));
+        const std::map<std::type_index, std::unique_ptr<BaseCommand>>::const_iterator
+            itType = it->second.find(std::type_index(typeid(T)));
 
         if (itType == it->second.end()) {
             std::cout << "Invalid registrar key type (" << typeid(T).name()
@@ -143,7 +140,7 @@ struct Registrar {
 #endif
         }
 
-        return static_cast<Command*>(itType->second)->mFunc;
+        return static_cast<Command*>(itType->second.get())->mFunc;
     }
 };
 }
