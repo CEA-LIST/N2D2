@@ -25,8 +25,8 @@ endif
 EXT=cpp
 EXT_CUDA=cu
 
-BIN:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find $(path)/exec/ -name *.$(EXT))))
-BIN_TESTS:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find $(path)/tests/ -name *.$(EXT))))
+BIN:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find $(path)/exec/ -name "*.$(EXT)")))
+BIN_TESTS:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find $(path)/tests/ -name "*.$(EXT)")))
 
 ifndef CXX
   CXX=g++
@@ -217,9 +217,9 @@ ifndef N2D2_BINDIR
 endif
 
 OBJDIR=$(N2D2_BINDIR).obj
-SRC=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name *.$(EXT)))
-SRC_CUDA=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name *.$(EXT_CUDA)))
-INCLUDES=$(foreach path, $(PARENT), $(shell find $(path)/include/ -name *.hpp))
+SRC=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name "*.$(EXT)"))
+SRC_CUDA=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name "*.$(EXT_CUDA)"))
+INCLUDES=$(foreach path, $(PARENT), $(shell find $(path)/include/ -name "*.hpp"))
 
 OBJ:=$(SRC:%.$(EXT)=$(OBJDIR)/%.o)
 ifdef CUDA
