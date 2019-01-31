@@ -391,7 +391,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     double avgAccuracy = 0.0;
     double avgF1Score = 0.0;
     double avgInformedness = 0.0;
-    unsigned int maxLabelSize = 0;
+    unsigned int maxLabelSize = 3;
 
     for (unsigned int target = 0; target < nbTargets; ++target) {
         avgSensitivity += conf[target].sensitivity();
@@ -411,7 +411,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         if (labelStr.str().size() > maxLabelSize)
             maxLabelSize = labelStr.str().size();
 
-        confData << "\"" << labelStr.str() << "\" " << target
+        confData << target << " \"" << labelStr.str() << "\""
             << " " << conf[target].sensitivity()
             << " " << conf[target].specificity()
             << " " << conf[target].precision()
@@ -445,14 +445,13 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
         Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
 
-        Gnuplot gnuplot(fileName + ".gnu");
+        Gnuplot gnuplot(confFile + ".gnu");
         gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
                    "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
-        gnuplot << "unset colorbox";
-        gnuplot.set("style histogram cluster gap 1");
+        gnuplot.set("key outside");
+        gnuplot.set("style histogram cluster gap 3");
         gnuplot.set("style data histograms");
         gnuplot.set("style fill pattern 1.00 border");
-        gnuplot.set("ytics 0.1 nomirror");
         gnuplot.set("mytics 10");
         gnuplot.set("grid");
         gnuplot.set("tmargin", 4);
@@ -462,15 +461,15 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
         std::stringstream plotCmd;
         plotCmd << "i 0 using 3:xticlabels(wrap(stringcolumn(2),"
-                << maxLabelSize << ") ti col, "
+                << maxLabelSize << ")) ti col, "
                      "'' i 0 using 4 ti col, "
                      "'' i 0 using 5 ti col, "
                      "'' i 0 using 6 ti col, "
                      "'' i 0 using 7 ti col, "
                      "'' i 0 using 8 ti col";
 
-        gnuplot.saveToFile(fileName);
-        gnuplot.plot(fileName, plotCmd.str());
+        gnuplot.saveToFile(confFile);
+        gnuplot.plot(confFile, plotCmd.str());
 
         Gnuplot::setDefaultOutput();
     }
