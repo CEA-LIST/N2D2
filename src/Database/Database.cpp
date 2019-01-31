@@ -1355,22 +1355,33 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
 
 cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
 {
-    if (mStimuli[id].label == -1) {
-        // Composite stimulus
-        std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
-        std::transform(fileExtension.begin(),
-                       fileExtension.end(),
-                       fileExtension.begin(),
-                       ::tolower);
+    std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
+    std::transform(fileExtension.begin(),
+                   fileExtension.end(),
+                   fileExtension.begin(),
+                   ::tolower);
+    std::shared_ptr<DataFile> dataFile = Registrar
+        <DataFile>::create(fileExtension)();
 
+    const int defaultLabel = getDefaultLabelID();
+    cv::Mat labels = dataFile->readLabel(mStimuli[id].name);
+
+    if (mStimuli[id].label == -1 || !labels.empty()) {
+        // Composite stimulus
         // Construct the labels matrix with the ROIs
-        std::shared_ptr<DataFile> dataFile = Registrar
-            <DataFile>::create(fileExtension)();
         cv::Mat stimulus = dataFile->read(mStimuli[id].name);
 
-        const int defaultLabel = getDefaultLabelID();
-        cv::Mat labels(
-            stimulus.rows, stimulus.cols, CV_32SC1, cv::Scalar(defaultLabel));
+        if (labels.empty()) {
+            // means mStimuli[id].label == -1
+            labels = cv::Mat(stimulus.rows, stimulus.cols, CV_32SC1,
+                             cv::Scalar(defaultLabel));
+        }
+        else if (mStimuli[id].label >= 0) {
+            // use labels as a mask for the stimulus label
+            // OpenCV comparison operator returns 255 and not 1 when true.
+            // cv::threshold() doesn't work with CV_32S.
+            labels = ((labels > 0) / 255) * mStimuli[id].label;
+        }
 
         if (mStimuli[id].slice != NULL)
             labels = mStimuli[id].slice->extract(labels);

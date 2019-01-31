@@ -53,6 +53,8 @@ public:
     }
 
     virtual cv::Mat read(const std::string& fileName) = 0;
+    virtual cv::Mat readLabel(const std::string& /*fileName*/)
+        { return cv::Mat(); }
     virtual void write(const std::string& fileName, const cv::Mat& data) = 0;
     virtual ~DataFile() {};
 };
