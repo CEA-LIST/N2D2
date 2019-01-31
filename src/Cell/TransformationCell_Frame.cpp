@@ -19,6 +19,7 @@
 */
 
 #include "Cell/TransformationCell_Frame.hpp"
+#include "Transformation/Transformation.hpp"
 
 N2D2::Registrar<N2D2::TransformationCell>
 N2D2::TransformationCell_Frame::mRegistrar(

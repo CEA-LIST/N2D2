@@ -18,7 +18,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <iomanip>
+#include <set>
+
 #include "GradientCheck.hpp"
+#include "containers/Tensor.hpp"
+#include "third_party/half.hpp"
+#include "utils/Random.hpp"
 
 template <class T>
 N2D2::GradientCheck<T>::GradientCheck(double epsilon, double maxError)

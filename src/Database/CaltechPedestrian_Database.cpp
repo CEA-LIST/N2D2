@@ -19,6 +19,7 @@
 */
 
 #include "Database/CaltechPedestrian_Database.hpp"
+#include "ROI/RectangularROI.hpp"
 
 N2D2::CaltechPedestrian_Database::CaltechPedestrian_Database(double validation,
                                                              bool singleLabel,

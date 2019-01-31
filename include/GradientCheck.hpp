@@ -21,11 +21,18 @@
 #ifndef N2D2_GRADIENT_CHECK_H
 #define N2D2_GRADIENT_CHECK_H
 
-#include "Environment.hpp" // Defines Float_T
-#include "containers/Tensor.hpp"
+#include <functional>
+#include <string>
+
+#include "FloatT.hpp"
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class BaseTensor;
+template<typename T>
+class Tensor;
+
 template <class T>
 class GradientCheck {
 public:

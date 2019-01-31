@@ -19,6 +19,7 @@
 */
 
 #include "Generator/SGDSolverGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::SolverGenerator>
 N2D2::SGDSolverGenerator::mRegistrar("SGD", N2D2::SGDSolverGenerator::generate);

@@ -21,11 +21,11 @@
 #ifndef N2D2_CSVDATAFILE_H
 #define N2D2_CSVDATAFILE_H
 
+#include <fstream>
 #include <iomanip>
 
 #include "DataFile/DataFile.hpp"
 #include "containers/Tensor.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 class CsvDataFile : public DataFile {

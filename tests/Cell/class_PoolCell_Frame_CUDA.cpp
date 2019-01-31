@@ -26,7 +26,9 @@
 #include "Environment.hpp"
 #include "Network.hpp"
 #include "Cell/PoolCell_Frame_CUDA.hpp"
+#include "third_party/half.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"
+#include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

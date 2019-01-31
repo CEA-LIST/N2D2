@@ -20,6 +20,8 @@
 */
 
 #include "NodeNeuron_PCM.hpp"
+#include "SpikeEvent.hpp"
+#include "Synapse_PCM.hpp"
 
 N2D2::NodeNeuron_PCM::NodeNeuron_PCM(Network& net)
     : NodeNeuron(net),

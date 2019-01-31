@@ -30,15 +30,17 @@
 #include <string>
 #include <vector>
 
-#include "HeteroEnvironment.hpp"
 #include "Network.hpp"
+#include "NodeNeuron.hpp"
+#include "utils/Parameterizable.hpp"
 #include "NodeNeuron_Behavioral.hpp"
-#include "NodeNeuron_PCM.hpp"
-#include "NodeNeuron_RRAM.hpp"
-#include "NodeNeuron_Reflective.hpp"
-#include "NodeSync.hpp"
 
 namespace N2D2 {
+
+class Environment;
+class HeteroEnvironment;
+class NodeSync;
+
 /**
  * This class represents a crossbar cell (Xcell). It can take other cells as
  * inputs (for multilayer networks), or it can be directly

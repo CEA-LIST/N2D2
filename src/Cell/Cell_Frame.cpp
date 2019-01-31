@@ -19,6 +19,8 @@
 */
 
 #include "Cell/Cell_Frame.hpp"
+#include "StimuliProvider.hpp"
+#include "third_party/half.hpp"
 
 template <class T>
 N2D2::Cell_Frame<T>::Cell_Frame(const std::string& name,

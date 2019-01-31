@@ -19,6 +19,8 @@
 */
 
 #include "Generator/LRNCellGenerator.hpp"
+#include "StimuliProvider.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::LRNCellGenerator::mRegistrar(LRNCell::Type,

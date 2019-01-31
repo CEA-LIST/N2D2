@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "Network.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 /**

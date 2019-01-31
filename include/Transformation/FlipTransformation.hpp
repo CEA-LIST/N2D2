@@ -22,7 +22,6 @@
 #define N2D2_FLIPTRANSFORMATION_H
 
 #include "Transformation.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 class FlipTransformation : public Transformation {

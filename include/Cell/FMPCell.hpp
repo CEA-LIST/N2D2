@@ -25,13 +25,15 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Activation/Activation.hpp"
-#include "Environment.hpp"
 #include "utils/Registrar.hpp"
 
 #include "Cell.hpp"
 
 namespace N2D2 {
+
+class Activation;
+class Network;
+
 class FMPCell : public virtual Cell {
 public:
     typedef std::function

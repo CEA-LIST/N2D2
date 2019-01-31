@@ -22,8 +22,6 @@
 #define N2D2_POOLCELL_SPIKE_H
 
 #include "Cell_Spike.hpp"
-#include "NodeIn.hpp"
-#include "NodeOut.hpp"
 #include "PoolCell.hpp"
 
 namespace N2D2 {

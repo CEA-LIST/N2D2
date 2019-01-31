@@ -27,12 +27,8 @@
 #include <string>
 #include <vector>
 
-#include "Aer.hpp"
-#include "AerEvent.hpp"
-#include "Sound.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Random.hpp"
-#include "utils/Utils.hpp"
+#include "Network.hpp"
 
 namespace N2D2 {
 class Cochlea : public Parameterizable {

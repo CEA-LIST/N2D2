@@ -19,6 +19,8 @@
 */
 
 #include "HeteroEnvironment.hpp"
+#include "Environment.hpp"
+#include "Transformation/RescaleTransformation.hpp"
 
 N2D2::HeteroEnvironment::HeteroEnvironment(const Environment& item)
     : HeteroStimuliProvider(item)

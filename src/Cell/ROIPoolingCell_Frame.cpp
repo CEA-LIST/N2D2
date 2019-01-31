@@ -19,6 +19,8 @@
 */
 
 #include "Cell/ROIPoolingCell_Frame.hpp"
+#include "GradientCheck.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::ROIPoolingCell>
 N2D2::ROIPoolingCell_Frame::mRegistrar("Frame",

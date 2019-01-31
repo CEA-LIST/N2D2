@@ -19,6 +19,7 @@
 */
 
 #include "Cell/TransformationCell.hpp"
+#include "Transformation/Transformation.hpp"
 
 const char* N2D2::TransformationCell::Type = "Transformation";
 

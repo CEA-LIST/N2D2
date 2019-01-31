@@ -65,6 +65,10 @@ namespace AnchorCell_Frame_Kernels {
                double scale = 1.0,
                Anchoring anchoring = TopLeft);
 
+        bool operator==(const Anchor& other) const {
+            return (x0 == other.x0) && (y0 == other.y0) && (x1 == other.x1) && (y1 == other.y1);
+        }
+
         float x0;
         float y0;
         float x1;

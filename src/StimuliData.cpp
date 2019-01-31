@@ -19,6 +19,9 @@
 */
 
 #include "StimuliData.hpp"
+#include "StimuliProvider.hpp"
+#include "utils/BinaryCvMat.hpp"
+#include "utils/Gnuplot.hpp"
 
 N2D2::StimuliData::StimuliData(const std::string& name,
                                StimuliProvider& provider)

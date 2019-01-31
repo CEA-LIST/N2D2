@@ -19,6 +19,8 @@
 */
 
 #include "Cell/Cell_CSpike.hpp"
+#include "CEnvironment.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Cell_CSpike::Cell_CSpike(const std::string& name, unsigned int nbOutputs)
     : Cell(name, nbOutputs)

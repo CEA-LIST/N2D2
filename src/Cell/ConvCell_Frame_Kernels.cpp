@@ -19,6 +19,9 @@
 */
 
 #include "Cell/ConvCell_Frame_Kernels.hpp"
+#include "containers/Tensor.hpp"
+#include "third_party/half.hpp"
+#include "utils/Utils.hpp"
 
 template <class T>
 void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,

@@ -29,13 +29,16 @@
 #include <string>
 #include <vector>
 
-#include "Layer.hpp"
 #include "Network.hpp"
-#include "NodeNeuron.hpp"
-#include "Xcell.hpp"
 #include "utils/Gnuplot.hpp"
 
 namespace N2D2 {
+
+class Layer;
+class Network;
+class Node;
+class Xcell;
+
 /**
  * The Monitor class provides tools to monitor the activity of the network.
  * For example, it provides methods to automatically compute the recognition

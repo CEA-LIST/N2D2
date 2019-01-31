@@ -20,6 +20,9 @@
 */
 
 #include "Cell/LSTMCell.hpp"
+#include "Solver/Solver.hpp"
+#include "utils/Gnuplot.hpp"
+#include "utils/Utils.hpp"
 
 const char* N2D2::LSTMCell::Type = "LSTM";
 

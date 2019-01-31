@@ -23,10 +23,13 @@
 
 #include "ConvCell_Frame.hpp"
 #include "ConvCell_Spike.hpp"
+#include "Activation/TanhActivation_Frame.hpp"
 
 #ifdef CUDA
 #include "ConvCell_Frame_CUDA.hpp"
 #endif
+
+#include "utils/Gnuplot.hpp"
 
 namespace N2D2 {
 template <class FRAME = ConvCell_Frame<Float_T>, class SPIKE = ConvCell_Spike>

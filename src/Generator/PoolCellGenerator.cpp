@@ -19,6 +19,7 @@
 */
 
 #include "Generator/PoolCellGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::PoolCellGenerator::mRegistrar(PoolCell::Type,

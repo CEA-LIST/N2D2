@@ -18,7 +18,16 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Environment.hpp"
+#include "HeteroEnvironment.hpp"
+#include "Synapse.hpp"
+#include "Synapse_Static.hpp"
+#include "Xcell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
+#include "containers/Matrix.hpp"
+#include "Filler/NormalFiller.hpp"
 
 N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Spike::mRegistrar("Spike",

@@ -20,6 +20,7 @@
 */
 
 #include "CEnvironment.hpp"
+#include "Database/MNIST_IDX_Database.hpp"
 
 N2D2::CEnvironment::CEnvironment(Database& database,
                                  const std::vector<size_t>& size,

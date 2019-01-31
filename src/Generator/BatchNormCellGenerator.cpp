@@ -19,6 +19,7 @@
 */
 
 #include "Generator/BatchNormCellGenerator.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator> N2D2::BatchNormCellGenerator::mRegistrar(
     BatchNormCell::Type, N2D2::BatchNormCellGenerator::generate);

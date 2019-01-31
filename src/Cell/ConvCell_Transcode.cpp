@@ -19,6 +19,9 @@
 */
 
 #include "Cell/ConvCell_Transcode.hpp"
+#include "Cell/NodeOut.hpp"
+#include "third_party/half.hpp"
+#include "utils/Gnuplot.hpp"
 
 template <>
 N2D2::Registrar<N2D2::ConvCell> N2D2::ConvCell_Transcode

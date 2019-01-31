@@ -22,6 +22,7 @@
 #include "NodeNeuron.hpp"
 
 #include "NodeNeuron_Reflective.hpp"
+#include "NodeSync.hpp"
 
 N2D2::NodeNeuron::NodeNeuron(Network& net)
     : Node(net),

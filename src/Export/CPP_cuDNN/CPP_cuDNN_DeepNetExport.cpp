@@ -20,6 +20,7 @@
 */
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_DeepNetExport.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::DeepNetExport> N2D2::CPP_cuDNN_DeepNetExport::mRegistrar(
     "CPP_cuDNN", N2D2::CPP_cuDNN_DeepNetExport::generate);

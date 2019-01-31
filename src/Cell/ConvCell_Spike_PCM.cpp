@@ -19,6 +19,8 @@
 */
 
 #include "Cell/ConvCell_Spike_PCM.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
 
 N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Spike_PCM::mRegistrar("Spike_PCM",

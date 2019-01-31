@@ -22,12 +22,14 @@
 #ifndef N2D2_REGISTRAR_H
 #define N2D2_REGISTRAR_H
 
-#include <cstdarg>
 #include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <typeindex>
+
 
 namespace N2D2 {
 class BaseCommand {

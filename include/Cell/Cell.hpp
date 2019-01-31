@@ -21,11 +21,15 @@
 #ifndef N2D2_CELL_H
 #define N2D2_CELL_H
 
-#include "Environment.hpp"
-#include "HeteroEnvironment.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
+
+class HeteroStimuliProvider;
+class StimuliProvider;
+
 typedef unsigned int CellId_T;
 
 /**

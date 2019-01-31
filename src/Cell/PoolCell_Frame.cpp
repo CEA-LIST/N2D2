@@ -18,7 +18,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "GradientCheck.hpp"
 #include "Cell/PoolCell_Frame.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::PoolCell>

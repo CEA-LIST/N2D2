@@ -26,15 +26,13 @@
 #include <vector>
 
 #include "Activation/Activation.hpp"
-#include "Activation/LogisticActivation.hpp"
-#include "Activation/RectifierActivation.hpp"
-#include "Activation/SaturationActivation.hpp"
-#include "Activation/SoftplusActivation.hpp"
-#include "Activation/TanhActivation.hpp"
-#include "Environment.hpp"
-#include "containers/Tensor.hpp"
 
 namespace N2D2 {
+
+class BaseTensor;
+template<typename T>
+class Tensor;
+
 class Cell_Frame_Top {
 public:
     enum Signals {

@@ -23,6 +23,7 @@
 
 #include "Solver/SGDSolver.hpp"
 #include "Solver/SGDSolver_Kernels.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 template <class T> class SGDSolver_Frame : public SGDSolver {

@@ -18,7 +18,12 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Activation/Activation.hpp"
 #include "Cell/ConvCell.hpp"
+#include "containers/Matrix.hpp"
+#include "controler/Interface.hpp"
+#include "Solver/Solver.hpp"
+#include "StimuliProvider.hpp"
 
 const char* N2D2::ConvCell::Type = "Conv";
 

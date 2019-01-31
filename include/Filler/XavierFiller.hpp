@@ -22,7 +22,9 @@
 #define N2D2_XAVIERFILLER_H
 
 #include "Filler.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Random.hpp"
+#include "third_party/half.hpp"
 
 namespace N2D2 {
 template <class T> class XavierFiller : public Filler {

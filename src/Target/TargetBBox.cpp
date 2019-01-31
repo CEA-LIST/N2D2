@@ -18,7 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "StimuliProvider.hpp"
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Target/TargetBBox.hpp"
+#include "ROI/RectangularROI.hpp"
 
 N2D2::Registrar<N2D2::Target>
 N2D2::TargetBBox::mRegistrar("TargetBBox", N2D2::TargetBBox::create);

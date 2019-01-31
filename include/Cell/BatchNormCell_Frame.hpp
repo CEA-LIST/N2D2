@@ -27,7 +27,7 @@
 
 #include "BatchNormCell.hpp"
 #include "Cell_Frame.hpp"
-#include "Solver/SGDSolver_Frame.hpp"
+#include "Activation/TanhActivation_Frame.hpp"
 
 namespace N2D2 {
 template <class T>

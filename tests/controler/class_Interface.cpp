@@ -21,6 +21,7 @@
 #include "N2D2.hpp"
 
 #include "controler/Interface.hpp"
+#include "utils/Random.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Environment.hpp"
 #include "Database/DIR_Database.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
 #include "N2D2.hpp"

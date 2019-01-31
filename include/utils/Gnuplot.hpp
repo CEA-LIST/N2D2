@@ -36,8 +36,6 @@
 #include <sys/stat.h>
 #endif
 
-#include "utils/Utils.hpp"
-
 namespace N2D2 {
 /**
  * Wrapper for using gnuplot interactively (through a pipe).

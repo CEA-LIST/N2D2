@@ -22,20 +22,19 @@
 #define N2D2_FCCELL_H
 
 #include <memory>
-#include <tuple>
-#include <unordered_map>
-#include <vector>
-
-#include "Activation/Activation.hpp"
-#include "Environment.hpp"
-#include "Filler/NormalFiller.hpp"
-#include "Solver/Solver.hpp"
-#include "utils/Registrar.hpp"
-#include "utils/Utils.hpp"
+#include <map>
 
 #include "Cell.hpp"
+#include "utils/Registrar.hpp"
+
 
 namespace N2D2 {
+
+class Activation;
+class Filler;
+class Network;
+class Solver;
+
 class FcCell : public virtual Cell {
 public:
     typedef std::function

@@ -19,6 +19,9 @@
 */
 
 #include "StimuliProvider.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
+#include "utils/BinaryCvMat.hpp"
+#include "utils/Gnuplot.hpp"
 
 N2D2::StimuliProvider::StimuliProvider(Database& database,
                                        const std::vector<size_t>& size,

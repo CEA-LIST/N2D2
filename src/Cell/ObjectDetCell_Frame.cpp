@@ -19,6 +19,7 @@
 */
 
 #include "Cell/ObjectDetCell_Frame.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::ObjectDetCell>
 N2D2::ObjectDetCell_Frame::mRegistrar("Frame", N2D2::ObjectDetCell_Frame::create);

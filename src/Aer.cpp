@@ -19,6 +19,10 @@
 */
 
 #include "Aer.hpp"
+#include "Environment.hpp"
+#include "HeteroEnvironment.hpp"
+#include "NodeEnv.hpp"
+#include "Transformation/FilterTransformation.hpp"
 
 N2D2::Aer::Aer(const std::shared_ptr<HeteroEnvironment>& environment)
     : mEnvironment(environment),

@@ -19,6 +19,7 @@
 */
 
 #include "utils/IniParser.hpp"
+#include "utils/TemplateParser.hpp"
 
 N2D2::IniParser::IniParser() : mCheckForUnknown(false)
 {

@@ -25,10 +25,13 @@
 
 #include "Cell_Spike.hpp"
 #include "FcCell.hpp"
-#include "NodeIn.hpp"
-#include "NodeOut.hpp"
+#include "containers/Tensor.hpp"
+
 
 namespace N2D2 {
+
+class NodeIn;
+
 class FcCell_Spike : public virtual FcCell, public Cell_Spike {
 public:
     FcCell_Spike(Network& net, const std::string& name, unsigned int nbOutputs);

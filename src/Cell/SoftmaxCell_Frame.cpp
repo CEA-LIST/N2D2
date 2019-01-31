@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "GradientCheck.hpp"
 #include "Cell/SoftmaxCell_Frame.hpp"
 
 template <>

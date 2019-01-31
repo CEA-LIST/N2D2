@@ -22,6 +22,7 @@
 #define N2D2_RECTIFIERACTIVATION_H
 
 #include "Activation/Activation.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 class RectifierActivation : public Activation {

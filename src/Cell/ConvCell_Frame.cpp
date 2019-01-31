@@ -18,7 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "GradientCheck.hpp"
 #include "Cell/ConvCell_Frame.hpp"
+#include "Filler/NormalFiller.hpp"
+#include "Solver/SGDSolver_Frame.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::ConvCell>

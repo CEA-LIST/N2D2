@@ -21,10 +21,12 @@
 #ifndef N2D2_FILLER_H
 #define N2D2_FILLER_H
 
-#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
+
+class BaseTensor;
+
 class Filler : public Parameterizable {
 public:
     virtual void apply(BaseTensor& data, bool restrictPositive=false) = 0;

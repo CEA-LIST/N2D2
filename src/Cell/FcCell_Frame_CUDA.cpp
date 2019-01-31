@@ -21,7 +21,11 @@
 
 #ifdef CUDA
 
+#include "Filler/Filler.hpp"
+#include "Filler/NormalFiller.hpp"
+#include "GradientCheck.hpp"
 #include "Cell/FcCell_Frame_CUDA.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::FcCell>

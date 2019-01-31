@@ -21,10 +21,12 @@
 #ifndef N2D2_NODEOUT_H
 #define N2D2_NODEOUT_H
 
-#include "Cell_Spike.hpp"
 #include "Node.hpp"
 
 namespace N2D2 {
+
+class Cell_Spike;
+
 class NodeOut : public Node {
 public:
     NodeOut(Network& net,

@@ -19,6 +19,7 @@
 */
 
 #include "utils/GraphViz.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::GraphViz::GraphViz(const std::string& name,
                          const std::string& label,

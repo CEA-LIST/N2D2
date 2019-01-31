@@ -19,6 +19,7 @@
 */
 
 #include "Activation/SoftplusActivation_Frame.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::SoftplusActivation>

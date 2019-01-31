@@ -21,6 +21,9 @@
 */
 
 #include "Database/KITTI_Road_Database.hpp"
+#include "DataFile/DataFile.hpp"
+#include "ROI/PolygonalROI.hpp"
+#include "utils/Registrar.hpp"
 
 N2D2::KITTI_Road_Database::KITTI_Road_Database(double learn)
     : DIR_Database(), mLearn(learn)

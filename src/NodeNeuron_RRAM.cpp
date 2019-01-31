@@ -20,6 +20,7 @@
 */
 
 #include "NodeNeuron_RRAM.hpp"
+#include "SpikeEvent.hpp"
 
 N2D2::NodeNeuron_RRAM::NodeNeuron_RRAM(Network& net)
     : NodeNeuron(net),

@@ -21,10 +21,12 @@
 #ifndef N2D2_DRAWNET_H
 #define N2D2_DRAWNET_H
 
-#include "DeepNet.hpp"
-#include "utils/GraphViz.hpp"
+#include <string>
 
 namespace N2D2 {
+
+class DeepNet;
+
 class DrawNet {
 public:
     static void draw(DeepNet& deepNet, const std::string& fileName);

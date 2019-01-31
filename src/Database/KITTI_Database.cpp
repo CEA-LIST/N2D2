@@ -21,6 +21,7 @@
 */
 
 #include "Database/KITTI_Database.hpp"
+#include "ROI/RectangularROI.hpp"
 
 N2D2::KITTI_Database::KITTI_Database(double learn)
     : DIR_Database(), mLearn(learn)

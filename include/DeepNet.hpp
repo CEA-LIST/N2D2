@@ -25,37 +25,10 @@
 #include <string>
 #include <vector>
 
-#include "CEnvironment.hpp"
+#include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
-#include "Environment.hpp"
-#include "Generator/DatabaseGenerator.hpp"
-#include "Generator/EnvironmentGenerator.hpp"
-#include "Monitor.hpp"
-#include "CMonitor.hpp"
 #include "Network.hpp"
-#include "utils/IniParser.hpp"
-#include "utils/Utils.hpp"
 
-#include "Cell/NodeIn.hpp"
-#include "Cell/NodeOut.hpp"
-
-#include "Activation/RectifierActivation.hpp"
-#include "Activation/SaturationActivation.hpp"
-#include "Cell/Cell_CSpike_Top.hpp"
-#include "Cell/Cell_Frame_Top.hpp"
-#include "Cell/Cell_Frame.hpp"
-#include "Cell/Cell_Spike.hpp"
-#include "Cell/BatchNormCell.hpp"
-#include "Cell/ConvCell.hpp"
-#include "Cell/ConvCell_Spike.hpp"
-#include "Cell/DeconvCell.hpp"
-#include "Cell/ElemWiseCell.hpp"
-#include "Cell/FMPCell.hpp"
-#include "Cell/FcCell.hpp"
-#include "Cell/PoolCell.hpp"
-#include "Cell/UnpoolCell.hpp"
-#include "Cell/SoftmaxCell.hpp"
-#include "Cell/TransformationCell.hpp"
 #include "Target/Target.hpp"
 
 #ifdef CUDA
@@ -66,6 +39,11 @@
 #endif
 
 namespace N2D2 {
+
+class CMonitor;
+class Monitor;
+class Gnuplot;
+
 class DeepNet : public Parameterizable {
 public:
     struct RangeStats {

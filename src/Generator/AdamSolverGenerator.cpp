@@ -19,6 +19,7 @@
 */
 
 #include "Generator/AdamSolverGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::SolverGenerator>
 N2D2::AdamSolverGenerator::mRegistrar("Adam", N2D2::AdamSolverGenerator::generate);

@@ -26,10 +26,14 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
+#include "utils/Utils.hpp"
 
 #include "AnchorCell_Frame_Kernels_struct.hpp"
 
 namespace N2D2 {
+
+class ROI;
+
 class AnchorCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<AnchorCell>(

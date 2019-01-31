@@ -19,6 +19,7 @@
 */
 
 #include "Generator/LogisticActivationGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::ActivationGenerator>
 N2D2::LogisticActivationGenerator::mRegistrar(

@@ -19,6 +19,7 @@
 */
 
 #include "Activation/LinearActivation_Frame.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::LinearActivation>

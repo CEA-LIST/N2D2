@@ -24,8 +24,6 @@
 #include <tuple>
 #include <vector>
 
-#include "containers/Matrix.hpp"
-
 namespace N2D2 {
 namespace ComputerVision {
     namespace ROI {

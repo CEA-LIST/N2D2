@@ -20,6 +20,7 @@
 */
 
 #include "Cell/ProposalCell_Frame.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::ProposalCell>
 N2D2::ProposalCell_Frame::mRegistrar("Frame", N2D2::ProposalCell_Frame::create);

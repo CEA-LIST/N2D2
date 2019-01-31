@@ -20,6 +20,7 @@
 */
 
 #include "utils/Parameterizable.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::Parameter_T& N2D2::Parameter_T::operator=(const N2D2::Parameter_T& value)
 {

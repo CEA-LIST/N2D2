@@ -19,6 +19,11 @@
 */
 
 #include "Sound.hpp"
+#include "utils/DSP.hpp"
+#include "utils/Gnuplot.hpp"
+#include "utils/Random.hpp"
+#include "utils/Utils.hpp"
+#include "utils/WindowFunction.hpp"
 
 N2D2::Sound::Sound(unsigned int samplingFrequency, unsigned short bitPerSample)
     : mSamplingFrequency(samplingFrequency), mBitPerSample(bitPerSample)

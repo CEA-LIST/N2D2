@@ -23,7 +23,6 @@
 
 #include "Transformation.hpp"
 #include "utils/DSP.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 class DFTTransformation : public Transformation {

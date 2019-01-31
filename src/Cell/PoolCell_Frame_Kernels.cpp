@@ -18,7 +18,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Cell/Cell_Frame.hpp"
 #include "Cell/PoolCell_Frame_Kernels.hpp"
+#include "Cell/PoolCell_Frame_Kernels_struct.hpp"
+#include "third_party/half.hpp"
 
 template <class T>
 void N2D2::PoolCell_Frame_Kernels::forwardAverage(const T* alpha,

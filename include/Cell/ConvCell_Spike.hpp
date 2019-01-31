@@ -21,14 +21,15 @@
 #ifndef N2D2_CONVCELL_SPIKE_H
 #define N2D2_CONVCELL_SPIKE_H
 
-#include "Xcell.hpp"
-
 #include "Cell_Spike.hpp"
 #include "ConvCell.hpp"
-#include "NodeIn.hpp"
-#include "NodeOut.hpp"
+#include "Synapse_Behavioral.hpp"
 
 namespace N2D2 {
+
+class NodeIn;
+class NodeOut;
+
 class ConvCell_Spike : public virtual ConvCell, public Cell_Spike {
 public:
     ConvCell_Spike(Network& net,

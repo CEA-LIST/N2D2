@@ -21,11 +21,7 @@
 #ifndef N2D2_ACTIVATION_KERNELS_H
 #define N2D2_ACTIVATION_KERNELS_H
 
-#include "utils/Utils.hpp"
-#include "third_party/half.hpp"
-
 #include "Activation/Activation.hpp"
-#include "Solver/SGDSolver_Kernels.hpp"
 
 namespace N2D2 {
 void rangeAveraging(double minVal,

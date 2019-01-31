@@ -33,8 +33,6 @@
 #include <utility>
 #include <map>
 
-#include "utils/Utils.hpp"
-
 namespace N2D2 {
 class GraphViz {
 public:

@@ -21,12 +21,14 @@
 #ifndef N2D2_STIMULIPROVIDEREXPORT_H
 #define N2D2_STIMULIPROVIDEREXPORT_H
 
-#include "CellExport.hpp"
-#include "DeepNet.hpp"
-#include "DeepNetExport.hpp"
-#include "StimuliProvider.hpp"
+#include "StimuliData.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+class StimuliProvider;
+
 class StimuliProviderExport {
 public:
     typedef std::function

@@ -20,6 +20,8 @@
 */
 
 #include "NodeNeuron_Reflective.hpp"
+#include "SpikeEvent.hpp"
+#include "utils/Gnuplot.hpp"
 
 N2D2::NodeNeuron_Reflective::NodeNeuron_Reflective(Network& net)
     : NodeNeuron(net),

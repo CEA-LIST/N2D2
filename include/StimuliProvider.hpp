@@ -35,14 +35,10 @@
 #else
 #include "containers/Tensor.hpp"
 #endif
-#include "utils/BinaryCvMat.hpp"
-#include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Random.hpp"
-#include "Solver/SGDSolver_Kernels.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
-typedef float Float_T;
 
 class StimuliProvider : virtual public Parameterizable {
 public:

@@ -19,6 +19,11 @@
 */
 
 #include "Target/Target.hpp"
+#include "N2D2.hpp"
+#include "StimuliProvider.hpp"
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/Cell_CSpike_Top.hpp"
 
 N2D2::Registrar<N2D2::Target> N2D2::Target::mRegistrar("Target",
                                                        N2D2::Target::create);

@@ -21,9 +21,11 @@
 #ifndef N2D2_CONVCELL_FRAME_KERNELS_H
 #define N2D2_CONVCELL_FRAME_KERNELS_H
 
-#include "Cell_Frame.hpp"
+#include <vector>
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
+
 namespace ConvCell_Frame_Kernels {
     struct Descriptor {
         const std::vector<unsigned int> subSample;

@@ -19,6 +19,7 @@
 */
 
 #include "Cell/Cell.hpp"
+#include "HeteroStimuliProvider.hpp"
 
 unsigned int N2D2::Cell::mIdCnt = 1;
 

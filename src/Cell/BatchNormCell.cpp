@@ -19,6 +19,7 @@
 */
 
 #include "Cell/BatchNormCell.hpp"
+#include "utils/Utils.hpp"
 
 const char* N2D2::BatchNormCell::Type = "BatchNorm";
 

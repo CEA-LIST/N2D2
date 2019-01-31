@@ -19,6 +19,7 @@
 */
 
 #include "Generator/ConstantFillerGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::FillerGenerator>
 N2D2::ConstantFillerGenerator::mRegistrar(

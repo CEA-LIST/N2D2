@@ -18,7 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DataFile/DataFile.hpp"
 #include "Database/Database.hpp"
+#include "ROI/RectangularROI.hpp"
+#include "utils/Gnuplot.hpp"
+#include "utils/Registrar.hpp"
 
 const std::locale
 N2D2::Database::csvLocale(std::locale(),

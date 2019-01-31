@@ -18,13 +18,15 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <tuple>
 #include "N2D2.hpp"
-
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
 #include "Cell/PoolCell_Frame.hpp"
+#include "third_party/half.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"
+#include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

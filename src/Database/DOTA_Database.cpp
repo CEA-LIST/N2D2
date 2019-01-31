@@ -20,6 +20,7 @@
 */
 
 #include "Database/DOTA_Database.hpp"
+#include "ROI/PolygonalROI.hpp"
 
 N2D2::DOTA_Database::DOTA_Database(double learn,
                                    bool useValidationForTest)

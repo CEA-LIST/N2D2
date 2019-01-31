@@ -19,6 +19,7 @@
 */
 
 #include "DataFile/CsvDataFile.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::Registrar<N2D2::DataFile> N2D2::CsvDataFile::mRegistrar(
     {"csv", "dat", "txt"}, N2D2::CsvDataFile::create);

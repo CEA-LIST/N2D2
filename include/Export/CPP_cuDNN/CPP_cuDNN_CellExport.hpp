@@ -26,7 +26,6 @@
 #include "Cell/Cell.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "utils/Registrar.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 /**

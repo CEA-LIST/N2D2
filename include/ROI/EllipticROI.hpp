@@ -23,7 +23,6 @@
 
 #include "Geometric/Ellipse.hpp"
 #include "ROI/ROI.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 template <class T>

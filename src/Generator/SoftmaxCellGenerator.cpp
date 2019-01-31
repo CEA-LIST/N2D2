@@ -19,6 +19,7 @@
 */
 
 #include "Generator/SoftmaxCellGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::SoftmaxCellGenerator::mRegistrar(SoftmaxCell::Type,

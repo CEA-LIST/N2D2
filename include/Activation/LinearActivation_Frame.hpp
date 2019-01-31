@@ -21,8 +21,10 @@
 #ifndef N2D2_LINEARACTIVATION_FRAME_H
 #define N2D2_LINEARACTIVATION_FRAME_H
 
-#include "Activation/LinearActivation.hpp"
 #include "Activation/Activation_Kernels.hpp"
+#include "Activation/LinearActivation.hpp"
+#include "containers/Tensor.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
 
 namespace N2D2 {
 template <class T>

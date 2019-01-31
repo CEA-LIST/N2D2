@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2014 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -17,25 +17,11 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
+#ifndef N2D2_FLOAT_T_H
+#define N2D2_FLOAT_T_H
 
-#include "Generator/SaturationActivationGenerator.hpp"
-#include "third_party/half.hpp"
-
-N2D2::Registrar<N2D2::ActivationGenerator>
-N2D2::SaturationActivationGenerator::mRegistrar(
-    "Saturation", N2D2::SaturationActivationGenerator::generate);
-
-std::shared_ptr<N2D2::SaturationActivation>
-N2D2::SaturationActivationGenerator::generate(
-    IniParser& /*iniConfig*/,
-    const std::string& /*section*/,
-    const std::string& model,
-    const DataType& dataType,
-    const std::string& /*name*/)
-{
-    return (dataType == Float32)
-            ? Registrar<SaturationActivation>::create<float>(model)()
-        : (dataType == Float16)
-            ? Registrar<SaturationActivation>::create<half_float::half>(model)()
-            : Registrar<SaturationActivation>::create<double>(model)();
+namespace N2D2 {
+typedef float Float_T;
 }
+
+#endif

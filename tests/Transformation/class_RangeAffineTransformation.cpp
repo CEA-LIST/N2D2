@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "FloatT.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/UnitTest.hpp"
 

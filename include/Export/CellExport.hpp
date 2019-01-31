@@ -21,11 +21,13 @@
 #ifndef N2D2_CELLEXPORT_H
 #define N2D2_CELLEXPORT_H
 
-#include "Cell/Cell.hpp"
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class Cell;
+
 /**
  * Base class for methods commun to every cell type for any export type
  * ANY CELL, ANY EXPORT

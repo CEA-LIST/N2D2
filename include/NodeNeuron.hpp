@@ -33,14 +33,12 @@
 #include <vector>
 
 #include "Node.hpp"
-#include "NodeSync.hpp"
-#include "SpikeEvent.hpp"
-#include "Synapse.hpp"
-#include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class Synapse;
+
 /**
  * Abstract neuron base class, which provides the minimum interface required for
  * a neuron. Any neuron model must inherit from

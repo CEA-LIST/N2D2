@@ -20,6 +20,7 @@
 */
 
 #include "Database/IMDBWIKI_Database.hpp"
+#include "ROI/RectangularROI.hpp"
 
 const std::locale
 N2D2::IMDBWIKI_Database::csvIMDBLocale(std::locale(),

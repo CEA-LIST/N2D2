@@ -19,6 +19,9 @@
 */
 
 #include "Cell/UnpoolCell.hpp"
+#include "controler/Interface.hpp"
+#include "utils/Gnuplot.hpp"
+#include "utils/Utils.hpp"
 
 const char* N2D2::UnpoolCell::Type = "Unpool";
 

@@ -24,12 +24,14 @@
 #include <string>
 #include <vector>
 
-#include "Activation/Activation.hpp"
 #include "Cell.hpp"
-#include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class Activation;
+class Solver;
+
 class BatchNormCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<BatchNormCell>(

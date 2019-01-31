@@ -20,6 +20,7 @@
 */
 
 #include "Generator/HeFillerGenerator.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::FillerGenerator>
 N2D2::HeFillerGenerator::mRegistrar("HeFiller",

@@ -24,7 +24,7 @@
 #include "Cell_Frame.hpp"
 #include "ConvCell.hpp"
 #include "ConvCell_Frame_Kernels.hpp"
-#include "Solver/SGDSolver_Frame.hpp"
+#include "Activation/TanhActivation_Frame.hpp"
 
 namespace N2D2 {
 template <class T>

@@ -27,7 +27,9 @@
 #include "PoolCell_Frame_CUDA.hpp"
 #endif
 
+#include "Cell/NodeOut.hpp"
 #include "PoolCell_Spike.hpp"
+#include "utils/Gnuplot.hpp"
 
 namespace N2D2 {
 template <class FRAME = PoolCell_Frame<Float_T>, class SPIKE = PoolCell_Spike>

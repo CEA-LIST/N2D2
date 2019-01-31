@@ -21,20 +21,22 @@
 #ifndef N2D2_CONVCELL_H
 #define N2D2_CONVCELL_H
 
-#include <cassert>
 #include <memory>
-#include <tuple>
-#include <unordered_map>
 #include <vector>
 
-#include "Activation/Activation.hpp"
 #include "Cell.hpp"
-#include "Filler/NormalFiller.hpp"
-#include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
-#include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class Activation;
+class BaseInterface;
+class Network;
+class Filler;
+class Solver;
+template<typename T>
+class Matrix;
+
 class ConvCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<ConvCell>(

@@ -22,6 +22,7 @@
 #define N2D2_NORMALFILLER_H
 
 #include "Filler.hpp"
+#include "containers/Tensor.hpp"
 #include "utils/Random.hpp"
 
 namespace N2D2 {

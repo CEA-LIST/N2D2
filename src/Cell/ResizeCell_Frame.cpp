@@ -25,6 +25,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "GradientCheck.hpp"
+
 N2D2::Registrar<N2D2::ResizeCell>
 N2D2::ResizeCell_Frame::mRegistrar("Frame",
                                        N2D2::ResizeCell_Frame::create);

@@ -30,16 +30,13 @@
 #include <string>
 #include <vector>
 
-#include "Layer.hpp"
 #include "Network.hpp"
-#include "NodeNeuron.hpp"
-#include "Xcell.hpp"
-#include "Cell/Cell.hpp"
-#include "CEnvironment.hpp"
+#include "FloatT.hpp"
+#include "containers/Tensor.hpp"
+#include "controler/Interface.hpp"
 #include "utils/Gnuplot.hpp"
 
 
-#include "Cell/Cell_CSpike.hpp"
 #ifdef CUDA
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"

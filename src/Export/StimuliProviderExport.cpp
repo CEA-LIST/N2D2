@@ -19,6 +19,10 @@
 */
 
 #include "Export/StimuliProviderExport.hpp"
+#include "DeepNet.hpp"
+#include "StimuliProvider.hpp"
+#include "Export/CellExport.hpp"
+#include "Export/DeepNetExport.hpp"
 
 void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,

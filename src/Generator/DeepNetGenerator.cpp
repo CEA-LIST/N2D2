@@ -19,7 +19,24 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "CMonitor.hpp"
+#include "Monitor.hpp"
+#include "Network.hpp"
+#include "NodeEnv.hpp"
+#include "StimuliProvider.hpp"
+#include "Synapse_PCM.hpp"
+#include "Synapse_RRAM.hpp"
+#include "Synapse_Static.hpp"
+#include "Cell/Cell_CSpike.hpp"
+#include "Cell/Cell_Spike.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
+#include "Generator/CellGenerator.hpp"
+#include "Generator/CEnvironmentGenerator.hpp"
+#include "Generator/DatabaseGenerator.hpp"
 #include "Generator/DeepNetGenerator.hpp"
+#include "Generator/EnvironmentGenerator.hpp"
+#include "Generator/TargetGenerator.hpp"
 
 std::shared_ptr<N2D2::DeepNet>
 N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)

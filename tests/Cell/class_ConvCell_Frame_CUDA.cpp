@@ -29,6 +29,8 @@
 #if CUDNN_VERSION >= 5000
 #include "Cell/DropoutCell_Frame_CUDA.hpp"
 #endif
+#include "Transformation/RescaleTransformation.hpp"
+#include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

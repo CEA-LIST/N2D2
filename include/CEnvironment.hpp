@@ -32,12 +32,7 @@
 #include "SpikeGenerator.hpp"
 #include "StimuliProvider.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Random.hpp"
-#include "utils/Utils.hpp"
-#include "Aer.hpp"
-#include "AerEvent.hpp"
 #include "Database/AER_Database.hpp"
-#include "Database/MNIST_IDX_Database.hpp"
 
 #ifdef CUDA
 #include "controler/CudaInterface.hpp"

@@ -19,6 +19,7 @@
 */
 
 #include "Cell/PoolCell.hpp"
+#include "utils/Gnuplot.hpp"
 
 const char* N2D2::PoolCell::Type = "Pool";
 

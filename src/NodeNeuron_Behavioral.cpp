@@ -20,6 +20,10 @@
 */
 
 #include "NodeNeuron_Behavioral.hpp"
+#include "SpikeEvent.hpp"
+#include "Synapse.hpp"
+#include "Synapse_Behavioral.hpp"
+#include "utils/Gnuplot.hpp"
 
 N2D2::NodeNeuron_Behavioral::NodeNeuron_Behavioral(Network& net)
     : NodeNeuron(net),

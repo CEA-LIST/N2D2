@@ -18,7 +18,12 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Export/CellExport.hpp"
 #include "Export/CPP/CPP_DeepNetExport.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::DeepNetExport>
 N2D2::CPP_DeepNetExport::mRegistrar("CPP", N2D2::CPP_DeepNetExport::generate);

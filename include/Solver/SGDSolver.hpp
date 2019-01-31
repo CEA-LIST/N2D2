@@ -22,6 +22,8 @@
 #define N2D2_SGDSOLVER_H
 
 #include "Solver/Solver.hpp"
+#include "utils/Registrar.hpp"
+#include "utils/Utils.hpp"
 
 namespace N2D2 {
 class SGDSolver : public Solver {

@@ -21,12 +21,13 @@
 #ifndef N2D2_ACTIVATION_H
 #define N2D2_ACTIVATION_H
 
-#include "Environment.hpp"
-#include "containers/Tensor.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class BaseTensor;
+
 class Activation : public Parameterizable {
 public:
     enum MovingAverageType {

@@ -30,7 +30,6 @@
 #define N2D2_KERNEL_H
 
 #include "containers/Matrix.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 /**

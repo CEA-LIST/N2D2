@@ -29,6 +29,9 @@
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+    
+class Transformation;
+
 class TransformationCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<TransformationCell>(

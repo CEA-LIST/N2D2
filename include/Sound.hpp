@@ -39,10 +39,6 @@
 #include <vector>
 
 #include "Network.hpp"
-#include "utils/DSP.hpp"
-#include "utils/Gnuplot.hpp"
-#include "utils/Random.hpp"
-#include "utils/Utils.hpp"
 #include "utils/WindowFunction.hpp"
 
 namespace N2D2 {

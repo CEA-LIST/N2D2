@@ -29,12 +29,14 @@
 #include <vector>
 
 #include "Cell.hpp"
-#include "Filler/NormalFiller.hpp"
-#include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
-#include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class Filler;
+class Network;
+class Solver;
+
 class LSTMCell : public virtual Cell {
 public:
 	typedef std::function<std::shared_ptr<LSTMCell>(

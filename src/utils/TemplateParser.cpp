@@ -19,6 +19,7 @@
 */
 
 #include "utils/TemplateParser.hpp"
+#include "utils/Utils.hpp"
 
 void N2D2::TemplateParser::Section::render(std::ostream& output,
                                            std::map

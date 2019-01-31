@@ -18,7 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "ROI/RectangularROI.hpp"
 #include "Target/TargetRP.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::Target>
 N2D2::TargetRP::mRegistrar("TargetRP", N2D2::TargetRP::create);

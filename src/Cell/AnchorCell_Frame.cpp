@@ -18,7 +18,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "ROI/ROI.hpp"
 #include "Cell/AnchorCell_Frame.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::AnchorCell>
 N2D2::AnchorCell_Frame::mRegistrar("Frame", N2D2::AnchorCell_Frame::create);

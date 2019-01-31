@@ -20,6 +20,9 @@
 */
 
 #include "Layer.hpp"
+#include "Environment.hpp"
+#include "HeteroEnvironment.hpp"
+#include "Network.hpp"
 
 N2D2::Layer::Layer(Network& net, unsigned int nbCells) //: mNet(net)
 {

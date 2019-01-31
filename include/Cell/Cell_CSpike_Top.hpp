@@ -21,11 +21,14 @@
 #ifndef N2D2_CELL_CSPIKE_TOP_H
 #define N2D2_CELL_CSPIKE_TOP_H
 
-#include "CEnvironment.hpp"
-#include "Cell.hpp"
-#include "controler/Interface.hpp"
+#include "Network.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
+
+template<typename T>
+class Tensor;
+
 class Cell_CSpike_Top {
 public:
     Cell_CSpike_Top()

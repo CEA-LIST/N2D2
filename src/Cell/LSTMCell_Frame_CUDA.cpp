@@ -22,7 +22,9 @@
 #include <cudnn.h>
 #if CUDNN_VERSION >= 5000
 
+#include "GradientCheck.hpp"
 #include "Cell/LSTMCell_Frame_CUDA.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::LSTMCell>

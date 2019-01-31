@@ -19,6 +19,7 @@
 */
 
 #include "Solver/SGDSolver_CUDA_Kernels.hpp"
+#include "CudaUtils.hpp"
 
 __global__ void
 cudaHclamp_kernel(__half* x, unsigned int size, __half minVal, __half maxVal)

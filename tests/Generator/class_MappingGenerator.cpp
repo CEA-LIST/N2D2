@@ -19,6 +19,7 @@
 */
 
 #include "Cell/ConvCell_Frame.hpp"
+#include "Environment.hpp"
 #include "Generator/MappingGenerator.hpp"
 #include "containers/Matrix.hpp"
 #include "utils/UnitTest.hpp"

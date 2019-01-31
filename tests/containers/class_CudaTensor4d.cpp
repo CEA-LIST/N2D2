@@ -24,6 +24,7 @@
 
 #include "containers/CudaTensor.hpp"
 #include "utils/UnitTest.hpp"
+#include "utils/Utils.hpp"
 
 using namespace N2D2;
 

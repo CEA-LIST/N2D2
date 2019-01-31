@@ -46,14 +46,13 @@
     #endif
 #endif
 
-#include "DataFile/DataFile.hpp"
-#include "ROI/RectangularROI.hpp"
-#include "containers/Tensor.hpp"
-#include "utils/Gnuplot.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class ROI;
+
 /**
  * Database specifications:
  * - Genericity: load image and sound, 1D, 2D or 3D data

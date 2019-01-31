@@ -19,6 +19,8 @@
 */
 
 #include "Cell/PaddingCell_Frame_Kernels.hpp"
+#include "containers/Tensor.hpp"
+#include "FloatT.hpp"
 
 void N2D2::PaddingCell_Frame_Kernels::forward(const Tensor<Float_T>& inputs,
                                            const Descriptor& desc,

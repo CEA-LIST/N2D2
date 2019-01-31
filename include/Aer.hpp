@@ -49,12 +49,13 @@
 #endif
 
 #include "AerEvent.hpp"
-#include "HeteroEnvironment.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Random.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class Environment;
+class HeteroEnvironment;
+
 class Aer : public Parameterizable {
 public:
     enum AerCodingMode {

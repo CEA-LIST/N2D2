@@ -26,6 +26,7 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
+#include "utils/Utils.hpp"
 
 namespace N2D2 {
 class ResizeCell : public virtual Cell {

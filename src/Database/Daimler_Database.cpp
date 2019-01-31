@@ -20,6 +20,7 @@
 */
 
 #include "Database/Daimler_Database.hpp"
+#include "ROI/RectangularROI.hpp"
 
 N2D2::Daimler_Database::Daimler_Database(double learn,
                                          double validation,

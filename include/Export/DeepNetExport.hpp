@@ -25,12 +25,13 @@
 #include <string>
 #include <vector>
 
-#include "DeepNet.hpp"
-#include "Export/CellExport.hpp"
-#include "N2D2.hpp"
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class Cell;
+class DeepNet;
+
 class DeepNetExport {
 public:
     typedef std::function

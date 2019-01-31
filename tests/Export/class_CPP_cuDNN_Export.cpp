@@ -23,6 +23,7 @@
 #include <cstdlib>
 
 #include "N2D2.hpp"
+#include "DeepNet.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "Transformation/NormalizeTransformation.hpp"
 #include "Transformation/ChannelExtractionTransformation.hpp"

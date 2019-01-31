@@ -21,6 +21,7 @@
 
 #ifdef CUDA
 
+#include "GradientCheck.hpp"
 #include "Cell/ElemWiseCell_Frame_CUDA.hpp"
 
 N2D2::Registrar<N2D2::ElemWiseCell>

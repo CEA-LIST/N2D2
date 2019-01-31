@@ -21,7 +21,12 @@
 #ifndef N2D2_SOFTPLUSACTIVATION_FRAME_H
 #define N2D2_SOFTPLUSACTIVATION_FRAME_H
 
+#ifndef WIN32
+#include <fenv.h>
+#endif
+
 #include "Activation/SoftplusActivation.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
 template <class T>

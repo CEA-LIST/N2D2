@@ -19,6 +19,7 @@
 */
 
 #include "Target/TargetScore.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::Target>
 N2D2::TargetScore::mRegistrar("TargetScore", N2D2::TargetScore::create);

@@ -19,6 +19,7 @@
 */
 
 #include "Generator/DatabaseGenerator.hpp"
+#include "utils/Utils.hpp"
 
 std::shared_ptr<N2D2::Database>
 N2D2::DatabaseGenerator::generate(IniParser& iniConfig,

@@ -23,7 +23,6 @@
 #define N2D2_NETWORK_H
 
 #include <chrono>
-#include <fstream>
 #include <functional>
 #include <queue>
 #include <set>
@@ -44,7 +43,6 @@
 #include <unistd.h>
 #endif
 
-#include "utils/Random.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {

@@ -29,16 +29,14 @@
 #include <vector>
 
 #include "Network.hpp"
-#include "NodeEnv.hpp"
-#include "Sound.hpp"
 #include "SpikeGenerator.hpp"
 #include "StimuliProvider.hpp"
-#include "Transformation/FilterTransformation.hpp"
-#include "utils/Parameterizable.hpp"
-#include "utils/Random.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class FilterTransformation;
+class NodeEnv;
+
 /**
  * This class is used to generate all kind of stimuli for the SNN.
  * It contains nodes of type NodeEnv, which constitute the input nodes of the

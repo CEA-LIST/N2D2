@@ -19,6 +19,7 @@
 */
 
 #include "Solver/Solver.hpp"
+#include "utils/Utils.hpp"
 
 void N2D2::Solver::save(const std::string& dirName) const
 {

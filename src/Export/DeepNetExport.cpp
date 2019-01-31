@@ -19,6 +19,12 @@
 */
 
 #include "Export/DeepNetExport.hpp"
+#include "DeepNet.hpp"
+#include "N2D2.hpp"
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/PoolCell.hpp"
+#include "Export/CellExport.hpp"
 
 bool N2D2::DeepNetExport::mUnsignedData = true;
 bool N2D2::DeepNetExport::mEnvDataUnsigned = false;

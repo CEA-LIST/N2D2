@@ -25,6 +25,7 @@
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
+#include "Activation/TanhActivation_Frame.hpp"
 #include "Cell/ConvCell_Frame_CUDA.hpp"
 #include "Cell/ROIPoolingCell_Frame_CUDA.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"

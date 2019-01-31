@@ -22,7 +22,6 @@
 #define N2D2_APODIZATIONTRANSFORMATION_H
 
 #include "Transformation.hpp"
-#include "utils/Utils.hpp"
 #include "utils/WindowFunction.hpp"
 
 namespace N2D2 {

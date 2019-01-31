@@ -19,6 +19,7 @@
 */
 
 #include "Cell/PoolCell_Transcode.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::PoolCell> N2D2::PoolCell_Transcode

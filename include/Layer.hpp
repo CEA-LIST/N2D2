@@ -26,11 +26,13 @@
 #include <string>
 #include <vector>
 
-#include "HeteroEnvironment.hpp"
-#include "Network.hpp"
 #include "Xcell.hpp"
 
 namespace N2D2 {
+
+class HeteroEnvironment;
+class Network;
+
 /**
  * A Layer is a group of Xcells and it is usefull to create non fully connected
  * network, because each cell in the layer can be

@@ -24,6 +24,8 @@
 
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Cell/FcCell_Frame_CUDA.hpp"
+#include "third_party/half.hpp"
+#include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

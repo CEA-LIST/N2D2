@@ -27,12 +27,14 @@
 #include <string>
 #include <vector>
 
-#include "StimuliProvider.hpp"
-#include "utils/BinaryCvMat.hpp"
-#include "utils/Gnuplot.hpp"
+#include "FloatT.hpp"
+#include "Database/Database.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
+
+class StimuliProvider;
+
 class StimuliData : public Parameterizable {
 public:
     struct Size {

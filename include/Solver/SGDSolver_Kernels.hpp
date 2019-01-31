@@ -21,6 +21,7 @@
 #ifndef N2D2_SGDSOLVER_KERNELS_H
 #define N2D2_SGDSOLVER_KERNELS_H
 
+#include "containers/Tensor.hpp"
 #include "utils/Utils.hpp"
 #include "third_party/half.hpp"
 

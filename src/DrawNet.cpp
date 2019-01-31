@@ -19,6 +19,14 @@
 */
 
 #include "DrawNet.hpp"
+#include "DeepNet.hpp"
+#include "StimuliProvider.hpp"
+#include "Cell/ConvCell.hpp"
+#include "Cell/DeconvCell.hpp"
+#include "Cell/PoolCell.hpp"
+#include "Cell/ElemWiseCell.hpp"
+#include "Cell/TransformationCell.hpp"
+#include "utils/GraphViz.hpp"
 
 void N2D2::DrawNet::draw(DeepNet& deepNet, const std::string& fileName)
 {

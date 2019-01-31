@@ -19,6 +19,11 @@
 */
 
 #include "Cell/FcCell_Spike.hpp"
+#include "Filler/NormalFiller.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
+#include "Synapse_Static.hpp"
+#include "FloatT.hpp"
 
 N2D2::Registrar<N2D2::FcCell>
 N2D2::FcCell_Spike::mRegistrar("Spike",

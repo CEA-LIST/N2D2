@@ -22,6 +22,7 @@
 #define N2D2_LOGISTICACTIVATION_H
 
 #include "Activation/Activation.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 extern bool LogisticActivationDisabled;     // declaration in Frame cpp file

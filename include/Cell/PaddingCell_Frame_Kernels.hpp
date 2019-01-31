@@ -21,9 +21,13 @@
 #ifndef N2D2_PADDINGCELL_FRAME_KERNELS_H
 #define N2D2_PADDINGCELL_FRAME_KERNELS_H
 
-#include "Cell_Frame.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
+
+template<typename T>
+class Tensor;
+
 namespace PaddingCell_Frame_Kernels {
     struct Descriptor {
         const int leftPad;

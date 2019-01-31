@@ -19,6 +19,8 @@
 */
 
 #include "Database/DIR_Database.hpp"
+#include "DataFile/DataFile.hpp"
+#include "utils/Registrar.hpp"
 
 N2D2::DIR_Database::DIR_Database(bool loadDataInMemory)
     : Database(loadDataInMemory)

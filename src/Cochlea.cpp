@@ -19,6 +19,10 @@
 */
 
 #include "Cochlea.hpp"
+#include "Aer.hpp"
+#include "AerEvent.hpp"
+#include "Sound.hpp"
+#include "utils/Gnuplot.hpp"
 
 N2D2::Cochlea::Cochlea(unsigned int nbChannels)
     : mNbChannels(nbChannels), mNormalize(this, "Normalize", true)

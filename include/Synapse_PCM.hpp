@@ -26,6 +26,7 @@
 #include <fstream>
 
 #include "NodeNeuron.hpp"
+#include "Synapse.hpp"
 
 namespace N2D2 {
 typedef double Weight_T;

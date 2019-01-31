@@ -19,6 +19,9 @@
 */
 
 #include "Target/TargetCompare.hpp"
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::Target>
 N2D2::TargetCompare::mRegistrar("TargetCompare", N2D2::TargetCompare::create);

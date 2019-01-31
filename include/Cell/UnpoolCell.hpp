@@ -25,15 +25,18 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Activation/Activation.hpp"
-#include "Environment.hpp"
 #include "utils/Registrar.hpp"
+#include "utils/Utils.hpp"
 
 #include "Cell.hpp"
-#include "Cell/PoolCell.hpp"
 #include "Cell/PoolCell_Frame_Kernels.hpp"
+#include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class Activation;
+class Network;
+
 class UnpoolCell : public virtual Cell {
 public:
     enum Pooling {

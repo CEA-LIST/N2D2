@@ -19,6 +19,8 @@
 */
 
 #include "Export/CellExport.hpp"
+#include "Cell/Cell.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::CellExport::Precision N2D2::CellExport::mPrecision = Int8;
 N2D2::CellExport::IntApprox N2D2::CellExport::mIntApprox = Round;

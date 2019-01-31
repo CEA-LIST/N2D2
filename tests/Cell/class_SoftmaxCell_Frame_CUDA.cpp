@@ -23,6 +23,7 @@
 #include "N2D2.hpp"
 
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
+#include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

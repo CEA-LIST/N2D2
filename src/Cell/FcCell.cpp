@@ -18,7 +18,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "StimuliProvider.hpp"
 #include "Cell/FcCell.hpp"
+#include "Filler/NormalFiller.hpp"
+#include "utils/Gnuplot.hpp"
 
 const char* N2D2::FcCell::Type = "Fc";
 

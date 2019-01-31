@@ -22,6 +22,7 @@
 #define N2D2_TANHACTIVATION_H
 
 #include "Activation/Activation.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 class TanhActivation : public Activation {

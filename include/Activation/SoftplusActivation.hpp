@@ -22,6 +22,7 @@
 #define N2D2_SOFTPLUSACTIVATION_H
 
 #include "Activation/Activation.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 class SoftplusActivation : public Activation {

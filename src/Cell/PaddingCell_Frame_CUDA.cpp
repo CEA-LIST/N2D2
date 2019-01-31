@@ -21,6 +21,7 @@
 #ifdef CUDA
 #include <cudnn.h>
 
+#include "GradientCheck.hpp"
 #include "Cell/PaddingCell_Frame_CUDA.hpp"
 
 N2D2::Registrar<N2D2::PaddingCell>

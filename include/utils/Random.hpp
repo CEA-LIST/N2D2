@@ -26,8 +26,6 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include "utils/Utils.hpp"
-
 #define MT_RAND_MAX 0xFFFFFFFF
 
 namespace N2D2 {
@@ -61,9 +59,9 @@ namespace Random {
      *(2^32)-1]
     */
     unsigned int mtRand();
-    inline double randUniform(double vmin = 0.0,
-                              double vmax = 1.0,
-                              Endpoints endpoints = ClosedInterval);
+    double randUniform(double vmin = 0.0,
+                       double vmax = 1.0,
+                       Endpoints endpoints = ClosedInterval);
 
     /**
      * Generates uniformly distributed integers in the range [min, max]
@@ -74,12 +72,11 @@ namespace Random {
      *
      * @exception std::domain_error vmax must be > vmin
     */
-    inline int randUniform(int vmin, int vmax);
+    int randUniform(int vmin, int vmax);
     double randNormal(double mean = 0.0, double stdDev = 1.0);
-    inline double randNormal(double mean, double stdDev, double vmin);
-    inline double
-    randNormal(double mean, double stdDev, double vmin, double vmax);
-    inline double randLogNormal(double mean, double stdDev);
+    double randNormal(double mean, double stdDev, double vmin);
+    double randNormal(double mean, double stdDev, double vmin, double vmax);
+    double randLogNormal(double mean, double stdDev);
 
     /**
      * Generates exponentially distributed numbers, with rate = 1/mean.
@@ -90,75 +87,15 @@ namespace Random {
      * @param mean            Mean time between events (= 1/rate)
      * @return Random number
     */
-    inline double randExponential(double mean);
+    double randExponential(double mean);
 
     /**
      * Generates Bernoulli random number.
      *
      * @return 1 with probability p and 0 with probability 1-p
     */
-    inline bool randBernoulli(double p = 0.5);
+    bool randBernoulli(double p = 0.5);
 }
-}
-
-double N2D2::Random::randUniform(double vmin, double vmax, Endpoints endpoints)
-{
-    if (vmax < vmin)
-        throw std::domain_error("Random::randUniform(): vmax must be >= vmin.");
-
-    if (endpoints == ClosedInterval) // [vmin,vmax]
-        return vmin + (double)Random::mtRand() / MT_RAND_MAX * (vmax - vmin);
-    else if (endpoints == LeftHalfOpenInterval) // ]vmin,vmax] = (vmin,vmax]
-        return vmin + ((double)Random::mtRand() + 1.0) / (MT_RAND_MAX + 1.0)
-                      * (vmax - vmin);
-    else if (endpoints == RightHalfOpenInterval) // [vmin,vmax[ = [vmin,vmax)
-        return vmin + (double)Random::mtRand() / (MT_RAND_MAX + 1.0)
-                      * (vmax - vmin);
-    else // ]vmin,vmax[ = (vmin,vmax)
-        return vmin + ((double)Random::mtRand() + 0.5) / (MT_RAND_MAX + 1.0)
-                      * (vmax - vmin);
-}
-
-int N2D2::Random::randUniform(int vmin, int vmax)
-{
-    if (vmax < vmin)
-        throw std::domain_error("Random::randUniform(): vmax must be >= vmin.");
-
-    return vmin + (int)((double)Random::mtRand() / (MT_RAND_MAX + 1.0)
-                        * (vmax - vmin + 1.0));
-}
-
-double N2D2::Random::randNormal(double mean, double stdDev, double vmin)
-{
-    return std::max(vmin, Random::randNormal(mean, stdDev));
-}
-
-double
-N2D2::Random::randNormal(double mean, double stdDev, double vmin, double vmax)
-{
-    if (vmax < vmin)
-        throw std::domain_error("Random::randNormal(): vmax must be >= vmin.");
-
-    return Utils::clamp(Random::randNormal(mean, stdDev), vmin, vmax);
-}
-
-double N2D2::Random::randLogNormal(double mean, double stdDev)
-{
-    return std::exp(randNormal(mean, stdDev));
-}
-
-double N2D2::Random::randExponential(double mean)
-{
-    return (-mean * std::log(Random::randUniform(
-                        0.0, 1.0, Random::LeftHalfOpenInterval)));
-}
-
-bool N2D2::Random::randBernoulli(double p)
-{
-    // uniform random number x is in [0,1[
-    // return 1 if x is in [0,p[ (p = 0 => return always 0)
-    // return 0 if x is in [p,1[ (p = 1 => return always 1)
-    return (Random::randUniform(0.0, 1.0, Random::RightHalfOpenInterval) < p);
 }
 
 #endif // N2D2_RANDOM_H

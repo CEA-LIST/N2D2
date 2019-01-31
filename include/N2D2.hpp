@@ -58,17 +58,6 @@
 #ifndef N2D2_N2D2_H
 #define N2D2_N2D2_H
 
-#include "Aer.hpp"
-#include "Cochlea.hpp"
-#include "Layer.hpp"
-#include "Monitor.hpp"
-#include "Network.hpp"
-#include "Sound.hpp"
-#include "Xcell.hpp"
-#include "utils/Gnuplot.hpp"
-#include "utils/ProgramOptions.hpp"
-
-#include <cstdlib>
 #include <string>
 
 namespace N2D2 {

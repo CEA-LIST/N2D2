@@ -22,6 +22,7 @@
 #ifdef CUDA
 
 #include "Cell/Cell_Frame_CUDA.hpp"
+#include "third_party/half.hpp"
 
 template <class T>
 N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const std::string& name,

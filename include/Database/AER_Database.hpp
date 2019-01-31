@@ -23,7 +23,6 @@
 #define N2D2_AER_DATABASE_H
 
 #include "Database.hpp"
-#include "containers/Tensor.hpp"
 #include "Network.hpp"
 
 namespace N2D2 {

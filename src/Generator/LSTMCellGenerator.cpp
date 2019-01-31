@@ -19,6 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 #include "Generator/LSTMCellGenerator.hpp"
+#include "Solver/Solver.hpp"
+#include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::LSTMCellGenerator::mRegistrar(LSTMCell::Type,

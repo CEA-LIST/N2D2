@@ -25,15 +25,8 @@
 #include <omp.h>
 #endif
 
-#include "Activation/LogisticActivation_Frame.hpp"
-#include "Activation/RectifierActivation_Frame.hpp"
-#include "Activation/SaturationActivation_Frame.hpp"
-#include "Activation/SoftplusActivation_Frame.hpp"
-#include "Activation/TanhActivation_Frame.hpp"
 #include "Cell.hpp"
 #include "Cell_Frame_Top.hpp"
-#include "Environment.hpp" // Defines Float_T
-#include "GradientCheck.hpp"
 #include "controler/Interface.hpp"
 
 namespace N2D2 {

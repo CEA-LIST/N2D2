@@ -20,6 +20,7 @@
 
 #include "N2D2.hpp"
 
+#include "Environment.hpp"
 #include "Cell/ConvCell_Frame.hpp"
 #include "Database/DIR_Database.hpp"
 #include "DeepNet.hpp"

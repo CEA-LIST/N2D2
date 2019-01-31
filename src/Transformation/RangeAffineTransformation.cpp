@@ -19,6 +19,7 @@
 */
 
 #include "Transformation/RangeAffineTransformation.hpp"
+#include "FloatT.hpp"
 
 N2D2::RangeAffineTransformation::RangeAffineTransformation(
     Operator firstOperator,

@@ -31,7 +31,6 @@
 #include <string>
 
 #include "utils/Utils.hpp"
-#include "utils/TemplateParser.hpp"
 
 namespace N2D2 {
 class IniParser {

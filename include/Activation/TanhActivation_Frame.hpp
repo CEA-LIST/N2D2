@@ -23,6 +23,8 @@
 
 #include "Activation/TanhActivation.hpp"
 #include "Activation/Activation_Kernels.hpp"
+#include "containers/Tensor.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
 
 namespace N2D2 {
 template <class T> class TanhActivation_Frame : public TanhActivation {

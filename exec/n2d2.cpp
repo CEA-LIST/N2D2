@@ -49,13 +49,23 @@
 
 #include "DeepNet.hpp"
 #include "DrawNet.hpp"
+#include "CEnvironment.hpp"
+#include "Environment.hpp"
+#include "NodeEnv.hpp"
+#include "StimuliProvider.hpp"
+#include "Activation/LogisticActivation.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/FcCell_Spike.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
+#include "Export/CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "Export/StimuliProviderExport.hpp"
-#include "Transformation/RangeAffineTransformation.hpp"
-#include "Cell/FcCell_Spike.hpp"
 #include "Generator/DeepNetGenerator.hpp"
 #include "Target/TargetROIs.hpp"
 #include "Target/TargetScore.hpp"
+#include "Transformation/RangeAffineTransformation.hpp"
+#include "utils/ProgramOptions.hpp"
 
 #ifdef CUDA
 #include <cudnn.h>

@@ -20,6 +20,8 @@
 */
 
 #include "Environment.hpp"
+#include "NodeEnv.hpp"
+#include "Transformation/FilterTransformation.hpp"
 
 namespace N2D2 {
 Database EmptyDatabase;

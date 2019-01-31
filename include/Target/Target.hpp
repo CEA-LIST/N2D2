@@ -25,15 +25,17 @@
 #include <string>
 #include <vector>
 
-#include "Cell/Cell.hpp"
-#include "Cell/Cell_CSpike_Top.hpp"
-#include "Cell/Cell_Frame_Top.hpp"
+#include "containers/Tensor.hpp"
 #include "Database/Database.hpp"
-#include "N2D2.hpp"
-#include "StimuliProvider.hpp"
 #include "utils/Parameterizable.hpp"
+#include "utils/Registrar.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
+
+class Cell;
+class StimuliProvider;
+
 class Target : public Parameterizable {
 public:
     typedef std::function

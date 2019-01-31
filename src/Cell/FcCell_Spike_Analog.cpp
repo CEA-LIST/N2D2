@@ -19,6 +19,8 @@
 */
 
 #include "Cell/FcCell_Spike_Analog.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
 
 N2D2::Registrar<N2D2::FcCell>
 N2D2::FcCell_Spike_Analog::mRegistrar("Spike_Analog",

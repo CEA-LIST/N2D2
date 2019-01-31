@@ -30,7 +30,6 @@
 
 #include "Network.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Random.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {

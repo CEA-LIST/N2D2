@@ -20,8 +20,12 @@
 
 #include "N2D2.hpp"
 
+#include "Environment.hpp"
+#include "Network.hpp"
+#include "Transformation/RescaleTransformation.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Cell/FcCell_Frame.hpp"
+#include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

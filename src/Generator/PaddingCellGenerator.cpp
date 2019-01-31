@@ -19,6 +19,7 @@
 */
 
 #include "Generator/PaddingCellGenerator.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::PaddingCellGenerator::mRegistrar(PaddingCell::Type,

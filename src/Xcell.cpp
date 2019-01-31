@@ -20,6 +20,12 @@
 */
 
 #include "Xcell.hpp"
+#include "Environment.hpp"
+#include "HeteroEnvironment.hpp"
+#include "Node.hpp"
+#include "NodeEnv.hpp"
+#include "NodeNeuron.hpp"
+#include "NodeSync.hpp"
 
 unsigned int N2D2::Xcell::mIdCnt = 1;
 

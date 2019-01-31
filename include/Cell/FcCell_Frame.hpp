@@ -21,9 +21,9 @@
 #ifndef N2D2_FCCELL_FRAME_H
 #define N2D2_FCCELL_FRAME_H
 
+#include "Activation/TanhActivation_Frame.hpp"
 #include "Cell_Frame.hpp"
 #include "FcCell.hpp"
-#include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
 template <class T>

@@ -23,6 +23,7 @@
 #define N2D2_TEMPLATEPARSER_H
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -30,8 +31,6 @@
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 class TemplateParser {

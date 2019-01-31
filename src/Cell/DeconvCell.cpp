@@ -18,7 +18,12 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Activation/Activation.hpp"
 #include "Cell/DeconvCell.hpp"
+#include "containers/Matrix.hpp"
+#include "Filler/NormalFiller.hpp"
+#include "Solver/Solver.hpp"
+#include "StimuliProvider.hpp"
 
 const char* N2D2::DeconvCell::Type = "Deconv";
 

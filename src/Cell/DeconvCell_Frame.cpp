@@ -19,6 +19,10 @@
 */
 
 #include "Cell/DeconvCell_Frame.hpp"
+#include "GradientCheck.hpp"
+#include "Filler/NormalFiller.hpp"
+#include "Solver/SGDSolver_Frame.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::DeconvCell>

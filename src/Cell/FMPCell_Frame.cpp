@@ -18,7 +18,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "GradientCheck.hpp"
 #include "Cell/FMPCell_Frame.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::FMPCell>
 N2D2::FMPCell_Frame::mRegistrar("Frame", N2D2::FMPCell_Frame::create);

@@ -23,9 +23,12 @@
 
 #include "Cell_Spike.hpp"
 #include "Node.hpp"
-#include "NodeEnv.hpp"
 
 namespace N2D2 {
+
+class Cell_Spike;
+class Network;
+
 class NodeIn : public Node {
 public:
     NodeIn(Network& net, Cell_Spike& cell, unsigned int channel);

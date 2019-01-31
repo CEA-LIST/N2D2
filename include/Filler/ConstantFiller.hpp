@@ -22,7 +22,7 @@
 #define N2D2_CONSTANTFILLER_H
 
 #include "Filler.hpp"
-#include "utils/Random.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
 template <class T> class ConstantFiller : public Filler {

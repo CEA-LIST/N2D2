@@ -18,6 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Network.hpp"
+#include "N2D2.hpp"
+#include "StimuliProvider.hpp"
+#include "Cell/Cell.hpp"
+#include "ROI/RectangularROI.hpp"
 #include "Target/TargetROIs.hpp"
 
 N2D2::Registrar<N2D2::Target>

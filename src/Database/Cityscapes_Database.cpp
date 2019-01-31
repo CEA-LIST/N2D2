@@ -22,6 +22,7 @@
 #ifdef JSONCPP
 
 #include "Database/Cityscapes_Database.hpp"
+#include "ROI/PolygonalROI.hpp"
 
 N2D2::Cityscapes_Database::Cityscapes_Database(bool incTrainExtra,
                                                bool useCoarse,

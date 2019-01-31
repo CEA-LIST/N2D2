@@ -28,6 +28,8 @@
 #include "FcCell_Frame_CUDA.hpp"
 #endif
 
+#include "utils/Gnuplot.hpp"
+
 namespace N2D2 {
 template <class FRAME = FcCell_Frame<Float_T>, class SPIKE = FcCell_Spike>
 class FcCell_Transcode : public FRAME, public SPIKE {

@@ -19,6 +19,9 @@
 */
 
 #include "Cell/FcCell_Transcode.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::FcCell> N2D2::FcCell_Transcode

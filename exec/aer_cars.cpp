@@ -27,6 +27,13 @@
 #include <list>
 
 #include "N2D2.hpp"
+#include "Aer.hpp"
+#include "Environment.hpp"
+#include "Network.hpp"
+#include "Monitor.hpp"
+#include "Xcell.hpp"
+#include "Transformation/FilterTransformation.hpp"
+#include "utils/ProgramOptions.hpp"
 
 using namespace N2D2;
 

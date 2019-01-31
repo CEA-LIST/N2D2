@@ -19,6 +19,7 @@
 */
 
 #include "Transformation/NormalizeTransformation.hpp"
+#include "FloatT.hpp"
 
 N2D2::NormalizeTransformation::NormalizeTransformation()
     : mNorm(this, "Norm", MinMax),

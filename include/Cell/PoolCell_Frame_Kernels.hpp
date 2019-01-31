@@ -21,7 +21,6 @@
 #ifndef N2D2_POOLCELL_FRAME_KERNELS_H
 #define N2D2_POOLCELL_FRAME_KERNELS_H
 
-#include "Cell_Frame.hpp"
 #include "PoolCell_Frame_Kernels_struct.hpp"
 
 namespace N2D2 {

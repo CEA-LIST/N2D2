@@ -21,6 +21,8 @@
 #ifdef CUDA
 
 #include "Activation/SaturationActivation_Frame_CUDA.hpp"
+#include "Solver/SGDSolver_Kernels.hpp"
+#include "third_party/half.hpp"
 
 template <>
 N2D2::Registrar<N2D2::SaturationActivation>

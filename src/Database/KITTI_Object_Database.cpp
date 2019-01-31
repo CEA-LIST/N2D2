@@ -20,6 +20,9 @@
 */
 
 #include "Database/KITTI_Object_Database.hpp"
+#include "DataFile/DataFile.hpp"
+#include "ROI/RectangularROI.hpp"
+#include "utils/Registrar.hpp"
 
 N2D2::KITTI_Object_Database::KITTI_Object_Database(double learn)
     : DIR_Database(), mLearn(learn)

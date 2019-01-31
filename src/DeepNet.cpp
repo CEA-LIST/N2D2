@@ -19,7 +19,19 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "CEnvironment.hpp"
+#include "CMonitor.hpp"
 #include "DeepNet.hpp"
+#include "Environment.hpp"
+#include "Monitor.hpp"
+#include "NodeEnv.hpp"
+#include "Cell/Cell_CSpike_Top.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/ConvCell.hpp"
+#include "Cell/ConvCell_Spike.hpp"
+#include "Cell/FcCell.hpp"
+#include "Cell/PoolCell.hpp"
+#include "Cell/SoftmaxCell.hpp"
 
 N2D2::DeepNet::RangeStats::RangeStats()
     : minVal(0.0), maxVal(0.0), moments(3, 0.0)

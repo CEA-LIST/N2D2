@@ -19,6 +19,7 @@
 */
 
 #include "Export/CPP/CPP_CellExport.hpp"
+#include "utils/Utils.hpp"
 
 void N2D2::CPP_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header)
 {

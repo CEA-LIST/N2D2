@@ -21,12 +21,13 @@
 #ifndef N2D2_SOLVER_H
 #define N2D2_SOLVER_H
 
-#include "Environment.hpp"
-#include "containers/Tensor.hpp"
+#include <iosfwd>
 #include "utils/Parameterizable.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class BaseTensor;
+
 class Solver : public Parameterizable {
 public:
     virtual const char* getType() const = 0;

@@ -19,6 +19,8 @@
 */
 
 #include "Cell/PoolCell_Spike.hpp"
+#include "Cell/NodeIn.hpp"
+#include "Cell/NodeOut.hpp"
 
 N2D2::Registrar<N2D2::PoolCell>
 N2D2::PoolCell_Spike::mRegistrar("Spike",

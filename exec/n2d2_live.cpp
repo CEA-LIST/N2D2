@@ -25,11 +25,13 @@
 
 #include "N2D2.hpp"
 #include "DeepNet.hpp"
+#include "StimuliProvider.hpp"
 #include "Target/TargetScore.hpp"
 #include "DrawNet.hpp"
 #include "Generator/DeepNetGenerator.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "Export/StimuliProviderExport.hpp"
+#include "utils/ProgramOptions.hpp"
 #include "utils/Key.hpp"
 #if defined(WIN32) || defined(_WIN32)
     #include <windows.h>

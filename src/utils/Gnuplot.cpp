@@ -19,6 +19,7 @@
 */
 
 #include "utils/Gnuplot.hpp"
+#include "utils/Utils.hpp"
 
 FILE* N2D2::Gnuplot::mMasterCmdPipe = NULL;
 std::tuple<std::string, std::string, std::string> N2D2::Gnuplot::mDefaultOutput

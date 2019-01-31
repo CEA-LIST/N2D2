@@ -22,6 +22,7 @@
 #define N2D2_ADAMSOLVER_H
 
 #include "Solver/Solver.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 class AdamSolver : public Solver {

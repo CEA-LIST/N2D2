@@ -21,7 +21,6 @@
 #ifndef N2D2_CELL_CSPIKE_H
 #define N2D2_CELL_CSPIKE_H
 
-#include "CEnvironment.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "controler/Interface.hpp"

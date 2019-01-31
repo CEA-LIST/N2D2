@@ -24,12 +24,14 @@
 #include <iterator>
 #include <vector>
 
-#include "Environment.hpp"
 #include "HeteroStimuliProvider.hpp"
-#include "Transformation/FilterTransformation.hpp"
-#include "Transformation/RescaleTransformation.hpp"
+#include "Network.hpp"
 
 namespace N2D2 {
+
+class Environment;
+class NodeEnv;
+
 /**
  * HeteroEnvironment has the same purpose as HeteroStimuliProvider, except that
  * it provide the additional functionalities

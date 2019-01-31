@@ -51,7 +51,6 @@
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
-typedef float Float_T;
 
 class CompositeTransformation;
 

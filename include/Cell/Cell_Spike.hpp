@@ -22,9 +22,12 @@
 #define N2D2_CELL_SPIKE_H
 
 #include "Cell.hpp"
-#include "Synapse_Static.hpp"
+#include "Network.hpp"
+#include "Synapse.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
+
 class NodeIn;
 class NodeOut;
 

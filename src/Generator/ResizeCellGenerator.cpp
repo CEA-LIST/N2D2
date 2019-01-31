@@ -19,6 +19,7 @@
 */
 
 #include "Generator/ResizeCellGenerator.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::ResizeCellGenerator::mRegistrar(ResizeCell::Type,

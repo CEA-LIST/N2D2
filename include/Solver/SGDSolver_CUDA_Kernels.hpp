@@ -28,8 +28,6 @@
 #include <thrust/extrema.h>
 #include <thrust/device_vector.h>
 
-#include "CudaUtils.hpp"
-#include "utils/Utils.hpp"
 #include "third_party/half.hpp"
 
 namespace N2D2 {

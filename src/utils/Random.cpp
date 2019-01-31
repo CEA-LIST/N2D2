@@ -20,6 +20,7 @@
 */
 
 #include "utils/Random.hpp"
+#include "utils/Utils.hpp"
 
 // Create a length 624 array to store the state of the generator
 unsigned int N2D2::Random::_mt[624];
@@ -97,4 +98,64 @@ double N2D2::Random::randNormal(double mean, double stdDev)
 
         return (mean + stdDev * (r * std::cos(theta)));
     }
+}
+
+double N2D2::Random::randUniform(double vmin, double vmax, Endpoints endpoints)
+{
+    if (vmax < vmin)
+        throw std::domain_error("Random::randUniform(): vmax must be >= vmin.");
+
+    if (endpoints == ClosedInterval) // [vmin,vmax]
+        return vmin + (double)Random::mtRand() / MT_RAND_MAX * (vmax - vmin);
+    else if (endpoints == LeftHalfOpenInterval) // ]vmin,vmax] = (vmin,vmax]
+        return vmin + ((double)Random::mtRand() + 1.0) / (MT_RAND_MAX + 1.0)
+                      * (vmax - vmin);
+    else if (endpoints == RightHalfOpenInterval) // [vmin,vmax[ = [vmin,vmax)
+        return vmin + (double)Random::mtRand() / (MT_RAND_MAX + 1.0)
+                      * (vmax - vmin);
+    else // ]vmin,vmax[ = (vmin,vmax)
+        return vmin + ((double)Random::mtRand() + 0.5) / (MT_RAND_MAX + 1.0)
+                      * (vmax - vmin);
+}
+
+int N2D2::Random::randUniform(int vmin, int vmax)
+{
+    if (vmax < vmin)
+        throw std::domain_error("Random::randUniform(): vmax must be >= vmin.");
+
+    return vmin + (int)((double)Random::mtRand() / (MT_RAND_MAX + 1.0)
+                        * (vmax - vmin + 1.0));
+}
+
+double N2D2::Random::randNormal(double mean, double stdDev, double vmin)
+{
+    return std::max(vmin, Random::randNormal(mean, stdDev));
+}
+
+double
+N2D2::Random::randNormal(double mean, double stdDev, double vmin, double vmax)
+{
+    if (vmax < vmin)
+        throw std::domain_error("Random::randNormal(): vmax must be >= vmin.");
+
+    return Utils::clamp(Random::randNormal(mean, stdDev), vmin, vmax);
+}
+
+double N2D2::Random::randLogNormal(double mean, double stdDev)
+{
+    return std::exp(randNormal(mean, stdDev));
+}
+
+double N2D2::Random::randExponential(double mean)
+{
+    return (-mean * std::log(Random::randUniform(
+                        0.0, 1.0, Random::LeftHalfOpenInterval)));
+}
+
+bool N2D2::Random::randBernoulli(double p)
+{
+    // uniform random number x is in [0,1[
+    // return 1 if x is in [0,p[ (p = 0 => return always 0)
+    // return 0 if x is in [p,1[ (p = 1 => return always 1)
+    return (Random::randUniform(0.0, 1.0, Random::RightHalfOpenInterval) < p);
 }

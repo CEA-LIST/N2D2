@@ -21,16 +21,13 @@
 #ifndef N2D2_DEEPNETGENERATOR_H
 #define N2D2_DEEPNETGENERATOR_H
 
-#include "DeepNet.hpp"
-#include "Generator/Generator.hpp"
-#include "Generator/CEnvironmentGenerator.hpp"
-#include "Generator/CellGenerator.hpp"
-#include "Generator/EnvironmentGenerator.hpp"
-#include "Generator/StimuliProviderGenerator.hpp"
-#include "Generator/TargetGenerator.hpp"
-#include "utils/IniParser.hpp"
+#include <string>
 
 namespace N2D2 {
+
+class DeepNet;
+class Network;
+
 class DeepNetGenerator {
 public:
     static std::shared_ptr<DeepNet> generate(Network& network,

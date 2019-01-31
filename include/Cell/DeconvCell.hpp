@@ -27,14 +27,19 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Activation/Activation.hpp"
 #include "Cell.hpp"
-#include "Filler/NormalFiller.hpp"
-#include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
-#include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class Activation;
+class BaseInterface;
+class Filler;
+template<typename T>
+class Matrix;
+class Network;
+class Solver;
+
 class DeconvCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<DeconvCell>(
