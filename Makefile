@@ -22,11 +22,13 @@ ifndef PARENT
   PARENT=.
 endif
 
+MAKEFILE_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
 EXT=cpp
 EXT_CUDA=cu
 
-BIN:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find $(path)/exec/ -name "*.$(EXT)")))
-BIN_TESTS:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find $(path)/tests/ -name "*.$(EXT)")))
+BIN:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find "$(path)/exec/" -name "*.$(EXT)")))
+BIN_TESTS:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find "$(path)/tests/" -name "*.$(EXT)")))
 
 ifndef CXX
   CXX=g++
@@ -217,9 +219,12 @@ ifndef N2D2_BINDIR
 endif
 
 OBJDIR=$(N2D2_BINDIR).obj
-SRC=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name "*.$(EXT)"))
-SRC_CUDA=$(foreach path, $(PARENT), $(shell find $(path)/src/ -name "*.$(EXT_CUDA)"))
-INCLUDES=$(foreach path, $(PARENT), $(shell find $(path)/include/ -name "*.hpp"))
+SRC=$(foreach path, $(PARENT), $(shell find "$(path)/src/" -name "*.$(EXT)"))
+SRC_CUDA=$(foreach path, $(PARENT), $(shell find "$(path)/src/" -name "*.$(EXT_CUDA)"))
+INCLUDES=$(foreach path, $(PARENT), $(shell find "$(path)/include/" -name "*.hpp"))
+
+PCH_SRC=$(MAKEFILE_DIR)/include/Precompiled.hpp
+PCH_OUT=$(PCH_SRC).gch
 
 OBJ:=$(SRC:%.$(EXT)=$(OBJDIR)/%.o)
 ifdef CUDA
@@ -274,18 +279,21 @@ ifneq (,$(filter $(MAKECMDGOALS),clean clean-all))
   -include $(OBJ:%.o=%.d)
 endif
 
+$(PCH_OUT): $(PCH_SRC)
+	$(CXX) $(CPPFLAGS) -o $@ $<
+
 .PRECIOUS : $(OBJDIR)/%.o
-$(OBJDIR)/%.o : %.$(EXT) $(INCLUDES)
+$(OBJDIR)/%.o : %.$(EXT) $(INCLUDES) $(PCH_OUT)
 	@mkdir -p $(@D)
 	$(call make-depend,$<,$@,$(patsubst %.o,%.d,$@))
-	$(CXX) -o $@ -c $< $(CPPFLAGS)
+	$(CXX) -o $@ -c $< $(CPPFLAGS) -include $(PCH_SRC)
 
 ifdef CUDA
   .PRECIOUS : $(OBJDIR)/%.ocu
-  $(OBJDIR)/%.ocu : %.$(EXT_CUDA) $(INCLUDES)
+  $(OBJDIR)/%.ocu : %.$(EXT_CUDA) $(INCLUDES) $(PCH_OUT)
 	@mkdir -p $(@D)
 	$(call make-depend,$<,$@,$(patsubst %.o,%.d,$@))
-	$(NVCC) -o $@ -c $< $(NVFLAGS)
+	$(NVCC) -o $@ -c $< $(NVFLAGS) -include $(PCH_SRC)
 endif
 
 doc : $(SRC) $(SRC_CUDA) $(wildcard include/*.hpp) doxygen.cfg
@@ -294,7 +302,7 @@ doc : $(SRC) $(SRC_CUDA) $(wildcard include/*.hpp) doxygen.cfg
 .PHONY : clean
 
 clean :
-	@rm -rf $(OBJDIR) $(addprefix $(N2D2_BINDIR)/, $(BIN)) $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS)) doc/
+	@rm -rf $(OBJDIR) $(addprefix $(N2D2_BINDIR)/, $(BIN)) $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS)) doc/ $(PCH_OUT)
 
 .PHONY : clean-all
 

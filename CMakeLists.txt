@@ -74,6 +74,7 @@ endmacro()
 
 
 set_globals()
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/modules/cotire.cmake")
 project(N2D2)
 
 
@@ -154,6 +155,10 @@ if(MSVC)
 endif()
 
 
+set_target_properties(n2d2_lib PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
+set_target_properties(n2d2_lib PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_CURRENT_LIST_DIR}/include/Precompiled.hpp")
+cotire(n2d2_lib)
+
 
 # n2d2_lib_cuda target
 find_package(CUDA)
@@ -188,7 +193,6 @@ if(CUDA_FOUND)
     target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
     target_link_libraries(n2d2_lib n2d2_lib_cuda)
 endif()
-
 
 
 
