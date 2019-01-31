@@ -28,6 +28,7 @@
 #include <iostream>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <ostream>
 #include <stdexcept>

@@ -25,6 +25,7 @@
 
 #include "containers/Matrix.hpp"
 #include "utils/Gnuplot.hpp"
+#include "utils/Utils.hpp"
 
 namespace N2D2 {
 enum ConfusionTableMetric {

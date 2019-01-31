@@ -23,6 +23,7 @@
 #include "N2D2.hpp"
 
 #include "Database/Cityscapes_Database.hpp"
+#include "ROI/ROI.hpp"
 #include "utils/Utils.hpp"
 #include "utils/UnitTest.hpp"
 
