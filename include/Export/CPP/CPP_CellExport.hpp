@@ -51,6 +51,8 @@ public:
 
     inline static std::unique_ptr<CPP_CellExport> getInstance(Cell& cell);
 
+    virtual ~CPP_CellExport() {}
+
     // Commun methods for all cells
     virtual void generateCellData(Cell& cell,
                                   const std::string& outputName,
