@@ -324,60 +324,6 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     tics << ")";
     confData.close();
 
-    const std::string confFile = Utils::fileBaseName(fileName) + "_score."
-                                 + Utils::fileExtension(fileName);
-    confData.open(confFile);
-
-    if (!confData.good())
-        throw std::runtime_error("Could not save confusion data file: "
-                                 + confFile);
-
-    confData << "Target Sensitivity Specificity Precision"
-                " Accuracy F1-score Informedness\n";
-
-    const std::vector<ConfusionTable<T> > conf = getConfusionTables();
-    double avgSensitivity = 0.0;
-    double avgSpecificity = 0.0;
-    double avgPrecision = 0.0;
-    double avgAccuracy = 0.0;
-    double avgF1Score = 0.0;
-    double avgInformedness = 0.0;
-
-    for (unsigned int target = 0; target < nbTargets; ++target) {
-        avgSensitivity += conf[target].sensitivity();
-        avgSpecificity += conf[target].specificity();
-        avgPrecision += conf[target].precision();
-        avgAccuracy += conf[target].accuracy();
-        avgF1Score += conf[target].fScore();
-        avgInformedness += conf[target].informedness();
-
-        confData << target
-            << " " << conf[target].sensitivity()
-            << " " << conf[target].specificity()
-            << " " << conf[target].precision()
-            << " " << conf[target].accuracy()
-            << " " << conf[target].fScore()
-            << " " << conf[target].informedness() << "\n";
-    }
-
-    avgSensitivity /= nbTargets;
-    avgSpecificity /= nbTargets;
-    avgPrecision /= nbTargets;
-    avgAccuracy /= nbTargets;
-    avgF1Score /= nbTargets;
-    avgInformedness /= nbTargets;
-
-    confData << "\n";
-    confData << "AVG"
-        << " " << avgSensitivity
-        << " " << avgSpecificity
-        << " " << avgPrecision
-        << " " << avgAccuracy
-        << " " << avgF1Score
-        << " " << avgInformedness << "\n";
-
-    confData.close();
-
     Gnuplot::setDefaultOutput("png", "size 800,600 tiny", "png");
 
     Gnuplot gnuplot;
@@ -418,6 +364,105 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         plotCmd << ", \"\" using 2:1:($3 > 0 ? sprintf(\"%.f\",$3) : \"\") "
                    "with labels";
     }
+
+    gnuplot.saveToFile(fileName);
+    gnuplot.plot(fileName, plotCmd.str());
+
+    Gnuplot::setDefaultOutput();
+
+    const std::string confFile = Utils::fileBaseName(fileName) + "_score."
+                                 + Utils::fileExtension(fileName);
+    confData.open(confFile);
+
+    if (!confData.good())
+        throw std::runtime_error("Could not save confusion data file: "
+                                 + confFile);
+
+    confData << "Target TargetName Sensitivity Specificity Precision"
+                " Accuracy F1-score Informedness\n";
+
+    const std::vector<ConfusionTable<T> > conf = getConfusionTables();
+    double avgSensitivity = 0.0;
+    double avgSpecificity = 0.0;
+    double avgPrecision = 0.0;
+    double avgAccuracy = 0.0;
+    double avgF1Score = 0.0;
+    double avgInformedness = 0.0;
+    unsigned int maxLabelSize = 0;
+
+    for (unsigned int target = 0; target < nbTargets; ++target) {
+        avgSensitivity += conf[target].sensitivity();
+        avgSpecificity += conf[target].specificity();
+        avgPrecision += conf[target].precision();
+        avgAccuracy += conf[target].accuracy();
+        avgF1Score += conf[target].fScore();
+        avgInformedness += conf[target].informedness();
+
+        std::stringstream labelStr;
+
+        if (!labels.empty())
+            labelStr << labels[target];
+        else
+            labelStr << target;
+
+        if (labelStr.str().size() > maxLabelSize)
+            maxLabelSize = labelStr.str().size();
+
+        confData << "\"" << labelStr.str() << "\" " << target
+            << " " << conf[target].sensitivity()
+            << " " << conf[target].specificity()
+            << " " << conf[target].precision()
+            << " " << conf[target].accuracy()
+            << " " << conf[target].fScore()
+            << " " << conf[target].informedness() << "\n";
+    }
+
+    avgSensitivity /= nbTargets;
+    avgSpecificity /= nbTargets;
+    avgPrecision /= nbTargets;
+    avgAccuracy /= nbTargets;
+    avgF1Score /= nbTargets;
+    avgInformedness /= nbTargets;
+
+    confData << "\n";
+    confData << "- AVG"
+        << " " << avgSensitivity
+        << " " << avgSpecificity
+        << " " << avgPrecision
+        << " " << avgAccuracy
+        << " " << avgF1Score
+        << " " << avgInformedness << "\n";
+
+    confData.close();
+
+    std::stringstream outputStr;
+    outputStr << "size " << ((nbTargets + 1) * 100 + 150) << ",600 enhanced";
+
+    Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
+
+    Gnuplot gnuplot(fileName + ".gnu");
+    gnuplot << "wrap(str,maxLength)=(strlen(str)<=maxLength)?str:str[0:"
+               "maxLength].\"\\n\".wrap(str[maxLength+1:],maxLength)";
+    gnuplot << "unset colorbox";
+    gnuplot.set("style histogram cluster gap 1");
+    gnuplot.set("style data histograms");
+    gnuplot.set("style fill pattern 1.00 border");
+    gnuplot.set("ytics 0.1 nomirror");
+    gnuplot.set("mytics 10");
+    gnuplot.set("grid");
+    gnuplot.set("tmargin", 4);
+    gnuplot.set("bmargin", (maxLabelSize / 2) + 2);
+    gnuplot.set("xtics rotate");
+    gnuplot.set("boxwidth 1.0");}
+
+    std::stringstream plotCmd;
+    plotCmd << "i 0 using 3:xticlabels(wrap(stringcolumn(2),"
+            << maxLabelSize << ") ti col, "
+                 "'' i 0 using 4 ti col, "
+                 "'' i 0 using 5 ti col, "
+                 "'' i 0 using 6 ti col, "
+                 "'' i 0 using 7 ti col, "
+                 "'' i 0 using 8 ti col";
 
     gnuplot.saveToFile(fileName);
     gnuplot.plot(fileName, plotCmd.str());
