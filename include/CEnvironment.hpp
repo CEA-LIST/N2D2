@@ -177,7 +177,8 @@ protected:
     std::vector<AerReadEvent>::iterator mEventIterator;
     Time_T mNextAerEventTime;
 
-
+    Parameter<bool> mNoConversion;
+    Parameter<Float_T> mScaling;
     Parameter<bool> mReadAerData;
     Parameter<std::string> mStreamPath;
     unsigned int mNbSubStimuli;
