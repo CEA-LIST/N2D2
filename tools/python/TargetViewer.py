@@ -45,7 +45,7 @@ class TargetViewer(object):
         skipDown = False
 
         cv2.namedWindow("index", cv2.WINDOW_AUTOSIZE)
-        cv2.imshow("index", numpy.array([0]))
+        cv2.imshow("index", numpy.array([0.0]))
         cv2.createTrackbar("#", "index", 1, # start at 1 to force update to 0
             max(1, len(self.files)-1), self._onTrackbarChange)
         cv2.moveWindow("index", 1024 + 256 + 20, 0)
