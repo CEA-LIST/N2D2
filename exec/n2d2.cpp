@@ -143,6 +143,8 @@ int main(int argc, char* argv[]) try
     const unsigned int stopValid = opts.parse(
         "-stop-valid", 0U, "max. number of successive lower score validation");
     const bool test = opts.parse("-test", "perform testing");
+    const bool fuse = opts.parse("-fuse", "fuse BatchNorm with Conv for test "
+                                 "and export");
     const bool bench = opts.parse("-bench", "learning speed benchmarking");
     const unsigned int learnStdp
         = opts.parse("-learn-stdp", 0U, "number of STDP learning steps");
@@ -337,6 +339,9 @@ int main(int argc, char* argv[]) try
             std::cout << Utils::cwarning << e.what()
                 << Utils::cdef << std::endl;
         }
+
+        if (fuse)
+            deepNet->fuseBatchNormWithConv();
 
         std::stringstream exportDir;
         exportDir << "export_" << genExport << "_"
@@ -806,6 +811,9 @@ int main(int argc, char* argv[]) try
             else
                 deepNet->importNetworkFreeParameters("weights");
         }
+
+        if (fuse)
+            deepNet->fuseBatchNormWithConv();
     }
 
     const std::string testName = (afterCalibration) ? "export" : "test";

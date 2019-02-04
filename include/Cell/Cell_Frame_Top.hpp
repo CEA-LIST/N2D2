@@ -56,6 +56,9 @@ public:
     }
     virtual void addInput(BaseTensor& inputs,
                           BaseTensor& diffOutputs) = 0;
+    virtual void replaceInput(BaseTensor& oldInputs,
+                              BaseTensor& newInputs,
+                              BaseTensor& newDiffOutputs) = 0;
     virtual void propagate(bool inference = false) = 0;
     virtual void backPropagate() = 0;
     virtual void update() = 0;

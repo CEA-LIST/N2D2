@@ -79,6 +79,22 @@ public:
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<ParamT>({1}, (*mVariance)(index));
     }
+    inline void setScale(unsigned int index, const BaseTensor& value)
+    {
+        (*mScale)(index) = tensor_cast<ParamT>(value)(0);
+    }
+    inline void setBias(unsigned int index, const BaseTensor& value)
+    {
+        (*mBias)(index) = tensor_cast<ParamT>(value)(0);
+    }
+    inline void setMean(unsigned int index, const BaseTensor& value)
+    {
+        (*mMean)(index) = tensor_cast<ParamT>(value)(0);
+    }
+    inline void setVariance(unsigned int index, const BaseTensor& value)
+    {
+        (*mVariance)(index) = tensor_cast<ParamT>(value)(0);
+    }
     inline std::shared_ptr<BaseTensor> getScales() const
     {
         return mScale;
@@ -139,23 +155,6 @@ public:
     virtual ~BatchNormCell_Frame();
 
 protected:
-    inline void setScale(unsigned int index, const BaseTensor& value)
-    {
-        (*mScale)(index) = tensor_cast<ParamT>(value)(0);
-    }
-    inline void setBias(unsigned int index, const BaseTensor& value)
-    {
-        (*mBias)(index) = tensor_cast<ParamT>(value)(0);
-    }
-    inline void setMean(unsigned int index, const BaseTensor& value)
-    {
-        (*mMean)(index) = tensor_cast<ParamT>(value)(0);
-    }
-    inline void setVariance(unsigned int index, const BaseTensor& value)
-    {
-        (*mVariance)(index) = tensor_cast<ParamT>(value)(0);
-    }
-
     unsigned int mNbPropagate;
     std::shared_ptr<Tensor<ParamT> > mScale;
     std::shared_ptr<Tensor<ParamT> > mBias;

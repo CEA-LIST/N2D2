@@ -25,6 +25,7 @@
 #include "Environment.hpp"
 #include "Monitor.hpp"
 #include "NodeEnv.hpp"
+#include "Cell/BatchNormCell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
@@ -1269,6 +1270,194 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
         if (applied)
             prevScalingFactor = appliedFactor;
+    }
+}
+
+/**
+ * Ref: https://tkv.io/posts/fusing-batchnorm-and-conv/
+*/
+void N2D2::DeepNet::fuseBatchNormWithConv() {
+    std::cout << "Fuse BatchNorm with Conv..." << std::endl;
+
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it)
+    {
+        // check every BatchNorm cell
+        if ((*it).second->getType() == BatchNormCell::Type) {
+            // check if a Conv is preceding
+            const std::vector<std::shared_ptr<Cell> > bnParents
+                = getParentCells((*it).first);
+
+            if (bnParents.size() == 1
+                && bnParents[0]->getType() == ConvCell::Type)
+            {
+                // only a single Conv is preceding
+                // check if BatchNorm is the only child
+                const std::vector<std::shared_ptr<Cell> > convChilds
+                    = getChildCells(bnParents[0]->getName());
+
+                if (convChilds.size() == 1) {
+                    assert(convChilds[0] == (*it).second);
+
+                    // OK, Conv's only child is BatchNorm, fuse them...
+                    std::cout << "  fuse BatchNorm \"" << (*it).second->getName()
+                        << "\" with Conv \"" << bnParents[0]->getName() << "\""
+                        << std::endl;
+
+                    std::shared_ptr<ConvCell> convCell =
+                        std::dynamic_pointer_cast<ConvCell>(bnParents[0]);
+                    const bool noBias = convCell->getParameter<bool>("NoBias");
+
+                    std::shared_ptr<BatchNormCell> bnCell =
+                        std::dynamic_pointer_cast<BatchNormCell>((*it).second);
+                    const Tensor<double>& bnScales
+                        = tensor_cast<double>(*(bnCell->getScales()));
+                    const Tensor<double>& bnBiases
+                        = tensor_cast<double>(*(bnCell->getBiases()));
+                    const Tensor<double>& bnMeans
+                        = tensor_cast<double>(*(bnCell->getMeans()));
+                    const Tensor<double>& bnVariances
+                        = tensor_cast<double>(*(bnCell->getVariances()));
+                    const double eps = bnCell->getParameter<double>("Epsilon");
+
+                    assert(bnScales.size() == convCell->getNbOutputs());
+                    assert(bnBiases.size() == convCell->getNbOutputs());
+                    assert(bnMeans.size() == convCell->getNbOutputs());
+                    assert(bnVariances.size() == convCell->getNbOutputs());
+                    assert(eps > 0.0);
+
+                    std::shared_ptr<Cell_Frame_Top> convCellTop =
+                        std::dynamic_pointer_cast<Cell_Frame_Top>(bnParents[0]);
+                    std::shared_ptr<Cell_Frame_Top> bnCellTop =
+                        std::dynamic_pointer_cast<Cell_Frame_Top>((*it).second);
+
+                    // Fuse activation
+                    if (bnCellTop->getActivation()
+                        && std::string(bnCellTop->getActivation()->getType())
+                            != "Linear")
+                    {
+                        if (convCellTop->getActivation()
+                            && std::string(convCellTop->getActivation()
+                                            ->getType()) != "Linear")
+                        {
+                            std::cout << Utils::cwarning << "  -> non-linear "
+                                "activation before BatchNorm prevents fuse!"
+                                << Utils::cdef << std::endl;
+                            continue;
+                        }
+                        else {
+                            convCellTop->setActivation(bnCellTop->
+                                                            getActivation());
+                        }
+                    }
+
+                    if (noBias)
+                        convCell->setParameter<bool>("NoBias", false);
+
+                    for (unsigned int output = 0;
+                        output < convCell->getNbOutputs(); ++output)
+                    {
+                        const double factor = bnScales(output)
+                                        / std::sqrt(eps + bnVariances(output));
+
+                        // Weights adjustments
+                        for (unsigned int channel = 0;
+                            channel < convCell->getNbChannels(); ++channel)
+                        {
+                            Tensor<double> kernel;
+                            convCell->getWeight(output, channel, kernel);
+
+                            for (unsigned int index = 0, size = kernel.size();
+                                index < size; ++index)
+                            {
+                                kernel(index) *= factor;
+                            }
+
+                            convCell->setWeight(output, channel, kernel);
+                        }
+
+                        // Biases adjustments
+                        Tensor<double> bias;
+
+                        if (noBias)
+                            bias.resize({1}, 0.0);
+                        else
+                            convCell->getBias(output, bias);
+
+                        bias(0) += bnBiases(output) - bnMeans(output) * factor;
+                        convCell->setBias(output, bias);
+                    }
+
+                    // Replace BatchNorm by Conv for BatchNorm childs
+                    const std::vector<std::shared_ptr<Cell> > bnChilds
+                        = getChildCells((*it).first);
+
+                    for (std::vector<std::shared_ptr<Cell> >::const_iterator
+                         itBnChilds = bnChilds.begin(),
+                         itBnChildsEnd = bnChilds.end();
+                         itBnChilds != itBnChildsEnd; ++itBnChilds)
+                    {
+                        std::shared_ptr<Cell_Frame_Top> cellTop =
+                            std::dynamic_pointer_cast<Cell_Frame_Top>(
+                                                                *itBnChilds);
+
+                        cellTop->replaceInput(
+                            bnCellTop->getOutputs(),
+                            convCellTop->getOutputs(),
+                            convCellTop->getDiffInputs());
+                    }
+
+                    // BatchNorm cell removal from DeepNet
+                    mCells.erase((*it).first);
+
+                    for (unsigned int l = 1; l < mLayers.size(); ++l) {
+                        mLayers[l].erase(std::remove(mLayers[l].begin(),
+                                                     mLayers[l].end(),
+                                                     (*it).first),
+                                         mLayers[l].end());
+                    }
+
+                    // CONV -> BN -> X
+                    // mParentLayers: ("BN", "CONV"), ("X", "BN")
+                    // =>
+                    // CONV -> X
+                    // mParentLayers: ("X", "CONV")
+
+                    for (std::multimap<std::string, std::string>::iterator
+                         itParentLayers = mParentLayers.begin();
+                         itParentLayers != mParentLayers.end(); )
+                    {
+                        if ((*itParentLayers).first == (*it).first) {
+                            itParentLayers
+                                = mParentLayers.erase(itParentLayers);
+                        }
+                        else {
+                            if ((*itParentLayers).second == (*it).first)
+                                (*itParentLayers).second = convCell->getName();
+
+                            ++itParentLayers;
+                        }
+                    }
+                }
+                else {
+                    std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
+                        << (*it).second->getName() << "\" because parent Conv "
+                        "(\"" << bnParents[0]->getName() << "\") has multiple "
+                        "childs" << Utils::cdef << std::endl;
+                }
+            }
+            else if (bnParents.size() == 1) {
+                std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
+                    << (*it).second->getName() << "\" because parent cell (\""
+                    << bnParents[0]->getName() << "\") is not a Conv"
+                    << Utils::cdef << std::endl;
+            }
+            else {
+                std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
+                    << (*it).second->getName() << "\" because it has multiple "
+                    "parents (not supported)" << Utils::cdef << std::endl;
+            }
+        }
     }
 }
 

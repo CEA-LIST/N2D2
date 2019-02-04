@@ -68,6 +68,10 @@ public:
     inline void getBias(unsigned int index, BaseTensor& value) const;
     inline void getMean(unsigned int index, BaseTensor& value) const;
     inline void getVariance(unsigned int index, BaseTensor& value) const;
+    inline void setScale(unsigned int index, const BaseTensor& value);
+    inline void setBias(unsigned int index, const BaseTensor& value);
+    inline void setMean(unsigned int index, const BaseTensor& value);
+    inline void setVariance(unsigned int index, const BaseTensor& value);
     inline std::shared_ptr<BaseTensor> getScales() const
     {
         return mScale;
@@ -99,11 +103,6 @@ public:
 
 protected:
     typedef typename Cuda::cudnn_scaling_type<T>::type ParamT;
-
-    inline void setScale(unsigned int index, const BaseTensor& value);
-    inline void setBias(unsigned int index, const BaseTensor& value);
-    inline void setMean(unsigned int index, const BaseTensor& value);
-    inline void setVariance(unsigned int index, const BaseTensor& value);
 
     cudnnBatchNormMode_t mMode;
     unsigned int mNbPropagate;

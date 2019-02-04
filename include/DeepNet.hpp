@@ -129,6 +129,7 @@ public:
                                <std::string, RangeStats>& outputsRange,
                                unsigned int nbLevels = 128,
                                unsigned int nbPasses = 1);
+    void fuseBatchNormWithConv();
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)

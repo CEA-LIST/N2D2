@@ -70,6 +70,10 @@ public:
     virtual void getBias(unsigned int index, BaseTensor& value) const = 0;
     virtual void getMean(unsigned int index, BaseTensor& value) const = 0;
     virtual void getVariance(unsigned int index, BaseTensor& value) const = 0;
+    virtual void setScale(unsigned int index, const BaseTensor& value) = 0;
+    virtual void setBias(unsigned int index, const BaseTensor& value) = 0;
+    virtual void setMean(unsigned int index, const BaseTensor& value) = 0;
+    virtual void setVariance(unsigned int index, const BaseTensor& value) = 0;
     virtual std::shared_ptr<BaseTensor> getScales() const
     {
         return std::shared_ptr<BaseTensor>();
@@ -102,10 +106,6 @@ public:
 
 protected:
     virtual void setOutputsDims();
-    virtual void setScale(unsigned int index, const BaseTensor& value) = 0;
-    virtual void setBias(unsigned int index, const BaseTensor& value) = 0;
-    virtual void setMean(unsigned int index, const BaseTensor& value) = 0;
-    virtual void setVariance(unsigned int index, const BaseTensor& value) = 0;
 
     /// Epsilon value used in the batch normalization formula
     Parameter<double> mEpsilon;

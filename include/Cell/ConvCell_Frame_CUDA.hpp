@@ -226,6 +226,9 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::setBias(unsigned int output,
                                            const BaseTensor& value)
 {
+    if (!mNoBias && mBias->empty())
+        mBias->resize({1, 1, getNbOutputs(), 1});
+
     (*mBias)(output) = tensor_cast<T>(value)(0);
 
     if (!mSynchronized)

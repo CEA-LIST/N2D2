@@ -73,6 +73,9 @@ public:
                           unsigned int height = 0);
     virtual void addInput(BaseTensor& inputs,
                           BaseTensor& diffOutputs);
+    virtual void replaceInput(BaseTensor& oldInputs,
+                              BaseTensor& newInputs,
+                              BaseTensor& newDiffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void setOutputTarget(const Tensor<int>& targets,

@@ -190,6 +190,23 @@ void N2D2::Cell_Frame<T>::addInput(BaseTensor& inputs,
 }
 
 template <class T>
+void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
+                                       BaseTensor& newInputs,
+                                       BaseTensor& newDiffOutputs)
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i) {
+        if (&mInputs[i] == &oldInputs) {
+            mInputs.replace(i, &newInputs);
+
+            if (!newDiffOutputs.empty()) {
+                assert(i < mDiffOutputs.size());
+                mDiffOutputs.replace(i, &newDiffOutputs);
+            }
+        }
+    }
+}
+
+template <class T>
 void N2D2::Cell_Frame<T>::propagate(bool inference)
 {
     if (mActivation)
