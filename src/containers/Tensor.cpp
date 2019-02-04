@@ -115,24 +115,6 @@ void N2D2::BaseTensor::reshape(const std::vector<size_t>& dims)
     }
 }
 
-size_t N2D2::BaseTensor::getOffset(unsigned int dim, size_t i) const
-{
-    (void) dim; // discard warning about unused parameter
-    assert(mDims.size() > dim);
-    assert(i < mDims[dim]);
-    return i;
-}
-
-size_t N2D2::BaseTensor::getOffsetAt(unsigned int dim, size_t i) const
-{
-    assert(mDims.size() > dim);
-
-    if (i >= mDims[dim])
-        throw std::runtime_error("Out of range!");
-
-    return i;
-}
-
 
 /**
  * Tensor 
