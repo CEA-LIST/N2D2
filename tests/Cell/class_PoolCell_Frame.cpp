@@ -72,6 +72,8 @@ public:
 
 };
 
+static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+
 TEST_DATASET(PoolCell_Frame,
              PoolCell_Frame,
              (unsigned int poolWidth,
@@ -345,8 +347,6 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
@@ -484,8 +484,6 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
@@ -793,9 +791,6 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
     Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
@@ -931,9 +926,6 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({strideX, strideY}),
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
-
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
@@ -1243,9 +1235,6 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
     Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
@@ -1382,8 +1371,6 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));

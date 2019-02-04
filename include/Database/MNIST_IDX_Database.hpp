@@ -27,6 +27,11 @@ namespace N2D2 {
 class MNIST_IDX_Database : public IDX_Database {
 public:
     MNIST_IDX_Database(double validation = 0.0);
+    MNIST_IDX_Database(const std::string& dataPath,
+                       const std::string& labelPath = "",
+                       bool /*extractROIs*/ = false,
+                       double validation = 0.0);
+
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);

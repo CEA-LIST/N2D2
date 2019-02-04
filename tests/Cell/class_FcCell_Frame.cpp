@@ -66,6 +66,8 @@ public:
     friend class UnitTest_FcCell_Frame_half_propagate_weight_check;
 };
 
+static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+
 ////////////////////////////////////////////////////////////////////////////////
 // float
 ////////////////////////////////////////////////////////////////////////////////
@@ -423,9 +425,6 @@ TEST_DATASET(FcCell_Frame_float,
         "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
     Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
@@ -496,9 +495,6 @@ TEST_DATASET(FcCell_Frame_float,
     FcCell_Frame_Test<float> fc1(
         "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
-
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
@@ -971,9 +967,6 @@ TEST_DATASET(FcCell_Frame_double,
         "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
     Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
@@ -1044,9 +1037,6 @@ TEST_DATASET(FcCell_Frame_double,
     FcCell_Frame_Test<double> fc1(
         "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
-
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
@@ -1520,9 +1510,6 @@ TEST_DATASET(FcCell_Frame_half,
         "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
     Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
@@ -1594,9 +1581,6 @@ TEST_DATASET(FcCell_Frame_half,
     FcCell_Frame_Test<half_float::half> fc1(
         "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
-
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
 
     Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));

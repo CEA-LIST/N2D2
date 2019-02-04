@@ -25,6 +25,14 @@ N2D2::MNIST_IDX_Database::MNIST_IDX_Database(double validation)
 {
     // ctor
 }
+N2D2::MNIST_IDX_Database::MNIST_IDX_Database(const std::string& dataPath,
+                                             const std::string& labelPath,
+                                             bool extractROIs,
+                                             double validation)
+    : MNIST_IDX_Database(validation)
+{
+    load(dataPath, labelPath, extractROIs);
+}
 
 void N2D2::MNIST_IDX_Database::load(const std::string& dataPath,
                                     const std::string& labelPath,
