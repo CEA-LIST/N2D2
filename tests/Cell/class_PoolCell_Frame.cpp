@@ -72,7 +72,10 @@ public:
 
 };
 
-static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+static MNIST_IDX_Database& getDatabase() {
+    static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+    return database;
+}
 
 TEST_DATASET(PoolCell_Frame,
              PoolCell_Frame,
@@ -348,7 +351,7 @@ TEST_DATASET(PoolCell_Frame,
                               PoolCell::Max);
 
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -485,7 +488,7 @@ TEST_DATASET(PoolCell_Frame,
                               PoolCell::Max);
 
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -791,7 +794,7 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -927,7 +930,7 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -1235,7 +1238,7 @@ TEST_DATASET(PoolCell_Frame,
                               std::vector<unsigned int>({paddingX, paddingY}),
                               PoolCell::Max);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -1372,7 +1375,7 @@ TEST_DATASET(PoolCell_Frame,
                               PoolCell::Max);
 
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));

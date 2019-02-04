@@ -75,7 +75,10 @@ public:
     friend class UnitTest_ConvCell_Frame_half_setWeight;
 };
 
-static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+static MNIST_IDX_Database& getDatabase() {
+    static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+    return database;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // float
@@ -434,7 +437,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -574,7 +577,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -1105,7 +1108,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -1245,7 +1248,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -1776,7 +1779,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -1916,7 +1919,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
