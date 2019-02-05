@@ -30,6 +30,7 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
+#include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
@@ -333,6 +334,100 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
     }
 
     mCells.insert(std::make_pair(cell->getName(), cell));
+}
+
+void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
+                               bool reconnect)
+{
+    const std::string name = cell->getName();
+
+    mCells.erase(name);
+
+    for (unsigned int l = 1; l < mLayers.size(); ) {
+        mLayers[l].erase(std::remove(mLayers[l].begin(),
+                                     mLayers[l].end(),
+                                     name),
+                         mLayers[l].end());
+
+        if (mLayers[l].empty())
+            mLayers.erase(mLayers.begin() + l);
+        else
+            ++l;
+    }
+
+    std::vector<std::string> parents;
+    std::vector<std::string> childs;
+
+    for (std::multimap<std::string, std::string>::iterator
+         itParentLayers = mParentLayers.begin();
+         itParentLayers != mParentLayers.end(); )
+    {
+        if ((*itParentLayers).first == name
+            || (*itParentLayers).second == name)
+        {
+            if ((*itParentLayers).first == name)
+                parents.push_back((*itParentLayers).second);
+            else
+                childs.push_back((*itParentLayers).first);
+
+            // Remove the cell from mParentLayers
+            itParentLayers
+                = mParentLayers.erase(itParentLayers);
+        }
+        else
+            ++itParentLayers;
+    }
+
+    if (reconnect) {
+        // Connect directly childs to parents
+
+        /* Example with single branch:
+           A -> X -> B                =>    A -> B
+           mParentLayers:
+           ("X", "A"), ("B", "X")     =>     ("B", "A")
+
+           Examples with multiples branches:
+           (1)  A \                                         A \
+                   -> X -> C                      =>           -> C
+                B /                                         B /
+           mParentLayers:
+           ("X", "A"), ("X", "B"), ("C", "X")     =>    ("C", "A"), ("C", "B")
+
+           (2)  A \       / C                               A \-/ C
+                   -> X ->                        =>           X
+                B /       \ D                               B /-\ D
+           mParentLayers:
+           ("X", "A"), ("X", "B")                 =>    ("C", "A"), ("C", "B")
+           ("C", "X"), ("D", "X")                       ("D", "A"), ("D", "B")
+        */
+
+        std::shared_ptr<Cell_Frame_Top> cellTop =
+            std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+        for (std::vector<std::string>::const_iterator itChild = childs.begin(),
+             itChildEnd = childs.end(); itChild != itChildEnd; ++itChild)
+        {
+            std::shared_ptr<Cell_Frame_Top> childCellTop =
+                std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itChild]);
+
+            for (std::vector<std::string>::const_iterator itParent
+                 = parents.begin(), itParentEnd = parents.end();
+                 itParent != itParentEnd; ++itParent)
+            {
+                std::shared_ptr<Cell_Frame_Top> parentCellTop =
+                   std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itParent]);
+
+                if (cellTop && childCellTop && parentCellTop) {
+                    childCellTop->replaceInput(
+                        cellTop->getOutputs(),
+                        parentCellTop->getOutputs(),
+                        parentCellTop->getDiffInputs());
+                }
+
+                mParentLayers.insert(std::make_pair(*itChild, *itParent));
+            }
+        }
+    }
 }
 
 void N2D2::DeepNet::addTarget(const std::shared_ptr<Target>& target)
@@ -1389,55 +1484,8 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                     }
 
                     // Replace BatchNorm by Conv for BatchNorm childs
-                    const std::vector<std::shared_ptr<Cell> > bnChilds
-                        = getChildCells((*it).first);
-
-                    for (std::vector<std::shared_ptr<Cell> >::const_iterator
-                         itBnChilds = bnChilds.begin(),
-                         itBnChildsEnd = bnChilds.end();
-                         itBnChilds != itBnChildsEnd; ++itBnChilds)
-                    {
-                        std::shared_ptr<Cell_Frame_Top> cellTop =
-                            std::dynamic_pointer_cast<Cell_Frame_Top>(
-                                                                *itBnChilds);
-
-                        cellTop->replaceInput(
-                            bnCellTop->getOutputs(),
-                            convCellTop->getOutputs(),
-                            convCellTop->getDiffInputs());
-                    }
-
-                    // BatchNorm cell removal from DeepNet
-                    mCells.erase((*it).first);
-
-                    for (unsigned int l = 1; l < mLayers.size(); ++l) {
-                        mLayers[l].erase(std::remove(mLayers[l].begin(),
-                                                     mLayers[l].end(),
-                                                     (*it).first),
-                                         mLayers[l].end());
-                    }
-
-                    // CONV -> BN -> X
-                    // mParentLayers: ("BN", "CONV"), ("X", "BN")
-                    // =>
-                    // CONV -> X
-                    // mParentLayers: ("X", "CONV")
-
-                    for (std::multimap<std::string, std::string>::iterator
-                         itParentLayers = mParentLayers.begin();
-                         itParentLayers != mParentLayers.end(); )
-                    {
-                        if ((*itParentLayers).first == (*it).first) {
-                            itParentLayers
-                                = mParentLayers.erase(itParentLayers);
-                        }
-                        else {
-                            if ((*itParentLayers).second == (*it).first)
-                                (*itParentLayers).second = convCell->getName();
-
-                            ++itParentLayers;
-                        }
-                    }
+                    // and BatchNorm cell removal from DeepNet
+                    removeCell((*it).second, true);
                 }
                 else {
                     std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
@@ -1457,6 +1505,23 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                     << (*it).second->getName() << "\" because it has multiple "
                     "parents (not supported)" << Utils::cdef << std::endl;
             }
+        }
+    }
+}
+
+void N2D2::DeepNet::removeDropout() {
+    std::cout << "Remove Dropout..." << std::endl;
+
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it)
+    {
+        // check every Dropout cell
+        if ((*it).second->getType() == DropoutCell::Type) {
+            // remove them
+            std::cout << "  remove Dropout \"" << (*it).second->getName()
+                << "\"" << std::endl;
+
+            removeCell((*it).second, true);
         }
     }
 }

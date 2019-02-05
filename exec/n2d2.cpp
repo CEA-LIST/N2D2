@@ -340,6 +340,8 @@ int main(int argc, char* argv[]) try
                 << Utils::cdef << std::endl;
         }
 
+        deepNet->removeDropout();
+
         if (fuse)
             deepNet->fuseBatchNormWithConv();
 

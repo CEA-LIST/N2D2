@@ -202,6 +202,8 @@ TEST(DeepNet, fuseBatchNormWithConv)
         bn1->setVariance(output, variance);
     }
 
+    ASSERT_EQUALS(deepNet.getLayers().size(), 3U);
+
     // Outputs before fuse
     conv1->propagate();
     bn1->propagate();
@@ -212,6 +214,7 @@ TEST(DeepNet, fuseBatchNormWithConv)
     // Fuse!
     deepNet.fuseBatchNormWithConv();
 
+    ASSERT_EQUALS(deepNet.getLayers().size(), 2U);
     ASSERT_EQUALS(conv1->getParameter<bool>("NoBias"), false);
     ASSERT_EQUALS(conv1->getActivation()->getType(), "Rectifier");
 

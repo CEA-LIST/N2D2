@@ -90,6 +90,7 @@ public:
     DeepNet(Network& net);
     void addCell(const std::shared_ptr<Cell>& cell,
                  const std::vector<std::shared_ptr<Cell> >& parents);
+    void removeCell(const std::shared_ptr<Cell>& cell, bool reconnect = true);
     void addTarget(const std::shared_ptr<Target>& cell);
     void addMonitor(const std::string& name,
                     const std::shared_ptr<Monitor>& monitor);
@@ -130,6 +131,7 @@ public:
                                unsigned int nbLevels = 128,
                                unsigned int nbPasses = 1);
     void fuseBatchNormWithConv();
+    void removeDropout();
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)
