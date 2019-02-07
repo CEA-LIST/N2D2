@@ -42,6 +42,7 @@ N2D2::Target::Target(const std::string& name,
       mLabelsHueOffset(this, "LabelsHueOffset", 0),
       mMaskedLabel(this, "MaskedLabel", -1),
       mBinaryThreshold(this, "BinaryThreshold", 0.5),
+      mImageLogFormat(this, "ImageLogFormat", "jpg"),
       mName(name),
       mCell(cell),
       mStimuliProvider(sp),
@@ -403,10 +404,12 @@ void N2D2::Target::process(Database::StimuliSet set)
             Tensor<Float_T> estimatedLabelsValue
                 = mEstimatedLabelsValue[batchPos];
 
-            if (mTargetTopN > value.dimZ())
+            if (mTargetTopN > value.dimZ()) {
+#pragma omp critical(Target__process)
                 throw std::runtime_error("Target::process(): target 'TopN' "
                                          "parameter must be <= to the network "
                                          "output size");
+            }
 
             if (target.size() == 1) {
                 if (target(0) >= 0) {
@@ -566,7 +569,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 = mStimuliProvider->getDatabase().getStimulusName(id);
             const std::string baseName = Utils::baseName(imgFile);
             const std::string fileBaseName = Utils::fileBaseName(baseName);
-            const std::string fileExtension = Utils::fileExtension(baseName);
+            const std::string fileExtension
+                = (!((std::string)mImageLogFormat).empty())
+                    ? mImageLogFormat : Utils::fileExtension(baseName);
 
             // Input image
             cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
@@ -576,8 +581,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             std::string fileName = dirPath + "/" + fileBaseName + "_target."
                                    + fileExtension;
 
-            if (!cv::imwrite(fileName, inputImg8U))
+            if (!cv::imwrite(fileName, inputImg8U)) {
+#pragma omp critical(Target__logEstimatedLabels)
                 throw std::runtime_error("Unable to write image: " + fileName);
+            }
 
             // Output image
             const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
@@ -587,8 +594,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             fileName = dirPath + "/" + fileBaseName + "_estimated."
                        + fileExtension;
 
-            if (!cv::imwrite(fileName, outputImg8U))
+            if (!cv::imwrite(fileName, outputImg8U)) {
+#pragma omp critical(Target__logEstimatedLabels)
                 throw std::runtime_error("Unable to write image: " + fileName);
+            }
         }
 
         return;
@@ -652,7 +661,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             = mStimuliProvider->getDatabase().getStimulusName(id);
         const std::string baseName = Utils::baseName(imgFile);
         const std::string fileBaseName = Utils::fileBaseName(baseName);
-        const std::string fileExtension = Utils::fileExtension(baseName);
+        const std::string fileExtension
+            = (!((std::string)mImageLogFormat).empty())
+                ? mImageLogFormat : Utils::fileExtension(baseName);
 
         // Input image
         cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
@@ -697,8 +708,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         std::string fileName = dirPath + "/" + fileBaseName + "_target."
                                + fileExtension;
 
-        if (!cv::imwrite(fileName, imgBlended))
+        if (!cv::imwrite(fileName, imgBlended)) {
+#pragma omp critical(Target__logEstimatedLabels)
             throw std::runtime_error("Unable to write image: " + fileName);
+        }
 
         // Estimated image
 #if CV_MAJOR_VERSION >= 3
@@ -720,8 +733,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         fileName = dirPath + "/" + fileBaseName + "_estimated." + fileExtension;
 
-        if (!cv::imwrite(fileName, imgBlended))
+        if (!cv::imwrite(fileName, imgBlended)) {
+#pragma omp critical(Target__logEstimatedLabels)
             throw std::runtime_error("Unable to write image: " + fileName);
+        }
     }
 }
 

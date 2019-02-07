@@ -146,6 +146,8 @@ protected:
     Parameter<int> mMaskedLabel;
     /// Threshold for single output (binary classification). Default is 0.5.
     Parameter<double> mBinaryThreshold;
+    /// If left empty, use the database image origin format
+    Parameter<std::string> mImageLogFormat;
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;

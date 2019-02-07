@@ -417,7 +417,12 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
         const std::string imgFile
             = mStimuliProvider->getDatabase().getStimulusName(id);
         const std::string baseName = Utils::baseName(imgFile);
-        const std::string fileName = dirPath + "/" + baseName;
+        const std::string fileBaseName = Utils::fileBaseName(baseName);
+        const std::string fileExtension
+            = (!((std::string)mImageLogFormat).empty())
+                ? mImageLogFormat : Utils::fileExtension(baseName);
+        const std::string fileName = dirPath + "/" + fileBaseName
+                                        + "." + fileExtension;
 
         // Draw image
         if (!cv::imwrite(fileName, drawEstimatedLabels(batchPos)))
