@@ -1300,20 +1300,23 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
 {
     // Initialize mStimuliDepth using the first stimulus
     if (mStimuliDepth == -1) {
-        std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
-        std::transform(fileExtension.begin(),
-                       fileExtension.end(),
-                       fileExtension.begin(),
-                       ::tolower);
+        #pragma omp critical
+        if (mStimuliDepth == -1) {
+            std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
+            std::transform(fileExtension.begin(),
+                           fileExtension.end(),
+                           fileExtension.begin(),
+                           ::tolower);
 
-        std::shared_ptr<DataFile> dataFile = Registrar
-            <DataFile>::create(fileExtension)();
-        mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
+            std::shared_ptr<DataFile> dataFile = Registrar
+                <DataFile>::create(fileExtension)();
+            mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
 
-        std::cout << Utils::cnotice << "Notice: stimuli depth is "
-                  << Utils::cvMatDepthToString(mStimuliDepth)
-                  << " (according to database first stimulus)" << Utils::cdef
-                  << std::endl;
+            std::cout << Utils::cnotice << "Notice: stimuli depth is "
+                      << Utils::cvMatDepthToString(mStimuliDepth)
+                      << " (according to database first stimulus)"
+                      << Utils::cdef << std::endl;
+        }
     }
 
     std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
