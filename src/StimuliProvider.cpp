@@ -309,7 +309,7 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 
     unsigned int exceptCatch = 0;
 
-#pragma omp parallel for if (mBatchSize > 1)
+#pragma omp parallel for schedule(dynamic) if (mBatchSize > 1)
     for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
         try {
             readStimulus(batchRef[batchPos], set, batchPos);
@@ -353,7 +353,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         batchRef[batchPos]
             = mDatabase.getStimulusID(set, startIndex + batchPos);
 
-#pragma omp parallel for if (batchSize > 1)
+#pragma omp parallel for schedule(dynamic) if (batchSize > 1)
     for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
         readStimulus(batchRef[batchPos], set, batchPos);
 

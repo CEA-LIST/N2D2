@@ -65,6 +65,12 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
         if (iniConfig.isProperty("Test"))
             test = iniConfig.getProperty<double>("Test");
 
+        if (iniConfig.isProperty("IgnoreMasks")) {
+            database->setIgnoreMasks(
+                iniConfig.getProperty<std::vector<std::string> >
+                    ("IgnoreMasks", std::vector<std::string>()));
+        }
+
         if (iniConfig.isProperty("ValidExtensions")) {
             database->setValidExtensions(
                 iniConfig.getProperty<std::vector<std::string> >

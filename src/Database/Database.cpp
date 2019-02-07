@@ -672,7 +672,7 @@ void N2D2::Database::extractSlices(unsigned int width,
         const int size = mStimuliSets(*itSet).size();
         std::vector<Stimulus> newStimuli;
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
         for (int i = 0; i < size; ++i) {
             const StimulusID id = mStimuliSets(*itSet)[i];
 

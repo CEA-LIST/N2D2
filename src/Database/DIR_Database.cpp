@@ -28,6 +28,15 @@ N2D2::DIR_Database::DIR_Database(bool loadDataInMemory)
     // ctor
 }
 
+void N2D2::DIR_Database::setIgnoreMasks(
+    const std::vector<std::string>& ignoreMasks)
+{
+    if (!ignoreMasks.empty())
+        std::cout << "Ignore masks are: " << ignoreMasks << std::endl;
+
+    mIgnoreMasks = ignoreMasks;
+}
+
 void N2D2::DIR_Database::setValidExtensions(
     const std::vector<std::string>& validExtensions)
 {
@@ -49,6 +58,9 @@ void N2D2::DIR_Database::loadDir(const std::string& dirPath,
                                  const std::string& labelName,
                                  int labelDepth)
 {
+    if (!((std::string)mDefaultLabel).empty())
+        labelID(mDefaultLabel);
+
     DIR* pDir = opendir(dirPath.c_str());
 
     if (pDir == NULL)
@@ -72,6 +84,22 @@ void N2D2::DIR_Database::loadDir(const std::string& dirPath,
             continue;
         // Exclude current and parent directories
         if (!strcmp(pFile->d_name, ".") || !strcmp(pFile->d_name, ".."))
+            continue;
+
+        bool masked = false;
+
+        for (std::vector<std::string>::const_iterator it = mIgnoreMasks.begin(),
+             itEnd = mIgnoreMasks.end(); it != itEnd; ++it)
+        {
+            if (Utils::match((*it), filePath)) {
+                std::cout << Utils::cnotice << "Notice: path \"" << filePath
+                          << "\" ignored (matching mask: " << (*it) << ")."
+                          << Utils::cdef << std::endl;
+                masked = true;
+            }
+        }
+
+        if (masked)
             continue;
 
         if (S_ISDIR(fileStat.st_mode))

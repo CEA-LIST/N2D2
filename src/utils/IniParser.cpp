@@ -326,61 +326,30 @@ std::string N2D2::IniParser::getCurrentSection() const
     return mIniSections[mCurrentSection];
 }
 
-bool N2D2::IniParser::isProperty(const std::string& name)
+bool N2D2::IniParser::isProperty(const std::string& name) const
 {
-    const size_t posWildcard = name.find("*");
-
-    if (posWildcard != std::string::npos) {
-        const std::string prefixMask = name.substr(0, posWildcard);
-        const std::string suffixMask = name.substr(posWildcard + 1);
-
-        for (std::map<std::string, std::pair<std::string, bool> >::iterator it
-             = mIniData[mCurrentSection].begin(),
-             itEnd = mIniData[mCurrentSection].end();
-             it != itEnd;
-             ++it) {
-            if ((prefixMask.empty() || (*it).first.find(prefixMask) == 0)
-                && (suffixMask.empty() || (*it).first.find(suffixMask)
-                                          == (*it).first.length()
-                                             - suffixMask.length())) {
-                return true;
-            }
-        }
-
-        return false;
-    } else {
-        std::map<std::string, std::pair<std::string, bool> >::iterator it
-            = mIniData[mCurrentSection].find(name);
-
-        return (it != mIniData[mCurrentSection].end());
+    for (std::map<std::string, std::pair<std::string, bool> >::const_iterator it
+         = mIniData[mCurrentSection].begin(),
+         itEnd = mIniData[mCurrentSection].end();
+         it != itEnd;
+         ++it)
+    {
+        if (Utils::match(name, (*it).first))
+            return true;
     }
+
+    return false;
 }
 
 void N2D2::IniParser::ignoreProperty(const std::string& name)
 {
-    const size_t posWildcard = name.find("*");
-
-    if (posWildcard != std::string::npos) {
-        const std::string prefixMask = name.substr(0, posWildcard);
-        const std::string suffixMask = name.substr(posWildcard + 1);
-
-        for (std::map<std::string, std::pair<std::string, bool> >::iterator it
-             = mIniData[mCurrentSection].begin(),
-             itEnd = mIniData[mCurrentSection].end();
-             it != itEnd;
-             ++it) {
-            if ((prefixMask.empty() || (*it).first.find(prefixMask) == 0)
-                && (suffixMask.empty() || (*it).first.find(suffixMask)
-                                          == (*it).first.length()
-                                             - suffixMask.length())) {
-                (*it).second.second = true;
-            }
-        }
-    } else {
-        std::map<std::string, std::pair<std::string, bool> >::iterator it
-            = mIniData[mCurrentSection].find(name);
-
-        if (it != mIniData[mCurrentSection].end())
+    for (std::map<std::string, std::pair<std::string, bool> >::iterator it
+         = mIniData[mCurrentSection].begin(),
+         itEnd = mIniData[mCurrentSection].end();
+         it != itEnd;
+         ++it)
+    {
+        if (Utils::match(name, (*it).first))
             (*it).second.second = true;
     }
 }
@@ -390,37 +359,14 @@ N2D2::IniParser::getSectionsWithProperty(const std::string& name)
 {
     std::vector<std::string> sections;
 
-    const size_t posWildcard = name.find("*");
-
-    if (posWildcard != std::string::npos) {
-        const std::string prefixMask = name.substr(0, posWildcard);
-        const std::string suffixMask = name.substr(posWildcard + 1);
-
-        for (unsigned int section = 0, nbSections = mIniSections.size();
-             section < nbSections;
-             ++section) {
-            for (std::map<std::string, std::pair<std::string, bool> >::iterator
-                     it = mIniData[section].begin(),
-                     itEnd = mIniData[section].end();
-                 it != itEnd;
-                 ++it) {
-                if ((prefixMask.empty() || (*it).first.find(prefixMask) == 0)
-                    && (suffixMask.empty() || (*it).first.find(suffixMask)
-                                              == (*it).first.length()
-                                                 - suffixMask.length())) {
-                    (*it).second.second = true;
-                }
-            }
-        }
-    } else {
-        for (unsigned int section = 0, nbSections = mIniSections.size();
-             section < nbSections;
-             ++section) {
-            const std::map
-                <std::string, std::pair<std::string, bool> >::iterator it
-                = mIniData[section].find(name);
-
-            if (it != mIniData[section].end()) {
+    for (unsigned int section = 0, nbSections = mIniSections.size();
+         section < nbSections; ++section)
+    {
+        for (std::map<std::string, std::pair<std::string, bool> >::iterator
+            it = mIniData[section].begin(), itEnd = mIniData[section].end();
+            it != itEnd; ++it)
+        {
+            if (Utils::match(name, (*it).first)) {
                 sections.push_back(mIniSections[section]);
                 (*it).second.second = true;
             }

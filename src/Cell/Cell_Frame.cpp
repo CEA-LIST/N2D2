@@ -240,7 +240,9 @@ void N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets,
         if (targets(0, batchPos) >= 0) {
             if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
                 || (outputSize == 1 && (targets(0, batchPos) < 0
-                                        || targets(0, batchPos) > 1))) {
+                                        || targets(0, batchPos) > 1)))
+            {
+#pragma omp critical
                 throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): "
                                         "target not within output range.");
             }

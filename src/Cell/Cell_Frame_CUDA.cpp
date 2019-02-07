@@ -296,7 +296,9 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
                 if (target(ox, oy) >= 0) {
                     if ((getNbOutputs() > 1 && target(ox, oy) >= (int)getNbOutputs())
                         || (getNbOutputs() == 1
-                            && (target(ox, oy) < 0 || target(ox, oy) > 1))) {
+                            && (target(ox, oy) < 0 || target(ox, oy) > 1)))
+                    {
+#pragma omp critical
                         throw std::domain_error("Cell_Frame_CUDA<T>::"
                                                 "setOutputTargets(): output "
                                                 "target out of range.");

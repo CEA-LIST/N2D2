@@ -27,6 +27,7 @@ namespace N2D2 {
 class DIR_Database : public Database {
 public:
     DIR_Database(bool loadDataInMemory = false);
+    void setIgnoreMasks(const std::vector<std::string>& ignoreMasks);
     void setValidExtensions(const std::vector<std::string>& validExtensions);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
@@ -59,6 +60,7 @@ public:
 protected:
     virtual void loadFile(const std::string& fileName, int label);
 
+    std::vector<std::string> mIgnoreMasks;
     std::vector<std::string> mValidExtensions;
 };
 }

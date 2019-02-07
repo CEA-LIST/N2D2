@@ -190,15 +190,18 @@ int N2D2::Target::getLabelTarget(int label) const
         else if (mDefaultTarget >= -1)
             return mDefaultTarget;
         else {
-            std::stringstream labelStr;
-            labelStr << label;
+            #pragma omp critical
+            {
+                std::stringstream labelStr;
+                labelStr << label;
 
-            const std::string labelName
-                = mStimuliProvider->getDatabase().getLabelName(label);
+                const std::string labelName
+                    = mStimuliProvider->getDatabase().getLabelName(label);
 
-            throw std::runtime_error(
-                "Incomplete class mapping: no output specified for label #"
-                + labelStr.str() + " (" + labelName + ")");
+                throw std::runtime_error(
+                    "Incomplete class mapping: no output specified for label #"
+                    + labelStr.str() + " (" + labelName + ")");
+            }
         }
     }
 }

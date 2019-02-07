@@ -111,18 +111,20 @@ public:
     /**
      * Check if a property exists.
      *
-     * @param name              Name of the property (support '*' wildcard)
+     * @param name              Name of the property (support '?' and '*'
+     *                                                wildcards)
      * @return True if the property exists
      *
      * @exception std::runtime_error Property not found in section
     */
-    bool isProperty(const std::string& name);
+    bool isProperty(const std::string& name) const;
 
     /**
      * Ignore a property (so it is not counted as unkown property in section
      *check for unknown).
      *
-     * @param name              Name of the property (support '*' wildcard)
+     * @param name              Name of the property (support '?' and '*'
+     *                                                wildcards)
     */
     void ignoreProperty(const std::string& name);
 
@@ -151,7 +153,8 @@ public:
     /**
      * Return all the sections containing a given property.
      *
-     * @param name              Name of the property
+     * @param name              Name of the property (support '?' and '*'
+     *                                                wildcards)
      * @return Vector containing the name of the sections containing the
      *property
     */
