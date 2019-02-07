@@ -1378,9 +1378,8 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         }
         else if (mStimuli[id].label >= 0) {
             // use labels as a mask for the stimulus label
-            // OpenCV comparison operator returns 255 and not 1 when true.
-            // cv::threshold() doesn't work with CV_32S.
-            labels = ((labels > 0) / 255) * mStimuli[id].label;
+            labels.setTo(defaultLabel, labels == 0);
+            labels.setTo(mStimuli[id].label, labels != 0);
         }
 
         if (mStimuli[id].slice != NULL)

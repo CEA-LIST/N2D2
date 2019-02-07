@@ -226,24 +226,21 @@ void N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets,
                                        double defaultVal)
 {
     if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): target "
+        throw std::domain_error("Cell_Frame::setOutputTarget(): target "
                                 "and output batch sizes don't match.");
 
     if (targets.size() / targets.dimB() != 1)
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): require "
+        throw std::domain_error("Cell_Frame::setOutputTarget(): require "
                                 "one target per batch.");
 
     const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
 
-#pragma omp parallel for if (mOutputs.dimB() > 4)
-    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
+    for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
         if (targets(0, batchPos) >= 0) {
             if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
                 || (outputSize == 1 && (targets(0, batchPos) < 0
-                                        || targets(0, batchPos) > 1)))
-            {
-#pragma omp critical
-                throw std::domain_error("Cell_Frame_CUDA::setOutputTarget(): "
+                                        || targets(0, batchPos) > 1))) {
+                throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): "
                                         "target not within output range.");
             }
         }
@@ -276,7 +273,8 @@ void N2D2::Cell_Frame<T>::setOutputTargets(const Tensor<int>& targets,
         throw std::domain_error(
             "Cell_Frame<T>::setOutputTargets(): wrong target matrix size.");
 
-    for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
+#pragma omp parallel for if (mOutputs.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
         const Tensor<int> target = targets[batchPos][0];
 
         std::vector<unsigned int> nbTargetOutputs(
@@ -287,10 +285,19 @@ void N2D2::Cell_Frame<T>::setOutputTargets(const Tensor<int>& targets,
                 if (target(ox, oy) >= 0) {
                     if ((getNbOutputs() > 1 && target(ox, oy) >= (int)getNbOutputs())
                         || (getNbOutputs() == 1
-                            && (target(ox, oy) < 0 || target(ox, oy) > 1))) {
-                        throw std::domain_error("Cell_Frame<T>::setOutputTargets()"
-                                                ": output target out of "
-                                                "range.");
+                            && (target(ox, oy) < 0 || target(ox, oy) > 1)))
+                    {
+#pragma omp critical
+                        {
+                            std::stringstream errorMsg;
+                            errorMsg << "Cell_Frame<T>:: "
+                                "setOutputTargets(): "
+                                "output target (" << target(ox, oy) << ") out "
+                                "of range [0," << (getNbOutputs()
+                                                - (getNbOutputs() > 1)) << "].";
+
+                            throw std::domain_error(errorMsg.str());
+                        }
                     }
 
                     ++nbTargetOutputs[target(ox, oy)];
@@ -345,7 +352,7 @@ template <class T>
 void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
 {
     if (baseErrors.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA::setOutputTargets(): target "
+        throw std::domain_error("Cell_Frame::setOutputTargets(): target "
                                 "and output batch sizes don't match.");
 
     if (baseErrors.dimX() != mOutputsDims[0]
@@ -353,7 +360,7 @@ void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
         || baseErrors.dimZ() != getNbOutputs())
     {
         throw std::domain_error(
-            "Cell_Frame_CUDA::setOutputErrors(): wrong target matrix size.");
+            "Cell_Frame::setOutputErrors(): wrong target matrix size.");
     }
 
     const Tensor<T>& errors = tensor_cast<T>(baseErrors);
