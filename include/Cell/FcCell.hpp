@@ -133,7 +133,9 @@ protected:
     Parameter<std::string> mOutputsRemap;
 
     std::shared_ptr<Filler> mWeightsFiller;
+    // TODO: At the moment not used
     std::shared_ptr<Filler> mTopDownWeightsFiller;
+    // TODO: At the moment not used
     std::shared_ptr<Filler> mRecWeightsFiller;
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;

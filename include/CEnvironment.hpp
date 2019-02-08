@@ -111,6 +111,22 @@ public:
     {
         return mRelationalTargets;
     };
+    Interface<Float_T>& getRelationalData()
+    {
+        return mRelationalData;
+    };
+    const Tensor<Float_T>& getRelationalData(unsigned int subIdx) const
+    {
+        return mRelationalData[subIdx];
+    };
+    Tensor<Float_T>& getRelationalData(unsigned int subIdx)
+    {
+        return mRelationalData[subIdx];
+    };
+    bool doesSpikeConversion()
+    {
+        return !mNoConversion;
+    };
 
     virtual void reset(Time_T timestamp);
     virtual void initialize(Time_T start, Time_T stop);

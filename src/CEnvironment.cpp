@@ -106,18 +106,6 @@ void N2D2::CEnvironment::addChannel(const CompositeTransformation
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
     if (mNoConversion) {
-        // Assumes that mRelationalData is normalized between 0 and 1
-        for (unsigned int k=0; k<mRelationalData.size(); k++){
-            for (unsigned int idx = 0, size = mRelationalData[k].size(); idx < size; ++idx) {
-                int value = std::floor(mScaling * 128 * mRelationalData[k](idx));
-                if (value > 128 || value < -128) {
-                    throw std::runtime_error("CEnvironment::tick: |value| > 128");
-                }
-                mTickData[k](idx) = (char)value;
-                //std::cout <<  value << " " << (int)mTickData[k](idx) << std::endl;
-            }
-            mTickData[k].synchronizeHToD();
-        }
         return;
     }
     if (!mReadAerData) {
