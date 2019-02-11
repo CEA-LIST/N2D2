@@ -24,6 +24,7 @@
 #include "Solver/Solver.hpp"
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
+#include "utils/Gnuplot.hpp"
 
 namespace N2D2 {
 class SGDSolver : public Solver {
@@ -69,10 +70,14 @@ public:
     {
         return std::make_pair(mMinValQuant, mMaxValQuant);
     }
+    void logSchedule(const std::string& fileName,
+                     unsigned int batchSize,
+                     unsigned int epochSize = 0,
+                     unsigned int maxSteps = 0);
     virtual ~SGDSolver() {};
 
 protected:
-    double getLearningRate(unsigned int batchSize);
+    double getLearningRate(unsigned int batchSize, bool silent = false);
     virtual void saveInternal(std::ostream& state, std::ostream& log) const;
     virtual void loadInternal(std::istream& state);
 

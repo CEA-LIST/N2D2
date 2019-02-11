@@ -21,6 +21,9 @@
 #include "Solver/Solver.hpp"
 #include "utils/Utils.hpp"
 
+unsigned long long int N2D2::Solver::mMaxSteps = 0;
+unsigned long long int N2D2::Solver::mLogSteps = 0;
+
 void N2D2::Solver::save(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);

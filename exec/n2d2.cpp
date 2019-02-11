@@ -62,6 +62,7 @@
 #include "Export/DeepNetExport.hpp"
 #include "Export/StimuliProviderExport.hpp"
 #include "Generator/DeepNetGenerator.hpp"
+#include "Solver/SGDSolver.hpp"
 #include "Target/TargetROIs.hpp"
 #include "Target/TargetScore.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
@@ -286,6 +287,9 @@ int main(int argc, char* argv[]) try
         seed = Network::readSeed("seed.dat");
 
     // Network topology construction
+    SGDSolver::mMaxSteps = learn;
+    SGDSolver::mLogSteps = log;
+
     Network net(seed);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, iniConfig);

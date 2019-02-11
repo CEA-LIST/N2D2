@@ -85,7 +85,7 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
 
     // Set configuration parameters defined in the INI file
     std::shared_ptr<Solver> solvers
-        = (dataType == Float16) 
+        = (dataType == Float16)
             ? SolverGenerator::generate(iniConfig, section, model, Float32, "Solvers")
             : SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
 
@@ -121,6 +121,23 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
     if (cell->getBiasSolver()) {
         cell->getBiasSolver()->setPrefixedParameters(params, "Solvers.");
         cell->getBiasSolver()->setPrefixedParameters(params, "BiasSolver.");
+    }
+
+    // Log solver scheduling
+    Utils::createDirectories("schedule");
+
+    if (cell->getScaleSolver()) {
+        cell->getScaleSolver()->logSchedule("schedule/"
+                + section + "_scale_schedule.log",
+            sp.getBatchSize(),
+            sp.getDatabase().getNbStimuli(Database::Learn));
+    }
+
+    if (cell->getBiasSolver()) {
+        cell->getBiasSolver()->logSchedule("schedule/"
+                + section + "_bias_schedule.log",
+            sp.getBatchSize(),
+            sp.getDatabase().getNbStimuli(Database::Learn));
     }
 
     // Will be processed in postGenerate

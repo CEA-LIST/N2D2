@@ -30,6 +30,13 @@ class BaseTensor;
 
 class Solver : public Parameterizable {
 public:
+    /// Maximum number of steps in the learning (= -learn parameter of exec/n2d2)
+    /// used for logSchedule()
+    static unsigned long long int mMaxSteps;
+    /// Number of steps between log (= -log parameter of exec/n2d2)
+    /// used for logSchedule()
+    static unsigned long long int mLogSteps;
+
     virtual const char* getType() const = 0;
     virtual void update(BaseTensor& data,
                         BaseTensor& diffData,
@@ -43,6 +50,10 @@ public:
     virtual void load(const std::string& dirName);
     virtual std::pair<double, double> getRange() const = 0;
     virtual std::pair<double, double> getQuantizedRange() const = 0;
+    virtual void logSchedule(const std::string& /*fileName*/,
+                             unsigned int /*batchSize*/,
+                             unsigned int /*epochSize*/ = 0,
+                             unsigned int /*maxSteps*/ = 0) {};
     virtual ~Solver() {};
 
 protected:

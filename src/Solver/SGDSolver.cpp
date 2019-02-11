@@ -69,7 +69,7 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
     // copy-ctor
 }
 
-double N2D2::SGDSolver::getLearningRate(unsigned int batchSize)
+double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
 {
     if (mLearningRate == 0.0)
         return 0.0;
@@ -104,7 +104,7 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize)
                                                 * mIterationSize * batchSize;
             const unsigned int prevStep = prevPattern / mLearningRateStepSize;
 
-            if (currentStep != prevStep) {
+            if (currentStep != prevStep && !silent) {
                 std::cout << "Learning rate after " << mNbIterations
                           << "(x" << (mIterationSize * batchSize) << ") "
                           "iteration(s): " << rate << std::endl;
@@ -124,6 +124,90 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize)
         ++mNbIterations;
 
     return rate;
+}
+
+void N2D2::SGDSolver::logSchedule(const std::string& fileName,
+                                  unsigned int batchSize,
+                                  unsigned int epochSize,
+                                  unsigned int maxSteps)
+{
+    const unsigned int iterationPass = mIterationPass;
+    const unsigned int nbIterations = mNbIterations;
+
+    std::ofstream log(fileName.c_str());
+
+    if (!log.good()) {
+        throw std::runtime_error("Could not create scheduling log file: "
+                                 + fileName);
+    }
+
+    mIterationPass = 0;
+    mNbIterations = 0;
+
+    if (maxSteps == 0 && batchSize > 0)
+        maxSteps = std::ceil(mMaxSteps / (double)batchSize);
+
+    if (maxSteps == 0)
+        return;
+
+    double prevLearningRate = 0.0;
+    unsigned int nextLog = mLogSteps;
+
+    for (unsigned int step = 0; step < maxSteps; ++step) {
+        const unsigned int i = step * batchSize;
+        const double learningRate = getLearningRate(batchSize, true);
+
+        if (isNewIteration() && learningRate != prevLearningRate) {
+            const unsigned int epoch = (epochSize > 0)
+                ? (i / epochSize) : 0;
+            const bool isLog = (i >= nextLog || step == maxSteps - 1);
+
+            log << step
+                << " " << mNbIterations
+                << " " << epoch
+                << " " << learningRate
+                << " " << ((isLog) ? "1" : "0") << "\n";
+
+            if (isLog)
+                nextLog += mLogSteps;
+
+            prevLearningRate = learningRate;
+        }
+    }
+
+    log.close();
+
+    mIterationPass = iterationPass;
+    mNbIterations = nbIterations;
+
+    Gnuplot gnuplot(fileName + ".gnu");
+    gnuplot.set("grid");
+    gnuplot.setTitle("Learning rate schedule");
+
+    std::stringstream xLabelStr;
+    xLabelStr << "# steps (batch size: " << batchSize << ", "
+        "iteration size: " << (batchSize * mIterationSize) << ")";
+
+    gnuplot.setXlabel(xLabelStr.str());
+
+    if (epochSize > 0) {
+        gnuplot.set("x2label", "\"# epoch\" tc rgb \"blue\"");
+        gnuplot.set("xtics nomirror");
+        gnuplot.set("x2tics tc rgb \"blue\"");
+    }
+
+    gnuplot.setYlabel("Learning rate");
+
+    std::stringstream plotStr;
+    plotStr << "using 1:4 with steps notitle";
+
+    if (epochSize > 0)
+        plotStr << ", '' using 3:(NaN) axes x2y1 notitle";
+
+    plotStr << ", '' using 1:($5==1?$4:1/0) with points pt 8 lc 7 title \"log step\"";
+
+    gnuplot.saveToFile(fileName);
+    gnuplot.plot(fileName, plotStr.str());
 }
 
 void N2D2::SGDSolver::saveInternal(std::ostream& state,
