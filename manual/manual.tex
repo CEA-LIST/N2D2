@@ -2807,11 +2807,30 @@ Apply a global random affine transformation to the values of the image.
  \hline
  Option [default value] & Description\\
  \hline\hline
-  \cellcolor{requiredcolor}\lstinline!GainVar! & Random gain is in range $\pm$\lstinline!GainVar! \\
-  \lstinline!BiasVar! [0.0] & Random bias is in range $\pm$\lstinline!BiasVar!\\
+  \cellcolor{requiredcolor}\lstinline!GainVar! & Random gain ($\alpha$) is in range 1$\pm$\lstinline!GainVar! \\
+   & The gain control the \emph{contrast} of the image \\
+  \lstinline!BiasVar! [0.0] & Random normalized bias ($\beta$) is in range $\pm$\lstinline!BiasVar! \\
+   & The bias control the \emph{brightness} of the image \\
+  \lstinline!GainVarProb! [1.0] & Probability to have a gain variation \\
+  \lstinline!BiasVarProb! [1.0] & Probability to have a bias variation \\
+  \lstinline!GammaRange! [0.25 2.0] & Random gamma ($\gamma$) range \\
+   & The gamma control more or less the \emph{exposure} of the image \\
+  \lstinline!GammaVarProb! [0.0] & Probability to have a gamma variation \\
+  \lstinline!DisjointGamma! [0] & If true, gamma variation and gain/bias variation are mutually exclusive. The probability to have a random gamma variation is therefore \lstinline!GammaVarProb! and the probability to have a gain/bias variation is 1-\lstinline!GammaVarProb!. \\
  \hline
 \end{tabular}
 \end{center}
+
+The equation of the transformation is:
+
+\[ S =
+   \begin{cases}
+      \text{numeric\_limits<T>::max()}  &  \text{if } \text{is\_integer<T>} \\
+      1.0   & \text{otherwise}
+   \end{cases}   \]
+
+\[ v(i,j) = \text{cv::saturate\_cast<T>}\left(\alpha \left(\frac{v(i,j)}{S}\right)^{\gamma} S + \beta.S\right) \]
+
 
 
 \paragraph{\texorpdfstring{%%
@@ -2913,6 +2932,8 @@ Extract a slice from an image.
   \lstinline!RandomOffsetY! [0] & If true, the Y offset is chosen randomly \\
   \lstinline!RandomRotation! [0] & If true, extract randomly rotated slices \\
   \lstinline!RandomRotationRange! [0.0 360.0] & Range of the random rotations, in degrees, counterclockwise (if \lstinline!RandomRotation! is enabled) \\
+  \lstinline!RandomScaling! [0] & If true, extract randomly scaled slices \\
+  \lstinline!RandomScalingRange! [0.8 1.2] & Range of the random scaling (if \lstinline!RandomRotation! is enabled) \\
   \lstinline!AllowPadding! [0] & If true, zero-padding is allowed if the image
   is smaller than the slice to extract \\
  \hline
