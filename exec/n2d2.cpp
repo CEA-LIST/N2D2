@@ -611,9 +611,9 @@ int main(int argc, char* argv[]) try
                 gnuplot << "loss_min=loss_init";
                 gnuplot << "x_limit=0";
                 gnuplot << "stats \"" + fileName + ".smooth\""
-                    " using ($1-dx):(valid = (valid && $2 < thres), "
-                    "x_limit = (valid && $2 < loss_min) ? $1 : x_limit, "
-                    "loss_min = (valid && $2 < loss_min) ? $2 : loss_min) "
+                    " using ($1-dx):(valid = (valid && $2 <= thres), "
+                    "x_limit = (valid && $2 <= loss_min) ? $1 : x_limit, "
+                    "loss_min = (valid && $2 <= loss_min) ? $2 : loss_min) "
                     "nooutput";
 
                 // Find good learning rate
@@ -623,11 +623,11 @@ int main(int argc, char* argv[]) try
                 gnuplot << "x_max=0";
                 gnuplot << "stats \"" + fileName + ".smooth\""
                     " using ($1-dx):(v = d($2), "
-                    "chunck0 = ($2 < loss_init && v < 0 && $1 < x_limit) ? 1 : 0, "
+                    "chunck0 = ($2 < loss_init && v < 0 && $1 <= x_limit) ? 1 : 0, "
                     "x_min = (chunck0 && !chunck1) ? $1 : x_min, "
                     "x_max = (chunck1 && !chunck0) ? $1 : x_max, "
                     "chunck1 = chunck0, "
-                    "(($2 < loss_init && v < 0 && $1 < x_limit) "
+                    "(($2 < loss_init && v < 0 && $1 <= x_limit) "
                         "? $2 : loss_init)) nooutput";
                 gnuplot << "lr=(x_max+x_min)/2";
 
@@ -644,7 +644,7 @@ int main(int argc, char* argv[]) try
                     " with lines lt 3"
                     "#, \"" + fileName + ".smooth\" using "
                     "($1-dx):(v = d($2), "
-                    "(($2 < loss_init && v < 0 && $1 < x_limit) "
+                    "(($2 < loss_init && v < 0 && $1 <= x_limit) "
                         "? $2 : loss_init)) "
                     "with lines lc 4";
             }
