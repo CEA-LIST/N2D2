@@ -159,12 +159,13 @@ void N2D2::SGDSolver::logSchedule(const std::string& fileName,
     for (unsigned int step = 0; step < maxSteps; ++step) {
         const unsigned int i = step * batchSize;
         const double learningRate = getLearningRate(batchSize, true);
+        const bool isLog = (i >= nextLog || step == maxSteps - 1);
 
-        if (isNewIteration() && learningRate != prevLearningRate) {
+        if (isNewIteration() && (learningRate != prevLearningRate
+                                 || isLog))
+        {
             const unsigned int epoch = (epochSize > 0)
                 ? (i / epochSize) : 0;
-            const bool isLog = (i >= nextLog || step == maxSteps - 1);
-
             log << step
                 << " " << mNbIterations
                 << " " << epoch
