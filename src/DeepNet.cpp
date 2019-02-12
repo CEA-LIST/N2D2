@@ -341,20 +341,6 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
 {
     const std::string name = cell->getName();
 
-    mCells.erase(name);
-
-    for (unsigned int l = 1; l < mLayers.size(); ) {
-        mLayers[l].erase(std::remove(mLayers[l].begin(),
-                                     mLayers[l].end(),
-                                     name),
-                         mLayers[l].end());
-
-        if (mLayers[l].empty())
-            mLayers.erase(mLayers.begin() + l);
-        else
-            ++l;
-    }
-
     std::vector<std::string> parents;
     std::vector<std::string> childs;
 
@@ -427,6 +413,20 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                 mParentLayers.insert(std::make_pair(*itChild, *itParent));
             }
         }
+    }
+
+    mCells.erase(name);
+
+    for (unsigned int l = 1; l < mLayers.size(); ) {
+        mLayers[l].erase(std::remove(mLayers[l].begin(),
+                                     mLayers[l].end(),
+                                     name),
+                         mLayers[l].end());
+
+        if (mLayers[l].empty())
+            mLayers.erase(mLayers.begin() + l);
+        else
+            ++l;
     }
 }
 
