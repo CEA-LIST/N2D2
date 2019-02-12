@@ -61,7 +61,7 @@ public:
         double minVal;
         double maxVal;
         unsigned int nbBins;
-        std::vector<unsigned int> values;
+        std::vector<unsigned long long int> values;
         unsigned long long int nbValues;
         unsigned int maxBin;
 
