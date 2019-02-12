@@ -138,6 +138,9 @@ int main(int argc, char* argv[]) try
         = opts.parse("-report", 100U, "number of steps between reportings");
     const unsigned int learn
         = opts.parse("-learn", 0U, "number of backprop learning steps");
+    const unsigned int findLr
+        = opts.parse("-find-lr", 0U, "find an appropriate learning rate over a"
+                     " number of iterations");
     const ConfusionTableMetric validMetric
         = opts.parse("-valid-metric", ConfusionTableMetric::Sensitivity,
                      "validation metric to use (default is Sensitivity)");
@@ -506,6 +509,152 @@ int main(int argc, char* argv[]) try
             sp.readStimulus(Database::Test, i);
             StimuliProvider::logData(fileName.str(), sp.getData()[0]);
         }
+    }
+
+    if (findLr > 0) {
+        std::cout << "Learning rate exploration over " << findLr
+            << " iterations..." << std::endl;
+
+        const double startLr = 1.0e-6;
+        const double endLr = 10.0;
+        const double grow = (1.0 / findLr) * std::log(endLr / startLr);
+
+        const unsigned int batchSize = sp.getBatchSize();
+        const unsigned int nbBatch = std::ceil(findLr / (double)batchSize);
+        std::vector<std::pair<std::string, double> >* timings = NULL;
+
+        sp.readRandomBatch(Database::Learn);
+
+        std::vector<double> learningRate;
+
+        for (unsigned int b = 0; b < nbBatch; ++b) {
+            const unsigned int i = b * batchSize;
+
+            const double lr = startLr * std::exp(grow * i);
+            Solver::mGlobalLearningRate = lr;
+            learningRate.push_back(lr);
+
+            sp.synchronize();
+            std::thread learnThread(learnThreadWrapper, deepNet, timings);
+
+            sp.future();
+            sp.readRandomBatch(Database::Learn);
+
+            std::ios::fmtflags f(std::cout.flags());
+
+            std::cout << "\rRunning #" << std::setw(8) << std::left << i
+                      << std::flush;
+
+            std::cout.flags(f);
+
+            learnThread.join();
+        }
+
+        Solver::mGlobalLearningRate = 0.0;
+
+        for (std::vector<std::shared_ptr<Target> >::const_iterator
+                 itTargets = deepNet->getTargets().begin(),
+                 itTargetsEnd = deepNet->getTargets().end();
+             itTargets != itTargetsEnd;
+             ++itTargets)
+        {
+            std::shared_ptr<TargetScore> target
+                = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+
+            if (target) {
+                const std::string fileName
+                    = "find_lr_" + target->getName() + ".dat";
+                const std::vector<double>& loss = target->getLoss();
+
+                std::ofstream lrLoss(fileName.c_str());
+
+                for (unsigned int i = 0; i < learningRate.size(); ++i) {
+                    lrLoss << learningRate[i] << " " << loss[i] << "\n";
+                }
+
+                lrLoss.close();
+
+                Gnuplot gnuplot(fileName + ".gnu");
+                gnuplot.set("grid").set("key off");
+                gnuplot.setTitle("Find where the loss is still decreasing "
+                                 "but has not plateaued");
+                gnuplot.setXlabel("Learning rate (log scale)");
+                gnuplot.setYlabel("Loss");
+                gnuplot.set("logscale x");
+                gnuplot.set("samples 100");
+                gnuplot.set("table \"" + fileName + ".smooth\"");
+                gnuplot.saveToFile(fileName);
+                gnuplot.plot(fileName, "using 1:2 smooth bezier with lines "
+                             "lt 2 lw 2");
+                gnuplot.unset("table");
+                gnuplot.set("y2tics");
+
+                // Get initial loss value
+                gnuplot << "col=2";
+                gnuplot << "row=0";
+                gnuplot << "stats \"" + fileName + ".smooth\" every ::row::row "
+                            "using col nooutput";
+                gnuplot << "loss_init=STATS_min";
+
+                // Find good y range
+                gnuplot << "stats \"" + fileName + ".smooth\" using 1:2 "
+                            "nooutput";
+                gnuplot << "thres=STATS_max_y";
+                gnuplot << "y_min=STATS_min_y-(loss_init-STATS_min_y)/10";
+                gnuplot << "y_max=loss_init+(loss_init-STATS_min_y)/10";
+
+                // Find max. learning rate
+                gnuplot << "d(y) = ($0 == 0) ? (y1 = y, 1/0)"
+                            " : (y2 = y1, y1 = y, y1-y2)";
+                gnuplot << "dx=0.0";
+                gnuplot << "valid=1";
+                gnuplot << "loss_min=loss_init";
+                gnuplot << "x_limit=0";
+                gnuplot << "stats \"" + fileName + ".smooth\""
+                    " using ($1-dx):(valid = (valid && $2 < thres), "
+                    "x_limit = (valid && $2 < loss_min) ? $1 : x_limit, "
+                    "loss_min = (valid && $2 < loss_min) ? $2 : loss_min) "
+                    "nooutput";
+
+                // Find good learning rate
+                gnuplot << "chunck0=0";
+                gnuplot << "chunck1=0";
+                gnuplot << "x_min=0";
+                gnuplot << "x_max=0";
+                gnuplot << "stats \"" + fileName + ".smooth\""
+                    " using ($1-dx):(v = d($2), "
+                    "chunck0 = ($2 < loss_init && v < 0 && $1 < x_limit) ? 1 : 0, "
+                    "x_min = (chunck0 && !chunck1) ? $1 : x_min, "
+                    "x_max = (chunck1 && !chunck0) ? $1 : x_max, "
+                    "chunck1 = chunck0, "
+                    "(($2 < loss_init && v < 0 && $1 < x_limit) "
+                        "? $2 : loss_init)) nooutput";
+                gnuplot << "lr=(x_max+x_min)/2";
+
+                gnuplot.set("yrange [y_min:y_max]");
+
+                // Display result (LR bar + value)
+                gnuplot.set("arrow from lr,graph 0 to lr,graph 1"
+                            " nohead lc rgb \"red\"");
+                gnuplot.set("label 1 sprintf(\"%3.4f\",lr) at lr,graph 1"
+                            " offset 0.5,-1 tc rgb \"red\"");
+
+                // Plot smooth curve
+                gnuplot << "replot \"" + fileName + "\" using 1:2"
+                    " with lines lt 3"
+                    "#, \"" + fileName + ".smooth\" using "
+                    "($1-dx):(v = d($2), "
+                    "(($2 < loss_init && v < 0 && $1 < x_limit) "
+                        "? $2 : loss_init)) "
+                    "with lines lc 4";
+            }
+        }
+
+        // We are still in future batch, need to synchronize for the following
+        sp.synchronize();
+
+        std::cout << "Done!" << std::endl;
+        std::exit(0);
     }
 
     if (learn > 0) {

@@ -540,6 +540,7 @@ void N2D2::TargetScore::log(const std::string& fileName,
 
 void N2D2::TargetScore::clear(Database::StimuliSet set)
 {
+    Target::clear(set);
     clearConfusionMatrix(set);
     clearMisclassified(set);
 }

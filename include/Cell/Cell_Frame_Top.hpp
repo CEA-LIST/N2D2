@@ -65,13 +65,13 @@ public:
     virtual void checkGradient(double /*epsilon*/, double /*maxError*/) = 0;
     virtual void discretizeSignals(unsigned int /*nbLevels*/,
                                    const Signals& /*signals*/ = In) = 0;
-    virtual void setOutputTarget(const Tensor<int>& targets,
-                                 double targetVal = 1.0,
-                                 double defaultVal = 0.0) = 0;
-    virtual void setOutputTargets(const Tensor<int>& targets,
-                                  double targetVal = 1.0,
-                                  double defaultVal = 0.0) = 0;
-    virtual void setOutputTargets(const BaseTensor& targets) = 0;
+    virtual double setOutputTarget(const Tensor<int>& targets,
+                                   double targetVal = 1.0,
+                                   double defaultVal = 0.0) = 0;
+    virtual double setOutputTargets(const Tensor<int>& targets,
+                                    double targetVal = 1.0,
+                                    double defaultVal = 0.0) = 0;
+    virtual double setOutputTargets(const BaseTensor& targets) = 0;
     virtual void setOutputErrors(const BaseTensor& errors) = 0;
     virtual BaseTensor& getOutputs() = 0;
     virtual const BaseTensor& getOutputs() const = 0;

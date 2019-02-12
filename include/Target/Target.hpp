@@ -134,9 +134,13 @@ public:
     };
     std::pair<int, Float_T> getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                               unsigned int batchPos = 0) const;
+    const std::vector<double>& getLoss() const
+    {
+        return mLoss;
+    }
     virtual void log(const std::string& /*fileName*/,
                      Database::StimuliSet /*set*/) {};
-    virtual void clear(Database::StimuliSet /*set*/) {};
+    virtual void clear(Database::StimuliSet set);
     virtual ~Target() {};
 
 protected:
@@ -164,6 +168,7 @@ protected:
     Tensor<Float_T> mEstimatedValues;
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
+    std::vector<double> mLoss;
 
 private:
     static Registrar<Target> mRegistrar;

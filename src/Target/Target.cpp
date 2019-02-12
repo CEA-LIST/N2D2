@@ -300,7 +300,8 @@ void N2D2::Target::process(Database::StimuliSet set)
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
 
             // Set targets
-            targetCell->setOutputTargets(mStimuliProvider->getData());
+            mLoss.push_back(targetCell->
+                            setOutputTargets(mStimuliProvider->getData()));
         }
     } else {
         const Tensor<int>& labels = mStimuliProvider->getLabelsData();
@@ -374,11 +375,11 @@ void N2D2::Target::process(Database::StimuliSet set)
                     }
                 }
 
-                targetCell->setOutputTarget(
-                    mTargets, mTargetValue, mDefaultValue);
+                mLoss.push_back(targetCell->setOutputTarget(
+                    mTargets, mTargetValue, mDefaultValue));
             } else
-                targetCell->setOutputTargets(
-                    mTargets, mTargetValue, mDefaultValue);
+                mLoss.push_back(targetCell->setOutputTargets(
+                    mTargets, mTargetValue, mDefaultValue));
         }
 
         // Retrieve estimated labels
@@ -848,4 +849,9 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         = std::max_element(bbLabels.begin(), bbLabels.end());
     return std::make_pair(it - bbLabels.begin(),
                           (*it) / ((x1 - x0 + 1) * (y1 - y0 + 1)));
+}
+
+void N2D2::Target::clear(Database::StimuliSet /*set*/)
+{
+    mLoss.clear();
 }

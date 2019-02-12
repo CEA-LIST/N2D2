@@ -286,6 +286,7 @@ void N2D2::TargetBBox::log(const std::string& /*fileName*/,
 
 void N2D2::TargetBBox::clear(Database::StimuliSet set)
 {
+    Target::clear(set);
     clearConfusionMatrix(set);
 }
 

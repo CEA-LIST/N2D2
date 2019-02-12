@@ -71,6 +71,9 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
 
 double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
 {
+    if (mGlobalLearningRate > 0.0)
+        return mGlobalLearningRate;
+
     if (mLearningRate == 0.0)
         return 0.0;
 

@@ -23,6 +23,7 @@
 
 unsigned long long int N2D2::Solver::mMaxSteps = 0;
 unsigned long long int N2D2::Solver::mLogSteps = 0;
+double N2D2::Solver::mGlobalLearningRate = 0.0;
 
 void N2D2::Solver::save(const std::string& dirName) const
 {

@@ -76,7 +76,9 @@ void AdamSolver_Frame_CUDA<half_float::half>::update(
     CudaTensor<half_float::half>& cudaContinuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
-    const half_float::half alpha(mLearningRate
+    const double learningRate = (mGlobalLearningRate > 0.0)
+        ? mGlobalLearningRate : mLearningRate;
+    const half_float::half alpha(learningRate
         * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
             / (1.0 - std::pow((double)mBeta1, (double)mNbSteps)));
     const half_float::half epsilon(mEpsilon
@@ -200,7 +202,9 @@ void AdamSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
     CudaTensor<float>& cudaContinuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
-    const float alpha = mLearningRate
+    const double learningRate = (mGlobalLearningRate > 0.0)
+        ? mGlobalLearningRate : mLearningRate;
+    const float alpha = learningRate
         * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
             / (1.0 - std::pow((double)mBeta1, (double)mNbSteps));
     const float epsilon = mEpsilon
@@ -333,7 +337,9 @@ void AdamSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
     CudaTensor<double>& cudaContinuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
-    const double alpha = mLearningRate
+    const double learningRate = (mGlobalLearningRate > 0.0)
+        ? mGlobalLearningRate : mLearningRate;
+    const double alpha = learningRate
         * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
             / (1.0 - std::pow((double)mBeta1, (double)mNbSteps));
     const double epsilon = mEpsilon

@@ -36,6 +36,8 @@ public:
     /// Number of steps between log (= -log parameter of exec/n2d2)
     /// used for logSchedule()
     static unsigned long long int mLogSteps;
+    /// Global learning rate, if > 0.0, overrides every solvers rate
+    static double mGlobalLearningRate;
 
     virtual const char* getType() const = 0;
     virtual void update(BaseTensor& data,

@@ -97,7 +97,9 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
     Tensor<T>& continuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
-    const double alpha = mLearningRate
+    const double learningRate = (mGlobalLearningRate > 0.0)
+        ? mGlobalLearningRate : mLearningRate;
+    const double alpha = learningRate
         * std::sqrt(1.0 - std::pow((double)mBeta2, (double)mNbSteps))
             / (1.0 - std::pow((double)mBeta1, (double)mNbSteps));
     const double epsilon = mEpsilon

@@ -544,5 +544,6 @@ void N2D2::TargetROIs::log(const std::string& fileName,
 
 void N2D2::TargetROIs::clear(Database::StimuliSet set)
 {
+    Target::clear(set);
     clearConfusionMatrix(set);
 }

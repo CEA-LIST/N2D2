@@ -438,6 +438,7 @@ void N2D2::TargetRP::log(const std::string& fileName,
 
 void N2D2::TargetRP::clear(Database::StimuliSet set)
 {
+    Target::clear(set);
     clearConfusionMatrix(set);
 }
 

@@ -50,13 +50,14 @@ public:
             <TransformationCell_Frame_CUDA>(name, nbOutputs, transformation);
     }
 
-    virtual void setOutputTarget(const Tensor<int>& /*targets*/,
-                                 double /*targetVal*/ = 1.0,
-                                 double /*defaultVal*/ = 0.0) {};
-    virtual void setOutputTargets(const Tensor<int>& /*targets*/,
-                                  double /*targetVal*/ = 1.0,
-                                  double /*defaultVal*/ = 0.0) {};
-    virtual void setOutputTargets(const Tensor<Float_T>& /*targets*/) {};
+    virtual double setOutputTarget(const Tensor<int>& /*targets*/,
+                                   double /*targetVal*/ = 1.0,
+                                   double /*defaultVal*/ = 0.0) { return 0.0; };
+    virtual double setOutputTargets(const Tensor<int>& /*targets*/,
+                                    double /*targetVal*/ = 1.0,
+                                    double /*defaultVal*/ = 0.0) { return 0.0; };
+    virtual double setOutputTargets(const Tensor<Float_T>& /*targets*/)
+        { return 0.0; };
     virtual void propagate(bool inference = false);
     virtual void backPropagate() {};
     virtual void update() {};

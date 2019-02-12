@@ -226,9 +226,9 @@ void N2D2::Cell_Frame_CUDA<T>::backPropagate()
 }
 
 template <class T>
-void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets,
-                                            double targetVal,
-                                            double defaultVal)
+double N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets,
+                                                 double targetVal,
+                                                 double defaultVal)
 {
     if (targets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): target "
@@ -241,6 +241,8 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets,
     mOutputs.synchronizeDToH();
 
     const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
+
+    double loss = 0.0;
 
     for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
         if (targets(0, batchPos) >= 0) {
@@ -261,18 +263,21 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets,
                           : defaultVal - mOutputs(index, batchPos);
 
                 mDiffInputs(index, batchPos) = error;
+                loss += error * error;
             } else
                 mDiffInputs(index, batchPos) = 0.0;
         }
     }
 
     mDiffInputs.synchronizeHToD();
+
+    return (loss / mOutputs.dimB());
 }
 
 template <class T>
-void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
-                                             double targetVal,
-                                             double defaultVal)
+double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
+                                                  double targetVal,
+                                                  double defaultVal)
 {
     if (targets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
@@ -284,7 +289,9 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
 
     mOutputs.synchronizeDToH();
 
-#pragma omp parallel for if (mOutputs.dimB() > 4)
+    double loss = 0.0;
+
+#pragma omp parallel for if (mOutputs.dimB() > 4) reduction(+:loss)
     for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
         const Tensor<int> target = targets[batchPos][0];
 
@@ -330,6 +337,7 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
 
                         mDiffInputs(ox, oy, output, batchPos)
                             = error / nbTargetOutputs[target(ox, oy)];
+                        loss += error * error;
                     } else
                         mDiffInputs(ox, oy, output, batchPos) = 0.0;
                 }
@@ -338,10 +346,12 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
     }
 
     mDiffInputs.synchronizeHToD();
+
+    return (loss / mOutputs.dimB());
 }
 
 template <class T>
-void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
+double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
 {
     if (baseTargets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
@@ -359,10 +369,17 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
 
     const Tensor<T>& targets = tensor_cast<T>(baseTargets);
 
-    for (unsigned int index = 0; index < mOutputs.size(); ++index)
-        mDiffInputs(index) = targets(index) - mOutputs(index);
+    double loss = 0.0;
+
+    for (unsigned int index = 0; index < mOutputs.size(); ++index) {
+        const double error = targets(index) - mOutputs(index);
+        mDiffInputs(index) = error;
+        loss += error * error;
+    }
 
     mDiffInputs.synchronizeHToD();
+
+    return (loss / mOutputs.dimB());
 }
 
 template <class T>
