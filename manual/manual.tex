@@ -2818,6 +2818,8 @@ Apply a global random affine transformation to the values of the image.
    & The gamma control more or less the \emph{exposure} of the image \\
   \lstinline!GammaVarProb! [0.0] & Probability to have a gamma variation \\
   \lstinline!DisjointGamma! [0] & If true, gamma variation and gain/bias variation are mutually exclusive. The probability to have a random gamma variation is therefore \lstinline!GammaVarProb! and the probability to have a gain/bias variation is 1-\lstinline!GammaVarProb!. \\
+  \lstinline!ChannelsMask! [] & If not empty, specifies on which channels the transformation is applied. For example, to apply the transformation only to the first and third channel, set \lstinline!ChannelsMask! to \lstinline!1 0 1! \\
+  \lstinline!PerChannel! [0] & If true, different random number of sampled for each channel \\
  \hline
 \end{tabular}
 \end{center}
@@ -4770,12 +4772,38 @@ Adaptive solvers, like Adam, may be used for fast exploration and prototyping, t
 
 \subsubsection{Choose the learning hyper-parameters}
 
-To start a learning from scratch, a learning rate of 0.1 or 0.01 may be considered, for large batch sizes (typically 256). Remind that if you scale the batch size ($N$) by a factor $k$, you should scale the learning rate accordingly. A simple linear scaling rule is recommanded \citep{DBLP:journals/corr/GoyalDGNWKTJH17}.
+You can use the \lstinline!-find-lr! option available in the \lstinline!n2d2! executable to automatically find the best learning rate for a given neural network.
+
+Usage example:
+\begin{lstlisting}
+./n2d2 model.ini -find-lr 10000
+\end{lstlisting}
+
+This commnand starts from a very low learning rate (1.0e-6) and increase it exponentially to reach the maximum value (10.0) after 10000 steps, as shown in figure \ref{fig:findLrRange}. The loss change during this phase is then plotted in function of the learning rate, as shown in figure \ref{fig:findLr}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/find_lr-range.png}
+  \caption{Exponential increase of the learning rate over the specified number of iterations, equals to the number of steps divided by the batch size (here: 24).}
+  \label{fig:findLrRange}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/find_lr.png}
+  \caption{Loss change as a function of the learning rate.}
+  \label{fig:findLr}
+\end{figure}
+
+Note that in N2D2, the learning rate is automatically normalized by the global batch size ($N \times \text{\lstinline!IterationSize!}$) for the \lstinline!SGDSolver!. A simple linear scaling rule is used, as recommanded in \citep{DBLP:journals/corr/GoyalDGNWKTJH17}. The effective learning rate $\alpha_{\text{eff}}$ applied for parameters update is therefore:
+
+\[ \alpha_{\text{eff}} = \frac{\alpha}{N \times \text{\lstinline!IterationSize!}} \text{ with $\alpha$ = \lstinline!LearningRate!} \]
+
 
 Typical values for the \lstinline!SGDSolver! are:
 
 \begin{lstlisting}[language=ini]
-Solvers.LearningRate=0.1
+Solvers.LearningRate=0.01
 Solvers.Decay=0.0001
 Solvers.Momentum=0.9
 \end{lstlisting}

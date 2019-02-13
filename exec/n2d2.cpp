@@ -552,6 +552,8 @@ int main(int argc, char* argv[]) try
 
         Solver::mGlobalLearningRate = 0.0;
 
+        std::string fileName;
+
         for (std::vector<std::shared_ptr<Target> >::const_iterator
                  itTargets = deepNet->getTargets().begin(),
                  itTargetsEnd = deepNet->getTargets().end();
@@ -562,8 +564,7 @@ int main(int argc, char* argv[]) try
                 = std::dynamic_pointer_cast<TargetScore>(*itTargets);
 
             if (target) {
-                const std::string fileName
-                    = "find_lr_" + target->getName() + ".dat";
+                fileName = "find_lr_" + target->getName() + ".dat";
                 const std::vector<double>& loss = target->getLoss();
 
                 std::ofstream lrLoss(fileName.c_str());
@@ -650,6 +651,20 @@ int main(int argc, char* argv[]) try
                         "? $2 : loss_init)) "
                     "with lines lc 4";
             }
+        }
+
+        if (!fileName.empty()) {
+            Gnuplot gnuplot;
+            gnuplot.set("grid").set("key off");
+
+            std::stringstream xLabelStr;
+            xLabelStr << "Iteration # (batch size: " << batchSize << ")";
+
+            gnuplot.setXlabel(xLabelStr.str());
+            gnuplot.setYlabel("Learning rate (log scale)");
+            gnuplot.set("logscale y");
+            gnuplot.saveToFile("find_lr-range.dat");
+            gnuplot.plot(fileName, "using 0:1 with lines");
         }
 
         // We are still in future batch, need to synchronize for the following
