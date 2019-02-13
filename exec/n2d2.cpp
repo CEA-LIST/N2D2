@@ -587,6 +587,7 @@ int main(int argc, char* argv[]) try
                 gnuplot.plot(fileName, "using 1:2 smooth bezier with lines "
                              "lt 2 lw 2");
                 gnuplot.unset("table");
+                gnuplot.unset("logscale x");
                 gnuplot.set("y2tics");
 
                 // Get initial loss value
@@ -631,6 +632,7 @@ int main(int argc, char* argv[]) try
                         "? $2 : loss_init)) nooutput";
                 gnuplot << "lr=(x_max+x_min)/2";
 
+                gnuplot.set("logscale x");
                 gnuplot.set("yrange [y_min:y_max]");
 
                 // Display result (LR bar + value)
