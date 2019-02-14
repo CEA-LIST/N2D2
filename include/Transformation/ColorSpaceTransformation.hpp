@@ -29,13 +29,36 @@ public:
     using Transformation::apply;
 
     enum ColorSpace {
+        // imread (any Gray, BGR or BGRA) to
         BGR,
         RGB,
         HSV,
         HLS,
         YCrCb,
         CIELab,
-        CIELuv
+        CIELuv,
+        // RGB to
+        RGB_to_BGR,
+        RGB_to_HSV,
+        RGB_to_HLS,
+        RGB_to_YCrCb,
+        RGB_to_CIELab,
+        RGB_to_CIELuv,
+        // HSV to
+        HSV_to_BGR,
+        HSV_to_RGB,
+        // HLS to
+        HLS_to_BGR,
+        HLS_to_RGB,
+        // YCrCb to
+        YCrCb_to_BGR,
+        YCrCb_to_RGB,
+        // CIELab to
+        CIELab_to_BGR,
+        CIELab_to_RGB,
+        // CIELuv to
+        CIELuv_to_BGR,
+        CIELuv_to_RGB
     };
 
     ColorSpaceTransformation(ColorSpace colorSpace);
@@ -114,7 +137,36 @@ namespace {
 template <>
 const char* const EnumStrings
     <N2D2::ColorSpaceTransformation::ColorSpace>::data[]
-    = {"BGR", "RGB", "HSV", "HLS", "YCrCb", "CIELab", "CIELuv"};
+    = { // imread (any Gray, BGR or BGRA) to
+        "BGR",
+        "RGB",
+        "HSV",
+        "HLS",
+        "YCrCb",
+        "CIELab",
+        "CIELuv",
+        // RGB to
+        "RGB_to_BGR",
+        "RGB_to_HSV",
+        "RGB_to_HLS",
+        "RGB_to_YCrCb",
+        "RGB_to_CIELab",
+        "RGB_to_CIELuv",
+        // HSV to
+        "HSV_to_BGR",
+        "HSV_to_RGB",
+        // HLS to
+        "HLS_to_BGR",
+        "HLS_to_RGB",
+        // YCrCb to
+        "YCrCb_to_BGR",
+        "YCrCb_to_RGB",
+        // CIELab to
+        "CIELab_to_BGR",
+        "CIELab_to_RGB",
+        // CIELuv to
+        "CIELuv_to_BGR",
+        "CIELuv_to_RGB" };
 }
 
 #endif // N2D2_COLORSPACETRANSFORMATION_H

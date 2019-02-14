@@ -2333,16 +2333,35 @@ Change the current image colorspace.
  \hline
  Option & Description\\
  \hline\hline
-  \cellcolor{requiredcolor}\lstinline!ColorSpace! & \lstinline!BGR!: if the
-  image is in grayscale, convert it in BGR \\
- & \lstinline!HSV! \\
- & \lstinline!HLS! \\
- & \lstinline!YCrCb! \\
- & \lstinline!CIELab! \\
- & \lstinline!CIELuv! \\
+  \cellcolor{requiredcolor}\lstinline!ColorSpace!
+ & \lstinline!BGR!: convert any gray, BGR or BGRA image to BGR \\
+ & \lstinline!RGB!: convert any gray, BGR or BGRA image to RGB \\
+ & \lstinline!HSV!: convert BGR image to HSV \\
+ & \lstinline!HLS!: convert BGR image to HLS \\
+ & \lstinline!YCrCb!: convert BGR image to YCrCb \\
+ & \lstinline!CIELab!: convert BGR image to CIELab \\
+ & \lstinline!CIELuv!: convert BGR image to CIELuv \\
+ & \lstinline!RGB_to_BGR!: convert RGB image to BGR \\
+ & \lstinline!RGB_to_HSV!: convert RGB image to HSV \\
+ & \lstinline!RGB_to_HLS!: convert RGB image to HLS \\
+ & \lstinline!RGB_to_YCrCb!: convert RGB image to YCrCb \\
+ & \lstinline!RGB_to_CIELab!: convert RGB image to CIELab \\
+ & \lstinline!RGB_to_CIELuv!: convert RGB image to CIELuv \\
+ & \lstinline!HSV_to_BGR!: convert HSV image to BGR \\
+ & \lstinline!HSV_to_RGB!: convert HSV image to RGB \\
+ & \lstinline!HLS_to_BGR!: convert HLS image to BGR \\
+ & \lstinline!HLS_to_RGB!: convert HLS image to RGB \\
+ & \lstinline!YCrCb_to_BGR!: convert YCrCb image to BGR \\
+ & \lstinline!YCrCb_to_RGB!: convert YCrCb image to RGB \\
+ & \lstinline!CIELab_to_BGR!: convert CIELab image to BGR \\
+ & \lstinline!CIELab_to_RGB!: convert CIELab image to RGB \\
+ & \lstinline!CIELuv_to_BGR!: convert CIELuv image to BGR \\
+ & \lstinline!CIELuv_to_RGB!: convert CIELuv image to RGB \\
  \hline
 \end{tabular}
 \end{center}
+
+Note that the default colorspace in N2D2 is BGR, the same as in OpenCV.
 
 
 \paragraph{\texorpdfstring{%%
