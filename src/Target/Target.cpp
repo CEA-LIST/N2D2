@@ -570,9 +570,14 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 = mStimuliProvider->getDatabase().getStimulusName(id);
             const std::string baseName = Utils::baseName(imgFile);
             const std::string fileBaseName = Utils::fileBaseName(baseName);
-            const std::string fileExtension
-                = (!((std::string)mImageLogFormat).empty())
-                    ? mImageLogFormat : Utils::fileExtension(baseName);
+            std::string fileExtension = Utils::fileExtension(baseName);
+
+            if (!((std::string)mImageLogFormat).empty()) {
+                // Keep "[x,y]" after file extension, appended by
+                // getStimulusName() in case of slicing
+                fileExtension.replace(0, fileExtension.find_first_of('['),
+                                      mImageLogFormat);
+            }
 
             // Input image
             cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
@@ -662,9 +667,14 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             = mStimuliProvider->getDatabase().getStimulusName(id);
         const std::string baseName = Utils::baseName(imgFile);
         const std::string fileBaseName = Utils::fileBaseName(baseName);
-        const std::string fileExtension
-            = (!((std::string)mImageLogFormat).empty())
-                ? mImageLogFormat : Utils::fileExtension(baseName);
+        std::string fileExtension = Utils::fileExtension(baseName);
+
+        if (!((std::string)mImageLogFormat).empty()) {
+            // Keep "[x,y]" after file extension, appended by
+            // getStimulusName() in case of slicing
+            fileExtension.replace(0, fileExtension.find_first_of('['),
+                                  mImageLogFormat);
+        }
 
         // Input image
         cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
