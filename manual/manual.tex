@@ -2827,18 +2827,17 @@ Apply a global random affine transformation to the values of the image.
  \hline
  Option [default value] & Description\\
  \hline\hline
-  \cellcolor{requiredcolor}\lstinline!GainVar! & Random gain ($\alpha$) is in range 1$\pm$\lstinline!GainVar! \\
-   & The gain control the \emph{contrast} of the image \\
-  \lstinline!BiasVar! [0.0] & Random normalized bias ($\beta$) is in range $\pm$\lstinline!BiasVar! \\
-   & The bias control the \emph{brightness} of the image \\
-  \lstinline!GainVarProb! [1.0] & Probability to have a gain variation \\
-  \lstinline!BiasVarProb! [1.0] & Probability to have a bias variation \\
-  \lstinline!GammaRange! [0.25 2.0] & Random gamma ($\gamma$) range \\
-   & The gamma control more or less the \emph{exposure} of the image \\
-  \lstinline!GammaVarProb! [0.0] & Probability to have a gamma variation \\
+  \lstinline!GainRange! [1.0 1.0] & Random gain ($\alpha$) range (identical for all channels) \\
+  \lstinline!GainRange[*]! [1.0 1.0] & Random gain ($\alpha$) range for channel \lstinline!*!. Mutually exclusive with \lstinline!GainRange!. If any specified, a different random gain will always be sampled for each channel. Default gain is 1.0 (no gain) for missing channels \\
+  \lstinline!BiasRange! [0.0 0.0] & Random bias ($\beta$) range (identical for all channels) \\
+  \lstinline!BiasRange[*]! [0.0 0.0] & Random bias ($\beta$) range for channel \lstinline!*!. Mutually exclusive with \lstinline!BiasRange!. If any specified, a different random bias will always be sampled for each channel. Default bias is 0.0 (no bias) for missing channels \\
+  \lstinline!GammaRange! [1.0 1.0] & Random gamma ($\gamma$) range (identical for all channels) \\
+  \lstinline!GammaRange[*]! [1.0 1.0] & Random gamma ($\gamma$) range for channel \lstinline!*!. Mutually exclusive with \lstinline!GammaRange!. If any specified, a different random gamma will always be sampled for each channel. Default gamma is 1.0 (no change) for missing channels \\
+  \lstinline!GainVarProb! [1.0] & Probability to have a gain variation for each channel. If only one value is specified, the same probability applies to all the channels. In this case, the same gain variation will be sampled for all the channels only if a single range if specified for all the channels using \lstinline!GainRange!. If more than one value is specified, a different random gain will always be sampled for each channel, even if the probabilities and ranges are identical \\
+  \lstinline!BiasVarProb! [1.0] & Probability to have a bias variation for each channel. If only one value is specified, the same probability applies to all the channels. In this case, the same bias variation will be sampled for all the channels only if a single range if specified for all the channels using \lstinline!BiasRange!. If more than one value is specified, a different random bias will always be sampled for each channel, even if the probabilities and ranges are identical \\
+  \lstinline!GammaVarProb! [1.0] & Probability to have a gamma variation for each channel. If only one value is specified, the same probability applies to all the channels. In this case, the same gamma variation will be sampled for all the channels only if a single range if specified for all the channels using \lstinline!GammaRange!. If more than one value is specified, a different random gamma will always be sampled for each channel, even if the probabilities and ranges are identical \\
   \lstinline!DisjointGamma! [0] & If true, gamma variation and gain/bias variation are mutually exclusive. The probability to have a random gamma variation is therefore \lstinline!GammaVarProb! and the probability to have a gain/bias variation is 1-\lstinline!GammaVarProb!. \\
   \lstinline!ChannelsMask! [] & If not empty, specifies on which channels the transformation is applied. For example, to apply the transformation only to the first and third channel, set \lstinline!ChannelsMask! to \lstinline!1 0 1! \\
-  \lstinline!PerChannel! [0] & If true, different random number of sampled for each channel \\
  \hline
 \end{tabular}
 \end{center}
