@@ -676,9 +676,11 @@ void N2D2::Database::extractSlices(unsigned int width,
         for (int i = 0; i < size; ++i) {
             const StimulusID id = mStimuliSets(*itSet)[i];
 
-            if (mStimuli[id].slice != NULL)
+            if (mStimuli[id].slice != NULL) {
+#pragma omp critical
                 throw std::runtime_error("Database::extractSlices(): some "
                                          "stimuli are already sliced!");
+            }
 
             const cv::Mat data = getStimulusData(id);
             Stimulus fullStimulus(mStimuli[id]);
@@ -734,7 +736,7 @@ void N2D2::Database::extractSlices(unsigned int width,
 // Don't push_back to mStimuli directly, because if a reallocation occurs,
 // concurrent readings (for
 // example with getStimulusData()) will go wrong...
-#pragma omp critical(Database__extractSlices)
+#pragma omp critical(Database__extractSlices_1)
                         newStimuli.push_back(stimulus);
                     }
                 }
@@ -751,7 +753,7 @@ void N2D2::Database::extractSlices(unsigned int width,
             progress = (unsigned int)(20.0 * (sliced) / (double)toSlice);
 
             if (progress > progressPrev) {
-#pragma omp critical(Database__extractSlices)
+#pragma omp critical(Database__extractSlices_2)
                 if (progress > progressPrev) {
                     std::cout << std::string(progress - progressPrev, '.')
                               << std::flush;
@@ -799,6 +801,72 @@ void N2D2::Database::load(const std::string& /*dataPath*/,
     std::cout << "Database loaded " << getNbLabels() << " labels from the file "
             << labelPath << std::endl;
 
+}
+
+void N2D2::Database::save(const std::string& dataPath,
+                          StimuliSetMask setMask,
+                          CompositeTransformation trans)
+{
+    Utils::createDirectories(dataPath);
+
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    // For progression visualization
+    unsigned int toSave = 0;
+
+    for (std::vector<Database::StimuliSet>::const_iterator it
+         = stimuliSets.begin(),
+         itEnd = stimuliSets.end();
+         it != itEnd;
+         ++it) {
+        toSave += getNbStimuli(*it);
+    }
+
+    std::cout << "Database: saving " << toSave << " stimuli to: "
+        << dataPath << std::flush;
+
+    unsigned int saved = 0;
+    unsigned int progress = 0, progressPrev = 0;
+
+    for (std::vector<StimuliSet>::const_iterator itSet = stimuliSets.begin(),
+                                                 itSetEnd = stimuliSets.end();
+         itSet != itSetEnd; ++itSet)
+    {
+        const int size = mStimuliSets(*itSet).size();
+
+#pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < size; ++i) {
+            const StimulusID id = mStimuliSets(*itSet)[i];
+
+            std::ostringstream fileName;
+            fileName << dataPath << "/" << Utils::baseName(getStimulusName(id));
+
+            cv::Mat data = getStimulusData(id).clone(); // make sure the
+            // database image will not be altered
+            trans.apply(data);
+
+            if (!cv::imwrite(fileName.str(), data)) {
+#pragma omp critical
+                throw std::runtime_error("Unable to write image: "
+                                         + fileName.str());
+            }
+
+// Progress bar
+#pragma omp atomic
+            ++saved;
+
+            progress = (unsigned int)(20.0 * (saved) / (double)toSave);
+
+            if (progress > progressPrev) {
+#pragma omp critical(Database__save)
+                if (progress > progressPrev) {
+                    std::cout << std::string(progress - progressPrev, '.')
+                              << std::flush;
+                    progressPrev = progress;
+                }
+            }
+        }
+    }
 }
 
 void N2D2::Database::partitionStimuli(unsigned int nbStimuli, StimuliSet set)

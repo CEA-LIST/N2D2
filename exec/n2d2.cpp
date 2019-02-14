@@ -66,6 +66,7 @@
 #include "Target/TargetROIs.hpp"
 #include "Target/TargetScore.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
+#include "Transformation/SliceExtractionTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 
 #ifdef CUDA
@@ -138,6 +139,9 @@ int main(int argc, char* argv[]) try
         = opts.parse("-report", 100U, "number of steps between reportings");
     const unsigned int learn
         = opts.parse("-learn", 0U, "number of backprop learning steps");
+    const int preSamples
+        = opts.parse("-pre-samples", -1, "if >= 0, log pre-processing samples "
+                     "of the corresponding stimulus ID");
     const unsigned int findLr
         = opts.parse("-find-lr", 0U, "find an appropriate learning rate over a"
                      " number of iterations");
@@ -184,6 +188,8 @@ int main(int argc, char* argv[]) try
                      "integer exports");
     const double timeStep
         = opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
+    const std::string saveTestSet = opts.parse<std::string>("-save-test-set",
+        "", "save the test dataset to a specified location");
     const std::string load = opts.parse<std::string>("-l", "",
         "start with a previously saved state from a specified location");
     const std::string weights = opts.parse<std::string>("-w", "",
@@ -325,6 +331,16 @@ int main(int argc, char* argv[]) try
     }
 
     StimuliProvider& sp = *deepNet->getStimuliProvider();
+
+    if (!saveTestSet.empty()) {
+        CompositeTransformation trans;
+        trans.push_back(SliceExtractionTransformation(sp.getSizeX(),
+                                                      sp.getSizeY()));
+        trans[0]->setParameter<bool>("AllowPadding", true);
+
+        database.save(saveTestSet, Database::TestOnly, trans);
+        std::exit(0);
+    }
 
     if (!load.empty())
         deepNet->load(load);
@@ -508,6 +524,34 @@ int main(int argc, char* argv[]) try
 
             sp.readStimulus(Database::Test, i);
             StimuliProvider::logData(fileName.str(), sp.getData()[0]);
+        }
+
+        if (preSamples >= 0) {
+            if (preSamples >= (int)database.getNbStimuli(Database::Learn)) {
+                throw std::runtime_error("Pre-sample stimulus ID is higher "
+                            "than the number of stimuli in the Learn dataset");
+            }
+
+            std::ostringstream dirName;
+            dirName << "pre_samples_" << preSamples;
+
+            // Larger sample of frames to see the pre-processing
+            Utils::createDirectories(dirName.str());
+
+            for (unsigned int i = 0; i < 100; ++i) {
+                std::ostringstream fileName;
+                fileName << dirName.str() << "/sample_" << i << ".jpg";
+
+                sp.readStimulus(Database::Learn, preSamples);
+
+                cv::Mat frame;
+                cv::Mat(sp.getData()[0]).convertTo(frame, CV_8U, 127.0, 127.0);
+
+                if (!cv::imwrite(fileName.str(), frame)) {
+                    throw std::runtime_error("Unable to write image: "
+                                             + fileName.str());
+                }
+            }
         }
     }
 

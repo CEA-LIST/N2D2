@@ -46,6 +46,7 @@
     #endif
 #endif
 
+#include "Transformation/CompositeTransformation.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"
 
@@ -201,6 +202,10 @@ public:
     virtual void load(const std::string& /*dataPath*/,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
+    virtual void save(const std::string& dataPath,
+                      StimuliSetMask setMask,
+                      CompositeTransformation trans
+                        = CompositeTransformation());
     void partitionStimuli(unsigned int nbStimuli, StimuliSet set);
     void partitionStimuli(double learn, double validation, double test);
     void partitionStimuliPerLabel(unsigned int nbStimuliPerLabel,
