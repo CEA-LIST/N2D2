@@ -29,6 +29,13 @@
 #ifndef N2D2_KERNEL_H
 #define N2D2_KERNEL_H
 
+#include <algorithm>
+#include <cmath>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include "containers/Matrix.hpp"
 
 namespace N2D2 {
