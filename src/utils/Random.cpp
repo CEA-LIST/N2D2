@@ -127,6 +127,11 @@ int N2D2::Random::randUniform(int vmin, int vmax)
                         * (vmax - vmin + 1.0));
 }
 
+int N2D2::Random::randShuffle(int value)
+{
+    return (int)((double)Random::mtRand() / (MT_RAND_MAX + 1.0) * value);
+}
+
 double N2D2::Random::randNormal(double mean, double stdDev, double vmin)
 {
     return std::max(vmin, Random::randNormal(mean, stdDev));

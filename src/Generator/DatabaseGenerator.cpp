@@ -72,7 +72,13 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
         const Database::StimuliSetMask applyTo
             = iniConfig.getProperty<Database::StimuliSetMask>("ApplyTo");
 
-        database->extractSlices(width, height, strideX, strideY, applyTo);
+        // Enable randomShuffle by default, so that calibration can be effective
+        // even with few stimuli
+        const bool randomShuffle = iniConfig.getProperty<bool>("RandomShuffle",
+                                                               true);
+
+        database->extractSlices(width, height, strideX, strideY, applyTo,
+                                randomShuffle);
     }
 
     return database;

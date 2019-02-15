@@ -197,7 +197,8 @@ public:
                                unsigned int height,
                                unsigned int strideX,
                                unsigned int strideY,
-                               StimuliSetMask setMask);
+                               StimuliSetMask setMask,
+                               bool randomShuffle = false);
 
     virtual void load(const std::string& /*dataPath*/,
                       const std::string& labelPath = "",

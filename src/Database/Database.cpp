@@ -645,7 +645,8 @@ void N2D2::Database::extractSlices(unsigned int width,
                                    unsigned int height,
                                    unsigned int strideX,
                                    unsigned int strideY,
-                                   StimuliSetMask setMask)
+                                   StimuliSetMask setMask,
+                                   bool randomShuffle)
 {
     const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
 
@@ -773,6 +774,12 @@ void N2D2::Database::extractSlices(unsigned int width,
              ++it) {
             mStimuli.push_back(*it);
             mStimuliSets(*itSet).push_back(mStimuli.size() - 1);
+        }
+
+        if (randomShuffle) {
+            std::random_shuffle(mStimuliSets(*itSet).begin(),
+                                mStimuliSets(*itSet).end(),
+                                Random::randShuffle);
         }
     }
 

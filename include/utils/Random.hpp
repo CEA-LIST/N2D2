@@ -73,6 +73,15 @@ namespace Random {
      * @exception std::domain_error vmax must be > vmin
     */
     int randUniform(int vmin, int vmax);
+
+    /**
+     * Generates uniformly distributed integers in the range [0, max-1].
+     * This function can be used with std::random_shuffle().
+     *
+     * @param value         Maximum value (excluded from the range)
+     * @return Random number in the closed interval [0, max-1]
+    */
+    int randShuffle(int value);
     double randNormal(double mean = 0.0, double stdDev = 1.0);
     double randNormal(double mean, double stdDev, double vmin);
     double randNormal(double mean, double stdDev, double vmin, double vmax);
