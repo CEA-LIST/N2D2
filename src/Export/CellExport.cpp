@@ -24,6 +24,7 @@
 
 N2D2::CellExport::Precision N2D2::CellExport::mPrecision = Int8;
 N2D2::CellExport::IntApprox N2D2::CellExport::mIntApprox = Round;
+bool N2D2::CellExport::mWarnSat = true;
 
 void N2D2::CellExport::generate(Cell& cell,
                                 const std::string& dirName,
@@ -70,6 +71,29 @@ long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double val
         std::cout << Utils::cwarning
                   << "Warning: free parameter saturation in \""
                   << cell.getName() << "\"" << Utils::cdef << std::endl;
+
+        if (mWarnSat) {
+            std::cout << "Saturation detected! This may lead to poor network"
+                " performance...\n"
+                "Consider using normalized free parameters for ReLU-only"
+                " activations\n"
+                "  (-w weights_normalized).\n"
+                "Continue anyway (will not stop again)? (y/n) ";
+
+            std::string cmd;
+
+            do {
+                std::cin >> cmd;
+            }
+            while (cmd != "y" && cmd != "n");
+
+            if (cmd == "n") {
+                std::cout << "Exiting..." << std::endl;
+                std::exit(0);
+            }
+
+            mWarnSat = false;
+        }
     }
 
     return getIntApprox(scaling * value, mIntApprox);

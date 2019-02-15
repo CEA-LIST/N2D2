@@ -77,6 +77,7 @@ public:
 
     static Precision mPrecision;
     static IntApprox mIntApprox;
+    static bool mWarnSat;
 
     static void
     generate(Cell& cell, const std::string& dirName, const std::string& type);
