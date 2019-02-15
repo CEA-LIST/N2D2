@@ -66,7 +66,6 @@
 #include "Target/TargetROIs.hpp"
 #include "Target/TargetScore.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
-#include "Transformation/SliceExtractionTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 
 #ifdef CUDA
@@ -334,12 +333,12 @@ int main(int argc, char* argv[]) try
 
     if (!saveTestSet.empty()) {
         CompositeTransformation trans;
+/*
         trans.push_back(SliceExtractionTransformation(sp.getSizeX(),
                                                       sp.getSizeY()));
         trans[0]->setParameter<bool>("AllowPadding", true);
-
+*/
         database.save(saveTestSet, Database::TestOnly, trans);
-        std::exit(0);
     }
 
     if (!load.empty())
