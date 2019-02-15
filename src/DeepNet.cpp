@@ -1375,13 +1375,16 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
     std::cout << "Fuse BatchNorm with Conv..." << std::endl;
 
     for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
-         = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it)
+         = mCells.begin(); it != mCells.end(); )
     {
+        const std::shared_ptr<Cell>& cell = (*it).second;
+        ++it; // increase it before being potentially invalided by removeCell()
+
         // check every BatchNorm cell
-        if ((*it).second->getType() == BatchNormCell::Type) {
+        if (cell->getType() == BatchNormCell::Type) {
             // check if a Conv is preceding
             const std::vector<std::shared_ptr<Cell> > bnParents
-                = getParentCells((*it).first);
+                = getParentCells(cell->getName());
 
             if (bnParents.size() == 1
                 && bnParents[0]->getType() == ConvCell::Type)
@@ -1392,10 +1395,10 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                     = getChildCells(bnParents[0]->getName());
 
                 if (convChilds.size() == 1) {
-                    assert(convChilds[0] == (*it).second);
+                    assert(convChilds[0] == cell);
 
                     // OK, Conv's only child is BatchNorm, fuse them...
-                    std::cout << "  fuse BatchNorm \"" << (*it).second->getName()
+                    std::cout << "  fuse BatchNorm \"" << cell->getName()
                         << "\" with Conv \"" << bnParents[0]->getName() << "\""
                         << std::endl;
 
@@ -1404,7 +1407,7 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                     const bool noBias = convCell->getParameter<bool>("NoBias");
 
                     std::shared_ptr<BatchNormCell> bnCell =
-                        std::dynamic_pointer_cast<BatchNormCell>((*it).second);
+                        std::dynamic_pointer_cast<BatchNormCell>(cell);
                     const Tensor<double>& bnScales
                         = tensor_cast<double>(*(bnCell->getScales()));
                     const Tensor<double>& bnBiases
@@ -1424,7 +1427,7 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                     std::shared_ptr<Cell_Frame_Top> convCellTop =
                         std::dynamic_pointer_cast<Cell_Frame_Top>(bnParents[0]);
                     std::shared_ptr<Cell_Frame_Top> bnCellTop =
-                        std::dynamic_pointer_cast<Cell_Frame_Top>((*it).second);
+                        std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
                     // Fuse activation
                     if (bnCellTop->getActivation()
@@ -1485,24 +1488,24 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
 
                     // Replace BatchNorm by Conv for BatchNorm childs
                     // and BatchNorm cell removal from DeepNet
-                    removeCell((*it).second, true);
+                    removeCell(cell, true);
                 }
                 else {
                     std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
-                        << (*it).second->getName() << "\" because parent Conv "
+                        << cell->getName() << "\" because parent Conv "
                         "(\"" << bnParents[0]->getName() << "\") has multiple "
                         "childs" << Utils::cdef << std::endl;
                 }
             }
             else if (bnParents.size() == 1) {
                 std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
-                    << (*it).second->getName() << "\" because parent cell (\""
+                    << cell->getName() << "\" because parent cell (\""
                     << bnParents[0]->getName() << "\") is not a Conv"
                     << Utils::cdef << std::endl;
             }
             else {
                 std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
-                    << (*it).second->getName() << "\" because it has multiple "
+                    << cell->getName() << "\" because it has multiple "
                     "parents (not supported)" << Utils::cdef << std::endl;
             }
         }
@@ -1513,15 +1516,18 @@ void N2D2::DeepNet::removeDropout() {
     std::cout << "Remove Dropout..." << std::endl;
 
     for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
-         = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it)
+         = mCells.begin(); it != mCells.end(); )
     {
+        const std::shared_ptr<Cell>& cell = (*it).second;
+        ++it; // increase it before being potentially invalided by removeCell()
+
         // check every Dropout cell
-        if ((*it).second->getType() == DropoutCell::Type) {
+        if (cell->getType() == DropoutCell::Type) {
             // remove them
-            std::cout << "  remove Dropout \"" << (*it).second->getName()
+            std::cout << "  remove Dropout \"" << cell->getName()
                 << "\"" << std::endl;
 
-            removeCell((*it).second, true);
+            removeCell(cell, true);
         }
     }
 }
