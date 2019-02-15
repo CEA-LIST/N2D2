@@ -448,6 +448,9 @@ int main(int argc, char* argv[]) try
             deepNet->setParameter("SignalsDiscretization", nbLevels);
             deepNet->setParameter("FreeParametersDiscretization", nbLevels);
 
+            // Clear the targets for the test that will occur afterward...
+            deepNet->clear(Database::Test);
+
             LogisticActivationDisabled = false;
             afterCalibration = true;
         }
