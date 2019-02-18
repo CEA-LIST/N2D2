@@ -44,13 +44,13 @@ namespace {
         throw std::runtime_error("Can't get the data() from a vector<bool>.");
     }
 
-    template<typename To, typename From, 
+    template<typename To, typename From,
              typename std::enable_if<std::is_convertible<From, To>::value>::type* = nullptr>
     To convertValue(const From& value) {
         return static_cast<To>(value);
     }
 
-    template<typename To, typename From, 
+    template<typename To, typename From,
              typename std::enable_if<!std::is_convertible<From, To>::value>::type* = nullptr>
     To convertValue(const From& /*value*/) {
         throw std::runtime_error("Can't convert value, types are incompatibles.");
@@ -81,7 +81,7 @@ namespace {
 
 
 /**
- * BaseTensor 
+ * BaseTensor
  */
 void N2D2::BaseTensor::reserve(std::initializer_list<size_t> dims)
 {
@@ -117,7 +117,7 @@ void N2D2::BaseTensor::reshape(const std::vector<size_t>& dims)
 
 
 /**
- * Tensor 
+ * Tensor
  */
 template <class T>
 N2D2::Tensor<T>::Tensor()
@@ -283,14 +283,14 @@ void N2D2::Tensor<T>::assign(const std::vector<size_t>& dims,
     (*mData)().assign(computeSize(), value);
 }
 
-template <typename T> 
+template <typename T>
 void N2D2::Tensor<T>::fill(const T& value)
 {
     std::fill((*mData)().begin() + mDataOffset,
               (*mData)().begin() + mDataOffset + size(), value);
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::push_back(const T& value)
 {
     assert(mData.unique());
@@ -313,7 +313,7 @@ void N2D2::Tensor<T>::push_back(const T& value)
     (*mData)().push_back(value);
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::push_back(const std::vector<T>& vec)
 {
     assert(mData.unique());
@@ -347,7 +347,7 @@ void N2D2::Tensor<T>::push_back(const std::vector<T>& vec)
     (*mData)().insert((*mData)().end(), vec.begin(), vec.end());
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::push_back(const Tensor<T>& frame)
 {
     assert(mData.unique());
@@ -385,7 +385,7 @@ void N2D2::Tensor<T>::push_back(const Tensor<T>& frame)
     (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::append(const std::vector<T>& vec)
 {
     assert(mData.unique());
@@ -408,7 +408,7 @@ void N2D2::Tensor<T>::append(const std::vector<T>& vec)
     (*mData)().insert((*mData)().end(), vec.begin(), vec.end());
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::append(const Tensor<T>& frame)
 {
     assert(mData.unique());
@@ -446,7 +446,7 @@ void N2D2::Tensor<T>::append(const Tensor<T>& frame)
     (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::clear()
 {
     assert(mData.unique());
@@ -457,7 +457,7 @@ void N2D2::Tensor<T>::clear()
     (*mData)().clear();
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::save(std::ostream& stream) const
 {
     const size_t dimsSize = mDims.size();
@@ -479,7 +479,7 @@ void N2D2::Tensor<T>::save(std::ostream& stream) const
     }
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::load(std::istream& stream)
 {
     size_t dimsSize;
@@ -513,7 +513,7 @@ void N2D2::Tensor<T>::load(std::istream& stream)
     }
 }
 
-template <class T> 
+template <class T>
 void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
 {
     std::swap(mDims, tensor.mDims);
@@ -525,7 +525,7 @@ void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
     assert((*tensor.mData)().size() == tensor.size());
 }
 
-template <class T> 
+template <class T>
 N2D2::Tensor<T> N2D2::Tensor<T>::clone() const {
     return Tensor<T>(mDims,
                      std::make_shared<DataTensor<T> >(
@@ -620,8 +620,8 @@ N2D2::Tensor<T>& N2D2::Tensor<T>::operator=(const Tensor<T>& tensor)
     return *this;
 }
 
-template <class T> 
-N2D2::Tensor<T>::operator cv::Mat() const 
+template <class T>
+N2D2::Tensor<T>::operator cv::Mat() const
 {
     const int type = (std::is_same<T, char>::value)         ? CV_8SC1 :
                  (std::is_same<T, unsigned char>::value)    ? CV_8UC1 :
@@ -744,27 +744,27 @@ bool N2D2::Tensor<T>::operator!=(const Tensor& other) const {
 }
 
 template <class T>
-template <class CV_T, class U, 
-          typename std::enable_if<std::is_arithmetic<U>::value && 
+template <class CV_T, class U,
+          typename std::enable_if<std::is_arithmetic<U>::value &&
                                   !std::is_same<U, bool>::value>::type*>
 void N2D2::Tensor<T>::convert(const cv::Mat& mat, std::vector<U>& data,
                               bool signedMapping)
 {
     const CV_T srcRange = (std::numeric_limits<CV_T>::is_integer)
                               ? ((signedMapping)
-                                    ? static_cast<CV_T>(std::numeric_limits
+                                    ? static_cast<CV_T>(-std::numeric_limits
                                         <typename try_make_signed<CV_T>::type>
-                                                                        ::max())
+                                                                        ::min())
                                     : std::numeric_limits<CV_T>::max())
                               : CV_T(1.0);
     const T dstRange = (std::numeric_limits<T>::is_integer)
                            ? std::numeric_limits<T>::max()
                            : T(1.0);
 
-    // We know dstRange and srcRange are positive. Convert them to unsigned to avoid 
+    // We know dstRange and srcRange are positive. Convert them to unsigned to avoid
     // a potential 'comparison between signed and unsigned integer expressions" warning.
-    if (static_cast<typename try_make_unsigned<CV_T>::type>(srcRange) == 
-        static_cast<typename try_make_unsigned<U>::type>(dstRange)) 
+    if (static_cast<typename try_make_unsigned<CV_T>::type>(srcRange) ==
+        static_cast<typename try_make_unsigned<U>::type>(dstRange))
     {
         if (mat.isContinuous())
             data.insert(data.end(), (CV_T*) mat.datastart, (CV_T*) mat.dataend);
@@ -804,8 +804,8 @@ void N2D2::Tensor<T>::convert(const cv::Mat& mat, std::vector<U>& data,
 }
 
 template <class T>
-template <class CV_T, class U, 
-          typename std::enable_if<!(std::is_arithmetic<U>::value && 
+template <class CV_T, class U,
+          typename std::enable_if<!(std::is_arithmetic<U>::value &&
                                     !std::is_same<U, bool>::value)>::type*>
 void N2D2::Tensor<T>::convert(const cv::Mat& /*mat*/, std::vector<U>& /*data*/,
                               bool /*signedMapping*/)
