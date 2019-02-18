@@ -38,6 +38,8 @@ class TargetViewer(object):
         self.labelsHueOffset = 0
 
         self.initialDir = "~"
+        self.gridSize = 50
+        self.regexSlice = r'\[([0-9]+),([0-9]+)\]$'
 
     def run(self):
         self.newIndex = 0
@@ -164,6 +166,40 @@ class TargetViewer(object):
     def _display(self):
         self.index = self.newIndex
 
+        slicing = self._getSlicing()
+
+        if slicing is not None:
+            (gridX, gridY, sliceX, sliceY, posX, posY) = slicing
+            imgSlicing = numpy.zeros((self.gridSize*gridY,
+                                      self.gridSize*gridX, 1),
+                dtype = "uint8")
+            imgSlicing[self.gridSize*posY:self.gridSize*(posY+1),
+                       self.gridSize*posX:self.gridSize*(posX+1)] = 255
+
+            for x in xrange(0,gridX):
+                for y in xrange(0,gridY):
+                    color = (255)
+                    if x == posX and y == posY:
+                        color = (0)
+                    cv2.putText(imgSlicing,
+                        "%d,%d"% (x*sliceX, y*sliceY),
+                        (self.gridSize*x + 5, self.gridSize*y + 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.25, color)
+
+            cv2.namedWindow("slicing", cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("slicing", self.gridSize*gridX,
+                                        self.gridSize*gridY)
+            cv2.moveWindow("slicing", 1024 + 256 + 20, 128)
+            cv2.imshow("slicing", imgSlicing)
+            cv2.setMouseCallback("slicing", self._slicingMouseCallback, False)
+        # -- Determine slice position
+
+        frameName, self.skippable = self._run()
+
+        print "Frame #%d/%d: %s" % (
+            self.index+1, len(self.files), frameName)
+
+    def _getSlicing(self):
         # Determine slice position --
         # Note that this code only works if slices are correctly
         # ordered, using "sort" with "natural_keys"
@@ -172,23 +208,22 @@ class TargetViewer(object):
         offsetX = 0
         offsetY = 0
         i = self.index
-        regexSlice = r'\[([0-9]+),([0-9]+)\]$'
-        stimulusName = re.sub(regexSlice, '', self.files[i])
+        stimulusName = re.sub(self.regexSlice, '', self.files[i])
 
         # |- Rewind to the first slice index for the current original
         # image file
         while i > 0:
-            if re.sub(regexSlice, '', self.files[i-1]) == stimulusName:
+            if re.sub(self.regexSlice, '', self.files[i-1]) == stimulusName:
                 i-= 1
             else:
                 break
 
         # |- Find grid size and max offsets
         while i < len(self.files):
-            if re.sub(regexSlice, '', self.files[i]) != stimulusName:
+            if re.sub(self.regexSlice, '', self.files[i]) != stimulusName:
                 break
 
-            m = re.search(regexSlice, self.files[i])
+            m = re.search(self.regexSlice, self.files[i])
 
             if m:
                 if int(m.group(2)) > offsetX:
@@ -204,38 +239,27 @@ class TargetViewer(object):
                 break
 
         # |- Find and display current slice position
-        m = re.search(regexSlice, self.files[self.index])
+        m = re.search(self.regexSlice, self.files[self.index])
 
         if m:
             sliceX = offsetX/max(gridX-1, 1)
             sliceY = offsetY/max(gridY-1, 1)
             posX = int(m.group(2))/max(sliceX, 1)
             posY = int(m.group(1))/max(sliceY, 1)
+            return (gridX, gridY, sliceX, sliceY, posX, posY)
+        else:
+            return None
 
-            imgSlicing = numpy.zeros((50*gridY, 50*gridX, 1),
-                dtype = "uint8")
-            imgSlicing[50*posY:50*(posY+1), 50*posX:50*(posX+1)] = 255
+    def _slicingMouseCallback(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            newPosX = x / self.gridSize
+            newPosY = y / self.gridSize
 
-            for x in xrange(0,gridX):
-                for y in xrange(0,gridY):
-                    color = (255)
-                    if x == posX and y == posY:
-                        color = (0)
-                    cv2.putText(imgSlicing,
-                        "%d,%d"% (x*sliceX, y*sliceY),
-                        (50*x + 5, 50*y + 25),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.25, color)
+            (gridX, gridY, sliceX, sliceY, posX, posY) = self._getSlicing()
 
-            cv2.namedWindow("slicing", cv2.WINDOW_NORMAL)
-            cv2.resizeWindow("slicing", 50*gridX, 50*gridY)
-            cv2.moveWindow("slicing", 1024 + 256 + 20, 128)
-            cv2.imshow("slicing", imgSlicing)
-        # -- Determine slice position
-
-        frameName, self.skippable = self._run()
-
-        print "Frame #%d/%d: %s" % (
-            self.index+1, len(self.files), frameName)
+            self.newIndex = self.index - (posY * gridX + posX) \
+                                       + (newPosY * gridX + newPosX)
+            self._display()
 
     def _atoi(self, text):
         return int(text) if text.isdigit() else text
