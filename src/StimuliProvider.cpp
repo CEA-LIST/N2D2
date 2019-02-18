@@ -36,7 +36,7 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mSize(size),
       mBatchSize(batchSize),
       mCompositeStimuli(compositeStimuli),
-      mCachePath("_cache"),
+      mCachePath(""),
       mBatch(batchSize),
       mFutureBatch(batchSize),
       mLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
@@ -44,8 +44,6 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mFuture(false)
 {
     // ctor
-    Utils::createDirectories(mCachePath); // Create default cache directory
-
     std::vector<size_t> dataSize(mSize);
     dataSize.push_back(batchSize);
 
@@ -374,11 +372,13 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                                          Database::StimuliSet set,
                                          unsigned int batchPos)
 {
-    std::stringstream dataCacheFile, labelsCacheFile;
+    std::stringstream dataCacheFile, labelsCacheFile, validCacheFile;
     dataCacheFile << mCachePath << "/" << std::setfill('0') << std::setw(7)
                   << id << "_data_" << set << ".bin";
     labelsCacheFile << mCachePath << "/" << std::setfill('0') << std::setw(7)
                     << id << "_labels_" << set << ".bin";
+    validCacheFile << mCachePath << "/" << std::setfill('0') << std::setw(7)
+                    << id << "_" << set << ".valid";
 
     std::vector<std::shared_ptr<ROI> >& labelsROI
         = (mFuture) ? mFutureLabelsROI[batchPos] : mLabelsROI[batchPos];
@@ -388,7 +388,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
     std::vector<cv::Mat> rawChannelsLabels;
 
     // 1. Cached data
-    if (!mCachePath.empty() && std::ifstream(dataCacheFile.str()).good()) {
+    if (!mCachePath.empty() && std::ifstream(validCacheFile.str()).good()) {
         // Cache present, load the pre-processed data
         rawChannelsData = loadDataCache(dataCacheFile.str());
         rawChannelsLabels = loadDataCache(labelsCacheFile.str());
@@ -429,6 +429,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
         if (!mCachePath.empty()) {
             saveDataCache(dataCacheFile.str(), rawChannelsData);
             saveDataCache(labelsCacheFile.str(), rawChannelsLabels);
+            std::ofstream(validCacheFile.str());
         }
     }
 
@@ -510,6 +511,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                 << dataRef.dims() << ", but size after transformations is "
                 << data.dims();
 
+#pragma omp critical
             throw std::runtime_error(msg.str());
         }
 
@@ -532,6 +534,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                 << labelsRef.dims() << ", but size after transformations is "
                 << labels.dims();
 
+#pragma omp critical
             throw std::runtime_error(msg.str());
         }
 
@@ -660,8 +663,12 @@ N2D2::StimuliProvider::readRawData(Database::StimulusID id) const
 
 void N2D2::StimuliProvider::setCachePath(const std::string& path)
 {
-    if (!path.empty())
-        Utils::createDirectories(path);
+    if (!path.empty()) {
+        if (!Utils::createDirectories(path)) {
+            throw std::runtime_error("StimuliProvider::setCachePath(): "
+                                     "Could not create directory: " + path);
+        }
+    }
 
     mCachePath = path;
 }

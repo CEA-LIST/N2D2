@@ -44,8 +44,8 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
                                    <unsigned int>("BatchSize", 1U);
     const bool compositeStimuli = iniConfig.getProperty
                                   <bool>("CompositeStimuli", false);
-    const std::string cachePath = iniConfig.getProperty
-                                  <std::string>("CachePath", "");
+    const std::string cachePath = Utils::expandEnvVars(iniConfig.getProperty
+                                  <std::string>("CachePath", ""));
 
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(
         database, size, batchSize, compositeStimuli));
