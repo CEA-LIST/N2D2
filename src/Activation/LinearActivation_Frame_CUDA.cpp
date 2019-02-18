@@ -65,7 +65,7 @@ void LinearActivation_Frame_CUDA<half_float::half>::propagate(
                                   data.getDevicePtr(),
                                   data.size(),
                                   (int)mShifting,
-                                  half_float::half(0.0f));
+                                  half_float::half(mClipping));
     }
 
     if (mQuantizationLevels > 0) {
@@ -111,7 +111,7 @@ void LinearActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
                                   data.getDevicePtr(),
                                   data.size(),
                                   (int)mShifting,
-                                  0.0f);
+                                  (float)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
@@ -157,7 +157,7 @@ void LinearActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
                                   data.getDevicePtr(),
                                   data.size(),
                                   (int)mShifting,
-                                  0.0);
+                                  (double)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
@@ -211,7 +211,7 @@ void LinearActivation_Frame_CUDA
                                       diffData.getDevicePtr(),
                                       data.size(),
                                       (int)mShifting,
-                                      half_float::half(0.0f));
+                                      half_float::half(mClipping));
     }
 }
 
@@ -227,7 +227,7 @@ void LinearActivation_Frame_CUDA
                                       diffData.getDevicePtr(),
                                       data.size(),
                                       (int)mShifting,
-                                      0.0f);
+                                      (float)mClipping);
     }
 }
 
@@ -243,7 +243,7 @@ void LinearActivation_Frame_CUDA
                                       diffData.getDevicePtr(),
                                       data.size(),
                                       (int)mShifting,
-                                      0.0);
+                                      (double)mClipping);
     }
 }
 }

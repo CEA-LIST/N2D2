@@ -23,7 +23,8 @@
 const char* N2D2::LinearActivation::Type = "Linear";
 
 N2D2::LinearActivation::LinearActivation()
-    : mMinValMA(0.0),
+    : mClipping(this, "Clipping", 0.0),
+      mMinValMA(0.0),
       mMaxValMA(0.0),
       mMinValAligned(0.0),
       mMaxValAligned(0.0),

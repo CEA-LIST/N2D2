@@ -1338,15 +1338,24 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
                 if (activation)
                     activation->setParameter<int>("Shifting", shifting);
-                else {
+                else if (shifting != 0) {
                     std::cout << Utils::cwarning
                         << "DeepNet::normalizeOutputsRange(): no activation "
                         "for cell " << (*itCell) << ", unable to add Shifting"
                         << Utils::cdef << std::endl;
                 }
 
-                if (activationType == "Rectifier")
-                    activation->setParameter<double>("Clipping", 1.0);
+                if (activationType == "Rectifier" || activationType == "Linear")
+                {
+                    if (activation)
+                        activation->setParameter<double>("Clipping", 1.0);
+                    else {
+                        std::cout << Utils::cwarning
+                            << "DeepNet::normalizeOutputsRange(): no "
+                            "activation for cell " << (*itCell) << ", unable "
+                            "to add Clipping" << Utils::cdef << std::endl;
+                    }
+                }
 
                 cell->processFreeParameters(std::bind(std::divides<double>(),
                                                       std::placeholders::_1,
