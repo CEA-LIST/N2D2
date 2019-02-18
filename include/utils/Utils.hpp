@@ -98,9 +98,6 @@ namespace N2D2 {
  * This is not a class, just a namespace containing common and useful functions.
 */
 namespace Utils {
-    extern unsigned int _mt[624];
-    extern unsigned int _mt_index;
-
     enum Endpoints {
         ClosedInterval,
         LeftHalfOpenInterval,
