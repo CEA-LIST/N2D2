@@ -25,6 +25,17 @@
 #include <curand_kernel.h>
 
 namespace N2D2 {
+
+void cudaNoConversion(float * data,
+                    float * tickOutputsTraces,
+                    float * tickOutputsTracesLearning,
+                    float scaling,
+                    unsigned int inputDimX,
+                    unsigned int inputDimY,
+                    unsigned int inputDimZ,
+                    unsigned int nbBatches,
+                    unsigned int maxNbThreads);
+
 void cudaGenerateInitialSpikes(float * data,
                         unsigned long long int * nextEventTime,
                         char * nextEventType,
@@ -42,6 +53,7 @@ void cudaGenerateInitialSpikes(float * data,
                         float mMaxFrequency,
                         unsigned int nbBatches,
                         curandState * state);
+
 void cudaGenerateSpikes(float * data,
                         char * tickData,
                         char * tickOutputs,

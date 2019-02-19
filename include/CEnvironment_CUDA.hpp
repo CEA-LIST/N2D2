@@ -68,6 +68,8 @@ protected:
     CudaInterface<char> mNextEventType;
     std::vector<curandState*> mCurandStates;
 
+    unsigned int mDeviceMaxThreads;
+
 };
 }
 

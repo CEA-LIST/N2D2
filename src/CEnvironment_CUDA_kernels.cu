@@ -27,6 +27,26 @@
 
 
 
+
+__global__ void cudaNoConversion_kernel(float * data,
+                                        float * tickOutputsTraces,
+                                        float * tickOutputsTracesLearning,
+                                        float scaling,
+                                        unsigned int inputDimX,
+                                        unsigned int inputDimY,
+                                        unsigned int inputDimZ)
+{
+    const unsigned int inputSize = inputDimX * inputDimY * inputDimZ;
+    const unsigned int batchOffset = blockIdx.x * inputSize;
+
+    for (unsigned int idx = threadIdx.x; idx < inputSize; idx += blockDim.x) {
+        float value = data[idx + batchOffset];
+        tickOutputsTraces[idx + batchOffset] = scaling*value;
+        tickOutputsTracesLearning[idx + batchOffset] += scaling*value;
+    }
+}
+
+
 __global__ void cudaGenerateInitialSpikes_kernel(float * data,
                                             unsigned long long int * nextEventTime,
                                             char * nextEventType,
@@ -299,6 +319,35 @@ __global__ void cudaSetupRng_kernel(curandState * state, unsigned int seed)
     curand_init(seed, id, 0, &state[id]);
 }
 
+
+void N2D2::cudaNoConversion(float * data,
+                            float * tickOutputsTraces,
+                            float * tickOutputsTracesLearning,
+                            float scaling,
+                            unsigned int inputsDimX,
+                            unsigned int inputsDimY,
+                            unsigned int inputsDimZ,
+                            unsigned int nbBatches,
+                            unsigned int maxNbThreads)
+{
+    const unsigned int groupSize =
+        inputsDimX * inputsDimY * inputsDimZ < maxNbThreads ?
+        inputsDimX * inputsDimY * inputsDimZ : maxNbThreads;
+
+    const dim3 blocksPerGrid = {nbBatches, 1, 1};
+    const dim3 threadsPerBlocks = {groupSize, 1, 1};
+
+    cudaNoConversion_kernel <<<blocksPerGrid, threadsPerBlocks>>>(data,
+                                tickOutputsTraces,
+                                tickOutputsTracesLearning,
+                                scaling,
+                                inputsDimX,
+                                inputsDimY,
+                                inputsDimZ);
+}
+
+
+
 void N2D2::cudaGenerateInitialSpikes(float * data,
                                 unsigned long long int * nextEventTime,
                                 char * nextEventType,
@@ -318,7 +367,7 @@ void N2D2::cudaGenerateInitialSpikes(float * data,
                                 curandState * state)
 {
 
-
+    // TODO: Replace 16 by inputSize?
     cudaGenerateInitialSpikes_kernel <<<nbBatches, 16>>>
                                 (data,
                                 nextEventTime,

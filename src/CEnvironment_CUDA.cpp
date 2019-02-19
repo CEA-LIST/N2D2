@@ -53,6 +53,9 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
         mCurandStates.push_back(state);
     }
     // TODO: Do we have to free this memory if the program terminates?
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, 0);
+    mDeviceMaxThreads = (unsigned int) deviceProp.maxThreadsPerBlock;
 
 }
 
@@ -60,6 +63,23 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 //TODO: Check that this has save behavior as CEnvironment!
 void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
+    if (mNoConversion) {
+        for (unsigned int k=0; k<mRelationalData.size(); k++){
+            cudaNoConversion(mRelationalData[k].getDevicePtr(),
+                            mTickDataTraces[k].getDevicePtr(),
+                            mTickDataTracesLearning[k].getDevicePtr(),
+                            mScaling,
+                            mRelationalData[k].dimX(),
+                            mRelationalData[k].dimY(),
+                            mRelationalData[k].dimZ(),
+                            mRelationalData[k].dimB(),
+                            mDeviceMaxThreads);
+            //mTickDataTraces[k].synchronizeDToH();
+            //std::cout << mTickDataTraces[k] << std::endl;
+        }
+        return;
+    }
+
     SpikeGenerator::checkParameters();
 
     if (!mInitialized) {
@@ -134,6 +154,9 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
 void N2D2::CEnvironment_CUDA::reset(Time_T /*timestamp*/)
 {
     mInitialized = false;
+    for (unsigned int k=0; k<mRelationalData.size(); ++k){
+        mTickDataTracesLearning[k].assign(mTickDataTracesLearning[k].dims(), 0);
+    }
 }
 
 N2D2::CEnvironment_CUDA::~CEnvironment_CUDA()

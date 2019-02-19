@@ -123,6 +123,22 @@ public:
     {
         return mRelationalData[subIdx];
     };
+    const Tensor<Float_T>& getTickDataTrace(unsigned int subIdx) const
+    {
+        return mTickDataTraces[subIdx];
+    };
+    Tensor<Float_T>& getTickDataTrace(unsigned int subIdx)
+    {
+        return mTickDataTraces[subIdx];
+    };
+     const Tensor<Float_T>& getTickDataTraceLearning(unsigned int subIdx) const
+    {
+        return mTickDataTracesLearning[subIdx];
+    };
+    Tensor<Float_T>& getTickDataTraceLearning(unsigned int subIdx)
+    {
+        return mTickDataTracesLearning[subIdx];
+    };
     bool doesSpikeConversion()
     {
         return !mNoConversion;
@@ -179,11 +195,15 @@ protected:
 #ifdef CUDA
     CudaInterface<char> mTickData;
     CudaTensor<char> mTickOutputs;
+    CudaInterface<Float_T> mTickDataTraces;
+    CudaInterface<Float_T> mTickDataTracesLearning;
     CudaInterface<Float_T> mCurrentFiringRate;
     CudaInterface<Float_T> mAccumulatedTickOutputs;
 #else
     Interface<char> mTickData;
     Tensor<char> mTickOutputs;
+    Interface<Float_T> mTickDataTraces;
+    Interface<Float_T> mTickDataTracesLearning;
     Interface<Float_T> mCurrentFiringRate;
     Interface<Float_T> mAccumulatedTickOutputs;
 #endif
@@ -198,6 +218,7 @@ protected:
     Parameter<bool> mReadAerData;
     Parameter<std::string> mStreamPath;
     unsigned int mNbSubStimuli;
+    long long unsigned int mLastTimestamp;
 
 };
 }

@@ -39,33 +39,37 @@ N2D2::CEnvironment::CEnvironment(Database& database,
       mNbSubStimuli(nbSubStimuli)
 {
     // ctor
+    std::initializer_list<size_t> dims({size[0], size[1], size[2], batchSize});
     mRelationalTargets.resize({mNbSubStimuli});
-    for (unsigned int k=0; k<mNbSubStimuli; k++){
-#ifdef CUDA
-        mRelationalData.push_back(new CudaTensor<Float_T>({size[0],
-                                                          size[1],
-                                                          size[2],
-                                                          batchSize}));
-#else
-        mRelationalData.push_back(new Tensor<Float_T>({size[0],
-                                                      size[1],
-                                                      size[2],
-                                                      batchSize}));
-#endif
+    if (mNbSubStimuli > 1) {
+        for (unsigned int k=0; k<mNbSubStimuli; k++){
+    #ifdef CUDA
+            mRelationalData.push_back(new CudaTensor<Float_T>(dims));
+    #else
+            mRelationalData.push_back(new Tensor<Float_T>(dims));
+    #endif
+        }
     }
+    else {
+         mRelationalData.push_back(&mData);
+    }
+
     for (unsigned int k=0; k<mRelationalData.size(); k++){
 #ifdef CUDA
-        mTickData.push_back(new CudaTensor<char>(mRelationalData[k].dims()));
-        mCurrentFiringRate.push_back(new CudaTensor<Float_T>(mRelationalData[k].dims()));
-        mAccumulatedTickOutputs.push_back(new CudaTensor<Float_T>(mRelationalData[k].dims()));
+        mTickData.push_back(new CudaTensor<char>(dims));
+        mTickDataTraces.push_back(new CudaTensor<Float_T>(dims));
+        mTickDataTracesLearning.push_back(new CudaTensor<Float_T>(dims));
+        mCurrentFiringRate.push_back(new CudaTensor<Float_T>(dims));
+        mAccumulatedTickOutputs.push_back(new CudaTensor<Float_T>(dims));
 
 #else
-        mTickData.push_back(new Tensor<char>(mRelationalData[k].dims()));
-        mCurrentFiringRate.push_back(new Tensor<Float_T>(mRelationalData[k].dims()));
-        mAccumulatedTickOutputs.push_back(new Tensor<Float_T>(mRelationalData[k].dims()));
+        mTickData.push_back(new Tensor<char>(dims));
+        mTickDataTraces.push_back(new Tensor<Float_T>(dims));
+        mTickDataTracesLearning.push_back(new Tensor<Float_T>(dims));
+        mCurrentFiringRate.push_back(new Tensor<Float_T>(dims));
+        mAccumulatedTickOutputs.push_back(new Tensor<Float_T>(dims));
 #endif
-        mNextEvent.push_back(new Tensor<std::pair<Time_T, char>>(
-                                                    mRelationalData[k].dims()));
+        mNextEvent.push_back(new Tensor<std::pair<Time_T, char>>(dims));
     }
 }
 
@@ -106,6 +110,17 @@ void N2D2::CEnvironment::addChannel(const CompositeTransformation
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
     if (mNoConversion) {
+        for (unsigned int k=0; k<mRelationalData.size(); k++){
+            //mTickDataTraceLearning[k].synchronizeDToH();
+            //mRelationalData[k].synchronizeDToH();
+            for (unsigned int idx = 0, size = mRelationalData[k].size(); idx < size; ++idx) {
+                mTickDataTraces[k](idx) = mScaling*mRelationalData[k](idx);
+                mTickDataTracesLearning[k](idx) += mTickDataTraces[k](idx);
+            }
+            mTickDataTracesLearning[k].synchronizeHToD();
+            mTickDataTraces[k].synchronizeHToD();
+            //std::cout << mRelationalData[k] << std::endl;
+        }
         return;
     }
     if (!mReadAerData) {
@@ -143,12 +158,17 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                 else {
                     mTickData[k](idx) = 0;
                 }
+                //std::cout << idx <<  " data: " << mRelationalData[k](idx);
+                //std::cout << " tickdata: " << (int)mTickData[k](idx) << std::endl;
 
 
                 if (mTickData[k](idx) != 0) {
+                    // TODO: Make coherent with other cells which take sign into account
                     mCurrentFiringRate[k](idx) += 1.0;
-                    mAccumulatedTickOutputs[k](idx) += (int)mTickData[k](idx);
                 }
+                mAccumulatedTickOutputs[k](idx) += (int)mTickData[k](idx);
+                mTickDataTraces[k](idx) = (int)mTickData[k](idx);
+                mTickDataTracesLearning[k](idx) += (int)mTickData[k](idx);
             }
         }
     }
@@ -176,14 +196,21 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
             }
 
             mTickData[0](x, y, channel, 0) = 1;
+            mTickDataTraces[0](x, y, channel, 0) =
+                 (int)mTickData[0](x, y, channel, 0);
+            mTickDataTracesLearning[0](x, y, channel, 0) +=
+                 (int)mTickData[0](x, y, channel, 0);
             ++mEventIterator;
         }
-
     }
 
-    // TODO: This is currently only necessary for the CMonitor implementation
     for (unsigned int k=0; k<mTickData.size(); k++){
-         mTickData[k].synchronizeHToD();
+        mTickDataTraces[k].synchronizeHToD();
+        mTickDataTracesLearning[k].synchronizeHToD();
+        mTickData[k].synchronizeHToD();
+    }
+     // TODO: This is currently only necessary for the CMonitor implementation
+    for (unsigned int k=0; k<mTickData.size(); k++){
         for (unsigned int z=0; z<mTickData[k].dimZ(); ++z){
             for (unsigned int y=0; y<mTickData[k].dimY(); ++y){
                 for (unsigned int x=0; x<mTickData[k].dimX(); ++x){
@@ -208,11 +235,18 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
 {
     StimuliProvider::readStimulus(id, set, batchPos);
 
-    if (mTickData.size() == 1){
+    if (mRelationalData.size() == 1){
         //mRelationalData.clear();
-        for (unsigned int i=0; i<mData.size(); ++i) {
-            mRelationalData[0](i) = mData(i);
-        }
+        //for (unsigned int i=0; i<mData.size(); ++i) {
+        //    mRelationalData[0](i) = mData(i);
+        //}
+#ifdef CUDA
+        mRelationalData[0].synchronizeHToD();
+#endif
+    }
+    else {
+        throw std::runtime_error("CEnvironment::readStimulus: "
+                                 "mRelationalData.size() != 1");
     }
 }
 
@@ -492,9 +526,10 @@ void N2D2::CEnvironment::reset(Time_T timestamp)
 {
     for (unsigned int k=0; k<mRelationalData.size(); ++k){
 
-        mTickData[k].assign(mRelationalData[k].dims(), 0);
-        mCurrentFiringRate[k].assign(mRelationalData[k].dims(), 0);
-        mAccumulatedTickOutputs[k].assign(mRelationalData[k].dims(), 0);
+        mTickData[k].assign(mTickData[k].dims(), 0);
+        mTickDataTracesLearning[k].assign(mTickDataTracesLearning[k].dims(), 0);
+        mCurrentFiringRate[k].assign(mCurrentFiringRate[k].dims(), 0);
+        mAccumulatedTickOutputs[k].assign(mAccumulatedTickOutputs[k].dims(), 0);
 
         // This is usually overwritten immediately by initialize()
         mNextEvent[k].assign(mRelationalData[k].dims(),
