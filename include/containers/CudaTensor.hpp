@@ -608,9 +608,11 @@ void N2D2::CudaTensor<T>::assign(const std::vector<size_t>& dims,
                                    const T& value)
 {
     assert(mDeviceTensor->isOwner());
+    bool dimsMatch = std::equal(mDims.begin(), mDims.end(), dims.begin());
     Tensor<T>::assign(dims, value);
-
-    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+    if (!dimsMatch) {
+        mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+    }
     syncFill<T>(value);
 }
 
