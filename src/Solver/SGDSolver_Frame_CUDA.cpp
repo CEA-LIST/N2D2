@@ -27,7 +27,8 @@ template <>
 N2D2::Registrar<N2D2::SGDSolver>
 N2D2::SGDSolver_Frame_CUDA<half_float::half>::mRegistrar(
     {"Frame_CUDA",
-     "Transcode_CUDA"},
+     "Transcode_CUDA",
+     "CSpike_BP_CUDA"},
     N2D2::SGDSolver_Frame_CUDA<half_float::half>::create,
     N2D2::Registrar<N2D2::SGDSolver>::Type<half_float::half>());
 
@@ -35,7 +36,8 @@ template <>
 N2D2::Registrar<N2D2::SGDSolver>
 N2D2::SGDSolver_Frame_CUDA<float>::mRegistrar(
     {"Frame_CUDA",
-     "Transcode_CUDA"},
+     "Transcode_CUDA",
+     "CSpike_BP_CUDA"},
     N2D2::SGDSolver_Frame_CUDA<float>::create,
     N2D2::Registrar<N2D2::SGDSolver>::Type<float>());
 
@@ -43,7 +45,8 @@ template <>
 N2D2::Registrar<N2D2::SGDSolver>
 N2D2::SGDSolver_Frame_CUDA<double>::mRegistrar(
     {"Frame_CUDA",
-     "Transcode_CUDA"},
+     "Transcode_CUDA",
+     "CSpike_BP_CUDA"},
     N2D2::SGDSolver_Frame_CUDA<double>::create,
     N2D2::Registrar<N2D2::SGDSolver>::Type<double>());
 
