@@ -205,8 +205,8 @@ public:
                      Time_T start = 0,
                      Time_T stop = 0) const;
     /// Clear all (activity, firing rates and success)
-    virtual void clearAll(unsigned int nbTimesteps=0);
-    virtual void clearActivity(unsigned int nbTimesteps=0);
+    virtual void clearAll();
+    virtual void clearActivity();
     void clearFiringRate();
     void clearMostActive();
     void clearSuccess();

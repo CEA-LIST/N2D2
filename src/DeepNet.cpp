@@ -807,7 +807,7 @@ std::vector<unsigned int> N2D2::DeepNet::getReceptiveField(
     return (hasParent) ? maxReceptiveField : cellReceptiveField;
 }
 
-void N2D2::DeepNet::clearAll(unsigned int nbTimesteps)
+void N2D2::DeepNet::clearAll()
 {
     for (std::map<std::string, std::shared_ptr<Monitor> >::const_iterator it
          = mMonitors.begin(),
@@ -821,7 +821,7 @@ void N2D2::DeepNet::clearAll(unsigned int nbTimesteps)
          itEnd = mCMonitors.end();
          it != itEnd;
          ++it) {
-        (*it).second->clearAll(nbTimesteps);
+        (*it).second->clearAll();
     }
 }
 

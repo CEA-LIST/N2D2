@@ -226,69 +226,7 @@ void N2D2::CMonitor_CUDA::update(Time_T start, Time_T stop)
 
 }
 
-void N2D2::CMonitor_CUDA::clearAll(unsigned int nbTimesteps)
-{
 
-    mTotalBatchActivity = 0;
-    mTotalBatchFiringRate = 0;
-    mNbEvaluations = 0;
-    mRelTimeIndex = 0;
-    mSuccessCounter = 0;
-
-    mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
-                          *(*mInputs).dimZ();
-
-    mMostActiveId.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-    mMostActiveRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-    mFirstEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-    mLastEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-
-
-    mBatchActivity.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
-                            (*mInputs).dimZ()}, 0);
-    mTotalActivity.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-
-    mFiringRate.assign((*mInputs).dims(), 0);
-    mBatchFiringRate.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
-                            (*mInputs).dimZ()}, 0);
-    mTotalFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-
-    clearActivity(nbTimesteps);
-
-    mSuccess.clear();
-    clearFastSuccess();
-
-}
-
-
-void N2D2::CMonitor_CUDA::clearActivity(unsigned int nbTimesteps)
-{
-    //TODO: clear seems not properly defined
-    //mActivity.clear();
-    //for (unsigned int k=0; k<mNbTimesteps; k++) {
-    //    mActivity.push_back(new CudaTensor<char>((*mInputs).dimX(),
-    //                (*mInputs).dimY(), (*mInputs).dimZ(), (*mInputs).dimB()));
-    //}
-    unsigned int oldNbTimesteps = mNbTimesteps;
-
-    if (nbTimesteps != 0) {
-        mNbTimesteps = nbTimesteps;
-    }
-
-    for (unsigned int k=0; k<mNbTimesteps; k++) {
-        if (k >= oldNbTimesteps) {
-             mActivity.push_back(new CudaTensor<char>((*mInputs).dims()));
-             std::cout << "Extended mActivity" << std::endl;
-        }
-        mActivity[k].assign((*mInputs).dims(),0);
-        mActivity.back().synchronizeHToD();
-    }
-
-
-    mTimeIndex.clear();
-    mRelTimeIndex=0;
-
-}
 
 
 

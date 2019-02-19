@@ -200,7 +200,7 @@ public:
                                         = std::vector<unsigned int>()) const;
 
     // Clear
-    void clearAll(unsigned int nbTimesteps = 0);
+    void clearAll();
     void clearActivity();
     void clearFiringRate();
     void clearSuccess();

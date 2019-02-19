@@ -43,8 +43,6 @@ public:
                             unsigned int nbClasses=0);
     virtual bool tick(Time_T timestamp);
     virtual void update(Time_T start, Time_T stop);
-    virtual void clearAll(unsigned int nbTimesteps=0);
-    virtual void clearActivity(unsigned int nbTimesteps=0);
 
 
 protected:

@@ -953,7 +953,7 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
 
 }
 
-void N2D2::CMonitor::clearAll(unsigned int nbTimesteps)
+void N2D2::CMonitor::clearAll()
 {
 
     mTotalBatchActivity = 0;
@@ -980,7 +980,7 @@ void N2D2::CMonitor::clearAll(unsigned int nbTimesteps)
                             (*mInputs).dimZ()}, 0);
     mTotalFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
-    clearActivity(nbTimesteps);
+    clearActivity();
 
     mSuccess.clear();
     clearFastSuccess();
@@ -988,28 +988,11 @@ void N2D2::CMonitor::clearAll(unsigned int nbTimesteps)
 
 }
 
-void N2D2::CMonitor::clearActivity(unsigned int nbTimesteps)
+void N2D2::CMonitor::clearActivity()
 {
-    //TODO: clear seems not properly defined
-    //mActivity.clear();
-    //for (unsigned int k=0; k<mNbTimesteps; k++) {
-    //    mActivity.push_back(new CudaTensor4d<char>((*mInputs).dimX(),
-    //                (*mInputs).dimY(), (*mInputs).dimZ(), (*mInputs).dimB()));
-    //}
-    //std::cout << "CMonitor clear activity" << std::endl;
-    unsigned int oldNbTimesteps = mNbTimesteps;
-
-    if (nbTimesteps != 0) {
-        mNbTimesteps = nbTimesteps;
-    }
-
     for (unsigned int k=0; k<mNbTimesteps; k++) {
-        if (k >= oldNbTimesteps) {
-             mActivity.push_back(new Tensor<char>((*mInputs).dims()));
-        }
         mActivity[k].assign((*mInputs).dims(),0);
     }
-
 
     mTimeIndex.clear();
     mRelTimeIndex=0;
