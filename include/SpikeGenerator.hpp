@@ -43,6 +43,11 @@ public:
         Linear
     };
 
+    void setNbQuantizationLevels(unsigned int nb)
+    {
+        mNbQuantizationLevels = nb;
+    }
+
     SpikeGenerator();
     virtual ~SpikeGenerator();
 
@@ -52,6 +57,7 @@ protected:
                    double value,
                    Time_T start,
                    Time_T end) const;
+    unsigned int quantize(double value) const;
 
     // Parameters
     Parameter<StimulusType> mStimulusType;
@@ -78,6 +84,8 @@ protected:
     Parameter<Time_T> mPeriodMin;
 
     Parameter<double> mMaxFrequency;
+
+    unsigned int mNbQuantizationLevels;
 };
 }
 

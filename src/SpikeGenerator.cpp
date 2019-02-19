@@ -30,7 +30,8 @@ N2D2::SpikeGenerator::SpikeGenerator()
       mPeriodMeanMax(this, "PeriodMeanMax", 12 * TimeS),
       mPeriodRelStdDev(this, "PeriodRelStdDev", 0.1),
       mPeriodMin(this, "PeriodMin", 11 * TimeMs),
-      mMaxFrequency(this, "MaxFrequency", 1.0 / TimeNs)
+      mMaxFrequency(this, "MaxFrequency", 1.0 / TimeNs),
+      mNbQuantizationLevels(2)
 {
     // ctor
 }
@@ -59,7 +60,9 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
     const double delay = 1.0 - std::fabs(value);
     const bool negSpike = (value < 0);
 
-    const double freq = std::fabs(value) * mMaxFrequency;
+    const unsigned int quantizationLevel = quantize(value);
+    const double freq =
+        ((double)quantizationLevel)/(mNbQuantizationLevels-1) * mMaxFrequency;
 
     if (delay > mDiscardedLateStimuli)
         return;
@@ -111,6 +114,12 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
         else
             event = std::make_pair(0, 0);
     }
+}
+
+unsigned int N2D2::SpikeGenerator::quantize(double value) const
+{
+    unsigned int level = std::round(std::fabs(value) * (mNbQuantizationLevels-1));
+    return level;
 }
 
 N2D2::SpikeGenerator::~SpikeGenerator()
