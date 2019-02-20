@@ -836,16 +836,15 @@ template <class T> T N2D2::Utils::quantize(double x, T vmin, T vmax)
 
 template <class T> double N2D2::Utils::mean(const std::vector<T>& x)
 {
-    if (x.size() > 0)
-        return std::accumulate(x.begin(), x.end(), 0.0) / x.size();
-    else
-        throw std::runtime_error("Utils::mean(): vector size must be > 0.");
+    return mean(x.begin(), x.end());
 }
 
 template <class InputIt> double N2D2::Utils::mean(InputIt first, InputIt last)
 {
+    const unsigned int size = std::distance(first, last);
+
     if (last != first)
-        return std::accumulate(first, last, 0.0) / std::distance(first, last);
+        return std::accumulate(first, last, 0.0) / size;
     else
         throw std::runtime_error(
             "Utils::mean(): number of elements must be > 0.");
@@ -855,24 +854,7 @@ template <class T>
 std::pair<double, double> N2D2::Utils::meanStdDev(const std::vector<T>& x,
                                                   bool unbiased)
 {
-    if (x.size() == 0)
-        throw std::runtime_error(
-            "Utils::meanStdDev(): number of elements must be > 0.");
-
-    const double mean = Utils::mean(x);
-    double sqSum = 0.0;
-
-    for (typename std::vector<T>::const_iterator it = x.begin(),
-                                                 itEnd = x.end();
-         it != itEnd;
-         ++it) {
-        const double v = (*it) - mean;
-        sqSum += v * v;
-    }
-
-    const double stdDev = (unbiased) ? std::sqrt(sqSum / (x.size() - 1))
-                                     : std::sqrt(sqSum / x.size());
-    return std::make_pair(mean, stdDev);
+    return meanStdDev(x.begin(), x.end(), unbiased);
 }
 
 template <class InputIt>
@@ -884,16 +866,24 @@ N2D2::Utils::meanStdDev(InputIt first, InputIt last, bool unbiased)
             "Utils::meanStdDev(): number of elements must be > 0.");
 
     const unsigned int size = std::distance(first, last);
-    const double mean = std::accumulate(first, last, 0.0) / size;
-    double sqSum = 0.0;
 
-    for (; first != last; ++first) {
-        const double v = (*first) - mean;
-        sqSum += v * v;
+    if (size == 1 && unbiased)
+        throw std::runtime_error(
+            "Utils::meanStdDev(): number of elements must be > 1 for unbiased.");
+
+    // Use Welford's method to compute std. dev. in one pass
+    double mean = 0.0;
+    double M2 = 0.0;
+
+    for (unsigned int k = 1; first != last; ++first, ++k) {
+        const double delta = ((*first) - mean);
+        mean += delta / k;
+        const double delta2 = ((*first) - mean);
+        M2 += delta * delta2;
     }
 
-    const double stdDev = (unbiased) ? std::sqrt(sqSum / (size - 1))
-                                     : std::sqrt(sqSum / size);
+    const double stdDev = (unbiased) ? std::sqrt(M2 / (size - 1))
+                                     : std::sqrt(M2 / size);
     return std::make_pair(mean, stdDev);
 }
 

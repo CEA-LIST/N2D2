@@ -748,10 +748,7 @@ void N2D2::Database::extractSlices(unsigned int width,
                           Utils::Delete());
 
 // Progress bar
-#pragma omp atomic
-            ++sliced;
-
-            progress = (unsigned int)(20.0 * (sliced) / (double)toSlice);
+            progress = (unsigned int)(20.0 * (sliced + i) / (double)toSlice);
 
             if (progress > progressPrev) {
 #pragma omp critical(Database__extractSlices_2)
@@ -762,6 +759,8 @@ void N2D2::Database::extractSlices(unsigned int width,
                 }
             }
         }
+
+        sliced += size;
 
         // push_back new stimuli to mStimuli
         mStimuli.reserve(mStimuli.size() + newStimuli.size());
@@ -784,6 +783,8 @@ void N2D2::Database::extractSlices(unsigned int width,
     }
 
     std::cout << std::endl;
+
+    assert(sliced == toSlice);
 }
 
 void N2D2::Database::load(const std::string& /*dataPath*/,
@@ -859,10 +860,7 @@ void N2D2::Database::save(const std::string& dataPath,
             }
 
 // Progress bar
-#pragma omp atomic
-            ++saved;
-
-            progress = (unsigned int)(20.0 * (saved) / (double)toSave);
+            progress = (unsigned int)(20.0 * (saved + i) / (double)toSave);
 
             if (progress > progressPrev) {
 #pragma omp critical(Database__save)
@@ -873,7 +871,11 @@ void N2D2::Database::save(const std::string& dataPath,
                 }
             }
         }
+
+        saved += size;
     }
+
+    assert(saved == toSave);
 }
 
 void N2D2::Database::partitionStimuli(unsigned int nbStimuli, StimuliSet set)

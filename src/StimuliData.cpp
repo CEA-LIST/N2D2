@@ -251,15 +251,16 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         Float_T globalValueMin = std::numeric_limits<Float_T>::max();
         Float_T globalValueMax = -std::numeric_limits<Float_T>::max();
 
-        long double sum = 0.0;
-        long double sqSum = 0.0;
-        unsigned long long int count = 0;
-
         const std::vector<Database::StimuliSet> stimuliSets
             = mProvider.getDatabase().getStimuliSets(setMask);
 
+        const std::string& meanDataFile = mName + "/meanData.bin";
+        bool computeMeanData = mMeanData
+                                && !std::ifstream(meanDataFile.c_str()).good();
+        cv::Mat meanData;
+
         // For progression visualization
-        std::cout << mName << " processing(1/2)" << std::flush;
+        std::cout << mName << " processing" << std::flush;
         unsigned int toLoad = 0;
 
         for (std::vector<Database::StimuliSet>::const_iterator it
@@ -269,6 +270,17 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
              ++it) {
             toLoad += mProvider.getDatabase().getNbStimuli(*it);
         }
+
+        mSize.resize(toLoad);
+        mValue.resize(toLoad);
+
+        // to compute global mean
+        long double sumMean = 0.0;
+        unsigned long long int sumCount = 0;
+        // to compute global stdDev
+        long double sumM2 = 0.0;
+        std::vector<double> mean(toLoad, 0.0);
+        std::vector<unsigned int> count(toLoad, 0U);
 
         unsigned int loaded = 0;
         unsigned int progress = 0, progressPrev = 0;
@@ -283,13 +295,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 = mProvider.getDatabase().getNbStimuli(*it);
             const bool rawData = (mProvider.getNbTransformations(*it) == 0);
 
-            const unsigned int sizeOffset = mSize.size();
-            const unsigned int valueOffset = mValue.size();
-
-            mSize.resize(sizeOffset + nbStimuli);
-            mValue.resize(valueOffset + nbStimuli);
-
-#pragma omp parallel for schedule(dynamic) reduction(+:sum,count)
+#pragma omp parallel for schedule(dynamic) reduction(+:sumMean,sumCount,sumM2)
 // min and max reduction not supported by MSVC, using double-checked locking instead.
 //reduction(min:minSizeX,minSizeY,minSizeZ,globalValueMin) reduction(max:maxSizeX,maxSizeY,maxSizeZ,globalValueMax)
             for (int index = 0; index < (int)nbStimuli; ++index) {
@@ -304,23 +310,42 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
                 assert(!data.empty());
 
-                const std::pair<std::vector<Float_T>::const_iterator,
-                                std::vector<Float_T>::const_iterator> minMaxIt
-                    = std::minmax_element(data.begin(), data.end());
-                // A new vector must be created because data.data() contains the
-                // full content of the original 4D tensor
-                const std::pair<double, double> meanStdDev
-                    = Utils::meanStdDev(data.begin(), data.end());
+                double dataMean = 0.0;
+                double dataM2 = 0.0;
+                Float_T minVal = data(0);
+                Float_T maxVal = data(0);
+
+                // Use Welford's method to compute std. dev. in one pass
+                for (unsigned int k = 0, kSize = data.size(); k < kSize; ++k) {
+                    const double x = data(k);
+
+                    const double delta = (x - dataMean);
+                    dataMean += delta / (k + 1);
+                    const double delta2 = (x - dataMean);
+                    dataM2 += delta * delta2;
+
+                    if (x < minVal)
+                        minVal = x;
+
+                    if (x > maxVal)
+                        maxVal = x;
+                }
+
+                const double dataStdDev = std::sqrt(dataM2 / (data.size() - 1));
+
+                // to compute global mean
+                sumMean += dataMean * data.size();
+                sumCount += data.size();
+                // to compute global stdDev
+                sumM2 += dataM2;
+                mean[loaded + index] = dataMean;
+                count[loaded + index] = data.size();
 
                 // Size
                 const Size size(data.dimX(), data.dimY(), data.dimZ());
 
                 // Value
-                const Value value(*minMaxIt.first, *minMaxIt.second,
-                                  meanStdDev.first, meanStdDev.second);
-
-                sum += meanStdDev.first * data.size();
-                count += data.size();
+                const Value value(minVal, maxVal, dataMean, dataStdDev);
 
                 if (data.dimX() < minSizeX) {
 #pragma omp critical(StimuliData__generate_minSizeX)
@@ -340,10 +365,10 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                         minSizeZ = data.dimZ();
                 }
 
-                if (*minMaxIt.first < globalValueMin) {
+                if (minVal < globalValueMin) {
 #pragma omp critical(StimuliData__generate_globalValueMin)
-                    if (*minMaxIt.first < globalValueMin)
-                        globalValueMin = *minMaxIt.first;
+                    if (minVal < globalValueMin)
+                        globalValueMin = minVal;
                 }
 
                 if (data.dimX() > maxSizeX) {
@@ -364,20 +389,34 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                         maxSizeZ = data.dimZ();
                 }
 
-                if (*minMaxIt.second > globalValueMax) {
+                if (maxVal > globalValueMax) {
 #pragma omp critical(StimuliData__generate_globalValueMax)
-                    if (*minMaxIt.second > globalValueMax)
-                        globalValueMax = *minMaxIt.second;
+                    if (maxVal > globalValueMax)
+                        globalValueMax = maxVal;
                 }
 
-                mSize[sizeOffset + index] = size;
-                mValue[valueOffset + index] = value;
+                mSize[loaded + index] = size;
+                mValue[loaded + index] = value;
+
+                if (computeMeanData) {
+                    cv::Mat matData;
+                    // Use double for maximum precision
+                    ((cv::Mat)data).convertTo(matData, CV_64F);
+
+#pragma omp critical(StimuliData__generate_meanData)
+                    if (computeMeanData) {
+                        if (meanData.empty())
+                            meanData = matData;
+                        else if (matData.size() == meanData.size())
+                            meanData += matData;
+                        else
+                            computeMeanData = false;
+                    }
+                }
 
                 // Progress bar
-#pragma omp atomic
-                ++loaded;
-
-                progress = (unsigned int)(20.0 * (loaded) / (double)toLoad);
+                progress = (unsigned int)(20.0 * (loaded + index)
+                                                            / (double)toLoad);
 
                 if (progress > progressPrev) {
 #pragma omp critical(StimuliData__generate)
@@ -388,110 +427,34 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                     }
                 }
             }
+
+            loaded += nbStimuli;
         }
 
         std::cout << std::endl;
+
+        assert(loaded == toLoad);
 
         mMinSize = Size(minSizeX, minSizeY, minSizeZ);
         mMaxSize = Size(maxSizeX, maxSizeY, maxSizeZ);
 
         mGlobalValue.minVal = globalValueMin;
         mGlobalValue.maxVal = globalValueMax;
-        mGlobalValue.mean = sum / count;
 
-        const std::string& meanDataFile = mName + "/meanData.bin";
-        cv::Mat meanData;
-        bool computeMeanData = false;
+        // Compute global mean
+        const double globalMean = sumMean / sumCount;
+        mGlobalValue.mean = globalMean;
 
-        if (mMeanData) {
-            if (mMinSize.dimX == mMaxSize.dimX && mMinSize.dimY == mMaxSize.dimY
-                && mMinSize.dimZ == mMaxSize.dimZ) {
-                if (!std::ifstream(meanDataFile.c_str()).good())
-                    computeMeanData = true;
-            } else {
-                std::cout << Utils::cwarning
-                          << "Warning: StimuliData::generate(): cannot compute "
-                             "mean data on images of different"
-                             " sizes: min = [" << mMinSize.dimX << "x"
-                          << mMinSize.dimY << "x" << mMinSize.dimZ << "], "
-                                                                      "max = ["
-                          << mMaxSize.dimX << "x" << mMaxSize.dimY << "x"
-                          << mMaxSize.dimZ << "]" << Utils::cdef << std::endl;
-            }
+        // Compute global stdDev
+        // source: https://stats.stackexchange.com/questions/10441/how-to-calculate-the-variance-of-a-partition-of-variables
+        double sqSum = 0.0;
+
+        for (unsigned int k = 0; k < loaded; ++k) {
+            const double delta = (mean[k] - globalMean);
+            sqSum += count[k] * delta * delta;
         }
 
-        std::cout << mName << " processing(2/2)" << std::flush;
-        loaded = 0;
-        progress = 0;
-        progressPrev = 0;
-
-        // Second loop: compute global std.dev. + mean data if enabled
-        for (std::vector<Database::StimuliSet>::const_iterator it
-             = stimuliSets.begin(),
-             itEnd = stimuliSets.end();
-             it != itEnd;
-             ++it) {
-            const unsigned int nbStimuli
-                = mProvider.getDatabase().getNbStimuli(*it);
-            const bool rawData = (mProvider.getNbTransformations(*it) == 0);
-
-#pragma omp parallel for schedule(dynamic) reduction(+:sqSum)
-            for (int index = 0; index < (int)nbStimuli; ++index) {
-                StimuliProvider provider = mProvider.cloneParameters();
-
-                if (!rawData)
-                    provider.readStimulus(*it, index, 0);
-
-                const Tensor<Float_T> data
-                    = (rawData) ? provider.readRawData(*it, index)
-                                : provider.getData()[0];
-
-                long double sqSumStimulus = 0.0;
-
-                for (std::vector<Float_T>::const_iterator it = data.begin(),
-                                                          itEnd = data.end();
-                     it != itEnd;
-                     ++it) {
-                    const double v = (*it) - mGlobalValue.mean;
-                    sqSumStimulus += v * v;
-                }
-
-                sqSum += sqSumStimulus;
-
-                if (computeMeanData) {
-                    cv::Mat matData;
-                    // Use double for maximum precision
-                    ((cv::Mat)data).convertTo(matData, CV_64F);
-
-#pragma omp critical(StimuliData__generate_1)
-                    {
-                        if (meanData.empty())
-                            meanData = matData;
-                        else
-                            meanData += matData;
-                    }
-                }
-
-                // Progress bar
-#pragma omp atomic
-                ++loaded;
-
-                progress = (unsigned int)(20.0 * (loaded) / (double)toLoad);
-
-                if (progress > progressPrev) {
-#pragma omp critical(StimuliData__generate_2)
-                    if (progress > progressPrev) {
-                        std::cout << std::string(progress - progressPrev, '.')
-                                  << std::flush;
-                        progressPrev = progress;
-                    }
-                }
-            }
-        }
-
-        std::cout << std::endl;
-
-        mGlobalValue.stdDev = std::sqrt(sqSum / count);
+        mGlobalValue.stdDev = std::sqrt((sumM2 + sqSum) / (loaded - 1));
 
         if (computeMeanData) {
             meanData /= (double)mSize.size();
@@ -499,6 +462,16 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
             StimuliProvider::logData(Utils::fileBaseName(meanDataFile) + ".dat",
                                      Tensor<Float_T>(meanData));
+        }
+        else if (mMeanData && !std::ifstream(meanDataFile.c_str()).good()) {
+            std::cout << Utils::cwarning
+                      << "Warning: StimuliData::generate(): cannot compute "
+                         "mean data on images of different"
+                         " sizes: min = [" << mMinSize.dimX << "x"
+                      << mMinSize.dimY << "x" << mMinSize.dimZ << "], "
+                                                                  "max = ["
+                      << mMaxSize.dimX << "x" << mMaxSize.dimY << "x"
+                      << mMaxSize.dimZ << "]" << Utils::cdef << std::endl;
         }
 
         mProvider.setBatchSize(batchSize);

@@ -232,6 +232,47 @@ TEST_DATASET(Utils,
 }
 
 TEST_DATASET(Utils,
+             meanStdDev_unbiased,
+             (std::string values, double mean, double stdDev),
+             std::make_tuple("1 2", 1.5, 0.70710678118654757),
+             std::make_tuple("3 0 1 2", 1.5, 1.2909944487358056),
+             std::make_tuple("4 0 1 2 3", 2.0, 1.5811388300841898),
+             std::make_tuple("3 2 4 1 3 5", 3.0, 1.4142135623730951),
+             std::make_tuple("3 2 1 6 4 5 3", 3.428571428571428, 1.7182493859684491),
+             std::make_tuple("3 2 4 1 7 5", 3.666666666666667, 2.1602468994692869),
+             std::make_tuple("7 2 1 6 4 5 3", 4.0, 2.1602468994692869))
+{
+    std::vector<double> vec;
+    vec << values;
+
+    const std::pair<double, double> result = Utils::meanStdDev(vec, true);
+
+    ASSERT_EQUALS_DELTA(result.first, mean, 1e-12);
+    ASSERT_EQUALS_DELTA(result.second, stdDev, 1e-12);
+}
+
+TEST_DATASET(Utils,
+             meanStdDev,
+             (std::string values, double mean, double stdDev),
+             std::make_tuple("1", 1.0, 0.0),
+             std::make_tuple("1 2", 1.5, 0.5),
+             std::make_tuple("3 0 1 2", 1.5, 1.1180339887498949),
+             std::make_tuple("4 0 1 2 3", 2.0, 1.4142135623730951),
+             std::make_tuple("3 2 4 1 3 5", 3.0, 1.2909944487358056),
+             std::make_tuple("3 2 1 6 4 5 3", 3.428571428571428, 1.5907898179514348),
+             std::make_tuple("3 2 4 1 7 5", 3.666666666666667, 1.9720265943665387),
+             std::make_tuple("7 2 1 6 4 5 3", 4.0, 2.0))
+{
+    std::vector<double> vec;
+    vec << values;
+
+    const std::pair<double, double> result = Utils::meanStdDev(vec, false);
+
+    ASSERT_EQUALS_DELTA(result.first, mean, 1e-12);
+    ASSERT_EQUALS_DELTA(result.second, stdDev, 1e-12);
+}
+
+TEST_DATASET(Utils,
              median,
              (std::string values, double median),
              std::make_tuple("1", 1.0),
