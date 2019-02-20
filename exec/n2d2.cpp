@@ -55,6 +55,7 @@
 #include "StimuliProvider.hpp"
 #include "Activation/LogisticActivation.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/SoftmaxCell.hpp"
 #include "Cell/FcCell_Spike.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
@@ -1032,6 +1033,30 @@ int main(int argc, char* argv[]) try
 
         if (fuse)
             deepNet->fuseBatchNormWithConv();
+    }
+    else if (nbBits > 0) {
+        // afterCalibration means that we are trying to simulate export result.
+        // In this case, if nbBits > 0, set EstimatedLabelsValueDisplay to false
+        // for non-softmax, non-logistic targets
+        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+             = deepNet->getTargets().begin(),
+             itTargetsEnd = deepNet->getTargets().end();
+             itTargets != itTargetsEnd;
+             ++itTargets)
+        {
+            std::shared_ptr<Cell> cell = (*itTargets)->getCell();
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+            if (cell->getType() != SoftmaxCell::Type
+                && (!cellFrame || !cellFrame->getActivation()
+                    || cellFrame->getActivation()->getType()
+                            != std::string("Logistic")))
+            {
+                (*itTargets)->setParameter<bool>("EstimatedLabelsValueDisplay",
+                                                 false);
+            }
+        }
     }
 
     const std::string testName = (afterCalibration) ? "export" : "test";
