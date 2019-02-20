@@ -309,14 +309,6 @@ public:
 
 
 protected:
-    StimuliProvider(bool dataSignedMapping, unsigned int quantizationLevels,
-                    Float_T quantizationMin, Float_T quantizationMax,
-                    Database& database, const std::vector<size_t>& size,
-                    unsigned int batchSize, bool compositeStimuli,
-                    std::string cachePath,
-                    TransformationsSets transformations,
-                    std::vector<TransformationsSets> channelsTransformations);
-    
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
