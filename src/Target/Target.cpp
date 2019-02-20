@@ -40,6 +40,7 @@ N2D2::Target::Target(const std::string& name,
     : mDataAsTarget(this, "DataAsTarget", false),
       mNoDisplayLabel(this, "NoDisplayLabel", -1),
       mLabelsHueOffset(this, "LabelsHueOffset", 0),
+      mEstimatedLabelsValueDisplay(this, "EstimatedLabelsValueDisplay", true),
       mMaskedLabel(this, "MaskedLabel", -1),
       mBinaryThreshold(this, "BinaryThreshold", 0.5),
       mImageLogFormat(this, "ImageLogFormat", "jpg"),
@@ -656,7 +657,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                     = (mask.empty() || mask(ox, oy) == mMaskedLabel)
                         ? ((estimatedLabels(ox, oy) != mNoDisplayLabel)
                             ? cv::Vec3f(estimatedHue, 255,
-                                        255 * estimatedLabelsValue(ox, oy))
+                                       (mEstimatedLabelsValueDisplay)
+                                           ? 255 * estimatedLabelsValue(ox, oy)
+                                           : 255)
                             : cv::Vec3f(estimatedHue, 10, 127)) // no color
                         : cv::Vec3f(0, 0, 127); // not masked = no color
             }

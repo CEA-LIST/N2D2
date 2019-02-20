@@ -147,6 +147,9 @@ protected:
     Parameter<bool> mDataAsTarget;
     Parameter<int> mNoDisplayLabel;
     Parameter<int> mLabelsHueOffset;
+    /// If true, the value in the HSV colorspace is equal to the estimated
+    /// value. Otherwise, displayed value is 255 regardless of the confidence.
+    Parameter<bool> mEstimatedLabelsValueDisplay;
     Parameter<int> mMaskedLabel;
     /// Threshold for single output (binary classification). Default is 0.5.
     Parameter<double> mBinaryThreshold;
@@ -165,7 +168,6 @@ protected:
     Tensor<int> mTargets;
     Tensor<int> mEstimatedLabels;
     Tensor<Float_T> mEstimatedLabelsValue;
-    Tensor<Float_T> mEstimatedValues;
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
     std::vector<double> mLoss;
