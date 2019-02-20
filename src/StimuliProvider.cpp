@@ -39,8 +39,8 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mCachePath("_cache"),
       mBatch(batchSize),
       mFutureBatch(batchSize),
-      mLabelsROI(batchSize, std::vector<std::shared_ptr<ROI> >()),
-      mFutureLabelsROI(batchSize, std::vector<std::shared_ptr<ROI> >()),
+      mLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
+      mFutureLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
       mFuture(false)
 {
     // ctor
@@ -67,31 +67,41 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
     mFutureLabelsData.resize(labelSize);
 }
 
-N2D2::StimuliProvider::StimuliProvider(const StimuliProvider& sp)
-    : Parameterizable(sp),
-      // Variables
-      mDataSignedMapping(this, "DataSignedMapping", sp.mDataSignedMapping),
-      mQuantizationLevels(this, "QuantizationLevels", sp.mQuantizationLevels),
-      mQuantizationMin(this, "QuantizationMin", sp.mQuantizationMin),
-      mQuantizationMax(this, "QuantizationMax", sp.mQuantizationMax),
-      mDatabase(sp.mDatabase),
-      mSize(sp.mSize),
-      mBatchSize(sp.mBatchSize),
-      mCompositeStimuli(sp.mCompositeStimuli),
-      mCachePath(sp.mCachePath),
-      mTransformations(sp.mTransformations),
-      mChannelsTransformations(sp.mChannelsTransformations),
-      mBatch(sp.mBatch),
-      mFutureBatch(sp.mFutureBatch),
-      mData(sp.mData),
-      mFutureData(sp.mFutureData),
-      mLabelsData(sp.mLabelsData),
-      mFutureLabelsData(sp.mFutureLabelsData),
-      mLabelsROI(sp.mLabelsROI),
-      mFutureLabelsROI(sp.mFutureLabelsROI),
-      mFuture(sp.mFuture)
+N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
+    : mDataSignedMapping(this, "DataSignedMapping", other.mDataSignedMapping),
+      mQuantizationLevels(this, "QuantizationLevels", other.mQuantizationLevels),
+      mQuantizationMin(this, "QuantizationMin", other.mQuantizationMin),
+      mQuantizationMax(this, "QuantizationMax", other.mQuantizationMax),
+      mDatabase(other.mDatabase),
+      mSize(std::move(other.mSize)),
+      mBatchSize(other.mBatchSize),
+      mCompositeStimuli(other.mCompositeStimuli),
+      mCachePath(std::move(other.mCachePath)),
+      mTransformations(other.mTransformations),
+      mChannelsTransformations(std::move(other.mChannelsTransformations)),
+      mBatch(std::move(other.mBatch)),
+      mFutureBatch(std::move(other.mFutureBatch)),
+      mData(other.mData),
+      mFutureData(other.mFutureData),
+      mLabelsData(other.mLabelsData),
+      mFutureLabelsData(other.mFutureLabelsData),
+      mLabelsROI(std::move(other.mLabelsROI)),
+      mFutureLabelsROI(std::move(other.mFutureLabelsROI)),
+      mFuture(other.mFuture) 
 {
-    // copy-ctor
+}
+
+N2D2::StimuliProvider N2D2::StimuliProvider::cloneParameters() const {
+    StimuliProvider sp(mDatabase, mSize, mBatchSize, mCompositeStimuli);
+    sp.mDataSignedMapping = mDataSignedMapping;
+    sp.mQuantizationLevels = mQuantizationLevels;
+    sp.mQuantizationMin = mQuantizationMin;
+    sp.mQuantizationMax = mQuantizationMax;
+    sp.mCachePath = mCachePath;
+    sp.mTransformations = mTransformations;
+    sp.mChannelsTransformations = mChannelsTransformations;
+
+    return sp;
 }
 
 void N2D2::StimuliProvider::addChannel(const CompositeTransformation

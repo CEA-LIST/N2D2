@@ -62,7 +62,14 @@ public:
                     const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
                     bool compositeStimuli = false);
-    StimuliProvider(const StimuliProvider& sp);
+
+    StimuliProvider(const StimuliProvider& other) = delete;
+    StimuliProvider(StimuliProvider&& other);
+
+    /// Return a partial copy of the StimuliProvider. Only the parameters of the 
+    /// StimuliProvider are copied, the loaded stimuli data are zero-initialized.
+    StimuliProvider cloneParameters() const;
+
     virtual void addChannel(const CompositeTransformation& /*transformation*/);
 
     /// Add global CACHEABLE transformations, before applying any channel
@@ -302,10 +309,19 @@ public:
 
 
 protected:
+    StimuliProvider(bool dataSignedMapping, unsigned int quantizationLevels,
+                    Float_T quantizationMin, Float_T quantizationMax,
+                    Database& database, const std::vector<size_t>& size,
+                    unsigned int batchSize, bool compositeStimuli,
+                    std::string cachePath,
+                    TransformationsSets transformations,
+                    std::vector<TransformationsSets> channelsTransformations);
+    
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
 
+protected:
     /// Map unsigned integer range to signed before convertion to Float_T
     /// 8 bits image pixels will be converted from [0,255] to [-0.5, 0.5]
     Parameter<bool> mDataSignedMapping;

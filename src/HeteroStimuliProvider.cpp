@@ -23,7 +23,7 @@
 N2D2::HeteroStimuliProvider::HeteroStimuliProvider(const StimuliProvider& item)
 {
     // ctor
-    mItems.push_back(std::make_shared<StimuliProvider>(item));
+    mItems.push_back(std::make_shared<StimuliProvider>(item.cloneParameters()));
 }
 
 N2D2::HeteroStimuliProvider::HeteroStimuliProvider(const std::shared_ptr
@@ -180,7 +180,7 @@ void N2D2::HeteroStimuliProvider::push_back(const StimuliProvider& item)
                                      "items must have the same batch size");
     }
 
-    mItems.push_back(std::make_shared<StimuliProvider>(item));
+    mItems.push_back(std::make_shared<StimuliProvider>(item.cloneParameters()));
 }
 
 unsigned int N2D2::HeteroStimuliProvider::size() const

@@ -293,7 +293,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 // min and max reduction not supported by MSVC, using double-checked locking instead.
 //reduction(min:minSizeX,minSizeY,minSizeZ,globalValueMin) reduction(max:maxSizeX,maxSizeY,maxSizeZ,globalValueMax)
             for (int index = 0; index < (int)nbStimuli; ++index) {
-                StimuliProvider provider(mProvider);
+                StimuliProvider provider = mProvider.cloneParameters();
 
                 if (!rawData)
                     provider.readStimulus(*it, index, 0);
@@ -437,7 +437,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
 #pragma omp parallel for schedule(dynamic) reduction(+:sqSum)
             for (int index = 0; index < (int)nbStimuli; ++index) {
-                StimuliProvider provider(mProvider);
+                StimuliProvider provider = mProvider.cloneParameters();
 
                 if (!rawData)
                     provider.readStimulus(*it, index, 0);
