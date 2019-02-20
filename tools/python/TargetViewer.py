@@ -150,10 +150,11 @@ class TargetViewer(object):
                   initialfile=os.path.basename(self.files[self.index]) + ".jpg")
                 root.destroy()
 
-                self.initialDir = os.path.dirname(saveName)
+                if saveName != ():
+                    self.initialDir = os.path.dirname(saveName)
 
-                img = cv2.imread(self.files[self.index])
-                cv2.imwrite(saveName, img)
+                    img = cv2.imread(self.files[self.index])
+                    cv2.imwrite(saveName, img)
             elif key == 27:
                 # KEY_ESC
                 break
