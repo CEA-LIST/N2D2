@@ -541,14 +541,28 @@ int main(int argc, char* argv[]) try
             // Larger sample of frames to see the pre-processing
             Utils::createDirectories(dirName.str());
 
+            sp.readStimulus(Database::Learn, preSamples);
+
+            // Estimate if input of network is signed or unsigned
+            const Tensor<Float_T> spData = sp.getData()[0];
+            const std::pair<std::vector<Float_T>::const_iterator,
+                            std::vector<Float_T>::const_iterator> minMaxIt
+                    = std::minmax_element(spData.begin(), spData.end());
+            const bool isSigned = (*minMaxIt.first) < 0.0;
+
             for (unsigned int i = 0; i < 100; ++i) {
                 std::ostringstream fileName;
                 fileName << dirName.str() << "/sample_" << i << ".jpg";
 
                 sp.readStimulus(Database::Learn, preSamples);
 
+                const cv::Mat mat = cv::Mat(sp.getData()[0]);
                 cv::Mat frame;
-                cv::Mat(sp.getData()[0]).convertTo(frame, CV_8U, 127.0, 127.0);
+
+                if (isSigned)
+                    mat.convertTo(frame, CV_8U, 127.0, 127.0);
+                else
+                    mat.convertTo(frame, CV_8U, 255.0, 0.0);
 
                 if (!cv::imwrite(fileName.str(), frame)) {
                     throw std::runtime_error("Unable to write image: "
