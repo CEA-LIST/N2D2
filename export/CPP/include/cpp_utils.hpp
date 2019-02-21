@@ -45,7 +45,8 @@ void envRead(const std::string& fileName, unsigned int size,
  * Values are rescaled to [0-255] in rescale is true. Otherwise the values are
  * kept intact ([0-1] for 'pbm' files and [0-maxValue] for 'pgm' and 'ppm' files.
  */
-void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut, bool rescale = true);
+void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut, 
+                    bool rescale = true);
 
 void confusion_print(unsigned int nbOutputs, unsigned int* confusion);
 
