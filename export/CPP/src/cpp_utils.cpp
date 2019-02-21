@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -124,8 +125,7 @@ void envRead(const std::string& fileName,
 }
 
 /**** Confusion Matrix ****/
-void confusion_print(unsigned int nbOutputs,
-                                              unsigned int* confusion)
+void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
 {
     std::cout << "\nConfusion matrix:\n";
     std::cout << std::string(9 + 10 * nbOutputs, '-') << "\n";
@@ -173,4 +173,105 @@ void confusion_print(unsigned int nbOutputs,
 
     std::cout << std::string(9 + 10 * nbOutputs, '-') << "\n"
               << "T: Target    E: Estimated" << std::endl;
+}
+
+void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut) {
+    enum format_e {
+        PBM_ASCII = 1,
+        PGM_ASCII = 2,
+        PPM_ASCII = 3,
+        PBM_BINARY = 4,
+        PGM_BINARY = 5,
+        PPM_BINARY = 6,
+    };
+    
+    std::ifstream fileStream(file.c_str(), std::fstream::binary);
+    if(!fileStream.is_open()) {
+        throw std::runtime_error("Couldn't open file '" + file + "'.");
+    }
+
+    fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
+
+    char header;
+    fileStream >> header;
+    if(header != 'P') {
+        throw std::runtime_error("The '" + file + "' file is not a valid Netpbm file.");
+    }
+
+    std::size_t format; 
+    fileStream >> format;
+    
+    std::size_t width;
+    fileStream >> width;
+    
+    std::size_t height;
+    fileStream >> height;
+
+    std::size_t maxValue = 1;
+    if(format == PGM_ASCII || format == PPM_ASCII || format == PGM_BINARY || format == PPM_BINARY) {
+        fileStream >> maxValue;
+    }
+    
+    std::size_t nbChannels = 1;
+    if(format == PPM_ASCII || format == PPM_BINARY) {
+        nbChannels = 3;
+    }
+    
+    
+    if(dataOut.empty()) {
+        dataOut.resize(width*height*nbChannels);
+    }
+    else if(dataOut.size() != width*height*nbChannels) {
+        throw std::runtime_error("dataOut (" + std::to_string(dataOut.size()) + ") should be empty or of size " + std::to_string(width*height*nbChannels) + ".");
+    }
+    assert(dataOut.size() == width*height*nbChannels);
+    
+    
+    // Read new line character
+    fileStream.get();
+    
+    
+    switch(format) {
+        case PBM_ASCII:{
+            char value;
+            for(std::size_t i = 0; i < height*width*nbChannels; i++) {
+                fileStream >> value;
+                dataOut[i] = (value == '1');
+                
+            }
+            break;
+        }
+        case PBM_BINARY:{
+            std::size_t i = 0;
+            for(std::size_t y = 0; y < height; y++) {
+                for(std::size_t x = 0; x < width; x += 8) {
+                    unsigned char value;
+                    fileStream.read((char*) &value, sizeof(value));
+                    
+                    for(std::size_t xi = 0; xi < std::min(width - x, (std::size_t) 8); xi++) {
+                        dataOut[i] = !((value >> (7 - xi)) & 1);
+                        i++;
+                    }
+                }
+            }
+            break;
+        }
+        case PGM_ASCII:        
+        case PPM_ASCII:
+            std::copy_n(std::istream_iterator<std::size_t>(fileStream), dataOut.size(), dataOut.begin());
+            break;
+        case PGM_BINARY:
+        case PPM_BINARY:
+            fileStream.read((char*) dataOut.data(), dataOut.size());
+            break;
+        default:
+            throw std::runtime_error("The '" + file + "' file is not a valid Netpbm file.");
+    }
+
+    
+    // Rescale from [0-maxValue] to [0-255]
+    if(maxValue != 255) {
+        std::transform(dataOut.begin(), dataOut.end(), 
+                       dataOut.begin(), [&](unsigned char v) { return (unsigned char) std::lround(v*255.0/maxValue); });
+    }
 }

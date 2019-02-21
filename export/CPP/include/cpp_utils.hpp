@@ -28,12 +28,24 @@
 
 
 void getFilesList(const std::string& dir, std::vector<std::string>& files);
-                  std::vector<std::string> getFilesList(const std::string& dir);
+std::vector<std::string> getFilesList(const std::string& dir);
 
 void envRead(const std::string& fileName, unsigned int size,
              unsigned int channelsHeight, unsigned int channelsWidth,
              DATA_T* data, unsigned int outputsSize,
              int32_t* outputTargets);
+
+/**
+ * Read the Netpbm 'file' and store the result in dataOut.
+ * 
+ * If dataOut is empty, the required size is allocated. Otherwise the dataOut buffer
+ * is reused to avoid any allocation. An exception is thrown if dataOut is not empty
+ * and doesn't have the same size as the image.
+ * 
+ * Values are rescaled to [0-255] in rescale is true. Otherwise the values are
+ * kept intact ([0-1] for 'pbm' files and [0-maxValue] for 'pgm' and 'ppm' files.
+ */
+void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut, bool rescale = true);
 
 void confusion_print(unsigned int nbOutputs, unsigned int* confusion);
 
