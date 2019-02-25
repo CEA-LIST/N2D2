@@ -176,7 +176,7 @@ void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
               << "T: Target    E: Estimated" << std::endl;
 }
 
-void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut) {
+void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut, bool rescale) {
     enum format_e {
         PBM_ASCII = 1,
         PGM_ASCII = 2,
