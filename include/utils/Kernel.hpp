@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "containers/Matrix.hpp"
+#include "utils/Utils.hpp"
 
 namespace N2D2 {
 /**
