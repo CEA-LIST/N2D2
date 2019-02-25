@@ -96,7 +96,6 @@ void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
 }
 
 
-// TODO: Parallelize with CUDA
 bool N2D2::CMonitor::tick(Time_T timestamp)
 {
     for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
@@ -106,7 +105,7 @@ bool N2D2::CMonitor::tick(Time_T timestamp)
 
                     char activity = (*mInputs)(x, y ,channel, batch);
 
-                    //TODO: Adapt to negative spikes?
+                    //TODO: Adapt to negative spikes and integer input?
                     if ((int)activity > 0) {
                         if (mFirstEventTime(batch) == 0) {
                             mFirstEventTime(batch) = timestamp;
