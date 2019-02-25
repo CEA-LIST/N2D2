@@ -30,7 +30,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            Database::StimuliSet set,
                                            int nbStimuliMax,
                                            bool normalize,
-                                           DeepNet* deepNet)
+                                           DeepNet* deepNet,
+                                           ExportFormat exportFormat)
 {
     if (Registrar<StimuliProviderExport>::exists(type)) {
         Registrar<StimuliProviderExport>::create(type)(sp,
@@ -47,7 +48,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                         set,
                                         nbStimuliMax,
                                         normalize,
-                                        deepNet);
+                                        deepNet,
+                                        exportFormat);
     }
 }
 
@@ -56,7 +58,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            Database::StimuliSet set,
                                            int nbStimuliMax,
                                            bool normalize,
-                                           DeepNet* deepNet)
+                                           DeepNet* deepNet,
+                                           ExportFormat exportFormat)
 {
     Utils::createDirectories(dirName);
 
@@ -64,9 +67,8 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     bool unsignedData;
     std::tie(scaling, unsignedData) = getScaling(sp, dirName, set, normalize);
 
-    generate(sp, dirName, set, scaling, unsignedData, nbStimuliMax, deepNet);
+    generate(sp, dirName, set, scaling, unsignedData, nbStimuliMax, deepNet, exportFormat);
 }
-
 
 void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            const std::string& dirName,
@@ -74,8 +76,11 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            double scaling,
                                            bool unsignedData,
                                            int nbStimuliMax,
-                                           DeepNet* deepNet)
+                                           DeepNet* deepNet,
+                                           ExportFormat exportFormat)
 {
+    assert(sp.getBatchSize() == 1);
+
     Utils::createDirectories(dirName);
 
     // Truncate is the natural approx. method for the input, as it is generally
@@ -138,118 +143,25 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
 
         sp.readStimulus(set, i);
 
-        for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-            const Tensor<Float_T> frame = sp.getData(channel);
+        if(exportFormat == CHW) {
+            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
+                const Tensor<Float_T> frame = sp.getData(channel);
 
+                for (unsigned int y = 0; y < envSizeY; ++y) {
+                    for (unsigned int x = 0; x < envSizeX; ++x) {
+                        writeStimulusValue(frame(x, y), unsignedData, 
+                                           scaling, approxMethod, envStimuli);
+                    }
+                }
+            }
+        }
+        else {
+            assert(exportFormat == HWC);
             for (unsigned int y = 0; y < envSizeY; ++y) {
                 for (unsigned int x = 0; x < envSizeX; ++x) {
-                    if (CellExport::mPrecision == CellExport::Float64) {
-                        const double value = (double)frame(x, y);
-                        envStimuli.write(reinterpret_cast<const char*>(&value),
-                                         sizeof(value));
-                    }
-                    else if (CellExport::mPrecision == CellExport::Float32
-                               || CellExport::mPrecision
-                                  == CellExport::Float16) {
-                        const float value = (float)frame(x, y);
-                        envStimuli.write(reinterpret_cast<const char*>(&value),
-                                         sizeof(value));
-                    }
-                    else if (CellExport::mPrecision <= 8) {
-                        const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y),
-                                                       approxMethod);
-
-                        if (unsignedData) {
-                            const uint8_t value
-                                = (uint8_t)Utils::clamp<long long int>(
-                                approxValue,
-                                std::numeric_limits<uint8_t>::min(),
-                                std::numeric_limits<uint8_t>::max());
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                        else {
-                            const int8_t value
-                                = (int8_t)Utils::clamp<long long int>(
-                                approxValue,
-                                std::numeric_limits<int8_t>::min(),
-                                std::numeric_limits<int8_t>::max());
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                    }
-                    else if (CellExport::mPrecision <= 16) {
-                        const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y),
-                                                       approxMethod);
-
-                        if (unsignedData) {
-                            const uint16_t value
-                                = (uint16_t)Utils::clamp<long long int>(
-                                approxValue,
-                                std::numeric_limits<uint16_t>::min(),
-                                std::numeric_limits<uint16_t>::max());
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                        else {
-                            const int16_t value
-                                = (int16_t)Utils::clamp<long long int>(
-                                approxValue,
-                                std::numeric_limits<int16_t>::min(),
-                                std::numeric_limits<int16_t>::max());
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                    }
-                    else if (CellExport::mPrecision <= 32) {
-                        const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y),
-                                                       approxMethod);
-
-                        if (unsignedData) {
-                            const uint32_t value
-                                = (uint32_t)Utils::clamp<long long int>(
-                                approxValue,
-                                std::numeric_limits<uint32_t>::min(),
-                                std::numeric_limits<uint32_t>::max());
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                        else {
-                            const int32_t value
-                                = (int32_t)Utils::clamp<long long int>(
-                                approxValue,
-                                std::numeric_limits<int32_t>::min(),
-                                std::numeric_limits<int32_t>::max());
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                    }
-                    else {
-                        const long long int approxValue
-                            = CellExport::getIntApprox(scaling * frame(x, y),
-                                                       approxMethod);
-
-                        if (unsignedData) {
-                            const uint64_t value = approxValue;
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
-                        else {
-                            const int64_t value = approxValue;
-                            envStimuli.write(reinterpret_cast<const char*>
-                                             (&value),
-                                             sizeof(value));
-                        }
+                    for (unsigned int channel = 0; channel < nbChannels; ++channel) {
+                        writeStimulusValue(sp.getData()(x, y, channel, 0), unsignedData, 
+                                           scaling, approxMethod, envStimuli);
                     }
                 }
             }
@@ -288,6 +200,81 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     }
 
     std::cout << std::endl;
+}
+
+template<typename T>
+T N2D2::StimuliProviderExport::getScaledData(Float_T data, double scaling, 
+                                             CellExport::IntApprox approxMethod) 
+{
+    const long long int approxValue = CellExport::getIntApprox(scaling * data, approxMethod);
+    const T value = (T) Utils::clamp<long long int>(approxValue,
+                                                    std::numeric_limits<T>::min(),
+                                                    std::numeric_limits<T>::max());
+    return value;
+}
+
+namespace N2D2 {
+template<>
+float StimuliProviderExport::getScaledData(Float_T data, double, CellExport::IntApprox) {
+    return (float) data;
+}
+
+template<>
+double StimuliProviderExport::getScaledData(Float_T data, double, CellExport::IntApprox) {
+    return (double) data;
+}
+}
+
+void N2D2::StimuliProviderExport::writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
+                                                     CellExport::IntApprox approxMethod, 
+                                                     std::ofstream& envStimuli) 
+{
+    if (CellExport::mPrecision == CellExport::Float64) {
+        const double val = getScaledData<double>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision == CellExport::Float32 || 
+             CellExport::mPrecision == CellExport::Float16) 
+    {
+        const float val = getScaledData<float>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 8 && unsignedData) {
+        const uint8_t val = getScaledData<uint8_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 8 && !unsignedData) {
+        const int8_t val = getScaledData<int8_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 16 && unsignedData) {
+        const uint16_t val = getScaledData<uint16_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 16 && !unsignedData) {
+        const int16_t val = getScaledData<int16_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 32 && unsignedData) {
+        const uint32_t val = getScaledData<uint32_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 32 && !unsignedData) {
+        const int32_t val = getScaledData<int32_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 64 && unsignedData) {
+        const uint64_t val = getScaledData<uint64_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else if (CellExport::mPrecision <= 64 && !unsignedData) {
+        const int64_t val = getScaledData<int64_t>(value, scaling, approxMethod);
+        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+    }
+    else {
+        throw std::runtime_error("Unsupported precision.");
+    }
+
 }
 
 N2D2::StimuliData N2D2::StimuliProviderExport::getStimuliData(

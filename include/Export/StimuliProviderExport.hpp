@@ -22,7 +22,10 @@
 #define N2D2_STIMULIPROVIDEREXPORT_H
 
 #include "StimuliData.hpp"
+#include "Export/CellExport.hpp"
 #include "utils/Registrar.hpp"
+
+#include <iosfwd>
 
 namespace N2D2 {
 
@@ -45,20 +48,27 @@ public:
         return rMap;
     }
 
+    enum ExportFormat {
+        HWC,
+        CHW
+    };
+
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
                          const std::string& type,
                          Database::StimuliSet set,
                          int nbStimuliMax = -1,
                          bool normalize = false,
-                         DeepNet* deepNet = NULL);
+                         DeepNet* deepNet = NULL,
+                         ExportFormat exportFormat = CHW);
 
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
                          Database::StimuliSet set,
                          int nbStimuliMax = -1,
                          bool normalize = false,
-                         DeepNet* deepNet = NULL);
+                         DeepNet* deepNet = NULL,
+                         ExportFormat exportFormat = CHW);
 
     static void generate(StimuliProvider& sp,
                          const std::string& dirName,
@@ -66,13 +76,29 @@ public:
                          double scaling,
                          bool unsignedData,
                          int nbStimuliMax = -1,
-                         DeepNet* deepNet = NULL);
+                         DeepNet* deepNet = NULL,
+                         ExportFormat exportFormat = CHW);
 
     static double getStimuliRange(StimuliProvider& sp,
                                   const std::string& dirName,
                                   Database::StimuliSet set);
 
 protected:
+    static void writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
+                                   CellExport::IntApprox approxMethod, 
+                                   std::ofstream& envStimuli);
+
+    template<typename T>
+    static void generateStimulus(StimuliProvider& sp, 
+                                 Database::StimuliSet set, 
+                                 std::size_t iStimulus,
+                                 double scaling,
+                                 std::ostream& ostream);
+    
+    template<typename T>
+    static T getScaledData(Float_T data, double scaling, 
+                           CellExport::IntApprox approxMethod);
+
     static StimuliData getStimuliData(StimuliProvider& sp,
                                       const std::string& dirName,
                                       Database::StimuliSet set);
