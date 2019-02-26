@@ -296,22 +296,22 @@ void N2D2::ConvCell_Transcode
             "Could not save spike coding compare data file.");
 
     const unsigned int oxSize
-        = (unsigned int)((ConvCell::mInputsDims[0] + 2 * ConvCell::mPaddingDims[0]
-                          - ConvCell::mKernelDims[0] + ConvCell::mStrideDims[0])
-                         / (double)ConvCell::mStrideDims[0]);
+        = (unsigned int)((FRAME::mInputsDims[0] + 2 * FRAME::mPaddingDims[0]
+                          - FRAME::mKernelDims[0] + FRAME::mStrideDims[0])
+                         / (double)FRAME::mStrideDims[0]);
     const unsigned int oySize
-        = (unsigned int)((ConvCell::mInputsDims[1] + 2 * ConvCell::mPaddingDims[1]
-                          - ConvCell::mKernelDims[1] + ConvCell::mStrideDims[1])
-                         / (double)ConvCell::mStrideDims[1]);
+        = (unsigned int)((FRAME::mInputsDims[1] + 2 * FRAME::mPaddingDims[1]
+                          - FRAME::mKernelDims[1] + FRAME::mStrideDims[1])
+                         / (double)FRAME::mStrideDims[1]);
 
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(FRAME::getOutputs());
-    std::vector<Float_T> minVal(ConvCell::getNbOutputs());
-    std::vector<Float_T> maxVal(ConvCell::getNbOutputs());
+    std::vector<Float_T> minVal(FRAME::getNbOutputs());
+    std::vector<Float_T> maxVal(FRAME::getNbOutputs());
 
     Float_T avgSignal = 0.0;
     int avgActivity = 0;
 
-    for (unsigned int output = 0; output < ConvCell::getNbOutputs(); ++output) {
+    for (unsigned int output = 0; output < FRAME::getNbOutputs(); ++output) {
         minVal[output] = outputs(0, 0, output, 0);
         maxVal[output] = outputs(0, 0, output, 0);
 
@@ -359,7 +359,7 @@ void N2D2::ConvCell_Transcode
     gnuplot.setXrange(-0.5, oxSize - 0.5);
     gnuplot.setYrange(oySize - 0.5, -0.5);
 
-    for (unsigned int output = 0; output < ConvCell::getNbOutputs(); ++output) {
+    for (unsigned int output = 0; output < FRAME::getNbOutputs(); ++output) {
         std::stringstream cbRangeStr, paletteStr;
         cbRangeStr << "cbrange [";
         paletteStr << "palette defined (";

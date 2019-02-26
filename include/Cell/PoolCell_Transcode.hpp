@@ -237,20 +237,20 @@ void N2D2::PoolCell_Transcode
             "Could not save spike coding compare data file.");
 
     const unsigned int oxSize
-        = (unsigned int)((PoolCell::mInputsDims[0] - PoolCell::mPoolDims[0]
-                          + PoolCell::mStrideDims[0]) / (double)PoolCell::mStrideDims[0]);
+        = (unsigned int)((FRAME::mInputsDims[0] - FRAME::mPoolDims[0]
+                          + FRAME::mStrideDims[0]) / (double)FRAME::mStrideDims[0]);
     const unsigned int oySize
-        = (unsigned int)((PoolCell::mInputsDims[1] - PoolCell::mPoolDims[1]
-                          + PoolCell::mStrideDims[1]) / (double)PoolCell::mStrideDims[1]);
+        = (unsigned int)((FRAME::mInputsDims[1] - FRAME::mPoolDims[1]
+                          + FRAME::mStrideDims[1]) / (double)FRAME::mStrideDims[1]);
 
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(FRAME::getOutputs());
-    std::vector<Float_T> minVal(PoolCell::getNbOutputs());
-    std::vector<Float_T> maxVal(PoolCell::getNbOutputs());
+    std::vector<Float_T> minVal(FRAME::getNbOutputs());
+    std::vector<Float_T> maxVal(FRAME::getNbOutputs());
 
     Float_T avgSignal = 0.0;
     int avgActivity = 0;
 
-    for (unsigned int output = 0; output < PoolCell::getNbOutputs(); ++output) {
+    for (unsigned int output = 0; output < FRAME::getNbOutputs(); ++output) {
         minVal[output] = outputs(0, 0, output, 0);
         maxVal[output] = outputs(0, 0, output, 0);
 
@@ -298,7 +298,7 @@ void N2D2::PoolCell_Transcode
     gnuplot.setXrange(-0.5, oxSize - 0.5);
     gnuplot.setYrange(oySize - 0.5, -0.5);
 
-    for (unsigned int output = 0; output < PoolCell::getNbOutputs(); ++output) {
+    for (unsigned int output = 0; output < FRAME::getNbOutputs(); ++output) {
         std::stringstream cbRangeStr, paletteStr;
         cbRangeStr << "cbrange [";
         paletteStr << "palette defined (";
