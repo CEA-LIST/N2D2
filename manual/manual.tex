@@ -966,7 +966,8 @@ Other program options related to the exports:
   \lstinline!-nbbits! [8] & Number of bits for the weights and signals.
   Must be 8, 16, 32 or 64 for integer export, or -32, -64 for floating
   point export. The number of bits can be arbitrary for the \lstinline!C_HLS!
-  export (for example, 6 bits) \\
+  export (for example, 6 bits). It must be -32 for the \lstinline!CPP_TensorRT! export,
+  the precision is directly set at runtime\\
   \lstinline!-calib! [0] & Number of stimuli used for the calibration.
   0 = no calibration (default),
   -1 = use the full test dataset for calibration \\
@@ -1073,14 +1074,12 @@ make
 
 \subsubsection{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!CPP_TensorRT! export}{CPP\_TensorRT export}}
-The tensorRT 2.1 API export can run the generated program in NVIDIA GPU architecture.
-It use CUDA and tensorRT 2.1 API library.
-The currently supported layers by the tensorRT 2.1 export are : Convolutional, Pooling, Concatenation,
-Fully-Connected, Softmax and all activations type.
-Custom layers implementation through the plugin factory and
- generic 8-bits calibrations inference features are under development.
+The TensorRT API export can run the generated program in NVIDIA GPU architecture.
+It use CUDA, cuDNN and TensorRT API library.
+All the native TensorRT layers are supported.
+The export support from TensorRT 2.1 to TensorRT 5.0 versions.
 
-Program options related to the tensorRT 2.1 API export:
+Program options related to the TensorRT API export:
 \begin{center}
  \begin{tabular}{| p{5cm} | p{10cm} | }
  \hline
@@ -1095,6 +1094,11 @@ Program options related to the tensorRT 2.1 API export:
   can decrease execution time performance.\\
   \lstinline!-iter-build! [1] & Sets the number of minimization build iterations
   done by the tensorRT builder to find the best layer tactics.\\
+  \lstinline!-nbbits! [-32] & Number of bits used for computation. Value -32 for Full FP32 bits configuration, 
+  -16 for Half FP16 bits configuration and 8 for INT8 bits configuration. When running INT8 mode for the first time,
+  the TensorRT calibration process can be very long. Once generated the generated calibration table will be automatically
+  reused. Supported compute mode in function of the compute capability are provided here: 
+  \url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities} . \\
  \hline
 \end{tabular}
 \end{center}
