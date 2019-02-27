@@ -271,8 +271,10 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
 
     
     // Rescale from [0-maxValue] to [0-255]
-    if(maxValue != 255) {
-        std::transform(dataOut.begin(), dataOut.end(), 
-                       dataOut.begin(), [&](unsigned char v) { return (unsigned char) std::lround(v*255.0/maxValue); });
+    if(rescale && maxValue != 255) {
+        std::transform(dataOut.begin(), dataOut.end(),  dataOut.begin(), 
+                       [&](unsigned char v) { 
+                           return (unsigned char) std::lround(v*255.0/maxValue); 
+                        });
     }
 }

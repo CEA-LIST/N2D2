@@ -42,7 +42,7 @@ void envRead(const std::string& fileName, unsigned int size,
  * is reused to avoid any allocation. An exception is thrown if dataOut is not empty
  * and doesn't have the same size as the image.
  * 
- * Values are rescaled to [0-255] in rescale is true. Otherwise the values are
+ * Values are rescaled to [0-255] if rescale is true. Otherwise the values are
  * kept intact ([0-1] for 'pbm' files and [0-maxValue] for 'pgm' and 'ppm' files.
  */
 void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut, 
