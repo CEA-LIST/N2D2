@@ -25,7 +25,9 @@ const char* N2D2::BatchNormCell::Type = "BatchNorm";
 
 N2D2::BatchNormCell::BatchNormCell(const std::string& name,
                                    unsigned int nbOutputs)
-    : Cell(name, nbOutputs), mEpsilon(this, "Epsilon", 0.0)
+    : Cell(name, nbOutputs), 
+      mEpsilon(this, "Epsilon", 0.0),
+      mMovingAverageMomentum(this, "MovingAverageMomentum", 0.1)
 {
     // ctor
 }

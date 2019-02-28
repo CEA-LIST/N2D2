@@ -110,6 +110,11 @@ protected:
     /// Epsilon value used in the batch normalization formula
     Parameter<double> mEpsilon;
 
+    // Moving average rate: used for the moving average of
+    // batch-wise means and standard deviations during training.
+    // The closer to 1.0, the more it will depend on the last batch 
+    Parameter<double> mMovingAverageMomentum;
+    
     std::shared_ptr<Solver> mScaleSolver;
     std::shared_ptr<Solver> mBiasSolver;
 };

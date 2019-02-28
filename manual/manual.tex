@@ -4741,6 +4741,8 @@ Batch Normalization layer \citep{Ioffe2015}.
   take precedence over the \lstinline!Solvers.!* parameters \\
   \lstinline!Epsilon! [0.0] & \emph{all Frame} & Epsilon value used in the batch normalization formula. If 0.0, automatically choose the minimum possible
   value. \\
+  \lstinline!MovingAverageMomentum! [0.1] & \emph{all Frame} & MovingAverageMomentum: used for the moving average of
+  batch-wise means and standard deviations during training. The closer to 1.0, the more it will depend on the last batch. \\
  \hline
 \end{longtable}
 \end{center}

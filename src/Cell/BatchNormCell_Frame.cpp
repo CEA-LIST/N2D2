@@ -141,6 +141,18 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
     mDiffBias.resize(requiredDims);
     mDiffSavedMean.resize(requiredDims);
     mDiffSavedVariance.resize(requiredDims);
+    if(mMovingAverageMomentum <= 0.0 || mMovingAverageMomentum >= 1.0)
+    {
+        std::stringstream msgStr;
+        msgStr << "BatchNormCell_Frame<T>::initialize():"
+            " in cell " + mName + ", wrong value for MovingAverageMomentum. "
+            "Expected value range ]0.0, 1.0[ whereas actual value is "
+            << mMovingAverageMomentum << std::endl;
+
+        throw std::runtime_error(msgStr.str());
+
+    }
+
 }
 
 template <class T>
@@ -182,8 +194,6 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
         } else {
             const unsigned int size = input.dimX() * input.dimY()
                                       * mInputs.dimB();
-            // Cumulative Moving Average (CMA)
-            const double expAverageFactor = 1.0 / (1.0 + mNbPropagate);
 
 #pragma omp parallel for if (input.dimZ() > 16)
             for (int channel = 0; channel < (int)input.dimZ(); ++channel) {
@@ -213,10 +223,10 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 
                 mSavedVariance(output) = sum / (ParamT)size;
 
-                (*mMean)(output) = mSavedMean(output) * expAverageFactor
-                                + (*mMean)(output) * (1.0 - expAverageFactor);
-                (*mVariance)(output) = mSavedVariance(output) * expAverageFactor
-                                    + (*mVariance)(output) * (1.0 - expAverageFactor);
+                (*mMean)(output) = mSavedMean(output) * mMovingAverageMomentum
+                                + (*mMean)(output) * (1.0 - mMovingAverageMomentum);
+                (*mVariance)(output) = mSavedVariance(output) * mMovingAverageMomentum
+                                    + (*mVariance)(output) * (1.0 - mMovingAverageMomentum);
             }
 
 #if defined(_OPENMP) && _OPENMP >= 200805

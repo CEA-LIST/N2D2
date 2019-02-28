@@ -157,11 +157,23 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
         }
     }
 
-    mSavedMean.resize(requiredDims);
-    mSavedVariance.resize(requiredDims);
+    if(mMovingAverageMomentum <= 0.0 || mMovingAverageMomentum >= 1.0)
+    {
+        std::stringstream msgStr;
+        msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+            " in cell " + mName + ", wrong value for MovingAverageMomentum. "
+            "Expected value range ]0.0, 1.0[ whereas actual value is "
+            << mMovingAverageMomentum << std::endl;
 
-    mDiffScale.resize(requiredDims);
-    mDiffBias.resize(requiredDims);
+        throw std::runtime_error(msgStr.str());
+
+    }
+
+    mSavedMean.resize(requiredDims, ParamT(0.0));
+    mSavedVariance.resize(requiredDims, ParamT(0.0));
+
+    mDiffScale.resize(requiredDims, ParamT(0.0));
+    mDiffBias.resize(requiredDims, ParamT(0.0));
 }
 
 template <class T>
@@ -192,8 +204,10 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mVariance->getDevicePtr(),
             mEpsilon));
     } else {
-        // Cumulative Moving Average (CMA)
-        const double expAverageFactor = 1.0 / (1.0 + mNbPropagate);
+        // mSavedMean and mSavedVariance cache parameters 
+        // must be reinitialized to 0.0 at each forward pass on training:
+        mSavedMean.fill(ParamT(0.0));
+        mSavedVariance.fill(ParamT(0.0));
 
         CHECK_CUDNN_STATUS(cudnnBatchNormalizationForwardTraining(
             CudaContext::cudnnHandle(),
@@ -207,7 +221,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mScale->getCudnnTensorDesc(),
             mScale->getDevicePtr(),
             mBias->getDevicePtr(),
-            expAverageFactor,
+            mMovingAverageMomentum,
             mMean->getDevicePtr(),
             mVariance->getDevicePtr(),
             mEpsilon,
