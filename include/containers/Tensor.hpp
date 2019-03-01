@@ -29,14 +29,20 @@
 #ifndef N2D2_TENSOR_H
 #define N2D2_TENSOR_H
 
+#include <algorithm>
 #include <cassert>
+#include <cctype>
+#include <complex>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <numeric>
+#include <sstream>
+#include <string>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
-#include <map>
 
 #ifdef OPENCV_USE_OLD_HEADERS       //  before OpenCV 2.2.0
     #include "cv.h"
