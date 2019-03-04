@@ -1491,7 +1491,7 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                         else
                             convCell->getBias(output, bias);
 
-                        bias(0) += bnBiases(output) - bnMeans(output) * factor;
+                        bias(0) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
                         convCell->setBias(output, bias);
                     }
 

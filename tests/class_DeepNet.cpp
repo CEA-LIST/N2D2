@@ -165,7 +165,6 @@ TEST(DeepNet, fuseBatchNormWithConv)
         std::vector<int>({(int)0, (int)0}),
         std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>()));
-    conv1->setParameter("NoBias", true);
 
     std::shared_ptr<BatchNormCell_Frame<double> > bn1(
         new BatchNormCell_Frame<double>("bn1",
@@ -190,11 +189,12 @@ TEST(DeepNet, fuseBatchNormWithConv)
     conv1->initialize();
     bn1->initialize();
 
+
     for (unsigned int output = 0; output < nbOutputs; ++output) {
         Tensor<double> scale({1}, Random::randNormal(1.0, 0.5));
         Tensor<double> bias({1}, Random::randUniform(-0.5, 0.5));
         Tensor<double> mean({1}, Random::randUniform(-0.5, 0.5));
-        Tensor<double> variance({1}, Random::randNormal(0.0, 0.5));
+        Tensor<double> variance({1}, Random::randUniform(0.0, 0.15));
 
         bn1->setScale(output, scale);
         bn1->setBias(output, bias);
@@ -205,8 +205,8 @@ TEST(DeepNet, fuseBatchNormWithConv)
     ASSERT_EQUALS(deepNet.getLayers().size(), 3U);
 
     // Outputs before fuse
-    conv1->propagate();
-    bn1->propagate();
+    conv1->propagate(true);
+    bn1->propagate(true);
     const Tensor<double>& outputsRef = tensor_cast<double>(bn1->getOutputs());
 
     conv1->logFreeParametersDistrib("class_DeepNet_conv1_ref.log");
@@ -219,7 +219,7 @@ TEST(DeepNet, fuseBatchNormWithConv)
     ASSERT_EQUALS(conv1->getActivation()->getType(), "Rectifier");
 
     // Outputs after fuse
-    conv1->propagate();
+    conv1->propagate(true);
     const Tensor<double>& outputsFuse = tensor_cast<double>(conv1->getOutputs());
 
     conv1->logFreeParametersDistrib("class_DeepNet_conv1_fuse.log");
