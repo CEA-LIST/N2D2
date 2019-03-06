@@ -54,5 +54,8 @@ std::shared_ptr<N2D2::StimuliData> N2D2::StimuliDataGenerator::generate(
     if (stimuliData->getParameter<bool>("MeanData"))
         iniConfig.setProperty("_MeanData", section + "/meanData.bin");
 
+    if (stimuliData->getParameter<bool>("StdDevData"))
+        iniConfig.setProperty("_StdDevData", section + "/stdDevData.bin");
+
     return stimuliData;
 }

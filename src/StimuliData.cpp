@@ -27,7 +27,8 @@ N2D2::StimuliData::StimuliData(const std::string& name,
                                StimuliProvider& provider)
     : mName(name),
       mProvider(provider),
-      mMeanData(this, "MeanData", false)
+      mMeanData(this, "MeanData", false),
+      mStdDevData(this, "StdDevData", false)
 {
     // ctor
     Utils::createDirectories(mName);
@@ -37,7 +38,8 @@ N2D2::StimuliData::StimuliData(const StimuliData& stimuliData)
     : Parameterizable(),
       mName(stimuliData.mName),
       mProvider(stimuliData.mProvider),
-      mMeanData(this, "MeanData", stimuliData.mMeanData)
+      mMeanData(this, "MeanData", stimuliData.mMeanData),
+      mStdDevData(this, "StdDevData", stimuliData.mStdDevData)
 {
     // copy-ctor
 }
@@ -259,6 +261,11 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                                 && !std::ifstream(meanDataFile.c_str()).good();
         cv::Mat meanData;
 
+        const std::string& stdDevDataFile = mName + "/stdDevData.bin";
+        bool computeStdDevData = mStdDevData
+                               && !std::ifstream(stdDevDataFile.c_str()).good();
+        cv::Mat M2Data;
+
         // For progression visualization
         std::cout << mName << " processing" << std::flush;
         unsigned int toLoad = 0;
@@ -398,19 +405,32 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 mSize[loaded + index] = size;
                 mValue[loaded + index] = value;
 
-                if (computeMeanData) {
+                if (computeMeanData || computeStdDevData) {
                     cv::Mat matData;
                     // Use double for maximum precision
                     ((cv::Mat)data).convertTo(matData, CV_64F);
 
 #pragma omp critical(StimuliData__generate_meanData)
-                    if (computeMeanData) {
+                    if (computeMeanData || computeStdDevData) {
                         if (meanData.empty())
-                            meanData = matData;
-                        else if (matData.size() == meanData.size())
-                            meanData += matData;
-                        else
+                            meanData = cv::Mat::zeros(matData.size(), CV_64F);
+
+                        if (M2Data.empty() && computeStdDevData)
+                            M2Data = cv::Mat::zeros(matData.size(), CV_64F);
+
+                        if (matData.size() == meanData.size()) {
+                            const cv::Mat delta = (matData - meanData);
+                            meanData += delta / (loaded + index + 1);
+
+                            if (computeStdDevData) {
+                                const cv::Mat delta2 = (matData - meanData);
+                                M2Data += delta.mul(delta2);
+                            }
+                        }
+                        else {
                             computeMeanData = false;
+                            computeStdDevData = false;
+                        }
                     }
                 }
 
@@ -456,17 +476,29 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
         mGlobalValue.stdDev = std::sqrt((sumM2 + sqSum) / (sumCount - 1));
 
-        if (computeMeanData) {
-            meanData /= (double)mSize.size();
+        if (computeMeanData || computeStdDevData) {
             BinaryCvMat::write(meanDataFile, meanData);
-
             StimuliProvider::logData(Utils::fileBaseName(meanDataFile) + ".dat",
                                      Tensor<Float_T>(meanData));
+
+            if (computeStdDevData) {
+                M2Data /= (double)(toLoad - 1);
+
+                cv::Mat stdDevData;
+                cv::sqrt(M2Data, stdDevData);
+
+                BinaryCvMat::write(stdDevDataFile, stdDevData);
+                StimuliProvider::logData(Utils::fileBaseName(stdDevDataFile)
+                                            + ".dat",
+                                         Tensor<Float_T>(stdDevData));
+            }
         }
-        else if (mMeanData && !std::ifstream(meanDataFile.c_str()).good()) {
+        else if ((mMeanData && !std::ifstream(meanDataFile.c_str()).good())
+            || (mStdDevData && !std::ifstream(stdDevDataFile.c_str()).good()))
+        {
             std::cout << Utils::cwarning
                       << "Warning: StimuliData::generate(): cannot compute "
-                         "mean data on images of different"
+                         "mean/std.dev. data on images of different"
                          " sizes: min = [" << mMinSize.dimX << "x"
                       << mMinSize.dimY << "x" << mMinSize.dimZ << "], "
                                                                   "max = ["

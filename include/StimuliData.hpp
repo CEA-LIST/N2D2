@@ -100,6 +100,7 @@ private:
 
     // Parameters
     Parameter<bool> mMeanData;
+    Parameter<bool> mStdDevData;
 
     // Per-stimulus size
     std::vector<Size> mSize;
