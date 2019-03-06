@@ -1438,25 +1438,18 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                     std::shared_ptr<Cell_Frame_Top> bnCellTop =
                         std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-                    // Fuse activation
-                    if (bnCellTop->getActivation()
-                        && std::string(bnCellTop->getActivation()->getType())
-                            != "Linear")
+                    // Fuse only if  the convolution has a linear activation
+                    if (convCellTop->getActivation()
+                        && std::string(convCellTop->getActivation()
+                                        ->getType()) != "Linear")
                     {
-                        if (convCellTop->getActivation()
-                            && std::string(convCellTop->getActivation()
-                                            ->getType()) != "Linear")
-                        {
-                            std::cout << Utils::cwarning << "  -> non-linear "
-                                "activation before BatchNorm prevents fuse!"
-                                << Utils::cdef << std::endl;
-                            continue;
-                        }
-                        else {
-                            convCellTop->setActivation(bnCellTop->
-                                                            getActivation());
-                        }
+                        std::cout << Utils::cwarning << "  -> non-linear "
+                            "activation before BatchNorm prevents fuse!"
+                            << Utils::cdef << std::endl;
+                        continue;
                     }
+
+                    convCellTop->setActivation(bnCellTop->getActivation());
 
                     if (noBias)
                         convCell->setParameter<bool>("NoBias", false);
