@@ -377,16 +377,17 @@ namespace Utils {
     template <class T> T quantize(double x, T vmin, T vmax);
 
     /**
-     * Mean value of a vector.
+     * Numerically stable computation of the arithmetic mean of a vector.
      *
      * @param x             Input vector
-     * @return Mean value of the vector (= sum(x[i])/size(x))
+     * @return Mean value of the vector (~ sum(x[i])/size(x))
     */
     template <class T> double mean(const std::vector<T>& x);
     template <class InputIt> double mean(InputIt first, InputIt last);
 
     /**
-     * Mean and standard deviation of a vector.
+     * Numerically stable computation of the arithmetic mean and standard
+     * deviation of a vector.
      *
      * @param x             Input vector
      * @param unbiased      If true, normalizes the result by N-1, where N is
@@ -841,13 +842,18 @@ template <class T> double N2D2::Utils::mean(const std::vector<T>& x)
 
 template <class InputIt> double N2D2::Utils::mean(InputIt first, InputIt last)
 {
-    const unsigned int size = std::distance(first, last);
-
-    if (last != first)
-        return std::accumulate(first, last, 0.0) / size;
-    else
+    if (last == first)
         throw std::runtime_error(
             "Utils::mean(): number of elements must be > 0.");
+
+    double mean = 0.0;
+
+    for (size_t k = 1; first != last; ++first, ++k) {
+        const double delta = ((*first) - mean);
+        mean += delta / k;
+    }
+
+    return mean;
 }
 
 template <class T>
@@ -865,7 +871,7 @@ N2D2::Utils::meanStdDev(InputIt first, InputIt last, bool unbiased)
         throw std::runtime_error(
             "Utils::meanStdDev(): number of elements must be > 0.");
 
-    const unsigned int size = std::distance(first, last);
+    const size_t size = std::distance(first, last);
 
     if (size == 1 && unbiased)
         throw std::runtime_error(
@@ -875,7 +881,7 @@ N2D2::Utils::meanStdDev(InputIt first, InputIt last, bool unbiased)
     double mean = 0.0;
     double M2 = 0.0;
 
-    for (unsigned int k = 1; first != last; ++first, ++k) {
+    for (size_t k = 1; first != last; ++first, ++k) {
         const double delta = ((*first) - mean);
         mean += delta / k;
         const double delta2 = ((*first) - mean);
