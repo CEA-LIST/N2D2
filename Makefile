@@ -109,6 +109,14 @@ ifeq ($(OPENCV_USE_OLD_HEADERS),1)
   CPPFLAGS:=$(CPPFLAGS) -DOPENCV_USE_OLD_HEADERS
 endif
 
+ifdef FLEXLM
+  CPPFLAGS:=$(CPPFLAGS) -DFLEXLM -isystem ${LM_PATH}/../machind \
+    -DNO_ACTIVATION_SUPPORT
+  LDFLAGS:=$(LDFLAGS) -l:lm_new_pic.o \
+    -L${LM_PATH} -llmgr_pic_trl -lcrvs_pic -lsb_pic -llmgr_dongle_stub_pic \
+    -L${LM_PATH}/activation/lib -lnoact_pic -ldl
+endif
+
 ifeq ($(CXX),icpc)
   ifndef DEBUG
     OPT:=-O3 -ipo -no-prec-div -DNDEBUG
@@ -241,6 +249,11 @@ define make-depend
 	 $1
 endef
 
+define copy-to-bin
+	@mkdir -p $(N2D2_BINDIR)/$2
+	@cp $1 $(N2D2_BINDIR)/$2/ > /dev/null 2>&1 || :
+endef
+
 define copy-resources-to-bin
 	@rsync -av $1/$2 $(N2D2_BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
@@ -252,10 +265,16 @@ define run-if-exists
 	fi
 endef
 
-exec : $(addprefix $(N2D2_BINDIR)/, $(BIN))
+exec : flexlm $(addprefix $(N2D2_BINDIR)/, $(BIN))
+ifdef FLEXLM
+	$(shell rm -f ${LM_PATH}/lm_new_pic.o)
+endif
 	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),exec);)
 
-tests : $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS))
+tests : flexlm $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS))
+ifdef FLEXLM
+	$(shell rm -f ${LM_PATH}/lm_new_pic.o)
+endif
 	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
 	$(foreach path,$(PARENT),$(call run-if-exists,$(path)/tests/run_all.sh);)
 
@@ -263,6 +282,21 @@ all : exec tests
 
 debug :
 	$(MAKE) all "DEBUG=1"
+
+flexlm:
+ifdef FLEXLM
+	$(info Compiling with FlexLM license manager)
+	${LM_PATH}/lmcrypt $(FLEXLM)
+	$(MAKE) -s -C ${LM_PATH} PIE=1 lm_new_pic.o
+	$(call copy-to-bin,${LM_PATH}/ceatech,flexlm)
+	$(call copy-to-bin,README-FLEXLM,flexlm)
+	$(call copy-to-bin,${LM_PATH}/lmgrd,flexlm)
+	$(call copy-to-bin,${LM_PATH}/lmstat,flexlm)
+	$(call copy-to-bin,${LM_PATH}/lmdown,flexlm)
+	$(call copy-to-bin,${LM_PATH}/lmdiag,flexlm)
+	$(call copy-to-bin,${LM_PATH}/lmhostid,flexlm)
+	$(call copy-to-bin,$(FLEXLM),flexlm)
+endif
 
 $(N2D2_BINDIR)/% : $(OBJ) $(OBJ_CUDA) $(OBJDIR)/%.o
 	@mkdir -p $(@D)
