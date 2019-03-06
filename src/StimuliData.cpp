@@ -454,7 +454,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
             sqSum += count[k] * delta * delta;
         }
 
-        mGlobalValue.stdDev = std::sqrt((sumM2 + sqSum) / (loaded - 1));
+        mGlobalValue.stdDev = std::sqrt((sumM2 + sqSum) / (sumCount - 1));
 
         if (computeMeanData) {
             meanData /= (double)mSize.size();
