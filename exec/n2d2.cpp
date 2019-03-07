@@ -402,36 +402,72 @@ int main(int argc, char* argv[]) try
             // correct range and shifting required for layers with logistic
             LogisticActivationDisabled = true;
 
+            Utils::createDirectories(exportDir.str() + "/calibration");
+
+            const std::string outputsRangeFile
+                = exportDir.str() + "/calibration/outputs_range.bin";
+            const std::string outputsHistogramFile
+                = exportDir.str() + "/calibration/outputs_histogram.bin";
+
             std::map<std::string, DeepNet::RangeStats> outputsRange;
             std::map<std::string, DeepNet::Histogram> outputsHistogram;
-            unsigned int nextLog = log;
-            unsigned int nextReport = report;
 
-            const unsigned int nbTest = (calibration > 0)
-                ? std::min((unsigned int)calibration,
-                           database.getNbStimuli(Database::Test))
-                : database.getNbStimuli(Database::Test);
-            const unsigned int batchSize = sp.getBatchSize();
-            const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+            bool loadPrevState = false;
 
-            for (unsigned int b = 0; b < nbBatch; ++b) {
-                const unsigned int i = b * batchSize;
+            if (std::ifstream(outputsRangeFile.c_str()).good()
+                && std::ifstream(outputsHistogramFile.c_str()).good())
+            {
+                std::cout << "Load previously saved RangeStats and Histogram"
+                    " for the calibration? (y/n) ";
 
-                sp.readBatch(Database::Test, i);
-                deepNet->test(Database::Test);
-                deepNet->reportOutputsRange(outputsRange);
-                deepNet->reportOutputsHistogram(outputsHistogram);
+                std::string cmd;
 
-                if (i >= nextReport || b == nbBatch - 1) {
-                    nextReport += report;
-                    std::cout << "Calibration data #" << i << std::endl;
+                do {
+                    std::cin >> cmd;
                 }
+                while (cmd != "y" && cmd != "n");
 
-                if (i >= nextLog || b == nbBatch - 1)
-                    nextLog += report;
+                loadPrevState = (cmd == "y");
             }
 
-            Utils::createDirectories(exportDir.str() + "/calibration");
+            if (loadPrevState) {
+                deepNet->loadOutputsRange(outputsRangeFile, outputsRange);
+                deepNet->loadOutputsHistogram(outputsHistogramFile,
+                                              outputsHistogram);
+            }
+            else {
+                unsigned int nextLog = log;
+                unsigned int nextReport = report;
+
+                const unsigned int nbTest = (calibration > 0)
+                    ? std::min((unsigned int)calibration,
+                               database.getNbStimuli(Database::Test))
+                    : database.getNbStimuli(Database::Test);
+                const unsigned int batchSize = sp.getBatchSize();
+                const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+
+                for (unsigned int b = 0; b < nbBatch; ++b) {
+                    const unsigned int i = b * batchSize;
+
+                    sp.readBatch(Database::Test, i);
+                    deepNet->test(Database::Test);
+                    deepNet->reportOutputsRange(outputsRange);
+                    deepNet->reportOutputsHistogram(outputsHistogram);
+
+                    if (i >= nextReport || b == nbBatch - 1) {
+                        nextReport += report;
+                        std::cout << "Calibration data #" << i << std::endl;
+                    }
+
+                    if (i >= nextLog || b == nbBatch - 1)
+                        nextLog += report;
+                }
+
+                deepNet->saveOutputsRange(outputsRangeFile, outputsRange);
+                deepNet->saveOutputsHistogram(outputsHistogramFile,
+                                              outputsHistogram);
+            }
+
             deepNet->logOutputsRange(exportDir.str() + "/calibration"
                                      "/outputs_range.dat", outputsRange);
             deepNet->logOutputsHistogram(exportDir.str() + "/calibration"

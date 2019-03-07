@@ -77,6 +77,26 @@ void N2D2::DeepNet::RangeStats::operator()(double value)
     }
 }
 
+void N2D2::DeepNet::RangeStats::save(std::ostream& state) const {
+    state.write(reinterpret_cast<const char*>(&minVal), sizeof(minVal));
+    state.write(reinterpret_cast<const char*>(&maxVal), sizeof(maxVal));
+    const size_t momentsSize = moments.size();
+    state.write(reinterpret_cast<const char*>(&momentsSize),
+                sizeof(momentsSize));
+    state.write(reinterpret_cast<const char*>(&moments[0]),
+                momentsSize * sizeof(moments[0]));
+}
+
+void N2D2::DeepNet::RangeStats::load(std::istream& state) {
+    state.read(reinterpret_cast<char*>(&minVal), sizeof(minVal));
+    state.read(reinterpret_cast<char*>(&maxVal), sizeof(maxVal));
+    size_t momentsSize;
+    state.read(reinterpret_cast<char*>(&momentsSize), sizeof(momentsSize));
+    moments.resize(momentsSize);
+    state.read(reinterpret_cast<char*>(&moments[0]),
+                momentsSize * sizeof(moments[0]));
+}
+
 N2D2::DeepNet::Histogram::Histogram(double minVal_,
                                     double maxVal_,
                                     unsigned int nbBins_)
@@ -275,6 +295,31 @@ double N2D2::DeepNet::Histogram::KLDivergence(const Histogram& ref,
     }
 
     return divergence;
+}
+
+void N2D2::DeepNet::Histogram::save(std::ostream& state) const {
+    state.write(reinterpret_cast<const char*>(&minVal), sizeof(minVal));
+    state.write(reinterpret_cast<const char*>(&maxVal), sizeof(maxVal));
+    state.write(reinterpret_cast<const char*>(&nbBins), sizeof(nbBins));
+    const size_t valuesSize = values.size();
+    state.write(reinterpret_cast<const char*>(&valuesSize), sizeof(valuesSize));
+    state.write(reinterpret_cast<const char*>(&values[0]),
+                valuesSize * sizeof(values[0]));
+    state.write(reinterpret_cast<const char*>(&nbValues), sizeof(nbValues));
+    state.write(reinterpret_cast<const char*>(&maxBin), sizeof(maxBin));
+}
+
+void N2D2::DeepNet::Histogram::load(std::istream& state) {
+    state.read(reinterpret_cast<char*>(&minVal), sizeof(minVal));
+    state.read(reinterpret_cast<char*>(&maxVal), sizeof(maxVal));
+    state.read(reinterpret_cast<char*>(&nbBins), sizeof(nbBins));
+    size_t valuesSize;
+    state.read(reinterpret_cast<char*>(&valuesSize), sizeof(valuesSize));
+    values.resize(valuesSize);
+    state.read(reinterpret_cast<char*>(&values[0]),
+                valuesSize * sizeof(values[0]));
+    state.read(reinterpret_cast<char*>(&nbValues), sizeof(nbValues));
+    state.read(reinterpret_cast<char*>(&maxBin), sizeof(maxBin));
 }
 
 N2D2::DeepNet::DeepNet(Network& net)
@@ -2799,6 +2844,71 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
     }
 }
 
+void N2D2::DeepNet::saveOutputsRange(const std::string& fileName,
+                               const std::map
+                               <std::string, RangeStats>& outputsRange) const
+{
+    std::ofstream state(fileName.c_str(), std::fstream::binary);
+
+    if (!state.good())
+        throw std::runtime_error("Could not create state file: " + fileName);
+
+    const size_t mapSize = outputsRange.size();
+    state.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
+
+    for (std::map<std::string, RangeStats>::const_iterator it
+         = outputsRange.begin(), itEnd = outputsRange.end(); it != itEnd; ++it)
+    {
+        const size_t nameSize = (*it).first.size();
+        const std::string& nameStr = (*it).first;
+        state.write(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
+        state.write(reinterpret_cast<const char*>(&nameStr[0]),
+                    nameSize * sizeof(nameStr[0]));
+
+        (*it).second.save(state);
+    }
+
+    if (!state.good())
+        throw std::runtime_error("Error writing state file: " + fileName);
+}
+
+void N2D2::DeepNet::loadOutputsRange(const std::string& fileName,
+                               std::map<std::string, RangeStats>& outputsRange)
+{
+    std::ifstream state(fileName.c_str(), std::fstream::binary);
+
+    if (!state.good())
+        throw std::runtime_error("Could not open state file: " + fileName);
+
+    size_t mapSize;
+    state.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
+
+    for (size_t n = 0; n < mapSize; ++n) {
+        size_t nameSize;
+        state.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
+        std::string nameStr(nameSize, ' ');
+        state.read(reinterpret_cast<char*>(&nameStr[0]),
+                    nameSize * sizeof(nameStr[0]));
+
+        std::map<std::string, RangeStats>::iterator it;
+        std::tie(it, std::ignore)
+            = outputsRange.insert(std::make_pair(nameStr, RangeStats()));
+
+        (*it).second.load(state);
+    }
+
+    if (state.eof())
+        throw std::runtime_error(
+            "End-of-file reached prematurely in state file: "
+            + fileName);
+    else if (!state.good())
+        throw std::runtime_error("Error while reading state file: "
+                                 + fileName);
+    else if (state.get() != std::fstream::traits_type::eof())
+        throw std::runtime_error(
+            "State file size larger than expected: " + fileName);
+}
+
 void
 N2D2::DeepNet::logOutputsRange(const std::string& fileName,
                                const std::map
@@ -2851,6 +2961,72 @@ N2D2::DeepNet::logOutputsRange(const std::string& fileName,
         " '' using 0:($2):($2) with labels offset char 0,-1 textcolor lt 3,"
         " '' using 0:($4):($4) with labels offset char 7,0 textcolor lt -1,"
         " '' using 0:4:4:4:4 with candlesticks lt -1 lw 2 notitle");
+}
+
+void N2D2::DeepNet::saveOutputsHistogram(const std::string& fileName,
+                               const std::map
+                               <std::string, Histogram>& outputsHistogram) const
+{
+    std::ofstream state(fileName.c_str(), std::fstream::binary);
+
+    if (!state.good())
+        throw std::runtime_error("Could not create state file: " + fileName);
+
+    const size_t mapSize = outputsHistogram.size();
+    state.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
+
+    for (std::map<std::string, Histogram>::const_iterator it
+         = outputsHistogram.begin(), itEnd = outputsHistogram.end();
+         it != itEnd; ++it)
+    {
+        const size_t nameSize = (*it).first.size();
+        const std::string& nameStr = (*it).first;
+        state.write(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
+        state.write(reinterpret_cast<const char*>(&nameStr[0]),
+                    nameSize * sizeof(nameStr[0]));
+
+        (*it).second.save(state);
+    }
+
+    if (!state.good())
+        throw std::runtime_error("Error writing state file: " + fileName);
+}
+
+void N2D2::DeepNet::loadOutputsHistogram(const std::string& fileName,
+                            std::map<std::string, Histogram>& outputsHistogram)
+{
+    std::ifstream state(fileName.c_str(), std::fstream::binary);
+
+    if (!state.good())
+        throw std::runtime_error("Could not open state file: " + fileName);
+
+    size_t mapSize;
+    state.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
+
+    for (size_t n = 0; n < mapSize; ++n) {
+        size_t nameSize;
+        state.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
+        std::string nameStr(nameSize, ' ');
+        state.read(reinterpret_cast<char*>(&nameStr[0]),
+                    nameSize * sizeof(nameStr[0]));
+
+        std::map<std::string, Histogram>::iterator it;
+        std::tie(it, std::ignore)
+            = outputsHistogram.insert(std::make_pair(nameStr, Histogram()));
+
+        (*it).second.load(state);
+    }
+
+    if (state.eof())
+        throw std::runtime_error(
+            "End-of-file reached prematurely in state file: "
+            + fileName);
+    else if (!state.good())
+        throw std::runtime_error("Error while reading state file: "
+                                 + fileName);
+    else if (state.get() != std::fstream::traits_type::eof())
+        throw std::runtime_error(
+            "State file size larger than expected: " + fileName);
 }
 
 void

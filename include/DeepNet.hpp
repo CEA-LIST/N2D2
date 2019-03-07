@@ -55,6 +55,8 @@ public:
         double mean() const;
         double stdDev() const;
         void operator()(double value);
+        void save(std::ostream& state) const;
+        void load(std::istream& state);
     };
 
     struct Histogram {
@@ -82,6 +84,8 @@ public:
         double calibrateKL(unsigned int nbLevels = 128,
                            double maxError = 1.0e-3,
                            unsigned int maxIters = 100) const;
+        void save(std::ostream& state) const;
+        void load(std::istream& state);
 
         static double KLDivergence(const Histogram& ref,
                                    const Histogram& quant);
@@ -227,9 +231,19 @@ public:
                             <std::string, RangeStats>& outputsRange) const;
     void reportOutputsHistogram(std::map
                             <std::string, Histogram>& outputsHistogram) const;
+    void saveOutputsRange(const std::string& fileName,
+                               const std::map
+                               <std::string, RangeStats>& outputsRange) const;
+    void loadOutputsRange(const std::string& fileName,
+                               std::map<std::string, RangeStats>& outputsRange);
     void logOutputsRange(const std::string& fileName,
                          const std::map
                          <std::string, RangeStats>& outputsRange) const;
+    void saveOutputsHistogram(const std::string& fileName,
+                         const std::map
+                         <std::string, Histogram>& outputsHistogram) const;
+    void loadOutputsHistogram(const std::string& fileName,
+                         std::map<std::string, Histogram>& outputsHistogram);
     void logOutputsHistogram(const std::string& fileName,
                          const std::map
                          <std::string, Histogram>& outputsHistogram,
