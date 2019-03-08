@@ -34,8 +34,12 @@ ifndef CXX
   CXX=g++
 endif
 
-CPPFLAGS:=`pkg-config opencv --cflags`
-LDFLAGS:=`pkg-config opencv --cflags --libs`
+ifndef OPENCV
+  OPENCV=opencv
+endif
+
+CPPFLAGS:=`pkg-config $(OPENCV) --cflags`
+LDFLAGS:=`pkg-config $(OPENCV) --cflags --libs`
 
 ifdef CUDA
   CUDA_PATH=/usr/local/cuda
@@ -96,14 +100,14 @@ ifdef MONGODB
     -lboost_system -lssl -lcrypto
 endif
 
-ifeq ($(shell pkg-config opencv --modversion),2.0.0)
+ifeq ($(shell pkg-config $(OPENCV) --modversion),2.0.0)
   # _GLIBCXX_PARALLEL needs to be defined for OpenCV 2.0.0 compiled with OpenMP
   $(info Compiling with _GLIBCXX_PARALLEL flag)
   CPPFLAGS:=$(CPPFLAGS) -D_GLIBCXX_PARALLEL
 endif
 
 OPENCV_USE_OLD_HEADERS:= $(shell expr \
-    `pkg-config opencv --modversion | sed 's/[.]//g'` \< 220)
+    `pkg-config $(OPENCV) --modversion | sed 's/[.]//g'` \< 220)
 
 ifeq ($(OPENCV_USE_OLD_HEADERS),1)
   CPPFLAGS:=$(CPPFLAGS) -DOPENCV_USE_OLD_HEADERS
