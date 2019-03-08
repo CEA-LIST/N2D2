@@ -205,10 +205,7 @@ int main(int argc, char* argv[]) try
     cudaDevice = opts.parse("-dev", 0, "CUDA device ID");
 #endif
 
-    const std::string iniConfig
-        = opts.grab<std::string>("<net>", "network config file (INI)");
     const bool version = opts.parse("-v", "display version information");
-    opts.done();
 
     if (version) {
         // N2D2 version
@@ -286,6 +283,10 @@ int main(int argc, char* argv[]) try
 
         std::exit(0);
     }
+
+    const std::string iniConfig
+        = opts.grab<std::string>("<net>", "network config file (INI)");
+    opts.done();
 
 #ifdef CUDA
     CudaContext::setDevice(cudaDevice);
