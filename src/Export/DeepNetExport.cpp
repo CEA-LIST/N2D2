@@ -85,6 +85,19 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
     std::cout << "Done!" << std::endl;
 }
 
+void N2D2::DeepNetExport::setExportParameters(
+    const std::string& exportParameters)
+{
+    if (!exportParameters.empty()
+        && !std::ifstream(exportParameters.c_str()).good())
+    {
+        throw std::runtime_error("DeepNetExport::setExportParameters(): "
+            "unable to read export parameter file: " + exportParameters);
+    }
+
+    mExportParameters = exportParameters;
+}
+
 std::string N2D2::DeepNetExport::getLayerName(DeepNet& deepNet,
                                               const std::vector
                                               <std::string>& layer)

@@ -198,8 +198,9 @@ int main(int argc, char* argv[]) try
     const int exportNbStimuliMax = opts.parse("-db-export", -1,
         "max. number of stimuli to export (0 = no dataset export, "
         "-1 = unlimited)");
-    N2D2::DeepNetExport::mExportParameters = opts.parse<std::string>(
-        "-export-parameters", "", "parameters for export");
+    N2D2::DeepNetExport::setExportParameters(opts.parse<std::string>(
+        "-export-parameters", "", "parameters for export"));
+
 #ifdef CUDA
     cudaDevice = opts.parse("-dev", 0, "CUDA device ID");
 #endif
