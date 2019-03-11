@@ -411,8 +411,8 @@ int main(int argc, char* argv[]) try
             const std::string outputsHistogramFile
                 = exportDir.str() + "/calibration/outputs_histogram.bin";
 
-            std::map<std::string, DeepNet::RangeStats> outputsRange;
-            std::map<std::string, DeepNet::Histogram> outputsHistogram;
+            std::map<std::string, RangeStats> outputsRange;
+            std::map<std::string, Histogram> outputsHistogram;
 
             bool loadPrevState = false;
 
@@ -433,9 +433,9 @@ int main(int argc, char* argv[]) try
             }
 
             if (loadPrevState) {
-                deepNet->loadOutputsRange(outputsRangeFile, outputsRange);
-                deepNet->loadOutputsHistogram(outputsHistogramFile,
-                                              outputsHistogram);
+                RangeStats::loadOutputsRange(outputsRangeFile, outputsRange);
+                Histogram::loadOutputsHistogram(outputsHistogramFile,
+                                                outputsHistogram);
             }
             else {
                 unsigned int nextLog = log;
@@ -465,14 +465,14 @@ int main(int argc, char* argv[]) try
                         nextLog += report;
                 }
 
-                deepNet->saveOutputsRange(outputsRangeFile, outputsRange);
-                deepNet->saveOutputsHistogram(outputsHistogramFile,
-                                              outputsHistogram);
+                RangeStats::saveOutputsRange(outputsRangeFile, outputsRange);
+                Histogram::saveOutputsHistogram(outputsHistogramFile,
+                                                outputsHistogram);
             }
 
-            deepNet->logOutputsRange(exportDir.str() + "/calibration"
+            RangeStats::logOutputsRange(exportDir.str() + "/calibration"
                                      "/outputs_range.dat", outputsRange);
-            deepNet->logOutputsHistogram(exportDir.str() + "/calibration"
+            Histogram::logOutputsHistogram(exportDir.str() + "/calibration"
                                         "/outputs_histogram", outputsHistogram);
 
             std::cout << "Calibration (" << nbBits << " bits):" << std::endl;
@@ -1133,8 +1133,8 @@ int main(int argc, char* argv[]) try
         std::shared_ptr<Cell_Frame_Top> cellFrame = deepNet->getTargetCell
                                                     <Cell_Frame_Top>();
 
-        std::map<std::string, DeepNet::RangeStats> outputsRange;
-        std::map<std::string, DeepNet::Histogram> outputsHistogram;
+        std::map<std::string, RangeStats> outputsRange;
+        std::map<std::string, Histogram> outputsHistogram;
 
         if (cellFrame && (learn > 0 || test)) {
             std::vector<std::pair<std::string, double> > timings, cumTimings;
@@ -1286,9 +1286,9 @@ int main(int argc, char* argv[]) try
                 }
             }
 
-            deepNet->logOutputsHistogram(testName + "_outputs_histogram",
+            Histogram::logOutputsHistogram(testName + "_outputs_histogram",
                                          outputsHistogram);
-            deepNet->logOutputsRange(testName + "_outputs_range.dat",
+            RangeStats::logOutputsRange(testName + "_outputs_range.dat",
                                      outputsRange);
 
             if (!afterCalibration) {

@@ -28,6 +28,8 @@
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
 #include "Network.hpp"
+#include "RangeStats.hpp"
+#include "Histogram.hpp"
 
 #include "Target/Target.hpp"
 
@@ -46,51 +48,6 @@ class Gnuplot;
 
 class DeepNet : public Parameterizable {
 public:
-    struct RangeStats {
-        double minVal;
-        double maxVal;
-        std::vector<double> moments;
-
-        RangeStats();
-        double mean() const;
-        double stdDev() const;
-        void operator()(double value);
-        void save(std::ostream& state) const;
-        void load(std::istream& state);
-    };
-
-    struct Histogram {
-        double minVal;
-        double maxVal;
-        unsigned int nbBins;
-        std::vector<unsigned long long int> values;
-        unsigned long long int nbValues;
-        unsigned int maxBin;
-
-        Histogram(double minVal_ = 0.0,
-                  double maxVal_ = 1000.0,
-                  unsigned int nbBins_ = 100000);
-        void operator()(double value, unsigned int count = 1);
-        unsigned int enlarge(double value);
-        unsigned int truncate(double value);
-        inline double getBinWidth() const;
-        inline double getBinValue(unsigned int binIdx) const;
-        unsigned int getBinIdx(double value) const;
-        void log(const std::string& fileName,
-                 const std::map<std::string, double>& thresholds
-                    = std::map<std::string, double>()) const;
-        Histogram quantize(double newMaxVal,
-                           unsigned int newNbBins = 128) const;
-        double calibrateKL(unsigned int nbLevels = 128,
-                           double maxError = 1.0e-3,
-                           unsigned int maxIters = 100) const;
-        void save(std::ostream& state) const;
-        void load(std::istream& state);
-
-        static double KLDivergence(const Histogram& ref,
-                                   const Histogram& quant);
-    };
-
     DeepNet(Network& net);
     void addCell(const std::shared_ptr<Cell>& cell,
                  const std::vector<std::shared_ptr<Cell> >& parents);
@@ -231,23 +188,6 @@ public:
                             <std::string, RangeStats>& outputsRange) const;
     void reportOutputsHistogram(std::map
                             <std::string, Histogram>& outputsHistogram) const;
-    void saveOutputsRange(const std::string& fileName,
-                               const std::map
-                               <std::string, RangeStats>& outputsRange) const;
-    void loadOutputsRange(const std::string& fileName,
-                               std::map<std::string, RangeStats>& outputsRange);
-    void logOutputsRange(const std::string& fileName,
-                         const std::map
-                         <std::string, RangeStats>& outputsRange) const;
-    void saveOutputsHistogram(const std::string& fileName,
-                         const std::map
-                         <std::string, Histogram>& outputsHistogram) const;
-    void loadOutputsHistogram(const std::string& fileName,
-                         std::map<std::string, Histogram>& outputsHistogram);
-    void logOutputsHistogram(const std::string& fileName,
-                         const std::map
-                         <std::string, Histogram>& outputsHistogram,
-                         unsigned int nbLevels = 128) const;
 
     virtual ~DeepNet() {};
 
@@ -402,16 +342,6 @@ std::shared_ptr<T> N2D2::DeepNet::getTarget(unsigned int index) const
             + indexStr.str());
 
     return target;
-}
-
-double N2D2::DeepNet::Histogram::getBinWidth() const
-{
-    return ((maxVal - minVal) / (double)nbBins);
-}
-
-double N2D2::DeepNet::Histogram::getBinValue(unsigned int binIdx) const
-{
-    return (minVal + (binIdx + 0.5) * getBinWidth());
 }
 
 /** @mainpage N2D2 Index Page
