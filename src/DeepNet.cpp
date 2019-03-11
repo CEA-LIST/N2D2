@@ -875,9 +875,16 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
                 const std::map<std::string, RangeStats>::const_iterator itRange
                     = outputsRange.find(*itCell);
-                nbElements += (*itRange).second.moments()[0];
-                sum += (*itRange).second.moments()[1];
-                sumSquare += (*itRange).second.moments()[2];
+
+                if (itRange != outputsRange.end()) {
+                    nbElements += (*itRange).second.moments()[0];
+                    sum += (*itRange).second.moments()[1];
+                    sumSquare += (*itRange).second.moments()[2];
+                }
+                else {
+                    throw std::runtime_error("Missing range stats for cell: "
+                                             + (*itCell));
+                }
             }
 
             const double mean = sum / nbElements;
@@ -895,11 +902,19 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                  = (nextIsPool) ? (*(it + 1)).begin() : (*it).begin(),
                  itCellEnd = (nextIsPool) ? (*(it + 1)).end() : (*it).end();
                  itCell != itCellEnd;
-                 ++itCell) {
+                 ++itCell)
+            {
                 const std::map<std::string, RangeStats>::const_iterator itRange
                     = outputsRange.find(*itCell);
-                scalingFactor
-                    = std::max(scalingFactor, (*itRange).second.maxVal());
+
+                if (itRange != outputsRange.end()) {
+                    scalingFactor
+                        = std::max(scalingFactor, (*itRange).second.maxVal());
+                }
+                else {
+                    throw std::runtime_error("Missing range stats for cell: "
+                                             + (*itCell));
+                }
             }
         }
 
@@ -998,16 +1013,19 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
             std::map<std::string, Histogram>::const_iterator itHistogram;
             std::map<std::string, RangeStats>::const_iterator itRange;
 
-            if (nextIsMaxPool) {
-                std::vector<std::string>::const_iterator itCellPool
-                    = (*(it + 1)).begin();
+            const std::vector<std::string>::const_iterator itCellStats
+                = (nextIsMaxPool) ? (*(it + 1)).begin() : itCell;
+            itHistogram = outputsHistogram.find(*itCellStats);
+            itRange = outputsRange.find(*itCellStats);
 
-                itHistogram = outputsHistogram.find(*itCellPool);
-                itRange = outputsRange.find(*itCellPool);
+            if (itHistogram == outputsHistogram.end()) {
+                throw std::runtime_error("Missing histogram for cell: "
+                                         + (*itCellStats));
             }
-            else {
-                itHistogram = outputsHistogram.find(*itCell);
-                itRange = outputsRange.find(*itCell);
+
+            if (itRange == outputsRange.end()) {
+                throw std::runtime_error("Missing range stats for cell: "
+                                         + (*itCellStats));
             }
 
             if (activationType == "Rectifier"
