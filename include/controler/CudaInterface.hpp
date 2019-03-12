@@ -115,7 +115,7 @@ void N2D2::CudaInterface<T, STACKING_DIM>::push_back(
     if (cudaTensor != NULL)
         Interface<T, STACKING_DIM>::push_back(tensor, refs);
     else
-        Interface<T, STACKING_DIM>::push_back(tensor->newCuda(), 0);
+        Interface<T, STACKING_DIM>::push_back(dynamic_cast<cuda_tensor_type*>(tensor->newCuda()), 0);
 }
 
 template <class T, int STACKING_DIM>

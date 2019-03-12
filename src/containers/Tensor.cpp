@@ -813,6 +813,33 @@ void N2D2::Tensor<T>::convert(const cv::Mat& /*mat*/, std::vector<U>& /*data*/,
     throw std::runtime_error("Can't convert from or to a non arithmetic Tensor.");
 }
 
+#ifdef CUDA
+
+#include "containers/CudaTensor.hpp"
+namespace {
+    template<typename U,
+             typename std::enable_if<std::is_same<typename U::value_type, half_float::half>::value || 
+                                     std::is_same<typename U::value_type, float>::value || 
+                                     std::is_same<typename U::value_type, double>::value>::type* = nullptr>
+    N2D2::CudaTensor<typename U::value_type>* newCudaImpl(const U& value) {
+        return new N2D2::CudaTensor<typename U::value_type>(value);
+    }
+    
+    template<typename U,
+             typename std::enable_if<!(std::is_same<typename U::value_type, half_float::half>::value || 
+                                       std::is_same<typename U::value_type, float>::value || 
+                                       std::is_same<typename U::value_type, double>::value)>::type* = nullptr>
+    U* newCudaImpl(const U& ) {
+        throw std::runtime_error("Tensor::newCuda(): type not supported");
+    }
+}
+
+template <class T>
+N2D2::BaseTensor* N2D2::Tensor<T>::newCuda() const {
+    return newCudaImpl(*this);
+}
+#endif
+    
 template class N2D2::Tensor<float>;
 template class N2D2::Tensor<double>;
 template class N2D2::Tensor<half_float::half>;
@@ -840,30 +867,3 @@ namespace N2D2 {
     }
 }
 template class N2D2::Tensor<std::shared_ptr<N2D2::CNNIP::Instance>>;
-
-
-#ifdef CUDA
-
-#include "containers/CudaTensor.hpp"
-
-namespace N2D2 {
-    template <>
-    Tensor<half_float::half>* Tensor<half_float::half>::newCuda() const
-    {
-    return new CudaTensor<half_float::half>(*this);
-    }
-
-    template <>
-    Tensor<float>* Tensor<float>::newCuda() const
-    {
-    return new CudaTensor<float>(*this);
-    }
-
-    template <>
-    Tensor<double>* Tensor<double>::newCuda() const
-    {
-    return new CudaTensor<double>(*this);
-    }
-}
-
-#endif

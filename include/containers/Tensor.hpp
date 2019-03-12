@@ -300,6 +300,7 @@ public:
     typedef typename std::vector<T>::const_iterator const_iterator;
     typedef typename std::vector<T>::reference reference;
     typedef typename std::vector<T>::const_reference const_reference;
+    typedef T value_type;
 
     using BaseTensor::reserve;
     using BaseTensor::resize;
@@ -397,7 +398,9 @@ public:
         return &typeid(T);
     };
 #ifdef CUDA
-    Tensor<T>* newCuda() const;
+    // Create a CudaTensor<T>*, but due to a compiler bug in MSVC 2015, we return
+    // a BaseTensor* that must be dynamic_casted to CudaTensor<T>.
+    BaseTensor* newCuda() const;
 #endif
     virtual ~Tensor() {};
 
@@ -882,19 +885,5 @@ std::istream& operator>>(std::istream& is, Tensor<T>& tensor)
     return is;
 }
 } // namespace N2D2 
-
-#ifdef CUDA
-template <class T>
-N2D2::Tensor<T>* N2D2::Tensor<T>::newCuda() const {
-    throw std::runtime_error("Tensor::newCuda(): type not supported");
-}
-
-namespace N2D2 {
-    template <> Tensor<half_float::half>* Tensor<half_float::half>::newCuda()
-        const;
-    template <> Tensor<float>* Tensor<float>::newCuda() const;
-    template <> Tensor<double>* Tensor<double>::newCuda() const;
-}
-#endif
 
 #endif // N2D2_TENSOR_H
