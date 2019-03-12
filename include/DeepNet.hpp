@@ -79,7 +79,7 @@ public:
     void cReset(Time_T timestamp = 0);
     void initializeCMonitors(unsigned int nbTimesteps);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
-    void normalizeFreeParameters(double normFactor = 1.0);
+    Float_T normalizeFreeParameters(double normFactor = 1.0);
     void normalizeOutputsRange(const std::map
                                <std::string, RangeStats>& outputsRange,
                                double normFactor,

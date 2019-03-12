@@ -792,7 +792,7 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
     }
 }
 
-void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
+Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
 {
     Float_T bNorm = 1.0;
 
@@ -832,6 +832,8 @@ void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
                                                   wNorm));
         }
     }
+
+    return bNorm;
 }
 
 void
