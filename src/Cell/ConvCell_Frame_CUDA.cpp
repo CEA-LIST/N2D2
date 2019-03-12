@@ -251,12 +251,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
         std::vector<cudnnConvolutionFwdAlgoPerf_t> returnFwdAlgo(maxAlgoIterations);
 /**************************************************************************************************************
 https://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html#cudnnFindConvolutionForwardAlgorithm
-This function attempts all cuDNN algorithms (including CUDNN_TENSOR_OP_MATH and CUDNN_DEFAULT_MATH 
-versions of algorithms where CUDNN_TENSOR_OP_MATH may be available) for cudnnConvolutionForward(), 
-using memory allocated via cudaMalloc(), and outputs performance metrics to a user-allocated array 
-of cudnnConvolutionFwdAlgoPerf_t. These metrics are written in sorted fashion where the first element 
-has the lowest compute time. The total number of resulting algorithms can be queried through 
-the API cudnnGetConvolutionForwardMaxCount(). 
+This function attempts all cuDNN algorithms (including CUDNN_TENSOR_OP_MATH and CUDNN_DEFAULT_MATH
+versions of algorithms where CUDNN_TENSOR_OP_MATH may be available) for cudnnConvolutionForward(),
+using memory allocated via cudaMalloc(), and outputs performance metrics to a user-allocated array
+of cudnnConvolutionFwdAlgoPerf_t. These metrics are written in sorted fashion where the first element
+has the lowest compute time. The total number of resulting algorithms can be queried through
+the API cudnnGetConvolutionForwardMaxCount().
 ***************************************************************************************************************/
 
         CHECK_CUDNN_STATUS(cudnnFindConvolutionForwardAlgorithm(
@@ -275,38 +275,38 @@ the API cudnnGetConvolutionForwardMaxCount().
         {
 
 
-            std::string algoName 
-                                = (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM) 
+            std::string algoName
+                                = (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_GEMM) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_GEMM)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_GEMM"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_DIRECT) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_DIRECT)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_DIRECT"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_FFT"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED"
-                                : (returnFwdAlgo[fwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_FWD_ALGO_COUNT) 
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_COUNT)
                                     ? "CUDNN_CONVOLUTION_FWD_ALGO_COUNT"
                                 : "Undetermined Algorithm";
 
 
-            std::cout << "----> Forward convolution algorithm: " << algoName 
+            std::cout << "----> Forward convolution algorithm: " << algoName
                 << " [" << returnFwdAlgo[fwdAlgo].time << " ms][" << returnFwdAlgo[fwdAlgo].memory / 1.0e6 << " MB]"
                 << std::endl;
         }
@@ -352,35 +352,35 @@ the API cudnnGetConvolutionForwardMaxCount().
 
         for(unsigned int bwdAlgo = 0; bwdAlgo < (unsigned int) maxAlgoIterations; ++bwdAlgo)
         {
-            std::string algoName 
-                                = (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0) 
+            std::string algoName
+                                = (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING"
-                                : (returnBwdFilterAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT) 
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT)
                                     ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT"
                                 : "Undetermined Algorithm";
 
 
-            std::cout << "----> Backward filter convolution algorithm: " << algoName 
+            std::cout << "----> Backward filter convolution algorithm: " << algoName
                 << " [" << returnBwdFilterAlgo[bwdAlgo].time << " ms][" << returnBwdFilterAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
                 << std::endl;
         }
@@ -406,32 +406,32 @@ the API cudnnGetConvolutionForwardMaxCount().
                             &returnBwdDataAlgo[0]));
         for(unsigned int bwdAlgo = 0; bwdAlgo < (unsigned int) maxAlgoIterations; ++bwdAlgo)
         {
-            std::string algoName 
-                                = (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_0) 
+            std::string algoName
+                                = (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_0)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_0"
-                                : (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_1) 
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_1)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_1"
-                                : (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT) 
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT"
-                                : (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING) 
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING"
-                                : (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD) 
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD"
-                                : (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED) 
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED"
-                                : (returnBwdDataAlgo[bwdAlgo].algo 
-                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT) 
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT)
                                     ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT"
                                 : "Undetermined Algorithm";
 
 
-            std::cout << "----> Backward data convolution algorithm: " << algoName 
+            std::cout << "----> Backward data convolution algorithm: " << algoName
                 << " [" << returnBwdDataAlgo[bwdAlgo].time << " ms][" << returnBwdDataAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
                 << std::endl;
         }
@@ -1028,7 +1028,8 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange() const
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(const std::function
-                                                <double(const double&)>& func)
+                                                <double(const double&)>& func,
+                                                        FreeParametersType type)
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeDToH();
@@ -1036,7 +1037,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(const std::function
     mBias->synchronizeDToH();
 
     mSynchronized = true;
-    ConvCell::processFreeParameters(func);
+    ConvCell::processFreeParameters(func, type);
     mSynchronized = false;
 
     for (unsigned int i = 0; i < mInputs.size(); ++i)

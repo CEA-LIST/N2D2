@@ -118,7 +118,8 @@ public:
     void discretizeFreeParameters(unsigned int nbLevels);
     std::pair<Float_T, Float_T> getFreeParametersRange() const;
     void processFreeParameters(const std::function
-                               <double(const double&)>& func);
+                               <double(const double&)>& func,
+                               FreeParametersType type = All);
     virtual ~ConvCell_Frame_CUDA();
 
 protected:

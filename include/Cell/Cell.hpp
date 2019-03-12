@@ -53,6 +53,14 @@ public:
         unsigned long long int nbConnections;
     };
 
+    /// Free parameters type in respect to their contribution to the output:
+    /// Multiplicative = weights, Additive = biases
+    enum FreeParametersType {
+        Additive,
+        Multiplicative,
+        All
+    };
+
     /**
      * Abstract cell constructor
      *
@@ -320,7 +328,8 @@ public:
         return std::pair<Float_T, Float_T>();
     };
     virtual void processFreeParameters(const std::function
-                                       <double(const double&)>& /*func*/) {};
+                                       <double(const double&)>& /*func*/,
+                                       FreeParametersType /*type*/ = All) {};
     bool isFullMap() const {
         return (groupMap() == 1);
     }

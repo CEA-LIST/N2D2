@@ -792,13 +792,14 @@ N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange() const
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::processFreeParameters(const std::function
-                                                <double(const double&)>& func)
+                                                <double(const double&)>& func,
+                                                       FreeParametersType type)
 {
     mSynapses.synchronizeDToH();
     mBias.synchronizeDToH();
 
     mSynchronized = true;
-    FcCell::processFreeParameters(func);
+    FcCell::processFreeParameters(func, type);
     mSynchronized = false;
 
     mSynapses.synchronizeHToD();

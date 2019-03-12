@@ -188,7 +188,8 @@ public:
     virtual void discretizeFreeParameters(unsigned int nbLevels);
     virtual std::pair<Float_T, Float_T> getFreeParametersRange() const;
     virtual void processFreeParameters(const std::function
-                               <double(const double&)>& func);
+                               <double(const double&)>& func,
+                                       FreeParametersType type = All);
     void getStats(Stats& stats) const;
     std::vector<unsigned int> getReceptiveField(
                                 const std::vector<unsigned int>& outputField

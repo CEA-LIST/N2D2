@@ -794,6 +794,8 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
 
 void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
 {
+    Float_T bNorm = 1.0;
+
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
     {
@@ -804,6 +806,12 @@ void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
         {
             std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
 
+            if (bNorm != 1.0) {
+                cell->processFreeParameters(std::bind(std::divides<double>(),
+                                                      std::placeholders::_1,
+                                                      bNorm), Cell::Additive);
+            }
+
             Float_T wMin, wMax;
             std::tie(wMin, wMax) = cell->getFreeParametersRange();
 
@@ -812,6 +820,7 @@ void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
         }
 
         wNorm /= normFactor;
+        bNorm *= wNorm;
 
         for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
             itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)

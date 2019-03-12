@@ -423,20 +423,23 @@ void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 }
 
 void N2D2::FcCell::processFreeParameters(const std::function
-                                         <double(const double&)>& func)
+                                         <double(const double&)>& func,
+                                         FreeParametersType type)
 {
     const unsigned int channelsSize = getInputsSize();
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            Tensor<double> weight;
-            getWeight(output, channel, weight);
-            weight(0) = func(weight(0));
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+                Tensor<double> weight;
+                getWeight(output, channel, weight);
+                weight(0) = func(weight(0));
 
-            setWeight(output, channel, weight);
+                setWeight(output, channel, weight);
+            }
         }
 
-        if (!mNoBias) {
+        if ((type == All || type == Additive) && !mNoBias) {
             Tensor<double> bias;
             getBias(output, bias);
             bias(0) = func(bias(0));

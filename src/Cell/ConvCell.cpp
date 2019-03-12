@@ -796,23 +796,27 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
 }
 
 void N2D2::ConvCell::processFreeParameters(const std::function
-                                           <double(const double&)>& func)
+                                           <double(const double&)>& func,
+                                           FreeParametersType type)
 {
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-            if (!isConnection(channel, output))
-                continue;
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            {
+                if (!isConnection(channel, output))
+                    continue;
 
-            Tensor<Float_T> kernel;
-            getWeight(output, channel, kernel);
+                Tensor<Float_T> kernel;
+                getWeight(output, channel, kernel);
 
-            for (unsigned int index = 0; index < kernel.size(); ++index)
-                kernel(index) = func(kernel(index));
+                for (unsigned int index = 0; index < kernel.size(); ++index)
+                    kernel(index) = func(kernel(index));
 
-            setWeight(output, channel, kernel);
+                setWeight(output, channel, kernel);
+            }
         }
 
-        if (!mNoBias) {
+        if ((type == All || type == Additive) && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);
             bias(0) = func(bias(0));
