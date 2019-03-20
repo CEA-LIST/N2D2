@@ -56,47 +56,11 @@ class CMonitor {
 public:
     CMonitor();
 
-    virtual void add(Tensor<char>& input);
+    virtual void add(Tensor<int>& input);
 
     virtual void initialize(unsigned int nbTimesteps, unsigned int nbClasses=0);
     virtual bool tick(Time_T timestamp);
     virtual void update(Time_T start, Time_T stop);
-
-    /*bool classifyMajorityVote(unsigned int batch, unsigned int cls, bool update = true);
-    bool classifyFirstSpike(unsigned int batch,
-                            unsigned int cls,
-                            unsigned int node,
-                            bool update = true);*/
-    bool classifyRateBased(int target,
-                            Tensor<float> integrations,
-                            unsigned int batch,
-                            bool update=true);
-
-    unsigned int classifyBatchRateBased(Tensor<int> targets,
-                                        Tensor<float> integrations,
-                                        bool update=true);
-
-    bool classifyIntegrationBased(int target,
-                                Tensor<float> integrations,
-                                unsigned int batch,
-                                bool update=true);
-
-    unsigned int classifyBatchIntegrationBased(Tensor<int> targets,
-                                        Tensor<float> integrations,
-                                        bool update=true);
-
-    bool checkLearningResponse(unsigned int batch, unsigned int cls,
-                               bool update = true);
-    unsigned int checkBatchLearningResponse(std::vector<unsigned int>& cls,
-                               bool update = true);
-    double inferRelation(unsigned int batch);
-    void inferRelation(const std::string& fileName,
-                       Tensor<Float_T>& relationalTargets,
-                        unsigned int targetVariable,
-                        unsigned int batch,
-                        bool plot);
-
-    void updateSuccess (bool success);
 
     NodeId_T getMostActiveNeuronId(unsigned int batch) const
     {
@@ -112,14 +76,19 @@ public:
     {
         return mActivitySize;
     };
-    unsigned int getTotalBatchActivity() const
+    long long unsigned int getTotalBatchExampleFiringRate() const
     {
-        return mTotalBatchActivity;
+        return mTotalBatchExampleFiringRate;
     };
     unsigned int getTotalActivity(unsigned int batch) const
     {
-        return mTotalActivity(batch);
+        return mTotalExampleFiringRate(batch);
     };
+    long long int getTotalBatchOutputsActivity() const
+    {
+        return mTotalBatchOutputsActivity;
+    };
+
     unsigned int getActivity(unsigned int x,
                                unsigned int y,
                                unsigned int z,
@@ -148,7 +117,7 @@ public:
                                         bool update=false);
 
     /// Firing rate -> calculated above several stimuli (batches)
-    unsigned int getTotalBatchFiringRate() const
+    long long unsigned int getTotalBatchFiringRate() const
     {
         return mTotalBatchFiringRate;
     }
@@ -162,37 +131,31 @@ public:
     {
         return mBatchFiringRate(0,x,y,z);
     }
-#ifdef CUDA
-    CudaTensor<unsigned int>& getFiringRate()
-    {
-        return mFiringRate;
-    }
-#else
+
     Tensor<unsigned int>& getFiringRate()
     {
+#ifdef CUDA
+        mFiringRate.synchronizeDToH();
+#endif
         return mFiringRate;
     }
-#endif
 
+    Tensor<unsigned int>& getExampleFiringRate()
+    {
 #ifdef CUDA
-    CudaTensor<unsigned int>& getExampleActivity()
-    {
-        return mLastExampleActivity;
-    }
-#else
-    Tensor<unsigned int>& getExampleActivity()
-    {
-        return mLastExampleActivity;
-    }
+        mExampleFiringRate.synchronizeDToH();
 #endif
+        return mExampleFiringRate;
+    }
 
+    Tensor<int>& getOutputsActivity()
+    {
+#ifdef CUDA
+        mOutputsActivity.synchronizeDToH();
+#endif
+        return mOutputsActivity;
+    }
 
-    double getSuccessRate(unsigned int avgWindow = 0) const;
-    double getFastSuccessRate() const;
-
-    void logSuccessRate(const std::string& fileName,
-                        unsigned int avgWindow = 0,
-                        bool plot = false) const;
     /// Create a file to store firing rates and plot them if demanded by
     /// generating a gnuplot file.
     void logFiringRate(const std::string& fileName, bool plot = false,
@@ -207,10 +170,10 @@ public:
     /// Clear all (activity, firing rates and success)
     virtual void clearAll();
     virtual void clearActivity();
+    virtual void reset(Time_T timestamp);
     void clearFiringRate();
     void clearMostActive();
-    void clearSuccess();
-    void clearFastSuccess();
+
     virtual ~CMonitor() {};
 
     template <class T>
@@ -234,16 +197,23 @@ protected:
     /// The network that is monitored.
 
 #ifdef CUDA
-    CudaTensor<char>* mInputs;
+    CudaTensor<int>* mInputs;
 
-    CudaInterface<unsigned int> mStats;
-    CudaTensor<unsigned int> mMaxClassResponse;
+    CudaInterface<char> mActivity;
+    CudaTensor<char> mBatchActivity;
 
-    /// Firing rates of each neuron in update phase
+    /// Firing rates of each neuron over all examples
     CudaTensor<unsigned int> mFiringRate;
-    CudaTensor<unsigned int> mBatchFiringRate;
     CudaTensor<unsigned int> mTotalFiringRate;
+    CudaTensor<unsigned int> mBatchFiringRate;
 
+    /// Firing rates of each neuron for current example
+    CudaTensor<unsigned int> mExampleFiringRate;
+    CudaTensor<unsigned int> mTotalExampleFiringRate;
+
+     /// Accumulated output of each neuron for current example
+    CudaTensor<int> mOutputsActivity;
+    CudaTensor<int> mTotalOutputsActivity;
 
     /// The ID of the most active neuron (since last update).
     CudaTensor<NodeId_T> mMostActiveId;
@@ -252,27 +222,32 @@ protected:
     /// The total number of spikes from all recorded neurons (since last
     /// update).
 
-    CudaInterface<char> mActivity;
-    CudaTensor<char> mBatchActivity;
-    CudaTensor<unsigned int> mTotalActivity;
-
-    CudaTensor<unsigned int> mLastExampleActivity;
-
     // TODO: This is not updated properly
     // In clock based simulation this will often be ambiguous
     CudaTensor<Time_T> mFirstEventTime;
     CudaTensor<Time_T> mLastEventTime;
+
+    CudaInterface<unsigned int> mStats;
+    CudaTensor<unsigned int> mMaxClassResponse;
+
 #else
-    Tensor<char>* mInputs;
+    Tensor<int>* mInputs;
 
-    Interface<unsigned int> mStats;
-    Tensor<unsigned int> mMaxClassResponse;
+    Interface<char> mActivity;
+    Tensor<char> mBatchActivity;
 
-    /// Firing rates of each neuron in update phase
+      /// Firing rates of each neuron over all examples
     Tensor<unsigned int> mFiringRate;
-    Tensor<unsigned int> mBatchFiringRate;
     Tensor<unsigned int> mTotalFiringRate;
+    Tensor<unsigned int> mBatchFiringRate;
 
+     /// Firing rates of each neuron for current example
+    Tensor<unsigned int> mExampleFiringRate;
+    Tensor<unsigned int> mTotalExampleFiringRate;
+
+      /// Accumulated output of each neuron for current example
+    Tensor<int> mOutputsActivity;
+    Tensor<int> mTotalOutputsActivity;
 
     /// The ID of the most active neuron (since last update).
     Tensor<NodeId_T> mMostActiveId;
@@ -281,17 +256,16 @@ protected:
     /// The total number of spikes from all recorded neurons (since last
     /// update).
 
-    Interface<char> mActivity;
-    Tensor<char> mBatchActivity;
-    Tensor<unsigned int> mTotalActivity;
-
-    Tensor<unsigned int> mLastExampleActivity;
-
     Tensor<Time_T> mFirstEventTime;
     Tensor<Time_T> mLastEventTime;
+
+    Interface<unsigned int> mStats;
+
 #endif
-    unsigned int mTotalBatchActivity;
-    unsigned int mTotalBatchFiringRate;
+    long long unsigned int mTotalBatchExampleFiringRate;
+    long long unsigned int mTotalBatchFiringRate;
+    long long int mTotalBatchOutputsActivity;
+
     unsigned int mNbEvaluations;
     unsigned int mRelTimeIndex;
     unsigned int mSuccessCounter;
@@ -300,10 +274,7 @@ protected:
     unsigned int mActivitySize;
     bool mInitialized;
 
-
     std::map<Time_T, unsigned int> mTimeIndex;
-    std::deque<bool> mSuccess;
-    std::deque<Tensor<Float_T>> relationalInferences;
 
 };
 }

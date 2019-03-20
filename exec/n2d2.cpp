@@ -1422,16 +1422,16 @@ int main(int argc, char* argv[]) try
             net.run((i + 1) * TimeUs);
 
             // Check activity
-            std::vector<std::pair<std::string, unsigned int> > activity
+            std::vector<std::pair<std::string, long long int> > activity
                 = deepNet->update(
                     logStep, i * TimeUs, (i + 1) * TimeUs, logStep);
 
             monitorEnv.update();
 
-            unsigned int sumActivity = 0;
+            long long int sumActivity = 0;
 
             for (std::vector
-                 <std::pair<std::string, unsigned int> >::const_iterator it
+                 <std::pair<std::string, long long int> >::const_iterator it
                  = activity.begin(),
                  itEnd = activity.end();
                  it != itEnd;
@@ -1498,14 +1498,14 @@ int main(int argc, char* argv[]) try
         net.run((i + 1) * TimeUs);
 
         // Check activity
-        std::vector<std::pair<std::string, unsigned int> > activity
+        std::vector<std::pair<std::string, long long int> > activity
             = deepNet->update(logStep, i * TimeUs, (i + 1) * TimeUs, logStep);
 
         monitorEnv.update(i < 10);
 
-        unsigned int sumActivity = 0;
+        long long int sumActivity = 0;
 
-        for (std::vector<std::pair<std::string, unsigned int> >::const_iterator
+        for (std::vector<std::pair<std::string, long long int> >::const_iterator
                  it = activity.begin(),
                  itEnd = activity.end();
              it != itEnd;

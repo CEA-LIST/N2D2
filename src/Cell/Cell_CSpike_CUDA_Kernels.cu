@@ -20,7 +20,8 @@
 
 #include "Cell/Cell_CSpike_CUDA_Kernels.hpp"
 
-__global__ void cudaSaccumulate_kernel(float* x, char* y, unsigned int size)
+
+__global__ void cudaIaccumulate_kernel(int* x, int* y, unsigned int size)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -30,7 +31,7 @@ __global__ void cudaSaccumulate_kernel(float* x, char* y, unsigned int size)
     }
 }
 
-__global__ void cudaDaccumulate_kernel(double* x, char* y, unsigned int size)
+__global__ void cudaSaccumulate_kernel(float* x, int* y, unsigned int size)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -40,13 +41,30 @@ __global__ void cudaDaccumulate_kernel(double* x, char* y, unsigned int size)
     }
 }
 
-void N2D2::cudaSaccumulate(float* x, char* y, unsigned int size)
+__global__ void cudaDaccumulate_kernel(double* x, int* y, unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        x[i] += y[i];
+    }
+}
+
+
+void N2D2::cudaIaccumulate(int* x, int* y, unsigned int size)
+{
+    cudaIaccumulate_kernel<<<(size + 255) / 256, 256>>>(x, y, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSaccumulate(float* x, int* y, unsigned int size)
 {
     cudaSaccumulate_kernel<<<(size + 255) / 256, 256>>>(x, y, size);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaDaccumulate(double* x, char* y, unsigned int size)
+void N2D2::cudaDaccumulate(double* x, int* y, unsigned int size)
 {
     cudaDaccumulate_kernel<<<(size + 255) / 256, 256>>>(x, y, size);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());

@@ -39,7 +39,7 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
     for (unsigned int k=0; k<mRelationalData.size(); k++){
         mNextEventTime.push_back(new CudaTensor<Time_T>(
                                                 mRelationalData[k].dims()));
-        mNextEventType.push_back(new CudaTensor<char>(
+        mNextEventType.push_back(new CudaTensor<int>(
                                                 mRelationalData[k].dims()));
         curandState* state;
         // Allocate global memory on device for curand states
@@ -52,7 +52,6 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 
         mCurandStates.push_back(state);
     }
-    // TODO: Do we have to free this memory if the program terminates?
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
     mDeviceMaxThreads = (unsigned int) deviceProp.maxThreadsPerBlock;
@@ -161,6 +160,9 @@ void N2D2::CEnvironment_CUDA::reset(Time_T /*timestamp*/)
 
 N2D2::CEnvironment_CUDA::~CEnvironment_CUDA()
 {
+    for (unsigned int k=0; k<mCurandStates.size(); k++){
+        cudaFree(mCurandStates[k]);
+    }
     // dtor
 }
 

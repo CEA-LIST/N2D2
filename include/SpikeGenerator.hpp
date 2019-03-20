@@ -53,7 +53,7 @@ public:
 
 protected:
     void checkParameters() const;
-    void nextEvent(std::pair<Time_T, char>& event,
+    void nextEvent(std::pair<Time_T, int>& event,
                    double value,
                    Time_T start,
                    Time_T end) const;

@@ -24,8 +24,9 @@
 #include "CudaUtils.hpp"
 
 namespace N2D2 {
-void cudaSaccumulate(float* x, char* y, unsigned int size);
-void cudaDaccumulate(double* x, char* y, unsigned int size);
+void cudaIaccumulate(int* x, int* y, unsigned int size);
+void cudaSaccumulate(float* x, int* y, unsigned int size);
+void cudaDaccumulate(double* x, int* y, unsigned int size);
 }
 
 #endif // N2D2_CELL_CSPIKE_CUDA_KERNELS_H

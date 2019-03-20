@@ -51,11 +51,11 @@ public:
                           unsigned int height = 0);
     virtual bool tick(Time_T timestamp);
     virtual void reset(Time_T timestamp);
-    virtual Tensor<Float_T>& getOutputsActivity()
+    virtual Tensor<int>& getOutputsActivity()
     {
         return mOutputsActivity;
     };
-    virtual Tensor<char>& getOutputs()
+    virtual Tensor<int>& getOutputs()
     {
         return mOutputs;
     };
@@ -66,9 +66,9 @@ public:
     virtual ~Cell_CSpike() {};
 
 protected:
-    Interface<char> mInputs;
-    Tensor<char> mOutputs;
-    Tensor<Float_T> mOutputsActivity;
+    Interface<int> mInputs;
+    Tensor<int> mOutputs;
+    Tensor<int> mOutputsActivity;
 };
 }
 

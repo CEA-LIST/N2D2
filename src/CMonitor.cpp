@@ -25,8 +25,9 @@
 
 
 N2D2::CMonitor::CMonitor()
-    : mTotalBatchActivity(0),
+    : mTotalBatchExampleFiringRate(0),
     mTotalBatchFiringRate(0),
+    mTotalBatchOutputsActivity(0),
     mNbEvaluations(0),
     mRelTimeIndex(0),
     mSuccessCounter(0),
@@ -39,10 +40,10 @@ N2D2::CMonitor::CMonitor()
 
 
 
-void N2D2::CMonitor::add(Tensor<char>& input)
+void N2D2::CMonitor::add(Tensor<int>& input)
 {
 #ifdef CUDA
-    mInputs = dynamic_cast<CudaTensor<char>*>(&(input));
+    mInputs = dynamic_cast<CudaTensor<int>*>(&(input));
 #else
     mInputs = &input;
 #endif
@@ -56,6 +57,7 @@ void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
 {
     // TODO: Refactor this considering the new Tensor implementation
     if (!mInitialized) {
+
         mNbTimesteps = nbTimesteps;
 
         mNbClasses = nbClasses;
@@ -63,33 +65,34 @@ void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
         mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
                               *(*mInputs).dimZ();
 
+         for (unsigned int k=0; k<nbTimesteps; k++) {
+            mActivity.push_back(new Tensor<char>((*mInputs).dims()));
+
+        }
+        mBatchActivity.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ()}, 0);
+
+        mFiringRate.resize((*mInputs).dims(), 0);
+        mTotalFiringRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+        mBatchFiringRate.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                                (*mInputs).dimZ()}, 0);
+
+        mExampleFiringRate.resize((*mInputs).dims(), 0);
+        mTotalExampleFiringRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+
+        mOutputsActivity.resize((*mInputs).dims(), 0);
+        mTotalOutputsActivity.resize({1, 1, 1, (*mInputs).dimB()}, 0);
+
         mMostActiveId.resize({1, 1, 1, (*mInputs).dimB()}, 0);
         mMostActiveRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
         mFirstEventTime.resize({1, 1, 1, (*mInputs).dimB()}, 0);
         mLastEventTime.resize({1, 1, 1, (*mInputs).dimB()}, 0);
 
-        mLastExampleActivity.resize({(*mInputs).dimX(), (*mInputs).dimY(),
-                                (*mInputs).dimZ(), (*mInputs).dimB()}, 0);
-
-        mBatchActivity.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
-                                (*mInputs).dimZ()}, 0);
-        mTotalActivity.resize({1, 1, 1, (*mInputs).dimB()}, 0);
-
-        mFiringRate.resize({(*mInputs).dimX(), (*mInputs).dimY(),
-                                (*mInputs).dimZ(), (*mInputs).dimB()}, 0);
-        mBatchFiringRate.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
-                                (*mInputs).dimZ()}, 0);
-        mTotalFiringRate.resize({1, 1, 1, (*mInputs).dimB()}, 0);
-
-        for (unsigned int k=0; k<nbTimesteps; k++) {
-            mActivity.push_back(new Tensor<char>((*mInputs).dims()));
-        }
         for (unsigned int k=0; k<nbClasses; k++) {
             mStats.push_back(new Tensor<unsigned int> ((*mInputs).dims()));
+            mStats.back().synchronizeHToD();
 
         }
-
-        mMaxClassResponse.resize((*mInputs).dims(), 0);
 
         mInitialized = true;
     }
@@ -103,7 +106,9 @@ bool N2D2::CMonitor::tick(Time_T timestamp)
             for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
                 for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
 
-                    char activity = (*mInputs)(x, y ,channel, batch);
+                    // Extract sign
+                    char activity = (*mInputs)(x, y ,channel, batch)/
+                                    std::abs((*mInputs)(x, y ,channel, batch));
 
                     //TODO: Adapt to negative spikes and integer input?
                     if ((int)activity > 0) {
@@ -132,452 +137,6 @@ void N2D2::CMonitor::update(Time_T start, Time_T stop)
 }
 
 
-/*
-bool N2D2::CMonitor::classifyMajorityVote(unsigned int batch, unsigned int cls, bool update)
-{
-    if (mNbClasses == 0) {
-        throw std::runtime_error("Error in "
-            "N2D2::CMonitor::checkLearningResponse: "
-            "Number of classes not specified in Monitor");
-    }
-    bool success = false;
-
-    //std::cout << "mNbClasses: " << mNbClasses << std::endl;
-    //std::cout << "mACtivitySize: " << mActivitySize << std::endl;
-
-    std::vector<unsigned int> preferedClass(mActivitySize, 0);
-
-    for (unsigned int node=0; node<mActivitySize; ++node) {
-        unsigned int maxClass = 0;
-        double maxResponse = 0;
-        for(unsigned int c=0; c<mNbClasses; ++c) {
-            if (mStats[c](node, batch) > maxResponse){
-                maxClass = c;
-                maxResponse = mStats[c](node, batch);
-            }
-        }
-        if (maxResponse > 0) {
-            preferedClass[node] = maxClass;
-        }
-        else {
-            preferedClass[node] = mNbClasses;
-        }
-        //std::cout << "node: "  << node << " "<<  preferedClass[node] << std::endl;
-    }
-
-    if (mMostActiveRate(batch) > 0) {
-
-        double maxResponse = 0;
-        unsigned int maxClass = 0;
-        for(unsigned int c=0; c<mNbClasses; ++c) {
-            double classAverage = 0;
-            unsigned int averageCounter = 0;
-            for (unsigned int node=0; node<mActivitySize; ++node) {
-                if (preferedClass[node] == c) {
-                    classAverage += mLastExampleActivity(node, batch);
-                    averageCounter++;
-                }
-                //std::cout << "c: " << mStats[c](node,batch) << std::endl;
-            }
-            if (averageCounter != 0){
-                classAverage = classAverage/averageCounter;
-            }
-            else {
-                classAverage = 0;
-            }
-            if (classAverage > maxResponse) {
-                maxClass = c;
-                maxResponse = classAverage;
-            }
-        }
-        //std::cout << "maxResponse: " << maxResponse << std::endl;
-        if (maxResponse > 0) {
-            if (maxClass == cls) {
-                //std::cout << "maxClass: " << maxClass << std::endl;
-                success = true;
-                mSuccessCounter++;
-            }
-        }
-
-        if (update) {
-        // Increase class counter for most active neuron
-            mStats[cls](mMostActiveId(batch), batch)++;
-            // If class counter becomes higher update the max response class
-            if (mStats[cls](mMostActiveId(batch), batch) >
-            mMaxClassResponse(mMostActiveId(batch), batch)) {
-                  //std::cout << "update" << std::endl;
-                  mMaxClassResponse(mMostActiveId(batch), batch) =
-                  mStats[cls](mMostActiveId(batch), batch);
-            }
-        }
-        // No response is not counted as failure
-        mNbEvaluations++;
-        mSuccess.push_back(success);
-    }
-    return success;
-}
-
-
-
-bool N2D2::CMonitor::classifyFirstSpike(unsigned int batch,
-                                        unsigned int cls,
-                                        unsigned int node,
-                                        bool update)
-{
-    if (mNbClasses == 0) {
-        throw std::runtime_error("Error in "
-            "N2D2::CMonitor::checkLearningResponse: "
-            "Number of classes not specified in Monitor");
-    }
-    bool success = false;
-
-    //std::cout << "MostActiveId: " << mMostActiveId(batch) << std::endl;
-    //std::cout << "MostActiveRate: " << mMostActiveRate(batch) << std::endl;
-
-    // Check if this neuron actually spiked
-    if (mLastExampleActivity(node, batch) > 0) {
-
-        unsigned int maxClass = 0;
-        double maxResponse = 0;
-        for(unsigned int c=0; c<mNbClasses; ++c) {
-            if (mStats[c](node, batch) > maxResponse){
-                maxClass = c;
-                maxResponse = mStats[c](node, batch);
-            }
-        }
-
-        if (maxResponse > 0) {
-            if(maxClass == cls) {
-                success = true;
-                mSuccessCounter++;
-            }
-        }
-
-        if (update) {
-        // Increase class counter for most active neuron
-            mStats[cls](node, batch)++;
-            // If class counter becomes higher update the max response class
-            if (mStats[cls](node, batch) >
-            mMaxClassResponse(node, batch)) {
-                  //std::cout << "update" << std::endl;
-                  mMaxClassResponse(node, batch) =
-                  mStats[cls](node, batch);
-            }
-        }
-        // No response is not counted as failure
-        mNbEvaluations++;
-        mSuccess.push_back(success);
-    }
-
-    return success;
-}
-*/
-
-bool N2D2::CMonitor::classifyRateBased(int target,
-                                    Tensor<float> integrations,
-                                    unsigned int batch,
-                                    bool update)
-{
-    if (mNbClasses == 0) {
-        throw std::runtime_error("Error in "
-            "N2D2::CMonitor::checkLearningResponse: "
-            "Number of classes not specified in Monitor");
-    }
-
-    if (target < 0) {
-        std::cout << "Skipping target < 0" << std::endl;
-        return false;
-    }
-
-    bool success = false;
-
-    unsigned int maxNode = 0;
-    double maxResponse = 0;
-    for(unsigned int i=0; i<mNbClasses; ++i) {
-        if (mLastExampleActivity(i,batch) > maxResponse){
-            maxNode = i;
-            maxResponse = mLastExampleActivity(i,batch);
-        }
-        // If same number of spikes compare integrations. Same integration is very unlikely
-        // This also includes the case of no spikes in all neurons
-        else if (mLastExampleActivity(i,batch) == maxResponse) {
-            if (integrations(i,batch) >= integrations(maxNode,batch)) {
-                maxNode = i;
-            }
-        }
-    }
-    if((int)maxNode == target) {
-        success = true;
-        if (update) {
-            mSuccessCounter++;
-        }
-    }
-
-    if (update) {
-        mNbEvaluations++;
-        mSuccess.push_back(success);
-    }
-
-    return success;
-}
-
-
-
-unsigned int N2D2::CMonitor::classifyBatchRateBased(Tensor<int> targets,
-                                                Tensor<float> integrations,
-                                                bool update)
-{
-    unsigned int success = 0;
-
-    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
-        success += static_cast<unsigned int>(
-            classifyRateBased(targets(batch), integrations, batch, update));
-    }
-
-
-    return success;
-}
-
-
-bool N2D2::CMonitor::classifyIntegrationBased(int target,
-                                            Tensor<float> integrations,
-                                            unsigned int batch,
-                                            bool update)
-{
-    if (target >= (int)(integrations.size()/integrations.dimB())) {
-        throw std::runtime_error("Error in "
-            "N2D2::CMonitor::classifyIntegrationBased: "
-            "target index larger than number of of neurons");
-    }
-
-    if (target < 0) {
-        std::cout << "Skipping target < 0" << std::endl;
-        return false;
-    }
-
-    bool success = false;
-
-    unsigned int maxNode = 0;
-    double maxResponse = 0;
-    for(unsigned int i=0; i<mNbClasses; ++i) {
-        //std::cout << integrations[i] << std::endl;
-        if (integrations(i, batch) > maxResponse){
-            maxNode = i;
-            maxResponse = integrations(i, batch);
-        }
-    }
-    if((int)maxNode == target) {
-        success = true;
-        if (update) {
-            mSuccessCounter++;
-        }
-    }
-
-    if (update) {
-        mNbEvaluations++;
-        mSuccess.push_back(success);
-    }
-
-    return success;
-}
-
-
-unsigned int N2D2::CMonitor::classifyBatchIntegrationBased(Tensor<int> targets,
-                                                Tensor<float> integrations,
-                                                bool update)
-{
-    unsigned int success = 0;
-
-    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
-        success += static_cast<unsigned int>(
-            classifyIntegrationBased(
-                                targets(batch), integrations, batch, update));
-    }
-
-
-    return success;
-}
-
-
-bool N2D2::CMonitor::checkLearningResponse(unsigned int batch, unsigned int cls,
-                                          bool update)
-{
-    if (mNbClasses == 0) {
-        throw std::runtime_error("Error in "
-            "N2D2::CMonitor::checkLearningResponse: "
-            "Number of classes not specified in Monitor");
-    }
-    bool success = false;
-
-    if (mMostActiveRate(batch) > 0) {
-
-
-        // Check if target class is maxResponse class for neuron
-        // which was most active
-        if(mMaxClassResponse(mMostActiveId(batch), batch) ==
-        mStats[cls](mMostActiveId(batch), batch) &&
-        mStats[cls](mMostActiveId(batch), batch) > 0){
-
-            success = true;
-            mSuccessCounter++;
-        }
-
-        if (update) {
-        // Increase class counter for most active neuron
-            mStats[cls](mMostActiveId(batch), batch)++;
-            // If class counter becomes higher update the max response class
-            if (mStats[cls](mMostActiveId(batch), batch) >
-            mMaxClassResponse(mMostActiveId(batch), batch)) {
-                  mMaxClassResponse(mMostActiveId(batch), batch) =
-                  mStats[cls](mMostActiveId(batch), batch);
-            }
-        }
-        // No response is not counted as failure
-        mNbEvaluations++;
-        mSuccess.push_back(success);
-    }
-    return success;
-}
-
-
-unsigned int N2D2::CMonitor::checkBatchLearningResponse(std::vector<unsigned int>& cls,
-                                          bool update)
-{
-
-    unsigned int success = 0;
-
-    for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
-        success += static_cast<unsigned int>(
-                    checkLearningResponse(batch, cls[batch], update));
-    }
-
-
-    return success;
-}
-
-void N2D2::CMonitor::updateSuccess(bool success)
-{
-    mNbEvaluations++;
-    mSuccess.push_back(success);
-}
-
-
-
-double N2D2::CMonitor::inferRelation(unsigned int batch)
-{
-    unsigned int outputSize = mLastExampleActivity.size();
-    Tensor<Float_T> reconstruction({1, 1, outputSize});
-
-    Float_T maxValue = 0;
-
-    for (unsigned int i = 0; i < outputSize; ++i) {
-        reconstruction(i) += mLastExampleActivity(i, batch);
-        if (reconstruction(i) > maxValue) {
-            maxValue = reconstruction(i);
-        }
-    }
-
-    Float_T maxPeriodMean = 0;
-    int prediction = 0;
-    for (unsigned int mean = 0; mean < outputSize; ++mean){
-        Float_T periodMean = 0;
-        for (unsigned int x = 0; x < outputSize; ++x){
-            int distance = (int)x - (int)mean;
-
-            if (distance > (int)outputSize/2) {
-                distance = outputSize - distance;
-            }
-            if (distance < -(int)outputSize/2) {
-                distance = outputSize + distance;
-            }
-
-            Float_T value = reconstruction(x);
-            periodMean += value*(outputSize - 2*std::abs(distance));
-        }
-        if (periodMean > maxPeriodMean){
-            maxPeriodMean = periodMean;
-            prediction = mean;
-        }
-    }
-    return prediction/(Float_T)outputSize;
-
-}
-
-
-void N2D2::CMonitor::inferRelation(const std::string& fileName,
-                                    Tensor<Float_T>& relationalTargets,
-                                    unsigned int targetVariable,
-                                    unsigned int batch,
-                                    bool plot)
-{
-    Float_T prediction = inferRelation(batch);
-    Float_T target = relationalTargets(targetVariable);
-
-    Float_T error = 0.0;
-
-    Float_T diff = target-prediction;
-    if (std::fabs(diff) > 0.5) {
-        Float_T higher = std::fmax(target, prediction);
-        Float_T lower = std::fmin(target, prediction);
-        diff = 1.0 + lower - higher;
-    }
-    error += diff*diff;
-
-    Tensor<Float_T> inferredRelation({relationalTargets.size()+3});
-    for (unsigned int i=0; i<relationalTargets.size(); ++i){
-        inferredRelation(i) = relationalTargets(i);
-    }
-    inferredRelation(relationalTargets.size()) = target;
-    inferredRelation(relationalTargets.size()+1) = prediction;
-    inferredRelation(relationalTargets.size()+2) = error;
-
-    relationalInferences.push_back(inferredRelation);
-
-    if (plot) {
-
-        std::ofstream dataFile(fileName.c_str());
-
-        if (!dataFile.good())
-            throw std::runtime_error("Could not create data rate log file: "
-                                     + fileName);
-        dataFile.precision(4);
-
-        Float_T averageError = 0.0;
-
-        for (unsigned int k=0; k<relationalInferences.size(); ++k) {
-
-            for (unsigned int i=0; i<relationalInferences[k].size(); ++i){
-                dataFile << relationalInferences[k](i) << " ";
-            }
-            dataFile << "\n";
-
-            averageError +=
-                relationalInferences[k](relationalInferences[k].size()-1);
-
-        }
-        dataFile.close();
-
-
-        std::ostringstream label;
-        label << "\"MSE: "
-            << averageError/relationalInferences.size() << " RMSE: "
-            << std::sqrt(averageError/relationalInferences.size());
-        label << "\" at graph 0.5, graph 0.1 front";
-
-        Gnuplot gnuplot;
-        gnuplot.set("grid").set("key off");
-        gnuplot.setYlabel("y");
-        gnuplot.setXlabel("x");
-
-        gnuplot.set("label", label.str());
-        gnuplot.saveToFile(fileName);
-
-        std::ostringstream plotIndices;
-        plotIndices << "using " << relationalTargets.size()+1
-            << ":" << relationalTargets.size()+2 << " with points";
-        gnuplot.plot(fileName, plotIndices.str());
-    }
-}
 
 
 unsigned int N2D2::CMonitor::getActivity(unsigned int x,
@@ -738,49 +297,16 @@ unsigned int N2D2::CMonitor::calcTotalBatchActivity(Time_T start,
         unsigned int activity = calcTotalActivity(batch, start, stop, update);
         activitySum += activity;
         if (update) {
-            mTotalActivity(batch) = activity;
+            mTotalExampleFiringRate(batch) = activity;
         }
     }
     if (update){
-        mTotalBatchActivity = activitySum;
+        mTotalBatchExampleFiringRate = activitySum;
     }
     return activitySum;
 }
 
 
-
-
-double N2D2::CMonitor::getSuccessRate(unsigned int avgWindow) const
-{
-    const unsigned int size = mSuccess.size();
-
-    if (size > 0) {
-        return (avgWindow > 0 && size > avgWindow)
-                   ? std::accumulate(mSuccess.end() - avgWindow,
-                                     mSuccess.end(),
-                                     0.0) / avgWindow
-                   : std::accumulate(mSuccess.begin(), mSuccess.end(), 0.0)
-                     / size;
-    }
-    else
-        return 0.0;
-}
-
-
-double N2D2::CMonitor::getFastSuccessRate() const
-{
-    if (mNbEvaluations > 0) {
-        return static_cast<double>(mSuccessCounter)/mNbEvaluations;
-    } else
-        return 0.0;
-}
-
-void N2D2::CMonitor::logSuccessRate(const std::string& fileName,
-                                       unsigned int avgWindow,
-                                       bool plot) const
-{
-    logDataRate(mSuccess, fileName, avgWindow, plot);
-}
 
 
 void N2D2::CMonitor::logFiringRate(const std::string& fileName,
@@ -901,14 +427,14 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
                                         y*(*mInputs).dimX() + x;
                 bool hasData = false;
                 for (std::map<Time_T, unsigned int>::const_iterator it=mTimeIndex.find(start);
-                it!=mTimeIndex.find(stop); ++it) {
+                it!=std::next(mTimeIndex.find(stop),1); ++it) {
                     int activity = (int) mActivity[(*it).second](nodeId, batch);
-                    if(isEmpty && activity > 0) {
+                    if(isEmpty && activity != 0) {
                         isEmpty = false;
                     }
-                    if (activity > 0){
+                    if (activity != 0){
                         data << nodeId << " " << (*it).first / ((double)TimeS)
-                            << " " << activity << "\n";
+                            << " " << "1" << "\n";
                         hasData = true;
                     }
 
@@ -928,16 +454,18 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
     else if (plot) {
 
         NodeId_T ymin = 0;
-        NodeId_T ymax = (*mInputs).dimY()*(*mInputs).dimX()*(*mInputs).dimZ()-1;
+        NodeId_T ymax = (*mInputs).dimY()*(*mInputs).dimX()*(*mInputs).dimZ();
 
         const double xmin = ((start>0) ? start : mFirstEventTime(batch)) /((double)TimeS);
         const double xmax = ((stop>0) ? stop : mLastEventTime(batch)) /((double)TimeS);
 
+        double xOffset = (stop-start)/((mNbTimesteps-1) * (double)TimeS);
+
         Gnuplot gnuplot;
         gnuplot.set("bars", 0);
         gnuplot.set("pointsize", 0.01);
-        gnuplot.setXrange(xmin, xmax);
-        gnuplot.setYrange(ymin, ymax + 1);
+        gnuplot.setXrange(xmin, xmax + xOffset);
+        gnuplot.setYrange(ymin, ymax );
         gnuplot.setXlabel("Time (s)");
         gnuplot.saveToFile(fileName);
 
@@ -955,35 +483,31 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
 void N2D2::CMonitor::clearAll()
 {
 
-    mTotalBatchActivity = 0;
+    mTotalBatchExampleFiringRate = 0;
     mTotalBatchFiringRate = 0;
     mNbEvaluations = 0;
-    mRelTimeIndex = 0;
-    mSuccessCounter = 0;
+    //mRelTimeIndex = 0;
 
-    mActivitySize = (*mInputs).dimX()* (*mInputs).dimY()
-                          *(*mInputs).dimZ();
+    mBatchActivity.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                            (*mInputs).dimZ()}, 0);
+
+    mFiringRate.assign((*mInputs).dims(), 0);
+    mTotalFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+    mBatchFiringRate.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
+                            (*mInputs).dimZ()}, 0);
+
+    mExampleFiringRate.assign((*mInputs).dims(), 0);
+    mTotalExampleFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+
+    mOutputsActivity.assign((*mInputs).dims(), 0);
+    mTotalOutputsActivity.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
     mMostActiveId.assign({1, 1, 1, (*mInputs).dimB()}, 0);
     mMostActiveRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
     mFirstEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
     mLastEventTime.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 
-
-    mBatchActivity.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
-                            (*mInputs).dimZ()}, 0);
-    mTotalActivity.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-
-    mFiringRate.assign((*mInputs).dims(), 0);
-    mBatchFiringRate.assign({1, (*mInputs).dimX(), (*mInputs).dimY(),
-                            (*mInputs).dimZ()}, 0);
-    mTotalFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
-
     clearActivity();
-
-    mSuccess.clear();
-    clearFastSuccess();
-    relationalInferences.clear();
 
 }
 
@@ -994,8 +518,23 @@ void N2D2::CMonitor::clearActivity()
     }
 
     mTimeIndex.clear();
-    mRelTimeIndex=0;
+    mRelTimeIndex = 0;
 
+}
+
+void N2D2::CMonitor::reset(Time_T timestamp)
+{
+    clearActivity();
+    clearMostActive();
+
+    mExampleFiringRate.assign((*mInputs).dims(), 0);
+    mTotalExampleFiringRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+
+    mOutputsActivity.assign((*mInputs).dims(), 0);
+    mTotalOutputsActivity.assign({1, 1, 1, (*mInputs).dimB()}, 0);
+
+    mTimeIndex.insert(std::make_pair(timestamp,mRelTimeIndex));
+    //mRelTimeIndex++;
 }
 
 void N2D2::CMonitor::clearFiringRate()
@@ -1008,17 +547,5 @@ void N2D2::CMonitor::clearMostActive()
     mMostActiveId.assign({1, 1, 1, (*mInputs).dimB()}, 0);
     mMostActiveRate.assign({1, 1, 1, (*mInputs).dimB()}, 0);
 }
-
-void N2D2::CMonitor::clearSuccess()
-{
-    mSuccess.clear();
-}
-
-void N2D2::CMonitor::clearFastSuccess()
-{
-    mSuccessCounter = 0;
-    mNbEvaluations = 0;
-}
-
 
 

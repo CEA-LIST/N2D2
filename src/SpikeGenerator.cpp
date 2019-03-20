@@ -52,7 +52,7 @@ void N2D2::SpikeGenerator::checkParameters() const
                                 "range (must be >= 0.0 and <= 1.0)");
 }
 
-void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, char>& event,
+void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, int>& event,
                                      double value,
                                      Time_T start,
                                      Time_T end) const

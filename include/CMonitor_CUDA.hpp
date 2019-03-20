@@ -46,8 +46,6 @@ public:
 
 
 protected:
-    CudaTensor<unsigned int> mExampleActivity;
-    CudaTensor<unsigned int> mExampleIds;
 
     unsigned int mDeviceMaxThreads;
     unsigned int mDeviceWarpSize;

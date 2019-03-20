@@ -147,15 +147,15 @@ public:
     virtual void reset(Time_T timestamp);
     virtual void initialize(Time_T start, Time_T stop);
 
-    virtual Tensor<char>& getTickData(unsigned int subIdx)
+    virtual Tensor<int>& getTickData(unsigned int subIdx)
     {
         return mTickData[subIdx];
     };
-    virtual const Tensor<char>& getTickData(unsigned int subIdx) const
+    virtual const Tensor<int>& getTickData(unsigned int subIdx) const
     {
         return mTickData[subIdx];
     };
-    virtual Interface<char>& getTickData()
+    virtual Interface<int>& getTickData()
     {
         return mTickData;
     };
@@ -167,7 +167,7 @@ public:
     {
         return mAccumulatedTickOutputs;
     };
-    virtual Tensor<char>& getTickOutputs()
+    virtual Tensor<int>& getTickOutputs()
     {
         return mTickOutputs;
     };
@@ -193,21 +193,21 @@ protected:
     Tensor<Float_T> mRelationalTargets;
 
 #ifdef CUDA
-    CudaInterface<char> mTickData;
-    CudaTensor<char> mTickOutputs;
+    CudaInterface<int> mTickData;
+    CudaTensor<int> mTickOutputs;
     CudaInterface<Float_T> mTickDataTraces;
     CudaInterface<Float_T> mTickDataTracesLearning;
     CudaInterface<Float_T> mCurrentFiringRate;
     CudaInterface<Float_T> mAccumulatedTickOutputs;
 #else
-    Interface<char> mTickData;
-    Tensor<char> mTickOutputs;
+    Interface<int> mTickData;
+    Tensor<int> mTickOutputs;
     Interface<Float_T> mTickDataTraces;
     Interface<Float_T> mTickDataTracesLearning;
     Interface<Float_T> mCurrentFiringRate;
     Interface<Float_T> mAccumulatedTickOutputs;
 #endif
-    Interface<std::pair<Time_T, char> > mNextEvent;
+    Interface<std::pair<Time_T, int> > mNextEvent;
 
     // With this iterator we avoid to iterate over all events in every tick
     std::vector<AerReadEvent>::iterator mEventIterator;

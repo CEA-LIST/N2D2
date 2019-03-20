@@ -42,79 +42,6 @@ void N2D2::Cell_CSpike_CUDA::addInput(StimuliProvider& /*sp*/,
                              "environment channel as input is not supported");
 }
 
-/*
-void N2D2::Cell_CSpike_CUDA::addInput(StimuliProvider& sp,
-                                      unsigned int x0,
-                                      unsigned int y0,
-                                      unsigned int width,
-                                      unsigned int height,
-                                      const Tensor<bool>& mapping)
-{
-
-
-    CEnvironment* cEnv = dynamic_cast<CEnvironment*>(&sp);
-
-    if (cEnv == NULL)
-        throw std::runtime_error(
-            "Cell_CSpike_CUDA::addInput(): CSpike models require CEnvironment");
-
-    unsigned int subMax = (cEnv->getTickData()).size();
-    unsigned int subMin = 0;
-
-    if (mSubConnectIdx > 0){
-        subMin = mSubConnectIdx - 1;
-        subMax = mSubConnectIdx;
-    }
-
-    //std::cout << "Add subStim " << k << " to cell" << std::endl;
-
-    for (unsigned int k=subMin; k<subMax; ++k){
-
-        std::cout << "Add subStim " << k << " to cell" << std::endl;
-
-        Tensor4d<char>& subTickData = cEnv->getTickData(k);
-
-        if (width == 0)
-            width = subTickData.dimX() - x0;
-        if (height == 0)
-            height = subTickData.dimY() - y0;
-
-        if (x0 > 0 || y0 > 0 || width < subTickData.dimX() || height < subTickData.dimY()) {
-            throw std::runtime_error("Cell_CSpike_CUDA::addInput(): adding a "
-                                     "cropped environment channel map as input is "
-                                     "not "
-                                     "supported");
-        }
-
-        // Define input-output sizes
-        setInputsSize(width, height);
-        mNbChannels += subTickData.dimZ();
-        setOutputsSize();
-
-        // Define input-output connections
-        if (!mapping.empty() && mapping.dimY() != subTickData.dimZ()) {
-            throw std::runtime_error("Cell_CSpike_CUDA::addInput(): number of "
-                                     "mapping rows must be equal to the number of "
-                                     "input "
-                                     "channels");
-        }
-
-        mMapping.append((!mapping.empty())
-            ? mapping
-            : Tensor<bool>({getNbOutputs(), subTickData.dimZ()}, true));
-
-        mInputs.push_back(&subTickData);
-        mInputs.back().setValid();
-
-    }
-
-    if (mOutputs.empty()) {
-        mOutputs.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, sp.getBatchSize());
-        mOutputsActivity.resize(
-            mOutputsWidth, mOutputsHeight, mNbOutputs, sp.getBatchSize(), 0);
-    }
-}*/
 
 void N2D2::Cell_CSpike_CUDA::addInput(StimuliProvider& sp,
                                  unsigned int x0,
@@ -238,9 +165,7 @@ void N2D2::Cell_CSpike_CUDA::addInput(Cell* cell,
 
 bool N2D2::Cell_CSpike_CUDA::tick(Time_T /*timestamp*/)
 {
-    accumulate<Float_T>(&mOutputsActivity, &mOutputs);
-    //TODO: Check if this sync is necessary (required by CMonitor?)
-    //mOutputs.synchronizeDToH();
+    accumulate<int>(&mOutputsActivity, &mOutputs);
     return false;
 }
 
@@ -249,13 +174,13 @@ void N2D2::Cell_CSpike_CUDA::reset(Time_T /*timestamp*/)
     mOutputsActivity.assign(mOutputsActivity.dims(), 0);
 }
 
-N2D2::Tensor<N2D2::Float_T>& N2D2::Cell_CSpike_CUDA::getOutputsActivity()
+N2D2::Tensor<int>& N2D2::Cell_CSpike_CUDA::getOutputsActivity()
 {
     mOutputsActivity.synchronizeDToH();
     return mOutputsActivity;
 }
 
-N2D2::Tensor<char>& N2D2::Cell_CSpike_CUDA::getOutputs()
+N2D2::Tensor<int>& N2D2::Cell_CSpike_CUDA::getOutputs()
 {
     mOutputs.synchronizeDToH();
     return mOutputs;
@@ -264,7 +189,16 @@ N2D2::Tensor<char>& N2D2::Cell_CSpike_CUDA::getOutputs()
 namespace N2D2 {
 template <>
 void Cell_CSpike_CUDA::accumulate
-    <float>(CudaTensor<float>* outputsActivity, CudaTensor<char>* outputs)
+    <int>(CudaTensor<int>* outputsActivity, CudaTensor<int>* outputs)
+{
+    cudaIaccumulate(outputsActivity->getDevicePtr(),
+                    outputs->getDevicePtr(),
+                    outputs->size());
+}
+
+template <>
+void Cell_CSpike_CUDA::accumulate
+    <float>(CudaTensor<float>* outputsActivity, CudaTensor<int>* outputs)
 {
     cudaSaccumulate(outputsActivity->getDevicePtr(),
                     outputs->getDevicePtr(),
@@ -273,7 +207,7 @@ void Cell_CSpike_CUDA::accumulate
 
 template <>
 void Cell_CSpike_CUDA::accumulate
-    <double>(CudaTensor<double>* outputsActivity, CudaTensor<char>* outputs)
+    <double>(CudaTensor<double>* outputsActivity, CudaTensor<int>* outputs)
 {
     cudaDaccumulate(outputsActivity->getDevicePtr(),
                     outputs->getDevicePtr(),

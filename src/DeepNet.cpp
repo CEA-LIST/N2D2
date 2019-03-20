@@ -249,10 +249,10 @@ void N2D2::DeepNet::addCMonitor(const std::string& name,
     mCMonitors.insert(std::make_pair(name, monitor));
 }
 
-std::vector<std::pair<std::string, unsigned int> >
+std::vector<std::pair<std::string, long long int> >
 N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
 {
-    std::vector<std::pair<std::string, unsigned int> > activity;
+    std::vector<std::pair<std::string, long long int> > activity;
 
     // Update monitors
     for (std::vector<std::vector<std::string> >::const_iterator it
@@ -286,16 +286,12 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
             if (itMonitor ==  mCMonitors.end())
                 continue;
 
-            (*itMonitor).second->clearMostActive();
-
             (*itMonitor).second->update(start, stop);
 
+            //activity.push_back(std::make_pair(
+            //    (*itCell), (*itMonitor).second->getTotalBatchExampleFiringRate()));
             activity.push_back(std::make_pair(
-                (*itCell), (*itMonitor).second->getTotalBatchActivity()));
-
-            if(!log) {
-                (*itMonitor).second->clearActivity();
-            }
+                (*itCell), (*itMonitor).second->getTotalBatchOutputsActivity()));
 
         }
     }
@@ -313,6 +309,7 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
 
             (*it).second->clearActivity();
         }
+
         for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
              = mCMonitors.begin(),
              itEnd = mCMonitors.end();
@@ -320,9 +317,7 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
              ++it) {
             (*it).second->logActivity("activity_batchElem_0_" + (*it).first + ".dat", 0, true, start, stop);
             (*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",
-                                        true);
-
-            (*it).second->clearActivity();
+                                        true, start, stop);
 
         }
 
@@ -624,13 +619,6 @@ void N2D2::DeepNet::clearSuccess()
     for (std::map<std::string, std::shared_ptr<Monitor> >::const_iterator it
          = mMonitors.begin(),
          itEnd = mMonitors.end();
-         it != itEnd;
-         ++it) {
-        (*it).second->clearSuccess();
-    }
-    for (std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator it
-         = mCMonitors.begin(),
-         itEnd = mCMonitors.end();
          it != itEnd;
          ++it) {
         (*it).second->clearSuccess();
@@ -2193,27 +2181,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
         }
     }
 
-//TODO: Remove as soon as FcCell_CSpike_IF_CUDA is refactored (and BP removed)
-/*
-#ifdef CUDA
-    for (unsigned int l = 1; l < nbLayers; ++l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell) {
-            std::shared_ptr<FcCell_CSpike_IF_CUDA> cellCSpike
-                = std::dynamic_pointer_cast
-                <FcCell_CSpike_IF_CUDA>(mCells[(*itCell)]);
-
-            if (cellCSpike){
-                cellCSpike->backProp();
-            }
-        }
-    }
-#endif
-*/
-
 }
 
 
@@ -2251,6 +2218,29 @@ void N2D2::DeepNet::cReset(Time_T timestamp)
                 "DeepNet::cReset(): requires Cell_CSpike cells");
 
         cellCSpike->reset(timestamp);
+    }
+
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin(),
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it) {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+         itCell != itCellEnd;
+         ++itCell) {
+
+            std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator
+            itMonitor = mCMonitors.find(*itCell);
+
+            if (itMonitor ==  mCMonitors.end())
+                continue;
+
+            //(*itMonitor).second->clearMostActive();
+
+            (*itMonitor).second->reset(timestamp);
+
+         }
     }
 }
 

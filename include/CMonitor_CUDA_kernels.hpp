@@ -28,10 +28,11 @@
 
 namespace N2D2 {
 
-void cudaUpdateActivity(char * inputs,
+void cudaUpdateActivity(int * inputs,
                         char * activity,
                         unsigned int * firingRate,
                         unsigned int * exampleFiringRate,
+                        int * totalOutput,
                         unsigned long long int * firstEventTime,
                         unsigned long long int * lastEventTime,
                         unsigned int inputsDimX,
@@ -44,6 +45,15 @@ void cudaUpdateActivity(char * inputs,
 
 void cudaUpdateFiringRate(unsigned int * firingRate,
                         unsigned int * totalFiringRate,
+                        unsigned int inputsDimX,
+                        unsigned int inputsDimY,
+                        unsigned int inputsDimZ,
+                        unsigned int batchSize,
+                        unsigned int maxNbThreads,
+                        unsigned int warpSize);
+
+void cudaUpdateFiringRate(int * firingRate,
+                        int * totalFiringRate,
                         unsigned int inputsDimX,
                         unsigned int inputsDimY,
                         unsigned int inputsDimZ,

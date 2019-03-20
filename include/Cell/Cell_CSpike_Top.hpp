@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -36,7 +37,8 @@ public:
     }
     virtual bool tick(Time_T timestamp) = 0;
     virtual void reset(Time_T timestamp) = 0;
-    virtual Tensor<Float_T>& getOutputsActivity() = 0;
+    virtual Tensor<int>& getOutputsActivity() = 0;
+    virtual Tensor<int>& getOutputs() = 0;
     virtual bool isCuda() const = 0;
     virtual ~Cell_CSpike_Top() {};
 };

@@ -22,7 +22,9 @@
 
 #include "CMonitor_CUDA_kernels.hpp"
 
+// TODO Check if still required
 #include <stdio.h>
+#include <stdlib.h>
 
 
 
@@ -45,10 +47,11 @@ static unsigned int findPower(unsigned int value)
 
 
 
-__global__ void cudaUpdateActivity_kernel(char * inputs,
+__global__ void cudaUpdateActivity_kernel(int * inputs,
                                         char * activity,
                                         unsigned int * firingRate,
                                         unsigned int * exampleFiringRate,
+                                        int * totalOutput,
                                         unsigned long long int * firstEventTime,
                                         unsigned long long int * lastEventTime,
                                         unsigned int inputsDimX,
@@ -68,15 +71,20 @@ __global__ void cudaUpdateActivity_kernel(char * inputs,
                     const unsigned int inputsIdx =
                         x + y*inputsDimX + channel*inputsDimX*inputsDimY;
                     char act = inputs[inputsIdx + batchInputOffset];
-                    int counter = (int)act;
+                    unsigned int actAbs = abs(act);
+
+                    int counter = inputs[inputsIdx + batchInputOffset];
 
                     activity[inputsIdx + batchInputOffset] = act;
-                    firingRate[inputsIdx + batchInputOffset] += counter;
-                    exampleFiringRate[inputsIdx + batchInputOffset] += counter;
+                    firingRate[inputsIdx + batchInputOffset] += actAbs;
+                    exampleFiringRate[inputsIdx + batchInputOffset] += actAbs;
+                    totalOutput[inputsIdx + batchInputOffset] += counter;
             }
         }
     }
 }
+
+
 
 
 __global__ void cudaUpdateFiringRate_kernel(unsigned int * firingRate,
@@ -125,6 +133,54 @@ __global__ void cudaUpdateFiringRate_kernel(unsigned int * firingRate,
 
 }
 
+
+__global__ void cudaUpdateFiringRate_kernel(int * firingRate,
+                                        int * totalFiringRatePartial,
+                                        unsigned int inputsDimX,
+                                        unsigned int inputsDimY,
+                                        unsigned int inputsDimZ)
+{
+
+    const unsigned int inputSize = inputsDimZ * inputsDimX * inputsDimY;
+
+    const unsigned int batchInputOffset = blockIdx.z * inputSize;
+
+    const unsigned int blockOffset = blockIdx.x * blockDim.x;
+
+    const unsigned int partialIdx = threadIdx.x + blockOffset;
+
+    extern __shared__ unsigned int partialSum[];
+
+    // Perform first level of reduction during initialization
+    // This is more efficient since we need all threads to load data
+    // but the partial sum will see only half of the threads active
+    //partialSum[threadIdx.x] = firingRate[partialIdx + batchInputOffset] +
+    //    firingRate[partialIdx + blockDim.x + batchInputOffset];
+
+    partialSum[threadIdx.x] = 0;
+    if (partialIdx < inputSize){
+        partialSum[threadIdx.x] = firingRate[partialIdx + batchInputOffset];
+    }
+
+    __syncthreads();
+
+    // Reduction over neurons
+    for (int offset = blockDim.x/2; offset > 0; offset >>= 1) {
+        if (threadIdx.x < offset){
+            partialSum[threadIdx.x] += partialSum[threadIdx.x + offset];
+        }
+
+        __syncthreads();
+    }
+
+    if (threadIdx.x == 0) {
+        totalFiringRatePartial[blockIdx.x+gridDim.x*blockIdx.z] = partialSum[0];
+    }
+
+
+}
+
+
 __global__ void cudaUpdateBatchFiringRate_kernel(unsigned int * firingRate,
                                         unsigned int * batchFiringRate,
                                         unsigned int inputsDimX,
@@ -154,7 +210,7 @@ __global__ void cudaUpdateBatchFiringRate_kernel(unsigned int * firingRate,
 }
 
 
-/*
+
 __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleIds,
                                         unsigned int * exampleFiringRate,
                                         unsigned int * mostActiveId,
@@ -200,7 +256,7 @@ __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleIds,
        mostActiveId[blockIdx.x+gridDim.x*blockIdx.z] = partialActiveIdx[0];
     }
 
-}*/
+}
 
 __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleFiringRate,
                                         unsigned int * mostActiveId,
@@ -253,10 +309,11 @@ __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleFiringRate,
 }
 
 
-void N2D2::cudaUpdateActivity(char * inputs,
+void N2D2::cudaUpdateActivity(int * inputs,
                             char * activity,
                             unsigned int * firingRate,
                             unsigned int * exampleFiringRate,
+                            int * totalOutput,
                             unsigned long long int * firstEventTime,
                             unsigned long long int * lastEventTime,
                             unsigned int inputsDimX,
@@ -281,6 +338,7 @@ void N2D2::cudaUpdateActivity(char * inputs,
                 activity,
                 firingRate,
                 exampleFiringRate,
+                totalOutput,
                 firstEventTime,
                 lastEventTime,
                 inputsDimX,
@@ -346,6 +404,64 @@ void N2D2::cudaUpdateFiringRate(unsigned int * firingRate,
     cudaFree(blockSum);
 
 }
+
+
+
+void N2D2::cudaUpdateFiringRate(int * firingRate,
+                            int * totalFiringRate,
+                            unsigned int inputsDimX,
+                            unsigned int inputsDimY,
+                            unsigned int inputsDimZ,
+                            unsigned int batchSize,
+                            unsigned int maxNbThreads,
+                            unsigned int warpSize)
+{
+    unsigned int numElem = findPower(inputsDimX * inputsDimY * inputsDimZ);
+    unsigned int nbBlocks = 1;
+    while (numElem > maxNbThreads){
+        numElem = numElem / 2;
+        nbBlocks*=2;
+    }
+
+
+    const dim3 blocksPerGrid = {nbBlocks, 1, batchSize};
+    const dim3 threadsPerBlocks = {numElem, 1, 1};
+    size_t sharedSize = sizeof(unsigned int) * threadsPerBlocks.x;
+
+    int * blockSum;
+    cudaMallocManaged(&blockSum, blocksPerGrid.x * blocksPerGrid.z * sizeof(unsigned int));
+
+    cudaUpdateFiringRate_kernel <<<blocksPerGrid, threadsPerBlocks, sharedSize>>> (
+        firingRate,
+        blockSum,
+        inputsDimX,
+        inputsDimY,
+        inputsDimZ);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
+
+    cudaDeviceSynchronize();
+
+    // Perform second sum over the partial sum in all blocks
+
+    const dim3 blocksPerGrid2 = {1, 1, batchSize};
+    const dim3 threadsPerBlocks2 = {nbBlocks, 1, 1};
+    sharedSize = sizeof(unsigned int) * threadsPerBlocks2.x;
+
+    cudaUpdateFiringRate_kernel <<< blocksPerGrid2, threadsPerBlocks2.x, sharedSize>>> (
+        blockSum,
+        totalFiringRate,
+        nbBlocks,
+        1,
+        1);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
+
+
+    cudaFree(blockSum);
+
+}
+
 
 void N2D2::cudaUpdateBatchFiringRate(unsigned int * firingRate,
                                     unsigned int * batchFiringRate,

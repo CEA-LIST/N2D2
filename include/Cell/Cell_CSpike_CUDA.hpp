@@ -55,8 +55,8 @@ public:
                           unsigned int height = 0);
     virtual bool tick(Time_T timestamp);
     virtual void reset(Time_T timestamp);
-    virtual Tensor<Float_T>& getOutputsActivity();
-    virtual Tensor<char>& getOutputs();
+    virtual Tensor<int>& getOutputsActivity();
+    virtual Tensor<int>& getOutputs();
     bool isCuda() const
     {
         return true;
@@ -65,26 +65,30 @@ public:
 
 protected:
     // Forward
-    CudaInterface<char> mInputs;
+    CudaInterface<int> mInputs;
 
-    CudaTensor<char> mOutputs;
-    CudaTensor<Float_T> mOutputsActivity;
+    CudaTensor<int> mOutputs;
+    CudaTensor<int> mOutputsActivity;
 
 private:
     template <class T>
     void accumulate(CudaTensor<T>* outputsActivity,
-                    CudaTensor<char>* outputs);
+                    CudaTensor<int>* outputs);
 };
 }
 
 namespace N2D2 {
 template <>
 void Cell_CSpike_CUDA::accumulate
-    <float>(CudaTensor<float>* outputsActivity, CudaTensor<char>* outputs);
+    <int>(CudaTensor<int>* outputsActivity, CudaTensor<int>* outputs);
+
+template <>
+void Cell_CSpike_CUDA::accumulate
+    <float>(CudaTensor<float>* outputsActivity, CudaTensor<int>* outputs);
 
 template <>
 void Cell_CSpike_CUDA::accumulate<double>(CudaTensor<double>* outputsActivity,
-                                          CudaTensor<char>* outputs);
+                                          CudaTensor<int>* outputs);
 }
 
 #endif // N2D2_CELL_CSPIKE_CUDA_H

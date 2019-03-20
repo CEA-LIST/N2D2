@@ -49,7 +49,7 @@ __global__ void cudaNoConversion_kernel(float * data,
 
 __global__ void cudaGenerateInitialSpikes_kernel(float * data,
                                             unsigned long long int * nextEventTime,
-                                            char * nextEventType,
+                                            int * nextEventType,
                                             unsigned int inputDimX,
                                             unsigned int inputDimY,
                                             unsigned int inputDimZ,
@@ -74,10 +74,10 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
     for (unsigned int idx = threadIdx.x; idx < inputSize; idx += inputStride) {
 
         float value = data[idx + batchOffset];
-        char sign = value < 0 ? -1 : 1;
+        int sign = value < 0 ? -1 : 1;
 
         unsigned long long int eventTime = nextEventTime[idx + batchOffset];
-        char eventType = nextEventType[idx + batchOffset];
+        int eventType = nextEventType[idx + batchOffset];
 
         /// Include SpikeGenerator::nextEvent in the kernel
         const double delay = 1.0 - fabsf(value);
@@ -169,10 +169,10 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
 
 
 __global__ void cudaGenerateSpikes_kernel(float * data,
-                                            char * tickData,
-                                            char * tickOutputs,
+                                            int * tickData,
+                                            int * tickOutputs,
                                             unsigned long long int * nextEventTime,
-                                            char * nextEventType,
+                                            int * nextEventType,
                                             unsigned int inputDimX,
                                             unsigned int inputDimY,
                                             unsigned int inputDimZ,
@@ -202,7 +202,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
     for (unsigned int idx = threadIdx.x; idx < inputSize; idx += inputStride) {
 
         float value = data[idx + batchOffset];
-        char sign = value < 0 ? -1 : 1;
+        int sign = value < 0 ? -1 : 1;
 
         if (nextEventType[idx + batchOffset] != 0 &&
         nextEventTime[idx + batchOffset] <= timestamp) {
@@ -210,7 +210,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
             tickOutputs[idx + subStimulus * inputSize + batchOffsetOutputs] =
                 nextEventType[idx + batchOffset];
             unsigned long long int eventTime;
-            char eventType;
+            int eventType;
 
             // This loops creates the next event
             for (unsigned int k = 0; nextEventType[idx + batchOffset] != 0
@@ -350,7 +350,7 @@ void N2D2::cudaNoConversion(float * data,
 
 void N2D2::cudaGenerateInitialSpikes(float * data,
                                 unsigned long long int * nextEventTime,
-                                char * nextEventType,
+                                int * nextEventType,
                                 unsigned int inputDimX,
                                 unsigned int inputDimY,
                                 unsigned int inputDimZ,
@@ -390,10 +390,10 @@ void N2D2::cudaGenerateInitialSpikes(float * data,
 
 
 void N2D2::cudaGenerateSpikes(float * data,
-                                char * tickData,
-                                char * tickOutputs,
+                                int * tickData,
+                                int * tickOutputs,
                                 unsigned long long int * nextEventTime,
-                                char * nextEventType,
+                                int * nextEventType,
                                 unsigned int inputDimX,
                                 unsigned int inputDimY,
                                 unsigned int inputDimZ,

@@ -261,17 +261,23 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
 
 
 #ifdef CUDA
-            std::shared_ptr<Cell_CSpike_CUDA> cellCSpike_CUDA = std::dynamic_pointer_cast
-                <Cell_CSpike_CUDA>(cell);
-            if (cellCSpike_CUDA){
-                std::shared_ptr<CMonitor> monitor(new CMonitor_CUDA());
-                monitor->add(cellCSpike_CUDA->getOutputs());
+            std::shared_ptr<Cell_CSpike_Top> cellCSpike_Top =
+                std::dynamic_pointer_cast<Cell_CSpike_Top>(cell);
+            if (cellCSpike_Top){
+                std::shared_ptr<CMonitor> monitor;
+                if (cellCSpike_Top->isCuda()) {
+                    monitor = std::make_shared<CMonitor_CUDA>();
+                }
+                else {
+                    monitor = std::make_shared<CMonitor>();
+                }
+                monitor->add(cellCSpike_Top->getOutputs());
                 deepNet->addCMonitor((*it), monitor);
                  /*std::ostringstream gradientMonitorName;
                 gradientMonitorName << (*it) << "_gradient";
                 std::shared_ptr<CMonitor>
                     gradientMonitor(new CMonitor_CUDA());
-                gradientMonitor->add(cellCSpike_CUDA->getDeltas());
+                gradientMonitor->add(cellCSpike_Top->getDeltas());
                 deepNet->addCMonitor(gradientMonitorName.str(),
                                      gradientMonitor);*/
             }

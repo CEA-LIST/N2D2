@@ -37,26 +37,26 @@ public:
                      bool compositeStimuli = false);
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
     virtual void reset(Time_T timestamp);
-    virtual const Tensor<char>& getTickData(unsigned int subIdx) const
+    virtual const Tensor<int>& getTickData(unsigned int subIdx) const
     {
         //TODO: There is a problem with that
         std::cout << "CEnv_CUDA getTickData const" << std::endl;
         exit(0);
         return mTickData[subIdx];
     };
-    virtual Tensor<char>& getTickData(unsigned int subIdx)
+    virtual Tensor<int>& getTickData(unsigned int subIdx)
     {
         mTickData[subIdx].synchronizeDToH();
         return mTickData[subIdx];
     };
-    virtual Interface<char>& getTickData()
+    virtual Interface<int>& getTickData()
     {
         for (unsigned int k=0; k<mTickData.size(); k++){
             mTickData[k].synchronizeDToH();
         }
         return mTickData;
     };
-    virtual Tensor<char>& getTickOutputs()
+    virtual Tensor<int>& getTickOutputs()
     {
         mTickOutputs.synchronizeDToH();
         return mTickOutputs;
@@ -65,7 +65,7 @@ public:
 
 protected:
     CudaInterface<Time_T> mNextEventTime;
-    CudaInterface<char> mNextEventType;
+    CudaInterface<int> mNextEventType;
     std::vector<curandState*> mCurandStates;
 
     unsigned int mDeviceMaxThreads;

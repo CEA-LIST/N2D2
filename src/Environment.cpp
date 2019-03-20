@@ -119,7 +119,7 @@ void N2D2::Environment::propagate(Time_T start, Time_T end)
                                             itEnd = mNodes.end();
          it != itEnd;
          ++it) {
-        std::pair<Time_T, char> event = std::make_pair(start, 0);
+        std::pair<Time_T, int> event = std::make_pair(start, 0);
 
         do {
             SpikeGenerator::nextEvent(event, mData(it - itBegin), start, end);

@@ -57,7 +57,7 @@ public:
                     const std::shared_ptr<Monitor>& monitor);
     void addCMonitor(const std::string& name,
                     const std::shared_ptr<CMonitor>& monitor);
-    std::vector<std::pair<std::string, unsigned int> >
+    std::vector<std::pair<std::string, long long int> >
     update(bool log, Time_T start, Time_T stop = 0, bool update = true);
     void save(const std::string& dirName) const;
     void load(const std::string& dirName);

@@ -56,20 +56,20 @@ N2D2::CEnvironment::CEnvironment(Database& database,
 
     for (unsigned int k=0; k<mRelationalData.size(); k++){
 #ifdef CUDA
-        mTickData.push_back(new CudaTensor<char>(dims));
+        mTickData.push_back(new CudaTensor<int>(dims));
         mTickDataTraces.push_back(new CudaTensor<Float_T>(dims));
         mTickDataTracesLearning.push_back(new CudaTensor<Float_T>(dims));
         mCurrentFiringRate.push_back(new CudaTensor<Float_T>(dims));
         mAccumulatedTickOutputs.push_back(new CudaTensor<Float_T>(dims));
 
 #else
-        mTickData.push_back(new Tensor<char>(dims));
+        mTickData.push_back(new Tensor<int>(dims));
         mTickDataTraces.push_back(new Tensor<Float_T>(dims));
         mTickDataTracesLearning.push_back(new Tensor<Float_T>(dims));
         mCurrentFiringRate.push_back(new Tensor<Float_T>(dims));
         mAccumulatedTickOutputs.push_back(new Tensor<Float_T>(dims));
 #endif
-        mNextEvent.push_back(new Tensor<std::pair<Time_T, char>>(dims));
+        mNextEvent.push_back(new Tensor<std::pair<Time_T, int>>(dims));
     }
 }
 
@@ -132,7 +132,7 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                 // If next event is valid set mTickData to spiking and search next event,
                 // else set to non spiking
                 if (mNextEvent[k](idx).second != 0 && mNextEvent[k](idx).first <= timestamp) {
-                    std::pair<Time_T, char> event;
+                    std::pair<Time_T, int> event;
                     mTickData[k](idx) = mNextEvent[k](idx).second;
 
 
