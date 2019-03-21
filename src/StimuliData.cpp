@@ -412,13 +412,19 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 
 #pragma omp critical(StimuliData__generate_meanData)
                     if (computeMeanData || computeStdDevData) {
-                        if (meanData.empty())
-                            meanData = cv::Mat::zeros(matData.size(), CV_64F);
+                        if (meanData.empty()) {
+                            meanData = cv::Mat::zeros(matData.size(),
+                                                      matData.type());
+                        }
 
-                        if (M2Data.empty() && computeStdDevData)
-                            M2Data = cv::Mat::zeros(matData.size(), CV_64F);
+                        if (M2Data.empty() && computeStdDevData) {
+                            M2Data = cv::Mat::zeros(matData.size(),
+                                                    matData.type());
+                        }
 
-                        if (matData.size() == meanData.size()) {
+                        if (matData.size() == meanData.size()
+                            && matData.type() == meanData.type())
+                        {
                             const cv::Mat delta = (matData - meanData);
                             meanData += delta / (loaded + index + 1);
 
