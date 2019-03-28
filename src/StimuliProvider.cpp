@@ -85,7 +85,7 @@ N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
       mFutureLabelsData(other.mFutureLabelsData),
       mLabelsROI(std::move(other.mLabelsROI)),
       mFutureLabelsROI(std::move(other.mFutureLabelsROI)),
-      mFuture(other.mFuture) 
+      mFuture(other.mFuture)
 {
 }
 

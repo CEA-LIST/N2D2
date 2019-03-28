@@ -34,27 +34,14 @@ N2D2::CEnvironment::CEnvironment(Database& database,
       mNextAerEventTime(0),
       mNoConversion(this, "NoConversion", false),
       mScaling(this, "Scaling", 1.0),
+      mStopStimulusTime(this, "StopStimulusTime", 0),
       mReadAerData(this, "ReadAerData", false),
       mStreamPath(this, "StreamPath", ""),
       mNbSubStimuli(nbSubStimuli)
 {
-    // ctor
-    std::initializer_list<size_t> dims({size[0], size[1], size[2], batchSize});
-    mRelationalTargets.resize({mNbSubStimuli});
-    if (mNbSubStimuli > 1) {
-        for (unsigned int k=0; k<mNbSubStimuli; k++){
-    #ifdef CUDA
-            mRelationalData.push_back(new CudaTensor<Float_T>(dims));
-    #else
-            mRelationalData.push_back(new Tensor<Float_T>(dims));
-    #endif
-        }
-    }
-    else {
-         mRelationalData.push_back(&mData);
-    }
-
-    for (unsigned int k=0; k<mRelationalData.size(); k++){
+   //ctor
+    std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});
+    for (unsigned int k=0; k<mNbSubStimuli; k++){
 #ifdef CUDA
         mTickData.push_back(new CudaTensor<int>(dims));
         mTickDataTraces.push_back(new CudaTensor<Float_T>(dims));
@@ -71,6 +58,28 @@ N2D2::CEnvironment::CEnvironment(Database& database,
 #endif
         mNextEvent.push_back(new Tensor<std::pair<Time_T, int>>(dims));
     }
+}
+
+
+void N2D2::CEnvironment::initialize()
+{
+     // ctor
+    std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});
+    mRelationalTargets.resize({mNbSubStimuli});
+    if (mNbSubStimuli > 1) {
+        for (unsigned int k=0; k<mNbSubStimuli; k++){
+    #ifdef CUDA
+            mRelationalData.push_back(new CudaTensor<Float_T>(dims));
+    #else
+            mRelationalData.push_back(new Tensor<Float_T>(dims));
+    #endif
+        }
+    }
+    else {
+        mRelationalData.push_back(&mData);
+    }
+
+    mStopStimulus = false;
 }
 
 
@@ -106,9 +115,44 @@ void N2D2::CEnvironment::addChannel(const CompositeTransformation
     StimuliProvider::addChannel(transformation);
 }
 
+void N2D2::CEnvironment::setBatchSize(unsigned int batchSize)
+{
+    mBatchSize = batchSize;
+
+    if (mBatchSize > 0) {
+        std::vector<size_t> dataSize(mData.dims());
+        dataSize.back() = mBatchSize;
+
+        mData.resize(dataSize);
+        mFutureData.resize(dataSize);
+
+        std::vector<size_t> labelSize(mLabelsData.dims());
+        labelSize.back() = mBatchSize;
+
+        mLabelsData.resize(labelSize);
+        mFutureLabelsData.resize(labelSize);
+
+        std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});
+        for (unsigned int k=0; k<mNbSubStimuli; k++){
+            mTickData[k].resize(dims);
+            mTickDataTraces[k].resize(dims);
+            mTickDataTracesLearning[k].resize(dims);
+            mCurrentFiringRate[k].resize(dims);
+            mAccumulatedTickOutputs[k].resize(dims);
+        }
+    }
+
+}
 
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
+    if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
+        if (!mStopStimulus) {
+            mStopStimulus = true;
+            clearTickOutput();
+        }
+        return;
+    }
     if (mNoConversion) {
         for (unsigned int k=0; k<mRelationalData.size(); k++){
             //mTickDataTraceLearning[k].synchronizeDToH();
@@ -117,9 +161,11 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
                 mTickDataTraces[k](idx) = mScaling*mRelationalData[k](idx);
                 mTickDataTracesLearning[k](idx) += mTickDataTraces[k](idx);
             }
+#ifdef CUDA
             mTickDataTracesLearning[k].synchronizeHToD();
             mTickDataTraces[k].synchronizeHToD();
             //std::cout << mRelationalData[k] << std::endl;
+#endif
         }
         return;
     }
@@ -536,10 +582,12 @@ void N2D2::CEnvironment::reset(Time_T timestamp)
                             std::make_pair(timestamp, 0));
 
     }
+
+     mStopStimulus = false;
 }
 
 
-void N2D2::CEnvironment::initialize(Time_T start, Time_T stop)
+void N2D2::CEnvironment::initializeSpikeGenerator(Time_T start, Time_T stop)
 {
     for (unsigned int k=0; k<mRelationalData.size(); ++k){
 
@@ -555,6 +603,14 @@ void N2D2::CEnvironment::initialize(Time_T start, Time_T stop)
 
     if (mReadAerData) {
         mEventIterator = mAerData.begin();
+    }
+}
+
+void N2D2::CEnvironment::clearTickOutput()
+{
+    for (unsigned int k=0; k<mRelationalData.size(); ++k){
+        mTickData[k].assign(mTickData[k].dims(), 0);
+        mTickDataTraces[k].assign(mTickDataTraces[k].dims(), 0);
     }
 }
 

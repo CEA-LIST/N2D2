@@ -66,7 +66,7 @@ public:
     StimuliProvider(const StimuliProvider& other) = delete;
     StimuliProvider(StimuliProvider&& other);
 
-    /// Return a partial copy of the StimuliProvider. Only the parameters of the 
+    /// Return a partial copy of the StimuliProvider. Only the parameters of the
     /// StimuliProvider are copied, the loaded stimuli data are zero-initialized.
     StimuliProvider cloneParameters() const;
 
@@ -205,7 +205,7 @@ public:
     inline Tensor<Float_T> readRawData(Database::StimuliSet set,
                                          unsigned int index) const;
 
-    void setBatchSize(unsigned int batchSize);
+    virtual void setBatchSize(unsigned int batchSize);
     void setCachePath(const std::string& path = "");
 
     // Getters

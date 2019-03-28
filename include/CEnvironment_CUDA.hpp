@@ -35,6 +35,8 @@ public:
                      unsigned int batchSize = 1,
                      unsigned int nbSubStimuli = 1,
                      bool compositeStimuli = false);
+
+    virtual void initialize();
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
     virtual void reset(Time_T timestamp);
     virtual const Tensor<int>& getTickData(unsigned int subIdx) const

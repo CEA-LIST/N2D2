@@ -316,8 +316,10 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
              it != itEnd;
              ++it) {
             (*it).second->logActivity("activity_batchElem_0_" + (*it).first + ".dat", 0, true, start, stop);
+            //(*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",
+            //                            true, start, stop);
             (*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",
-                                        true, start, stop);
+                                        true, 0, 0);
 
         }
 
@@ -641,6 +643,13 @@ void N2D2::DeepNet::checkGradient(double epsilon, double maxError)
 
 void N2D2::DeepNet::initialize()
 {
+     std::shared_ptr<CEnvironment> cenv = std::dynamic_pointer_cast
+        <CEnvironment>(mStimuliProvider);
+
+    if (cenv) {
+        cenv->initialize();
+    }
+
     for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
              = mLayers[l].begin(),
@@ -2104,7 +2113,7 @@ void N2D2::DeepNet::cTicks(Time_T start,
         throw std::runtime_error("DeepNet::cTicks(): stop < start");
     }
 
-    cEnv->initialize(start, stop);
+    cEnv->initializeSpikeGenerator(start, stop);
 
     if (record) {
         for (std::vector<std::vector<std::string> >::const_iterator it

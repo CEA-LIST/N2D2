@@ -36,6 +36,13 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 {
     // ctor
 
+}
+
+
+void N2D2::CEnvironment_CUDA::initialize()
+{
+    CEnvironment::initialize();
+
     for (unsigned int k=0; k<mRelationalData.size(); k++){
         mNextEventTime.push_back(new CudaTensor<Time_T>(
                                                 mRelationalData[k].dims()));
@@ -55,13 +62,20 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
     mDeviceMaxThreads = (unsigned int) deviceProp.maxThreadsPerBlock;
-
 }
 
 
 //TODO: Check that this has save behavior as CEnvironment!
 void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
+    if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
+        if (!mStopStimulus) {
+            mStopStimulus = true;
+            clearTickOutput();
+        }
+        //std::cout << "Stop stimulus at time " << timestamp << std::endl;
+        return;
+    }
     if (mNoConversion) {
         for (unsigned int k=0; k<mRelationalData.size(); k++){
             cudaNoConversion(mRelationalData[k].getDevicePtr(),
@@ -156,7 +170,10 @@ void N2D2::CEnvironment_CUDA::reset(Time_T /*timestamp*/)
     for (unsigned int k=0; k<mRelationalData.size(); ++k){
         mTickDataTracesLearning[k].assign(mTickDataTracesLearning[k].dims(), 0);
     }
+
+    mStopStimulus = false;
 }
+
 
 N2D2::CEnvironment_CUDA::~CEnvironment_CUDA()
 {

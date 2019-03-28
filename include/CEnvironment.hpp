@@ -52,6 +52,8 @@ public:
                  bool compositeStimuli = false);
     void addChannel(const CompositeTransformation& transformation,
                     unsigned int subIdx=0);
+    void setBatchSize(unsigned int batchSize);
+
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
 
     virtual void readStimulus(Database::StimulusID id,
@@ -145,7 +147,8 @@ public:
     };
 
     virtual void reset(Time_T timestamp);
-    virtual void initialize(Time_T start, Time_T stop);
+    virtual void initialize();
+    virtual void initializeSpikeGenerator(Time_T start, Time_T stop);
 
     virtual Tensor<int>& getTickData(unsigned int subIdx)
     {
@@ -175,6 +178,14 @@ public:
     {
         return mReadAerData;
     };
+
+    unsigned int getNbSubStimuli()
+    {
+        return mNbSubStimuli;
+    };
+
+    void clearTickOutput();
+
     virtual ~CEnvironment();
 
 protected:
@@ -215,10 +226,12 @@ protected:
 
     Parameter<bool> mNoConversion;
     Parameter<Float_T> mScaling;
+    Parameter<unsigned int> mStopStimulusTime;
     Parameter<bool> mReadAerData;
     Parameter<std::string> mStreamPath;
     unsigned int mNbSubStimuli;
     long long unsigned int mLastTimestamp;
+    bool mStopStimulus;
 
 };
 }
