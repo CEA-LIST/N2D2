@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <numeric>
 
 #include "containers/Tensor.hpp"
 #include "Database/Database.hpp"
@@ -155,6 +156,14 @@ protected:
     Parameter<double> mBinaryThreshold;
     /// If left empty, use the database image origin format
     Parameter<std::string> mImageLogFormat;
+    /// When attributing a target to an output macropixel, any target other than
+    /// mWeakTarget in the macropixel takes precedence over mWeakTarget, 
+    /// regardless of their respective occurrence.
+    /// Value can be -1 (meaning any target other than "ignore" takes 
+    /// precedence).
+    /// Default value is -2 (meaning that there is no weak target, as a target
+    /// is >= -1).
+    Parameter<int> mWeakTarget;
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;

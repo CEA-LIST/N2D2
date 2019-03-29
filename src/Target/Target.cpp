@@ -44,6 +44,7 @@ N2D2::Target::Target(const std::string& name,
       mMaskedLabel(this, "MaskedLabel", -1),
       mBinaryThreshold(this, "BinaryThreshold", 0.5),
       mImageLogFormat(this, "ImageLogFormat", "jpg"),
+      mWeakTarget(this, "WeakTarget", -2),
       mName(name),
       mCell(cell),
       mStimuliProvider(sp),
@@ -330,18 +331,68 @@ void N2D2::Target::process(Database::StimuliSet set)
                 const double yRatio = labels.dimY()
                                       / (double)mCell->getOutputsHeight();
 
-#pragma omp parallel for if (labels.dimB() > 16)
+                const size_t size = labels.dimB() * mTargets.dimX();
+
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (size > 16)
+#else
+#pragma omp parallel for if (labels.dimB() > 4 && size > 16)
+#endif
                 for (int batchPos = 0; batchPos < (int)labels.dimB();
                     ++batchPos)
                 {
-                    const Tensor<int> label = labels[batchPos][0];
-                    Tensor<int> target = mTargets[batchPos][0];
+                    for (int x = 0; x < (int)mTargets.dimX(); ++x) {
+                        for (int y = 0; y < (int)mTargets.dimY(); ++y) {
+                            const unsigned int xl0 = std::floor(x * xRatio);
+                            const unsigned int xl1 = std::max(xl0 + 1,
+                                (unsigned int)std::floor((x + 1) * xRatio));
+                            const unsigned int yl0 = std::floor(y * yRatio);
+                            const unsigned int yl1 = std::max(yl0 + 1,
+                                (unsigned int)std::floor((y + 1) * yRatio));
 
-                    for (unsigned int x = 0; x < mTargets.dimX(); ++x) {
-                        for (unsigned int y = 0; y < mTargets.dimY(); ++y) {
-                            target(x, y) = getLabelTarget(
-                                label((int)std::floor((x + 0.5) * xRatio),
-                                      (int)std::floor((y + 0.5) * yRatio)));
+                            // +1 takes into account ignore target (-1)
+                            std::vector<int> targetHist(labels.dimB() + 1, 0);
+
+                            for (unsigned int xl = xl0; xl < xl1; ++xl) {
+                                for (unsigned int yl = yl0; yl < yl1; ++yl) {
+                                    assert(getLabelTarget(
+                                        labels(xl, yl, batchPos, 0)) >= -1);
+
+                                    ++targetHist[getLabelTarget(
+                                        labels(xl, yl, batchPos, 0)) + 1];
+                                }
+                            }
+
+                            if (mWeakTarget >= -1) {
+                                // initialize original index locations
+                                // first index is -1 (ignore)
+                                std::vector<int> targetHistIdx(targetHist.size());
+                                std::iota(targetHistIdx.begin(),
+                                        targetHistIdx.end(), -1); // -1 = ignore
+
+                                // sort indexes based on comparing values in 
+                                // targetHist. Sort in descending order.
+                                std::partial_sort(targetHistIdx.begin(),
+                                    targetHistIdx.begin() + 2,
+                                    targetHistIdx.end(),
+                                    [&targetHist](size_t i1, size_t i2)
+                                        {return targetHist[i1] > targetHist[i2];});
+
+                                mTargets(x, y, batchPos, 0)
+                                    = (targetHistIdx[0] == mWeakTarget
+                                        && targetHistIdx[1] > 0)
+                                            ? targetHistIdx[1]
+                                            : targetHistIdx[0];
+                            }
+                            else {
+                                std::vector<int>::iterator maxElem
+                                    = std::max_element(targetHist.begin(),
+                                                       targetHist.end());
+
+                                mTargets(x, y, batchPos, 0)
+                                    = std::distance(targetHist.begin(),
+                                                    maxElem) - 1; // -1 = ignore
+                            }
                         }
                     }
                 }
