@@ -105,6 +105,8 @@ class Viewer(TargetViewer.TargetViewer):
 
             cv2.line(newImgTarget, (x, 0), (x, height), (255, 255, 255))
             cv2.line(newImgTarget, (0, y), (width, y), (255, 255, 255))
+            cv2.putText(newImgTarget, "%d,%d" % (x, y), (x+2, y-2),
+                cv2.FONT_HERSHEY_PLAIN, 0.5, (255, 255, 255))
             cv2.imshow(self.targetWindow, newImgTarget)
         elif event == cv2.EVENT_LBUTTONDOWN or event == cv2.EVENT_RBUTTONDOWN:
             legendHeight, legendWidth = self.imgLegend.shape[:2]
