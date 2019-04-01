@@ -325,24 +325,24 @@ void N2D2::Target::process(Database::StimuliSet set)
 
         if (mPopulateTargets) {
             // Generate targets
-            if (mCell->getOutputsWidth() > 1 || mCell->getOutputsHeight() > 1) {
-                const double xRatio = labels.dimX()
-                                      / (double)mCell->getOutputsWidth();
-                const double yRatio = labels.dimY()
-                                      / (double)mCell->getOutputsHeight();
+            const size_t size = mTargets.dimB() * mTargets.dimY();
 
-                const size_t size = labels.dimB() * mTargets.dimX();
+            if (mTargets.dimX() != labels.dimX()
+                || mTargets.dimY() != labels.dimY())
+            {
+                const double xRatio = labels.dimX() / (double)mTargets.dimX();
+                const double yRatio = labels.dimY() / (double)mTargets.dimY();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
-#pragma omp parallel for if (labels.dimB() > 4 && size > 16)
+#pragma omp parallel for if (mTargets.dimB() > 4 && size > 16)
 #endif
-                for (int batchPos = 0; batchPos < (int)labels.dimB();
+                for (int batchPos = 0; batchPos < (int)mTargets.dimB();
                     ++batchPos)
                 {
-                    for (int x = 0; x < (int)mTargets.dimX(); ++x) {
-                        for (int y = 0; y < (int)mTargets.dimY(); ++y) {
+                    for (int y = 0; y < (int)mTargets.dimY(); ++y) {
+                        for (int x = 0; x < (int)mTargets.dimX(); ++x) {
                             const unsigned int xl0 = std::floor(x * xRatio);
                             const unsigned int xl1 = std::max(xl0 + 1,
                                 (unsigned int)std::floor((x + 1) * xRatio));
@@ -353,20 +353,21 @@ void N2D2::Target::process(Database::StimuliSet set)
                             // +1 takes into account ignore target (-1)
                             std::vector<int> targetHist(labels.dimB() + 1, 0);
 
-                            for (unsigned int xl = xl0; xl < xl1; ++xl) {
-                                for (unsigned int yl = yl0; yl < yl1; ++yl) {
+                            for (unsigned int yl = yl0; yl < yl1; ++yl) {
+                                for (unsigned int xl = xl0; xl < xl1; ++xl) {
                                     assert(getLabelTarget(
-                                        labels(xl, yl, batchPos, 0)) >= -1);
+                                        labels(xl, yl, 0, batchPos)) >= -1);
 
                                     ++targetHist[getLabelTarget(
-                                        labels(xl, yl, batchPos, 0)) + 1];
+                                        labels(xl, yl, 0, batchPos)) + 1];
                                 }
                             }
 
                             if (mWeakTarget >= -1) {
                                 // initialize original index locations
                                 // first index is -1 (ignore)
-                                std::vector<int> targetHistIdx(targetHist.size());
+                                std::vector<int> targetHistIdx(
+                                        targetHist.size());
                                 std::iota(targetHistIdx.begin(),
                                         targetHistIdx.end(), -1); // -1 = ignore
 
@@ -375,10 +376,11 @@ void N2D2::Target::process(Database::StimuliSet set)
                                 std::partial_sort(targetHistIdx.begin(),
                                     targetHistIdx.begin() + 2,
                                     targetHistIdx.end(),
-                                    [&targetHist](size_t i1, size_t i2)
-                                        {return targetHist[i1] > targetHist[i2];});
+                                    [&targetHist](int i1, int i2)
+                                        {return targetHist[i1 + 1]
+                                                    > targetHist[i2 + 1];});
 
-                                mTargets(x, y, batchPos, 0)
+                                mTargets(x, y, 0, batchPos)
                                     = (targetHistIdx[0] == mWeakTarget
                                         && targetHistIdx[1] > 0)
                                             ? targetHistIdx[1]
@@ -389,23 +391,27 @@ void N2D2::Target::process(Database::StimuliSet set)
                                     = std::max_element(targetHist.begin(),
                                                        targetHist.end());
 
-                                mTargets(x, y, batchPos, 0)
+                                mTargets(x, y, 0, batchPos)
                                     = std::distance(targetHist.begin(),
                                                     maxElem) - 1; // -1 = ignore
                             }
                         }
                     }
                 }
-            } else {
-                for (int batchPos = 0; batchPos < (int)labels.dimB();
+            }
+            else {
+                // one-to-one mapping
+#pragma omp parallel for if (mTargets.dimB() > 64 && size > 256)
+                for (int batchPos = 0; batchPos < (int)mTargets.dimB();
                     ++batchPos)
                 {
-                    const Tensor<int> label = labels[batchPos];
-                    Tensor<int> target = mTargets[batchPos];
-
                     // target only has 1 channel, whereas label has as many
                     // channels as environment channels
-                    target(0) = getLabelTarget(label(0));
+                    const Tensor<int> label = labels[batchPos][0];
+                    Tensor<int> target = mTargets[batchPos][0];
+
+                    for (int index = 0; index < (int)label.size(); ++index)
+                        target(index) = getLabelTarget(label(index));
                 }
             }
         }
@@ -441,54 +447,70 @@ void N2D2::Target::process(Database::StimuliSet set)
             = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
                            : tensor_cast<Float_T>(
                                         targetCellCSpike->getOutputsActivity());
+        const unsigned int nbOutputs = values.dimZ();
 
-#pragma omp parallel for if (mTargets.dimB() > 4)
-        for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
-            const int id = mStimuliProvider->getBatch()[batchPos];
+        if (mTargetTopN > nbOutputs) {
+            throw std::runtime_error("Target::process(): target 'TopN' "
+                                    "parameter must be <= to the network "
+                                    "output size");
+        }
 
-            if (id < 0) {
-                // Invalid stimulus in batch (can occur for the last batch of
-                // the set)
-                continue;
+        // Find batchSize to ignore invalid stimulus in batch (can occur for the 
+        // last batch of the set)
+        int batchSize = 0;
+
+        if (mStimuliProvider->getBatch().back() >= 0)
+            batchSize = (int)mTargets.dimB();
+        else {
+            for (; batchSize < (int)mTargets.dimB(); ++batchSize) {
+                const int id = mStimuliProvider->getBatch()[batchSize];
+
+                if (id < 0)
+                    break;
             }
+        }
 
-            const Tensor<Float_T> value = values[batchPos];
-            const Tensor<int> target = mTargets[batchPos];
-            Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
-            Tensor<Float_T> estimatedLabelsValue
-                = mEstimatedLabelsValue[batchPos];
+        const size_t size = values.dimY() * batchSize;
 
-            if (mTargetTopN > value.dimZ()) {
-#pragma omp critical(Target__process)
-                throw std::runtime_error("Target::process(): target 'TopN' "
-                                         "parameter must be <= to the network "
-                                         "output size");
-            }
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (size > 16)
+#else
+#pragma omp parallel for if (batchSize > 4 && size > 16)
+#endif
+        for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
+        {
+            for (int oy = 0; oy < (int)values.dimY(); ++oy) {
+                for (int ox = 0; ox < (int)values.dimX(); ++ox) {
+                    const int id = mStimuliProvider->getBatch()[batchPos];
+                    assert(id >= 0);
 
-            if (target.size() == 1) {
-                if (target(0) >= 0) {
-                    if (target(0) >= (int)nbTargets) {
+                    if (mTargets(ox, oy, 0, batchPos) >= (int)nbTargets) {
 #pragma omp critical(Target__process)
                         {
                             std::cout << Utils::cwarning << "Stimulus #"
-                                << id << " has target " << target(0) << " but "
+                                << id << " has target "
+                                << mTargets(ox, oy, 0, batchPos)
+                                << " @ (" << ox << "," << oy << ") but "
                                 "number of output target is " << nbTargets
                                 << Utils::cdef << std::endl;
 
-                            throw std::runtime_error("Target::process(): target"
-                                                     " out of range.");
+                            throw std::runtime_error("Target::process(): "
+                                                        "target out of "
+                                                        "range.");
                         }
                     }
 
-                    if (value.size() > 1) {
-                        std::vector
-                            <std::pair<Float_T, size_t> > sortedLabelsValues;
-                        sortedLabelsValues.reserve(value.size());
+                    if (nbOutputs > 1) {
+                        std::vector<std::pair<Float_T, size_t> >
+                            sortedLabelsValues;
+                        sortedLabelsValues.reserve(nbOutputs);
 
-                        for (unsigned int index = 0; index < value.size();
-                             ++index)
-                            sortedLabelsValues.push_back(
-                                std::make_pair(value(index), index));
+                        for (unsigned int index = 0; index < nbOutputs;
+                                ++index)
+                        {
+                            sortedLabelsValues.push_back(std::make_pair(
+                                values(ox, oy, index, batchPos), index));
+                        }
 
                         // Top-n accuracy sorting
                         std::partial_sort(
@@ -498,83 +520,44 @@ void N2D2::Target::process(Database::StimuliSet set)
                             std::greater<std::pair<Float_T, size_t> >());
 
                         for (unsigned int i = 0; i < mTargetTopN; ++i) {
-                            estimatedLabels(i) = sortedLabelsValues[i].second;
-                            estimatedLabelsValue(i)
+                            mEstimatedLabels(ox, oy, i, batchPos)
+                                = sortedLabelsValues[i].second;
+                            mEstimatedLabelsValue(ox, oy, i, batchPos)
                                 = sortedLabelsValues[i].first;
                         }
-                    } else {
-                        estimatedLabels(0) = (value(0) > mBinaryThreshold);
-                        estimatedLabelsValue(0) = value(0);
+                    }
+                    else {
+                        mEstimatedLabels(ox, oy, 0, batchPos)
+                            = (values(ox, oy, 0, batchPos) > mBinaryThreshold);
+                        mEstimatedLabelsValue(ox, oy, 0, batchPos)
+                            = (mEstimatedLabels(ox, oy, 0, batchPos) == 1)
+                                    ? values(ox, oy, 0, batchPos)
+                                    : (1.0 - values(ox, oy, 0, batchPos));
                     }
 
-                    static bool display = true;
+                    if (values.dimX() == 1 && values.dimY() == 1) {
+                        static bool display = true;
 
-                    if (set == Database::Test && batchPos == 0 && display) {
-                        std::cout << "[";
+                        if (set == Database::Test && batchPos == 0 && display) {
+                            std::cout << "[";
 
-                        for (int i = 0, size = value.size(); i < size; ++i) {
-                            if (i == estimatedLabels(0))
-                                std::cout << std::setprecision(2) << std::fixed
-                                          << "(" << value(i) << ") ";
-                            else
-                                std::cout << std::setprecision(2) << std::fixed
-                                          << value(i) << " ";
-                        }
-
-                        std::cout << "]" << std::endl;
-                        display = false;
-                    }
-                }
-            } else {
-                const unsigned int nbOutputs = value.dimZ();
-
-                for (unsigned int oy = 0; oy < value.dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < value.dimX(); ++ox) {
-                        if (target(ox, oy, 0) >= (int)nbTargets) {
-#pragma omp critical(Target__process)
-                            {
-                                std::cout << Utils::cwarning << "Stimulus #"
-                                    << id << " has target " << target(ox, oy, 0)
-                                    << " @ (" << ox << "," << oy << ") but "
-                                    "number of output target is " << nbTargets
-                                    << Utils::cdef << std::endl;
-
-                                throw std::runtime_error("Target::process(): "
-                                                         "target out of "
-                                                         "range.");
+                            for (int i = 0; i < (int)nbOutputs; ++i) {
+                                if (i == mEstimatedLabels(ox, oy, 0, batchPos))
+                                {
+                                    std::cout << std::setprecision(2)
+                                        << std::fixed
+                                        << "(" << values(ox, oy, i, batchPos)
+                                        << ") ";
+                                }
+                                else {
+                                    std::cout << std::setprecision(2)
+                                        << std::fixed
+                                        << values(ox, oy, i, batchPos) << " ";
+                                }
                             }
-                        }
 
-                        if (nbOutputs > 1) {
-                            std::vector<std::pair<Float_T, size_t> >
-                            sortedLabelsValues;
-                            sortedLabelsValues.reserve(nbOutputs);
-
-                            for (unsigned int index = 0; index < nbOutputs;
-                                 ++index)
-                                sortedLabelsValues.push_back(std::make_pair(
-                                    value(ox, oy, index), index));
-
-                            // Top-n accuracy sorting
-                            std::partial_sort(
-                                sortedLabelsValues.begin(),
-                                sortedLabelsValues.begin() + mTargetTopN,
-                                sortedLabelsValues.end(),
-                                std::greater<std::pair<Float_T, size_t> >());
-
-                            for (unsigned int i = 0; i < mTargetTopN; ++i) {
-                                estimatedLabels(ox, oy, i)
-                                    = sortedLabelsValues[i].second;
-                                estimatedLabelsValue(ox, oy, i)
-                                    = sortedLabelsValues[i].first;
-                            }
-                        } else {
-                            estimatedLabels(ox, oy, 0)
-                                = (value(ox, oy, 0) > mBinaryThreshold);
-                            estimatedLabelsValue(ox, oy, 0)
-                                = (estimatedLabels(ox, oy, 0) == 1)
-                                      ? value(ox, oy, 0)
-                                      : (1.0 - value(ox, oy, 0));
+                            std::cout << "]" << std::endl;
+                            display = false;
                         }
                     }
                 }
