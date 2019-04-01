@@ -1459,7 +1459,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         else if (mStimuli[id].label >= 0) {
             // use labels as a mask for the stimulus label
             labels.setTo(defaultLabel, labels == 0);
-            labels.setTo(mStimuli[id].label, labels != 0);
+            labels.setTo(mStimuli[id].label, labels > 0);
         }
 
         if (mStimuli[id].slice != NULL)
