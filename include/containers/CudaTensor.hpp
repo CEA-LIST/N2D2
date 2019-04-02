@@ -564,18 +564,24 @@ template <typename T>
 void N2D2::CudaTensor<T>::reserve(const std::vector<size_t>& dims)
 {
     assert(mDeviceTensor->isOwner());
+    const bool dimsMatch = (dims == mDims);
+
     Tensor<T>::reserve(dims);
 
-    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+    if (!dimsMatch)
+        mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
 }
 
 template <typename T>
 void N2D2::CudaTensor<T>::resize(const std::vector<size_t>& dims)
 {
     assert(mDeviceTensor->isOwner());
+    const bool dimsMatch = (dims == mDims);
+
     Tensor<T>::resize(dims);
 
-    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+    if (!dimsMatch)
+        mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
 }
 
 template <typename T>
@@ -590,9 +596,13 @@ void N2D2::CudaTensor<T>::resize(const std::vector<size_t>& dims,
                                  const T& value)
 {
     assert(mDeviceTensor->isOwner());
+    const bool dimsMatch = (dims == mDims);
+
     Tensor<T>::resize(dims, value);
 
-    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+    if (!dimsMatch)
+        mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+
     syncFill<T>(value);
 }
 
@@ -608,11 +618,13 @@ void N2D2::CudaTensor<T>::assign(const std::vector<size_t>& dims,
                                    const T& value)
 {
     assert(mDeviceTensor->isOwner());
-    bool dimsMatch = std::equal(mDims.begin(), mDims.end(), dims.begin());
+    const bool dimsMatch = (dims == mDims);
+
     Tensor<T>::assign(dims, value);
-    if (!dimsMatch) {
+
+    if (!dimsMatch)
         mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
-    }
+
     syncFill<T>(value);
 }
 
