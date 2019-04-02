@@ -34,6 +34,7 @@
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::DeepNet::DeepNet(Network& net)
     : mName(this, "Name", ""),
@@ -1045,7 +1046,8 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                     // In this case, the full range is required as several
                     // values can be very high.
             {
-                double threshold = (*itRange).second.maxVal();
+                double threshold = std::max(std::abs((*itRange).second.minVal()), 
+                                            std::abs((*itRange).second.maxVal()));
 
                 if (nbPasses > 0) {
                     Histogram hist = (*itHistogram).second;
@@ -2552,8 +2554,7 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
                                 (*mCells.find(*itCell)).second)->getOutputs())
                           : mStimuliProvider->getData();
 
-                const Float_T maxVal = *std::max_element(outputs.begin(),
-                                                         outputs.end());
+                const Float_T maxVal = std::abs(*Utils::max_abs_element(outputs.begin(), outputs.end()));
                 outputsHistogram.insert(std::make_pair(*itCell,
                                                     Histogram(0.0, maxVal)));
             }
@@ -2573,14 +2574,14 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
                             (*mCells.find(*itCell)).second)->getOutputs())
                       : mStimuliProvider->getData();
 
-            const Float_T maxVal = *std::max_element(outputs.begin(),
-                                                     outputs.end());
+            const Float_T maxVal = std::abs(*Utils::max_abs_element(outputs.begin(), outputs.end()));
 
             const std::map<std::string, Histogram>::iterator itHistogram
                 = outputsHistogram.find(*itCell);
             (*itHistogram).second.enlarge(maxVal);
-            (*itHistogram).second = std::for_each(
-                outputs.begin(), outputs.end(), (*itHistogram).second);
+            for(Float_T val: outputs) {
+                (*itHistogram).second(std::abs(val));
+            }
         }
     }
 }

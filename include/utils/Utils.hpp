@@ -500,6 +500,13 @@ namespace Utils {
     template <class T>
     inline const T& clamp(const T& x, const T& min, const T& max);
 
+    /**
+     * Return an iterator to the largest absolute value in the range [first, last). 
+     * Returns 'last' if the range is empty.
+     */
+    template<class ForwardIt>
+    ForwardIt max_abs_element(ForwardIt first, ForwardIt last);
+
     template <class charT, class traits>
     std::basic_ostream<charT, traits>& cwarning(std::basic_ostream
                                                 <charT, traits>& stream);
@@ -938,6 +945,16 @@ template <class T>
 const T& N2D2::Utils::clamp(const T& x, const T& min, const T& max)
 {
     return (x < min) ? min : (x > max) ? max : x;
+}
+
+template<class ForwardIt>
+inline ForwardIt N2D2::Utils::max_abs_element(ForwardIt first, ForwardIt last) {
+    return std::max_element(first, last, 
+                            [](const typename ForwardIt::value_type& lhs, 
+                               const typename ForwardIt::value_type& rhs) 
+                            {
+                                return std::abs(lhs) < std::abs(rhs);
+                            });
 }
 
 template <class charT, class traits>
