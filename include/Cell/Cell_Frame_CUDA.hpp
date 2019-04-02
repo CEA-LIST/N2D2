@@ -28,6 +28,7 @@
 #include "Activation/TanhActivation_Frame_CUDA.hpp"
 #include "Cell.hpp"
 #include "Cell_Frame_Top.hpp"
+#include "Cell_Frame_CUDA_Kernels.hpp"
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "Environment.hpp" // Defines Float_T
@@ -105,6 +106,9 @@ public:
     virtual ~Cell_Frame_CUDA();
 
 protected:
+    virtual double setOutputTargetsInternal(double targetVal = 1.0,
+                                            double defaultVal = 0.0);
+
     // Internal
     /*
         Structures shared by all kind of layer :
@@ -121,12 +125,33 @@ protected:
     CudaTensor<T> mDiffInputs;
     CudaInterface<> mDiffOutputs;
 
+    CudaTensor<int> mTargets;
+    CudaTensor<unsigned int> mNbTargetOutputs;
+    CudaTensor<T> mLossMem;
+
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;
 #else
     cudnnActivationMode_t mActivationDesc;
 #endif
 };
+}
+
+namespace N2D2 {
+template <>
+double Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal(
+    double targetVal,
+    double defaultVal);
+
+template <>
+double Cell_Frame_CUDA<float>::setOutputTargetsInternal(
+    double targetVal,
+    double defaultVal);
+
+template <>
+double Cell_Frame_CUDA<double>::setOutputTargetsInternal(
+    double targetVal,
+    double defaultVal);
 }
 
 #endif // N2D2_CELL_FRAME_CUDA_H
