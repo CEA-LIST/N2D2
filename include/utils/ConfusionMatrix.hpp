@@ -462,12 +462,22 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
         std::stringstream plotCmd;
         plotCmd << "i 0 using 3:xticlabels(wrap(stringcolumn(2),"
-                << maxLabelSize << ")) ti col, "
-                     "'' i 0 using 4 ti col, "
+                << maxLabelSize << ")) ti col, ";
+
+        if (nbTargets > 2) {
+            // If the confusion matrix is more than 2x2, don't display
+            // Specificity and Accuracy, which are meaningless...
+            plotCmd << "'' i 0 using 5 ti col, "
+                     "'' i 0 using 7 ti col, "
+                     "'' i 0 using 8 ti col";
+        }
+        else {
+            plotCmd << "'' i 0 using 4 ti col, "
                      "'' i 0 using 5 ti col, "
                      "'' i 0 using 6 ti col, "
                      "'' i 0 using 7 ti col, "
                      "'' i 0 using 8 ti col";
+        }
 
         gnuplot.saveToFile(confFile);
         gnuplot.plot(confFile, plotCmd.str());
