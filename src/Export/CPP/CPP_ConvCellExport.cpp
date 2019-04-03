@@ -18,7 +18,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Cell/Cell.hpp"
+#include "Cell/ConvCell.hpp"
 #include "Export/CPP/CPP_ConvCellExport.hpp"
+#include "utils/Registrar.hpp"
+
+#include <fstream>
+#include <string>
 
 N2D2::Registrar<N2D2::ConvCellExport>
 N2D2::CPP_ConvCellExport::mRegistrar("CPP", N2D2::CPP_ConvCellExport::generate);
@@ -140,7 +146,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
                                                           std::ofstream& header)
 {
     const std::string indentifier = Utils::CIdentifier(cell.getName());
-    header << "static const WDATA_T "
+    header << "static const BDATA_T "
         << indentifier << "_biases[" << Utils::upperCase(indentifier) << "_NB_OUTPUTS] = ";
 }
 
@@ -160,7 +166,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
             cell.getBias(output, bias);
 
             CellExport::generateFreeParameter(
-                cell, bias(0), header);
+                cell, bias(0), header, Cell::Additive, true);
         }
     }
 
@@ -204,7 +210,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(ConvCell& cell,
                         header << "0";
                     }
                     else {
-                        CellExport::generateFreeParameter(cell, kernel(sx, sy), header);
+                        CellExport::generateFreeParameter(cell, kernel(sx, sy), header, 
+                                                          Cell::Multiplicative);
                     }
 
                     i++;

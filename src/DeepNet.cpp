@@ -817,6 +817,11 @@ N2D2::Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
             wNorm = std::max(wMaxAbs, wNorm);
         }
 
+        // Don't normalize the layer if all free parameters are equal to 0
+        if(wNorm == 0.0) {
+            continue;
+        }
+
         wNorm /= normFactor;
         bNorm *= wNorm;
 
@@ -1145,7 +1150,13 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 
                 cell->processFreeParameters(std::bind(std::divides<double>(),
                                                       std::placeholders::_1,
-                                                      remainingFactor));
+                                                      remainingFactor), 
+                                                      Cell::Multiplicative);
+                
+                cell->processFreeParameters(std::bind(std::divides<double>(),
+                                                      std::placeholders::_1,
+                                                      prevScalingFactor * remainingFactor), 
+                                                      Cell::Additive);
 
                 std::cout << (*itCell) << ": "
                     "scaling = " << scalingFactor << "   "

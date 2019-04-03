@@ -61,11 +61,10 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
     return 0;
 }
 
-long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double value)
+long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double value, 
+                                                    Cell::FreeParametersType freeParameterType)
 {
-    const double scaling = (double)(std::pow(2, mPrecision - 1) - 1);
     const bool sat = (std::abs(value) > 1.0);
-
     if (sat) {
         value = Utils::clamp(value, -1.0, 1.0);
         std::cout << Utils::cwarning
@@ -96,23 +95,22 @@ long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double val
         }
     }
 
+    const double scaling = getScalingForFreeParameterType(freeParameterType);
     return getIntApprox(scaling * value, mIntApprox);
 }
 
-bool N2D2::CellExport::generateFreeParameter(const Cell& cell,
-                                             double value,
-                                             std::ostream& stream,
+bool N2D2::CellExport::generateFreeParameter(const Cell& cell, double value, std::ostream& stream,
+                                             Cell::FreeParametersType freeParameterType,
                                              bool typeAccuracy)
 {
     if (mPrecision > 0) {
-        const double scaling = (double)(std::pow(2, mPrecision - 1) - 1);
+        stream << getIntFreeParameter(cell, value, freeParameterType);
+
         const bool sat = (std::abs(value) > 1.0);
-        const double val = scaling * value;
-
-        stream << getIntFreeParameter(cell, value);
-
-        if (sat)
+        if (sat) {
+            const double val = getScalingForFreeParameterType(freeParameterType) * value;
             stream << " /*SAT(" << val << ")*/";
+        }
 
         return sat;
     } else {
@@ -130,4 +128,15 @@ bool N2D2::CellExport::generateFreeParameter(const Cell& cell,
         }
         return false;
     }
+}
+
+double N2D2::CellExport::getScalingForFreeParameterType(Cell::FreeParametersType freeParameterType) {
+    // Additive free parameters are on 2*mPrecision bytes, we scale by (2**(precision-1)-1)**2
+    if(freeParameterType == Cell::Additive) {
+        return (double) std::pow((std::pow(2, mPrecision - 1) - 1), 2);
+    }
+    // Other free parameters are on mPrecision bytes, we scale by 2**(precision-1)-1
+    else {
+        return (double) std::pow(2, mPrecision - 1) - 1;
+    }  
 }

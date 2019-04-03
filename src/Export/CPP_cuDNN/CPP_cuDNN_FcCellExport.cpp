@@ -113,7 +113,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    header << "static WDATA_T " << identifier << "_biases["
+    header << "static BDATA_T " << identifier << "_biases["
            << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
 }
 
@@ -133,7 +133,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasValues(FcCell& cell,
             cell.getBias(output, bias);
 
             CellExport::generateFreeParameter(
-                cell, bias(0), header);
+                cell, bias(0), header, Cell::Additive);
         }
     }
 
@@ -167,7 +167,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
             cell.getWeight(output, channel, weight);
 
             CellExport::generateFreeParameter(
-                cell, weight(0), header);
+                cell, weight(0), header, Cell::Multiplicative);
         }
     }
 
@@ -211,7 +211,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
         if (i > 0)
             header << ", ";
 
-        CellExport::generateFreeParameter(cell, weights[i], header);
+        CellExport::generateFreeParameter(cell, weights[i], header, Cell::Multiplicative);
     }
 
     header << "};\n\n";

@@ -21,12 +21,11 @@
 #ifndef N2D2_CELLEXPORT_H
 #define N2D2_CELLEXPORT_H
 
+#include "Cell/Cell.hpp"
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
-
-class Cell;
 
 /**
  * Base class for methods commun to every cell type for any export type
@@ -79,13 +78,20 @@ public:
     static IntApprox mIntApprox;
     static bool mWarnSat;
 
-    static void
-    generate(Cell& cell, const std::string& dirName, const std::string& type);
+    static void generate(Cell& cell, const std::string& dirName, 
+                         const std::string& type);
 
-    static bool
-    generateFreeParameter(const Cell& cell, double value, std::ostream& stream, bool typeAccuracy = true);
+    static bool generateFreeParameter(const Cell& cell, 
+                    double value, std::ostream& stream, 
+                    Cell::FreeParametersType freeParameterType = Cell::Multiplicative, 
+                    bool typeAccuracy = true);
+
     static long long int getIntApprox(double value, IntApprox method = Round);
-    static long long int getIntFreeParameter(const Cell& cell, double value);
+    static long long int getIntFreeParameter(const Cell& cell, double value, 
+                    Cell::FreeParametersType freeParameterType = Cell::Multiplicative);
+
+private:
+    static double getScalingForFreeParameterType(Cell::FreeParametersType freeParameterType);
 };
 }
 

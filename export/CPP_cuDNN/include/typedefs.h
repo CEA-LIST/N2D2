@@ -44,22 +44,27 @@ typedef enum {
 typedef double DATA_T;
 typedef double UDATA_T;
 typedef double SUM_T;
+typedef SUM_T BDATA_T;
 #elif NB_BITS == -32 || NB_BITS == -16
 typedef float DATA_T;
 typedef float UDATA_T;
 typedef float SUM_T;
+typedef SUM_T BDATA_T;
 #elif NB_BITS == 8
 typedef char DATA_T;
 typedef unsigned char UDATA_T;
 typedef int SUM_T;
+typedef SUM_T BDATA_T;
 #elif NB_BITS == 16
 typedef short DATA_T;
 typedef unsigned short UDATA_T;
 typedef long long int SUM_T;
+typedef SUM_T BDATA_T;
 #elif NB_BITS == 32 || NB_BITS == 64
 typedef int DATA_T;
 typedef unsigned int UDATA_T;
 typedef long long int SUM_T;
+typedef SUM_T BDATA_T;
 #else
 #define CONCAT(x, y) x##y
 #define INT(x) CONCAT(int, x)
@@ -90,6 +95,7 @@ typedef long long int SUM_T;
 typedef INT(NB_BITS) DATA_T;
 typedef UINT(NB_BITS) UDATA_T;
 typedef INT(MULT(NB_BITS, 4)) SUM_T;
+typedef SUM_T BDATA_T;
 #endif
 
 typedef DATA_T WDATA_T;

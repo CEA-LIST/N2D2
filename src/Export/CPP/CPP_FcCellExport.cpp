@@ -107,7 +107,7 @@ void N2D2::CPP_FcCellExport::generateHeaderBias(FcCell& cell,
 void N2D2::CPP_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
                                                         std::ofstream& header)
 {
-    header << "const std::vector<WDATA_T> "
+    header << "const std::vector<BDATA_T> "
         << Utils::CIdentifier(cell.getName()) << "_biases = ";
 }
 
@@ -126,8 +126,7 @@ void N2D2::CPP_FcCellExport::generateHeaderBiasValues(FcCell& cell,
             Tensor<Float_T> bias;
             cell.getBias(output, bias);
 
-            CellExport::generateFreeParameter(
-                cell, bias(0), header);
+            CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
         }
     }
 
@@ -171,7 +170,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
         if (i > 0)
             header << ", ";
 
-        CellExport::generateFreeParameter(cell, weights[i], header);
+        CellExport::generateFreeParameter(cell, weights[i], header, Cell::Multiplicative);
     }
 
     header << "};\n\n";
@@ -239,7 +238,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsValues(FcCell& cell,
             cell.getWeight(output, channel, weight);
 
             CellExport::generateFreeParameter(
-                cell, weight(0), header);
+                cell, weight(0), header, Cell::Multiplicative);
         }
 
         header << "}";
