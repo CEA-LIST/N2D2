@@ -135,7 +135,7 @@ public:
     };
     std::pair<int, Float_T> getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                               unsigned int batchPos = 0) const;
-    const std::vector<double>& getLoss() const
+    const std::vector<Float_T>& getLoss() const
     {
         return mLoss;
     }
@@ -179,7 +179,7 @@ protected:
     Tensor<Float_T> mEstimatedLabelsValue;
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
-    std::vector<double> mLoss;
+    std::vector<Float_T> mLoss;
 
 private:
     static Registrar<Target> mRegistrar;

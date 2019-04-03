@@ -472,8 +472,13 @@ void N2D2::Target::process(Database::StimuliSet set)
 
         const size_t size = values.dimY() * batchSize;
 
+        std::vector<int> outputsIdx(nbOutputs);
+
+        if (nbOutputs > 1 && mTargetTopN > 1)
+            std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
+
 #if defined(_OPENMP) && _OPENMP >= 200805
-#pragma omp parallel for collapse(2) if (size > 16)
+#pragma omp parallel for collapse(2) if (size > 16) schedule(dynamic)
 #else
 #pragma omp parallel for if (batchSize > 4 && size > 16)
 #endif
@@ -500,31 +505,39 @@ void N2D2::Target::process(Database::StimuliSet set)
                         }
                     }
 
-                    if (nbOutputs > 1) {
-                        std::vector<std::pair<Float_T, size_t> >
-                            sortedLabelsValues;
-                        sortedLabelsValues.reserve(nbOutputs);
+                    if (nbOutputs > 1 && mTargetTopN > 1) {
+                        // initialize original index locations
+                        std::vector<int> sortedLabelsIdx(outputsIdx.begin(),
+                                                         outputsIdx.end());
 
-                        for (unsigned int index = 0; index < nbOutputs;
-                                ++index)
-                        {
-                            sortedLabelsValues.push_back(std::make_pair(
-                                values(ox, oy, index, batchPos), index));
-                        }
-
-                        // Top-n accuracy sorting
-                        std::partial_sort(
-                            sortedLabelsValues.begin(),
-                            sortedLabelsValues.begin() + mTargetTopN,
-                            sortedLabelsValues.end(),
-                            std::greater<std::pair<Float_T, size_t> >());
+                        // sort indexes based on comparing values
+                        std::partial_sort(sortedLabelsIdx.begin(),
+                            sortedLabelsIdx.begin() + mTargetTopN,
+                            sortedLabelsIdx.end(),
+                            [&values, &ox, &oy, &batchPos](int i1, int i2)
+                                {return values(ox, oy, i1, batchPos)
+                                            > values(ox, oy, i2, batchPos);});
 
                         for (unsigned int i = 0; i < mTargetTopN; ++i) {
                             mEstimatedLabels(ox, oy, i, batchPos)
-                                = sortedLabelsValues[i].second;
+                                = sortedLabelsIdx[i];
                             mEstimatedLabelsValue(ox, oy, i, batchPos)
-                                = sortedLabelsValues[i].first;
+                                = values(ox, oy, sortedLabelsIdx[i], batchPos);
                         }
+                    }
+                    else if (nbOutputs > 1) {
+                        size_t maxIdx = 0;
+                        Float_T maxVal = values(ox, oy, 0, batchPos);
+
+                        for (size_t i = 1; i < nbOutputs; ++i) {
+                            if (values(ox, oy, i, batchPos) > maxVal) {
+                                maxIdx = i;
+                                maxVal = values(ox, oy, i, batchPos);
+                            }
+                        }
+
+                        mEstimatedLabels(ox, oy, 0, batchPos) = maxIdx;
+                        mEstimatedLabelsValue(ox, oy, 0, batchPos) = maxVal;
                     }
                     else {
                         mEstimatedLabels(ox, oy, 0, batchPos)

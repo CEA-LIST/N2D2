@@ -664,7 +664,7 @@ int main(int argc, char* argv[]) try
 
             if (target) {
                 fileName = "find_lr_" + target->getName() + ".dat";
-                const std::vector<double>& loss = target->getLoss();
+                const std::vector<Float_T>& loss = target->getLoss();
 
                 std::ofstream lrLoss(fileName.c_str());
 
