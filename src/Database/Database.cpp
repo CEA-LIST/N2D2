@@ -1250,6 +1250,35 @@ bool N2D2::Database::isLabel(const std::string& labelName) const
             != mLabelsName.end());
 }
 
+bool N2D2::Database::isMatchingLabel(const std::string& labelMask) const
+{
+    for (std::vector<std::string>::const_iterator it = mLabelsName.begin(),
+                                                  itEnd = mLabelsName.end();
+         it != itEnd; ++it)
+    {
+        if (Utils::match(labelMask, *it))
+            return true;
+    }
+
+    return false;
+}
+
+std::vector<int> N2D2::Database::getMatchingLabelsIDs(
+    const std::string& labelMask) const
+{
+    std::vector<int> labels;
+
+    for (std::vector<std::string>::const_iterator it = mLabelsName.begin(),
+        itBegin = mLabelsName.begin(), itEnd = mLabelsName.end();
+        it != itEnd; ++it)
+    {
+        if (Utils::match(labelMask, *it))
+            labels.push_back(it - itBegin);
+    }
+
+    return labels;
+}
+
 int N2D2::Database::getLabelID(const std::string& labelName) const
 {
     std::vector<std::string>::const_iterator it

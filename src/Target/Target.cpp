@@ -139,32 +139,56 @@ void N2D2::Target::labelsMapping(const std::string& fileName)
 
             mDefaultTarget = output;
         } else {
-            int label = -1;
-            bool corruptedLabel = false;
+            std::vector<int> labels;
+
             if (className != "*") {
+                if (mStimuliProvider->getDatabase().isLabel(className)) {
+                    if (className.find_first_of("*?") != std::string::npos) {
+                        throw std::runtime_error("Ambiguous use of wildcard: "
+                            + line + ", because there is a label named \""
+                            + className + "\" in the database, in file "
+                            + fileName);
+                    }
 
-                if (!mStimuliProvider->getDatabase().isLabel(className)) {
-                    std::cout
-                        << Utils::cwarning
-                        << "No label exists in the database with the name: "
-                        << className << " in file " << fileName << Utils::cdef
-                        << std::endl;
+                    labels.push_back(mStimuliProvider->getDatabase()
+                        .getLabelID(className));
+                }
+                else {
+                    labels = mStimuliProvider->getDatabase()
+                        .getMatchingLabelsIDs(className);
+                }
+            }
+            else {
+                if (mStimuliProvider->getDatabase().isLabel(className)) {
+                    throw std::runtime_error("Ambiguous ignore wildcard *,"
+                        " because there is a label named \"*\" in the database,"
+                        " in file " + fileName);
+                }
 
-                    corruptedLabel = true;
-                } else
-                    label
-                        = mStimuliProvider->getDatabase().getLabelID(className);
+                labels.push_back(-1);
             }
 
-            if (!corruptedLabel) {
-                bool newInsert;
+            if (!labels.empty()) {
+                for (std::vector<int>::const_iterator it = labels.begin(),
+                    itEnd = labels.end(); it != itEnd; ++it)
+                {
+                    bool newInsert;
+                    std::tie(std::ignore, newInsert)
+                        = mLabelsMapping.insert(std::make_pair(*it, output));
 
-                std::tie(std::ignore, newInsert)
-                    = mLabelsMapping.insert(std::make_pair(label, output));
-                if (!newInsert)
-                    throw std::runtime_error(
-                        "Mapping already exists for label: " + line
-                        + " in file " + fileName);
+                    if (!newInsert) {
+                        throw std::runtime_error(
+                            "Mapping already exists for label: " + line
+                            + " in file " + fileName);
+                    }
+                }
+            }
+            else {
+                std::cout
+                    << Utils::cwarning
+                    << "No label exists in the database with the name: "
+                    << className << " in file " << fileName
+                    << Utils::cdef << std::endl;
             }
         }
     }

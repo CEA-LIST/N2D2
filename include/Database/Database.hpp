@@ -271,10 +271,12 @@ public:
     unsigned int getNbROIsWithLabel(int label) const;
     inline unsigned int getNbROIsWithLabel(const std::string& labelName) const;
     bool isLabel(const std::string& labelName) const;
+    bool isMatchingLabel(const std::string& labelMask) const;
     int getLabelID(const std::string& labelName) const;
     int getDefaultLabelID() const;
     inline std::vector<int> getLabelsIDs(const std::vector
                                          <std::string>& names) const;
+    std::vector<int> getMatchingLabelsIDs(const std::string& labelMask) const;
     inline const std::string& getLabelName(int label) const;
     cv::Mat getStimulusData(StimulusID id);
     inline cv::Mat getStimulusData(StimuliSet set, unsigned int index);
