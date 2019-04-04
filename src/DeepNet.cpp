@@ -427,6 +427,7 @@ void N2D2::DeepNet::exportNetworkSolverParameters(const std::string
 void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
                                                 bool ignoreNotExists)
 {
+    std::cout << "Importing weights from directory '" << dirName << "'." << std::endl;
     for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
          = mCells.begin(),
          itEnd = mCells.end();

@@ -307,6 +307,179 @@ public:
     std::string iniConfig;
 };
 
+void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalibration) {
+    const std::string testName = (afterCalibration) ? "export" : "test";
+
+    std::shared_ptr<Database> database = deepNet->getDatabase();
+    std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
+
+    std::map<std::string, RangeStats> outputsRange;
+    std::map<std::string, Histogram> outputsHistogram;
+    
+    std::vector<std::pair<std::string, double> > timings, cumTimings;
+
+    // Static testing
+    unsigned int nextLog = opt.log;
+    unsigned int nextReport = opt.report;
+    std::chrono::high_resolution_clock::time_point startTimeSp,
+                                                    endTimeSp;
+
+    const unsigned int nbTest
+        = (opt.testIdx >= 0) ? 1 : database->getNbStimuli(Database::Test);
+    const unsigned int batchSize = sp->getBatchSize();
+    const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+
+    for (unsigned int b = 0; b < nbBatch; ++b) {
+        const unsigned int i = b * batchSize;
+        const unsigned int idx = (opt.testIdx >= 0) ? opt.testIdx : i;
+
+        startTimeSp = std::chrono::high_resolution_clock::now();
+        sp->readBatch(Database::Test, idx);
+        endTimeSp = std::chrono::high_resolution_clock::now();
+
+        deepNet->test(Database::Test, &timings);
+
+        deepNet->reportOutputsRange(outputsRange);
+        deepNet->reportOutputsHistogram(outputsHistogram);
+        deepNet->logEstimatedLabels(testName);
+
+        if (opt.logOutputs && i == 0) {
+            std::cout << "First stimulus ID: " << sp->getBatch()[0]
+                        << std::endl;
+            std::cout << "First stimulus label: "
+                        << sp->getLabelsData()[0](0) << std::endl;
+            deepNet->logOutputs("outputs_" + testName);
+        }
+
+        timings.push_back(std::make_pair(
+            "sp", std::chrono::duration_cast
+            <std::chrono::duration<double> >(endTimeSp - startTimeSp)
+                                            .count()));
+
+        if (!cumTimings.empty()) {
+            std::transform(timings.begin(),
+                            timings.end(),
+                            cumTimings.begin(),
+                            cumTimings.begin(),
+                            Utils::PairOp<std::string,
+                                            double,
+                                            Utils::Left<std::string>,
+                                            std::plus<double> >());
+        } else
+            cumTimings = timings;
+
+        if (i >= nextReport || b == nbBatch - 1) {
+            nextReport += opt.report;
+            std::cout << "Testing #" << idx << "   ";
+
+            for (std::vector<std::shared_ptr<Target> >::const_iterator
+                        itTargets = deepNet->getTargets().begin(),
+                        itTargetsEnd = deepNet->getTargets().end();
+                    itTargets != itTargetsEnd;
+                    ++itTargets) {
+                std::shared_ptr<TargetScore> target
+                    = std::dynamic_pointer_cast
+                    <TargetScore>(*itTargets);
+
+                if (target)
+                    std::cout << (100.0 * target->getAverageSuccess(
+                                                Database::Test)) << "% ";
+            }
+
+            std::cout << std::endl;
+        }
+
+        if (i >= nextLog || b == nbBatch - 1) {
+            nextLog += opt.report;
+
+            for (std::vector<std::shared_ptr<Target> >::const_iterator
+                        itTargets = deepNet->getTargets().begin(),
+                        itTargetsEnd = deepNet->getTargets().end();
+                    itTargets != itTargetsEnd;
+                    ++itTargets) {
+                std::shared_ptr<TargetScore> target
+                    = std::dynamic_pointer_cast
+                    <TargetScore>(*itTargets);
+
+                if (target) {
+                    target->logSuccess(testName, Database::Test);
+                    target->logTopNSuccess(testName, Database::Test);
+                }
+            }
+        }
+    }
+
+    if (nbTest > 0) {
+        deepNet->log(testName, Database::Test);
+        for (std::vector<std::pair<std::string, double> >::iterator it
+                = cumTimings.begin(),
+                itEnd = cumTimings.end();
+                it != itEnd;
+                ++it) {
+            (*it).second /= nbTest;
+        }
+
+        Utils::createDirectories("timings");
+
+        deepNet->logTimings("timings/inference_timings.dat", cumTimings);
+
+        for (std::vector<std::shared_ptr<Target> >::const_iterator
+                    itTargets = deepNet->getTargets().begin(),
+                    itTargetsEnd = deepNet->getTargets().end();
+                itTargets != itTargetsEnd;
+                ++itTargets) {
+            std::shared_ptr<TargetScore> target
+                = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+
+            if (target) {
+                std::cout << "Final recognition rate: "
+                            << (100.0 * target->getAverageSuccess(
+                                            Database::Test))
+                            << "%"
+                                "    (error rate: "
+                            << 100.0 * (1.0 - target->getAverageSuccess(
+                                                Database::Test)) << "%)"
+                            << std::endl;
+
+                std::cout << "    Sensitivity: " << (100.0
+                    * target->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Sensitivity))
+                            << "% / Specificity: " << (100.0
+                    * target->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Specificity))
+                            << "% / Precision: " << (100.0
+                    * target->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Precision))
+                            << "%\n"
+                            "    Accuracy: " << (100.0
+                    * target->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Accuracy))
+                            << "% / F1-score: " << (100.0
+                    * target->getAverageScore(Database::Test,
+                                ConfusionTableMetric::F1Score))
+                            << "% / Informedness: " << (100.0
+                    * target->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Informedness))
+                            << "%\n" << std::endl;
+            }
+        }
+    }
+
+    Histogram::logOutputsHistogram(testName + "_outputs_histogram",
+                                    outputsHistogram);
+    RangeStats::logOutputsRange(testName + "_outputs_range.dat",
+                                outputsRange);
+
+    if (!afterCalibration) {
+        deepNet->normalizeFreeParameters();
+        deepNet->exportNetworkFreeParameters("weights_normalized");
+
+        deepNet->normalizeOutputsRange(outputsRange, 0.25);
+        deepNet->exportNetworkFreeParameters(
+            "weights_range_normalized");
+    }    
+}
+
 bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::shared_ptr<Database> database = deepNet->getDatabase();
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
@@ -341,6 +514,16 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
+        if(opt.weights.empty() && opt.load.empty()) {
+            std::cout << "No weights or saved state passed in parameters. "
+                      << "The default weights are not normalized. "
+                      << "Use the test database to normalize them before the calibration pass." 
+                      << std::endl;
+
+            test(opt, deepNet, false);
+            deepNet->importNetworkFreeParameters("weights_normalized");
+        }
+
         const double stimuliRange = StimuliProviderExport::getStimuliRange(
                                             *sp,
                                             exportDir.str()
@@ -1222,179 +1405,6 @@ void testCStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         }
     }
 
-}
-
-void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalibration) {
-    const std::string testName = (afterCalibration) ? "export" : "test";
-
-    std::shared_ptr<Database> database = deepNet->getDatabase();
-    std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
-
-    std::map<std::string, RangeStats> outputsRange;
-    std::map<std::string, Histogram> outputsHistogram;
-    
-    std::vector<std::pair<std::string, double> > timings, cumTimings;
-
-    // Static testing
-    unsigned int nextLog = opt.log;
-    unsigned int nextReport = opt.report;
-    std::chrono::high_resolution_clock::time_point startTimeSp,
-                                                    endTimeSp;
-
-    const unsigned int nbTest
-        = (opt.testIdx >= 0) ? 1 : database->getNbStimuli(Database::Test);
-    const unsigned int batchSize = sp->getBatchSize();
-    const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
-
-    for (unsigned int b = 0; b < nbBatch; ++b) {
-        const unsigned int i = b * batchSize;
-        const unsigned int idx = (opt.testIdx >= 0) ? opt.testIdx : i;
-
-        startTimeSp = std::chrono::high_resolution_clock::now();
-        sp->readBatch(Database::Test, idx);
-        endTimeSp = std::chrono::high_resolution_clock::now();
-
-        deepNet->test(Database::Test, &timings);
-
-        deepNet->reportOutputsRange(outputsRange);
-        deepNet->reportOutputsHistogram(outputsHistogram);
-        deepNet->logEstimatedLabels(testName);
-
-        if (opt.logOutputs && i == 0) {
-            std::cout << "First stimulus ID: " << sp->getBatch()[0]
-                        << std::endl;
-            std::cout << "First stimulus label: "
-                        << sp->getLabelsData()[0](0) << std::endl;
-            deepNet->logOutputs("outputs_" + testName);
-        }
-
-        timings.push_back(std::make_pair(
-            "sp", std::chrono::duration_cast
-            <std::chrono::duration<double> >(endTimeSp - startTimeSp)
-                                            .count()));
-
-        if (!cumTimings.empty()) {
-            std::transform(timings.begin(),
-                            timings.end(),
-                            cumTimings.begin(),
-                            cumTimings.begin(),
-                            Utils::PairOp<std::string,
-                                            double,
-                                            Utils::Left<std::string>,
-                                            std::plus<double> >());
-        } else
-            cumTimings = timings;
-
-        if (i >= nextReport || b == nbBatch - 1) {
-            nextReport += opt.report;
-            std::cout << "Testing #" << idx << "   ";
-
-            for (std::vector<std::shared_ptr<Target> >::const_iterator
-                        itTargets = deepNet->getTargets().begin(),
-                        itTargetsEnd = deepNet->getTargets().end();
-                    itTargets != itTargetsEnd;
-                    ++itTargets) {
-                std::shared_ptr<TargetScore> target
-                    = std::dynamic_pointer_cast
-                    <TargetScore>(*itTargets);
-
-                if (target)
-                    std::cout << (100.0 * target->getAverageSuccess(
-                                                Database::Test)) << "% ";
-            }
-
-            std::cout << std::endl;
-        }
-
-        if (i >= nextLog || b == nbBatch - 1) {
-            nextLog += opt.report;
-
-            for (std::vector<std::shared_ptr<Target> >::const_iterator
-                        itTargets = deepNet->getTargets().begin(),
-                        itTargetsEnd = deepNet->getTargets().end();
-                    itTargets != itTargetsEnd;
-                    ++itTargets) {
-                std::shared_ptr<TargetScore> target
-                    = std::dynamic_pointer_cast
-                    <TargetScore>(*itTargets);
-
-                if (target) {
-                    target->logSuccess(testName, Database::Test);
-                    target->logTopNSuccess(testName, Database::Test);
-                }
-            }
-        }
-    }
-
-    if (nbTest > 0) {
-        deepNet->log(testName, Database::Test);
-        for (std::vector<std::pair<std::string, double> >::iterator it
-                = cumTimings.begin(),
-                itEnd = cumTimings.end();
-                it != itEnd;
-                ++it) {
-            (*it).second /= nbTest;
-        }
-
-        Utils::createDirectories("timings");
-
-        deepNet->logTimings("timings/inference_timings.dat", cumTimings);
-
-        for (std::vector<std::shared_ptr<Target> >::const_iterator
-                    itTargets = deepNet->getTargets().begin(),
-                    itTargetsEnd = deepNet->getTargets().end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-            std::shared_ptr<TargetScore> target
-                = std::dynamic_pointer_cast<TargetScore>(*itTargets);
-
-            if (target) {
-                std::cout << "Final recognition rate: "
-                            << (100.0 * target->getAverageSuccess(
-                                            Database::Test))
-                            << "%"
-                                "    (error rate: "
-                            << 100.0 * (1.0 - target->getAverageSuccess(
-                                                Database::Test)) << "%)"
-                            << std::endl;
-
-                std::cout << "    Sensitivity: " << (100.0
-                    * target->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Sensitivity))
-                            << "% / Specificity: " << (100.0
-                    * target->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Specificity))
-                            << "% / Precision: " << (100.0
-                    * target->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Precision))
-                            << "%\n"
-                            "    Accuracy: " << (100.0
-                    * target->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Accuracy))
-                            << "% / F1-score: " << (100.0
-                    * target->getAverageScore(Database::Test,
-                                ConfusionTableMetric::F1Score))
-                            << "% / Informedness: " << (100.0
-                    * target->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Informedness))
-                            << "%\n" << std::endl;
-            }
-        }
-    }
-
-    Histogram::logOutputsHistogram(testName + "_outputs_histogram",
-                                    outputsHistogram);
-    RangeStats::logOutputsRange(testName + "_outputs_range.dat",
-                                outputsRange);
-
-    if (!afterCalibration) {
-        deepNet->normalizeFreeParameters();
-        deepNet->exportNetworkFreeParameters("weights_normalized");
-
-        deepNet->normalizeOutputsRange(outputsRange, 0.25);
-        deepNet->exportNetworkFreeParameters(
-            "weights_range_normalized");
-    }    
 }
 
 void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
