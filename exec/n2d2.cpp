@@ -1550,11 +1550,30 @@ int main(int argc, char* argv[]) try
 
     if (opt.logDbStats) {
         // Log stats
-        database.logStats("database-size.dat", "database-label.dat");
-        database.logStats("testset-size.dat", "testset-label.dat",
-                          Database::TestOnly);
-        database.logROIsStats("database-roi-size.dat", "database-roi-label.dat");
-        database.logROIsStats("testset-roi-size.dat", "testset-roi-label.dat",
+        Utils::createDirectories("dbstats");
+
+        // Stimuli stats
+        database.logStats("dbstats/database-size.dat",
+                          "dbstats/database-label.dat");
+        database.logStats("dbstats/learnset-size.dat",
+                          "dbstats/learnset-label.dat", Database::LearnOnly);
+        database.logStats("dbstats/validationset-size.dat",
+                          "dbstats/validationset-label.dat",
+                          Database::ValidationOnly);
+        database.logStats("dbstats/testset-size.dat",
+                          "dbstats/testset-label.dat", Database::TestOnly);
+
+        // ROIs stats
+        database.logROIsStats("dbstats/database-roi-size.dat",
+                              "dbstats/database-roi-label.dat");
+        database.logROIsStats("dbstats/learnset-roi-size.dat",
+                              "dbstats/learnset-roi-label.dat",
+                              Database::LearnOnly);
+        database.logROIsStats("dbstats/validationset-roi-size.dat",
+                              "dbstats/validationset-roi-label.dat",
+                              Database::ValidationOnly);
+        database.logROIsStats("dbstats/testset-roi-size.dat",
+                              "dbstats/testset-roi-label.dat",
                               Database::TestOnly);
     }
 

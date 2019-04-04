@@ -279,9 +279,10 @@ void N2D2::Database::logStats(const std::string& sizeFileName,
          itSet != itSetEnd;
          ++itSet)
     {
-        for (unsigned int i = 0, size = mStimuliSets(*itSet).size(); i < size;
-             ++i)
-        {
+        const unsigned int size = mStimuliSets(*itSet).size();
+
+#pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < (int)size; ++i){
             const StimulusID id = mStimuliSets(*itSet)[i];
 
             // Read stimuli
@@ -296,28 +297,53 @@ void N2D2::Database::logStats(const std::string& sizeFileName,
             cv::Mat stimulus = dataFile->read(mStimuli[id].name);
 
             // Stats
+            if (stimulus.cols > (int)maxWidth) {
+#pragma omp critical(logStats_maxWidth)
+                if (stimulus.cols > (int)maxWidth)
+                    maxWidth = stimulus.cols;
+            }
+
+            if (stimulus.rows > (int)maxHeight) {
+#pragma omp critical(logStats_maxHeight)
+                if (stimulus.rows > (int)maxHeight)
+                    maxHeight = stimulus.rows;
+            }
+
+            if (stimulus.cols < (int)minWidth) {
+#pragma omp critical(logStats_minWidth)
+                if (stimulus.cols < (int)minWidth)
+                    minWidth = stimulus.cols;
+            }
+
+            if (stimulus.rows < (int)minHeight) {
+#pragma omp critical(logStats_minHeight)
+                if (stimulus.rows < (int)minHeight)
+                    minHeight = stimulus.rows;
+            }
+
+            const std::pair<std::pair<unsigned int, unsigned int>, unsigned int>
+                sizeStat = std::make_pair(std::make_pair(stimulus.cols,
+                                                         stimulus.rows), 0U);
+
+            const std::pair<int, unsigned int> labelStat
+                = std::make_pair(mStimuli[id].label, 0U);
+
             std::map<std::pair<unsigned int, unsigned int>,
                      unsigned int>::iterator itSizeStats;
-            std::tie(itSizeStats, std::ignore) = sizeStats.insert(
-                std::make_pair(std::make_pair(stimulus.cols, stimulus.rows), 0U));
-            ++(*itSizeStats).second;
-
-            if (stimulus.cols > (int)maxWidth)
-                maxWidth = stimulus.cols;
-            if (stimulus.rows > (int)maxHeight)
-                maxHeight = stimulus.rows;
-            if (stimulus.cols < (int)minWidth)
-                minWidth = stimulus.cols;
-            if (stimulus.rows < (int)minHeight)
-                minHeight = stimulus.rows;
-
             std::map<int, unsigned int>::iterator itLabelStats;
-            std::tie(itLabelStats, std::ignore) = labelStats.insert(
-                std::make_pair(mStimuli[id].label, 0U));
-            ++(*itLabelStats).second;
 
-            ++nbStimuli;
+#pragma omp critical(logStats)
+            {
+                std::tie(itSizeStats, std::ignore) = sizeStats.insert(sizeStat);
+                ++(*itSizeStats).second;
+
+                std::tie(itLabelStats, std::ignore)
+                    = labelStats.insert(labelStat);
+                ++(*itLabelStats).second;
+            }
         }
+
+        nbStimuli += size;
     }
 
     if (nbStimuli > 0) {
@@ -348,10 +374,19 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
          = stimuliSets.begin(),
          itSetEnd = stimuliSets.end();
          itSet != itSetEnd;
-         ++itSet) {
-        for (unsigned int i = 0, size = mStimuliSets(*itSet).size(); i < size;
-             ++i) {
+         ++itSet)
+    {
+        const unsigned int size = mStimuliSets(*itSet).size();
+
+//#pragma omp parallel for schedule(dynamic) reduction(+:nbROIs)
+        for (int i = 0; i < (int)size; ++i)
+        {
             const StimulusID id = mStimuliSets(*itSet)[i];
+
+            unsigned int bbMinWidth = std::numeric_limits<int>::max();
+            unsigned int bbMinHeight = std::numeric_limits<int>::max();
+            unsigned int bbMaxWidth = 0;
+            unsigned int bbMaxHeight = 0;
 
             for (std::vector<ROI*>::const_iterator itROIs
                  = mStimuli[id].ROIs.begin(),
@@ -360,28 +395,63 @@ void N2D2::Database::logROIsStats(const std::string& sizeFileName,
                  ++itROIs) {
                 const cv::Rect bb = (*itROIs)->getBoundingRect();
 
+                if (bb.width > (int)bbMaxWidth)
+                    bbMaxWidth = bb.width;
+                if (bb.height > (int)bbMaxHeight)
+                    bbMaxHeight = bb.height;
+                if (bb.width < (int)bbMinWidth)
+                    bbMinWidth = bb.width;
+                if (bb.height < (int)bbMinHeight)
+                    bbMinHeight = bb.height;
+
+                const std::pair<std::pair<unsigned int, unsigned int>,
+                                unsigned int> sizeStat
+                    = std::make_pair(std::make_pair(bb.width, bb.height), 0U);
+
+                const std::pair<int, unsigned int> labelStat
+                    = std::make_pair((*itROIs)->getLabel(), 0U);
+
                 std::map<std::pair<unsigned int, unsigned int>,
                          unsigned int>::iterator itSizeStats;
-                std::tie(itSizeStats, std::ignore) = sizeStats.insert(
-                    std::make_pair(std::make_pair(bb.width, bb.height), 0U));
-                ++(*itSizeStats).second;
-
-                if (bb.width > (int)maxWidth)
-                    maxWidth = bb.width;
-                if (bb.height > (int)maxHeight)
-                    maxHeight = bb.height;
-                if (bb.width < (int)minWidth)
-                    minWidth = bb.width;
-                if (bb.height < (int)minHeight)
-                    minHeight = bb.height;
-
                 std::map<int, unsigned int>::iterator itLabelStats;
-                std::tie(itLabelStats, std::ignore) = labelStats.insert(
-                    std::make_pair((*itROIs)->getLabel(), 0U));
-                ++(*itLabelStats).second;
 
-                ++nbROIs;
+//#pragma omp critical(logROIsStats)
+                {
+                    std::tie(itSizeStats, std::ignore)
+                        = sizeStats.insert(sizeStat);
+                    ++(*itSizeStats).second;
+
+                    std::tie(itLabelStats, std::ignore)
+                        = labelStats.insert(labelStat);
+                    ++(*itLabelStats).second;
+                }
             }
+
+            if (bbMaxWidth > maxWidth) {
+//#pragma omp critical(logROIsStats_maxWidth)
+//                if (bbMaxWidth > maxWidth)
+                    maxWidth = bbMaxWidth;
+            }
+
+            if (bbMaxHeight > maxHeight) {
+//#pragma omp critical(logROIsStats_maxHeight)
+//                if (bbMaxHeight > maxHeight)
+                    maxHeight = bbMaxHeight;
+            }
+
+            if (bbMinWidth < minWidth) {
+//#pragma omp critical(logROIsStats_minWidth)
+//                if (bbMinWidth < minWidth)
+                    minWidth = bbMinWidth;
+            }
+
+            if (bbMinHeight < minHeight) {
+//#pragma omp critical(logROIsStats_minHeight)
+//                if (bbMinHeight < minHeight)
+                    minHeight = bbMinHeight;
+            }
+
+            nbROIs += mStimuli[id].ROIs.size();
         }
     }
 
