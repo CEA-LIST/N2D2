@@ -56,6 +56,8 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
             iniConfig.getProperty<std::string>("ROIFile", ""));
         const bool perLabel = iniConfig.getProperty
                               <bool>("PerLabelPartitioning", true);
+        const bool equivLabel = iniConfig.getProperty
+                              <bool>("EquivLabelPartitioning", true);
         const double learn = iniConfig.getProperty<double>("Learn");
         const double validation = iniConfig.getProperty<double>("Validation",
                                                                 0.0);
@@ -90,7 +92,8 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
             if (!iniConfig.isProperty("Test"))
                 test = 1.0 - learn - validation;
 
-            database->partitionStimuliPerLabel(learn, validation, test, true);
+            database->partitionStimuliPerLabel(learn, validation, test,
+                                               equivLabel);
             database->partitionStimuli(0.0, 0.0, 1.0);
         } else {
             if (!iniConfig.isProperty("Test"))
