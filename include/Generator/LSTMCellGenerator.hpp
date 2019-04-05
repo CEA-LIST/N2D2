@@ -20,7 +20,7 @@
 */
 
 #ifndef N2D2_LSTMCELLGENERATOR_H
-#define N2D2_LSTMVCELLGENERATOR_H
+#define N2D2_LSTMCELLGENERATOR_H
 
 #include "Cell/LSTMCell.hpp"
 #include "Generator/CellGenerator.hpp"
