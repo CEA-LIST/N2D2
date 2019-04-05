@@ -1577,11 +1577,10 @@ int main(int argc, char* argv[]) try
                               Database::TestOnly);
     }
 
-    StimuliProvider& sp = *deepNet->getStimuliProvider();
-
     if (!opt.saveTestSet.empty()) {
         CompositeTransformation trans;
 /*
+        StimuliProvider& sp = *deepNet->getStimuliProvider();
         trans.push_back(SliceExtractionTransformation(sp.getSizeX(),
                                                       sp.getSizeY()));
         trans[0]->setParameter<bool>("AllowPadding", true);
