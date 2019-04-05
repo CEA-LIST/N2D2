@@ -1109,32 +1109,42 @@ void N2D2::Database::partitionStimuliPerLabel(double learnPerLabel,
 
         const unsigned int nbLearn
             = Utils::round(nbStimuli * learnPerLabel, Utils::HalfUp);
-        const unsigned int nbValidationTest = Utils::round(
-            nbStimuli * (validationPerLabel + testPerLabel), Utils::HalfDown);
+        // round() HalfDown alone would work with perfectly represented floating
+        // point numbers, but numerical imprecision may lead in some cases to
+        // false result, if the actual number is 2.5000000001 or 2.4999999999
+        // instead of 2.5. That's why we have the min() in addition.
+        const unsigned int nbValidationTest
+            = std::min((unsigned int)Utils::round(
+            nbStimuli * (validationPerLabel + testPerLabel), Utils::HalfDown),
+            nbStimuli - nbLearn);
         const double fracValidation
             = (validationPerLabel > 0)
                   ? (validationPerLabel / (validationPerLabel + testPerLabel))
                   : 0.0;
 
+        const unsigned int nbValidation = Utils::round(
+            nbValidationTest * fracValidation, Utils::HalfUp);
+        // Same as above for the min()
+        const unsigned int nbTest = std::min((unsigned int)Utils::round(
+            nbValidationTest * (1.0 - fracValidation), Utils::HalfDown),
+            nbStimuli - nbLearn - nbValidation);
+
         std::map<StimuliSet, unsigned int> partition;
         partition.insert(std::make_pair(Learn, nbLearn));
-        partition.insert(std::make_pair(
-            Validation,
-            Utils::round(nbValidationTest * fracValidation, Utils::HalfUp)));
-        partition.insert(std::make_pair(
-            Test,
-            Utils::round(nbValidationTest * (1.0 - fracValidation),
-                         Utils::HalfDown)));
+        partition.insert(std::make_pair(Validation, nbValidation));
+        partition.insert(std::make_pair(Test, nbTest));
 
-        for (std::map<StimuliSet, unsigned int>::const_iterator it
+        for (std::map<StimuliSet, unsigned int>::const_iterator itSet
              = partition.begin(),
-             itEnd = partition.end();
-             it != itEnd;
-             ++it)
+             itSetEnd = partition.end();
+             itSet != itSetEnd;
+             ++itSet)
+        {
             partitionIndexes(unpartitionedIndexes,
                              partitionedIndexes,
-                             (*it).second,
-                             (*it).first);
+                             (*itSet).second,
+                             (*itSet).first);
+        }
     }
 
     if (partitionedIndexes.empty()) {
