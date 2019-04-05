@@ -91,6 +91,12 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
         || mLearningRatePolicy == SGDSolver::ExponentialDecay
         || mLearningRatePolicy == SGDSolver::InvTDecay)
     {
+        if (!(mLearningRateStepSize > 0)) {
+            throw std::runtime_error("SGDSolver::getLearningRate(): parameter"
+                " mLearningRateStepSize must be > 0 for \"StepDecay\","
+                " \"ExponentialDecay\" and \"InvTDecay\" mLearningRatePolicy");
+        }
+
         const unsigned int currentPattern = mNbIterations
                                             * mIterationSize * batchSize;
         const unsigned int currentStep = currentPattern / mLearningRateStepSize;
@@ -115,6 +121,12 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
         }
     }
     else if (mLearningRatePolicy == SGDSolver::PolyDecay) {
+        if (!(mMaxIterations > 0)) {
+            throw std::runtime_error("SGDSolver::getLearningRate(): parameter"
+                " mMaxIterations must be > 0 for \"PolyDecay\""
+                " mLearningRatePolicy");
+        }
+
         rate *= std::pow(1.0 - (mNbIterations / (double)mMaxIterations),
                          (double)mPower);
     }

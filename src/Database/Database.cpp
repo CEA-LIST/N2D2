@@ -1072,6 +1072,26 @@ void N2D2::Database::partitionStimuliPerLabel(double learnPerLabel,
 
         maxStimuliPerLabel
             = (*labelsStimuliUnpartitionedIndexes.begin()).size();
+
+        if (maxStimuliPerLabel == 0) {
+            std::cout << Utils::cwarning << "Warning:"
+                " partitionStimuliPerLabel(): maxStimuliPerLabel is 0 with"
+                " equiLabel=true" << Utils::cdef << std::endl;
+
+            std::cout << "StimuliPerLabel are:" << std::endl;
+
+            for (std::vector<std::vector<unsigned int> >::iterator it
+                = labelsStimuliUnpartitionedIndexes.begin(),
+                itBegin = labelsStimuliUnpartitionedIndexes.begin(),
+                itEnd = labelsStimuliUnpartitionedIndexes.end();
+                it != itEnd;
+                ++it)
+            {
+                std::cout << "  " << (it - itBegin)
+                    << " " << getLabelName(it - itBegin)
+                    << " " << (*it).size() << std::endl;
+            }
+        }
     }
 
     std::vector<unsigned int> partitionedIndexes;
@@ -1648,10 +1668,15 @@ void N2D2::Database::partitionIndexes(std::vector
 {
     unsigned int maxStimuli = unpartitionedIndexes.size();
 
-    if (nbStimuli > maxStimuli)
-        throw std::runtime_error("Database::partitionIndexes(): partition size "
-                                 "larger than the number of available "
-                                 "stimuli.");
+    if (nbStimuli > maxStimuli) {
+        std::stringstream errorMsg;
+        errorMsg << "Database::partitionIndexes():"
+            " partition size (" << nbStimuli << ") larger than"
+            " the number of available stimuli (" << maxStimuli << ") for the"
+            " set " << set << ".";
+
+        throw std::runtime_error(errorMsg.str());
+    }
 
     for (unsigned int i = 0; i < nbStimuli; ++i) {
         const unsigned int idx = (mRandomPartitioning)
