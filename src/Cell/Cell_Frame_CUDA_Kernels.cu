@@ -75,7 +75,7 @@ __global__ void cudaHReduce_kernel(__half* idata, __half* odata,
     if (index < size)
         sdata[tid] = idata[index];
     else
-        sdata[tid] = 0;
+        sdata[tid] = __float2half(0.0f);
 
     __syncthreads();
 
@@ -151,8 +151,9 @@ void cudaHSetOutputTargets_kernel(int* targets,
                         ? __hsub(targetVal, outputs[outputsIdx])
                         : __hsub(defaultVal, outputs[outputsIdx]);
 
+                    // __hdiv is undefined with CUDA 7.5
                     diffInputs[outputsIdx]
-                        = __hdiv(error, __float2half(
+                        = __hmul(error, __float2half(1.0f / 
                                 (float)nbTargetOutputs[nbTargetOutputsIdx]));
                     lossMem[outputsIdx] = __hmul(error, error);
 #else
@@ -192,7 +193,7 @@ __global__ void cudaSReduce_kernel(float* idata, float* odata,
     if (index < size)
         sdata[tid] = idata[index];
     else
-        sdata[tid] = 0;
+        sdata[tid] = 0.0f;
 
     __syncthreads();
 
@@ -295,7 +296,7 @@ __global__ void cudaDReduce_kernel(double* idata, double* odata,
     if (index < size)
         sdata[tid] = idata[index];
     else
-        sdata[tid] = 0;
+        sdata[tid] = 0.0;
 
     __syncthreads();
 
@@ -348,7 +349,7 @@ void cudaDSetOutputTargets_kernel(int* targets,
                 if (targets[targetsIdx] >= 0) {
                     const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
                         + batchNbTargetOutputsOffset;
-                        
+
                     const double error = ((nbOutputs > 1
                                 && targets[targetsIdx] == (int)output)
                             || (nbOutputs == 1 && targets[targetsIdx] == 1))
