@@ -19,6 +19,7 @@
 */
 
 #include "Cell/ObjectDetCell.hpp"
+#include "StimuliProvider.hpp"
 
 const char* N2D2::ObjectDetCell::Type = "ObjectDet";
 
@@ -63,3 +64,5 @@ void N2D2::ObjectDetCell::setOutputsDims()
     mOutputsDims[0] = 1;
     mOutputsDims[1] = 1;
 }
+
+

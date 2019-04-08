@@ -114,7 +114,7 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
     const int batchPos = blockIdx.z;
     const int proposal = (threadIdx.x & 0x1f) + blockIdx.x*blockDim.x;
     const int ptIdx = blockIdx.y;
-    
+
     const int nbDetectedObject  = (int) nbValidROIs[batchPos];
     const int nbIdx = 6;
     if(proposal < nbProposals)
@@ -132,25 +132,14 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 outputs[4 + n*(nbIdx + maxParts*2 + maxTemplates*3)] = roi_bbox[4 + 5*proposal + batchPos*nbProposals*5];
                 outputs[5 + n*(nbIdx + maxParts*2 + maxTemplates*3)] = (float) cls;
             }
-            /*if(ptIdx < nbParts)
-            {
-                outputs[ptIdx*2 + 0 + 5 + n*(5 + maxParts*2 + maxTemplates*3) ] = 0.0;
-                outputs[ptIdx*2 + 1 + 5 + n*(5 + maxParts*2 + maxTemplates*3) ] = 0.0;
-            }
 
-            if(ptIdx < nbTemplates)
+            if(ptIdx < nbParts && totalParts > 0)
             {
-                outputs[ptIdx*3 + maxParts*2 + 0 + 5 + n*(5 + maxParts*2 + maxTemplates*3) ] = 0.0;
-                outputs[ptIdx*3 + maxParts*2 + 1 + 5 + n*(5 + maxParts*2 + maxTemplates*3) ] = 0.0;
-                outputs[ptIdx*3 + maxParts*2 + 2 + 5 + n*(5 + maxParts*2 + maxTemplates*3) ] = 0.0;
-            }*/
-
-            const unsigned int xa   = roi_anchors[0 + 5*proposal + batchPos*nbProposals*5];
-            const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
-            const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int xa   = roi_anchors[0 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
            
-            if(ptIdx < nbParts)
-            {
+
                 const int yIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbParts*2 + cumulParts + ptIdx*2)*channelHeight*channelWidth
@@ -183,15 +172,19 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = predPartX;
 
             }
-            else if(ptIdx < maxParts)
+            else if(ptIdx < maxParts && totalParts > 0)
             {
                     outputs[ptIdx*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
                     outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
             }
             
             ///for(unsigned int t = 0; t < nbTemplates; ++t)
-            if(ptIdx < nbTemplates)
+            if(ptIdx < nbTemplates && totalTemplates > 0)
             {
+                const unsigned int xa   = roi_anchors[0 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
+
                 const int yIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbTemplates*3 + cumulTemplates + ptIdx*3)*channelHeight*channelWidth
@@ -215,12 +208,13 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 outputs[ptIdx*3 + maxParts*2 + 2 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateZ;
 
             }
-            else if(ptIdx < maxTemplates)
+            else if(ptIdx < maxTemplates && totalTemplates > 0)
             {
                     outputs[ptIdx*3 + maxParts*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
                     outputs[ptIdx*3 + maxParts*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
                     outputs[ptIdx*3 + maxParts*2 + 2 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
             }
+            
         }
         else
         {
@@ -229,20 +223,22 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
             outputs[2 + n*(nbIdx + maxParts*2 + maxTemplates*3)] = 0.0;
             outputs[3 + n*(nbIdx + maxParts*2 + maxTemplates*3)] = 0.0;
             outputs[4 + n*(nbIdx + maxParts*2 + maxTemplates*3)] = 0.0;
+            
             //for(unsigned int p = 0; p < nbParts; ++p)
-            if(ptIdx < maxParts)
+            if(ptIdx < maxParts && totalParts > 0)
             {
                 outputs[ptIdx*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
                 outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
             }
 
             //for(unsigned int t = 0;t < nbTemplates; ++t)
-            if(ptIdx < maxTemplates)
+            if(ptIdx < maxTemplates && totalTemplates > 0)
             {
                 outputs[ptIdx*3 + maxParts*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
                 outputs[ptIdx*3 + maxParts*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
                 outputs[ptIdx*3 + maxParts*2 + 2 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = 0.0;
             }
+            
         }
     }
 }
@@ -278,7 +274,6 @@ void N2D2::cudaS_SSD_output_gathering( unsigned int batchSize,
                                         const dim3 blocksPerGrid,
                                         const dim3 threadsPerBlock)
 {
-
     cudaS_ssdToOutput_kernels<<<blocksPerGrid, threadsPerBlock>>>( batchSize,
                                                                 nbClass,
                                                                 nbAnchors,
@@ -372,4 +367,3 @@ void N2D2::thrust_sort_keys_INT32(float* inputs, int* keys, unsigned int nbEleme
                                 thrust::greater<float>());
 
 }
-

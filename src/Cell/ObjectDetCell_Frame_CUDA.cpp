@@ -180,9 +180,10 @@ void N2D2::ObjectDetCell_Frame_CUDA::initialize()
         mGPUAnchors.synchronizeHToD();
 
     }
+
 }
 
-void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
+void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
     std::shared_ptr<CudaDeviceTensor<Float_T> > input_templates 
@@ -222,7 +223,6 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
 
     mPixelMap.synchronizeHToD();
     mPixelMapSorted.synchronizeHToD();
-
 
     cudaSReduceIndex(  mInputs[0].dimX()*mInputs[0].dimY()*mNbAnchors,
                        inputBatchOffset,
@@ -339,88 +339,111 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                                                                   0.0,
                                                                   0.0));
                 }
-                std::vector<BBox_T> final_rois;
-                std::vector<BBox_T> final_anchors;
+                if(inference)
+                {
+                    std::vector<BBox_T> final_rois;
+                    std::vector<BBox_T> final_anchors;
 
-                BBox_T next_candidate;
-                BBox_T next_anchors;
-                std::reverse(ROIs[cls][batchPos].begin(),ROIs[cls][batchPos].end());
-                std::reverse(ROIsAnchors[cls][batchPos].begin(),ROIsAnchors[cls][batchPos].end());
+                    BBox_T next_candidate;
+                    BBox_T next_anchors;
+                    std::reverse(ROIs[cls][batchPos].begin(),ROIs[cls][batchPos].end());
+                    std::reverse(ROIsAnchors[cls][batchPos].begin(),ROIsAnchors[cls][batchPos].end());
 
-                while (final_rois.size() < mNbProposals && !ROIs[cls][batchPos].empty()) {
-                    next_candidate = ROIs[cls][batchPos].back();
-                    ROIs[cls][batchPos].pop_back();
-                    next_anchors = ROIsAnchors[cls][batchPos].back();
-                    ROIsAnchors[cls][batchPos].pop_back();
+                    while (final_rois.size() < mNbProposals && !ROIs[cls][batchPos].empty()) {
+                        next_candidate = ROIs[cls][batchPos].back();
+                        ROIs[cls][batchPos].pop_back();
+                        next_anchors = ROIsAnchors[cls][batchPos].back();
+                        ROIsAnchors[cls][batchPos].pop_back();
 
-                    bool should_select = true;
-                    const float x0 = next_candidate.x;
-                    const float y0 = next_candidate.y;
-                    const float w0 = next_candidate.w;
-                    const float h0 = next_candidate.h;
+                        bool should_select = true;
+                        const float x0 = next_candidate.x;
+                        const float y0 = next_candidate.y;
+                        const float w0 = next_candidate.w;
+                        const float h0 = next_candidate.h;
 
-                    for (int j = static_cast<int>(final_rois.size()) - 1; j >= 0; --j) {
+                        for (int j = static_cast<int>(final_rois.size()) - 1; j >= 0; --j) {
 
-                        const float x = final_rois[j].x;
-                        const float y = final_rois[j].y;
-                        const float w = final_rois[j].w;
-                        const float h = final_rois[j].h;
-                        const float interLeft = std::max(x0, x);
-                        const float interRight = std::min(x0 + w0, x + w);
-                        const float interTop = std::max(y0, y);
-                        const float interBottom = std::min(y0 + h0, y + h);
+                            const float x = final_rois[j].x;
+                            const float y = final_rois[j].y;
+                            const float w = final_rois[j].w;
+                            const float h = final_rois[j].h;
+                            const float interLeft = std::max(x0, x);
+                            const float interRight = std::min(x0 + w0, x + w);
+                            const float interTop = std::max(y0, y);
+                            const float interBottom = std::min(y0 + h0, y + h);
 
-                        if (interLeft < interRight && interTop < interBottom) {
-                            const float interArea = (interRight - interLeft)
-                                                        * (interBottom - interTop);
-                            const float unionArea = w0 * h0 + w * h - interArea;
-                            const float IoU = interArea / unionArea;
+                            if (interLeft < interRight && interTop < interBottom) {
+                                const float interArea = (interRight - interLeft)
+                                                            * (interBottom - interTop);
+                                const float unionArea = w0 * h0 + w * h - interArea;
+                                const float IoU = interArea / unionArea;
 
-                            if (IoU > mNMS_IoU_Threshold) {
-                                should_select = false;
-                                break;
+                                if (IoU > mNMS_IoU_Threshold) {
+                                    should_select = false;
+                                    break;
 
+                                }
                             }
+
                         }
 
+                        if (should_select) {
+                            final_rois.push_back(next_candidate);
+                            final_anchors.push_back(next_anchors);
+                        }
                     }
 
-                    if (should_select) {
-                        final_rois.push_back(next_candidate);
-                        final_anchors.push_back(next_anchors);
+                    ROIs[cls][batchPos].resize(final_rois.size());
+                    ROIsAnchors[cls][batchPos].resize(final_anchors.size());
+
+                    for(unsigned int proposal = 0; proposal < final_rois.size(); ++ proposal )
+                    {
+                        mROIsBBOxFinal({0, proposal, batchPos, cls}) = final_rois[proposal].x;
+                        mROIsBBOxFinal({1, proposal, batchPos, cls}) = final_rois[proposal].y;
+                        mROIsBBOxFinal({2, proposal, batchPos, cls}) = final_rois[proposal].w;
+                        mROIsBBOxFinal({3, proposal, batchPos, cls}) = final_rois[proposal].h;
+                        mROIsBBOxFinal({4, proposal, batchPos, cls}) = final_rois[proposal].s;
+                        mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = final_anchors[proposal].x;
+                        mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = final_anchors[proposal].y;
+                        mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = final_anchors[proposal].w;
+                        mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = final_anchors[proposal].h;
+                        mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = final_anchors[proposal].s;
                     }
-                }
-                ROIs[cls][batchPos].resize(final_rois.size());
-                ROIsAnchors[cls][batchPos].resize(final_anchors.size());
+                    for(unsigned int proposal = final_rois.size(); proposal < mNbProposals; ++ proposal )
+                    {
+                        mROIsBBOxFinal({0, proposal, batchPos, cls}) = 0.0;
+                        mROIsBBOxFinal({1, proposal, batchPos, cls}) = 0.0;
+                        mROIsBBOxFinal({2, proposal, batchPos, cls}) = 0.0;
+                        mROIsBBOxFinal({3, proposal, batchPos, cls}) = 0.0;
+                        mROIsBBOxFinal({4, proposal, batchPos, cls}) = 0.0;
+                        mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = 0.0;
+                        mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = 0.0;
+                        mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = 0.0;
+                        mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = 0.0;
+                        mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = 0.0;
+                    }
 
-                for(unsigned int proposal = 0; proposal < final_rois.size(); ++ proposal )
-                {
-                    mROIsBBOxFinal({0, proposal, batchPos, cls}) = final_rois[proposal].x;
-                    mROIsBBOxFinal({1, proposal, batchPos, cls}) = final_rois[proposal].y;
-                    mROIsBBOxFinal({2, proposal, batchPos, cls}) = final_rois[proposal].w;
-                    mROIsBBOxFinal({3, proposal, batchPos, cls}) = final_rois[proposal].h;
-                    mROIsBBOxFinal({4, proposal, batchPos, cls}) = final_rois[proposal].s;
-                    mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = final_anchors[proposal].x;
-                    mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = final_anchors[proposal].y;
-                    mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = final_anchors[proposal].w;
-                    mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = final_anchors[proposal].h;
-                    mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = final_anchors[proposal].s;
+                    mROIsIndexFinal(batchPos, cls) = final_rois.size();
                 }
-                for(unsigned int proposal = final_rois.size(); proposal < mNbProposals; ++ proposal )
+                else
                 {
-                    mROIsBBOxFinal({0, proposal, batchPos, cls}) = 0.0;
-                    mROIsBBOxFinal({1, proposal, batchPos, cls}) = 0.0;
-                    mROIsBBOxFinal({2, proposal, batchPos, cls}) = 0.0;
-                    mROIsBBOxFinal({3, proposal, batchPos, cls}) = 0.0;
-                    mROIsBBOxFinal({4, proposal, batchPos, cls}) = 0.0;
-                    mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = 0.0;
-                    mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = 0.0;
-                    mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = 0.0;
-                    mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = 0.0;
-                    mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = 0.0;
-                }
+                    for(unsigned int proposal = 0; proposal < mNbProposals; ++ proposal )
+                    {
+                        mROIsBBOxFinal({0, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIs[cls][batchPos][proposal].x : 0.0;
+                        mROIsBBOxFinal({1, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIs[cls][batchPos][proposal].y : 0.0;
+                        mROIsBBOxFinal({2, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIs[cls][batchPos][proposal].w : 0.0;
+                        mROIsBBOxFinal({3, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIs[cls][batchPos][proposal].h : 0.0;
+                        mROIsBBOxFinal({4, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIs[cls][batchPos][proposal].s : 0.0;
+                        mROIsMapAnchorsFinal({0, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIsAnchors[cls][batchPos][proposal].x : 0.0;
+                        mROIsMapAnchorsFinal({1, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIsAnchors[cls][batchPos][proposal].y : 0.0;
+                        mROIsMapAnchorsFinal({2, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIsAnchors[cls][batchPos][proposal].w : 0.0;
+                        mROIsMapAnchorsFinal({3, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIsAnchors[cls][batchPos][proposal].h : 0.0;
+                        mROIsMapAnchorsFinal({4, proposal, batchPos, cls}) = (proposal < nbElementNMS) ? ROIsAnchors[cls][batchPos][proposal].s : 0.0;
 
-                mROIsIndexFinal(batchPos, cls) = final_rois.size();
+                    }
+                    mROIsIndexFinal(batchPos, cls) = mNbProposals;
+
+                }
 
             }
             else{
@@ -443,17 +466,16 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
         }
     }
 
-
     mROIsIndexFinal.synchronizeHToD();
     mROIsBBOxFinal.synchronizeHToD();
     mROIsMapAnchorsFinal.synchronizeHToD();
 
     for(unsigned int cls = 0; cls < mNbClass; ++cls)
     {
-
-        dim3 outputs_blocks = { (unsigned int) std::ceil((float)mNbProposals/32.0),
-                                std::max(mNumParts[cls], mNumTemplates[cls]),
-                                (unsigned int) mInputs[0].dimB() };
+        const unsigned int yBlocks = (mNumParts.size() > 0) && (mNumTemplates.size() > 0) ? std::max(mNumParts[cls], mNumTemplates[cls]) : 1;
+        dim3 outputs_blocks = {(unsigned int) std::ceil((float)mNbProposals/32.0), 
+                                yBlocks, 
+                                (unsigned int) mInputs[0].dimB() } ;
 
         dim3 outputs_threads = {32, 1, 1};
 
@@ -465,14 +487,14 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                                     mNbProposals,
                                     mROIsIndexFinal.getDevicePtr() + cls*mInputs.dimB(),
                                     cls,
-                                    std::accumulate(mNumParts.begin(), mNumParts.end(), 0),
-                                    std::accumulate(mNumTemplates.begin(), mNumTemplates.end(), 0),
-                                    mMaxParts,
-                                    mMaxTemplates,
-                                    std::accumulate(mNumParts.begin(), mNumParts.begin() + cls, 0) * 2 * mNbAnchors,
-                                    std::accumulate(mNumTemplates.begin(), mNumTemplates.begin() + cls, 0) * 3 * mNbAnchors,
-                                    mNumParts[cls],
-                                    mNumTemplates[cls],
+                                    mNumParts.size() > 0 ? std::accumulate(mNumParts.begin(), mNumParts.end(), 0) : 0,
+                                    mNumTemplates.size() > 0 ? std::accumulate(mNumTemplates.begin(), mNumTemplates.end(), 0) : 0,
+                                    mNumParts.size() > 0 ? mMaxParts : 0,
+                                    mNumTemplates.size() > 0 ? mMaxTemplates : 0,
+                                    mNumParts.size() > 0 ? std::accumulate(mNumParts.begin(), mNumParts.begin() + cls, 0) * 2 * mNbAnchors : 0,
+                                    mNumTemplates.size() > 0 ? std::accumulate(mNumTemplates.begin(), mNumTemplates.begin() + cls, 0) * 3 * mNbAnchors : 0,
+                                    mNumParts.size() > 0 ? mNumParts[cls] : 0,
+                                    mNumTemplates.size() > 0 ? mNumTemplates[cls] : 0,
                                     xRatio,
                                     yRatio,
                                     xOutputRatio,
@@ -480,12 +502,11 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool /*inference*/)
                                     mROIsBBOxFinal.getDevicePtr() + cls*mInputs.dimB()*5*mNbProposals,
                                     mROIsMapAnchorsFinal.getDevicePtr() + cls*mInputs.dimB()*5*mNbProposals,
                                     mGPUAnchors.getDevicePtr(),
-                                    input_parts->getDevicePtr(),
-                                    input_templates->getDevicePtr(),
+                                    (mNumParts.size() > 0 && mNumTemplates.size() > 0) ?  input_parts->getDevicePtr(): mGPUAnchors.getDevicePtr(),
+                                    (mNumParts.size() > 0 && mNumTemplates.size() > 0) ?  input_templates->getDevicePtr() : mGPUAnchors.getDevicePtr(),
                                     mOutputs.getDevicePtr(),
                                     outputs_blocks,
                                     outputs_threads);
-
     }
     Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();

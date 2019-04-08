@@ -27,6 +27,7 @@
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
 #include "AnchorCell_Frame_Kernels_struct.hpp"
+#include "Database/Database.hpp"
 
 namespace N2D2 {
 class ObjectDetCell : public virtual Cell {
