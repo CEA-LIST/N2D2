@@ -859,6 +859,7 @@ template class N2D2::Tensor<N2D2::Synapse*>;
 template class N2D2::Tensor<N2D2::NodeEnv*>;
 template class N2D2::Tensor<N2D2::NodeOut*>;
 template class N2D2::Tensor<N2D2::AnchorCell_Frame_Kernels::Anchor>;
+template class N2D2::Tensor<N2D2::AnchorCell_Frame_Kernels::BBox_T>;
 template class N2D2::Tensor<N2D2::PoolCell_Frame_Kernels::ArgMax>;
 
 
