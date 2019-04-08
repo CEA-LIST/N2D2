@@ -38,6 +38,11 @@ namespace AnchorCell_Frame_Kernels {
         CUDA_HOSTDEV BBox_T() {}
         CUDA_HOSTDEV BBox_T(float x_, float y_, float w_, float h_):
             x(x_), y(y_), w(w_), h(h_) {}
+
+        bool operator==(const BBox_T& other) const {
+            return (x == other.x) && (y == other.y) && (w == other.w) && (h == other.h);
+        }
+
     };
     
     struct Anchor {
@@ -55,8 +60,8 @@ namespace AnchorCell_Frame_Kernels {
                float height_)
             : x0(x0_),
               y0(y0_),
-              x1(width_ + x0_ - 1),
-              y1(height_ + y0_ - 1)
+              x1(width_ + x0_),
+              y1(height_ + y0_)
         {
         }
         Anchor(float width, float height, Anchoring anchoring = TopLeft);

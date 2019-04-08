@@ -28,13 +28,30 @@
 namespace N2D2 {
 class AnchorCellGenerator : public CellGenerator {
 public:
+    struct AnchorBBOX_T {
+        float x;
+        float y;
+        float w;
+        float h;
+        float s;
+
+        AnchorBBOX_T() {}
+        AnchorBBOX_T(float x_, float y_, float w_, float h_, float s_):
+            x(x_), y(y_), w(w_), h(h_), s(s_) {}
+
+    };
+
     static std::shared_ptr<AnchorCell>
     generate(Network& network,
              StimuliProvider& sp,
              const std::vector<std::shared_ptr<Cell> >& parents,
              IniParser& iniConfig,
              const std::string& section);
-
+    static std::vector<AnchorBBOX_T> generateAnchors_kmeans(   StimuliProvider& sp,
+                                                        Database::StimuliSet set,
+                                                        std::vector<int>& labels,
+                                                        unsigned int nbAnchors) ;
+ 
 private:
     static Registrar<CellGenerator> mRegistrar;
 };

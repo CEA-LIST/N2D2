@@ -31,6 +31,7 @@
 namespace N2D2 {
 
 class ROI;
+class StimuliProvider;
 
 class AnchorCell_Frame : public virtual AnchorCell, public Cell_Frame<Float_T> {
 public:
@@ -45,6 +46,7 @@ public:
     {
         return std::make_shared<AnchorCell_Frame>(name, sp, anchors, scoresCls);
     }
+
 
     virtual const std::vector<AnchorCell_Frame_Kernels::BBox_T>&
         getGT(unsigned int batchPos) const;
@@ -64,13 +66,18 @@ public:
     virtual std::vector<Float_T> getAnchor(const unsigned int idx) const;
     void checkGradient(double /*epsilon */ = 1.0e-4,
                        double /*maxError */ = 1.0e-6) {};
+                       
+    virtual void setAnchors(const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors);
+
     virtual ~AnchorCell_Frame() {};
 
 protected:
     std::vector<AnchorCell_Frame_Kernels::Anchor> mAnchors;
     std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> > mGT;
+    std::vector<std::vector<std::vector< AnchorCell_Frame_Kernels::BBox_T> > > mGTClass;
     Tensor<int> mArgMaxIoU;
     std::vector<Float_T> mMaxIoU;
+    std::vector<std::vector<Float_T> > mMaxIoUClass;
 
 private:
     static Registrar<AnchorCell> mRegistrar;
@@ -82,7 +89,12 @@ private:
 N2D2::Float_T N2D2::AnchorCell_Frame::smoothL1(Float_T tx, Float_T x) const {
     const Float_T error = tx - x;
     const Float_T sign = (error >= 0.0) ? 1.0 : -1.0;
-    return (std::fabs(error) < 1.0) ? error : sign;
+    //return (std::fabs(error) < 1.0) ? error*sign : sign;
+    return (std::fabs(error) < 1.0) ? 
+            std::fabs(error)*std::fabs(error) * 0.5 * sign 
+            : (std::fabs(error) - 0.5f) * sign;
+
 }
 
 #endif // N2D2_ANCHORCELL_FRAME_H
+

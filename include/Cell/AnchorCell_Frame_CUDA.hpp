@@ -31,6 +31,9 @@
 #include "AnchorCell_Frame_CUDA_Kernels.hpp"
 
 namespace N2D2 {
+class ROI;
+class StimuliProvider;
+
 class AnchorCell_Frame_CUDA : public virtual AnchorCell, public Cell_Frame_CUDA<Float_T> {
 public:
     AnchorCell_Frame_CUDA(const std::string& name,
@@ -66,16 +69,39 @@ public:
     virtual std::vector<Float_T> getAnchor(const unsigned int idx) const;
     void checkGradient(double /*epsilon */ = 1.0e-4,
                        double /*maxError */ = 1.0e-6) {};
+                       
+    virtual void setAnchors(const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors);
+
     virtual ~AnchorCell_Frame_CUDA();
 
 protected:
-    CudaTensor<AnchorCell_Frame_Kernels::Anchor> mAnchors;
     std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> > mGT;
-    AnchorCell_Frame_Kernels::BBox_T** mCudaGT;
+
+    CudaTensor<AnchorCell_Frame_Kernels::Anchor> mAnchors;
     unsigned int mNbLabelsMax;
-    CudaTensor<unsigned int> mNbLabels;
     CudaTensor<int> mArgMaxIoU;
+    //FasterRCNN mode
+    AnchorCell_Frame_Kernels::BBox_T** mCudaGT;
+    CudaTensor<unsigned int> mNbLabels;
     CudaTensor<Float_T> mMaxIoU;
+    //SingleShot mode
+    CudaTensor<AnchorCell_Frame_Kernels::BBox_T> mGTClass;
+    std::vector<std::vector<std::vector< AnchorCell_Frame_Kernels::BBox_T> > > mHostGTClass;
+
+    CudaTensor<unsigned int> mNbLabelsClass;
+    CudaTensor<Float_T> mMaxIoUClass;
+
+    CudaTensor<int> mKeyNegSamples;
+    CudaTensor<int> mKeyNegSamplesSorted;
+    CudaTensor<Float_T> mConfNegSamples;
+    CudaTensor<Float_T> mConfNegSamplesFiltered;
+
+    CudaTensor<int> mKeyPosSamples;
+    CudaTensor<int> mKeyPosSamplesSorted;
+    CudaTensor<Float_T> mConfPosSamples;
+    CudaTensor<Float_T> mConfPosSamplesFiltered;
+
+
     std::vector<dim3> GPU_BLOCK_GRID;
     std::vector<dim3> GPU_THREAD_GRID;
 

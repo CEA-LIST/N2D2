@@ -73,8 +73,8 @@ __global__ void cudaSAnchorPropagate_kernel(
 
     const float xRatio = ceil(featureMapX / (float)outputsWidth);
     const float yRatio = ceil(featureMapY / (float)outputsHeight);
-    const float xOutputRatio = stimuliSizeX / (float) featureMapX;
-    const float yOutputRatio = stimuliSizeY / (float) featureMapY;
+    const float xOutputRatio = stimuliSizeX / (float) (featureMapX - 1.0);
+    const float yOutputRatio = stimuliSizeY / (float) (featureMapY - 1.0);
 
     float globalMaxIoU = 0.0;
     
@@ -235,10 +235,7 @@ __global__ void cudaSAnchorPropagate_kernel(
                     outputs[addrBase + 4 * nbAnchors * addrStep] = hbb;
                     outputs[addrBase + 5 * nbAnchors * addrStep] = maxIoU_;
 
-                    argMaxIoU[batchClsOffset/nbTotalCls 
-                                + k * addrStep 
-                                + ya * outputsWidth 
-                                + xa] = argMaxIoU_;
+                    argMaxIoU[batchClsOffset/nbTotalCls + k * addrStep + ya * outputsWidth + xa] = argMaxIoU_;
                                 
                     globalMaxIoU = max(globalMaxIoU, maxIoU_);
                     
@@ -261,13 +258,7 @@ __global__ void cudaSAnchorPropagate_kernel(
     atomicMax(maxIoU + blockIdx.z, globalMaxIoU);
 }
 
-static unsigned int nextDivisor(unsigned int target, unsigned int value)
-{
-    unsigned int v = value;
-    while (target % v != 0)
-        ++v;
-    return v;
-}
+
 
 void N2D2::cudaSAnchorPropagate(
     unsigned int stimuliSizeX,
@@ -294,22 +285,6 @@ void N2D2::cudaSAnchorPropagate(
     const dim3 blocksPerGrid,
     const dim3 threadsPerBlock)
 {
-/*
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
-
-    const dim3 blocksPerGrid = {nbAnchors, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-*/
     cudaSAnchorPropagate_kernel<<<blocksPerGrid, threadsPerBlock>>>
         (stimuliSizeX,
            stimuliSizeY,
@@ -332,5 +307,576 @@ void N2D2::cudaSAnchorPropagate(
            batchSize,
            nbTotalCls,
            nbInputs);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+__global__ void cudaSAnchorPropagateSSD_kernel( unsigned int stimuliSizeX,
+                                                unsigned int stimuliSizeY,
+                                                unsigned int featureMapX,
+                                                unsigned int featureMapY,
+                                                bool flip,
+                                                bool inference,
+                                                float* inputsCls,
+                                                float* inputsCoord,
+                                                unsigned int scoresCls,
+                                                N2D2::AnchorCell_Frame_Kernels::Anchor* anchors,
+                                                N2D2::AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
+                                                unsigned int* nbLabelsWithClass,
+                                                float* outputs,
+                                                int* argMaxIoU,
+                                                float* maxIoU,
+                                                unsigned int nbAnchors,
+                                                unsigned int outputsHeight,
+                                                unsigned int outputsWidth,
+                                                unsigned int batchSize,
+                                                unsigned int nbTotalCls,
+                                                unsigned int nbClass,
+                                                unsigned int nbInputs,
+                                                unsigned int maxGTLabels)
+{
+    const unsigned int batchOffset = blockIdx.z * 6 * nbAnchors
+                                        * outputsHeight * outputsWidth;
+    
+    const unsigned int batchCoordOffset = blockIdx.z * 4 * nbAnchors 
+                                        * outputsHeight * outputsWidth;
+
+    const unsigned int batchClsOffset = blockIdx.z * nbAnchors
+                                        * outputsHeight * outputsWidth;
+
+
+    const float xRatio = ceil(featureMapX / (float)outputsWidth);
+    const float yRatio = ceil(featureMapY / (float)outputsHeight);
+    const float xOutputRatio = stimuliSizeX / (float) featureMapX;
+    const float yOutputRatio = stimuliSizeY / (float) featureMapY;
+   
+    for (unsigned int k = blockIdx.x; k < nbAnchors;
+         k += gridDim.x)
+    {
+        const int classIdx = k/(nbAnchors/nbClass);
+
+        for (unsigned int ya = threadIdx.y; ya < outputsHeight;
+             ya += blockDim.y)
+        {
+            for (unsigned int xa = threadIdx.x; xa < outputsWidth;
+                 xa += blockDim.x)
+            {
+                
+                // Shifted anchors coordinates at (xa, ya)
+                const int xa0 = (int)(anchors[k].x0 + xa * xRatio);
+                const int ya0 = (int)(anchors[k].y0 + ya * yRatio);
+                const int xa1 = (int)(anchors[k].x1 + xa * xRatio);
+                const int ya1 = (int)(anchors[k].y1 + ya * yRatio);
+
+                const int wa = xa1 - xa0;
+                const int ha = ya1 - ya0;
+
+                // Anchor center coordinates (xac, yac)
+                const float xac = xa0 + wa / 2.0;
+                const float yac = ya0 + ha / 2.0;
+
+                const unsigned int addrStep = outputsHeight * outputsWidth;
+
+                const unsigned int addrBase = batchOffset + xa + (ya + k * outputsHeight) * outputsWidth;
+
+                const unsigned int addrCoordBase = batchCoordOffset 
+                                                    + k * addrStep
+                                                    + ya * outputsWidth 
+                                                    + xa;
+
+                const unsigned int addrClsBase = batchClsOffset 
+                                                    + k * addrStep 
+                                                    + ya * outputsWidth 
+                                                    + xa;
+                     
+                // Score
+                const float cls = inputsCls[addrClsBase];
+                // Parameterized coordinates
+                const float txbb = fmaxf(fminf(inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep], 70.0f), -70.0f);
+                const float tybb = fmaxf(fminf(inputsCoord[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep], 70.0f), -70.0f);
+                const float twbb = fmaxf(fminf(inputsCoord[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep], 70.0f), -70.0f);
+                const float thbb = fmaxf(fminf(inputsCoord[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep], 70.0f), -70.0f);
+
+                // Predicted box center coordinates
+                const float xbbc = ((flip) ? -txbb : txbb) * wa
+                                        + xac;
+                const float ybbc = ((flip) ? -tybb : tybb) * ha
+                                        + yac;
+                float wbb = wa * exp(twbb);
+                float hbb = ha * exp(thbb);
+
+                // Predicted box top-left coordinates
+                float xbb = xbbc - wbb / 2.0;
+                float ybb = ybbc - hbb / 2.0;
+
+                /// During testing: "This  may  generate
+                /// cross-boundary proposal boxes, which we clip to
+                /// the image boundary."
+                // Clip coordinates
+                if (xbb < 0.0) {
+                    wbb+= xbb;
+                    xbb = 0.0;
+                }
+                if (ybb < 0.0) {
+                    hbb+= ybb;
+                    ybb = 0.0;
+                }
+                if (xbb + wbb > featureMapX - 1)
+                    wbb = featureMapX - 1 - xbb;
+                if (ybb + hbb > featureMapY - 1)
+                    hbb = featureMapY - 1 - ybb;
+
+                // For inference, compute IoU on predicted boxes
+                // For learning, compute IoU on anchor boxes
+                // => if IoU is computed on predicted boxes during
+                // learning, predicted boxes may arbitrarily drift from
+                // anchors and learning does not converge
+
+                const N2D2::AnchorCell_Frame_Kernels::BBox_T bb
+                    = (inference)
+                        ? N2D2::AnchorCell_Frame_Kernels::BBox_T
+                            (xbb, ybb, wbb, hbb)
+                        : N2D2::AnchorCell_Frame_Kernels::BBox_T
+                            (xa0, ya0, wa, ha);
+                
+                float maxIoU_ = 0.0;
+                int argMaxIoU_ = -1;
+                
+                for (unsigned int l = 0; l < nbLabelsWithClass[blockIdx.z*nbClass + classIdx]; ++l) {
+                    // Ground Truth box coordinates
+                    const N2D2::AnchorCell_Frame_Kernels::BBox_T gt 
+                        = gtsWithClass[blockIdx.z*maxGTLabels*nbClass +  classIdx*maxGTLabels + l];
+                    
+                    const float interLeft = max(gt.x, bb.x);
+                    const float interRight = min(gt.x + gt.w, bb.x + bb.w);
+                    const float interTop = max(gt.y, bb.y);
+                    const float interBottom = min(gt.y + gt.h, bb.y + bb.h);
+
+                    if (interLeft < interRight
+                        && interTop < interBottom)
+                    {
+                        const float interArea
+                            = (interRight - interLeft)
+                                * (interBottom - interTop);
+                        const float unionArea = gt.w * gt.h
+                            + bb.w * bb.h - interArea;
+                        const float IoU = interArea / unionArea;
+
+                        if (IoU > maxIoU_) {
+                            maxIoU_ = IoU;
+                            argMaxIoU_ = l;
+                        }
+                    }
+                    
+                }
+                
+                //Rescale Bounding Box if Feature MAP size is different than stimuli size
+                xbb *=  xOutputRatio;
+                wbb *=  xOutputRatio;
+                ybb *=  yOutputRatio;
+                hbb *=  yOutputRatio;
+                
+                outputs[addrBase] = cls;
+                outputs[addrBase + 1 * nbAnchors * addrStep] = xbb;
+                outputs[addrBase + 2 * nbAnchors * addrStep] = ybb;
+                outputs[addrBase + 3 * nbAnchors * addrStep] = wbb;
+                outputs[addrBase + 4 * nbAnchors * addrStep] = hbb;
+                outputs[addrBase + 5 * nbAnchors * addrStep] = maxIoU_;
+
+                argMaxIoU[addrClsBase] = argMaxIoU_;
+              
+               
+            }
+        }
+    }
+}
+
+
+void N2D2::cudaSAnchorPropagateSSD( unsigned int stimuliSizeX,
+                                    unsigned int stimuliSizeY,
+                                    unsigned int featureMapX,
+                                    unsigned int featureMapY,
+                                    bool flip,
+                                    bool inference,
+                                    float* inputsCls,
+                                    float* inputsCoord,
+                                    unsigned int scoresCls,
+                                    AnchorCell_Frame_Kernels::Anchor* anchors,
+                                    AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
+                                    unsigned int* nbLabelsWithClass,
+                                    float* outputs,
+                                    int* argMaxIoU,
+                                    float* maxIoU,
+                                    unsigned int nbAnchors,
+                                    unsigned int outputsHeight,
+                                    unsigned int outputsWidth,
+                                    unsigned int batchSize,
+                                    unsigned int nbTotalCls,
+                                    unsigned int nbClass,
+                                    unsigned int nbInputs,
+                                    unsigned int maxLabelGT,
+                                    const dim3 blocksPerGrid,
+                                    const dim3 threadsPerBlock)
+{
+    cudaSAnchorPropagateSSD_kernel<<<blocksPerGrid, threadsPerBlock>>> (stimuliSizeX,
+                                                                        stimuliSizeY,
+                                                                        featureMapX,
+                                                                        featureMapY,
+                                                                        flip,
+                                                                        inference,
+                                                                        inputsCls,
+                                                                        inputsCoord,
+                                                                        scoresCls,
+                                                                        anchors,
+                                                                        gtsWithClass,
+                                                                        nbLabelsWithClass,
+                                                                        outputs,
+                                                                        argMaxIoU,
+                                                                        maxIoU,
+                                                                        nbAnchors,
+                                                                        outputsHeight,
+                                                                        outputsWidth,
+                                                                        batchSize,
+                                                                        nbTotalCls,
+                                                                        nbClass,
+                                                                        nbInputs,
+                                                                        maxLabelGT);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+__global__ void cudaSAnchorBackPropagateSSD_kernel( const float* inputsCls,
+                                                    const float* outputs,
+                                                    const int* argMaxIoU,
+                                                    float* diffOutputsCoords,
+                                                    float* diffOutputsCls,
+                                                    int* keyNegSamples,
+                                                    int* keyPosSamples,
+                                                    float* confNegSamples,
+                                                    float* confPosSamples,
+                                                    float positiveIoU,
+                                                    unsigned int nbAnchors,
+                                                    unsigned int outputsHeight,
+                                                    unsigned int outputsWidth,
+                                                    unsigned int batchSize,
+                                                    unsigned int nbTotalCls,
+                                                    unsigned int nbClass,
+                                                    unsigned int nbInputs)
+{
+    const unsigned int batchOffset = blockIdx.z * 6 * nbAnchors * outputsHeight * outputsWidth;
+    const unsigned int batchClsOffset = blockIdx.z * nbAnchors * outputsHeight * outputsWidth;
+    const unsigned int batchCoordOffset = blockIdx.z * 4 * nbAnchors  * outputsHeight * outputsWidth;
+
+    for (unsigned int k = blockIdx.x; k < nbAnchors; k += gridDim.x)
+    {
+        const int classIdx = (k/nbAnchors)*nbClass;
+        const int classOffset = outputsHeight*outputsWidth*nbAnchors*classIdx;
+
+        for (unsigned int ya = threadIdx.y; ya < outputsHeight; ya += blockDim.y)
+        {
+            for (unsigned int xa = threadIdx.x; xa < outputsWidth; xa += blockDim.x)
+            {
+                const unsigned int addrStep = outputsHeight * outputsWidth;
+
+                const unsigned int addrBase = batchOffset + xa + (ya + k * outputsHeight) * outputsWidth;
+
+                const unsigned int addrClsBase = batchClsOffset 
+                                                    + k * addrStep 
+                                                    + ya * outputsWidth 
+                                                    + xa;
+                const unsigned int addrCoordBase = batchCoordOffset 
+                                                    + k * addrStep
+                                                    + ya * outputsWidth 
+                                                    + xa;
+
+                // Score
+                const float conf = inputsCls[addrClsBase];
+                const float IoU = outputs[addrBase + 5 * nbAnchors * addrStep];
+
+                const int maxIoU = argMaxIoU[addrClsBase];
+                
+                if (IoU >= positiveIoU && maxIoU > -1)
+                {
+                    keyPosSamples[addrClsBase] = xa + (ya + k * outputsHeight) * outputsWidth;
+                    confPosSamples[addrClsBase] = conf;
+
+                    keyNegSamples[addrClsBase] = -1;
+                    confNegSamples[addrClsBase] = -1.0f;
+
+                }
+                else if(maxIoU == -1 /*&& IoU <= 0.0*/)
+                {
+                    keyNegSamples[addrClsBase] = xa + (ya + k * outputsHeight) * outputsWidth;
+                    confNegSamples[addrClsBase] = conf;
+
+                    keyPosSamples[addrClsBase] = -1;
+                    confPosSamples[addrClsBase] = -1.0f;
+                }
+                else
+                {
+                    //printf("maxIoU: %d\n", maxIoU);
+
+                    keyNegSamples[addrClsBase] = -1;
+                    confNegSamples[addrClsBase] = -1.0f;
+
+                    keyPosSamples[addrClsBase] = -1;
+                    confPosSamples[addrClsBase] = -1.0f;
+
+                }
+                
+
+
+                diffOutputsCls[addrClsBase] = 0.0f;
+
+                diffOutputsCoords[addrCoordBase] = 0.0f;
+                diffOutputsCoords[addrCoordBase + 1 * nbAnchors * addrStep] = 0.0f;
+                diffOutputsCoords[addrCoordBase + 2 * nbAnchors * addrStep] = 0.0f;
+                diffOutputsCoords[addrCoordBase + 3 * nbAnchors * addrStep] = 0.0f;
+
+            }
+        }
+    }
+}
+
+void N2D2::cudaSAnchorBackPropagatePropagateSSD(const float* inputsCls,
+                                                const float* outputs,
+                                                const int* argMaxIoU,
+                                                float* diffOutputsCoords,
+                                                float* diffOutputsCls,
+                                                int* keyNegSamples,
+                                                int* keyPosSamples,
+                                                float* confNegSamples,
+                                                float* confPosSamples,
+                                                float positiveIoU,
+                                                unsigned int nbAnchors,
+                                                unsigned int outputsHeight,
+                                                unsigned int outputsWidth,
+                                                unsigned int batchSize,
+                                                unsigned int nbTotalCls,
+                                                unsigned int nbClass,
+                                                unsigned int nbInputs,
+                                                const dim3 blocksPerGrid,
+                                                const dim3 threadsPerBlock)
+{
+    cudaSAnchorBackPropagateSSD_kernel<<<blocksPerGrid, threadsPerBlock>>> (inputsCls,
+                                                                            outputs,
+                                                                            argMaxIoU,
+                                                                            diffOutputsCoords,
+                                                                            diffOutputsCls,
+                                                                            keyNegSamples,
+                                                                            keyPosSamples,
+                                                                            confNegSamples,
+                                                                            confPosSamples,
+                                                                            positiveIoU,
+                                                                            nbAnchors,
+                                                                            outputsHeight,
+                                                                            outputsWidth,
+                                                                            batchSize,
+                                                                            nbTotalCls,
+                                                                            nbClass,
+                                                                            nbInputs);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaSAnchorBackPropagateSSD_NegSamples_kernel(const float* inputCls,
+                                                                float* diffOutputsCls,
+                                                                const float* confSamples,
+                                                                const int* keySamples,
+                                                                const int nbSamples,
+                                                                const int nbPositive,
+                                                                const unsigned int nbAnchors,
+                                                                const unsigned int outputsHeight,
+                                                                const unsigned int outputsWidth,
+                                                                const unsigned int batchSize)
+{
+
+    const int index = (threadIdx.x & 0x1f) + blockIdx.x*blockDim.x;
+
+    if(index < nbSamples)
+    {
+        const int indexSamples = keySamples[index];
+        const float error = inputCls[indexSamples]; 
+        //diffOutputsCls[indexSamples] = -inputCls[index] / (nbPositive * batchSize);
+        //printf("error[%d]: %f\n", indexSamples, error);
+
+        diffOutputsCls[indexSamples] = -error / (nbPositive * batchSize);
+    }
+    
+}
+
+
+void N2D2::cudaSAnchorBackPropagate_SSD_NegSamples( const float* inputCls,
+                                                    float* diffOutputsCls,
+                                                    const float* confNegSamples,
+                                                    const int* keyNegSamples,
+                                                    const int nbNegative,
+                                                    const int nbPositive,
+                                                    const unsigned int nbAnchors,
+                                                    const unsigned int outputsHeight,
+                                                    const unsigned int outputsWidth,
+                                                    const unsigned int batchSize,
+                                                    const dim3 blocksPerGrid,
+                                                    const dim3 threadsPerBlock)
+{
+
+    cudaSAnchorBackPropagateSSD_NegSamples_kernel<<<blocksPerGrid, threadsPerBlock>>> (inputCls,
+                                                                                        diffOutputsCls,
+                                                                                        confNegSamples,
+                                                                                        keyNegSamples,
+                                                                                        nbNegative,
+                                                                                        nbPositive,
+                                                                                        nbAnchors,
+                                                                                        outputsHeight,
+                                                                                        outputsWidth,
+                                                                                        batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+
+__device__ static float smoothL1(float tx, float x)
+{
+    const float error = tx - x;
+    float return_value = 0.0f;
+    float sign = -1.0f;
+    if (error >= 0.0f)
+        sign = 1.0f;
+
+    /*
+    float sign = -1.0f;
+
+
+    if (error >= 0.0f)
+        sign = 1.0f;
+
+    if(abs(error) >= 1.0f)
+        return_value = sign;
+        */
+    if(abs(error) < 1.0f)
+    {
+        return_value = sign * 0.5*(abs(error)*abs(error));
+    }
+    else
+        return_value = (abs(error) - 0.5f)*sign;
+    return return_value;
+}
+
+
+__global__ void cudaSAnchorBackPropagateSSD_PosSamples_kernel(const float* inputCls,
+                                                                float* diffOutputsCls,
+                                                                const float* inputCoord,
+                                                                float* diffOutputsCoord,
+                                                                const float* confSamples,
+                                                                const int* keySamples,
+                                                                N2D2::AnchorCell_Frame_Kernels::Anchor* anchors,
+                                                                const float xRatio,
+                                                                const float yRatio,
+                                                                N2D2::AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
+                                                                const int* argMaxIoU,
+                                                                const int nbPositive,
+                                                                const float lossLambda,
+                                                                const unsigned int nbAnchors,
+                                                                const unsigned int outputsHeight,
+                                                                const unsigned int outputsWidth,
+                                                                const unsigned int batchSize)
+{
+
+    const int index = (threadIdx.x & 0x1f) + blockIdx.x*blockDim.x;
+
+    if(index < nbPositive)
+    {
+        const int indexSamples = keySamples[index];
+        const int keyArgMax = argMaxIoU[indexSamples];
+        const N2D2::AnchorCell_Frame_Kernels::BBox_T gt = gtsWithClass[keyArgMax];
+
+        const int xa = indexSamples % outputsWidth;
+        const int k = indexSamples / (outputsHeight * outputsWidth);
+        const int ya = (indexSamples - k*outputsHeight*outputsWidth) / outputsWidth;
+
+        const int xa0 = (int)(anchors[k].x0 + xa * xRatio);
+        const int ya0 = (int)(anchors[k].y0 + ya * yRatio);
+        const int xa1 = (int)(anchors[k].x1 + xa * xRatio);
+        const int ya1 = (int)(anchors[k].y1 + ya * yRatio);
+
+        // Anchors width and height
+        const int wa = xa1 - xa0;
+        const int ha = ya1 - ya0;
+
+        // Anchor center coordinates (xac, yac)
+        const float xac = xa0 + wa / 2.0;
+        const float yac = ya0 + ha / 2.0;
+
+        // Ground Truth center coordinates (xgtc, ygtc)
+        const float xgtc = gt.x + gt.w / 2.0;
+        const float ygtc = gt.y + gt.h / 2.0;
+
+        // Parameterized Ground Truth center coordinates
+        const float txgt = (xgtc - xac) / wa;
+        const float tygt =(ygtc - yac) / ha;
+        const float twgt = log(gt.w / wa);
+        const float thgt = log(gt.h / ha);
+
+        // Parameterized coordinates
+        const float tx = inputCoord[indexSamples];
+        const float ty = inputCoord[indexSamples + 1 * outputsHeight * outputsWidth * nbAnchors];
+        const float tw = inputCoord[indexSamples + 2 * outputsHeight * outputsWidth * nbAnchors];
+        const float th = inputCoord[indexSamples + 3 * outputsHeight * outputsWidth * nbAnchors];
+
+        //printf("Coord[%d]: {%f, %f, %f, %f}(%f)\n", indexSamples, tx, ty, tw, th, inputCls[indexSamples]);
+
+
+        // Smooth L1 loss
+        const float lossTx = lossLambda * smoothL1(txgt, tx) / (nbPositive); //(nbPositive * batchSize);
+        const float lossTy = lossLambda * smoothL1(tygt, ty) / (nbPositive); //(nbPositive * batchSize);
+        const float lossTw = lossLambda * smoothL1(twgt, tw) / (nbPositive); //(nbPositive * batchSize);
+        const float lossTh = lossLambda * smoothL1(thgt, th) / (nbPositive); //(nbPositive * batchSize);
+        const float lossCls = (1.0f - inputCls[indexSamples]) / (nbPositive); //(nbPositive * batchSize);
+
+        diffOutputsCoord[indexSamples] = lossTx / batchSize;
+        diffOutputsCoord[indexSamples + 1 * outputsHeight * outputsWidth * nbAnchors] = lossTy / batchSize;
+        diffOutputsCoord[indexSamples + 2 * outputsHeight * outputsWidth * nbAnchors] = lossTw / batchSize;
+        diffOutputsCoord[indexSamples + 3 * outputsHeight * outputsWidth * nbAnchors] = lossTh / batchSize;
+        diffOutputsCls[indexSamples] = lossCls / batchSize;
+    }
+    
+}
+
+void N2D2::cudaSAnchorBackPropagateSSD_PosSamples( const float* inputCls,
+                                                    float* diffOutputsCls,
+                                                    const float* inputCoord,
+                                                    float* diffOutputsCoord,
+                                                    const float* confSamples,
+                                                    const int* keySamples,
+                                                    N2D2::AnchorCell_Frame_Kernels::Anchor* anchors,
+                                                    const float xRatio,
+                                                    const float yRatio,
+                                                    N2D2::AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
+                                                    const int* argMaxIoU,
+                                                    const int nbPositive,
+                                                    const float lossLambda,
+                                                    const unsigned int nbAnchors,
+                                                    const unsigned int outputsHeight,
+                                                    const unsigned int outputsWidth,
+                                                    const unsigned int batchSize,
+                                                    const dim3 blocksPerGrid,
+                                                    const dim3 threadsPerBlock)
+{
+
+    cudaSAnchorBackPropagateSSD_PosSamples_kernel<<<blocksPerGrid, threadsPerBlock>>> (inputCls,
+                                                                                        diffOutputsCls,
+                                                                                        inputCoord,
+                                                                                        diffOutputsCoord,
+                                                                                        confSamples,
+                                                                                        keySamples,
+                                                                                        anchors,
+                                                                                        xRatio,
+                                                                                        yRatio,
+                                                                                        gtsWithClass,
+                                                                                        argMaxIoU,
+                                                                                        nbPositive,
+                                                                                        lossLambda,
+                                                                                        nbAnchors,
+                                                                                        outputsHeight,
+                                                                                        outputsWidth,
+                                                                                        batchSize);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

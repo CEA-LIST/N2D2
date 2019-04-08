@@ -29,13 +29,17 @@
 #include "utils/Utils.hpp"
 
 #include "AnchorCell_Frame_Kernels_struct.hpp"
+#include "Database/Database.hpp"
 
 namespace N2D2 {
 
 class ROI;
+class StimuliProvider;
 
 class AnchorCell : public virtual Cell {
 public:
+
+
     typedef std::function<std::shared_ptr<AnchorCell>(
         const std::string&,
         StimuliProvider&,
@@ -54,6 +58,8 @@ public:
                StimuliProvider& sp,
                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                unsigned int scoresCls = 1);
+
+
     const char* getType() const
     {
         return Type;
@@ -79,12 +85,16 @@ public:
     unsigned int getScoreCls() { return mScoresCls; };
     unsigned int getFeatureMapWidth() { return mFeatureMapWidth; };
     unsigned int getFeatureMapHeight() { return mFeatureMapHeight; };
+    //std::map<int, int> getLabelMapping() { return mLabelsMapping; };
+    std::vector<int> getLabelMapping() { return mLabelsMapping; };
 
+    void labelsMapping(const std::string& fileName);
+    virtual void setAnchors(const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors);
     virtual ~AnchorCell() {};
 
 protected:
-    virtual void setOutputsDims();
 
+    virtual void setOutputsDims();
     Parameter<double> mPositiveIoU;
     Parameter<double> mNegativeIoU;
     Parameter<double> mLossLambda;
@@ -93,9 +103,18 @@ protected:
     Parameter<unsigned int> mFeatureMapWidth;
     Parameter<unsigned int> mFeatureMapHeight;
     Parameter<bool> mFlip;
+    Parameter<bool> mSingleShotMode;
+    Parameter<std::string> mTargetFilePath;
+    Parameter<unsigned int> mNegativeRatioSSD;
+    Parameter<unsigned int> mMaxLabelGT;
+    Parameter<int> mNbClass;
 
     StimuliProvider& mStimuliProvider;
     unsigned int mScoresCls;
+    //std::map<int, int> mLabelsMapping;
+    std::vector<int> mLabelsMapping;
+    std::vector<int> mAnchorsStats;
+
 };
 }
 
