@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "StimuliProvider.hpp"
 #include "Generator/AnchorCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
