@@ -267,6 +267,12 @@ void cudaSSetOutputTargets_kernel(int* targets,
 }
 
 //Double
+#define VALUE_TO_STRING(x) #x
+#define VALUE(x) VALUE_TO_STRING(x)
+#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
+
+#pragma message(VAR_NAME_VALUE(__CUDA_ARCH__))
+
 #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
 #else
 __device__ double atomicAdd(double* address, double val)
