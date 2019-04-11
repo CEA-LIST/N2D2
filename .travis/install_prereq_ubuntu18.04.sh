@@ -39,6 +39,8 @@ if [ -n "$USE_CUDA" ] ; then
     dpkg -i $CUDA_REPO_PKG
     rm $CUDA_REPO_PKG
 
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+
     # Install the "repo" package for CuDNN
     ML_REPO_PKG=nvidia-machine-learning-repo-ubuntu1804_1.0.0-1_amd64.deb
     wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/$ML_REPO_PKG
