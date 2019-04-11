@@ -267,15 +267,14 @@ void cudaSSetOutputTargets_kernel(int* targets,
 }
 
 //Double
-#define VALUE_TO_STRING(x) #x
-#define VALUE(x) VALUE_TO_STRING(x)
-#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
-
-#pragma message(VAR_NAME_VALUE(__CUDA_ARCH__))
+#if __CUDA_ARCH__ < 600
+// Prototype declaration
+__device__ __forceinline__ double atomicAdd(double* address, double val);
+#endif
 
 #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
 #else
-__device__ double atomicAdd(double* address, double val)
+__device__ __forceinline__ double atomicAdd(double* address, double val)
 {
     unsigned long long int* address_as_ull =
                              (unsigned long long int*)address;
