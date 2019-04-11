@@ -269,7 +269,7 @@ void cudaSSetOutputTargets_kernel(int* targets,
 //Double
 #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
 #else
-static __device__ double atomicAdd(double* address, double val)
+__device__ double atomicAdd(double* address, double val)
 {
     unsigned long long int* address_as_ull =
                              (unsigned long long int*)address;
