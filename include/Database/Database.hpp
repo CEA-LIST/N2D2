@@ -198,7 +198,8 @@ public:
                                unsigned int strideX,
                                unsigned int strideY,
                                StimuliSetMask setMask,
-                               bool randomShuffle = false);
+                               bool randomShuffle = false,
+                               bool overlapping = false);
 
     virtual void load(const std::string& /*dataPath*/,
                       const std::string& labelPath = "",

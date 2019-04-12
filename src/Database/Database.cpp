@@ -716,7 +716,8 @@ void N2D2::Database::extractSlices(unsigned int width,
                                    unsigned int strideX,
                                    unsigned int strideY,
                                    StimuliSetMask setMask,
-                                   bool randomShuffle)
+                                   bool randomShuffle,
+                                   bool overlapping)
 {
     const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
 
@@ -760,10 +761,25 @@ void N2D2::Database::extractSlices(unsigned int width,
                  x += strideX) {
                 for (unsigned int y = 0; y < (unsigned int)data.rows;
                      y += strideY) {
-                    const RectangularROI<int>::Point_T tl(x, y);
-                    const RectangularROI<int>::Point_T br(
-                        std::min(x + width, (unsigned int)data.cols),
-                        std::min(y + height, (unsigned int)data.rows));
+                    RectangularROI<int>::Point_T tl, br;
+
+                    if (overlapping) {
+                        tl = RectangularROI<int>::Point_T(
+                            std::min(x, data.cols - width),
+                            std::min(y, data.rows - height));
+                        br = RectangularROI<int>::Point_T(
+                            tl.x + width,
+                            tl.y + height);
+                    }
+                    else {
+                        tl = RectangularROI<int>::Point_T(x, y);
+                        br = RectangularROI<int>::Point_T(
+                            std::min(x + width, (unsigned int)data.cols),
+                            std::min(y + height, (unsigned int)data.rows));
+                    }
+
+                    const int offsetX = x - tl.x; // = 0 without overlapping
+                    const int offsetY = y - tl.y; // = 0 without overlapping
 
                     Stimulus stimulus(fullStimulus);
                     stimulus.slice = new RectangularROI<int>(-1, tl, br);
@@ -787,7 +803,8 @@ void N2D2::Database::extractSlices(unsigned int width,
 
                             if (roiRect.tl().x > (int)width
                                 || roiRect.tl().y > (int)height
-                                || roiRect.br().x < 0 || roiRect.br().y < 0) {
+                                || roiRect.br().x < offsetX
+                                || roiRect.br().y < offsetY) {
                                 // No overlap with current slice, discard ROI
                                 delete roi;
                                 continue;
@@ -799,6 +816,21 @@ void N2D2::Database::extractSlices(unsigned int width,
                             // *before* slicing => DON'T CHANGE IT!
 
                         stimulus.ROIs.push_back(roi);
+                    }
+
+                    if (overlapping) {
+                        // Make overlapping area ignored
+                        if (offsetX > 0) {
+                            stimulus.ROIs.push_back(new RectangularROI<int>(-1,
+                                RectangularROI<int>::Point_T(0, 0),
+                                RectangularROI<int>::Point_T(offsetX, height)));
+                        }
+
+                        if (offsetY > 0) {
+                            stimulus.ROIs.push_back(new RectangularROI<int>(-1,
+                                RectangularROI<int>::Point_T(0, 0),
+                                RectangularROI<int>::Point_T(width, offsetY)));
+                        }
                     }
 
                     if (x == 0 && y == 0)
@@ -1284,27 +1316,39 @@ N2D2::Database::getStimulusROIs(StimulusID id) const
                    std::bind(&ROI::clone, std::placeholders::_1));
 
     if (mStimuli[id].label >= 0 && !stimulusROIs.empty()) {
-        if (stimulusROIs.size() != 1) {
+        unsigned int nbLabelROIs = 0;
+
+        for (std::vector<std::shared_ptr<ROI> >::iterator
+            itROIs = stimulusROIs.begin(), itROIsEnd = stimulusROIs.end();
+            itROIs != itROIsEnd; ++itROIs)
+        {
+            if ((*itROIs)->getLabel() >= 0) {
+                // Align ROI to extracted data
+                const cv::Rect roiOrg = (*itROIs)->getBoundingRect();
+                (*itROIs)->padCrop(roiOrg.tl().x,
+                                        roiOrg.tl().y,
+                                        roiOrg.width,
+                                        roiOrg.height);
+
+                if (mStimuli[id].slice != NULL) {
+                    // Align ROI to slice
+                    const cv::Rect sliceRect
+                        = mStimuli[id].slice->getBoundingRect();
+
+                    (*itROIs)->padCrop(sliceRect.tl().x,
+                                            sliceRect.tl().y,
+                                            sliceRect.width,
+                                            sliceRect.height);
+                }
+
+                ++nbLabelROIs; // only for ROIs with label >= 0
+            }
+        }
+
+        if (nbLabelROIs > 1) {
             throw std::runtime_error("Database::getStimulusROIs(): "
                                      "number of ROIs should be 1 for "
                                      "non-composite stimuli");
-        }
-
-        // Align ROI to extracted data
-        const cv::Rect roiOrg = stimulusROIs[0]->getBoundingRect();
-        stimulusROIs[0]->padCrop(roiOrg.tl().x,
-                                 roiOrg.tl().y,
-                                 roiOrg.width,
-                                 roiOrg.height);
-
-        if (mStimuli[id].slice != NULL) {
-            // Align ROI to slice
-            const cv::Rect sliceRect = mStimuli[id].slice->getBoundingRect();
-
-            stimulusROIs[0]->padCrop(sliceRect.tl().x,
-                                     sliceRect.tl().y,
-                                     sliceRect.width,
-                                     sliceRect.height);
         }
     }
 
@@ -1552,8 +1596,26 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
     }
 
     if (mStimuli[id].label >= 0 && !mStimuli[id].ROIs.empty()) {
-        // Non-composite stimulus with ROI
-        data = mStimuli[id].ROIs[0]->extract(data);
+        bool extracted = false;
+
+        for (std::vector<ROI*>::const_iterator
+            itROIs = mStimuli[id].ROIs.begin(),
+            itROIsEnd = mStimuli[id].ROIs.end();
+            itROIs != itROIsEnd; ++itROIs)
+        {
+            if ((*itROIs)->getLabel() >= 0) {
+                // Non-composite stimulus with ROI
+                if (!extracted) {
+                    data = (*itROIs)->extract(data);
+                    extracted = true;
+                }
+                else {
+                    throw std::runtime_error("Database::loadStimulusData():"
+                        " number of ROIs should be 1 for non-composite"
+                        " stimuli");
+                }
+            }
+        }
     }
 
     if (mStimuli[id].slice != NULL)

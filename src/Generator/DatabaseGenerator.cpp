@@ -77,8 +77,11 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
         const bool randomShuffle = iniConfig.getProperty<bool>("RandomShuffle",
                                                                true);
 
+        const bool overlapping = iniConfig.getProperty<bool>("Overlapping",
+                                                               false);
+
         database->extractSlices(width, height, strideX, strideY, applyTo,
-                                randomShuffle);
+                                randomShuffle, overlapping);
     }
 
     return database;
