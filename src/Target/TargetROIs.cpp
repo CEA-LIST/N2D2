@@ -502,7 +502,8 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
         const std::vector<DetectedBB>& detectedBB = mDetectedBB[batchPos];
 
         if (!detectedBB.empty()) {
-            const std::string logFileName = fileBaseName + ".log";
+            const std::string logFileName = Utils::fileBaseName(fileName)
+                + ".log";
             std::ofstream roisData(logFileName.c_str());
 
             if (!roisData.good())
