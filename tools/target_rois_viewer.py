@@ -101,7 +101,8 @@ class RoisViewer(TargetViewer.TargetViewer):
         frameName = os.path.basename(self.files[self.index])
 
         if self.estimatedPath is not None:
-            cv2.destroyWindow(self.estimatedWindow)
+            if self.estimatedWindow != "":
+                cv2.destroyWindow(self.estimatedWindow)
 
             estimatedName = os.path.join(self.estimatedPath,
                 self._replace_last_of(frameName, ".", "_estimated."))
