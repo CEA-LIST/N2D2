@@ -106,6 +106,16 @@ class RoisViewer(TargetViewer.TargetViewer):
 
             estimatedName = os.path.join(self.estimatedPath,
                 self._replace_last_of(frameName, ".", "_estimated."))
+
+            if not os.path.isfile(estimatedName):
+                estimatedNameBase = os.path.splitext(estimatedName)[0]
+                fileProposals = glob.glob(estimatedNameBase + ".*")
+
+                if len(fileProposals) != 0:
+                    estimatedName = fileProposals[0]
+                else:
+                    raise Exception("File doesn't exist: " + estimatedName)
+
             self.estimatedWindow = os.path.basename(estimatedName)
             cv2.namedWindow(self.estimatedWindow, cv2.WINDOW_NORMAL)
             cv2.setMouseCallback(self.estimatedWindow,
