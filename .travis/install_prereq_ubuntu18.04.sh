@@ -34,7 +34,7 @@ apt-get install -y \
 
 if [ -n "$USE_CUDA" ] ; then
     # Install the "repo" package for CUDA
-    CUDA_REPO_PKG=cuda-repo-ubuntu1804_10.1.105-1_amd64.deb
+    CUDA_REPO_PKG=cuda-repo-ubuntu1804_10.0.130-1_amd64.deb
     wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/$CUDA_REPO_PKG
     dpkg -i $CUDA_REPO_PKG
     rm $CUDA_REPO_PKG
@@ -50,8 +50,8 @@ if [ -n "$USE_CUDA" ] ; then
     apt-get -y update
 
     # Install the CUDA and CuDNN packages
-    CUDA_PKG_VERSION="10-1"
-    CUDA_VERSION="10.1"
+    CUDA_PKG_VERSION="10-0"
+    CUDA_VERSION="10.0"
 
     apt-get install -y --no-install-recommends \
         cuda-core-$CUDA_PKG_VERSION \
