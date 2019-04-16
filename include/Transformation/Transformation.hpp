@@ -128,26 +128,40 @@ N2D2::Tensor<T1> N2D2::Transformation::apply(const Tensor<T1>& frame,
 {
     cv::Mat mat = (cv::Mat)frame;
     apply(mat, id);
-    return Tensor<T1>(mat);
+
+    Tensor<T1> res(mat);
+    // For single channel cv::Mat, the tensor dims will be {x, y} and not
+    // {x, y, 1}. If frame original dims where 3D ({x, y, 1}), make sure to
+    // return a 3D tensor.
+    res.reshape(frame.dims());
+    return res;
 }
 
 template <class T1>
 void N2D2::Transformation::apply(Tensor<T1>& frame, int id)
 {
+    const std::vector<size_t> dims = frame.dims();
+
     cv::Mat mat = (cv::Mat)frame;
     apply(mat, id);
     frame = Tensor<T1>(mat);
+    frame.reshape(dims); // same as above
 }
 
 template <class T1, class T2>
 void
 N2D2::Transformation::apply(Tensor<T1>& frame, Tensor<T2>& labels, int id)
 {
+    const std::vector<size_t> dims = frame.dims();
+    const std::vector<size_t> labelsDims = labels.dims();
+
     cv::Mat mat = (cv::Mat)frame;
     cv::Mat labelsMat = (cv::Mat)labels;
     apply(mat, labelsMat, id);
     frame = Tensor<T1>(mat);
+    frame.reshape(dims); // same as above
     labels = Tensor<T2>(labelsMat);
+    labels.reshape(labelsDims); // same as above
 }
 
 void
