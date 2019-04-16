@@ -346,12 +346,22 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
         deepNet->reportOutputsHistogram(outputsHistogram);
         deepNet->logEstimatedLabels(testName);
 
-        if (opt.logOutputs && i == 0) {
-            std::cout << "First stimulus ID: " << sp->getBatch()[0]
+        if (opt.logOutputs > 0 && b == (opt.logOutputs - 1) / batchSize) {
+            const unsigned int batchPos = (opt.logOutputs - 1) % batchSize;
+
+            std::cout << "Outputs log for stimulus #" << opt.logOutputs
+                << " (" << (batchPos + 1) << "/" << batchSize
+                << " in batch #" << b << "):" << std::endl;
+            std::cout << "  Stimulus ID: " << sp->getBatch()[batchPos]
                         << std::endl;
-            std::cout << "First stimulus label: "
-                        << sp->getLabelsData()[0](0) << std::endl;
-            deepNet->logOutputs("outputs_" + testName);
+            std::cout << "  Stimulus label: "
+                        << sp->getLabelsData()[batchPos](0) << std::endl;
+
+            std::stringstream numStr;
+            numStr << opt.logOutputs;
+
+            deepNet->logOutputs("outputs_" + testName + "_" + numStr.str(),
+                                batchPos);
         }
 
         timings.push_back(std::make_pair(
