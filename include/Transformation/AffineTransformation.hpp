@@ -25,6 +25,10 @@
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Utils.hpp"
 
+#ifndef WIN32
+#include <fenv.h>
+#endif
+
 namespace N2D2 {
 class AffineTransformation : public Transformation {
 public:
@@ -73,6 +77,7 @@ private:
     cv::Mat mFirstValue;
     const Operator mSecondOperator;
     cv::Mat mSecondValue;
+    mutable int mDivByZeroWarn;
 };
 }
 

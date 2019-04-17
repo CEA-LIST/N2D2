@@ -27,7 +27,8 @@ N2D2::AffineTransformation::AffineTransformation(Operator firstOperator,
     : mFirstOperator(firstOperator),
       mFirstValue(firstValue),
       mSecondOperator(secondOperator),
-      mSecondValue(secondValue)
+      mSecondValue(secondValue),
+      mDivByZeroWarn(0)
 {
     // ctor
 }
@@ -117,7 +118,58 @@ void N2D2::AffineTransformation::applyOperator(cv::Mat& frame,
         mat = mat.mul(valueMat);
         break;
     case Divides:
-        cv::divide(mat, valueMat, mat);
+        const int nonZero = cv::countNonZero(valueMat);
+        assert(nonZero <= (int)valueMat.total());
+
+        if (nonZero < (int)valueMat.total()) {
+            // Divide by 0 will occur...
+            const int warnLimit = 5;
+
+            if (mDivByZeroWarn < warnLimit) {
+                std::cout << Utils::cwarning << "Warning:"
+                    " AffineTransformation: divide by 0 will occur (found "
+                    << (valueMat.total() - nonZero) << " 0s in the denominator)."
+                    " Values divided by 0 will be set to 0.0."
+                    << Utils::cdef << std::endl;
+
+                ++mDivByZeroWarn;
+
+                if (mDivByZeroWarn == warnLimit) {
+                    std::cout << Utils::cwarning
+                        << "Future divide by 0 warning will be ignored!"
+                        << Utils::cdef << std::endl;
+                }
+            }
+
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
+            const int excepts = fegetexcept();
+            fedisableexcept(FE_INVALID | FE_DIVBYZERO);
+#endif
+
+            // Divide by 0 = 0 in OpenCV 3.x, but is IEEE conformant in 4.x
+            cv::divide(mat, valueMat, mat);
+
+            // Converts NaN's to 0.0 (0/0 => FE_INVALID)
+            cv::patchNaNs(mat, 0.0);
+
+            // Converts inf values to 0.0 (0/x => FE_DIVBYZERO)
+            if (mat.depth() == CV_32F) {
+                mat.setTo(0.0f, mat == std::numeric_limits<float>::infinity());
+                mat.setTo(0.0f, mat == -std::numeric_limits<float>::infinity());
+            }
+            else if (mat.depth() == CV_64F) {
+                mat.setTo(0.0, mat == std::numeric_limits<double>::infinity());
+                mat.setTo(0.0, mat == -std::numeric_limits<double>::infinity());
+            }
+
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
+            feenableexcept(excepts);
+#endif
+        }
+        else {
+            cv::divide(mat, valueMat, mat);
+        }
+
         break;
     }
 
