@@ -1071,7 +1071,7 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 sp->readBatch(Database::Validation, 0);
 
-                for (unsigned int bv = 0; bv < nbBatchValid; ++bv) {
+                for (unsigned int bv = 1; bv <= nbBatchValid; ++bv) {
                     const unsigned int k = bv * batchSize;
 
                     sp->synchronize();
@@ -1079,7 +1079,10 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                                     deepNet);
 
                     sp->future();
-                    sp->readBatch(Database::Validation, k);
+
+                    if (bv < nbBatchValid)
+                        sp->readBatch(Database::Validation, k);
+
                     validationThread.join();
 
                     // Progress bar
