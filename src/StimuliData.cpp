@@ -493,6 +493,17 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 cv::Mat stdDevData;
                 cv::sqrt(M2Data, stdDevData);
 
+                const int nonZero = cv::countNonZero(stdDevData);
+                assert(nonZero <= (int)stdDevData.total());
+
+                if (nonZero < (int)stdDevData.total()) {
+                    std::cout << Utils::cwarning
+                        << "Warning: StimuliData::generate(): beware that"
+                        " StdDevData matrix contains "
+                        << (stdDevData.total() - nonZero) << " 0s."
+                        << Utils::cdef << std::endl;
+                }
+
                 BinaryCvMat::write(stdDevDataFile, stdDevData);
                 StimuliProvider::logData(Utils::fileBaseName(stdDevDataFile)
                                             + ".dat",
