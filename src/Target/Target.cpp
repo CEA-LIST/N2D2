@@ -711,6 +711,16 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
             : Tensor<int>();
 
+        if (!mask.empty() && mask.dims() != target.dims()) {
+            std::ostringstream errorStr;
+            errorStr << "Mask dims (" << mask.dims() << ") from MaskLabelTarget"
+                " does not match target dims (" << target.dims() << ") for"
+                " target \"" << mName << "\"";
+
+#pragma omp critical(Target__logEstimatedLabels)
+            throw std::runtime_error(errorStr.str());
+        }
+
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
                 const int targetHue = (180 * target(ox, oy) / nbTargets
