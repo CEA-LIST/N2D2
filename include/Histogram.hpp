@@ -34,7 +34,7 @@ public:
     Histogram(double minVal_ = 0.0,
               double maxVal_ = 1000.0,
               unsigned int nbBins_ = 100000);
-    void operator()(double value, unsigned int count = 1);
+    void operator()(double value, unsigned long long int count = 1);
     unsigned int enlarge(double value);
     unsigned int truncate(double value);
     inline double getBinWidth() const;

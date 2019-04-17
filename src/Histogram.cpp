@@ -36,7 +36,7 @@ N2D2::Histogram::Histogram(double minVal_,
     // ctor
 }
 
-void N2D2::Histogram::operator()(double value, unsigned int count)
+void N2D2::Histogram::operator()(double value, unsigned long long int count)
 {
     const unsigned int binIdx = getBinIdx(value);
 
