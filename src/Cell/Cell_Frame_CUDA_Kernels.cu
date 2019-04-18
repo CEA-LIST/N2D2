@@ -97,9 +97,12 @@ __global__ void cudaHReduce_kernel(__half* idata, __half* odata,
     if (tid == 0) {
 #if __CUDA_ARCH__ >= 700
         atomicAdd(odata, sdata[0]);
-#elif __CUDA_ARCH__ >= 600
-        // Not sure it works!
-        atomicAdd((__half2*)odata, *((__half2*)sdata));
+// Work on open source Docker, but fail in internal Docker...
+// error: no instance of overloaded function "atomicAdd" matches the argument list
+// argument types are: (__half2 *, __half2)
+//#elif __CUDA_ARCH__ >= 600
+//        // Not sure it works!
+//        atomicAdd((__half2*)odata, *((__half2*)sdata));
 #else
         // Not supported!
         asm("trap;");
