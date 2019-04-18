@@ -605,11 +605,68 @@ void N2D2::Target::process(Database::StimuliSet set)
 
 void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 {
-    if (mTargets.dimX() == 1 && mTargets.dimY() == 1)
-        return;
-
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
+
+    if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
+        const int ret = symlink(N2D2_PATH("tools/roc.py"),
+                                (dirPath + "_roc.py").c_str());
+        if (ret < 0) {
+        } // avoid ignoring return value warning
+#endif
+
+        std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
+            <Cell_Frame_Top>(mCell);
+        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
+            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+        const Tensor<Float_T>& values
+            = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
+                           : tensor_cast_nocopy<Float_T>
+                                (targetCellCSpike->getOutputsActivity());
+        const unsigned int nbOutputs = values.dimZ();
+
+        const std::string fileName = dirPath + "/classif.log";
+
+        std::ofstream data(fileName, std::ofstream::app);
+
+        if (!data.good()) {
+            throw std::runtime_error("Could not save log classif data file: "
+                                    + fileName);
+        }
+
+        for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+            const int id = mStimuliProvider->getBatch()[batchPos];
+
+            if (id < 0) {
+                // Invalid stimulus in batch (can occur for the last batch of the
+                // set)
+                continue;
+            }
+
+            const Tensor<Float_T> value = values[batchPos];
+            const Tensor<int> target = mTargets[batchPos][0];
+            const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
+            const Tensor<Float_T> estimatedLabelsValue
+                = mEstimatedLabelsValue[batchPos][0];
+
+            const std::string imgFile
+                = mStimuliProvider->getDatabase().getStimulusName(id);
+
+            data << id
+                << " " << imgFile
+                << " " << target(0)
+                << " " << estimatedLabels(0)
+                << " " << estimatedLabelsValue(0);
+
+            for (int i = 0; i < (int)nbOutputs; ++i)
+                data << " " << value(i);
+
+            data << "\n";
+        }
+
+        return;
+    }
 
 #if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
     const int ret = symlink(N2D2_PATH("tools/target_viewer.py"),
