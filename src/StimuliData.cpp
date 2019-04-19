@@ -493,7 +493,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                 cv::Mat stdDevData;
                 cv::sqrt(M2Data, stdDevData);
 
-                const int nonZero = cv::countNonZero(stdDevData);
+                const int nonZero = cv::countNonZero(stdDevData.reshape(1));
                 assert(nonZero <= (int)stdDevData.total());
 
                 if (nonZero < (int)stdDevData.total()) {

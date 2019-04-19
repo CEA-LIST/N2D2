@@ -118,7 +118,7 @@ void N2D2::AffineTransformation::applyOperator(cv::Mat& frame,
         mat = mat.mul(valueMat);
         break;
     case Divides:
-        const int nonZero = cv::countNonZero(valueMat);
+        const int nonZero = cv::countNonZero(valueMat.reshape(1));
         assert(nonZero <= (int)valueMat.total());
 
         if (nonZero < (int)valueMat.total()) {
