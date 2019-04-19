@@ -119,16 +119,16 @@ void N2D2::AffineTransformation::applyOperator(cv::Mat& frame,
         break;
     case Divides:
         const int nonZero = cv::countNonZero(valueMat.reshape(1));
-        assert(nonZero <= (int)valueMat.total());
+        assert(nonZero <= (int)valueMat.reshape(1).total());
 
-        if (nonZero < (int)valueMat.total()) {
+        if (nonZero < (int)valueMat.reshape(1).total()) {
             // Divide by 0 will occur...
             const int warnLimit = 5;
 
             if (mDivByZeroWarn < warnLimit) {
                 std::cout << Utils::cwarning << "Warning:"
                     " AffineTransformation: divide by 0 will occur (found "
-                    << (valueMat.total() - nonZero) << " 0s in the denominator)."
+                    << (valueMat.reshape(1).total() - nonZero) << " 0s in the denominator)."
                     " Values divided by 0 will be set to 0.0."
                     << Utils::cdef << std::endl;
 
