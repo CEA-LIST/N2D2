@@ -225,7 +225,10 @@ public:
         learnStdp =   opts.parse("-learn-stdp", 0U, "number of STDP learning steps");
         avgWindow =   opts.parse("-ws", 10000U, "average window to compute success rate "
                                                 "during learning");
-        testIdx =     opts.parse("-test-idx", -1, "test a single specific frame index");
+        testIndex =   opts.parse("-test-index", -1, "test a single specific stimulus index"
+                                                    " in the Test set");
+        testId =      opts.parse("-test-id", -1, "test a single specific stimulus ID (takes"
+                                                 " precedence over -test-index)");
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
                                                      "stimulus (0 = no log)");
@@ -291,7 +294,8 @@ public:
     bool bench;
     unsigned int learnStdp;
     unsigned int avgWindow;
-    int testIdx;
+    int testIndex;
+    int testId;
     bool check;
     unsigned int logOutputs;
     bool logDbStats;
@@ -327,17 +331,20 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     std::chrono::high_resolution_clock::time_point startTimeSp,
                                                     endTimeSp;
 
-    const unsigned int nbTest
-        = (opt.testIdx >= 0) ? 1 : database->getNbStimuli(Database::Test);
+    const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
+        ? 1 : database->getNbStimuli(Database::Test);
     const unsigned int batchSize = sp->getBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
-        const unsigned int idx = (opt.testIdx >= 0) ? opt.testIdx : i;
+        const unsigned int idx = (opt.testIndex >= 0) ? opt.testIndex : i;
 
         startTimeSp = std::chrono::high_resolution_clock::now();
-        sp->readBatch(Database::Test, idx);
+        if (opt.testId >= 0)
+            sp->readStimulusBatch(Database::Test, opt.testId);
+        else
+            sp->readBatch(Database::Test, idx);
         endTimeSp = std::chrono::high_resolution_clock::now();
 
         deepNet->test(Database::Test, &timings);
@@ -1342,19 +1349,26 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
     
     Utils::createDirectories("stimuli");
 
-    for (unsigned int i
-         = 0,
-         nbTest = ((opt.testIdx >= 0) ? 1 : database->getNbStimuli(Database::Test));
+    for (unsigned int i = 0, nbTest = ((opt.testIndex >= 0 || opt.testId >= 0)
+        ? 1 : database->getNbStimuli(Database::Test));
          i < nbTest;
          ++i) {
-        const unsigned int idx = (opt.testIdx >= 0) ? opt.testIdx : i;
+        const unsigned int idx = (opt.testIndex >= 0) ? opt.testIndex : i;
         const bool logStep = (i + 1) % opt.log == 0 || i == nbTest - 1;
 
         // Run
         std::cout << "Test from " << i* TimeUs / (double)TimeS << "s to "
                   << (i + 1) * TimeUs / (double)TimeS << "s..." << std::endl;
 
-        const Database::StimulusID id = env->readStimulus(Database::Test, idx);
+        Database::StimulusID id;
+
+        if (opt.testId >= 0) {
+            id = opt.testId;
+            env->readStimulus(id, Database::Test);
+        }
+        else
+            id = env->readStimulus(Database::Test, idx);
+
         env->propagate(i * TimeUs, (i + 1) * TimeUs);
         net.run((i + 1) * TimeUs);
 
@@ -1389,7 +1403,7 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
             database->getStimulusLabel(id));
         const unsigned int targetId = fcCell->getOutput(outputTarget)->getId();
 
-        if (opt.testIdx >= 0) {
+        if (opt.testIndex >= 0 || opt.testId >= 0) {
             const bool success = monitorOut.checkLearningResponse(
                 database->getStimulusLabel(id),
                 targetId,
@@ -1405,7 +1419,9 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
             std::cout << std::endl;
 
             deepNet->logSpikeStats("stats-test-idx", 1);
-            deepNet->spikeCodingCompare("compare-test-idx", idx);
+
+            if (opt.testId < 0)
+                deepNet->spikeCodingCompare("compare-test-idx", idx);
         } else {
             // Work also for unsupervised learning
             const bool success = (opt.learn > 0 || opt.test)
@@ -1448,7 +1464,7 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
         net.reset((i + 1) * TimeUs);
     }
 
-    if (opt.testIdx < 0) {
+    if (opt.testIndex < 0 && opt.testId < 0) {
         std::cout << "Final spiking recognition rate: "
                   << (100.0 * monitorOut.getSuccessRate())
                   << "%"
@@ -1466,16 +1482,20 @@ void testCStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     unsigned int nextLog = opt.log;
     unsigned int nextReport = opt.report;
 
-    const unsigned int nbTest
-        = (opt.testIdx >= 0) ? 1 : database->getNbStimuli(Database::Test);
+    const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
+        ? 1 : database->getNbStimuli(Database::Test);
     const unsigned int batchSize = sp->getBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
-        const unsigned int idx = (opt.testIdx >= 0) ? opt.testIdx : i;
+        const unsigned int idx = (opt.testIndex >= 0) ? opt.testIndex : i;
 
-        sp->readBatch(Database::Test, idx);
+        if (opt.testId >= 0)
+            sp->readStimulusBatch(Database::Test, opt.testId);
+        else
+            sp->readBatch(Database::Test, idx);
+
         deepNet->cTicks(0, 1 * TimeUs, (Time_T)(opt.timeStep * TimeNs));
         deepNet->cTargetsProcess(Database::Test);
 
@@ -1795,8 +1815,10 @@ int main(int argc, char* argv[]) try
     }
 
 
-    if (opt.testIdx >= 0) {
-        const int label = database.getStimulusLabel(Database::Test, opt.testIdx);
+    if (opt.testIndex >= 0 || opt.testId >= 0) {
+        const int label = (opt.testId >= 0)
+            ? database.getStimulusLabel(opt.testId)
+            : database.getStimulusLabel(Database::Test, opt.testIndex);
 
         std::cout << "Pattern label ID = " << label << std::endl;
 

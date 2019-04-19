@@ -353,6 +353,15 @@ N2D2::StimuliProvider::readRandomStimulus(Database::StimuliSet set,
 void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
                                       unsigned int startIndex)
 {
+    if (startIndex >= mDatabase.getNbStimuli(set)) {
+        std::stringstream msg;
+        msg << "StimuliProvider::readBatch(): startIndex (" << startIndex
+            << ") is higher than the number of stimuli in the " << set
+            << " set (" << mDatabase.getNbStimuli(set) << ")";
+
+        throw std::runtime_error(msg.str());
+    }
+
     const unsigned int batchSize
         = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
     std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
@@ -366,6 +375,17 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         readStimulus(batchRef[batchPos], set, batchPos);
 
     std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
+}
+
+void N2D2::StimuliProvider::readStimulusBatch(Database::StimuliSet set,
+                                              Database::StimulusID id)
+{
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    readStimulus(id, set, 0);
+
+    batchRef[0] = id;
+    std::fill(batchRef.begin() + 1, batchRef.end(), -1);
 }
 
 void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,

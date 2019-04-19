@@ -180,6 +180,8 @@ public:
                              std::vector<Database::StimulusID>& Ids);
 */
 
+    void readStimulusBatch(Database::StimuliSet set, Database::StimulusID id);
+
     /// Read the stimulus with StimulusID @p id, apply all the transformations
     /// and put the results at batch
     /// position @p batchPos in mData and mLabelsData
