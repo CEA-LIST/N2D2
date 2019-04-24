@@ -627,7 +627,14 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
             = value.substr(startPos + 2, endPos - startPos - 2);
 
         std::stringstream cmdNameStr;
-        cmdNameStr << "python -c " << Utils::quoted("print (" + cmdName + ")");
+        const char* pythonCmd = std::getenv("N2D2_PYTHON");
+
+        if (pythonCmd == NULL)
+            cmdNameStr << "python";
+        else
+            cmdNameStr << pythonCmd;
+
+        cmdNameStr << " -c " << Utils::quoted("print (" + cmdName + ")");
         std::string cmdValue = Utils::exec(cmdNameStr.str());
 
         // Left trim & right trim
