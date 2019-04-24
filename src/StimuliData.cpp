@@ -267,7 +267,6 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         cv::Mat M2Data;
 
         // For progression visualization
-        std::cout << mName << " processing" << std::flush;
         unsigned int toLoad = 0;
 
         for (std::vector<Database::StimuliSet>::const_iterator it
@@ -278,6 +277,8 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
             toLoad += mProvider.getDatabase().getNbStimuli(*it);
         }
 
+        std::cout << mName << " processing " << toLoad << " stimuli"
+            << std::flush;
         mSize.resize(toLoad);
         mValue.resize(toLoad);
 
