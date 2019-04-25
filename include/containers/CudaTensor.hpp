@@ -647,7 +647,9 @@ void N2D2::CudaTensor<T>::push_back(const T& value)
 {
     Tensor<T>::push_back(value);
 
-    reserve(mDims); // Resize device tensor accordingly
+    // Reallocation is needed
+    // Note: don't use reserve(), as mDims is already changed!
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory
 }
 
@@ -656,7 +658,7 @@ void N2D2::CudaTensor<T>::push_back(const std::vector<T>& vec)
 {
     Tensor<T>::push_back(vec);
 
-    reserve(mDims); // Resize device tensor accordingly
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory
 }
 
@@ -665,7 +667,7 @@ void N2D2::CudaTensor<T>::push_back(const Tensor<T>& frame)
 {
     Tensor<T>::push_back(frame);
 
-    reserve(mDims); // Resize device tensor accordingly
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory
 }
 
@@ -674,7 +676,7 @@ void N2D2::CudaTensor<T>::append(const std::vector<T>& vec)
 {
     Tensor<T>::append(vec);
 
-    reserve(mDims); // Resize device tensor accordingly
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory
 }
 
@@ -683,7 +685,7 @@ void N2D2::CudaTensor<T>::append(const Tensor<T>& frame)
 {
     Tensor<T>::append(frame);
 
-    reserve(mDims); // Resize device tensor accordingly
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory
 }
 
