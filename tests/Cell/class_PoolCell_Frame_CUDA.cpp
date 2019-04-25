@@ -386,6 +386,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
+    pool1.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& out = tensor_cast<Float_T>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -532,6 +533,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
+    pool1.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& out = tensor_cast<Float_T>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -841,6 +843,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
+    pool1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -989,6 +992,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
+    pool1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -1302,6 +1306,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
+    pool1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out = tensor_cast<half_float::half>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -1453,6 +1458,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
 
     pool1.propagate();
 
+    pool1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out = tensor_cast<half_float::half>(pool1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {

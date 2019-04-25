@@ -228,6 +228,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 
     fc1.propagate();
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<float>& out = tensor_cast<float>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
@@ -313,6 +314,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
         }
     }
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<float>& out = tensor_cast<float>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
@@ -368,6 +370,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 
     fc1.propagate();
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<float>& out = tensor_cast<float>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
@@ -558,6 +561,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 
     fc1.propagate();
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
@@ -643,6 +647,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
         }
     }
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
@@ -698,6 +703,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 
     fc1.propagate();
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), nbOutputs);
@@ -893,6 +899,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     fc1.propagate();
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out
         = tensor_cast<half_float::half>(fc1.getOutputs());
 
@@ -982,6 +989,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         }
     }
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out
         = tensor_cast<half_float::half>(fc1.getOutputs());
 
@@ -1039,6 +1047,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     fc1.propagate();
 
+    fc1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out
         = tensor_cast<half_float::half>(fc1.getOutputs());
 

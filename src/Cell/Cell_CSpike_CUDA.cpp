@@ -176,13 +176,11 @@ void N2D2::Cell_CSpike_CUDA::reset(Time_T /*timestamp*/)
 
 N2D2::Tensor<int>& N2D2::Cell_CSpike_CUDA::getOutputsActivity()
 {
-    mOutputsActivity.synchronizeDToH();
     return mOutputsActivity;
 }
 
 N2D2::Tensor<int>& N2D2::Cell_CSpike_CUDA::getOutputs()
 {
-    mOutputs.synchronizeDToH();
     return mOutputs;
 }
 

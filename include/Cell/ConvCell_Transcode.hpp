@@ -304,6 +304,7 @@ void N2D2::ConvCell_Transcode
                           - FRAME::mKernelDims[1] + FRAME::mStrideDims[1])
                          / (double)FRAME::mStrideDims[1]);
 
+    FRAME::getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(FRAME::getOutputs());
     std::vector<Float_T> minVal(FRAME::getNbOutputs());
     std::vector<Float_T> maxVal(FRAME::getNbOutputs());

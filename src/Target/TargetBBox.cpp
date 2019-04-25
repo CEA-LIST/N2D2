@@ -200,9 +200,9 @@ void N2D2::TargetBBox::initialize(bool genAnchors, unsigned int nbAnchors, long 
 
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const BaseTensor& values = targetCell->getOutputs();
+    const BaseTensor& outputsShape = targetCell->getOutputs();
     
-    if (values.dimZ() != 4 && values.dimZ() != 5) {
+    if (outputsShape.dimZ() != 4 && outputsShape.dimZ() != 5) {
         //throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
         //                        " output channels for BBox TargetBBox " + mName);
 
@@ -211,8 +211,8 @@ void N2D2::TargetBBox::initialize(bool genAnchors, unsigned int nbAnchors, long 
 
     mTargets.resize({mCell->getOutputsWidth(),
                     mCell->getOutputsHeight(),
-                    values.dimZ(),
-                    values.dimB()});
+                    outputsShape.dimZ(),
+                    outputsShape.dimB()});
     
     //if(mGenerateAnchors)
     //    computeKmeansClustering(Database::Learn);
@@ -236,6 +236,8 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();
     const int nbBBoxMax = (int)mTargets.dimB()/batch.size();
+
+    targetCell->getOutputs().synchronizeDToH();
     const Tensor<Float_T>& values
         = tensor_cast<Float_T>(targetCell->getOutputs());
     const std::vector<int> labelsCls = getTargetLabels(0);

@@ -450,6 +450,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 #endif
     conv1.propagate();
 
+    conv1.getOutputs().synchronizeDToH();
     const Tensor<float>& out = tensor_cast<float>(conv1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -615,6 +616,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 #endif
     conv1.propagate();
 
+    conv1.getOutputs().synchronizeDToH();
     const Tensor<float>& out = tensor_cast<float>(conv1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -1122,6 +1124,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 #endif
     conv1.propagate();
 
+    conv1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(conv1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -1287,6 +1290,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 #endif
     conv1.propagate();
 
+    conv1.getOutputs().synchronizeDToH();
     const Tensor<double>& out = tensor_cast<double>(conv1.getOutputs());
 
     for (unsigned int batch = 0; batch < 2; ++batch) {
@@ -1798,6 +1802,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 #endif
     conv1.propagate();
 
+    conv1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out
         = tensor_cast<half_float::half>(conv1.getOutputs());
 
@@ -1966,6 +1971,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 #endif
     conv1.propagate();
 
+    conv1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& out
         = tensor_cast<half_float::half>(conv1.getOutputs());
 

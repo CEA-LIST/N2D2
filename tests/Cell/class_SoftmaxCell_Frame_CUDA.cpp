@@ -70,6 +70,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
 
     inputs.fill(0.0);
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<float>& outputs1 = tensor_cast<float>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
@@ -78,6 +79,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
 
     inputs.fill(1.0);
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<float>& outputs2 = tensor_cast<float>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
@@ -90,6 +92,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
         inputs(0, batchPos) = 1.0;
 
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<float>& outputs3 = tensor_cast<float>(softmax1.getOutputs());
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
@@ -143,6 +146,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
     softmax1.mDiffInputs.synchronizeHToD();
 
     softmax1.backPropagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<float>& outputs = tensor_cast<float>(softmax1.getOutputs());
     softmax1.mDiffOutputs.synchronizeDToH();
 
@@ -191,6 +195,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
 
     inputs.fill(0.0);
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<double>& outputs1 = tensor_cast<double>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
@@ -199,6 +204,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
 
     inputs.fill(1.0);
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<double>& outputs2 = tensor_cast<double>(softmax1.getOutputs());
 
     for (unsigned int o = 0; o < nbOutputs; ++o) {
@@ -211,6 +217,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
         inputs(0, batchPos) = 1.0;
 
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<double>& outputs3 = tensor_cast<double>(softmax1.getOutputs());
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
@@ -264,6 +271,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
     softmax1.mDiffInputs.synchronizeHToD();
 
     softmax1.backPropagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<double>& outputs = tensor_cast<double>(softmax1.getOutputs());
     softmax1.mDiffOutputs.synchronizeDToH();
 
@@ -312,6 +320,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
 
     inputs.fill(half_float::half(0.0f));
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& outputs1
         = tensor_cast<half_float::half>(softmax1.getOutputs());
 
@@ -321,6 +330,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
 
     inputs.fill(half_float::half(1.0f));
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& outputs2
         = tensor_cast<half_float::half>(softmax1.getOutputs());
 
@@ -334,6 +344,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
         inputs(0, batchPos) = 1.0f;
 
     softmax1.propagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& outputs3
         = tensor_cast<half_float::half>(softmax1.getOutputs());
 
@@ -388,6 +399,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
     softmax1.mDiffInputs.synchronizeHToD();
 
     softmax1.backPropagate();
+    softmax1.getOutputs().synchronizeDToH();
     const Tensor<half_float::half>& outputs
         = tensor_cast<half_float::half>(softmax1.getOutputs());
     softmax1.mDiffOutputs.synchronizeDToH();

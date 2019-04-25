@@ -1346,9 +1346,12 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
              itCell != itCellEnd;
              ++itCell) {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            const std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+            cellFrame->getOutputs().synchronizeDToH();
             const Tensor<Float_T> outputs
-                = tensor_cast<Float_T>(std::dynamic_pointer_cast
-                  <Cell_Frame_Top>(cell)->getOutputs())[batchPos];
+                = tensor_cast<Float_T>(cellFrame->getOutputs())[batchPos];
 
             StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
                                      outputs);
@@ -1370,9 +1373,12 @@ void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
              itCell != itCellEnd;
              ++itCell) {
             const std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
+            const std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+            cellFrame->getDiffInputs().synchronizeDToH();
             const Tensor<Float_T> diffInputs
-                = tensor_cast<Float_T>(std::dynamic_pointer_cast
-                  <Cell_Frame_Top>(cell)->getDiffInputs())[batchPos];
+                = tensor_cast<Float_T>(cellFrame->getDiffInputs())[batchPos];
 
             StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
                                      diffInputs);
@@ -2534,11 +2540,17 @@ N2D2::DeepNet::reportOutputsRange(std::map
              itCell != itCellEnd;
              ++itCell)
         {
-            const Tensor<Float_T>& outputs
-                = (mCells.find(*itCell) != mCells.end())
-                      ? tensor_cast<Float_T>(std::dynamic_pointer_cast<Cell_Frame_Top>(
-                            (*mCells.find(*itCell)).second)->getOutputs())
-                      : mStimuliProvider->getData();
+            std::shared_ptr<Cell_Frame_Top> cellFrame;
+
+            if (mCells.find(*itCell) != mCells.end()) {
+                cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(
+                                                (*mCells.find(*itCell)).second);
+                cellFrame->getOutputs().synchronizeDToH();
+            }
+
+            const Tensor<Float_T>& outputs = (cellFrame)
+                ? tensor_cast<Float_T>(cellFrame->getOutputs())
+                : mStimuliProvider->getData();
 
             const std::map<std::string, RangeStats>::iterator itRange
                 = outputsRange.find(*itCell);
@@ -2560,11 +2572,17 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
                  itCell != itCellEnd;
                  ++itCell)
             {
-                const Tensor<Float_T>& outputs
-                    = (mCells.find(*itCell) != mCells.end())
-                          ? tensor_cast<Float_T>(std::dynamic_pointer_cast<Cell_Frame_Top>(
-                                (*mCells.find(*itCell)).second)->getOutputs())
-                          : mStimuliProvider->getData();
+                std::shared_ptr<Cell_Frame_Top> cellFrame;
+
+                if (mCells.find(*itCell) != mCells.end()) {
+                    cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(
+                                                (*mCells.find(*itCell)).second);
+                    cellFrame->getOutputs().synchronizeDToH();
+                }
+
+                const Tensor<Float_T>& outputs = (cellFrame)
+                    ? tensor_cast<Float_T>(cellFrame->getOutputs())
+                    : mStimuliProvider->getData();
 
                 const Float_T maxVal = std::abs(*Utils::max_abs_element(outputs.begin(), outputs.end()));
                 outputsHistogram.insert(std::make_pair(*itCell,
@@ -2580,11 +2598,17 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
              itCell != itCellEnd;
              ++itCell)
         {
-            const Tensor<Float_T>& outputs
-                = (mCells.find(*itCell) != mCells.end())
-                      ? tensor_cast<Float_T>(std::dynamic_pointer_cast<Cell_Frame_Top>(
-                            (*mCells.find(*itCell)).second)->getOutputs())
-                      : mStimuliProvider->getData();
+            std::shared_ptr<Cell_Frame_Top> cellFrame;
+
+            if (mCells.find(*itCell) != mCells.end()) {
+                cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(
+                                                (*mCells.find(*itCell)).second);
+                cellFrame->getOutputs().synchronizeDToH();
+            }
+
+            const Tensor<Float_T>& outputs = (cellFrame)
+                ? tensor_cast<Float_T>(cellFrame->getOutputs())
+                : mStimuliProvider->getData();
 
             const Float_T maxVal = std::abs(*Utils::max_abs_element(outputs.begin(), outputs.end()));
 

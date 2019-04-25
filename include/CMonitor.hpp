@@ -150,9 +150,6 @@ public:
 
     Tensor<int>& getOutputsActivity()
     {
-#ifdef CUDA
-        mOutputsActivity.synchronizeDToH();
-#endif
         return mOutputsActivity;
     }
 

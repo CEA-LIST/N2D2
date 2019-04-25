@@ -97,7 +97,6 @@ TEST_DATASET(PaddingCell_Frame,
 
     padding1.propagate();
 
-
     const Tensor<Float_T>& outputs1 = tensor_cast<Float_T>(padding1.getOutputs());
 
     for(unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
@@ -217,7 +216,6 @@ TEST_DATASET(PaddingCell_Frame,
                   topPad + botPad + inputHeight);
 
     padding1.propagate();
-
 
     const Tensor<Float_T>& outputs1 = tensor_cast<Float_T>(padding1.getOutputs());
 

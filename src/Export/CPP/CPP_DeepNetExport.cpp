@@ -138,9 +138,9 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
         std::shared_ptr<Cell_Frame_Top> targetCellTop = std::dynamic_pointer_cast
             <Cell_Frame_Top>(cell);
 
-        const BaseTensor& values = targetCellTop->getOutputs();
+        const BaseTensor& outputsShape = targetCellTop->getOutputs();
 
-        envHeader << cell->getNbOutputs()*(values.dimB()/sp->getBatchSize());
+        envHeader << cell->getNbOutputs()*(outputsShape.dimB()/sp->getBatchSize());
     }
     envHeader << "};\n";
 

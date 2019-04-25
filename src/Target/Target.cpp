@@ -467,6 +467,12 @@ void N2D2::Target::process(Database::StimuliSet set)
         // Retrieve estimated labels
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+
+        if (targetCell)
+            targetCell->getOutputs().synchronizeDToH();
+        else
+            targetCellCSpike->getOutputsActivity().synchronizeDToH();
+
         const Tensor<Float_T>& values
             = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
                            : tensor_cast<Float_T>(
@@ -620,6 +626,12 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             <Cell_Frame_Top>(mCell);
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+
+        if (targetCell)
+            targetCell->getOutputs().synchronizeDToH();
+        else
+            targetCellCSpike->getOutputsActivity().synchronizeDToH();
+
         const Tensor<Float_T>& values
             = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
                            : tensor_cast_nocopy<Float_T>
@@ -693,6 +705,11 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             }
 
             // Retrieve estimated labels
+            if (targetCell)
+                targetCell->getOutputs().synchronizeDToH();
+            else
+                targetCellCSpike->getOutputsActivity().synchronizeDToH();
+
             const Tensor<Float_T>& values
                 = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
                                : tensor_cast_nocopy<Float_T>
@@ -975,6 +992,12 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         <Cell_Frame_Top>(mCell);
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
         = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+    
+    if (targetCell)
+        targetCell->getOutputs().synchronizeDToH();
+    else
+        targetCellCSpike->getOutputsActivity().synchronizeDToH();
+
     const Tensor<Float_T>& value
         = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())[batchPos]
                        : tensor_cast_nocopy<Float_T>

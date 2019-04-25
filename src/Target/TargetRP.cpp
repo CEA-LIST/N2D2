@@ -68,9 +68,9 @@ void N2D2::TargetRP::initialize(TargetType targetType,
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    const BaseTensor& values = targetCell->getOutputs();
+    const BaseTensor& outputsShape = targetCell->getOutputs();
 
-    if (targetType == BBox && values.dimZ() != 4) {
+    if (targetType == BBox && outputsShape.dimZ() != 4) {
         throw std::runtime_error("TargetRP::initialize(): cell must have 4"
                                  " output channels for BBox TargetRP " + mName);
     }
@@ -81,17 +81,17 @@ void N2D2::TargetRP::initialize(TargetType targetType,
     mTargets.resize({mCell->getOutputsWidth(),
                     mCell->getOutputsHeight(),
                     (mTargetType == BBox) ? 4U : 1U,
-                    values.dimB()});
+                    outputsShape.dimB()});
 
     if (mTargetType == Cls) {
         mEstimatedLabels.resize({mCell->getOutputsWidth(),
                                 mCell->getOutputsHeight(),
                                 mTargetTopN,
-                                values.dimB()});
+                                outputsShape.dimB()});
         mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
                                      mCell->getOutputsHeight(),
                                      mTargetTopN,
-                                     values.dimB()});
+                                     outputsShape.dimB()});
     }
 
     const std::string targetRP = anchorCell->getName()
@@ -116,6 +116,8 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
+    
+    targetCell->getOutputs().synchronizeDToH();
     const Tensor<Float_T>& values
         = tensor_cast<Float_T>(targetCell->getOutputs());
     const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
@@ -194,6 +196,8 @@ void N2D2::TargetRP::processBBox(Database::StimuliSet set)
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
     const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
+
+    targetCell->getOutputs().synchronizeDToH();
     const Tensor<Float_T>& values
         = tensor_cast<Float_T>(targetCell->getOutputs());
 
@@ -318,6 +322,7 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
     std::shared_ptr<Cell_Frame_Top> targetBBoxCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mTargetRP[targetRP][BBox]->getCell());
 
+    targetBBoxCell->getOutputs().synchronizeDToH();
     const Tensor<Float_T>& valuesBBox
         = tensor_cast_nocopy<Float_T>(targetBBoxCell->getOutputs());
 

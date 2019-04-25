@@ -105,6 +105,7 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
     resize.initialize();
     resize.propagate();
 
+    resize.getOutputs().synchronizeDToH();
     ASSERT_EQUALS(tensor_cast_nocopy<Float_T>(resize.getOutputs()), createBatchTensor(outputsProp.begin(), outputsProp.end()));
 
     /**

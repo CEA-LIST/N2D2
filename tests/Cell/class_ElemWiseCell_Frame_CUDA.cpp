@@ -75,6 +75,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -127,6 +128,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -189,6 +191,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -258,6 +261,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -309,6 +313,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -363,6 +368,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -428,6 +434,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -479,6 +486,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -534,6 +542,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -599,6 +608,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -670,6 +680,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -722,6 +733,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -773,6 +785,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -820,6 +833,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());
@@ -873,6 +887,7 @@ TEST(ElemWiseCell_Frame_CUDA,
     elemWise.initialize();
 
     elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
 
     ASSERT_EQUALS(outputs.dimX(), inputsA.dimX());

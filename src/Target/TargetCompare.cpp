@@ -81,6 +81,7 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
 
+    targetCell->getOutputs().synchronizeDToH();
     const Tensor<Float_T>& values
         = tensor_cast<Float_T>(targetCell->getOutputs());
 
