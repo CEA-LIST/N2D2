@@ -264,7 +264,8 @@ define copy-resources-to-bin
 endef
 
 define run-if-exists
-	@if [ -f "$(N2D2_BINDIR)/$1" ]; then \
+	if [ -f "$(N2D2_BINDIR)/$1" ]; then \
+	    MAKEFLAGS=; \
 	    $(N2D2_BINDIR)/$1 || exit 1; \
 	fi
 endef
@@ -280,7 +281,7 @@ ifdef FLEXLM
 	$(shell rm -f ${LM_PATH}/lm_new_pic.o)
 endif
 	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
-	$(foreach path,$(PARENT),$(call run-if-exists,$(path)/tests/run_all.sh);)
+	@$(foreach path,$(PARENT),$(call run-if-exists,$(path)/tests/run_all.sh);)
 
 all : exec tests
 
