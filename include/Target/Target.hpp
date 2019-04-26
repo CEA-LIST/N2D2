@@ -32,6 +32,12 @@
 #include "utils/Registrar.hpp"
 #include "FloatT.hpp"
 
+#ifdef CUDA
+#include "CudaContext.hpp"
+#include "CudaUtils.hpp"
+#include "containers/CudaTensor.hpp"
+#endif
+
 namespace N2D2 {
 
 class Cell;
@@ -117,6 +123,12 @@ public:
     void labelsMapping(const std::string& fileName);
     void setLabelTarget(int label, int output);
     void setDefaultTarget(int output);
+    void process_Frame(const Tensor<Float_T>& values,
+                        const int batchSize);
+#ifdef CUDA
+    void process_Frame_CUDA(CudaTensor<Float_T>& values,
+                            const int batchSize);
+#endif
     int getLabelTarget(int label) const;
     int getDefaultTarget() const;
     std::vector<int> getTargetLabels(int output) const;
@@ -177,6 +189,10 @@ protected:
     Tensor<int> mTargets;
     Tensor<int> mEstimatedLabels;
     Tensor<Float_T> mEstimatedLabelsValue;
+#ifdef CUDA
+    CudaTensor<int> mEstimatedLabels_CUDA;
+    CudaTensor<Float_T> mEstimatedLabelsValue_CUDA;
+#endif
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
     std::vector<Float_T> mLoss;

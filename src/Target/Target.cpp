@@ -24,6 +24,9 @@
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
+#ifdef CUDA
+#include "Target/Target_CUDA_kernels.hpp"
+#endif
 
 N2D2::Registrar<N2D2::Target> N2D2::Target::mRegistrar("Target",
                                                        N2D2::Target::create);
@@ -345,6 +348,20 @@ void N2D2::Target::process(Database::StimuliSet set)
                                          mCell->getOutputsHeight(),
                                          mTargetTopN,
                                          labels.dimB()});
+
+#ifdef CUDA
+            mEstimatedLabels_CUDA.resize(   {mCell->getOutputsWidth(),
+                                            mCell->getOutputsHeight(),
+                                            mTargetTopN,
+                                            labels.dimB()}, 0);
+            mEstimatedLabels_CUDA.synchronizeHToD();
+
+            mEstimatedLabelsValue_CUDA.resize(  {mCell->getOutputsWidth(),
+                                                mCell->getOutputsHeight(),
+                                                mTargetTopN,
+                                                labels.dimB()}, 0.0f);
+            mEstimatedLabelsValue_CUDA.synchronizeHToD();
+#endif   
         }
 
         if (mPopulateTargets) {
@@ -442,6 +459,8 @@ void N2D2::Target::process(Database::StimuliSet set)
 
         std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
             <Cell_Frame_Top>(mCell);
+        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
+            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
         if (set == Database::Learn) {
             // Set targets
@@ -464,27 +483,6 @@ void N2D2::Target::process(Database::StimuliSet set)
                     mTargets, mTargetValue, mDefaultValue));
         }
 
-        // Retrieve estimated labels
-        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
-            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
-
-        if (targetCell)
-            targetCell->getOutputs().synchronizeDToH();
-        else
-            targetCellCSpike->getOutputsActivity().synchronizeDToH();
-
-        const Tensor<Float_T>& values
-            = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
-                           : tensor_cast<Float_T>(
-                                        targetCellCSpike->getOutputsActivity());
-        const unsigned int nbOutputs = values.dimZ();
-
-        if (mTargetTopN > nbOutputs) {
-            throw std::runtime_error("Target::process(): target 'TopN' "
-                                    "parameter must be <= to the network "
-                                    "output size");
-        }
-
         // Find batchSize to ignore invalid stimulus in batch (can occur for the 
         // last batch of the set)
         int batchSize = 0;
@@ -500,27 +498,15 @@ void N2D2::Target::process(Database::StimuliSet set)
             }
         }
 
-        const size_t size = values.dimY() * batchSize;
 
-        std::vector<int> outputsIdx(nbOutputs);
-
-        if (nbOutputs > 1 && mTargetTopN > 1)
-            std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
-
-#if defined(_OPENMP) && _OPENMP >= 200805
-#pragma omp parallel for collapse(2) if (size > 16) schedule(dynamic)
-#else
-#pragma omp parallel for if (batchSize > 4 && size > 16)
-#endif
         for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
         {
-            for (int oy = 0; oy < (int)values.dimY(); ++oy) {
-                for (int ox = 0; ox < (int)values.dimX(); ++ox) {
+            for (int oy = 0; oy < (int)mEstimatedLabelsValue.dimY(); ++oy) {
+                for (int ox = 0; ox < (int)mEstimatedLabelsValue.dimX(); ++ox) {
                     const int id = mStimuliProvider->getBatch()[batchPos];
                     assert(id >= 0);
 
                     if (mTargets(ox, oy, 0, batchPos) >= (int)nbTargets) {
-#pragma omp critical(Target__process)
                         {
                             std::cout << Utils::cwarning << "Stimulus #"
                                 << id << " has target "
@@ -534,68 +520,59 @@ void N2D2::Target::process(Database::StimuliSet set)
                                                         "range.");
                         }
                     }
+                }
+            }
+        }
+        BaseTensor& outputBaseTensor = targetCell->getOutputs();
+        bool isProcess = false;
 
-                    if (nbOutputs > 1 && mTargetTopN > 1) {
-                        // initialize original index locations
-                        std::vector<int> sortedLabelsIdx(outputsIdx.begin(),
-                                                         outputsIdx.end());
+#ifdef CUDA
+        CudaTensor<Float_T>* valuesFrame_CUDA 
+                = dynamic_cast<CudaTensor<Float_T>*>(&outputBaseTensor);
 
-                        // sort indexes based on comparing values
-                        std::partial_sort(sortedLabelsIdx.begin(),
-                            sortedLabelsIdx.begin() + mTargetTopN,
-                            sortedLabelsIdx.end(),
-                            [&values, &ox, &oy, &batchPos](int i1, int i2)
-                                {return values(ox, oy, i1, batchPos)
-                                            > values(ox, oy, i2, batchPos);});
+        if(valuesFrame_CUDA != NULL)
+        {
+            process_Frame_CUDA(*valuesFrame_CUDA, labels.dimB());
+            isProcess = true;
+        }
+#endif
 
-                        for (unsigned int i = 0; i < mTargetTopN; ++i) {
-                            mEstimatedLabels(ox, oy, i, batchPos)
-                                = sortedLabelsIdx[i];
-                            mEstimatedLabelsValue(ox, oy, i, batchPos)
-                                = values(ox, oy, sortedLabelsIdx[i], batchPos);
-                        }
-                    }
-                    else if (nbOutputs > 1) {
-                        size_t maxIdx = 0;
-                        Float_T maxVal = values(ox, oy, 0, batchPos);
+        if(!isProcess)
+        {
+            if (targetCell)
+                targetCell->getOutputs().synchronizeDToH();
+            else
+                targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
-                        for (size_t i = 1; i < nbOutputs; ++i) {
-                            if (values(ox, oy, i, batchPos) > maxVal) {
-                                maxIdx = i;
-                                maxVal = values(ox, oy, i, batchPos);
-                            }
-                        }
-
-                        mEstimatedLabels(ox, oy, 0, batchPos) = maxIdx;
-                        mEstimatedLabelsValue(ox, oy, 0, batchPos) = maxVal;
-                    }
-                    else {
-                        mEstimatedLabels(ox, oy, 0, batchPos)
-                            = (values(ox, oy, 0, batchPos) > mBinaryThreshold);
-                        mEstimatedLabelsValue(ox, oy, 0, batchPos)
-                            = (mEstimatedLabels(ox, oy, 0, batchPos) == 1)
-                                    ? values(ox, oy, 0, batchPos)
-                                    : (1.0 - values(ox, oy, 0, batchPos));
-                    }
-
-                    if (values.dimX() == 1 && values.dimY() == 1) {
+            const Tensor<Float_T>& valuesFrame
+                = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
+                            : tensor_cast<Float_T>(
+                                        targetCellCSpike->getOutputsActivity());
+            process_Frame(valuesFrame, batchSize);
+        }
+        
+        for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos) {
+            for (int oy = 0; oy < (int)mEstimatedLabelsValue.dimY(); ++oy) {
+                for (int ox = 0; ox < (int)mEstimatedLabelsValue.dimX(); ++ox) {
+                    if (mEstimatedLabelsValue.dimX() == 1 
+                            && mEstimatedLabelsValue.dimY() == 1) {
                         static bool display = true;
 
                         if (set == Database::Test && batchPos == 0 && display) {
                             std::cout << "[";
 
-                            for (int i = 0; i < (int)nbOutputs; ++i) {
+                            for (int i = 0; i < (int)mTargetTopN; ++i) {
                                 if (i == mEstimatedLabels(ox, oy, 0, batchPos))
                                 {
                                     std::cout << std::setprecision(2)
                                         << std::fixed
-                                        << "(" << values(ox, oy, i, batchPos)
+                                        << "(" << mEstimatedLabelsValue(ox, oy, i, batchPos)
                                         << ") ";
                                 }
                                 else {
                                     std::cout << std::setprecision(2)
                                         << std::fixed
-                                        << values(ox, oy, i, batchPos) << " ";
+                                        << mEstimatedLabelsValue(ox, oy, i, batchPos) << " ";
                                 }
                             }
 
@@ -608,6 +585,121 @@ void N2D2::Target::process(Database::StimuliSet set)
         }
     }
 }
+
+#ifdef CUDA
+void N2D2::Target::process_Frame_CUDA(CudaTensor<Float_T>& values,
+                                        const int batchSize)
+{
+
+    const unsigned int nbOutputs = values.dimZ();
+    const size_t tensorSize = mCell->getOutputsHeight()*mCell->getOutputsWidth()
+                                    *mTargetTopN*batchSize*sizeof(Float_T);
+
+    if (mTargetTopN > nbOutputs) {
+        throw std::runtime_error("Target::process_Frame_CUDA(): target 'TopN' "
+                                "parameter must be <= to the network "
+                                "output size");
+    }
+
+    cudaGetEstimatedTarget( mTargetTopN,
+                            mCell->getNbOutputs(),
+                            mCell->getOutputsHeight(),
+                            mCell->getOutputsWidth(),
+                            batchSize,
+                            mBinaryThreshold,
+                            values.getDevicePtr(),
+                            mEstimatedLabelsValue_CUDA.getDevicePtr(),
+                            mEstimatedLabels_CUDA.getDevicePtr());
+
+    CHECK_CUDA_STATUS(cudaMemcpy(   mEstimatedLabels.data().data(),
+                                    mEstimatedLabels_CUDA.getDevicePtr(),
+                                    tensorSize,
+                                    cudaMemcpyDeviceToHost));
+
+    CHECK_CUDA_STATUS(cudaMemcpy(   mEstimatedLabelsValue.data().data(),
+                                    mEstimatedLabelsValue_CUDA.getDevicePtr(),
+                                    tensorSize,
+                                    cudaMemcpyDeviceToHost));
+}
+#endif
+
+void N2D2::Target::process_Frame(const Tensor<Float_T>& values,
+                                const int batchSize)
+{
+
+    const unsigned int nbOutputs = values.dimZ();
+
+    if (mTargetTopN > nbOutputs) {
+        throw std::runtime_error("Target::process_Frame(): target 'TopN' "
+                                "parameter must be <= to the network "
+                                "output size");
+    }
+
+    const size_t size = values.dimY() * batchSize;
+
+    std::vector<int> outputsIdx(nbOutputs);
+
+    if (nbOutputs > 1 && mTargetTopN > 1)
+        std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
+
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (size > 16) schedule(dynamic)
+#else
+#pragma omp parallel for if (batchSize > 4 && size > 16)
+#endif
+    for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
+    {
+        for (int oy = 0; oy < (int)values.dimY(); ++oy) {
+            for (int ox = 0; ox < (int)values.dimX(); ++ox) {
+                if (nbOutputs > 1 && mTargetTopN > 1) {
+                    // initialize original index locations
+                    std::vector<int> sortedLabelsIdx(outputsIdx.begin(),
+                                                    outputsIdx.end());
+
+                    // sort indexes based on comparing values
+                    std::partial_sort(sortedLabelsIdx.begin(),
+                        sortedLabelsIdx.begin() + mTargetTopN,
+                        sortedLabelsIdx.end(),
+                        [&values, &ox, &oy, &batchPos](int i1, int i2)
+                            {return values(ox, oy, i1, batchPos)
+                                        > values(ox, oy, i2, batchPos);});
+
+                    for (unsigned int i = 0; i < mTargetTopN; ++i) {
+                        mEstimatedLabels(ox, oy, i, batchPos)
+                            = sortedLabelsIdx[i];
+                        mEstimatedLabelsValue(ox, oy, i, batchPos)
+                            = values(ox, oy, sortedLabelsIdx[i], batchPos);
+                    }
+                }
+                else if (nbOutputs > 1) {
+                    size_t maxIdx = 0;
+                    Float_T maxVal = values(ox, oy, 0, batchPos);
+
+                    for (size_t i = 1; i < nbOutputs; ++i) {
+                        if (values(ox, oy, i, batchPos) > maxVal) {
+                            maxIdx = i;
+                            maxVal = values(ox, oy, i, batchPos);
+                        }
+                    }
+
+                    mEstimatedLabels(ox, oy, 0, batchPos) = maxIdx;
+                    mEstimatedLabelsValue(ox, oy, 0, batchPos) = maxVal;
+                }
+                else {
+                    mEstimatedLabels(ox, oy, 0, batchPos)
+                        = (values(ox, oy, 0, batchPos) > mBinaryThreshold);
+                    mEstimatedLabelsValue(ox, oy, 0, batchPos)
+                        = (mEstimatedLabels(ox, oy, 0, batchPos) == 1)
+                                ? values(ox, oy, 0, batchPos)
+                                : (1.0 - values(ox, oy, 0, batchPos));
+                }
+
+            }
+        }
+    }
+}
+
+
 
 void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 {
