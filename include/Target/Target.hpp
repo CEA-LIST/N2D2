@@ -123,10 +123,10 @@ public:
     void labelsMapping(const std::string& fileName);
     void setLabelTarget(int label, int output);
     void setDefaultTarget(int output);
-    void process_Frame(const Tensor<Float_T>& values,
-                        const int batchSize);
+    void process_Frame(BaseTensor& values,
+                       const int batchSize);
 #ifdef CUDA
-    void process_Frame_CUDA(CudaTensor<Float_T>& values,
+    void process_Frame_CUDA(CudaBaseTensor& values,
                             const int batchSize);
 #endif
     int getLabelTarget(int label) const;
@@ -187,11 +187,12 @@ protected:
     std::map<int, int> mLabelsMapping;
     int mDefaultTarget;
     Tensor<int> mTargets;
+#ifdef CUDA
+    CudaTensor<int> mEstimatedLabels;
+    CudaTensor<Float_T> mEstimatedLabelsValue;
+#else
     Tensor<int> mEstimatedLabels;
     Tensor<Float_T> mEstimatedLabelsValue;
-#ifdef CUDA
-    CudaTensor<int> mEstimatedLabels_CUDA;
-    CudaTensor<Float_T> mEstimatedLabelsValue_CUDA;
 #endif
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;

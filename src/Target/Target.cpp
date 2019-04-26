@@ -348,20 +348,6 @@ void N2D2::Target::process(Database::StimuliSet set)
                                          mCell->getOutputsHeight(),
                                          mTargetTopN,
                                          labels.dimB()});
-
-#ifdef CUDA
-            mEstimatedLabels_CUDA.resize(   {mCell->getOutputsWidth(),
-                                            mCell->getOutputsHeight(),
-                                            mTargetTopN,
-                                            labels.dimB()}, 0);
-            mEstimatedLabels_CUDA.synchronizeHToD();
-
-            mEstimatedLabelsValue_CUDA.resize(  {mCell->getOutputsWidth(),
-                                                mCell->getOutputsHeight(),
-                                                mTargetTopN,
-                                                labels.dimB()}, 0.0f);
-            mEstimatedLabelsValue_CUDA.synchronizeHToD();
-#endif   
         }
 
         if (mPopulateTargets) {
@@ -383,6 +369,12 @@ void N2D2::Target::process(Database::StimuliSet set)
                     ++batchPos)
                 {
                     for (int y = 0; y < (int)mTargets.dimY(); ++y) {
+                        const int id
+                            = mStimuliProvider->getBatch()[batchPos];
+
+                        if (id < 0)
+                            continue;
+
                         for (int x = 0; x < (int)mTargets.dimX(); ++x) {
                             const unsigned int xl0 = std::floor(x * xRatio);
                             const unsigned int xl1 = std::max(xl0 + 1,
@@ -436,6 +428,24 @@ void N2D2::Target::process(Database::StimuliSet set)
                                     = std::distance(targetHist.begin(),
                                                     maxElem) - 1; // -1 = ignore
                             }
+
+                            // Target range checking
+                            if (mTargets(x, y, 0, batchPos) >= (int)nbTargets) {
+#pragma omp critical(Target__process)
+                                {
+                                    std::cout << Utils::cwarning << "Stimulus #"
+                                        << id << " has target "
+                                        << mTargets(x, y, 0, batchPos)
+                                        << " @ (" << x << "," << y << ") but "
+                                        "number of output target is "
+                                        << nbTargets << Utils::cdef
+                                        << std::endl;
+
+                                    throw std::runtime_error(
+                                        "Target::process(): target out of "
+                                        "range.");
+                                }
+                            }
                         }
                     }
                 }
@@ -446,13 +456,37 @@ void N2D2::Target::process(Database::StimuliSet set)
                 for (int batchPos = 0; batchPos < (int)mTargets.dimB();
                     ++batchPos)
                 {
+                    const int id = mStimuliProvider->getBatch()[batchPos];
+
+                    if (id < 0)
+                        continue;
+
                     // target only has 1 channel, whereas label has as many
                     // channels as environment channels
                     const Tensor<int> label = labels[batchPos][0];
                     Tensor<int> target = mTargets[batchPos][0];
 
-                    for (int index = 0; index < (int)label.size(); ++index)
+                    for (int index = 0; index < (int)label.size(); ++index) {
                         target(index) = getLabelTarget(label(index));
+
+                        // Target range checking
+                        if (target(index) >= (int)nbTargets) {
+#pragma omp critical(Target__process)
+                            {
+                                std::cout << Utils::cwarning << "Stimulus #"
+                                    << id << " has target "
+                                    << target(index)
+                                    << " @ (" << index << ") but "
+                                    "number of output target is "
+                                    << nbTargets << Utils::cdef
+                                    << std::endl;
+
+                                throw std::runtime_error(
+                                    "Target::process(): target out of "
+                                    "range.");
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -462,7 +496,7 @@ void N2D2::Target::process(Database::StimuliSet set)
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
-        if (set == Database::Learn) {
+        if (set == Database::Learn && targetCell) {
             // Set targets
             if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
                 for (unsigned int batchPos = 0; batchPos < mTargets.dimB();
@@ -498,102 +532,60 @@ void N2D2::Target::process(Database::StimuliSet set)
             }
         }
 
-
-        for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
-        {
-            for (int oy = 0; oy < (int)mEstimatedLabelsValue.dimY(); ++oy) {
-                for (int ox = 0; ox < (int)mEstimatedLabelsValue.dimX(); ++ox) {
-                    const int id = mStimuliProvider->getBatch()[batchPos];
-                    assert(id >= 0);
-
-                    if (mTargets(ox, oy, 0, batchPos) >= (int)nbTargets) {
-                        {
-                            std::cout << Utils::cwarning << "Stimulus #"
-                                << id << " has target "
-                                << mTargets(ox, oy, 0, batchPos)
-                                << " @ (" << ox << "," << oy << ") but "
-                                "number of output target is " << nbTargets
-                                << Utils::cdef << std::endl;
-
-                            throw std::runtime_error("Target::process(): "
-                                                        "target out of "
-                                                        "range.");
-                        }
-                    }
-                }
-            }
-        }
-        BaseTensor& outputBaseTensor = targetCell->getOutputs();
-        bool isProcess = false;
+        BaseTensor& outputsBaseTensor = (targetCell)
+            ? targetCell->getOutputs()
+            : targetCellCSpike->getOutputsActivity();
 
 #ifdef CUDA
-        CudaTensor<Float_T>* valuesFrame_CUDA 
-                = dynamic_cast<CudaTensor<Float_T>*>(&outputBaseTensor);
+        CudaBaseTensor* outputsCudaBaseTensor 
+                = dynamic_cast<CudaBaseTensor*>(&outputsBaseTensor);
 
-        if(valuesFrame_CUDA != NULL)
-        {
-            process_Frame_CUDA(*valuesFrame_CUDA, labels.dimB());
-            isProcess = true;
+        if (outputsCudaBaseTensor != NULL) {
+            process_Frame_CUDA(*outputsCudaBaseTensor, batchSize);
+        }
+        else {
+#endif
+            outputsBaseTensor.synchronizeDToH();
+            process_Frame(outputsBaseTensor, batchSize);
+#ifdef CUDA
         }
 #endif
 
-        if(!isProcess)
+        if (mEstimatedLabelsValue.dimX() == 1
+            && mEstimatedLabelsValue.dimY() == 1)
         {
-            if (targetCell)
-                targetCell->getOutputs().synchronizeDToH();
-            else
-                targetCellCSpike->getOutputsActivity().synchronizeDToH();
+            static bool display = true;
 
-            const Tensor<Float_T>& valuesFrame
-                = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
-                            : tensor_cast<Float_T>(
-                                        targetCellCSpike->getOutputsActivity());
-            process_Frame(valuesFrame, batchSize);
-        }
-        
-        for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos) {
-            for (int oy = 0; oy < (int)mEstimatedLabelsValue.dimY(); ++oy) {
-                for (int ox = 0; ox < (int)mEstimatedLabelsValue.dimX(); ++ox) {
-                    if (mEstimatedLabelsValue.dimX() == 1 
-                            && mEstimatedLabelsValue.dimY() == 1) {
-                        static bool display = true;
+            if (set == Database::Test && display) {
+                std::cout << "[";
 
-                        if (set == Database::Test && batchPos == 0 && display) {
-                            std::cout << "[";
-
-                            for (int i = 0; i < (int)mTargetTopN; ++i) {
-                                if (i == mEstimatedLabels(ox, oy, 0, batchPos))
-                                {
-                                    std::cout << std::setprecision(2)
-                                        << std::fixed
-                                        << "(" << mEstimatedLabelsValue(ox, oy, i, batchPos)
-                                        << ") ";
-                                }
-                                else {
-                                    std::cout << std::setprecision(2)
-                                        << std::fixed
-                                        << mEstimatedLabelsValue(ox, oy, i, batchPos) << " ";
-                                }
-                            }
-
-                            std::cout << "]" << std::endl;
-                            display = false;
-                        }
+                for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
+                    if (i == mEstimatedLabels(0, 0, 0, 0))
+                    {
+                        std::cout << std::setprecision(2)
+                            << std::fixed
+                            << "(" << mEstimatedLabelsValue(0, 0, i, 0)
+                            << ") ";
+                    }
+                    else {
+                        std::cout << std::setprecision(2)
+                            << std::fixed
+                            << mEstimatedLabelsValue(0, 0, i, 0) << " ";
                     }
                 }
+
+                std::cout << "]" << std::endl;
+                display = false;
             }
         }
     }
 }
 
 #ifdef CUDA
-void N2D2::Target::process_Frame_CUDA(CudaTensor<Float_T>& values,
-                                        const int batchSize)
+void N2D2::Target::process_Frame_CUDA(CudaBaseTensor& values,
+                                      const int batchSize)
 {
-
     const unsigned int nbOutputs = values.dimZ();
-    const size_t tensorSize = mCell->getOutputsHeight()*mCell->getOutputsWidth()
-                                    *mTargetTopN*batchSize*sizeof(Float_T);
 
     if (mTargetTopN > nbOutputs) {
         throw std::runtime_error("Target::process_Frame_CUDA(): target 'TopN' "
@@ -601,32 +593,27 @@ void N2D2::Target::process_Frame_CUDA(CudaTensor<Float_T>& values,
                                 "output size");
     }
 
+    std::shared_ptr<CudaDeviceTensor<Float_T> > value
+        = cuda_device_tensor_cast<Float_T>(values);
+
     cudaGetEstimatedTarget( mTargetTopN,
                             mCell->getNbOutputs(),
                             mCell->getOutputsHeight(),
                             mCell->getOutputsWidth(),
                             batchSize,
                             mBinaryThreshold,
-                            values.getDevicePtr(),
-                            mEstimatedLabelsValue_CUDA.getDevicePtr(),
-                            mEstimatedLabels_CUDA.getDevicePtr());
+                            value->getDevicePtr(),
+                            mEstimatedLabelsValue.getDevicePtr(),
+                            mEstimatedLabels.getDevicePtr());
 
-    CHECK_CUDA_STATUS(cudaMemcpy(   mEstimatedLabels.data().data(),
-                                    mEstimatedLabels_CUDA.getDevicePtr(),
-                                    tensorSize,
-                                    cudaMemcpyDeviceToHost));
-
-    CHECK_CUDA_STATUS(cudaMemcpy(   mEstimatedLabelsValue.data().data(),
-                                    mEstimatedLabelsValue_CUDA.getDevicePtr(),
-                                    tensorSize,
-                                    cudaMemcpyDeviceToHost));
+    mEstimatedLabels.synchronizeDToH();
+    mEstimatedLabelsValue.synchronizeDToH();
 }
 #endif
 
-void N2D2::Target::process_Frame(const Tensor<Float_T>& values,
-                                const int batchSize)
+void N2D2::Target::process_Frame(BaseTensor& values,
+                                 const int batchSize)
 {
-
     const unsigned int nbOutputs = values.dimZ();
 
     if (mTargetTopN > nbOutputs) {
@@ -635,7 +622,8 @@ void N2D2::Target::process_Frame(const Tensor<Float_T>& values,
                                 "output size");
     }
 
-    const size_t size = values.dimY() * batchSize;
+    const Tensor<Float_T>& value = tensor_cast<Float_T>(values);
+    const size_t size = value.dimY() * batchSize;
 
     std::vector<int> outputsIdx(nbOutputs);
 
@@ -649,8 +637,8 @@ void N2D2::Target::process_Frame(const Tensor<Float_T>& values,
 #endif
     for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
     {
-        for (int oy = 0; oy < (int)values.dimY(); ++oy) {
-            for (int ox = 0; ox < (int)values.dimX(); ++ox) {
+        for (int oy = 0; oy < (int)value.dimY(); ++oy) {
+            for (int ox = 0; ox < (int)value.dimX(); ++ox) {
                 if (nbOutputs > 1 && mTargetTopN > 1) {
                     // initialize original index locations
                     std::vector<int> sortedLabelsIdx(outputsIdx.begin(),
@@ -660,25 +648,25 @@ void N2D2::Target::process_Frame(const Tensor<Float_T>& values,
                     std::partial_sort(sortedLabelsIdx.begin(),
                         sortedLabelsIdx.begin() + mTargetTopN,
                         sortedLabelsIdx.end(),
-                        [&values, &ox, &oy, &batchPos](int i1, int i2)
-                            {return values(ox, oy, i1, batchPos)
-                                        > values(ox, oy, i2, batchPos);});
+                        [&value, &ox, &oy, &batchPos](int i1, int i2)
+                            {return value(ox, oy, i1, batchPos)
+                                        > value(ox, oy, i2, batchPos);});
 
                     for (unsigned int i = 0; i < mTargetTopN; ++i) {
                         mEstimatedLabels(ox, oy, i, batchPos)
                             = sortedLabelsIdx[i];
                         mEstimatedLabelsValue(ox, oy, i, batchPos)
-                            = values(ox, oy, sortedLabelsIdx[i], batchPos);
+                            = value(ox, oy, sortedLabelsIdx[i], batchPos);
                     }
                 }
                 else if (nbOutputs > 1) {
                     size_t maxIdx = 0;
-                    Float_T maxVal = values(ox, oy, 0, batchPos);
+                    Float_T maxVal = value(ox, oy, 0, batchPos);
 
                     for (size_t i = 1; i < nbOutputs; ++i) {
-                        if (values(ox, oy, i, batchPos) > maxVal) {
+                        if (value(ox, oy, i, batchPos) > maxVal) {
                             maxIdx = i;
-                            maxVal = values(ox, oy, i, batchPos);
+                            maxVal = value(ox, oy, i, batchPos);
                         }
                     }
 
@@ -687,11 +675,11 @@ void N2D2::Target::process_Frame(const Tensor<Float_T>& values,
                 }
                 else {
                     mEstimatedLabels(ox, oy, 0, batchPos)
-                        = (values(ox, oy, 0, batchPos) > mBinaryThreshold);
+                        = (value(ox, oy, 0, batchPos) > mBinaryThreshold);
                     mEstimatedLabelsValue(ox, oy, 0, batchPos)
                         = (mEstimatedLabels(ox, oy, 0, batchPos) == 1)
-                                ? values(ox, oy, 0, batchPos)
-                                : (1.0 - values(ox, oy, 0, batchPos));
+                                ? value(ox, oy, 0, batchPos)
+                                : (1.0 - value(ox, oy, 0, batchPos));
                 }
 
             }
