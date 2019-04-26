@@ -746,7 +746,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 = mStimuliProvider->getDatabase().getStimulusName(id);
 
             data << id
-                << " " << imgFile
+                << " " << Utils::quoted(imgFile)
                 << " " << target(0)
                 << " " << estimatedLabels(0)
                 << " " << estimatedLabelsValue(0);

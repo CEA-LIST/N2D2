@@ -112,13 +112,14 @@ void cudaGetEstimatedTarget_kernel( const unsigned int topN,
         }
         else if(nbClass == 1)
         {
-            if(input[index + batchInputOffset] > threshold)
-            {
-                outputMax = 1;
-                maxVal = input[index + batchInputOffset];
-            }
-            estimatedLabels[index + batchOutputOffset] = outputMax;
-            estimatedLabelsValue[index + batchOutputOffset] = maxVal;
+            const int estimatedLabel
+                = (input[index + batchInputOffset] > threshold);
+
+            estimatedLabels[index + batchOutputOffset] = estimatedLabel;
+            estimatedLabelsValue[index + batchOutputOffset]
+                = (estimatedLabel == 1)
+                    ? input[index + batchInputOffset]
+                    : (1.0 - input[index + batchInputOffset]);
         }
 
     }

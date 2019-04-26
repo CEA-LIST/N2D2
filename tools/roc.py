@@ -9,6 +9,7 @@ import os, sys
 import numpy, pylab
 import optparse
 import textwrap
+import csv
 
 parser = optparse.OptionParser(usage="""%prog <output> [options]
 
@@ -30,9 +31,21 @@ dirPath = "."
 if len(prefix) > 1:
     dirPath = prefix[0]
 
-classif = numpy.loadtxt(os.path.join(dirPath, "classif.log"), dtype='S')
-targets = numpy.array(classif.transpose()[2]).astype(int)
-outputs = numpy.array(classif.transpose()[5:]).astype(float)
+with open(os.path.join(dirPath, "classif.log"), 'rb') as f:
+    # Support for N2D2 Utils::quote()
+    classif = csv.reader(f, delimiter=' ', doublequote=False, escapechar='\\',
+                         strict=True)
+    classif = [row for row in classif]
+
+classif = numpy.array(classif).transpose()
+targets = numpy.array(classif[2]).astype(int)
+outputs = numpy.array(classif[5:]).astype(float)
+
+# Check range of either Softmax outputs or Logistic outputs
+if outputNum < 0 or (len(outputs) > 1 and outputNum >= len(outputs)) \
+  or (outputNum > len(outputs)):
+    raise Exception("Specified output (%d) is out of range [0, %d]"
+        % (outputNum, len(outputs) - (len(outputs) > 1)))
 
 if os.path.isfile("labels_mapping.log.dat"):
     legend = numpy.loadtxt("labels_mapping.log.dat", dtype='S')
@@ -58,9 +71,20 @@ totalFp = numpy.sum(targets != outputNum)
 hitRate = []
 fpRate = []
 
+if len(outputs) == 1 and outputNum == 0:
+    outputs = 1.0 - outputs
+
 for thresh in thresholds:
-    hits = numpy.logical_and(targets == outputNum, outputs[outputNum] > thresh)
-    fps = numpy.logical_and(targets != outputNum, outputs[outputNum] > thresh)
+    if len(outputs) > 1:
+        # Softmax outputs
+        hits = numpy.logical_and(targets == outputNum,
+                                 outputs[outputNum] > thresh)
+        fps = numpy.logical_and(targets != outputNum,
+                                outputs[outputNum] > thresh)
+    else:
+        # Logistic output
+        hits = numpy.logical_and(targets == outputNum, outputs[0] > thresh)
+        fps = numpy.logical_and(targets != outputNum, outputs[0] > thresh)
 
     hitRate.append(numpy.sum(hits) / float(totalHit))
     fpRate.append(numpy.sum(fps) / float(totalFp))
