@@ -500,7 +500,12 @@ const std::string& N2D2::Database::getLabelName(int label) const
     if (label < 0 || label >= (int)mLabelsName.size()) {
         std::stringstream msgStr;
         msgStr << "Database::getLabelName(): label ID (" << label
-               << ") out of range [0," << (mLabelsName.size() - 1) << "]";
+               << ") out of range [";
+
+        if (!mLabelsName.empty())
+            msgStr << "0," << (mLabelsName.size() - 1);
+
+        msgStr << "]";
 
         throw std::domain_error(msgStr.str());
     }
