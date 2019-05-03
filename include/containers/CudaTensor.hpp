@@ -187,6 +187,8 @@ public:
     inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
     inline const CudaTensor<T> operator[](size_t i) const;
+    inline CudaTensor<T> rows(size_t j0, size_t nb);
+    inline const CudaTensor<T> rows(size_t j0, size_t nb) const;
     CudaTensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> CudaTensor<T>& operator=(const Tensor<U>& tensor);
 
@@ -718,6 +720,26 @@ const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i) const
         Tensor<T>::operator[](i),
         std::make_shared<CudaDeviceTensor<T> >(*this,
                                 mDeviceTensor->getDevicePtr() + i * mSizeM1),
+        mHostBased);
+}
+
+template <class T>
+N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb)
+{
+    return CudaTensor<T>(
+        Tensor<T>::rows(j0, nb),
+        std::make_shared<CudaDeviceTensor<T> >(*this,
+                                mDeviceTensor->getDevicePtr() + j0 * mSizeM1),
+        mHostBased);
+}
+
+template <class T>
+const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb) const
+{
+    return CudaTensor<T>(
+        Tensor<T>::rows(j0, nb),
+        std::make_shared<CudaDeviceTensor<T> >(*this,
+                                mDeviceTensor->getDevicePtr() + j0 * mSizeM1),
         mHostBased);
 }
 
