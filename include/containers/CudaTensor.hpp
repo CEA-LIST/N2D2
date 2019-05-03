@@ -136,11 +136,12 @@ public:
     virtual void synchronizeHToDBased() const = 0;
 
     virtual CudaBaseDeviceTensor& deviceTensor() = 0;
+    inline bool& hostBased() { return mHostBased; }
     virtual const cudnnTensorDescriptor_t& getCudnnTensorDesc() const = 0;
     virtual ~CudaBaseTensor() {};
 
 protected:
-    const bool mHostBased;
+    bool mHostBased;
     mutable std::map<const std::type_info*,
              std::shared_ptr<CudaBaseDeviceTensor> > mDeviceTensors;
 
@@ -164,7 +165,7 @@ public:
     using CudaBaseTensor::reserve;
     using CudaBaseTensor::resize;
 
-    CudaTensor();
+    CudaTensor(bool hostBased = false);
     CudaTensor(const Tensor<T>& base, bool hostBased = true);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
@@ -511,10 +512,10 @@ N2D2::CudaBaseTensor::CudaBaseTensor(bool hostBased):
 }
 
 template <typename T>
-N2D2::CudaTensor<T>::CudaTensor()
+N2D2::CudaTensor<T>::CudaTensor(bool hostBased)
     : BaseTensor(),
       Tensor<T>(),
-      CudaBaseTensor(false)
+      CudaBaseTensor(hostBased)
 {
     // ctor
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);

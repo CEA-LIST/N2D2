@@ -40,6 +40,13 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mCachePath(""),
       mBatch(batchSize),
       mFutureBatch(batchSize),
+#ifdef CUDA
+      // mData and mFutureData are host-based by default.
+      // This can be changed with the hostBased() method if data is directly
+      // supplied to mData's device pointer.
+      mData(true),
+      mFutureData(true),
+#endif
       mLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
       mFutureLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
       mFuture(false)
@@ -575,6 +582,13 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
     std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
 }
 
+void N2D2::StimuliProvider::streamBatch(int startIndex) {
+    if (startIndex < 0)
+        startIndex = mBatch.back() + 1;
+
+    std::iota(mBatch.begin(), mBatch.end(), startIndex);
+}
+
 void N2D2::StimuliProvider::readStimulusBatch(Database::StimuliSet set,
                                               Database::StimulusID id)
 {
@@ -717,16 +731,17 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
         }
     }
 
-    Tensor<Float_T>& dataRef = (mFuture) ? mFutureData : mData;
+    TensorData_T& dataRef = (mFuture) ? mFutureData : mData;
     Tensor<int>& labelsRef = (mFuture) ? mFutureLabelsData : mLabelsData;
 
     if (mBatchSize > 0) {
-        if (!std::equal(data.dims().begin(), data.dims().end(),
-                   dataRef.dims().begin()))
-        {
+        TensorData_T dataRefPos = dataRef[batchPos];
+        Tensor<int> labelsRefPos = labelsRef[batchPos];
+
+        if (data.dims() != dataRefPos.dims()) {
             std::stringstream msg;
             msg << "StimuliProvider::readStimulus(): expected data size is "
-                << dataRef.dims() << ", but size after transformations is "
+                << dataRefPos.dims() << ", but size after transformations is "
                 << data.dims();
 
 #pragma omp critical
@@ -742,21 +757,19 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                      true);
         }
 
-        dataRef[batchPos] = data;
+        dataRefPos = data;
 
-        if (!std::equal(labels.dims().begin(), labels.dims().end(),
-                   labelsRef.dims().begin()))
-        {
+        if (labels.dims() != labelsRefPos.dims()) {
             std::stringstream msg;
             msg << "StimuliProvider::readStimulus(): expected labels size is "
-                << labelsRef.dims() << ", but size after transformations is "
+                << labelsRefPos.dims() << ", but size after transformations is "
                 << labels.dims();
 
 #pragma omp critical
             throw std::runtime_error(msg.str());
         }
 
-        labelsRef[batchPos] = labels;
+        labelsRefPos = labels;
     } else {
         dataRef.clear();
         dataRef.push_back(data);
@@ -777,7 +790,7 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
                                            Database::StimuliSet set,
                                            unsigned int batchPos)
 {
-    Tensor<Float_T>& dataRef = (mFuture) ? mFutureData : mData;
+    TensorData_T& dataRef = (mFuture) ? mFutureData : mData;
 
     // Apply global transformation
     cv::Mat rawData = mat.clone();
@@ -909,11 +922,11 @@ N2D2::StimuliProvider::getNbTransformations(Database::StimuliSet set) const
     return nbTransformations;
 }
 
-const N2D2::Tensor<N2D2::Float_T>
+const N2D2::StimuliProvider::TensorData_T
 N2D2::StimuliProvider::getData(unsigned int channel,
                                unsigned int batchPos) const
 {
-    return Tensor<Float_T>(mData[batchPos][channel]);
+    return TensorData_T(mData[batchPos][channel]);
 }
 
 const N2D2::Tensor<int>

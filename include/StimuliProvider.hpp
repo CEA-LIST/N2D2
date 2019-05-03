@@ -58,6 +58,12 @@ public:
         operator()(Database::StimuliSet set) const;
     };
 
+#ifdef CUDA
+    typedef CudaTensor<Float_T> TensorData_T;
+#else
+    typedef Tensor<Float_T> TensorData_T;
+#endif
+
     StimuliProvider(Database& database,
                     const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
@@ -172,6 +178,7 @@ public:
     /// transformations and put the results in
     /// mData and mLabelsData
     void readBatch(Database::StimuliSet set, unsigned int startIndex);
+    void streamBatch(int startIndex = -1);
 
 //TODO: Required for spiking neural network batch parallelization
 /*
@@ -262,7 +269,7 @@ public:
     {
         return mBatch;
     };
-    Tensor<Float_T>& getData()
+    TensorData_T& getData()
     {
         return mData;
     };
@@ -270,7 +277,7 @@ public:
     {
         return mLabelsData;
     };
-    const Tensor<Float_T>& getData() const
+    const TensorData_T& getData() const
     {
         return mData;
     };
@@ -283,7 +290,7 @@ public:
     {
         return mLabelsROI;
     };
-    const Tensor<Float_T> getData(unsigned int channel,
+    const TensorData_T getData(unsigned int channel,
                                     unsigned int batchPos = 0) const;
     const Tensor<int> getLabelsData(unsigned int channel,
                                       unsigned int batchPos = 0) const;
@@ -343,8 +350,8 @@ protected:
     std::vector<int> mBatch;
     std::vector<int> mFutureBatch;
     /// Tensor (x, y, channel, batch)
-    Tensor<Float_T> mData;
-    Tensor<Float_T> mFutureData;
+    TensorData_T mData;
+    TensorData_T mFutureData;
     /// Tensor (x, y, channel, batch)
     Tensor<int> mLabelsData;
     Tensor<int> mFutureLabelsData;
