@@ -438,6 +438,9 @@ cv::Mat N2D2::TargetROIs::getBBData(const DetectedBB& bb,
 
 void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
 {
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
+
     Target::logEstimatedLabels(dirName);
 
     const std::string dirPath = mName + "/" + dirName;
@@ -478,21 +481,35 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
             continue;
         }
 
-        const std::string imgFile
-            = mStimuliProvider->getDatabase().getStimulusName(id);
-        const std::string baseName = Utils::baseName(imgFile);
-        const std::string fileBaseName = Utils::fileBaseName(baseName);
-        std::string fileExtension = Utils::fileExtension(baseName);
+        std::ostringstream imgFile;
+        std::string fileName;
 
-        if (!((std::string)mImageLogFormat).empty()) {
-            // Keep "[x,y]" after file extension, appended by
-            // getStimulusName() in case of slicing
-            fileExtension.replace(0, fileExtension.find_first_of('['),
-                                  mImageLogFormat);
+        if (validDatabase) {
+            imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+
+            const std::string baseName = Utils::baseName(imgFile.str());
+            const std::string fileBaseName = Utils::fileBaseName(baseName);
+            std::string fileExtension = Utils::fileExtension(baseName);
+
+            if (!((std::string)mImageLogFormat).empty()) {
+                // Keep "[x,y]" after file extension, appended by
+                // getStimulusName() in case of slicing
+                fileExtension.replace(0, fileExtension.find_first_of('['),
+                                    mImageLogFormat);
+            }
+
+            fileName = dirPath + "/" + fileBaseName + "." + fileExtension;
         }
+        else {
+            imgFile << std::setw(10) << std::setfill('0') << id;
 
-        const std::string fileName = dirPath + "/" + fileBaseName
-                                        + "." + fileExtension;
+            const std::string fileExtension
+                = (!((std::string)mImageLogFormat).empty())
+                    ? (std::string)mImageLogFormat
+                    : std::string("jpg");
+
+            fileName = dirPath + "/" + imgFile.str() + "." + fileExtension;
+        }
 
         // Draw image
         if (!cv::imwrite(fileName, drawEstimatedLabels(batchPos)))
@@ -517,10 +534,11 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
                  ++it) {
                 const cv::Rect rect = (*it).bb->getBoundingRect();
 
-                roisData << baseName << " " << rect.x << " " << rect.y << " "
-                         << rect.width << " " << rect.height << " "
-                         << labelsName[(*it).bb->getLabel()] << " "
-                         << (*it).score;
+                roisData << Utils::quoted(imgFile.str())
+                    << " " << rect.x << " " << rect.y
+                    << " " << rect.width << " " << rect.height
+                    << " " << labelsName[(*it).bb->getLabel()]
+                    << " " << (*it).score;
 
                 if ((*it).roi)
                     roisData << " 1";

@@ -322,6 +322,8 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
 void N2D2::Target::process(Database::StimuliSet set)
 {
     const unsigned int nbTargets = getNbTargets();
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
 
     if (mDataAsTarget) {
         if (set == Database::Learn) {
@@ -350,7 +352,7 @@ void N2D2::Target::process(Database::StimuliSet set)
                                          labels.dimB()});
         }
 
-        if (mPopulateTargets) {
+        if (mPopulateTargets && validDatabase) {
             // Generate targets
             const size_t size = mTargets.dimB() * mTargets.dimY();
 
@@ -694,6 +696,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
 
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
+
     if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
 #if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
         const int ret = symlink(N2D2_PATH("tools/roc.py"),
@@ -742,11 +747,15 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             const Tensor<Float_T> estimatedLabelsValue
                 = mEstimatedLabelsValue[batchPos][0];
 
-            const std::string imgFile
-                = mStimuliProvider->getDatabase().getStimulusName(id);
+            std::ostringstream imgFile;
+
+            if (validDatabase)
+                imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+            else
+                imgFile << std::setw(10) << std::setfill('0') << id;
 
             data << id
-                << " " << Utils::quoted(imgFile)
+                << " " << Utils::quoted(imgFile.str())
                 << " " << target(0)
                 << " " << estimatedLabels(0)
                 << " " << estimatedLabelsValue(0);
@@ -794,39 +803,56 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
                                : tensor_cast_nocopy<Float_T>
                                     (targetCellCSpike->getOutputsActivity());
-            const std::string imgFile
-                = mStimuliProvider->getDatabase().getStimulusName(id);
-            const std::string baseName = Utils::baseName(imgFile);
-            const std::string fileBaseName = Utils::fileBaseName(baseName);
-            std::string fileExtension = Utils::fileExtension(baseName);
 
-            if (!((std::string)mImageLogFormat).empty()) {
-                // Keep "[x,y]" after file extension, appended by
-                // getStimulusName() in case of slicing
-                fileExtension.replace(0, fileExtension.find_first_of('['),
-                                      mImageLogFormat);
+            std::string fileName;
+
+            if (validDatabase) {
+                const std::string imgFile
+                    = mStimuliProvider->getDatabase().getStimulusName(id);
+                const std::string baseName = Utils::baseName(imgFile);
+                const std::string fileBaseName = Utils::fileBaseName(baseName);
+                std::string fileExtension = Utils::fileExtension(baseName);
+
+                if (!((std::string)mImageLogFormat).empty()) {
+                    // Keep "[x,y]" after file extension, appended by
+                    // getStimulusName() in case of slicing
+                    fileExtension.replace(0, fileExtension.find_first_of('['),
+                                        mImageLogFormat);
+                }
+
+                // Input image
+                cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+                cv::Mat inputImg8U;
+                inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+
+                fileName = dirPath + "/" + fileBaseName + "_target."
+                                + fileExtension;
+
+                if (!cv::imwrite(fileName, inputImg8U)) {
+    #pragma omp critical(Target__logEstimatedLabels)
+                    throw std::runtime_error("Unable to write image: " + fileName);
+                }
+
+                fileName = dirPath + "/" + fileBaseName + "_estimated."
+                        + fileExtension;
             }
+            else {
+                std::ostringstream imgFile;
+                imgFile << std::setw(10) << std::setfill('0') << id;
 
-            // Input image
-            cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
-            cv::Mat inputImg8U;
-            inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+                const std::string fileExtension
+                    = (!((std::string)mImageLogFormat).empty())
+                        ? (std::string)mImageLogFormat
+                        : std::string("jpg");
 
-            std::string fileName = dirPath + "/" + fileBaseName + "_target."
-                                   + fileExtension;
-
-            if (!cv::imwrite(fileName, inputImg8U)) {
-#pragma omp critical(Target__logEstimatedLabels)
-                throw std::runtime_error("Unable to write image: " + fileName);
+                fileName = dirPath + "/" + imgFile.str() + "."
+                                        + fileExtension;
             }
 
             // Output image
             const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
             cv::Mat outputImg8U;
             outputImg.convertTo(outputImg8U, CV_8U, 255.0);
-
-            fileName = dirPath + "/" + fileBaseName + "_estimated."
-                       + fileExtension;
 
             if (!cv::imwrite(fileName, outputImg8U)) {
 #pragma omp critical(Target__logEstimatedLabels)
@@ -854,9 +880,14 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         const Tensor<Float_T> estimatedLabelsValue
             = mEstimatedLabelsValue[batchPos][0];
 
-        cv::Mat targetImgHsv(cv::Size(mTargets.dimX(), mTargets.dimY()),
-                             CV_8UC3,
-                             cv::Scalar(0, 0, 0));
+        cv::Mat targetImgHsv;
+
+        if (validDatabase) {
+            targetImgHsv = cv::Mat(cv::Size(mTargets.dimX(), mTargets.dimY()),
+                                CV_8UC3,
+                                cv::Scalar(0, 0, 0));
+        }
+
         cv::Mat estimatedImgHsv(cv::Size(mTargets.dimX(), mTargets.dimY()),
                                 CV_8UC3,
                                 cv::Scalar(0, 0, 0));
@@ -877,15 +908,17 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
-                const int targetHue = (180 * target(ox, oy) / nbTargets
-                                       + mLabelsHueOffset) % 180;
+                if (validDatabase) {
+                    const int targetHue = (180 * target(ox, oy) / nbTargets
+                                        + mLabelsHueOffset) % 180;
 
-                targetImgHsv.at<cv::Vec3b>(oy, ox)
-                    = (target(ox, oy) >= 0)
-                        ? ((target(ox, oy) != mNoDisplayLabel)
-                            ? cv::Vec3f(targetHue, 255, 255)
-                            : cv::Vec3f(targetHue, 10, 127)) // no color
-                        : cv::Vec3f(0, 0, 127); // ignore = no color
+                    targetImgHsv.at<cv::Vec3b>(oy, ox)
+                        = (target(ox, oy) >= 0)
+                            ? ((target(ox, oy) != mNoDisplayLabel)
+                                ? cv::Vec3f(targetHue, 255, 255)
+                                : cv::Vec3f(targetHue, 10, 127)) // no color
+                            : cv::Vec3f(0, 0, 127); // ignore = no color
+                }
 
                 const int estimatedHue = (180 * estimatedLabels(ox, oy)
                                           / nbTargets + mLabelsHueOffset) % 180;
@@ -903,18 +936,6 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         }
 
         const double alpha = 0.75;
-        const std::string imgFile
-            = mStimuliProvider->getDatabase().getStimulusName(id);
-        const std::string baseName = Utils::baseName(imgFile);
-        const std::string fileBaseName = Utils::fileBaseName(baseName);
-        std::string fileExtension = Utils::fileExtension(baseName);
-
-        if (!((std::string)mImageLogFormat).empty()) {
-            // Keep "[x,y]" after file extension, appended by
-            // getStimulusName() in case of slicing
-            fileExtension.replace(0, fileExtension.find_first_of('['),
-                                  mImageLogFormat);
-        }
 
         // Input image
         cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
@@ -935,33 +956,62 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         cv::cvtColor(inputImg8U, inputImgColor, CV_GRAY2BGR);
 #endif
 
-        // Target image
-        cv::Mat imgColor;
+        std::string fileName;
+        cv::Mat imgColor, imgSampled, imgBlended;
+
+        if (validDatabase) {
+            const std::string imgFile
+                = mStimuliProvider->getDatabase().getStimulusName(id);
+            const std::string baseName = Utils::baseName(imgFile);
+            const std::string fileBaseName = Utils::fileBaseName(baseName);
+            std::string fileExtension = Utils::fileExtension(baseName);
+
+            if (!((std::string)mImageLogFormat).empty()) {
+                // Keep "[x,y]" after file extension, appended by
+                // getStimulusName() in case of slicing
+                fileExtension.replace(0, fileExtension.find_first_of('['),
+                                    mImageLogFormat);
+            }
+
+            // Target image
 #if CV_MAJOR_VERSION >= 3
-        cv::cvtColor(targetImgHsv, imgColor, cv::COLOR_HSV2BGR);
+            cv::cvtColor(targetImgHsv, imgColor, cv::COLOR_HSV2BGR);
 #else
-        cv::cvtColor(targetImgHsv, imgColor, CV_HSV2BGR);
+            cv::cvtColor(targetImgHsv, imgColor, CV_HSV2BGR);
 #endif
 
-        cv::Mat imgSampled;
-        cv::resize(imgColor,
-                   imgSampled,
-                   cv::Size(mStimuliProvider->getSizeX(),
-                            mStimuliProvider->getSizeY()),
-                   0.0,
-                   0.0,
-                   cv::INTER_NEAREST);
+            cv::resize(imgColor,
+                    imgSampled,
+                    cv::Size(mStimuliProvider->getSizeX(),
+                                mStimuliProvider->getSizeY()),
+                    0.0,
+                    0.0,
+                    cv::INTER_NEAREST);
 
-        cv::Mat imgBlended;
-        cv::addWeighted(
-            inputImgColor, alpha, imgSampled, 1 - alpha, 0.0, imgBlended);
+            cv::addWeighted(
+                inputImgColor, alpha, imgSampled, 1 - alpha, 0.0, imgBlended);
 
-        std::string fileName = dirPath + "/" + fileBaseName + "_target."
-                               + fileExtension;
+            fileName = dirPath + "/" + fileBaseName + "_target."
+                                + fileExtension;
 
-        if (!cv::imwrite(fileName, imgBlended)) {
+            if (!cv::imwrite(fileName, imgBlended)) {
 #pragma omp critical(Target__logEstimatedLabels)
-            throw std::runtime_error("Unable to write image: " + fileName);
+                throw std::runtime_error("Unable to write image: " + fileName);
+            }
+
+            fileName = dirPath + "/" + fileBaseName + "_estimated."
+                + fileExtension;
+        }
+        else {
+            std::ostringstream imgFile;
+            imgFile << std::setw(10) << std::setfill('0') << id;
+
+            const std::string fileExtension
+                = (!((std::string)mImageLogFormat).empty())
+                    ? (std::string)mImageLogFormat
+                    : std::string("jpg");
+
+            fileName = dirPath + "/" + imgFile.str() + "." + fileExtension;
         }
 
         // Estimated image
@@ -981,8 +1031,6 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         cv::addWeighted(
             inputImgColor, alpha, imgSampled, 1 - alpha, 0.0, imgBlended);
-
-        fileName = dirPath + "/" + fileBaseName + "_estimated." + fileExtension;
 
         if (!cv::imwrite(fileName, imgBlended)) {
 #pragma omp critical(Target__logEstimatedLabels)
