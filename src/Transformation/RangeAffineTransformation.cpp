@@ -21,6 +21,8 @@
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "FloatT.hpp"
 
+const char* N2D2::RangeAffineTransformation::Type = "RangeAffine";
+
 N2D2::RangeAffineTransformation::RangeAffineTransformation(
     Operator firstOperator,
     const std::vector<double>& firstValue,

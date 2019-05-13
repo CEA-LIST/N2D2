@@ -28,8 +28,14 @@ class FlipTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    static const char* Type;
+
     FlipTransformation(bool horizontalFlip = false, bool verticalFlip = false);
     FlipTransformation(const FlipTransformation& trans);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& labelsROI,

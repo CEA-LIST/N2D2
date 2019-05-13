@@ -44,8 +44,14 @@ class FilterTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    static const char* Type;
+
     FilterTransformation(const Kernel<double>& kernel,
                          double orientation = 0.0);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

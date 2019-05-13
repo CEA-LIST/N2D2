@@ -20,6 +20,8 @@
 
 #include "Transformation/DFTTransformation.hpp"
 
+const char* N2D2::DFTTransformation::Type = "DFT";
+
 N2D2::DFTTransformation::DFTTransformation(bool twoDimensional)
     : mTwoDimensional(twoDimensional)
 {

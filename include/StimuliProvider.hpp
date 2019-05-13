@@ -136,6 +136,8 @@ public:
                                            Database::StimuliSetMask setMask
                                            = Database::All);
 
+    void logTransformations(const std::string& fileName) const;
+
     void future();
     void synchronize();
 

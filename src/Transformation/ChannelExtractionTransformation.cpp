@@ -20,6 +20,8 @@
 
 #include "Transformation/ChannelExtractionTransformation.hpp"
 
+const char* N2D2::ChannelExtractionTransformation::Type = "ChannelExtraction";
+
 N2D2::ChannelExtractionTransformation::ChannelExtractionTransformation(
     Channel channel)
     : mChannel(channel)

@@ -22,6 +22,7 @@
 #include "Solver/SGDSolver_Kernels.hpp"
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Gnuplot.hpp"
+#include "utils/GraphViz.hpp"
 
 N2D2::StimuliProvider::StimuliProvider(Database& database,
                                        const std::vector<size_t>& size,
@@ -279,6 +280,203 @@ void N2D2::StimuliProvider::addChannelsOnTheFlyTransformation(
             (*itTrans)(*it).onTheFly.push_back(transformation);
         }
     }
+}
+
+void N2D2::StimuliProvider::logTransformations(const std::string& fileName)
+    const
+{
+    GraphViz graph("Transformations", "", true);
+
+    const std::vector<Database::StimuliSet> stimuliSets
+        = mDatabase.getStimuliSets(Database::All);
+
+    for (std::vector<Database::StimuliSet>::const_iterator it
+         = stimuliSets.begin(), itEnd = stimuliSets.end(); it != itEnd; ++it)
+    {
+        auto transParams = [](GraphViz& setGraph,
+                              const std::string& nodeName,
+                              const std::map<std::string, std::string>& params)
+        {
+            if (!params.empty()) {
+                std::ostringstream paramsStr;
+                paramsStr << "{";
+
+                for (std::map<std::string, std::string>::const_iterator itParams
+                    = params.begin(), itParamsEnd = params.end();
+                    itParams != itParamsEnd; ++itParams)
+                {
+                    if (itParams != params.begin())
+                        paramsStr << "|";
+
+                    paramsStr << (*itParams).first;
+                }
+
+                paramsStr << "}|{";
+
+                for (std::map<std::string, std::string>::const_iterator itParams
+                    = params.begin(), itParamsEnd = params.end();
+                    itParams != itParamsEnd; ++itParams)
+                {
+                    if (itParams != params.begin())
+                        paramsStr << "|";
+
+                    paramsStr << (*itParams).second;
+                }
+
+                paramsStr << "}";
+
+                setGraph.node(nodeName + "_params", paramsStr.str());
+                setGraph.attr(nodeName + "_params", "shape", "record");
+                setGraph.attr(nodeName + "_params", "color", "gray");
+                setGraph.attr(nodeName + "_params", "fontsize", "8");
+            }
+        };
+
+        auto transNode = [transParams](GraphViz& graph,
+                                       std::shared_ptr<Transformation> trans,
+                                       unsigned int& width,
+                                       unsigned int& height,
+                                       const std::string& prevNodeName,
+                                       const std::string& nodeName,
+                                       bool isCacheable)
+        {
+            std::tie(width, height) = trans->getOutputsSize(width, height);
+
+            std::ostringstream labelStr;
+            labelStr << trans->getType() << "\n";
+
+            if (width != 0 && height != 0)
+                labelStr << width << "x" << height;
+            else
+                labelStr << "?x?";
+
+            GraphViz nodeGraph("cluster" + nodeName);
+            nodeGraph.attr("cluster" + nodeName, "style", "invis");
+            nodeGraph.node(nodeName, labelStr.str());
+
+            if (trans->getType() == std::string("ChannelExtraction")) {
+                nodeGraph.attr(nodeName, "shape", "invtrapezium");
+                nodeGraph.attr(nodeName, "width", "2");
+                nodeGraph.attr(nodeName, "fixedsize", "true");
+            }
+            else
+                nodeGraph.attr(nodeName, "shape", "rect");
+
+            if (isCacheable)
+                nodeGraph.attr(nodeName, "style", "filled");
+
+            transParams(nodeGraph, nodeName, trans->getParameters());
+
+            graph.subgraph(nodeGraph);
+            graph.edge(prevNodeName, nodeName);
+        };
+
+        unsigned int width = 0;
+        unsigned int height = 0;
+
+        // Dataset node
+        std::string nodeName = Utils::toString(*it);
+        std::string prevNodeName;
+
+        graph.node(nodeName);
+        graph.attr(nodeName, "shape", "cylinder");
+        graph.attr(nodeName, "style", "filled");
+        graph.attr(nodeName, "fillcolor", "yellow");
+
+        // Output DATA node
+        const std::string dataNodeName = "DATA" + nodeName;
+
+        std::ostringstream labelStr;
+        labelStr << "DATA\n"
+            << mSize;
+
+        graph.node(dataNodeName, labelStr.str());
+
+        if (mSize.back() > 1)
+            graph.attr(dataNodeName, "shape", "box3d");
+        else
+            graph.attr(dataNodeName, "shape", "box");
+
+        graph.attr(dataNodeName, "height", "0.75");
+        graph.attr(dataNodeName, "width", "1.5");
+        graph.attr(dataNodeName, "fixedsize", "true");
+
+        // Global transformations
+        const CompositeTransformation& trans = mTransformations(*it).cacheable;
+
+        for (size_t i = 0; i < trans.size(); ++i) {
+            std::swap(prevNodeName, nodeName);
+            nodeName = Utils::toString(*it)
+                + "_cacheable_" + std::to_string(i);
+
+            transNode(graph, trans[i], width, height,
+                      prevNodeName, nodeName, true);
+
+            if (mSize.back() > 1) {
+                graph.attr(prevNodeName + "->" + nodeName,
+                           "color", "black:invis:black");
+            }
+        }
+
+        const CompositeTransformation& transFly
+            = mTransformations(*it).onTheFly;
+
+        for (size_t i = 0; i < transFly.size(); ++i) {
+            std::swap(prevNodeName, nodeName);
+            nodeName = Utils::toString(*it)
+                + "_onthefly_" + std::to_string(i);
+
+            transNode(graph, transFly[i], width, height,
+                      prevNodeName, nodeName, false);
+
+            if (mSize.back() > 1) {
+                graph.attr(prevNodeName + "->" + nodeName,
+                           "color", "black:invis:black");
+            }
+        }
+
+        const std::string globalNodeName = nodeName;
+
+        // Channel transformations
+        for (size_t channel = 0; channel < mChannelsTransformations.size();
+            ++channel)
+        {
+            nodeName = globalNodeName;
+
+            const CompositeTransformation& chTrans 
+                = mChannelsTransformations[channel](*it).cacheable;
+
+            for (size_t i = 0; i < chTrans.size(); ++i) {
+                std::swap(prevNodeName, nodeName);
+                nodeName = Utils::toString(*it)
+                    + "_ch" + std::to_string(channel)
+                    + "_cacheable_" + std::to_string(i);
+
+                transNode(graph, chTrans[i], width, height,
+                          prevNodeName, nodeName, true);
+            }
+
+            const CompositeTransformation& chTransFly
+                = mChannelsTransformations[channel](*it).onTheFly;
+
+            for (size_t i = 0; i < chTransFly.size(); ++i) {
+                std::swap(prevNodeName, nodeName);
+                nodeName = Utils::toString(*it)
+                    + "_ch" + std::to_string(channel)
+                    + "_onthefly_" + std::to_string(i);
+
+                transNode(graph, chTransFly[i], width, height,
+                          prevNodeName, nodeName, false);
+            }
+
+            graph.edge(nodeName, dataNodeName);
+        }
+
+        if (mChannelsTransformations.empty())
+            graph.edge(nodeName, dataNodeName);
+    }
+
+    graph.render(fileName);
 }
 
 void N2D2::StimuliProvider::future()

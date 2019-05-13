@@ -35,8 +35,14 @@ public:
         MinMax
     };
 
+    static const char* Type;
+
     NormalizeTransformation();
     NormalizeTransformation(const NormalizeTransformation& trans);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

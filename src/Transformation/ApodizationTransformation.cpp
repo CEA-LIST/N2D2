@@ -20,6 +20,8 @@
 
 #include "Transformation/ApodizationTransformation.hpp"
 
+const char* N2D2::ApodizationTransformation::Type = "Apodization";
+
 N2D2::ApodizationTransformation::ApodizationTransformation(const WindowFunction
                                                            <double>& func,
                                                            unsigned int size)

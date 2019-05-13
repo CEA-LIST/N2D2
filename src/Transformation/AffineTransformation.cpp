@@ -20,6 +20,8 @@
 
 #include "Transformation/AffineTransformation.hpp"
 
+const char* N2D2::AffineTransformation::Type = "Affine";
+
 N2D2::AffineTransformation::AffineTransformation(Operator firstOperator,
                                                  cv::Mat firstValue,
                                                  Operator secondOperator,

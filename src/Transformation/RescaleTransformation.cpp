@@ -20,6 +20,8 @@
 
 #include "Transformation/RescaleTransformation.hpp"
 
+const char* N2D2::RescaleTransformation::Type = "Rescale";
+
 N2D2::RescaleTransformation::RescaleTransformation(unsigned int width,
                                                    unsigned int height)
     : mWidth(width),

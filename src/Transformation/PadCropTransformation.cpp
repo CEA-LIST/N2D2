@@ -20,6 +20,8 @@
 
 #include "Transformation/PadCropTransformation.hpp"
 
+const char* N2D2::PadCropTransformation::Type = "PadCrop";
+
 N2D2::PadCropTransformation::PadCropTransformation(unsigned int width,
                                                    unsigned int height)
     : mWidth(width),

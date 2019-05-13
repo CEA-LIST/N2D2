@@ -20,6 +20,8 @@
 
 #include "Transformation/MagnitudePhaseTransformation.hpp"
 
+const char* N2D2::MagnitudePhaseTransformation::Type = "MagnitudePhase";
+
 N2D2::MagnitudePhaseTransformation::MagnitudePhaseTransformation(bool logScale)
     : mLogScale(logScale)
 {

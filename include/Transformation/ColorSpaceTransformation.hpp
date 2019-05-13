@@ -61,7 +61,13 @@ public:
         CIELuv_to_RGB
     };
 
+    static const char* Type;
+
     ColorSpaceTransformation(ColorSpace colorSpace);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

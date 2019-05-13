@@ -88,6 +88,11 @@ void N2D2::GraphViz::attr(const std::string& name,
 
 void N2D2::GraphViz::subgraph(const GraphViz& graph)
 {
+    if (&graph == this) {
+        throw std::runtime_error("GraphViz::subgraph(): trying to subgraph"
+            " itself!");
+    }
+
     mEdges.insert(mEdges.end(), graph.mEdges.begin(), graph.mEdges.end());
     mAttrs.insert(graph.mAttrs.begin(), graph.mAttrs.end());
 

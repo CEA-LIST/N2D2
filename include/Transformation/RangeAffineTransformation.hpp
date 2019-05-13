@@ -35,6 +35,8 @@ public:
         Divides
     };
 
+    static const char* Type;
+
     RangeAffineTransformation(Operator firstOperator,
                               const std::vector<double>& firstValue,
                               Operator secondOperator = Plus,
@@ -44,6 +46,10 @@ public:
                               double firstValue,
                               Operator secondOperator = Plus,
                               double secondValue = 0.0);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

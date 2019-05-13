@@ -20,6 +20,8 @@
 
 #include "Transformation/FlipTransformation.hpp"
 
+const char* N2D2::FlipTransformation::Type = "Flip";
+
 N2D2::FlipTransformation::FlipTransformation(bool horizontalFlip,
                                              bool verticalFlip)
     : mHorizontalFlip(horizontalFlip),

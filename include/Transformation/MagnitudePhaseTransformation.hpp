@@ -29,7 +29,13 @@ class MagnitudePhaseTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    static const char* Type;
+
     MagnitudePhaseTransformation(bool logScale = false);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

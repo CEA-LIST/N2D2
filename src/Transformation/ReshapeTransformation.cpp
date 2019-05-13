@@ -20,6 +20,8 @@
 
 #include "Transformation/ReshapeTransformation.hpp"
 
+const char* N2D2::ReshapeTransformation::Type = "Reshape";
+
 N2D2::ReshapeTransformation::ReshapeTransformation(unsigned int nbRows,
                                                    unsigned int nbCols,
                                                    unsigned int nbChannels)

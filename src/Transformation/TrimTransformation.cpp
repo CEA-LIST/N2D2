@@ -20,6 +20,8 @@
 
 #include "Transformation/TrimTransformation.hpp"
 
+const char* N2D2::TrimTransformation::Type = "Trim";
+
 N2D2::TrimTransformation::TrimTransformation(unsigned int nbLevels,
                                              const cv::Mat& kernel)
     : mNbLevels(nbLevels),

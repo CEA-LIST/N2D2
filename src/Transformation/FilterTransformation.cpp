@@ -20,6 +20,8 @@
 
 #include "Transformation/FilterTransformation.hpp"
 
+const char* N2D2::FilterTransformation::Type = "Filter";
+
 namespace N2D2 {
 const FilterTransformation
 FilterTransformationLaplacian(Kernel<double>("0 -1 0 -1 4 -1 0 -1 0"), 0.0);

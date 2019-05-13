@@ -37,8 +37,14 @@ public:
         ToZeroInverted
     };
 
+    static const char* Type;
+
     ThresholdTransformation(double threshold, bool otsuMethod = false);
     ThresholdTransformation(const ThresholdTransformation& trans);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

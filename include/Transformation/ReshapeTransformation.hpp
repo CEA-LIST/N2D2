@@ -28,9 +28,15 @@ class ReshapeTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    static const char* Type;
+
     ReshapeTransformation(unsigned int nbRows,
                           unsigned int nbCols = 0,
                           unsigned int nbChannels = 0);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

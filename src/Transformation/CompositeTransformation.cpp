@@ -18,42 +18,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_DFTTRANSFORMATION_H
-#define N2D2_DFTTRANSFORMATION_H
+#include "Transformation/CompositeTransformation.hpp"
 
-#include "Transformation.hpp"
-#include "utils/DSP.hpp"
-
-namespace N2D2 {
-class DFTTransformation : public Transformation {
-public:
-    using Transformation::apply;
-
-    static const char* Type;
-
-    DFTTransformation(bool twoDimensional = true);
-    const char* getType() const
-    {
-        return Type;
-    };
-    void apply(cv::Mat& frame,
-               cv::Mat& /*labels*/,
-               std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
-               int /*id*/ = -1);
-    std::shared_ptr<DFTTransformation> clone() const
-    {
-        return std::shared_ptr<DFTTransformation>(doClone());
-    }
-    virtual ~DFTTransformation() {};
-
-private:
-    virtual DFTTransformation* doClone() const
-    {
-        return new DFTTransformation(*this);
-    }
-
-    const bool mTwoDimensional;
-};
-}
-
-#endif // N2D2_DFTTRANSFORMATION_H
+const char* N2D2::CompositeTransformation::Type = "Composite";

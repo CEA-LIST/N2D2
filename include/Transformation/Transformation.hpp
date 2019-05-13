@@ -71,6 +71,7 @@ struct opencv_data_type<double> {
 
 class Transformation : public Parameterizable {
 public:
+    virtual const char* getType() const = 0;
     inline void apply(cv::Mat& frame, int id = -1);
     inline void apply(cv::Mat& frame, cv::Mat& labels, int id = -1);
     virtual void apply(cv::Mat& frame,

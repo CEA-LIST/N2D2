@@ -55,7 +55,13 @@ public:
         Cr
     };
 
+    static const char* Type;
+
     ChannelExtractionTransformation(Channel channel);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

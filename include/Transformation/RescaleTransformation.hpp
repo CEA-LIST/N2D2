@@ -28,8 +28,14 @@ class RescaleTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    static const char* Type;
+
     RescaleTransformation(unsigned int width, unsigned int height);
     RescaleTransformation(const RescaleTransformation& trans);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& labelsROI,

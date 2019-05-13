@@ -28,11 +28,17 @@ class CompositeTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    static const char* Type;
+
     CompositeTransformation() {};
     /// Any transformation can be transformed to a composite transformation
     template <class T> CompositeTransformation(const T& transformation);
     template <class T>
     CompositeTransformation(const std::shared_ptr<T>& transformation);
+    const char* getType() const
+    {
+        return Type;
+    };
     inline void apply(cv::Mat& frame,
                       cv::Mat& labels,
                       std::vector<std::shared_ptr<ROI> >& labelsROI,

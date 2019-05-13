@@ -34,11 +34,17 @@ public:
         Reduce
     };
 
+    static const char* Type;
+
     TrimTransformation(unsigned int nbLevels,
                        const cv::Mat& kernel
                        = cv::getStructuringElement(cv::MORPH_RECT,
                                                    cv::Size(3, 3)));
     TrimTransformation(const TrimTransformation& trans);
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& labels,
                std::vector<std::shared_ptr<ROI> >& labelsROI,

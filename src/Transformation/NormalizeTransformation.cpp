@@ -21,6 +21,8 @@
 #include "Transformation/NormalizeTransformation.hpp"
 #include "FloatT.hpp"
 
+const char* N2D2::NormalizeTransformation::Type = "Normalize";
+
 N2D2::NormalizeTransformation::NormalizeTransformation()
     : mNorm(this, "Norm", MinMax),
       mNormValue(this, "NormValue", 1.0),

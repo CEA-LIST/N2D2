@@ -20,6 +20,8 @@
 
 #include "Transformation/ThresholdTransformation.hpp"
 
+const char* N2D2::ThresholdTransformation::Type = "Threshold";
+
 N2D2::ThresholdTransformation::ThresholdTransformation(double threshold,
                                                        bool otsuMethod)
     : mThreshold(threshold),

@@ -41,6 +41,8 @@ public:
         Divides
     };
 
+    static const char* Type;
+
     AffineTransformation(Operator firstOperator,
                          cv::Mat firstValue,
                          Operator secondOperator = Plus,
@@ -49,6 +51,10 @@ public:
                          const std::string& firstValue,
                          Operator secondOperator = Plus,
                          const std::string& secondValue = "");
+    const char* getType() const
+    {
+        return Type;
+    };
     void apply(cv::Mat& frame,
                cv::Mat& /*labels*/,
                std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,

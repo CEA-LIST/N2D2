@@ -1570,6 +1570,8 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::shared_ptr<Database> database = deepNet->getDatabase();
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
 
+    sp->logTransformations("transformations.dot");
+
     DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
     DrawNet::draw(*deepNet, Utils::baseName(opt.iniConfig) + ".svg");
     deepNet->logStats("stats");

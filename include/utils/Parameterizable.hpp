@@ -225,6 +225,7 @@ public:
                                        bool ignoreUnknown = false);
     template <class T> T getParameter(const std::string& name) const;
     std::string getParameter(const std::string& name) const;
+    std::map<std::string, std::string> getParameters() const;
 
     /**
      * Load parameters from file @p fileName.

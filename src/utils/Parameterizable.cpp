@@ -214,6 +214,25 @@ std::string N2D2::Parameterizable::getParameter(const std::string& name) const
         throw std::runtime_error("Parameter does not exist: " + name);
 }
 
+std::map<std::string, std::string> N2D2::Parameterizable::getParameters() const
+{
+    std::map<std::string, std::string> params;
+
+    for (std::map<std::string, Parameter_T*>::const_iterator it
+         = mParameters.begin(),
+         itEnd = mParameters.end();
+         it != itEnd;
+         ++it)
+    {
+        std::ostringstream value;
+        value << std::showpoint << (*((*it).second));
+
+        params[(*it).first] = value.str();
+    }
+
+    return params;
+}
+
 unsigned int N2D2::Parameterizable::loadParameters(const std::string& fileName,
                                                    bool ignoreNotExists,
                                                    bool ignoreUnknown)

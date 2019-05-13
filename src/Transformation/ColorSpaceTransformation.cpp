@@ -20,6 +20,8 @@
 
 #include "Transformation/ColorSpaceTransformation.hpp"
 
+const char* N2D2::ColorSpaceTransformation::Type = "ColorSpace";
+
 N2D2::ColorSpaceTransformation::ColorSpaceTransformation(ColorSpace colorSpace)
     : mColorSpace(colorSpace)
 {
