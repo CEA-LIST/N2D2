@@ -60,6 +60,14 @@ public:
         return rMap;
     }
 
+#ifdef CUDA
+    typedef CudaTensor<int> TensorLabels_T;
+    typedef CudaTensor<Float_T> TensorLabelsValue_T;
+#else
+    typedef Tensor<int> TensorLabels_T;
+    typedef Tensor<Float_T> TensorLabelsValue_T;
+#endif
+
     static std::shared_ptr<Target> create(const std::string& name,
                                           const std::shared_ptr<Cell>& cell,
                                           const std::shared_ptr
@@ -137,11 +145,11 @@ public:
     virtual void process(Database::StimuliSet set);
     virtual void logEstimatedLabels(const std::string& dirName) const;
     virtual void logLabelsLegend(const std::string& fileName) const;
-    const Tensor<int>& getEstimatedLabels() const
+    const TensorLabels_T& getEstimatedLabels() const
     {
         return mEstimatedLabels;
     };
-    const Tensor<Float_T>& getEstimatedLabelsValue() const
+    const TensorLabelsValue_T& getEstimatedLabelsValue() const
     {
         return mEstimatedLabelsValue;
     };
@@ -187,13 +195,8 @@ protected:
     std::map<int, int> mLabelsMapping;
     int mDefaultTarget;
     Tensor<int> mTargets;
-#ifdef CUDA
-    CudaTensor<int> mEstimatedLabels;
-    CudaTensor<Float_T> mEstimatedLabelsValue;
-#else
-    Tensor<int> mEstimatedLabels;
-    Tensor<Float_T> mEstimatedLabelsValue;
-#endif
+    TensorLabels_T mEstimatedLabels;
+    TensorLabelsValue_T mEstimatedLabelsValue;
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
     std::vector<Float_T> mLoss;

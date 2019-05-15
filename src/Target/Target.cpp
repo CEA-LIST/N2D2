@@ -718,8 +718,8 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
         const Tensor<Float_T>& values
-            = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
-                           : tensor_cast_nocopy<Float_T>
+            = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
+                           : tensor_cast<Float_T>
                                 (targetCellCSpike->getOutputsActivity());
         const unsigned int nbOutputs = values.dimZ();
 
@@ -783,6 +783,11 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
         const int size = mStimuliProvider->getBatch().size();
 
+        if (targetCell)
+            targetCell->getOutputs().synchronizeDToH();
+        else
+            targetCellCSpike->getOutputsActivity().synchronizeDToH();
+
 #pragma omp parallel for if (size > 4)
         for (int batchPos = 0; batchPos < size; ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
@@ -794,14 +799,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             }
 
             // Retrieve estimated labels
-            if (targetCell)
-                targetCell->getOutputs().synchronizeDToH();
-            else
-                targetCellCSpike->getOutputsActivity().synchronizeDToH();
-
             const Tensor<Float_T>& values
-                = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())
-                               : tensor_cast_nocopy<Float_T>
+                = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
+                               : tensor_cast<Float_T>
                                     (targetCellCSpike->getOutputsActivity());
 
             std::string fileName;
@@ -892,9 +892,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                 CV_8UC3,
                                 cv::Scalar(0, 0, 0));
 
-        const Tensor<int> mask = (mMaskLabelTarget && mMaskedLabel >= 0)
+        const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
             ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
-            : Tensor<int>();
+            : TensorLabels_T();
 
         if (!mask.empty() && mask.dims() != target.dims()) {
             std::ostringstream errorStr;
@@ -1127,8 +1127,8 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
     const Tensor<Float_T>& value
-        = (targetCell) ? tensor_cast_nocopy<Float_T>(targetCell->getOutputs())[batchPos]
-                       : tensor_cast_nocopy<Float_T>
+        = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())[batchPos]
+                       : tensor_cast<Float_T>
                         (targetCellCSpike->getOutputsActivity())[batchPos];
 
     if (x1 >= value.dimX() || y1 >= value.dimY())
