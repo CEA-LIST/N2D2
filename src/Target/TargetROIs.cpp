@@ -88,6 +88,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
     const double yRatio = (labels.dimY() - 1)
                           / (double)(mCell->getOutputsHeight() - 1);
 
+    mEstimatedLabels.synchronizeDToH();
+    mEstimatedLabelsValue.synchronizeDToH();
+    
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];

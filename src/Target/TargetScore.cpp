@@ -410,6 +410,9 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
 
     mBatchSuccess.assign(mTargets.dimB(), -1.0);
 
+    mEstimatedLabels.synchronizeDToH();
+    mEstimatedLabelsValue.synchronizeDToH();
+
     if (mTargetTopN > 1)
         mBatchTopNSuccess.assign(mTargets.dimB(), -1.0);
 

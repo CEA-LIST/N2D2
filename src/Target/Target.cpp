@@ -559,6 +559,9 @@ void N2D2::Target::process(Database::StimuliSet set)
             static bool display = true;
 
             if (set == Database::Test && display) {
+                mEstimatedLabels.synchronizeDToH();
+                mEstimatedLabelsValue.synchronizeDToH();
+
                 std::cout << "[";
 
                 for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
@@ -607,9 +610,6 @@ void N2D2::Target::process_Frame_CUDA(CudaBaseTensor& values,
                             value->getDevicePtr(),
                             mEstimatedLabelsValue.getDevicePtr(),
                             mEstimatedLabels.getDevicePtr());
-
-    mEstimatedLabels.synchronizeDToH();
-    mEstimatedLabelsValue.synchronizeDToH();
 }
 #endif
 
@@ -731,6 +731,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             throw std::runtime_error("Could not save log classif data file: "
                                     + fileName);
         }
+
+        mEstimatedLabels.synchronizeDToH();
+        mEstimatedLabelsValue.synchronizeDToH();
 
         for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
@@ -864,6 +867,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
     }
 
     const unsigned int nbTargets = getNbTargets();
+
+    mEstimatedLabels.synchronizeDToH();
+    mEstimatedLabelsValue.synchronizeDToH();
 
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
