@@ -70,9 +70,8 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
 
+    const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

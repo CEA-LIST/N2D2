@@ -30,7 +30,8 @@
 
 namespace N2D2 {
 // Forward
-void cudaSROIPoolingForwardBilinear(const float alpha,
+void cudaSROIPoolingForwardBilinear(const cudaDeviceProp& deviceProp,
+                                   const float alpha,
                                    float* proposals,
                                    unsigned int nbProposals,
                                    unsigned int inputSizeY,
@@ -53,7 +54,8 @@ void cudaSROIPoolingForwardBilinear(const float alpha,
                                    float xRatio,
                                    float yRatio);
 
-void cudaSROIPoolingForwardAverage(const float alpha,
+void cudaSROIPoolingForwardAverage(const cudaDeviceProp& deviceProp,
+                                   const float alpha,
                                    float* proposals,
                                    unsigned int nbProposals,
                                    unsigned int inputSizeY,
@@ -70,7 +72,8 @@ void cudaSROIPoolingForwardAverage(const float alpha,
                                    unsigned int outputsWidth,
                                    unsigned int outputOffset);
 
-void cudaSROIPoolingForwardMax(const float alpha,
+void cudaSROIPoolingForwardMax(const cudaDeviceProp& deviceProp,
+                               const float alpha,
                                float* proposals,
                                unsigned int nbProposals,
                                unsigned int inputSizeY,
@@ -89,7 +92,8 @@ void cudaSROIPoolingForwardMax(const float alpha,
                                PoolCell_Frame_Kernels::ArgMax* argMax);
 
 // Backward
-void cudaSROIPoolingBackwardAverage(const float alpha,
+void cudaSROIPoolingBackwardAverage(const cudaDeviceProp& deviceProp,
+                                    const float alpha,
                                     float* proposals,
                                     unsigned int nbProposals,
                                     unsigned int inputSizeY,
@@ -106,7 +110,8 @@ void cudaSROIPoolingBackwardAverage(const float alpha,
                                     unsigned int channelsHeight,
                                     unsigned int channelsWidth);
 
-void cudaSROIPoolingBackwardMax(const float alpha,
+void cudaSROIPoolingBackwardMax(const cudaDeviceProp& deviceProp,
+                                const float alpha,
                                 float* proposals,
                                 unsigned int nbProposals,
                                 unsigned int inputSizeY,

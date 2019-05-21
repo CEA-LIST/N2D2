@@ -129,7 +129,8 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool inference)
             = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
         if (mPooling == Max) {
-            cudaSPoolBackwardMax(alpha,
+            cudaSPoolBackwardMax(CudaContext::getDeviceProp(),
+                                 alpha,
                                  input->getDevicePtr(),
                                  mInputs[k].dimZ(),
                                  mInputs[k].dimY(),
@@ -145,7 +146,8 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool inference)
                                  mInputMap[k]);
         }
         else {
-            cudaSPoolBackwardAverage(alpha,
+            cudaSPoolBackwardAverage(CudaContext::getDeviceProp(),
+                                     alpha,
                                      input->getDevicePtr(),
                                      mInputs[k].dimZ(),
                                      mInputs[k].dimY(),
@@ -184,7 +186,8 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
                 : cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
         if (mPooling == Max) {
-            cudaSPoolForwardMax(alpha,
+            cudaSPoolForwardMax(CudaContext::getDeviceProp(),
+                                alpha,
                                 mDiffInputs.getDevicePtr(),
                                 mDiffInputs.dimZ(),
                                 mDiffInputs.dimY(),
@@ -201,7 +204,8 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
                                 mInputMap[k]);
         }
         else {
-            cudaSPoolForwardAverage(alpha,
+            cudaSPoolForwardAverage(CudaContext::getDeviceProp(),
+                                    alpha,
                                     mDiffInputs.getDevicePtr(),
                                     mDiffInputs.dimZ(),
                                     mDiffInputs.dimY(),

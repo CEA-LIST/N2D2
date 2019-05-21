@@ -34,7 +34,8 @@
 namespace N2D2 {
 /******************** Forward ***************************/
 //Half
-void cudaHPoolForwardAverage(half_float::half alpha,
+void cudaHPoolForwardAverage(const cudaDeviceProp& deviceProp,
+                             half_float::half alpha,
                              half_float::half* inputs,
                              unsigned int nbChannels,
                              unsigned int channelsHeight,
@@ -49,7 +50,8 @@ void cudaHPoolForwardAverage(half_float::half alpha,
                              bool countIncludePadding = true,
                              char* maps = NULL);
 //Float
-void cudaSPoolForwardAverage(const float alpha,
+void cudaSPoolForwardAverage(const cudaDeviceProp& deviceProp,
+                             const float alpha,
                              float* inputs,
                              unsigned int nbChannels,
                              unsigned int channelsHeight,
@@ -64,7 +66,8 @@ void cudaSPoolForwardAverage(const float alpha,
                              bool countIncludePadding = true,
                              char* maps = NULL);
 //Double
-void cudaDPoolForwardAverage(const double alpha,
+void cudaDPoolForwardAverage(const cudaDeviceProp& deviceProp,
+                             const double alpha,
                              double* inputs,
                              unsigned int nbChannels,
                              unsigned int channelsHeight,
@@ -79,7 +82,8 @@ void cudaDPoolForwardAverage(const double alpha,
                              bool countIncludePadding = true,
                              char* maps = NULL);
 //Half
-void cudaHPoolForwardMax(half_float::half alpha,
+void cudaHPoolForwardMax(const cudaDeviceProp& deviceProp,
+                         half_float::half alpha,
                          half_float::half* inputs,
                          unsigned int nbChannels,
                          unsigned int channelsHeight,
@@ -95,7 +99,8 @@ void cudaHPoolForwardMax(half_float::half alpha,
                          bool useArgMax = false,
                          char* maps = NULL);
 //Float
-void cudaSPoolForwardMax(const float alpha,
+void cudaSPoolForwardMax(const cudaDeviceProp& deviceProp,
+                         const float alpha,
                          float* inputs,
                          unsigned int nbChannels,
                          unsigned int channelsHeight,
@@ -111,7 +116,8 @@ void cudaSPoolForwardMax(const float alpha,
                          bool useArgMax = false,
                          char* maps = NULL);
 //Double
-void cudaDPoolForwardMax(const double alpha,
+void cudaDPoolForwardMax(const cudaDeviceProp& deviceProp,
+                         const double alpha,
                          double* inputs,
                          unsigned int nbChannels,
                          unsigned int channelsHeight,
@@ -130,7 +136,8 @@ void cudaDPoolForwardMax(const double alpha,
 
 /******************** Backward ***************************/
 //Half
-void cudaHPoolBackwardAverage(half_float::half alpha,
+void cudaHPoolBackwardAverage(const cudaDeviceProp& deviceProp,
+                              half_float::half alpha,
                               half_float::half* diffInputs,
                               unsigned int nbOutputs,
                               unsigned int outputsHeight,
@@ -145,7 +152,8 @@ void cudaHPoolBackwardAverage(half_float::half alpha,
                               bool countIncludePadding = true,
                               char* maps = NULL);
 //Float
-void cudaSPoolBackwardAverage(const float alpha,
+void cudaSPoolBackwardAverage(const cudaDeviceProp& deviceProp,
+                              const float alpha,
                               float* diffInputs,
                               unsigned int nbOutputs,
                               unsigned int outputsHeight,
@@ -160,7 +168,8 @@ void cudaSPoolBackwardAverage(const float alpha,
                               bool countIncludePadding = true,
                               char* maps = NULL);
 //Double
-void cudaDPoolBackwardAverage(const double alpha,
+void cudaDPoolBackwardAverage(const cudaDeviceProp& deviceProp,
+                              const double alpha,
                               double* diffInputs,
                               unsigned int nbOutputs,
                               unsigned int outputsHeight,
@@ -175,7 +184,8 @@ void cudaDPoolBackwardAverage(const double alpha,
                               bool countIncludePadding = true,
                               char* maps = NULL);
 //Half
-void cudaHPoolBackwardMax(half_float::half alpha,
+void cudaHPoolBackwardMax(const cudaDeviceProp& deviceProp,
+                          half_float::half alpha,
                           half_float::half* diffInputs,
                           unsigned int nbOutputs,
                           unsigned int outputsHeight,
@@ -190,7 +200,8 @@ void cudaHPoolBackwardMax(half_float::half alpha,
                           PoolCell_Frame_Kernels::ArgMax* argMax,
                           char* maps = NULL);
 //Float
-void cudaSPoolBackwardMax(const float alpha,
+void cudaSPoolBackwardMax(const cudaDeviceProp& deviceProp,
+                          const float alpha,
                           float* diffInputs,
                           unsigned int nbOutputs,
                           unsigned int outputsHeight,
@@ -205,7 +216,8 @@ void cudaSPoolBackwardMax(const float alpha,
                           PoolCell_Frame_Kernels::ArgMax* argMax,
                           char* maps = NULL);
 //Double
-void cudaDPoolBackwardMax(const double alpha,
+void cudaDPoolBackwardMax(const cudaDeviceProp& deviceProp,
+                          const double alpha,
                           double* diffInputs,
                           unsigned int nbOutputs,
                           unsigned int outputsHeight,

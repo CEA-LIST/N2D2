@@ -280,9 +280,7 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
 
     mMaxIoU.resize({mOutputs.dimB(), 1, 1, 1});
 
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
+    const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

@@ -1399,7 +1399,8 @@ static unsigned int nextDivisor(unsigned int target, unsigned int value)
     return v;
 }
 //Half
-void N2D2::cudaHPoolForwardAverage(half_float::half alpha,
+void N2D2::cudaHPoolForwardAverage(const cudaDeviceProp& deviceProp,
+                                   half_float::half alpha,
                                    half_float::half* inputs,
                                    unsigned int nbChannels,
                                    unsigned int channelsHeight,
@@ -1415,9 +1416,6 @@ void N2D2::cudaHPoolForwardAverage(half_float::half alpha,
                                    bool countIncludePadding,
                                    char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1448,7 +1446,8 @@ void N2D2::cudaHPoolForwardAverage(half_float::half alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Float
-void N2D2::cudaSPoolForwardAverage(const float alpha,
+void N2D2::cudaSPoolForwardAverage(const cudaDeviceProp& deviceProp,
+                                   const float alpha,
                                    float* inputs,
                                    unsigned int nbChannels,
                                    unsigned int channelsHeight,
@@ -1464,9 +1463,6 @@ void N2D2::cudaSPoolForwardAverage(const float alpha,
                                    bool countIncludePadding,
                                    char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1497,7 +1493,8 @@ void N2D2::cudaSPoolForwardAverage(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Double
-void N2D2::cudaDPoolForwardAverage(const double alpha,
+void N2D2::cudaDPoolForwardAverage(const cudaDeviceProp& deviceProp,
+                                   const double alpha,
                                    double* inputs,
                                    unsigned int nbChannels,
                                    unsigned int channelsHeight,
@@ -1513,9 +1510,6 @@ void N2D2::cudaDPoolForwardAverage(const double alpha,
                                    bool countIncludePadding,
                                    char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1548,7 +1542,8 @@ void N2D2::cudaDPoolForwardAverage(const double alpha,
 
 
 //Half
-void N2D2::cudaHPoolForwardMax(half_float::half alpha,
+void N2D2::cudaHPoolForwardMax(const cudaDeviceProp& deviceProp,
+                               half_float::half alpha,
                                half_float::half* inputs,
                                unsigned int nbChannels,
                                unsigned int channelsHeight,
@@ -1565,9 +1560,6 @@ void N2D2::cudaHPoolForwardMax(half_float::half alpha,
                                bool useArgMax,
                                char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1599,7 +1591,8 @@ void N2D2::cudaHPoolForwardMax(half_float::half alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Float
-void N2D2::cudaSPoolForwardMax(const float alpha,
+void N2D2::cudaSPoolForwardMax(const cudaDeviceProp& deviceProp,
+                               const float alpha,
                                float* inputs,
                                unsigned int nbChannels,
                                unsigned int channelsHeight,
@@ -1616,9 +1609,6 @@ void N2D2::cudaSPoolForwardMax(const float alpha,
                                bool useArgMax,
                                char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1650,7 +1640,8 @@ void N2D2::cudaSPoolForwardMax(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Double
-void N2D2::cudaDPoolForwardMax(const double alpha,
+void N2D2::cudaDPoolForwardMax(const cudaDeviceProp& deviceProp,
+                               const double alpha,
                                double* inputs,
                                unsigned int nbChannels,
                                unsigned int channelsHeight,
@@ -1667,9 +1658,6 @@ void N2D2::cudaDPoolForwardMax(const double alpha,
                                bool useArgMax,
                                char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1702,7 +1690,8 @@ void N2D2::cudaDPoolForwardMax(const double alpha,
 }
 
 //Half
-void N2D2::cudaHPoolBackwardAverage(half_float::half alpha,
+void N2D2::cudaHPoolBackwardAverage(const cudaDeviceProp& deviceProp,
+                                    half_float::half alpha,
                                     half_float::half* diffInputs,
                                     unsigned int nbOutputs,
                                     unsigned int outputsHeight,
@@ -1722,9 +1711,6 @@ void N2D2::cudaHPoolBackwardAverage(half_float::half alpha,
         throw std::runtime_error("PoolCell_Frame_CUDA_Kernels::"
             "backwardAverage() exclude padding not implemented");
     }
-
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
 
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
@@ -1756,7 +1742,8 @@ void N2D2::cudaHPoolBackwardAverage(half_float::half alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Float
-void N2D2::cudaSPoolBackwardAverage(const float alpha,
+void N2D2::cudaSPoolBackwardAverage(const cudaDeviceProp& deviceProp,
+                                    const float alpha,
                                     float* diffInputs,
                                     unsigned int nbOutputs,
                                     unsigned int outputsHeight,
@@ -1776,9 +1763,6 @@ void N2D2::cudaSPoolBackwardAverage(const float alpha,
         throw std::runtime_error("PoolCell_Frame_CUDA_Kernels::"
             "backwardAverage() exclude padding not implemented");
     }
-
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
 
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
@@ -1810,7 +1794,8 @@ void N2D2::cudaSPoolBackwardAverage(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Double
-void N2D2::cudaDPoolBackwardAverage(const double alpha,
+void N2D2::cudaDPoolBackwardAverage(const cudaDeviceProp& deviceProp,
+                                    const double alpha,
                                     double* diffInputs,
                                     unsigned int nbOutputs,
                                     unsigned int outputsHeight,
@@ -1830,9 +1815,6 @@ void N2D2::cudaDPoolBackwardAverage(const double alpha,
         throw std::runtime_error("PoolCell_Frame_CUDA_Kernels::"
             "backwardAverage() exclude padding not implemented");
     }
-
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
 
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
@@ -1865,7 +1847,8 @@ void N2D2::cudaDPoolBackwardAverage(const double alpha,
 }
 
 //Half
-void N2D2::cudaHPoolBackwardMax(half_float::half alpha,
+void N2D2::cudaHPoolBackwardMax(const cudaDeviceProp& deviceProp,
+                                half_float::half alpha,
                                 half_float::half* diffInputs,
                                 unsigned int nbOutputs,
                                 unsigned int outputsHeight,
@@ -1881,9 +1864,6 @@ void N2D2::cudaHPoolBackwardMax(half_float::half alpha,
                                 N2D2::PoolCell_Frame_Kernels::ArgMax* argMax,
                                 char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1914,7 +1894,8 @@ void N2D2::cudaHPoolBackwardMax(half_float::half alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Float
-void N2D2::cudaSPoolBackwardMax(const float alpha,
+void N2D2::cudaSPoolBackwardMax(const cudaDeviceProp& deviceProp,
+                                const float alpha,
                                 float* diffInputs,
                                 unsigned int nbOutputs,
                                 unsigned int outputsHeight,
@@ -1930,9 +1911,6 @@ void N2D2::cudaSPoolBackwardMax(const float alpha,
                                 N2D2::PoolCell_Frame_Kernels::ArgMax* argMax,
                                 char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -1963,7 +1941,8 @@ void N2D2::cudaSPoolBackwardMax(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 //Double
-void N2D2::cudaDPoolBackwardMax(const double alpha,
+void N2D2::cudaDPoolBackwardMax(const cudaDeviceProp& deviceProp,
+                                const double alpha,
                                 double* diffInputs,
                                 unsigned int nbOutputs,
                                 unsigned int outputsHeight,
@@ -1979,9 +1958,6 @@ void N2D2::cudaDPoolBackwardMax(const double alpha,
                                 N2D2::PoolCell_Frame_Kernels::ArgMax* argMax,
                                 char* maps)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

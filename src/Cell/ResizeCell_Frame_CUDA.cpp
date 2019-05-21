@@ -106,9 +106,7 @@ void N2D2::ResizeCell_Frame_CUDA::initialize()
 
 
     }
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
+    const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

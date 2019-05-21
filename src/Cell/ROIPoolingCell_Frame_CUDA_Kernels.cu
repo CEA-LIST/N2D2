@@ -536,7 +536,8 @@ static unsigned int nextDivisor(unsigned int target, unsigned int value)
     return v;
 }
 
-void N2D2::cudaSROIPoolingForwardBilinear(const float alpha,
+void N2D2::cudaSROIPoolingForwardBilinear(const cudaDeviceProp& deviceProp,
+                                   const float alpha,
                                    float* proposals,
                                    unsigned int nbProposals,
                                    unsigned int inputSizeY,
@@ -559,9 +560,6 @@ void N2D2::cudaSROIPoolingForwardBilinear(const float alpha,
                                    float xRatio,
                                    float yRatio)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -599,7 +597,8 @@ void N2D2::cudaSROIPoolingForwardBilinear(const float alpha,
           yRatio);
 }
 
-void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
+void N2D2::cudaSROIPoolingForwardAverage(const cudaDeviceProp& deviceProp,
+                                         const float alpha,
                                          float* proposals,
                                          unsigned int nbProposals,
                                          unsigned int inputSizeY,
@@ -616,9 +615,6 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
                                          unsigned int outputsWidth,
                                          unsigned int outputOffset)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -651,7 +647,8 @@ void N2D2::cudaSROIPoolingForwardAverage(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSROIPoolingForwardMax(const float alpha,
+void N2D2::cudaSROIPoolingForwardMax(const cudaDeviceProp& deviceProp,
+                                     const float alpha,
                                      float* proposals,
                                      unsigned int nbProposals,
                                      unsigned int inputSizeY,
@@ -670,9 +667,6 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
                                      N2D2::PoolCell_Frame_Kernels::ArgMax*
                                         argMax)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -706,7 +700,8 @@ void N2D2::cudaSROIPoolingForwardMax(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
+void N2D2::cudaSROIPoolingBackwardAverage(const cudaDeviceProp& deviceProp,
+                                          const float alpha,
                                           float* proposals,
                                           unsigned int nbProposals,
                                           unsigned int inputSizeY,
@@ -723,9 +718,6 @@ void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
                                           unsigned int channelsHeight,
                                           unsigned int channelsWidth)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -758,7 +750,8 @@ void N2D2::cudaSROIPoolingBackwardAverage(const float alpha,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
+void N2D2::cudaSROIPoolingBackwardMax(const cudaDeviceProp& deviceProp,
+                                      const float alpha,
                                       float* proposals,
                                       unsigned int nbProposals,
                                       unsigned int inputSizeY,
@@ -777,9 +770,6 @@ void N2D2::cudaSROIPoolingBackwardMax(const float alpha,
                                       N2D2::PoolCell_Frame_Kernels::ArgMax*
                                         argMax)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

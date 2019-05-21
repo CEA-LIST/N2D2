@@ -102,7 +102,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool inference)
             = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
         if (mPooling == Max) {
-            cudaSROIPoolingForwardMax(alpha,
+            cudaSROIPoolingForwardMax(CudaContext::getDeviceProp(),
+                                      alpha,
                                       input0->getDevicePtr(),
                                       mInputs[0].dimB(),
                                       mStimuliProvider.getSizeY(),
@@ -121,7 +122,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool inference)
                                       mArgMax[k-1].getDevicePtr());
         }
         else if (mPooling == Average) {
-            cudaSROIPoolingForwardAverage(alpha,
+            cudaSROIPoolingForwardAverage(CudaContext::getDeviceProp(),
+                                          alpha,
                                           input0->getDevicePtr(),
                                           mInputs[0].dimB(),
                                           mStimuliProvider.getSizeY(),
@@ -153,7 +155,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::propagate(bool inference)
                             - (mInputs[k].dimY() - 1);
             }
 
-            cudaSROIPoolingForwardBilinear(alpha,
+            cudaSROIPoolingForwardBilinear(CudaContext::getDeviceProp(),
+                                                alpha,
                                                 input0->getDevicePtr(),
                                                 mInputs[0].dimB(),
                                                 mStimuliProvider.getSizeY(),
@@ -217,7 +220,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
         }
 
         if (mPooling == Max) {
-            cudaSROIPoolingBackwardMax(alpha,
+            cudaSROIPoolingBackwardMax(CudaContext::getDeviceProp(),
+                                       alpha,
                                        input0->getDevicePtr(),
                                        mInputs[0].dimB(),
                                        mStimuliProvider.getSizeY(),
@@ -236,7 +240,8 @@ void N2D2::ROIPoolingCell_Frame_CUDA::backPropagate()
                                        mArgMax[k-1].getDevicePtr());
         }
         else if (mPooling == Average) {
-            cudaSROIPoolingBackwardAverage(alpha,
+            cudaSROIPoolingBackwardAverage(CudaContext::getDeviceProp(),
+                                           alpha,
                                            input0->getDevicePtr(),
                                            mInputs[0].dimB(),
                                            mStimuliProvider.getSizeY(),

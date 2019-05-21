@@ -110,7 +110,8 @@ static unsigned int nextDivisor(unsigned int target, unsigned int value)
     return v;
 }
 
-void N2D2::cudaSFMPPropagate(const float alpha,
+void N2D2::cudaSFMPPropagate(const cudaDeviceProp& deviceProp,
+                             const float alpha,
                              float* inputs,
                              unsigned int* gridX,
                              unsigned int* gridY,
@@ -125,9 +126,6 @@ void N2D2::cudaSFMPPropagate(const float alpha,
                              unsigned int batchSize,
                              bool overlapping)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

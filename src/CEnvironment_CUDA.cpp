@@ -59,8 +59,8 @@ void N2D2::CEnvironment_CUDA::initialize()
 
         mCurandStates.push_back(state);
     }
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
+
+    const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
     mDeviceMaxThreads = (unsigned int) deviceProp.maxThreadsPerBlock;
 }
 

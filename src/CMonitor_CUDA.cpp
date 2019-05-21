@@ -77,8 +77,7 @@ void N2D2::CMonitor_CUDA::initialize(unsigned int nbTimesteps,
 
         mInitialized = true;
 
-        cudaDeviceProp deviceProp;
-        cudaGetDeviceProperties(&deviceProp, 0);
+        const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
         mDeviceMaxThreads = (unsigned int) deviceProp.maxThreadsPerBlock;
         mDeviceWarpSize = (unsigned int) deviceProp.warpSize;
     }
