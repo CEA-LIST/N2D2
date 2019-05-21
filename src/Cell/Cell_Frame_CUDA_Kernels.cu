@@ -385,16 +385,14 @@ static unsigned int nextDivisor(unsigned int target, unsigned int value)
     return v;
 }
 
-void N2D2::cudaPopulateNbTargetOutputs(int* targets,
+void N2D2::cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
+    int* targets,
     unsigned int* nbTargetOutputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
     unsigned int batchSize)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -452,7 +450,8 @@ void N2D2::cudaPopulateNbTargetOutputs(int* targets,
 }
 
 //Half
-double N2D2::cudaHSetOutputTargets(int* targets,
+double N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+    int* targets,
     unsigned int* nbTargetOutputs,
     half_float::half* lossMem,
     half_float::half* outputs,
@@ -464,9 +463,6 @@ double N2D2::cudaHSetOutputTargets(int* targets,
     half_float::half targetVal,
     half_float::half defaultVal)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -510,7 +506,8 @@ double N2D2::cudaHSetOutputTargets(int* targets,
 }
 
 //Float
-double N2D2::cudaSSetOutputTargets(int* targets,
+double N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+    int* targets,
     unsigned int* nbTargetOutputs,
     float* lossMem,
     float* outputs,
@@ -522,9 +519,6 @@ double N2D2::cudaSSetOutputTargets(int* targets,
     float targetVal,
     float defaultVal)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -565,7 +559,8 @@ double N2D2::cudaSSetOutputTargets(int* targets,
 }
 
 //Double
-double N2D2::cudaDSetOutputTargets(int* targets,
+double N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+    int* targets,
     unsigned int* nbTargetOutputs,
     double* lossMem,
     double* outputs,
@@ -577,9 +572,6 @@ double N2D2::cudaDSetOutputTargets(int* targets,
     double targetVal,
     double defaultVal)
 {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 

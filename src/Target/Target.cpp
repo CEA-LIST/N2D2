@@ -1126,35 +1126,61 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         <Cell_Frame_Top>(mCell);
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
         = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
-    
-    if (targetCell)
-        targetCell->getOutputs().synchronizeDToH();
-    else
-        targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
-    const Tensor<Float_T>& value
-        = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())[batchPos]
-                       : tensor_cast<Float_T>
-                        (targetCellCSpike->getOutputsActivity())[batchPos];
+    BaseTensor& outputsBaseTensor = (targetCell)
+        ? targetCell->getOutputs()
+        : targetCellCSpike->getOutputsActivity();
 
-    if (x1 >= value.dimX() || y1 >= value.dimY())
+    if (x1 >= outputsBaseTensor.dimX() || y1 >= outputsBaseTensor.dimY())
         throw std::runtime_error(
             "Target::getEstimatedLabel(): bounding box out of range");
 
-    const unsigned int nbOutputs = value.dimZ();
-    std::vector<Float_T> bbLabels((nbOutputs > 1) ? nbOutputs : 2, 0.0);
+    const unsigned int nbOutputs = outputsBaseTensor.dimZ();
+    TensorLabelsValue_T bbLabels({(nbOutputs > 1) ? nbOutputs : 2}, 0.0);
 
-    for (unsigned int oy = y0; oy <= y1; ++oy) {
-        for (unsigned int ox = x0; ox <= x1; ++ox) {
-            if (nbOutputs > 1) {
-                for (unsigned int index = 0; index < nbOutputs; ++index)
-                    bbLabels[index] += value(ox, oy, index);
-            } else {
-                bbLabels[0] += 1.0 - value(ox, oy, 0);
-                bbLabels[1] += value(ox, oy, 0);
+#ifdef CUDA
+    CudaBaseTensor* outputsCudaBaseTensor 
+            = dynamic_cast<CudaBaseTensor*>(&outputsBaseTensor);
+
+    if (outputsCudaBaseTensor != NULL) {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > value
+            = cuda_device_tensor_cast_nocopy<Float_T>(
+                *outputsCudaBaseTensor);
+
+        cudaGetEstimatedLabel( CudaContext::getDeviceProp(),
+                                value->getDevicePtr(),
+                                outputsBaseTensor.dimX(),
+                                outputsBaseTensor.dimY(),
+                                nbOutputs,
+                                batchPos,
+                                x0,
+                                x1,
+                                y0,
+                                y1,
+                                bbLabels.getDevicePtr());
+        
+        bbLabels.synchronizeDToH();
+    }
+    else {
+#endif
+        // Sync. already done in process(), cast also
+        const Tensor<Float_T>& value
+            = tensor_cast_nocopy<Float_T>(outputsBaseTensor);
+
+        for (unsigned int oy = y0; oy <= y1; ++oy) {
+            for (unsigned int ox = x0; ox <= x1; ++ox) {
+                if (nbOutputs > 1) {
+                    for (unsigned int index = 0; index < nbOutputs; ++index)
+                        bbLabels(index) += value(ox, oy, index);
+                } else {
+                    bbLabels(0) += 1.0 - value(ox, oy, 0);
+                    bbLabels(1) += value(ox, oy, 0);
+                }
             }
         }
+#ifdef CUDA
     }
+#endif
 
     const std::vector<Float_T>::const_iterator it
         = std::max_element(bbLabels.begin(), bbLabels.end());

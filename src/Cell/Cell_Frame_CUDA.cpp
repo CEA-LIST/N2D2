@@ -294,7 +294,8 @@ double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
     mNbTargetOutputs.resize(
         {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
 
-    cudaPopulateNbTargetOutputs(mTargets.getDevicePtr(),
+    cudaPopulateNbTargetOutputs(CudaContext::getDeviceProp(),
+                                mTargets.getDevicePtr(),
                                 mNbTargetOutputs.getDevicePtr(),
                                 getNbOutputs(),
                                 mTargets.dimY(),
@@ -314,7 +315,8 @@ double Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal(
     double targetVal,
     double defaultVal)
 {
-    return cudaHSetOutputTargets(mTargets.getDevicePtr(),
+    return cudaHSetOutputTargets(CudaContext::getDeviceProp(),
+                                 mTargets.getDevicePtr(),
                                  mNbTargetOutputs.getDevicePtr(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),
@@ -332,7 +334,8 @@ double Cell_Frame_CUDA<float>::setOutputTargetsInternal(
     double targetVal,
     double defaultVal)
 {
-    return cudaSSetOutputTargets(mTargets.getDevicePtr(),
+    return cudaSSetOutputTargets(CudaContext::getDeviceProp(),
+                                 mTargets.getDevicePtr(),
                                  mNbTargetOutputs.getDevicePtr(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),
@@ -350,7 +353,8 @@ double Cell_Frame_CUDA<double>::setOutputTargetsInternal(
     double targetVal,
     double defaultVal)
 {
-    return cudaDSetOutputTargets(mTargets.getDevicePtr(),
+    return cudaDSetOutputTargets(CudaContext::getDeviceProp(),
+                                 mTargets.getDevicePtr(),
                                  mNbTargetOutputs.getDevicePtr(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),

@@ -126,8 +126,47 @@ void cudaGetEstimatedTarget_kernel( const unsigned int topN,
 
 }
 
+__global__
+void cudaGetEstimatedLabel_kernel(const float* value,
+                                  unsigned int outputWidth,
+                                  unsigned int outputHeight,
+                                  unsigned int nbOutputs,
+                                  unsigned int batchPos,
+                                  unsigned int x0,
+                                  unsigned int x1,
+                                  unsigned int y0,
+                                  unsigned int y1,
+                                  float* bbLabels)
+{
+    const unsigned int batchOffset
+        = outputWidth * outputHeight * nbOutputs * batchPos;
+    const unsigned int dimZ = (nbOutputs > 1) ? nbOutputs : 2;
 
+    for (unsigned int z = blockIdx.x; z < dimZ; z += gridDim.x) {
+        for (unsigned int y = y0 + threadIdx.y; y <= y1; y += blockDim.y) {
+            for (unsigned int x = x0 + threadIdx.x; x <= x1; x += blockDim.x) {
+                const unsigned int idx = x + outputWidth
+                    * (y + outputHeight * z * (nbOutputs > 1)) + batchOffset;
 
+                if (nbOutputs > 1 || z > 0) {
+                    atomicAdd(bbLabels + z, value[idx]);
+                }
+                else {
+                    // nbOutputs == 1 && z == 0
+                    atomicAdd(bbLabels + z, 1.0f - value[idx]);
+                }
+            }
+        }
+    }
+}
+
+static unsigned int nextDivisor(unsigned int target, unsigned int value)
+{
+    unsigned int v = value;
+    while (target % v != 0)
+        ++v;
+    return v;
+}
 
 void N2D2::cudaGetEstimatedTarget(const unsigned int topN,
                                   const unsigned int nbClass,
@@ -163,5 +202,48 @@ void N2D2::cudaGetEstimatedTarget(const unsigned int topN,
            estimatedLabels);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
+
+void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
+                                 const float* value,
+                                 unsigned int outputWidth,
+                                 unsigned int outputHeight,
+                                 unsigned int nbOutputs,
+                                 unsigned int batchPos,
+                                 unsigned int x0,
+                                 unsigned int x1,
+                                 unsigned int y0,
+                                 unsigned int y1,
+                                 float* bbLabels)
+{
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int dimZ = (nbOutputs > 1) ? nbOutputs : 2;
+    const unsigned int sizeX = (x1 - x0 + 1);
+    const unsigned int sizeY = (y1 - y0 + 1);
+
+    const unsigned int groupSize = (sizeX * sizeY < maxSize)
+                                       ? sizeX * sizeY
+                                       : maxSize;
+    const unsigned int groupWidth
+        = min(prefMultiple, nextDivisor(groupSize, sizeX));
+
+    const dim3 blocksPerGrid = {dimZ, 1, 1};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaGetEstimatedLabel_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (value,
+           outputWidth,
+           outputHeight,
+           nbOutputs,
+           batchPos,
+           x0,
+           x1,
+           y0,
+           y1,
+           bbLabels);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
 
 

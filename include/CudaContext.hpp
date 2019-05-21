@@ -36,6 +36,21 @@ public:
         CHECK_CUDA_STATUS(cudaSetDevice(device));
     }
 
+    static const cudaDeviceProp& getDeviceProp()
+    {
+        static cudaDeviceProp deviceProp;
+        static bool init = false;
+
+        if (!init) {
+            int device;
+            CHECK_CUDA_STATUS(cudaGetDevice(&device));
+            CHECK_CUDA_STATUS(cudaGetDeviceProperties(&deviceProp, device));
+            init = true;
+        }
+
+        return deviceProp;
+    }
+
     // Declare cublas handle
     static cublasHandle_t& cublasHandle()
     {

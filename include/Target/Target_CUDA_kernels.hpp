@@ -40,6 +40,18 @@ void cudaGetEstimatedTarget(const unsigned int topN,
                             const float* input,
                             float* estimatedLabelsValueGPU,
                             int* estimatedLabelsGPU);
+
+void cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
+                           const float* value,
+                           unsigned int outputWidth,
+                           unsigned int outputHeight,
+                           unsigned int nbOutputs,
+                           unsigned int batchPos,
+                           unsigned int x0,
+                           unsigned int x1,
+                           unsigned int y0,
+                           unsigned int y1,
+                           float* bbLabels);
 }
 
 #endif // N2D2_TARGET_CUDA_KERNELS_H

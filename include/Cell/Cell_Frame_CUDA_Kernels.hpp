@@ -31,7 +31,8 @@
 #include "third_party/half.hpp"
 
 namespace N2D2 {
-void cudaPopulateNbTargetOutputs(int* targets,
+void cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
+                                 int* targets,
                                  unsigned int* nbTargetOutputs,
                                  unsigned int nbOutputs,
                                  unsigned int outputsHeight,
@@ -39,7 +40,8 @@ void cudaPopulateNbTargetOutputs(int* targets,
                                  unsigned int batchSize);
 
 //Half
-double cudaHSetOutputTargets(int* targets,
+double cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+                             int* targets,
                              unsigned int* nbTargetOutputs,
                              half_float::half* lossMem,
                              half_float::half* outputs,
@@ -52,7 +54,8 @@ double cudaHSetOutputTargets(int* targets,
                              half_float::half defaultVal);
 
 //Float
-double cudaSSetOutputTargets(int* targets,
+double cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+                             int* targets,
                              unsigned int* nbTargetOutputs,
                              float* lossMem,
                              float* outputs,
@@ -64,7 +67,8 @@ double cudaSSetOutputTargets(int* targets,
                              float targetVal,
                              float defaultVal);
 //Double
-double cudaDSetOutputTargets(int* targets,
+double cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+                             int* targets,
                              unsigned int* nbTargetOutputs,
                              double* lossMem,
                              double* outputs,

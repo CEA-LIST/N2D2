@@ -73,6 +73,9 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 {
     Target::process(set);
 
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
+
     mDetectedBB.assign(mTargets.dimB(), std::vector<DetectedBB>());
 
     const unsigned int nbTargets = getNbTargets();
@@ -104,7 +107,6 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         std::vector<DetectedBB> detectedBB;
 
         // Extract estimated BB
-        const Tensor<int> target = mTargets[batchPos];
         const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
         const Tensor<Float_T> estimatedLabelsValue
             = mEstimatedLabelsValue[batchPos][0];
@@ -175,136 +177,140 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
             detectedBB.push_back(dbb);
         }
 
-        // Sort BB by highest score
-        std::sort(detectedBB.begin(), detectedBB.end(), scoreCompare);
+        if (validDatabase) {
+            const Tensor<int> target = mTargets[batchPos];
 
-        // Extract ground true ROIs
-        std::vector<std::shared_ptr<ROI> > labelROIs
-            = mStimuliProvider->getLabelsROIs(batchPos);
+            // Sort BB by highest score
+            std::sort(detectedBB.begin(), detectedBB.end(), scoreCompare);
 
-        if (labelROIs.empty() && target.size() == 1) {
-            // The whole image has a single label
-            if (target(0) >= 0) {
-                // Confusion computation
-                for (std::vector<DetectedBB>::const_iterator itBB
-                     = detectedBB.begin(),
-                     itBBEnd = detectedBB.end();
-                     itBB != itBBEnd;
-                     ++itBB) {
-                    const int bbLabel = (*itBB).bb->getLabel();
-#pragma omp atomic
-                    confusionMatrix(target(0), bbLabel) += 1ULL;
+            // Extract ground true ROIs
+            std::vector<std::shared_ptr<ROI> > labelROIs
+                = mStimuliProvider->getLabelsROIs(batchPos);
+
+            if (labelROIs.empty() && target.size() == 1) {
+                // The whole image has a single label
+                if (target(0) >= 0) {
+                    // Confusion computation
+                    for (std::vector<DetectedBB>::const_iterator itBB
+                        = detectedBB.begin(),
+                        itBBEnd = detectedBB.end();
+                        itBB != itBBEnd;
+                        ++itBB) {
+                        const int bbLabel = (*itBB).bb->getLabel();
+    #pragma omp atomic
+                        confusionMatrix(target(0), bbLabel) += 1ULL;
+                    }
                 }
             }
-        }
-        else {
-            // ROI and BB association
-            for (std::vector<DetectedBB>::iterator itBB = detectedBB.begin(),
-                                                   itBBEnd = detectedBB.end();
-                 itBB != itBBEnd;
-                 ++itBB) {
-                for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
-                     = labelROIs.begin(),
-                     itLabelEnd = labelROIs.end();
-                     itLabel != itLabelEnd;
-                     ++itLabel) {
-                    const cv::Rect bbRect = (*itBB).bb->getBoundingRect();
-                    cv::Rect labelRect = (*itLabel)->getBoundingRect();
+            else {
+                // ROI and BB association
+                for (std::vector<DetectedBB>::iterator
+                    itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
+                    itBB != itBBEnd; ++itBB)
+                {
+                    for (std::vector<std::shared_ptr<ROI> >::const_iterator
+                        itLabel = labelROIs.begin(),
+                        itLabelEnd = labelROIs.end(); itLabel != itLabelEnd;
+                        ++itLabel)
+                    {
+                        const cv::Rect bbRect = (*itBB).bb->getBoundingRect();
+                        cv::Rect labelRect = (*itLabel)->getBoundingRect();
 
-                    // Crop labelRect to the slice for correct overlap area
-                    // calculation
-                    if (labelRect.tl().x < 0) {
-                        labelRect.width+= labelRect.tl().x;
-                        labelRect.x = 0;
-                    }
-                    if (labelRect.tl().y < 0) {
-                        labelRect.height+= labelRect.tl().y;
-                        labelRect.y = 0;
-                    }
-                    if (labelRect.br().x > (int)labels.dimX())
-                        labelRect.width = labels.dimX() - labelRect.x;
-                    if (labelRect.br().y > (int)labels.dimY())
-                        labelRect.height = labels.dimY() - labelRect.y;
+                        // Crop labelRect to the slice for correct overlap area
+                        // calculation
+                        if (labelRect.tl().x < 0) {
+                            labelRect.width+= labelRect.tl().x;
+                            labelRect.x = 0;
+                        }
+                        if (labelRect.tl().y < 0) {
+                            labelRect.height+= labelRect.tl().y;
+                            labelRect.y = 0;
+                        }
+                        if (labelRect.br().x > (int)labels.dimX())
+                            labelRect.width = labels.dimX() - labelRect.x;
+                        if (labelRect.br().y > (int)labels.dimY())
+                            labelRect.height = labels.dimY() - labelRect.y;
 
-                    const int interLeft = std::max(labelRect.tl().x,
-                                                   bbRect.tl().x);
-                    const int interRight
-                        = std::min(labelRect.br().x, bbRect.br().x);
-                    const int interTop = std::max(labelRect.tl().y,
-                                                  bbRect.tl().y);
-                    const int interBottom
-                        = std::min(labelRect.br().y, bbRect.br().y);
-                    const cv::Rect interRect
-                        = cv::Rect(cv::Point(interLeft, interTop),
-                                   cv::Point(interRight, interBottom));
+                        const int interLeft = std::max(labelRect.tl().x,
+                                                    bbRect.tl().x);
+                        const int interRight
+                            = std::min(labelRect.br().x, bbRect.br().x);
+                        const int interTop = std::max(labelRect.tl().y,
+                                                    bbRect.tl().y);
+                        const int interBottom
+                            = std::min(labelRect.br().y, bbRect.br().y);
+                        const cv::Rect interRect
+                            = cv::Rect(cv::Point(interLeft, interTop),
+                                    cv::Point(interRight, interBottom));
 
-                    if (interLeft < interRight && interTop < interBottom) {
-                        const int interArea = interRect.area();
-                        const int unionArea = labelRect.area() + bbRect.area()
-                                              - interArea;
-                        const double overlapFraction = interArea
-                            / (double)unionArea;
+                        if (interLeft < interRight && interTop < interBottom) {
+                            const int interArea = interRect.area();
+                            const int unionArea = labelRect.area()
+                                + bbRect.area() - interArea;
+                            const double overlapFraction = interArea
+                                / (double)unionArea;
 
-                        if (overlapFraction > mMinOverlap) {
-                            if (!(*itBB).roi
-                                || overlapFraction > (*itBB).matching)
-                            {
-                                (*itBB).roi = (*itLabel);
-                                (*itBB).matching = overlapFraction;
+                            if (overlapFraction > mMinOverlap) {
+                                if (!(*itBB).roi
+                                    || overlapFraction > (*itBB).matching)
+                                {
+                                    (*itBB).roi = (*itLabel);
+                                    (*itBB).matching = overlapFraction;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // Confusion computation
-            for (std::vector<DetectedBB>::iterator
-                 itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
-                 itBB != itBBEnd;
-                 ++itBB) {
-                const int bbLabel = (*itBB).bb->getLabel();
+                // Confusion computation
+                for (std::vector<DetectedBB>::iterator
+                    itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
+                    itBB != itBBEnd;
+                    ++itBB) {
+                    const int bbLabel = (*itBB).bb->getLabel();
 
-                if ((*itBB).roi) {
-                    // Found a matching ROI
-                    const std::vector<std::shared_ptr<ROI> >::iterator
-                        itLabel = std::find(labelROIs.begin(),
-                                            labelROIs.end(),
-                                            (*itBB).roi);
+                    if ((*itBB).roi) {
+                        // Found a matching ROI
+                        const std::vector<std::shared_ptr<ROI> >::iterator
+                            itLabel = std::find(labelROIs.begin(),
+                                                labelROIs.end(),
+                                                (*itBB).roi);
 
-                    (*itBB).duplicate = (itLabel == labelROIs.end());
+                        (*itBB).duplicate = (itLabel == labelROIs.end());
 
-                    if (!(*itBB).duplicate) {
-                        // If this is the first match, remove this label
-                        // from the list and count it for the confusion
-                        // matrix
-                        labelROIs.erase(itLabel);
+                        if (!(*itBB).duplicate) {
+                            // If this is the first match, remove this label
+                            // from the list and count it for the confusion
+                            // matrix
+                            labelROIs.erase(itLabel);
 
-                        const int targetLabel = getLabelTarget((*itBB).roi
-                                                          ->getLabel());
+                            const int targetLabel = getLabelTarget((*itBB).roi
+                                                            ->getLabel());
 
-                        if (targetLabel >= 0) {
+                            if (targetLabel >= 0) {
 #pragma omp atomic
-                            confusionMatrix(targetLabel, bbLabel) += 1ULL;
+                                confusionMatrix(targetLabel, bbLabel) += 1ULL;
+                            }
                         }
+                    } else {
+                        // False positive
+#pragma omp atomic
+                        confusionMatrix(0, bbLabel) += 1ULL;
                     }
-                } else {
-                    // False positive
-#pragma omp atomic
-                    confusionMatrix(0, bbLabel) += 1ULL;
                 }
-            }
 
-            // False negative (miss) for remaining unmatched label ROIs
-            for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
-                 = labelROIs.begin(),
-                 itLabelEnd = labelROIs.end();
-                 itLabel != itLabelEnd;
-                 ++itLabel) {
-                const int targetLabel = getLabelTarget((*itLabel)->getLabel());
+                // False negative (miss) for remaining unmatched label ROIs
+                for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
+                    = labelROIs.begin(), itLabelEnd = labelROIs.end();
+                    itLabel != itLabelEnd; ++itLabel)
+                {
+                    const int targetLabel
+                        = getLabelTarget((*itLabel)->getLabel());
 
-                if (targetLabel >= 0) {
+                    if (targetLabel >= 0) {
 #pragma omp atomic
-                    confusionMatrix(targetLabel, 0) += 1ULL;
+                        confusionMatrix(targetLabel, 0) += 1ULL;
+                    }
                 }
             }
         }
