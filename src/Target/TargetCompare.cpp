@@ -34,9 +34,10 @@ N2D2::TargetCompare::TargetCompare(const std::string& name,
                          double targetValue,
                          double defaultValue,
                          unsigned int targetTopN,
-                         const std::string& labelsMapping)
+                         const std::string& labelsMapping,
+                         bool createMissingLabels)
     : TargetScore(
-          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping),
+          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping, createMissingLabels),
       mDataPath(this, "DataPath", ""),
       mMatching(this, "Matching", "*.dat"),
       mDataTargetFormat(this, "TargetFormat", NCHW),

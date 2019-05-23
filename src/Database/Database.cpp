@@ -1203,6 +1203,21 @@ N2D2::Database::addStimulus(const std::string& name, int label, StimuliSet set)
     mStimuliSets(set).push_back(mStimuli.size() - 1);
 }
 
+int N2D2::Database::addLabel(const std::string& labelName) {
+    const std::vector<std::string>::iterator itBegin = mLabelsName.begin();
+    std::vector<std::string>::const_iterator it
+        = std::find(itBegin, mLabelsName.end(), labelName);
+
+    if (it != mLabelsName.end()) {
+        throw std::runtime_error(
+            "Database::addLabel(): a label with the name \"" + labelName
+            + "\" already exists");
+    }
+
+    mLabelsName.push_back(labelName);
+    return (mLabelsName.size() - 1);
+}
+
 void N2D2::Database::removeStimulus(StimulusID id)
 {
     std::vector<StimuliSet> stimuliSets;

@@ -32,9 +32,10 @@ N2D2::TargetScore::TargetScore(const std::string& name,
                                double targetValue,
                                double defaultValue,
                                unsigned int targetTopN,
-                               const std::string& labelsMapping)
+                               const std::string& labelsMapping,
+                               bool createMissingLabels)
     : Target(
-          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping),
+          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping, createMissingLabels),
       mMaxValidationScore(0.0),
       mMaxValidationTopNScore(0.0)
 {

@@ -36,9 +36,10 @@ N2D2::TargetROIs::TargetROIs(const std::string& name,
                              double targetValue,
                              double defaultValue,
                              unsigned int targetTopN,
-                             const std::string& labelsMapping)
+                             const std::string& labelsMapping,
+                             bool createMissingLabels)
     : Target(
-          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping),
+          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping, createMissingLabels),
       mMinSize(this, "MinSize", 0U),
       mMinOverlap(this, "MinOverlap", 0.5),
       mFilterMinHeight(this, "FilterMinHeight", 0U),

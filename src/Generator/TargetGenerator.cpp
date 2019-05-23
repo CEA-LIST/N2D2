@@ -39,6 +39,8 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
                                     <unsigned int>("TopN", 1U);
     const std::string labelsMapping = Utils::expandEnvVars(
         iniConfig.getProperty<std::string>("LabelsMapping", ""));
+    const bool createMissingLabels
+        = iniConfig.getProperty<bool>("CreateMissingLabels", false);
 
     // These options are processed afterwards in postGenerate()
     iniConfig.getProperty<std::string>("ROIsLabelTarget", "");
@@ -56,7 +58,8 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
                                      targetValue,
                                      defaultValue,
                                      targetTopN,
-                                     labelsMapping);
+                                     labelsMapping,
+                                     createMissingLabels);
 
     if (type == "TargetRP") {
         const TargetRP::TargetType targetType = iniConfig.getProperty

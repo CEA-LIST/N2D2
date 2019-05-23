@@ -241,6 +241,7 @@ public:
     void addStimulus(const std::string& name,
                      int label = -1,
                      StimuliSet set = Unpartitioned);
+    int addLabel(const std::string& labelName);
     void removeStimulus(StimulusID id);
     void removeLabel(int label);
     inline void removeLabel(const std::string& labelName);

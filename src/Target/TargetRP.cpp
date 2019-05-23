@@ -37,9 +37,10 @@ N2D2::TargetRP::TargetRP(const std::string& name,
                          double targetValue,
                          double defaultValue,
                          unsigned int targetTopN,
-                         const std::string& labelsMapping)
+                         const std::string& labelsMapping,
+                         bool createMissingLabels)
     : Target(
-          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping),
+          name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping, createMissingLabels),
       mMinOverlap(this, "MinOverlap", 0.5),
       mLossLambda(this, "LossLambda", 1.0)
 {

@@ -52,7 +52,8 @@ public:
                                  double,
                                  double,
                                  unsigned int,
-                                 const std::string&)> RegistryCreate_T;
+                                 const std::string&,
+                                 bool)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -75,7 +76,8 @@ public:
                                           double targetValue = 1.0,
                                           double defaultValue = 0.0,
                                           unsigned int targetTopN = 1,
-                                          const std::string& labelsMapping = "")
+                                          const std::string& labelsMapping = "",
+                                          bool createMissingLabels = false)
     {
         return std::make_shared<Target>(name,
                                         cell,
@@ -83,7 +85,8 @@ public:
                                         targetValue,
                                         defaultValue,
                                         targetTopN,
-                                        labelsMapping);
+                                        labelsMapping,
+                                        createMissingLabels);
     }
     static const char* Type;
 
@@ -93,7 +96,8 @@ public:
            double targetValue = 1.0,
            double defaultValue = 0.0,
            unsigned int targetTopN = 1,
-           const std::string& labelsMapping = "");
+           const std::string& labelsMapping = "",
+           bool createMissingLabels = false);
     /// Returns cell name
     const std::string& getName() const
     {
@@ -128,7 +132,8 @@ public:
     {
         mMaskLabelTarget = target;
     };
-    void labelsMapping(const std::string& fileName);
+    void labelsMapping(const std::string& fileName,
+                       bool createMissingLabels = false);
     void setLabelTarget(int label, int output);
     void setDefaultTarget(int output);
     void process_Frame(BaseTensor& values,

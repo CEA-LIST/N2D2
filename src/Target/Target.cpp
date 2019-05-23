@@ -39,7 +39,8 @@ N2D2::Target::Target(const std::string& name,
                      double targetValue,
                      double defaultValue,
                      unsigned int targetTopN,
-                     const std::string& labelsMapping_)
+                     const std::string& labelsMapping_,
+                     bool createMissingLabels)
     : mDataAsTarget(this, "DataAsTarget", false),
       mNoDisplayLabel(this, "NoDisplayLabel", -1),
       mLabelsHueOffset(this, "LabelsHueOffset", 0),
@@ -61,7 +62,7 @@ N2D2::Target::Target(const std::string& name,
     Utils::createDirectories(name);
 
     if (!labelsMapping_.empty())
-        labelsMapping(labelsMapping_);
+        labelsMapping(labelsMapping_, createMissingLabels);
 }
 
 unsigned int N2D2::Target::getNbTargets() const
@@ -69,7 +70,8 @@ unsigned int N2D2::Target::getNbTargets() const
     return (mCell->getNbOutputs() > 1) ? mCell->getNbOutputs() : 2;
 }
 
-void N2D2::Target::labelsMapping(const std::string& fileName)
+void N2D2::Target::labelsMapping(const std::string& fileName,
+                                 bool createMissingLabels)
 {
     mLabelsMapping.clear();
 
@@ -169,6 +171,14 @@ void N2D2::Target::labelsMapping(const std::string& fileName)
                 }
 
                 labels.push_back(-1);
+            }
+
+            if (labels.empty() && createMissingLabels) {
+                // Remove wildcard
+                className = Utils::searchAndReplace(className, "*", "");
+                className = Utils::searchAndReplace(className, "?", "_");
+
+                labels.push_back(mStimuliProvider->getDatabase().addLabel(className));
             }
 
             if (!labels.empty()) {

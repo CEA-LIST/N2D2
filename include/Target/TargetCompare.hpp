@@ -38,7 +38,8 @@ public:
         double targetValue = 1.0,
         double defaultValue = 0.0,
         unsigned int targetTopN = 1,
-        const std::string& labelsMapping = "")
+        const std::string& labelsMapping = "",
+        bool createMissingLabels = false)
     {
         return std::make_shared<TargetCompare>(name,
                                           cell,
@@ -46,7 +47,8 @@ public:
                                           targetValue,
                                           defaultValue,
                                           targetTopN,
-                                          labelsMapping);
+                                          labelsMapping,
+                                          createMissingLabels);
     }
     static const char* Type;
 
@@ -65,7 +67,8 @@ public:
              double targetValue = 1.0,
              double defaultValue = 0.0,
              unsigned int targetTopN = 1,
-             const std::string& labelsMapping = "");
+             const std::string& labelsMapping = "",
+             bool createMissingLabels = false);
     virtual const char* getType() const
     {
         return Type;
