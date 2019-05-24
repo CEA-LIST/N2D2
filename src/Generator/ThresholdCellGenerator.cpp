@@ -38,8 +38,8 @@ N2D2::ThresholdCellGenerator::generate(Network& /*network*/,
 
     const std::string model = iniConfig.getProperty<std::string>(
         "Model", CellGenerator::mDefaultModel);
-    const DataType dataType = iniConfig.getProperty<DataType>(
-        "DataType", CellGenerator::mDefaultDataType);
+    //const DataType dataType = iniConfig.getProperty<DataType>(
+    //    "DataType", CellGenerator::mDefaultDataType);
 
     const unsigned int nbOutputs = iniConfig.getProperty
                                    <unsigned int>("NbOutputs");
