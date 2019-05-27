@@ -108,7 +108,6 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                           / (double)(mCell->getOutputsHeight() - 1);
 
     mEstimatedLabels.synchronizeDToH();
-    mEstimatedLabelsValue.synchronizeDToH();
     
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
@@ -124,8 +123,6 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 
         // Extract estimated BB
         const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        const Tensor<Float_T> estimatedLabelsValue
-            = mEstimatedLabelsValue[batchPos][0];
 
         ComputerVision::LSL_Box lsl(mMinSize);
         lsl.process(Matrix<int>(estimatedLabels.dimY(),
@@ -165,30 +162,14 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                            0.0,
                            false);
 
-            if (mROIsLabelTarget) {
-                int label;
-                Float_T score;
-                std::tie(label, score)
-                    = mROIsLabelTarget->getEstimatedLabel(dbb.bb, batchPos);
+            int label;
+            Float_T score;
+            std::tie(label, score) = (mROIsLabelTarget)
+                ? mROIsLabelTarget->getEstimatedLabel(dbb.bb, batchPos)
+                : getEstimatedLabel(dbb.bb, batchPos);
 
-                dbb.bb->setLabel(label);
-                dbb.score = score;
-            } else {
-                // Compute BB score
-                int nbPixels = 0;
-
-                for (unsigned int x = (*it).j0; x < (*it).j1; ++x) {
-                    for (unsigned int y = (*it).i0; y < (*it).i1; ++y) {
-                        if (estimatedLabels(x, y) == bbLabel) {
-                            dbb.score += estimatedLabelsValue(x, y);
-                            ++nbPixels;
-                        }
-                    }
-                }
-
-                if (nbPixels > 0)
-                    dbb.score /= nbPixels;
-            }
+            dbb.bb->setLabel(label);
+            dbb.score = score;
 
             detectedBB.push_back(dbb);
         }
