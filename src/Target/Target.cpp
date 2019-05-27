@@ -1147,7 +1147,8 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
             "Target::getEstimatedLabel(): bounding box out of range");
 
     const unsigned int nbOutputs = outputsBaseTensor.dimZ();
-    TensorLabelsValue_T bbLabels({(nbOutputs > 1) ? nbOutputs : 2}, 0.0);
+    TensorLabelsValue_T bbLabels;
+    bbLabels.resize({(nbOutputs > 1) ? nbOutputs : 2}, 0.0);
 
 #ifdef CUDA
     CudaBaseTensor* outputsCudaBaseTensor 
