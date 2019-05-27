@@ -174,11 +174,11 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
             detectedBB.push_back(dbb);
         }
 
+        // Sort BB by highest score
+        std::sort(detectedBB.begin(), detectedBB.end(), scoreCompare);
+
         if (validDatabase) {
             const Tensor<int> target = mTargets[batchPos];
-
-            // Sort BB by highest score
-            std::sort(detectedBB.begin(), detectedBB.end(), scoreCompare);
 
             // Extract ground true ROIs
             std::vector<std::shared_ptr<ROI> > labelROIs
