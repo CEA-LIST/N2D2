@@ -58,6 +58,21 @@ unsigned int N2D2::TargetROIs::getNbTargets() const
                               : Target::getNbTargets();
 }
 
+void N2D2::TargetROIs::setROIsLabelTarget(const std::shared_ptr<Target>& target)
+{
+    mROIsLabelTarget = target;
+
+    // Create target_rois_label.dat for target_rois_viewer.py
+    const std::string fileName = mName + "/target_rois_label.dat";
+    std::ofstream roisLabelData(fileName);
+
+    if (!roisLabelData.good())
+        throw std::runtime_error("Could not save data file: " + fileName);
+
+    roisLabelData << mROIsLabelTarget->getName();
+    roisLabelData.close();
+}
+
 void N2D2::TargetROIs::logConfusionMatrix(const std::string& fileName,
                                           Database::StimuliSet set) const
 {
@@ -323,7 +338,7 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const
 {
     const std::vector<DetectedBB>& detectedBB = mDetectedBB[batchPos];
-    const std::vector<std::string> labelsName = getTargetLabelsName();
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
 
     // Input image
     cv::Mat img = (cv::Mat)mStimuliProvider->getData(0, batchPos);
@@ -456,17 +471,6 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
 
-    if (mROIsLabelTarget) {
-        const std::string fileName = mName + "/target_rois_label.dat";
-        std::ofstream roisLabelData(fileName);
-
-        if (!roisLabelData.good())
-            throw std::runtime_error("Could not save data file: " + fileName);
-
-        roisLabelData << mROIsLabelTarget->getName();
-        roisLabelData.close();
-    }
-
     // Remove symlink created in Target::logEstimatedLabels()
     int ret = remove((dirPath + ".py").c_str());
     if (ret < 0) {
@@ -479,7 +483,7 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     } // avoid ignoring return value warning
 #endif
 
-    const std::vector<std::string> labelsName = getTargetLabelsName();
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
 
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {

@@ -250,7 +250,7 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
     if (mTargetType != Cls)
         return cv::Mat();
 
-    const std::vector<std::string> labelsName = getTargetLabelsName();
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
     const int defaultLabel = getLabelTarget(mStimuliProvider->getDatabase()
                                                 .getDefaultLabelID());
 

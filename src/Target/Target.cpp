@@ -273,37 +273,38 @@ std::vector<int> N2D2::Target::getTargetLabels(int output) const
     }
 }
 
-std::vector<std::string> N2D2::Target::getTargetLabelsName() const
+const std::vector<std::string>& N2D2::Target::getTargetLabelsName() const
 {
-    const unsigned int nbTargets = getNbTargets();
-    std::vector<std::string> labelsName;
-    labelsName.reserve(nbTargets);
+    if (mLabelsName.empty()) {
+        const unsigned int nbTargets = getNbTargets();
+        mLabelsName.reserve(nbTargets);
 
-    for (int target = 0; target < (int)nbTargets; ++target) {
-        std::stringstream labelName;
+        for (int target = 0; target < (int)nbTargets; ++target) {
+            std::stringstream labelName;
 
-        if (target == mDefaultTarget)
-            labelName << "default";
-        else {
-            const std::vector<int> cls = getTargetLabels(target);
-            const Database& db = mStimuliProvider->getDatabase();
+            if (target == mDefaultTarget)
+                labelName << "default";
+            else {
+                const std::vector<int> cls = getTargetLabels(target);
+                const Database& db = mStimuliProvider->getDatabase();
 
-            if (!cls.empty()) {
-                labelName << ((cls[0] >= 0 && cls[0] < (int)db.getNbLabels())
-                                ? db.getLabelName(cls[0]) :
-                              (cls[0] >= 0)
-                                ? "" :
-                                  "*");
+                if (!cls.empty()) {
+                    labelName << ((cls[0] >= 0 && cls[0] < (int)db.getNbLabels())
+                                    ? db.getLabelName(cls[0]) :
+                                (cls[0] >= 0)
+                                    ? "" :
+                                    "*");
 
-                if (cls.size() > 1)
-                    labelName << "...";
+                    if (cls.size() > 1)
+                        labelName << "...";
+                }
             }
-        }
 
-        labelsName.push_back(labelName.str());
+            mLabelsName.push_back(labelName.str());
+        }
     }
 
-    return labelsName;
+    return mLabelsName;
 }
 
 void N2D2::Target::logLabelsMapping(const std::string& fileName) const

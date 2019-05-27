@@ -91,10 +91,7 @@ public:
         return Type;
     };
     unsigned int getNbTargets() const;
-    void setROIsLabelTarget(const std::shared_ptr<Target>& target)
-    {
-        mROIsLabelTarget = target;
-    };
+    void setROIsLabelTarget(const std::shared_ptr<Target>& target);
     void logConfusionMatrix(const std::string& fileName,
                             Database::StimuliSet set) const;
     void clearConfusionMatrix(Database::StimuliSet set);

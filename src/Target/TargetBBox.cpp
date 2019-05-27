@@ -218,7 +218,7 @@ void N2D2::TargetBBox::initialize(bool genAnchors, unsigned int nbAnchors, long 
     //if(mGenerateAnchors)
     //    computeKmeansClustering(Database::Learn);
 
-    const std::vector<std::string> labelsName = getTargetLabelsName();
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
     mLabelsBBoxName.push_back("Background");
     for(unsigned int i = 0; i < labelsName.size(); ++i)
     {
@@ -414,7 +414,7 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
 cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
 {
     const std::vector<DetectedBB>& detectedBB = mBatchDetectedBBox[batchPos];
-    const std::vector<std::string> labelsName = getTargetLabelsName();
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
 
     //const int defaultLabel = getLabelTarget(mStimuliProvider->getDatabase()
     //                                            .getDefaultLabelID());

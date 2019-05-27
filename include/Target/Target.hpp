@@ -145,7 +145,7 @@ public:
     int getLabelTarget(int label) const;
     int getDefaultTarget() const;
     std::vector<int> getTargetLabels(int output) const;
-    std::vector<std::string> getTargetLabelsName() const;
+    const std::vector<std::string>& getTargetLabelsName() const;
     void logLabelsMapping(const std::string& fileName) const;
     virtual void process(Database::StimuliSet set);
     virtual void logEstimatedLabels(const std::string& dirName) const;
@@ -205,6 +205,8 @@ protected:
     std::shared_ptr<Target> mMaskLabelTarget;
     bool mPopulateTargets;
     std::vector<Float_T> mLoss;
+
+    mutable std::vector<std::string> mLabelsName;
 
 private:
     static Registrar<Target> mRegistrar;
