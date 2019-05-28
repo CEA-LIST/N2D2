@@ -47,9 +47,9 @@ TEST_DATASET(TrimTransformation,
              std::make_tuple(false, 10, TrimTransformation::Reduce),
              std::make_tuple(false, 255, TrimTransformation::Reduce))
 {
-    RectangularROI<int> roi1(64, cv::Point(0, 0), 127, 127);
-    RectangularROI<int> roi2(128, cv::Point(128, 0), 127, 127);
-    RectangularROI<int> roi3(255, cv::Point(128, 128), 127, 127);
+    RectangularROI<int> roi1(64, cv::Point(0, 0), 128, 128);
+    RectangularROI<int> roi2(128, cv::Point(128, 0), 128, 128);
+    RectangularROI<int> roi3(255, cv::Point(128, 128), 128, 128);
 
     cv::Mat labels(256, 256, CV_32SC1, cv::Scalar(0));
     roi1.append(labels);

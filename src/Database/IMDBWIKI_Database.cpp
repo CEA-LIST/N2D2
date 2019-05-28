@@ -145,6 +145,8 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
                 mStimuli.push_back(
                     Stimulus(dirPath + "/" + facesParam[face].full_path, -1));
                 mStimuliSets(Unpartitioned).push_back(mStimuli.size() - 1);
+
+                // x1 and y1 are exclusive, as required by RectangularROI<>()
                 mStimuli.back().ROIs.push_back(new RectangularROI<int>(
                     labelID(labelStr.str()),
                     RectangularROI
@@ -214,6 +216,7 @@ N2D2::IMDBWIKI_Database::loadFaceParameters(const std::string& path) const
 
         FaceParameters fp;
 
+        // TODO: it is assumed that x1 and y1 are exclusive
         if (!(values >> fp.full_path) || values.get() != ';'
             || (values.peek() != ';'
                 && !(values >> fp.name)) // handle the case of missing name

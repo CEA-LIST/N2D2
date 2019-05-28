@@ -1132,6 +1132,12 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     const unsigned int y0 = rect.tl().y / yRatio;
     const unsigned int x1 = rect.br().x / xRatio;
     const unsigned int y1 = rect.br().y / yRatio;
+    const unsigned int size = (x1 - x0) * (y1 - y0);
+
+    if (size == 0) {
+        throw std::runtime_error(
+            "Target::getEstimatedLabel(): bounding box is empty");
+    }
 
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
@@ -1142,9 +1148,10 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         ? targetCell->getOutputs()
         : targetCellCSpike->getOutputsActivity();
 
-    if (x1 >= outputsBaseTensor.dimX() || y1 >= outputsBaseTensor.dimY())
+    if (x1 > outputsBaseTensor.dimX() || y1 > outputsBaseTensor.dimY()) {
         throw std::runtime_error(
             "Target::getEstimatedLabel(): bounding box out of range");
+    }
 
     const unsigned int nbOutputs = outputsBaseTensor.dimZ();
     TensorLabelsValue_T bbLabels;
@@ -1179,8 +1186,8 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         const Tensor<Float_T>& value
             = tensor_cast_nocopy<Float_T>(outputsBaseTensor);
 
-        for (unsigned int oy = y0; oy <= y1; ++oy) {
-            for (unsigned int ox = x0; ox <= x1; ++ox) {
+        for (unsigned int oy = y0; oy < y1; ++oy) {
+            for (unsigned int ox = x0; ox < x1; ++ox) {
                 if (nbOutputs > 1) {
                     for (unsigned int index = 0; index < nbOutputs; ++index)
                         bbLabels(index) += value(ox, oy, index);
@@ -1196,8 +1203,7 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
 
     const std::vector<Float_T>::const_iterator it
         = std::max_element(bbLabels.begin(), bbLabels.end());
-    return std::make_pair(it - bbLabels.begin(),
-                          (*it) / ((x1 - x0 + 1) * (y1 - y0 + 1)));
+    return std::make_pair(it - bbLabels.begin(), (*it) / size);
 }
 
 void N2D2::Target::clear(Database::StimuliSet /*set*/)

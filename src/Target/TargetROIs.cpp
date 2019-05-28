@@ -153,10 +153,12 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 
             DetectedBB dbb(std::make_shared<RectangularROI<int> >(
                                bbLabel,
+                               // RectangularROI<>() bottom right is exclusive,
+                               // but LSL_Box b.r. is inclusive
                                cv::Point(Utils::round(xRatio * (*it).j0),
                                          Utils::round(yRatio * (*it).i0)),
-                               cv::Point(Utils::round(xRatio * (*it).j1),
-                                         Utils::round(yRatio * (*it).i1))),
+                               cv::Point(Utils::round(xRatio * ((*it).j1 + 1)),
+                                         Utils::round(yRatio * ((*it).i1 + 1)))),
                            0.0,
                            std::shared_ptr<ROI>(),
                            0.0,

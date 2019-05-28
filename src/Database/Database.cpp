@@ -100,6 +100,7 @@ void N2D2::Database::loadROIs(const std::string& fileName,
             }
         }
 
+        // x2 and y2 are assumed to be exclusive
         double x1, y1, x2, y2;
         std::string label;
 
@@ -767,6 +768,7 @@ void N2D2::Database::extractSlices(unsigned int width,
                         tl = RectangularROI<int>::Point_T(
                             std::min(x, data.cols - width),
                             std::min(y, data.rows - height));
+                        // br is exclusive, as required by RectangularROI<>()
                         br = RectangularROI<int>::Point_T(
                             tl.x + width,
                             tl.y + height);

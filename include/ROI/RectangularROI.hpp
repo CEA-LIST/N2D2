@@ -28,10 +28,11 @@ namespace N2D2 {
 template <class T>
 class RectangularROI : public PolygonalROI<T>, public Geometric::Rectangle<T> {
 public:
+    // br must be exclusive, to be consistent with OpenCV Rect()
     RectangularROI(int label,
-                   const typename Geometric::Rectangle<T>::Point_T& tl,
-                   const typename Geometric::Rectangle<T>::Point_T& br)
-        : PolygonalROI<T>(label), Geometric::Rectangle<T>(tl, br) {};
+                   const typename Geometric::Rectangle<T>::Point_T& pt1,
+                   const typename Geometric::Rectangle<T>::Point_T& pt2)
+        : PolygonalROI<T>(label), Geometric::Rectangle<T>(pt1, pt2) {};
     RectangularROI(int label,
                    const typename Geometric::Rectangle<T>::Point_T& tl,
                    unsigned int width,

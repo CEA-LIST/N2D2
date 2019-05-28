@@ -66,13 +66,11 @@ private:
 
 template <class T> cv::Rect N2D2::PolygonalROI<T>::getBoundingRect() const
 {
+    // The BR point returned by this function is exclusive.
     cv::Rect rect = cv::boundingRect(points);
-    // If the polygonal is a rectangle, the returned Rect BR point should not be
-    // inclusive, but the cv::boundingRect() includes it.
-    // That's why the width and height of the returned Rect must be reduced by
-    // 1.
-    rect.width -= 1;
-    rect.height -= 1;
+    // cv::boundingRect() BR point is exclusive w.r.t the set of points.
+    // The TR, BR and BL points constituting the polygonal that make the
+    // rectangle are inclusive by construction.
     return rect;
 }
 
@@ -80,11 +78,16 @@ template <class T>
 cv::Mat N2D2::PolygonalROI
     <T>::draw(cv::Mat& stimulus, const cv::Scalar& color, int thickness) const
 {
-    const typename Geometric::Polygon<T>::Point_T* pts[1] = {&points[0]};
     int npts = (int)points.size();
-
     cv::Mat res(stimulus);
-    cv::polylines(res, pts, &npts, 1, true, color, thickness);
+
+    if (npts > 0) {
+        const typename Geometric::Polygon<T>::Point_T* pts[1] = {&points[0]};
+
+        // polylines is inclusive
+        cv::polylines(res, pts, &npts, 1, true, color, thickness);
+    }
+
     return res;
 }
 
@@ -93,6 +96,9 @@ void N2D2::PolygonalROI<T>::append(cv::Mat& labels,
                                    unsigned int outsideMargin,
                                    int outsideLabel) const
 {
+    if (points.empty())
+        return;
+
     // Draw on a sub-image, because drawing functions overflows for coordinates
     // > 65535
     const cv::Rect bb = cv::boundingRect(points);
@@ -133,6 +139,7 @@ void N2D2::PolygonalROI<T>::append(cv::Mat& labels,
         labelsOverlap.copyTo(labelsWorkArea, (labelsWorkArea == outsideLabel));
     }
 
+    // fillPoly is inclusive
     cv::fillPoly(labelsWorkArea, newPts, &newNpts, 1, cv::Scalar(mLabel));
 
     /*
@@ -190,11 +197,12 @@ void N2D2::PolygonalROI
     <T>::flip(unsigned int width, unsigned int height, bool hFlip, bool vFlip)
 {
     for (unsigned int i = 0; i < points.size(); ++i) {
+        // points are always inclusive => width - 1 and height - 1
         if (hFlip)
-            points[i].x = width - points[i].x;
+            points[i].x = width - 1 - points[i].x;
 
         if (vFlip)
-            points[i].y = height - points[i].y;
+            points[i].y = height - 1 - points[i].y;
     }
 }
 

@@ -35,9 +35,9 @@ TEST_DATASET(RescaleTransformation,
              std::make_tuple(160, 200, true),
              std::make_tuple(500, 500, true))
 {
-    RectangularROI<int> roi1(64, cv::Point(0, 0), 255, 255);
-    RectangularROI<int> roi2(128, cv::Point(256, 0), 255, 255);
-    RectangularROI<int> roi3(255, cv::Point(256, 256), 255, 255);
+    RectangularROI<int> roi1(64, cv::Point(0, 0), 256, 256);
+    RectangularROI<int> roi2(128, cv::Point(256, 0), 256, 256);
+    RectangularROI<int> roi3(255, cv::Point(256, 256), 256, 256);
 
     cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(0));
     roi1.append(labels);
