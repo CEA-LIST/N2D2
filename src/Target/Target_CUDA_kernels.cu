@@ -136,7 +136,9 @@ void cudaGetEstimatedLabel_kernel(const float* value,
                                   unsigned int x1,
                                   unsigned int y0,
                                   unsigned int y1,
-                                  float* bbLabels)
+                                  float* bbLabels,
+                                  const int* mask,
+                                  int maskedLabel)
 {
     const unsigned int batchOffset
         = outputWidth * outputHeight * nbOutputs * batchPos;
@@ -147,13 +149,16 @@ void cudaGetEstimatedLabel_kernel(const float* value,
             for (unsigned int x = x0 + threadIdx.x; x < x1; x += blockDim.x) {
                 const unsigned int idx = x + outputWidth
                     * (y + outputHeight * z * (nbOutputs > 1)) + batchOffset;
+                const unsigned int maskIdx = x + outputWidth * y;
 
-                if (nbOutputs > 1 || z > 0) {
-                    atomicAdd(bbLabels + z, value[idx]);
-                }
-                else {
-                    // nbOutputs == 1 && z == 0
-                    atomicAdd(bbLabels + z, 1.0f - value[idx]);
+                if (mask == NULL || mask[maskIdx] == maskedLabel) {
+                    if (nbOutputs > 1 || z > 0) {
+                        atomicAdd(bbLabels + z, value[idx]);
+                    }
+                    else {
+                        // nbOutputs == 1 && z == 0
+                        atomicAdd(bbLabels + z, 1.0f - value[idx]);
+                    }
                 }
             }
         }
@@ -213,7 +218,9 @@ void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
                                  unsigned int x1,
                                  unsigned int y0,
                                  unsigned int y1,
-                                 float* bbLabels)
+                                 float* bbLabels,
+                                 const int* mask,
+                                 int maskedLabel)
 {
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
@@ -241,7 +248,9 @@ void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
            x1,
            y0,
            y1,
-           bbLabels);
+           bbLabels,
+           mask,
+           maskedLabel);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 

@@ -1142,6 +1142,7 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     const unsigned int size = (x1 - x0) * (y1 - y0);
 
     if (size == 0) {
+#pragma omp critical(Target__getEstimatedLabel)
         throw std::runtime_error(
             "Target::getEstimatedLabel(): bounding box is empty");
     }
@@ -1156,6 +1157,7 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         : targetCellCSpike->getOutputsActivity();
 
     if (x1 > outputsBaseTensor.dimX() || y1 > outputsBaseTensor.dimY()) {
+#pragma omp critical(Target__getEstimatedLabel)
         throw std::runtime_error(
             "Target::getEstimatedLabel(): bounding box out of range");
     }
@@ -1163,6 +1165,22 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     const unsigned int nbOutputs = outputsBaseTensor.dimZ();
     TensorLabelsValue_T bbLabels;
     bbLabels.resize({(nbOutputs > 1) ? nbOutputs : 2}, 0.0);
+
+    const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
+        ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
+        : TensorLabels_T();
+
+    if (!mask.empty() && (mask.dimX() != outputsBaseTensor.dimX()
+                         || mask.dimY() != outputsBaseTensor.dimY()))
+    {
+        std::ostringstream errorStr;
+        errorStr << "Mask dims (" << mask.dims() << ") from MaskLabelTarget"
+            " does not match target dims (" << outputsBaseTensor.dims() << ")"
+            " for target \"" << mName << "\"";
+
+#pragma omp critical(Target__getEstimatedLabel)
+        throw std::runtime_error(errorStr.str());
+    }
 
 #ifdef CUDA
     CudaBaseTensor* outputsCudaBaseTensor 
@@ -1183,7 +1201,9 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                 x1,
                                 y0,
                                 y1,
-                                bbLabels.getDevicePtr());
+                                bbLabels.getDevicePtr(),
+                                (!mask.empty()) ? mask.getDevicePtr() : NULL,
+                                mMaskedLabel);
         
         bbLabels.synchronizeDToH();
     }
@@ -1195,12 +1215,14 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
 
         for (unsigned int oy = y0; oy < y1; ++oy) {
             for (unsigned int ox = x0; ox < x1; ++ox) {
-                if (nbOutputs > 1) {
-                    for (unsigned int index = 0; index < nbOutputs; ++index)
-                        bbLabels(index) += value(ox, oy, index);
-                } else {
-                    bbLabels(0) += 1.0 - value(ox, oy, 0);
-                    bbLabels(1) += value(ox, oy, 0);
+                if (mask.empty() || mask(ox, oy) == mMaskedLabel) {
+                    if (nbOutputs > 1) {
+                        for (unsigned int index = 0; index < nbOutputs; ++index)
+                            bbLabels(index) += value(ox, oy, index);
+                    } else {
+                        bbLabels(0) += 1.0 - value(ox, oy, 0);
+                        bbLabels(1) += value(ox, oy, 0);
+                    }
                 }
             }
         }
