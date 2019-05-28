@@ -149,12 +149,16 @@ public:
                                                        & name) const;
     template <class T = Cell>
     std::shared_ptr<T> getTargetCell(unsigned int index = 0) const;
+    template <class T = Cell>
+    std::shared_ptr<T> getTargetCell(const std::string& name) const;
     const std::vector<std::shared_ptr<Target> >& getTargets() const
     {
         return mTargets;
     };
     template <class T = Target>
     std::shared_ptr<T> getTarget(unsigned int index = 0) const;
+    template <class T = Target>
+    std::shared_ptr<T> getTarget(const std::string& name) const;
     void getStats(Cell::Stats& stats) const;
     std::vector<unsigned int> getReceptiveField(const std::string& name,
                                 const std::vector<unsigned int>& outputField
@@ -306,20 +310,32 @@ std::shared_ptr<T> N2D2::DeepNet::getCell(const std::string& name) const
 template <class T>
 std::shared_ptr<T> N2D2::DeepNet::getTargetCell(unsigned int index) const
 {
-    std::ostringstream indexStr;
-    indexStr << index;
+    std::shared_ptr<Target> target = getTarget(index);
+    std::shared_ptr<T> cell = std::dynamic_pointer_cast<T>(target->getCell());
 
-    if (index >= mTargets.size())
-        throw std::runtime_error(
-            "DeepNet::getTargetCell(): wrong target index: " + indexStr.str());
+    if (!cell) {
+        std::ostringstream indexStr;
+        indexStr << index;
 
-    std::shared_ptr<T> cell = std::dynamic_pointer_cast
-        <T>(mTargets[index]->getCell());
-
-    if (!cell)
         throw std::runtime_error(
             "DeepNet::getTargetCell(): wrong cell type for index "
             + indexStr.str());
+    }
+
+    return cell;
+}
+
+template <class T>
+std::shared_ptr<T> N2D2::DeepNet::getTargetCell(const std::string& name) const
+{
+    std::shared_ptr<Target> target = getTarget(name);
+    std::shared_ptr<T> cell = std::dynamic_pointer_cast<T>(target->getCell());
+
+    if (!cell) {
+        throw std::runtime_error(
+            "DeepNet::getTargetCell(): wrong cell type for target with name: "
+            + name);
+    }
 
     return cell;
 }
@@ -340,6 +356,30 @@ std::shared_ptr<T> N2D2::DeepNet::getTarget(unsigned int index) const
         throw std::runtime_error(
             "DeepNet::getTarget(): wrong target type for index "
             + indexStr.str());
+
+    return target;
+}
+
+template <class T>
+std::shared_ptr<T> N2D2::DeepNet::getTarget(const std::string& name) const
+{
+    std::vector<std::shared_ptr<Target> >::const_iterator it
+        = find_if(mTargets.begin(), mTargets.end(),
+            [&name](const std::shared_ptr<Target>& target)
+                {return target->getName() == name;});
+
+    if (it == mTargets.end()) {
+        throw std::runtime_error("DeepNet::getTarget(): no target with name: "
+                                 + name);
+    }
+
+    std::shared_ptr<T> target = std::dynamic_pointer_cast<T>(*it);
+
+    if (!target) {
+        throw std::runtime_error(
+            "DeepNet::getTarget(): wrong target type for target with name: "
+            + name);
+    }
 
     return target;
 }
