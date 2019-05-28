@@ -138,7 +138,8 @@ void cudaGetEstimatedLabel_kernel(const float* value,
                                   unsigned int y1,
                                   float* bbLabels,
                                   const int* mask,
-                                  int maskedLabel)
+                                  int maskedLabel,
+                                  const float* maskValue)
 {
     const unsigned int batchOffset
         = outputWidth * outputHeight * nbOutputs * batchPos;
@@ -152,13 +153,15 @@ void cudaGetEstimatedLabel_kernel(const float* value,
                 const unsigned int maskIdx = x + outputWidth * y;
 
                 if (mask == NULL || mask[maskIdx] == maskedLabel) {
-                    if (nbOutputs > 1 || z > 0) {
-                        atomicAdd(bbLabels + z, value[idx]);
-                    }
-                    else {
+                    float val = (nbOutputs > 1 || z > 0)
+                        ? value[idx]
                         // nbOutputs == 1 && z == 0
-                        atomicAdd(bbLabels + z, 1.0f - value[idx]);
-                    }
+                        : 1.0f - value[idx];
+
+                    if (maskValue != NULL)
+                        val *= maskValue[maskIdx];
+
+                    atomicAdd(bbLabels + z, val);
                 }
             }
         }
@@ -220,7 +223,8 @@ void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
                                  unsigned int y1,
                                  float* bbLabels,
                                  const int* mask,
-                                 int maskedLabel)
+                                 int maskedLabel,
+                                 const float* maskValue)
 {
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
@@ -250,7 +254,8 @@ void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
            y1,
            bbLabels,
            mask,
-           maskedLabel);
+           maskedLabel,
+           maskValue);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 

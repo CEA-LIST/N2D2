@@ -53,7 +53,8 @@ void cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
                            unsigned int y1,
                            float* bbLabels,
                            const int* mask,
-                           int maskedLabel);
+                           int maskedLabel,
+                           const float* maskValue);
 }
 
 #endif // N2D2_TARGET_CUDA_KERNELS_H

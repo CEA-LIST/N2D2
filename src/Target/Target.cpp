@@ -46,6 +46,7 @@ N2D2::Target::Target(const std::string& name,
       mLabelsHueOffset(this, "LabelsHueOffset", 0),
       mEstimatedLabelsValueDisplay(this, "EstimatedLabelsValueDisplay", true),
       mMaskedLabel(this, "MaskedLabel", -1),
+      mMaskedLabelValue(this, "MaskedLabelValue", false),
       mBinaryThreshold(this, "BinaryThreshold", 0.5),
       mImageLogFormat(this, "ImageLogFormat", "jpg"),
       mWeakTarget(this, "WeakTarget", -2),
@@ -1169,6 +1170,10 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
         ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
         : TensorLabels_T();
+    const TensorLabelsValue_T maskValue = (mMaskLabelTarget && mMaskedLabel >= 0
+                                            && mMaskedLabelValue)
+        ? mMaskLabelTarget->getEstimatedLabelsValue()[batchPos][0]
+        : TensorLabelsValue_T();
 
     if (!mask.empty() && (mask.dimX() != outputsBaseTensor.dimX()
                          || mask.dimY() != outputsBaseTensor.dimY()))
@@ -1203,7 +1208,9 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                 y1,
                                 bbLabels.getDevicePtr(),
                                 (!mask.empty()) ? mask.getDevicePtr() : NULL,
-                                mMaskedLabel);
+                                mMaskedLabel,
+                                (!maskValue.empty()) ? maskValue.getDevicePtr()
+                                                     : NULL);
         
         bbLabels.synchronizeDToH();
     }
@@ -1212,16 +1219,21 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
         // Sync. already done in process(), cast also
         const Tensor<Float_T>& value
             = tensor_cast_nocopy<Float_T>(outputsBaseTensor);
+        const unsigned int dimZ = (nbOutputs > 1) ? nbOutputs : 2;
 
         for (unsigned int oy = y0; oy < y1; ++oy) {
             for (unsigned int ox = x0; ox < x1; ++ox) {
                 if (mask.empty() || mask(ox, oy) == mMaskedLabel) {
-                    if (nbOutputs > 1) {
-                        for (unsigned int index = 0; index < nbOutputs; ++index)
-                            bbLabels(index) += value(ox, oy, index);
-                    } else {
-                        bbLabels(0) += 1.0 - value(ox, oy, 0);
-                        bbLabels(1) += value(ox, oy, 0);
+                    for (unsigned int z = 0; z < dimZ; ++z) {
+                        float val = (nbOutputs > 1 || z > 0)
+                            ? value(ox, oy, z * (nbOutputs > 1))
+                            // nbOutputs == 1 && z == 0
+                            : 1.0f - value(ox, oy, z * (nbOutputs > 1));
+
+                        if (mMaskedLabelValue)
+                            val *= maskValue(ox, oy);
+
+                        bbLabels(z) += val;
                     }
                 }
             }

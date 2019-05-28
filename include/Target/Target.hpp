@@ -177,6 +177,7 @@ protected:
     /// value. Otherwise, displayed value is 255 regardless of the confidence.
     Parameter<bool> mEstimatedLabelsValueDisplay;
     Parameter<int> mMaskedLabel;
+    Parameter<bool> mMaskedLabelValue;
     /// Threshold for single output (binary classification). Default is 0.5.
     Parameter<double> mBinaryThreshold;
     /// If left empty, use the database image origin format
