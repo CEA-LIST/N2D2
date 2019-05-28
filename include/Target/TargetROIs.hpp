@@ -103,6 +103,8 @@ public:
         return mDetectedBB.at(batchPos);
     };
     cv::Mat getBBData(const DetectedBB& bb, unsigned int batchPos = 0) const;
+    void logDetectedBB(const std::string& fileName,
+                       unsigned int batchPos = 0) const;
     virtual void logEstimatedLabels(const std::string& dirName) const;
     virtual void log(const std::string& fileName, Database::StimuliSet set);
     virtual void clear(Database::StimuliSet set);

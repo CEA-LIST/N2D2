@@ -444,6 +444,55 @@ cv::Mat N2D2::TargetROIs::getBBData(const DetectedBB& bb,
     return bb.bb->extract(img8U);
 }
 
+void N2D2::TargetROIs::logDetectedBB(const std::string& fileName,
+                                     unsigned int batchPos) const
+{
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
+    const std::vector<DetectedBB>& detectedBB = mDetectedBB[batchPos];
+
+    if (!detectedBB.empty()) {
+        const std::vector<std::string>& labelsName = getTargetLabelsName();
+        const int id = mStimuliProvider->getBatch()[batchPos];
+
+        const std::string logFileName = Utils::fileBaseName(fileName)
+            + ".log";
+        std::ofstream roisData(logFileName.c_str());
+
+        if (!roisData.good())
+            throw std::runtime_error("Could not save data file: "
+                                        + logFileName);
+
+        std::ostringstream imgFile;
+
+        if (validDatabase)
+            imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+        else
+            imgFile << std::setw(10) << std::setfill('0') << id;
+
+        for (std::vector<DetectedBB>::const_iterator it
+                = detectedBB.begin(),
+                itEnd = detectedBB.end();
+                it != itEnd;
+                ++it) {
+            const cv::Rect rect = (*it).bb->getBoundingRect();
+
+            roisData << Utils::quoted(imgFile.str())
+                << " " << rect.x << " " << rect.y
+                << " " << rect.width << " " << rect.height
+                << " " << labelsName[(*it).bb->getLabel()]
+                << " " << (*it).score;
+
+            if ((*it).roi)
+                roisData << " 1";
+            else
+                roisData << " 0";
+
+            roisData << "\n";
+        }
+    }
+}
+
 void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
 {
     const bool validDatabase
@@ -513,38 +562,7 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
             throw std::runtime_error("Unable to write image: " + fileName);
 
         // Log ROIs
-        const std::vector<DetectedBB>& detectedBB = mDetectedBB[batchPos];
-
-        if (!detectedBB.empty()) {
-            const std::string logFileName = Utils::fileBaseName(fileName)
-                + ".log";
-            std::ofstream roisData(logFileName.c_str());
-
-            if (!roisData.good())
-                throw std::runtime_error("Could not save data file: "
-                                         + logFileName);
-
-            for (std::vector<DetectedBB>::const_iterator it
-                 = detectedBB.begin(),
-                 itEnd = detectedBB.end();
-                 it != itEnd;
-                 ++it) {
-                const cv::Rect rect = (*it).bb->getBoundingRect();
-
-                roisData << Utils::quoted(imgFile.str())
-                    << " " << rect.x << " " << rect.y
-                    << " " << rect.width << " " << rect.height
-                    << " " << labelsName[(*it).bb->getLabel()]
-                    << " " << (*it).score;
-
-                if ((*it).roi)
-                    roisData << " 1";
-                else
-                    roisData << " 0";
-
-                roisData << "\n";
-            }
-        }
+        logDetectedBB(fileName, batchPos);
     }
 
     // Merge all ROIs logs
