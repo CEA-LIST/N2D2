@@ -21,13 +21,15 @@
 #include "Cell/ConvCell_Spike_RRAM.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::ConvCell>
 N2D2::ConvCell_Spike_RRAM::mRegistrar("Spike_RRAM",
     N2D2::ConvCell_Spike_RRAM::create,
     N2D2::Registrar<N2D2::ConvCell>::Type<Float_T>());
 
-N2D2::ConvCell_Spike_RRAM::ConvCell_Spike_RRAM(Network& net,
+N2D2::ConvCell_Spike_RRAM::ConvCell_Spike_RRAM(Network& net, 
+                                 const DeepNet& deepNet, 
                                  const std::string& name,
                                  const std::vector<unsigned int>& kernelDims,
                                  unsigned int nbOutputs,
@@ -35,15 +37,15 @@ N2D2::ConvCell_Spike_RRAM::ConvCell_Spike_RRAM(Network& net,
                                  const std::vector<unsigned int>& strideDims,
                                  const std::vector<int>& paddingDims,
                                  const std::vector<unsigned int>& dilationDims)
-    : Cell(name, nbOutputs),
-      ConvCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      ConvCell(deepNet, name,
                kernelDims,
                nbOutputs,
                subSampleDims,
                strideDims,
                paddingDims,
                dilationDims),
-      ConvCell_Spike(net,
+      ConvCell_Spike(net, deepNet, 
                      name,
                      kernelDims,
                      nbOutputs,

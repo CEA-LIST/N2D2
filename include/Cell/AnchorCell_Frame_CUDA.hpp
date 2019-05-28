@@ -26,9 +26,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Cell_Frame_CUDA.hpp"
 #include "AnchorCell.hpp"
 #include "AnchorCell_Frame_CUDA_Kernels.hpp"
+#include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 class ROI;
@@ -36,16 +37,16 @@ class StimuliProvider;
 
 class AnchorCell_Frame_CUDA : public virtual AnchorCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    AnchorCell_Frame_CUDA(const std::string& name,
+    AnchorCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                  StimuliProvider& sp,
                  const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                  unsigned int scoresCls = 1);
-    static std::shared_ptr<AnchorCell> create(const std::string& name,
+    static std::shared_ptr<AnchorCell> create(const DeepNet& deepNet, const std::string& name,
                   StimuliProvider& sp,
                   const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                   unsigned int scoresCls)
     {
-        return std::make_shared<AnchorCell_Frame_CUDA>(name,
+        return std::make_shared<AnchorCell_Frame_CUDA>(deepNet, name,
                                                        sp,
                                                        anchors,
                                                        scoresCls);

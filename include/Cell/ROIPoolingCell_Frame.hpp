@@ -26,26 +26,27 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "PoolCell_Frame_Kernels.hpp"
 #include "ROIPoolingCell.hpp"
 
 namespace N2D2 {
 class ROIPoolingCell_Frame : public virtual ROIPoolingCell, public Cell_Frame<Float_T> {
 public:
-    ROIPoolingCell_Frame(const std::string& name,
+    ROIPoolingCell_Frame(const DeepNet& deepNet, const std::string& name,
                          StimuliProvider& sp,
                          unsigned int outputsWidth,
                          unsigned int outputsHeight,
                          unsigned int nbOutputs,
                          ROIPooling pooling);
-    static std::shared_ptr<ROIPoolingCell> create(const std::string& name,
+    static std::shared_ptr<ROIPoolingCell> create(const DeepNet& deepNet, const std::string& name,
                                                   StimuliProvider& sp,
                                                   unsigned int outputsWidth,
                                                   unsigned int outputsHeight,
                                                   unsigned int nbOutputs,
                                                   ROIPooling pooling)
     {
-        return std::make_shared<ROIPoolingCell_Frame>(name,
+        return std::make_shared<ROIPoolingCell_Frame>(deepNet, name,
                                                       sp,
                                                       outputsWidth,
                                                       outputsHeight,

@@ -21,6 +21,7 @@
 #include "Cell/PoolCell_Spike.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::PoolCell>
 N2D2::PoolCell_Spike::mRegistrar("Spike",
@@ -28,20 +29,21 @@ N2D2::PoolCell_Spike::mRegistrar("Spike",
     N2D2::Registrar<N2D2::PoolCell>::Type<Float_T>());
 
 N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
+    const DeepNet& deepNet, 
     const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling)
-    : Cell(name, nbOutputs),
-      PoolCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      PoolCell(deepNet, name,
                poolDims,
                nbOutputs,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Spike(net, name, nbOutputs),
+      Cell_Spike(net, deepNet, name, nbOutputs),
       mPoolNbChannels(nbOutputs, 0)
 // IMPORTANT: Do not change the value of the parameters here! Use setParameter()
 // or loadParameters().

@@ -19,15 +19,16 @@
 */
 
 #include "Cell/FMPCell.hpp"
+#include "DeepNet.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Utils.hpp"
 
 const char* N2D2::FMPCell::Type = "FMP";
 
-N2D2::FMPCell::FMPCell(const std::string& name,
+N2D2::FMPCell::FMPCell(const DeepNet& deepNet, const std::string& name,
                        double scalingRatio,
                        unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mOverlapping(this, "Overlapping", true),
       mPseudoRandom(this, "PseudoRandom", true),
       mScalingRatio(scalingRatio),

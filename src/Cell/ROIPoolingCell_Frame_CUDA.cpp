@@ -23,20 +23,22 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/ROIPoolingCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::ROIPoolingCell>
 N2D2::ROIPoolingCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                        N2D2::ROIPoolingCell_Frame_CUDA::create);
 
-N2D2::ROIPoolingCell_Frame_CUDA::ROIPoolingCell_Frame_CUDA(const std::string& name,
+N2D2::ROIPoolingCell_Frame_CUDA::ROIPoolingCell_Frame_CUDA(const DeepNet& deepNet, 
+                                                 const std::string& name,
                                                  StimuliProvider& sp,
                                                  unsigned int outputsWidth,
                                                  unsigned int outputsHeight,
                                                  unsigned int nbOutputs,
                                                  ROIPooling pooling)
-    : Cell(name, nbOutputs),
-      ROIPoolingCell(name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ROIPoolingCell(deepNet, name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
     mInputs.matchingDims({});

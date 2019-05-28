@@ -29,11 +29,12 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 class ElemWiseCell_Frame_CUDA : public virtual ElemWiseCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    ElemWiseCell_Frame_CUDA(const std::string& name,
+    ElemWiseCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         unsigned int nbOutputs,
                         Operation operation = Sum,
                         const std::vector<Float_T>& weights
@@ -42,7 +43,7 @@ public:
                         = std::vector<Float_T>(),
                         const std::shared_ptr<Activation>& activation
                         = std::shared_ptr<Activation>());
-    static std::shared_ptr<ElemWiseCell> create(Network& /*net*/,
+    static std::shared_ptr<ElemWiseCell> create(Network& /*net*/, const DeepNet& deepNet, 
                                             const std::string& name,
                                             unsigned int nbOutputs,
                                             Operation operation = Sum,
@@ -55,7 +56,7 @@ public:
                                             = std::shared_ptr
                                             <Activation>())
     {
-        return std::make_shared<ElemWiseCell_Frame_CUDA>(name,
+        return std::make_shared<ElemWiseCell_Frame_CUDA>(deepNet, name,
                                                      nbOutputs,
                                                      operation,
                                                      weights,

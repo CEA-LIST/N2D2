@@ -20,10 +20,11 @@
 */
 
 #include "Cell/ProposalCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::ProposalCell::Type = "Proposal";
 
-N2D2::ProposalCell::ProposalCell(const std::string& name,
+N2D2::ProposalCell::ProposalCell(const DeepNet& deepNet, const std::string& name,
                                  StimuliProvider& sp,
                                  const unsigned int nbOutputs,
                                  unsigned int nbProposals,
@@ -34,7 +35,7 @@ N2D2::ProposalCell::ProposalCell(const std::string& name,
                                  std::vector<double> stdFactor,
                                  std::vector<unsigned int> numParts,
                                  std::vector<unsigned int> numTemplates)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mNMS_IoU_Threshold(this, "NMS_IoU_Threshold", 0.3),
       mScoreThreshold(this, "Score_Threshold", 0.0),
       mKeepMax(this, "KeepMaxCls", false),

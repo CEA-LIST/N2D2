@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/ElemWiseCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -25,7 +26,7 @@ N2D2::ElemWiseCellGenerator::mRegistrar(ElemWiseCell::Type,
                                     N2D2::ElemWiseCellGenerator::generate);
 
 std::shared_ptr<N2D2::ElemWiseCell>
-N2D2::ElemWiseCellGenerator::generate(Network& network,
+N2D2::ElemWiseCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                   StimuliProvider& sp,
                                   const std::vector
                                   <std::shared_ptr<Cell> >& parents,
@@ -60,7 +61,7 @@ N2D2::ElemWiseCellGenerator::generate(Network& network,
 
     // Cell construction
     std::shared_ptr<ElemWiseCell> cell = Registrar
-        <ElemWiseCell>::create(model)(network,
+        <ElemWiseCell>::create(model)(network, deepNet,
                                   section,
                                   nbOutputs,
                                   operation,

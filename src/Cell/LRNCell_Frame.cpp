@@ -20,6 +20,7 @@
 */
 
 #include "Cell/LRNCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -41,11 +42,11 @@ N2D2::LRNCell_Frame<double>::mRegistrar("Frame",
     N2D2::Registrar<N2D2::LRNCell>::Type<double>());
 
 template <class T>
-N2D2::LRNCell_Frame<T>::LRNCell_Frame(const std::string& name,
+N2D2::LRNCell_Frame<T>::LRNCell_Frame(const DeepNet& deepNet, const std::string& name,
                                    unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      LRNCell(name, nbOutputs),
-      Cell_Frame<T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      LRNCell(deepNet, name, nbOutputs),
+      Cell_Frame<T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

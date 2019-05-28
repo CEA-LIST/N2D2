@@ -33,6 +33,7 @@
 
 namespace N2D2 {
 
+class DeepNet;
 class Filler;
 class Network;
 class Solver;
@@ -41,6 +42,7 @@ class LSTMCell : public virtual Cell {
 public:
 	typedef std::function<std::shared_ptr<LSTMCell>(
 		Network&,
+		const DeepNet&,
 		const std::string&,
 		unsigned int,
 		unsigned int,
@@ -61,7 +63,7 @@ public:
 	}
 	static const char* Type;
 
-	LSTMCell(const std::string& name,
+	LSTMCell(const DeepNet& deepNet, const std::string& name,
 				unsigned int seqLength,
 				unsigned int batchSize,
 				unsigned int inputDim,

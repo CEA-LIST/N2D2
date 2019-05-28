@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/FMPCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -25,7 +26,7 @@ N2D2::FMPCellGenerator::mRegistrar(FMPCell::Type,
                                    N2D2::FMPCellGenerator::generate);
 
 std::shared_ptr<N2D2::FMPCell>
-N2D2::FMPCellGenerator::generate(Network& network,
+N2D2::FMPCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                  StimuliProvider& sp,
                                  const std::vector
                                  <std::shared_ptr<Cell> >& parents,
@@ -52,7 +53,7 @@ N2D2::FMPCellGenerator::generate(Network& network,
 
     // Cell construction
     std::shared_ptr<FMPCell> cell = Registrar<FMPCell>::create(model)(
-        network, section, scalingRatio, nbOutputs, activation);
+        network, deepNet, section, scalingRatio, nbOutputs, activation);
 
     if (!cell) {
         throw std::runtime_error(

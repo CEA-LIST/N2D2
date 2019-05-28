@@ -20,6 +20,7 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/SoftmaxCell_Frame.hpp"
+#include "DeepNet.hpp"
 
 template <>
 N2D2::Registrar<N2D2::SoftmaxCell>
@@ -40,13 +41,13 @@ N2D2::SoftmaxCell_Frame<double>::mRegistrar("Frame",
     N2D2::Registrar<N2D2::SoftmaxCell>::Type<double>());
 
 template <class T>
-N2D2::SoftmaxCell_Frame<T>::SoftmaxCell_Frame(const std::string& name,
+N2D2::SoftmaxCell_Frame<T>::SoftmaxCell_Frame(const DeepNet& deepNet, const std::string& name,
                                            unsigned int nbOutputs,
                                            bool withLoss,
                                            unsigned int groupSize)
-    : Cell(name, nbOutputs),
-      SoftmaxCell(name, nbOutputs, withLoss, groupSize),
-      Cell_Frame<T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      SoftmaxCell(deepNet, name, nbOutputs, withLoss, groupSize),
+      Cell_Frame<T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

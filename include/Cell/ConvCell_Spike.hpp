@@ -23,6 +23,7 @@
 
 #include "Cell_Spike.hpp"
 #include "ConvCell.hpp"
+#include "DeepNet.hpp"
 #include "Synapse_Behavioral.hpp"
 
 namespace N2D2 {
@@ -32,7 +33,7 @@ class NodeOut;
 
 class ConvCell_Spike : public virtual ConvCell, public Cell_Spike {
 public:
-    ConvCell_Spike(Network& net,
+    ConvCell_Spike(Network& net, const DeepNet& deepNet, 
                    const std::string& name,
                    const std::vector<unsigned int>& kernelDims,
                    unsigned int nbOutputs,
@@ -45,7 +46,7 @@ public:
                    const std::vector<unsigned int>& dilationDims
                         = std::vector<unsigned int>(2, 1U));
     static std::shared_ptr<ConvCell>
-    create(Network& net,
+    create(Network& net, const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
@@ -60,7 +61,7 @@ public:
            const std::shared_ptr<Activation>& /*activation*/
            = std::shared_ptr<Activation>())
     {
-        return std::make_shared<ConvCell_Spike>(net,
+        return std::make_shared<ConvCell_Spike>(net, deepNet, 
                                                 name,
                                                 kernelDims,
                                                 nbOutputs,

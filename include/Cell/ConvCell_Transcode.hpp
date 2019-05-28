@@ -23,6 +23,7 @@
 
 #include "ConvCell_Frame.hpp"
 #include "ConvCell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
 
 #ifdef CUDA
@@ -40,7 +41,7 @@ public:
         Spike
     };
 
-    ConvCell_Transcode(Network& net,
+    ConvCell_Transcode(Network& net, const DeepNet& deepNet, 
                        const std::string& name,
                        const std::vector<unsigned int>& kernelDims,
                        unsigned int nbOutputs,
@@ -54,7 +55,7 @@ public:
                             = std::vector<unsigned int>(2, 1U),
                        const std::shared_ptr<Activation>& activation
                        = std::make_shared<TanhActivation_Frame<Float_T> >());
-    static std::shared_ptr<ConvCell> create(Network& net,
+    static std::shared_ptr<ConvCell> create(Network& net, const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
@@ -69,7 +70,7 @@ public:
            const std::shared_ptr<Activation>& activation
                 = std::make_shared<TanhActivation_Frame<Float_T> >())
     {
-        return std::make_shared<ConvCell_Transcode>(net,
+        return std::make_shared<ConvCell_Transcode>(net, deepNet,
                                                     name,
                                                     kernelDims,
                                                     nbOutputs,
@@ -162,6 +163,7 @@ void N2D2::ConvCell_Transcode
 template <class FRAME, class SPIKE>
 N2D2::ConvCell_Transcode
     <FRAME, SPIKE>::ConvCell_Transcode(Network& net,
+                               const DeepNet& deepNet, 
                                const std::string& name,
                                const std::vector<unsigned int>& kernelDims,
                                unsigned int nbOutputs,
@@ -171,15 +173,15 @@ N2D2::ConvCell_Transcode
                                const std::vector<unsigned int>& dilationDims,
                                const std::shared_ptr
                                <Activation>& activation)
-    : Cell(name, nbOutputs),
-      ConvCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      ConvCell(deepNet, name,
                kernelDims,
                nbOutputs,
                subSampleDims,
                strideDims,
                paddingDims,
                dilationDims),
-      FRAME(name,
+      FRAME(deepNet, name,
             kernelDims,
             nbOutputs,
             subSampleDims,
@@ -187,7 +189,7 @@ N2D2::ConvCell_Transcode
             paddingDims,
             dilationDims,
             activation),
-      SPIKE(net,
+      SPIKE(net, deepNet,
             name,
             kernelDims,
             nbOutputs,

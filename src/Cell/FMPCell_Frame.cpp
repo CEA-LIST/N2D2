@@ -20,19 +20,20 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/FMPCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::FMPCell>
 N2D2::FMPCell_Frame::mRegistrar("Frame", N2D2::FMPCell_Frame::create);
 
-N2D2::FMPCell_Frame::FMPCell_Frame(const std::string& name,
+N2D2::FMPCell_Frame::FMPCell_Frame(const DeepNet& deepNet, const std::string& name,
                                    double scalingRatio,
                                    unsigned int nbOutputs,
                                    const std::shared_ptr
                                    <Activation>& activation)
-    : Cell(name, nbOutputs),
-      FMPCell(name, scalingRatio, nbOutputs),
-      Cell_Frame<Float_T>(name, nbOutputs, activation),
+    : Cell(deepNet, name, nbOutputs),
+      FMPCell(deepNet, name, scalingRatio, nbOutputs),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs, activation),
       mLockRandom(false)
 {
     // ctor

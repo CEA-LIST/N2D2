@@ -22,15 +22,16 @@
 #define N2D2_FCCELL_SPIKE_PCM_H
 
 #include "FcCell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "Synapse_PCM.hpp"
 
 namespace N2D2 {
 class FcCell_Spike_PCM : public FcCell_Spike {
 public:
-    FcCell_Spike_PCM(Network& net,
+    FcCell_Spike_PCM(Network& net, const DeepNet& deepNet, 
                      const std::string& name,
                      unsigned int nbOutputs);
-    static std::shared_ptr<FcCell> create(Network& net,
+    static std::shared_ptr<FcCell> create(Network& net, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
@@ -38,7 +39,7 @@ public:
                                           = std::shared_ptr
                                           <Activation>())
     {
-        return std::make_shared<FcCell_Spike_PCM>(net, name, nbOutputs);
+        return std::make_shared<FcCell_Spike_PCM>(net, deepNet, name, nbOutputs);
     }
 
     void propagateSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);

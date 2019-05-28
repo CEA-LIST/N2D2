@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/ResizeCellGenerator.hpp"
 #include "StimuliProvider.hpp"
 
@@ -26,7 +27,7 @@ N2D2::ResizeCellGenerator::mRegistrar(ResizeCell::Type,
                                         N2D2::ResizeCellGenerator::generate);
 
 std::shared_ptr<N2D2::ResizeCell>
-N2D2::ResizeCellGenerator::generate(Network& /*network*/,
+N2D2::ResizeCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                         StimuliProvider& sp,
                                         const std::vector
                                         <std::shared_ptr<Cell> >& parents,
@@ -55,7 +56,7 @@ N2D2::ResizeCellGenerator::generate(Network& /*network*/,
     
     // Cell construction
     std::shared_ptr<ResizeCell> cell = Registrar
-        <ResizeCell>::create(model)(section,
+        <ResizeCell>::create(model)(deepNet, section,
                                     outputWidth,
                                     outputHeight,
                                     nbOutputs,

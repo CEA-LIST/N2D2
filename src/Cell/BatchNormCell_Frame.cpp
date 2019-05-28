@@ -19,6 +19,7 @@
 */
 
 #include "Cell/BatchNormCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "GradientCheck.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
 #include "third_party/half.hpp"
@@ -43,12 +44,13 @@ N2D2::BatchNormCell_Frame<double>::mRegistrar("Frame",
 
 template <class T>
 N2D2::BatchNormCell_Frame<T>::BatchNormCell_Frame(
+    const DeepNet& deepNet,
     const std::string& name,
     unsigned int nbOutputs,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      BatchNormCell(name, nbOutputs),
-      Cell_Frame<T>(name, nbOutputs, activation),
+    : Cell(deepNet, name, nbOutputs),
+      BatchNormCell(deepNet, name, nbOutputs),
+      Cell_Frame<T>(deepNet, name, nbOutputs, activation),
       mScale(std::make_shared<Tensor<ParamT> >()),
       mBias(std::make_shared<Tensor<ParamT> >()),
       mMean(std::make_shared<Tensor<ParamT> >()),

@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/SoftmaxCellGenerator.hpp"
 #include "third_party/half.hpp"
 
@@ -26,7 +27,7 @@ N2D2::SoftmaxCellGenerator::mRegistrar(SoftmaxCell::Type,
                                        N2D2::SoftmaxCellGenerator::generate);
 
 std::shared_ptr<N2D2::SoftmaxCell>
-N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
+N2D2::SoftmaxCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                      StimuliProvider& sp,
                                      const std::vector
                                      <std::shared_ptr<Cell> >& parents,
@@ -54,16 +55,16 @@ N2D2::SoftmaxCellGenerator::generate(Network& /*network*/,
     // Cell construction
     std::shared_ptr<SoftmaxCell> cell
         = (dataType == Float32)
-            ? Registrar<SoftmaxCell>::create<float>(model)(section,
+            ? Registrar<SoftmaxCell>::create<float>(model)(deepNet, section,
                                                            nbOutputs,
                                                            withLoss,
                                                            groupSize)
           : (dataType == Float16)
-            ? Registrar<SoftmaxCell>::create<half_float::half>(model)(section,
+            ? Registrar<SoftmaxCell>::create<half_float::half>(model)(deepNet, section,
                                                                       nbOutputs,
                                                                       withLoss,
                                                                       groupSize)
-            : Registrar<SoftmaxCell>::create<double>(model)(section,
+            : Registrar<SoftmaxCell>::create<double>(model)(deepNet, section,
                                                            nbOutputs,
                                                            withLoss,
                                                            groupSize);

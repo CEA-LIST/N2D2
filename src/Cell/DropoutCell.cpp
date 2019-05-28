@@ -19,11 +19,13 @@
 */
 
 #include "Cell/DropoutCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::DropoutCell::Type = "Dropout";
 
-N2D2::DropoutCell::DropoutCell(const std::string& name, unsigned int nbOutputs)
-    : Cell(name, nbOutputs), mDropout(this, "Dropout", 0.5)
+N2D2::DropoutCell::DropoutCell(const DeepNet& deepNet, const std::string& name, 
+                               unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs), mDropout(this, "Dropout", 0.5)
 {
     // ctor
 }

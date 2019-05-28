@@ -20,18 +20,19 @@
 
 #include "Cell/UnpoolCell.hpp"
 #include "controler/Interface.hpp"
+#include "DeepNet.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Utils.hpp"
 
 const char* N2D2::UnpoolCell::Type = "Unpool";
 
-N2D2::UnpoolCell::UnpoolCell(const std::string& name,
+N2D2::UnpoolCell::UnpoolCell(const DeepNet& deepNet, const std::string& name,
                          const std::vector<unsigned int>& poolDims,
                          unsigned int nbOutputs,
                          const std::vector<unsigned int>& strideDims,
                          const std::vector<unsigned int>& paddingDims,
                          Pooling pooling)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mPoolDims(poolDims),
       mStrideDims(strideDims),
       mPaddingDims(paddingDims),

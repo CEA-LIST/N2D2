@@ -23,6 +23,7 @@
 #define N2D2_LSTMCELL_FRAME_CUDA_H
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "LSTMCell.hpp"
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
@@ -43,7 +44,7 @@ using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::addInput;
 
-	LSTMCell_Frame_CUDA(const std::string& name,
+	LSTMCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
 						unsigned int seqLength,
 						unsigned int batchSize,
 						unsigned int inputDim,
@@ -56,7 +57,7 @@ using Cell_Frame_CUDA<T>::mInputs;
                 		float dropout,
 						bool singleBackpropFeeding);
     static std::shared_ptr<LSTMCell>
-    create(Network& /*net*/,
+    create(Network& /*net*/, const DeepNet& deepNet, 
 			const std::string& name,
 			unsigned int seqLength,
 			unsigned int batchSize,
@@ -70,7 +71,7 @@ using Cell_Frame_CUDA<T>::mInputs;
             float dropout,
 			bool singleBackpropFeeding)
     {
-        return std::make_shared<LSTMCell_Frame_CUDA>(name,
+        return std::make_shared<LSTMCell_Frame_CUDA>(deepNet, name,
 													seqLength,
 													batchSize,
 													inputDim,

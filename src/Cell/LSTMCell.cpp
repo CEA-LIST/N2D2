@@ -20,13 +20,14 @@
 */
 
 #include "Cell/LSTMCell.hpp"
+#include "DeepNet.hpp"
 #include "Solver/Solver.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Utils.hpp"
 
 const char* N2D2::LSTMCell::Type = "LSTM";
 
-N2D2::LSTMCell::LSTMCell(const std::string& name,
+N2D2::LSTMCell::LSTMCell(const DeepNet& deepNet, const std::string& name,
                 unsigned int seqLength,
                 unsigned int batchSize,
                 unsigned int inputDim,
@@ -38,7 +39,7 @@ N2D2::LSTMCell::LSTMCell(const std::string& name,
                 unsigned int inputMode,
                 float dropout,
                 bool singleBackpropFeeding)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
         mSeqLength(seqLength),
         mBatchSize(batchSize),
         mInputDim(inputDim),

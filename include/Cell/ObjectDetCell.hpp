@@ -30,6 +30,9 @@
 #include "Database/Database.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class ObjectDetCell : public virtual Cell {
 public:
     struct BBox_T {
@@ -45,7 +48,7 @@ public:
     };
 
     typedef std::function
-        <std::shared_ptr<ObjectDetCell>(const std::string&,
+        <std::shared_ptr<ObjectDetCell>(const DeepNet&, const std::string&,
                                         StimuliProvider&,
                                         const unsigned int,
                                         unsigned int,
@@ -65,7 +68,7 @@ public:
     }
     static const char* Type;
 
-    ObjectDetCell(const std::string& name,
+    ObjectDetCell(const DeepNet& deepNet, const std::string& name,
                  StimuliProvider& sp,
                  const unsigned int nbOutputs,
                  unsigned int nbAnchors,

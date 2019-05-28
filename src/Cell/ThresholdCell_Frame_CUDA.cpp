@@ -22,18 +22,20 @@
 
 #include "Cell/ThresholdCell_Frame_CUDA.hpp"
 #include "Cell/ThresholdCell_Frame_CUDA_Kernels.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::ThresholdCell>
 N2D2::ThresholdCell_Frame_CUDA::mRegistrar(
     "Frame_CUDA", N2D2::ThresholdCell_Frame_CUDA::create);
 
 N2D2::ThresholdCell_Frame_CUDA::ThresholdCell_Frame_CUDA(
+    const DeepNet& deepNet, 
     const std::string& name,
     unsigned int nbOutputs,
     double threshold)
-    : Cell(name, nbOutputs),
-      ThresholdCell(name, nbOutputs, threshold),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ThresholdCell(deepNet, name, nbOutputs, threshold),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

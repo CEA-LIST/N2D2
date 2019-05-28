@@ -19,16 +19,17 @@
 */
 
 #include "Cell/AnchorCell.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 const char* N2D2::AnchorCell::Type = "Anchor";
 
-N2D2::AnchorCell::AnchorCell(
+N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet, 
     const std::string& name,
     StimuliProvider& sp,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
-    : Cell(name, 6*anchors.size()),
+    : Cell(deepNet, name, 6*anchors.size()),
       mPositiveIoU(this, "PositiveIoU", 0.7),
       mNegativeIoU(this, "NegativeIoU", 0.3),
       mLossLambda(this, "LossLambda", 10.0),

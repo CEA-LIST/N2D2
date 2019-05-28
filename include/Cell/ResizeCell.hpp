@@ -29,6 +29,9 @@
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class ResizeCell : public virtual Cell {
 public:
     enum ResizeMode {
@@ -38,7 +41,7 @@ public:
     };
 
     typedef std::function
-        <std::shared_ptr<ResizeCell>(const std::string&,
+        <std::shared_ptr<ResizeCell>(const DeepNet& , const std::string&,
                                          unsigned int,
                                          unsigned int,
                                          unsigned int,
@@ -52,7 +55,7 @@ public:
     }
     static const char* Type;
 
-    ResizeCell(const std::string& name,
+    ResizeCell(const DeepNet& deepNet, const std::string& name,
                    unsigned int outputsWidth,
                    unsigned int outputsHeight,
                    unsigned int nbOutputs,

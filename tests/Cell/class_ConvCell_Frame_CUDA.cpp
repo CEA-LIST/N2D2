@@ -24,6 +24,7 @@
 
 #include "Cell/ConvCell_Frame_CUDA.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
+#include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
 #if CUDNN_VERSION >= 5000
@@ -38,7 +39,8 @@ using namespace N2D2;
 template <class T>
 class ConvCell_Frame_CUDA_Test : public ConvCell_Frame_CUDA<T> {
 public:
-    ConvCell_Frame_CUDA_Test(const std::string& name,
+    ConvCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                             const std::string& name,
                              const std::vector<unsigned int>& kernelDims,
                              unsigned int nbOutputs,
                              const std::vector<unsigned int>& subSampleDims,
@@ -47,15 +49,15 @@ public:
                              const std::vector<unsigned int>& dilationDims,
                              const std::shared_ptr
                              <Activation>& activation)
-        : Cell(name, nbOutputs),
-          ConvCell(name,
+        : Cell(deepNet, name, nbOutputs),
+          ConvCell(deepNet, name,
                    kernelDims,
                    nbOutputs,
                    subSampleDims,
                    strideDims,
                    paddingDims,
                    dilationDims),
-          ConvCell_Frame_CUDA<T>(name,
+          ConvCell_Frame_CUDA<T>(deepNet, name,
                               kernelDims,
                               nbOutputs,
                               subSampleDims,
@@ -128,7 +130,9 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    ConvCell_Frame_CUDA<float> conv1("conv1",
+    Network net;
+    DeepNet dn(net);
+    ConvCell_Frame_CUDA<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -193,9 +197,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<float> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -285,9 +290,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<float> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({4, 4}),
         16,
         std::vector<unsigned int>({1, 1}),
@@ -295,7 +301,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame_CUDA<float> >());
-    ConvCell_Frame_CUDA_Test<float> conv2("conv2",
+    ConvCell_Frame_CUDA_Test<float> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -386,12 +392,13 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
-    ConvCell_Frame_CUDA_Test<float> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -545,14 +552,15 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-    DropoutCell_Frame_CUDA<Float_T> drop2("drop2", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop2(dn, "drop2", 1);
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
-    ConvCell_Frame_CUDA_Test<float> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -710,9 +718,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<float> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -802,7 +811,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    ConvCell_Frame_CUDA<double> conv1("conv1",
+    Network net;
+    DeepNet dn(net);
+
+    ConvCell_Frame_CUDA<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -867,9 +879,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<double> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -959,9 +972,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<double> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({4, 4}),
         16,
         std::vector<unsigned int>({1, 1}),
@@ -969,7 +983,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame_CUDA<double> >());
-    ConvCell_Frame_CUDA_Test<double> conv2("conv2",
+    ConvCell_Frame_CUDA_Test<double> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1060,12 +1074,13 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
-    ConvCell_Frame_CUDA_Test<double> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1219,14 +1234,15 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-    DropoutCell_Frame_CUDA<Float_T> drop2("drop2", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop2(dn, "drop2", 1);
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
-    ConvCell_Frame_CUDA_Test<double> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1384,9 +1400,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<double> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1476,7 +1493,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(5, 3));
 
-    ConvCell_Frame_CUDA<half_float::half> conv1("conv1",
+    Network net;
+    DeepNet dn(net);
+    
+    ConvCell_Frame_CUDA<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1542,9 +1562,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1635,9 +1656,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({4, 4}),
         16,
         std::vector<unsigned int>({1, 1}),
@@ -1645,7 +1667,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame_CUDA<half_float::half> >());
-    ConvCell_Frame_CUDA_Test<half_float::half> conv2("conv2",
+    ConvCell_Frame_CUDA_Test<half_float::half> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1738,12 +1760,13 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
 #endif
-    ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1900,14 +1923,15 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
-    DropoutCell_Frame_CUDA<Float_T> drop1("drop1", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-    DropoutCell_Frame_CUDA<Float_T> drop2("drop2", 1);
+    DropoutCell_Frame_CUDA<Float_T> drop2(dn, "drop2", 1);
     drop2.setParameter<double>("Dropout", 0.0);
 #endif
-    ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -2067,9 +2091,10 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_CUDA_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),

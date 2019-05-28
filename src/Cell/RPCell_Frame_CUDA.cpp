@@ -20,18 +20,20 @@
 #ifdef CUDA
 
 #include "Cell/RPCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include <thrust/device_ptr.h>
+
 N2D2::Registrar<N2D2::RPCell>
 N2D2::RPCell_Frame_CUDA::mRegistrar("Frame_CUDA", N2D2::RPCell_Frame_CUDA::create);
 
-N2D2::RPCell_Frame_CUDA::RPCell_Frame_CUDA(const std::string& name,
+N2D2::RPCell_Frame_CUDA::RPCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                  unsigned int nbAnchors,
                                  unsigned int nbProposals,
                                  unsigned int scoreIndex,
                                  unsigned int IoUIndex)
-    : Cell(name, 4),
-      RPCell(name, nbAnchors, nbProposals, scoreIndex, IoUIndex),
-      Cell_Frame_CUDA<Float_T>(name, 4)
+    : Cell(deepNet, name, 4),
+      RPCell(deepNet, name, nbAnchors, nbProposals, scoreIndex, IoUIndex),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, 4)
 {
     // ctor
 }

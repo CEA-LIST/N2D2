@@ -19,15 +19,16 @@
 */
 
 #include "Cell/ResizeCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::ResizeCell::Type = "Resize";
 
-N2D2::ResizeCell::ResizeCell(const std::string& name,
+N2D2::ResizeCell::ResizeCell(const DeepNet& deepNet, const std::string& name,
                              unsigned int outputsWidth,
                              unsigned int outputsHeight,
                              unsigned int nbOutputs,
                              ResizeMode resizeMode)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mAlignCorners(this, "AlignCorners", true),
       mResizeMode(resizeMode),
       mResizeOutputWidth(outputsWidth),

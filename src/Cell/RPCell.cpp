@@ -19,15 +19,16 @@
 */
 
 #include "Cell/RPCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::RPCell::Type = "RP";
 
-N2D2::RPCell::RPCell(const std::string& name,
+N2D2::RPCell::RPCell(const DeepNet& deepNet, const std::string& name,
                      unsigned int nbAnchors,
                      unsigned int nbProposals,
                      unsigned int scoreIndex,
                      unsigned int IoUIndex)
-    : Cell(name, 4),
+    : Cell(deepNet, name, 4),
       mMinWidth(this, "MinWidth", 0.0),
       mMinHeight(this, "MinHeight", 0.0),
       mNMS_IoU_Threshold(this, "NMS_IoU_Threshold", 0.7),

@@ -19,6 +19,7 @@
 */
 
 #include "Cell/DropoutCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -40,11 +41,11 @@ N2D2::DropoutCell_Frame<double>::mRegistrar("Frame",
     N2D2::Registrar<N2D2::DropoutCell>::Type<double>());
 
 template <class T>
-N2D2::DropoutCell_Frame<T>::DropoutCell_Frame(const std::string& name,
-                                                     unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      DropoutCell(name, nbOutputs),
-      Cell_Frame<T>(name, nbOutputs)
+N2D2::DropoutCell_Frame<T>::DropoutCell_Frame(const DeepNet& deepNet, const std::string& name,
+                                              unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      DropoutCell(deepNet, name, nbOutputs),
+      Cell_Frame<T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

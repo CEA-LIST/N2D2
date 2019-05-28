@@ -23,6 +23,7 @@
 #if CUDNN_VERSION >= 4000
 
 #include "GradientCheck.hpp"
+#include "DeepNet.hpp"
 #include "Cell/BatchNormCell_Frame_CUDA.hpp"
 #include "third_party/half.hpp"
 
@@ -46,12 +47,13 @@ N2D2::BatchNormCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
 
 template <class T>
 N2D2::BatchNormCell_Frame_CUDA<T>::BatchNormCell_Frame_CUDA(
+    const DeepNet& deepNet,
     const std::string& name,
     unsigned int nbOutputs,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      BatchNormCell(name, nbOutputs),
-      Cell_Frame_CUDA<T>(name, nbOutputs, activation),
+    : Cell(deepNet, name, nbOutputs),
+      BatchNormCell(deepNet, name, nbOutputs),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation),
       mScale(std::make_shared<CudaTensor<ParamT> >()),
       mBias(std::make_shared<CudaTensor<ParamT> >()),
       mMean(std::make_shared<CudaTensor<ParamT> >()),

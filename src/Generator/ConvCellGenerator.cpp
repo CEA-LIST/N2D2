@@ -19,6 +19,7 @@
 */
 
 #include "Generator/ConvCellGenerator.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -30,7 +31,7 @@ N2D2::ConvCellGenerator::mRegistrarPost(ConvCell::Type + std::string("+"),
                                       N2D2::ConvCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::ConvCell>
-N2D2::ConvCellGenerator::generate(Network& network,
+N2D2::ConvCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                   StimuliProvider& sp,
                                   const std::vector
                                   <std::shared_ptr<Cell> >& parents,
@@ -163,7 +164,7 @@ N2D2::ConvCellGenerator::generate(Network& network,
     // Cell construction
     std::shared_ptr<ConvCell> cell
         = (dataType == Float32)
-            ? Registrar<ConvCell>::create<float>(model)(network,
+            ? Registrar<ConvCell>::create<float>(model)(network, deepNet, 
                                                         section,
                                                         kernelDims,
                                                         nbOutputs,
@@ -173,7 +174,7 @@ N2D2::ConvCellGenerator::generate(Network& network,
                                                         dilationDims,
                                                         activation)
           : (dataType == Float16)
-            ? Registrar<ConvCell>::create<half_float::half>(model)(network,
+            ? Registrar<ConvCell>::create<half_float::half>(model)(network, deepNet, 
                                                         section,
                                                         kernelDims,
                                                         nbOutputs,
@@ -182,7 +183,7 @@ N2D2::ConvCellGenerator::generate(Network& network,
                                                         paddingDims,
                                                         dilationDims,
                                                         activation)
-            : Registrar<ConvCell>::create<double>(model)(network,
+            : Registrar<ConvCell>::create<double>(model)(network, deepNet, 
                                                          section,
                                                          kernelDims,
                                                          nbOutputs,

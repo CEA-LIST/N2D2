@@ -24,27 +24,28 @@
 
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "PaddingCell.hpp"
 #include "PaddingCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
 class PaddingCell_Frame : public virtual PaddingCell, public Cell_Frame<Float_T> {
 public:
-    PaddingCell_Frame(const std::string& name,
+    PaddingCell_Frame(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
                       int topPad,
                       int botPad,
                       int leftPad,
                       int rightPad);
 
-    static std::shared_ptr<PaddingCell> create(const std::string& name,
+    static std::shared_ptr<PaddingCell> create(const DeepNet& deepNet, const std::string& name,
                                            unsigned int nbOutputs,
                                            int topPad = 0,
                                            int botPad = 0,
                                            int leftPad = 0,
                                            int rightPad = 0)
     {
-        return std::make_shared<PaddingCell_Frame>(name,
+        return std::make_shared<PaddingCell_Frame>(deepNet, name,
                                                    nbOutputs,
                                                    topPad,
                                                    botPad,

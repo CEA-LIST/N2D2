@@ -20,6 +20,7 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/FcCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Filler/NormalFiller.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
 #include "third_party/half.hpp"
@@ -43,13 +44,13 @@ N2D2::FcCell_Frame<double>::mRegistrar("Frame",
     N2D2::Registrar<N2D2::FcCell>::Type<double>());
 
 template <class T>
-N2D2::FcCell_Frame<T>::FcCell_Frame(const std::string& name,
+N2D2::FcCell_Frame<T>::FcCell_Frame(const DeepNet& deepNet, const std::string& name,
                                  unsigned int nbOutputs,
                                  const std::shared_ptr
                                  <Activation>& activation)
-    : Cell(name, nbOutputs),
-      FcCell(name, nbOutputs),
-      Cell_Frame<T>(name, nbOutputs, activation),
+    : Cell(deepNet, name, nbOutputs),
+      FcCell(deepNet, name, nbOutputs),
+      Cell_Frame<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().,
       mDropConnect(this, "DropConnect", 1.0),

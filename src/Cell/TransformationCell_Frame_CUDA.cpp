@@ -21,18 +21,20 @@
 #ifdef CUDA
 
 #include "Cell/TransformationCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::TransformationCell>
 N2D2::TransformationCell_Frame_CUDA::mRegistrar(
     "Frame_CUDA", N2D2::TransformationCell_Frame_CUDA::create);
 
 N2D2::TransformationCell_Frame_CUDA::TransformationCell_Frame_CUDA(
+    const DeepNet& deepNet, 
     const std::string& name,
     unsigned int nbOutputs,
     const std::shared_ptr<Transformation>& transformation)
-    : Cell(name, nbOutputs),
-      TransformationCell(name, nbOutputs, transformation),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      TransformationCell(deepNet, name, nbOutputs, transformation),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

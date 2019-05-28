@@ -26,9 +26,12 @@
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class Cell_CSpike : public virtual Cell, public Cell_CSpike_Top {
 public:
-    Cell_CSpike(const std::string& name, unsigned int nbOutputs);
+    Cell_CSpike(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
     virtual void addInput(StimuliProvider& sp,
                           unsigned int channel,
                           unsigned int x0,

@@ -20,14 +20,15 @@
 */
 
 #include "Cell/SoftmaxCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::SoftmaxCell::Type = "Softmax";
 
-N2D2::SoftmaxCell::SoftmaxCell(const std::string& name,
+N2D2::SoftmaxCell::SoftmaxCell(const DeepNet& deepNet, const std::string& name,
                                unsigned int nbOutputs,
                                bool withLoss,
                                unsigned int groupSize)
-    : Cell(name, nbOutputs), mWithLoss(withLoss), mGroupSize(groupSize)
+    : Cell(deepNet, name, nbOutputs), mWithLoss(withLoss), mGroupSize(groupSize)
 {
     // ctor
 }

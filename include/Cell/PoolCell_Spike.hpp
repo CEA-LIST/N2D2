@@ -22,12 +22,14 @@
 #define N2D2_POOLCELL_SPIKE_H
 
 #include "Cell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "PoolCell.hpp"
 
 namespace N2D2 {
 class PoolCell_Spike : public virtual PoolCell, public Cell_Spike {
 public:
     PoolCell_Spike(Network& net,
+                   const DeepNet& deepNet, 
                    const std::string& name,
                    const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
@@ -38,6 +40,7 @@ public:
                    Pooling pooling = Max);
     static std::shared_ptr<PoolCell>
     create(Network& net,
+           const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& poolDims,
            unsigned int nbOutputs,
@@ -50,6 +53,7 @@ public:
            = std::shared_ptr<Activation>())
     {
         return std::make_shared<PoolCell_Spike>(net,
+                                                deepNet,
                                                 name,
                                                 poolDims,
                                                 nbOutputs,

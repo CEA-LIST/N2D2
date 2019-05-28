@@ -20,25 +20,26 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/PaddingCell_Frame.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::PaddingCell>
 N2D2::PaddingCell_Frame::mRegistrar("Frame",
                                      N2D2::PaddingCell_Frame::create);
 
-N2D2::PaddingCell_Frame::PaddingCell_Frame(const std::string& name,
+N2D2::PaddingCell_Frame::PaddingCell_Frame(const DeepNet& deepNet, const std::string& name,
                                             unsigned int nbOutputs,
                                             int topPad,
                                             int botPad,
                                             int leftPad,
                                             int rightPad)
-    : Cell(name, nbOutputs),
-      PaddingCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      PaddingCell(deepNet, name,
                   nbOutputs,
                   topPad,
                   botPad,
                   leftPad,
                   rightPad),
-      Cell_Frame<Float_T>(name, nbOutputs),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs),
       mPaddingDesc(mLeftPad, mRightPad, mTopPad, mBotPad)
 
 {

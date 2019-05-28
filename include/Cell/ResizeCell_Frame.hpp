@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "ResizeCell.hpp"
 #include "ResizeCell_Frame_Kernels_struct.hpp"
 
@@ -37,18 +38,18 @@ public:
                                 const float scale,
                                 ResizeCell_Frame_Kernels::PreComputed* interpolation);
 
-    ResizeCell_Frame(const std::string& name,
+    ResizeCell_Frame(const DeepNet& deepNet, const std::string& name,
                          unsigned int outputsWidth,
                          unsigned int outputsHeight,
                          unsigned int nbOutputs,
                          ResizeMode resizeMode);
-    static std::shared_ptr<ResizeCell> create(const std::string& name,
+    static std::shared_ptr<ResizeCell> create(const DeepNet& deepNet, const std::string& name,
                                                   unsigned int outputsWidth,
                                                   unsigned int outputsHeight,
                                                   unsigned int nbOutputs,
                                                   ResizeMode resizeMode)
     {
-        return std::make_shared<ResizeCell_Frame>(name,
+        return std::make_shared<ResizeCell_Frame>(deepNet, name,
                                                       outputsWidth,
                                                       outputsHeight,
                                                       nbOutputs,

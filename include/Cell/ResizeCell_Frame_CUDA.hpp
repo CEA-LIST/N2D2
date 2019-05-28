@@ -30,6 +30,7 @@
 #include "containers/CudaTensor.hpp"
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "ResizeCell.hpp"
 #include "ResizeCell_Frame_Kernels_struct.hpp"
 #include "ResizeCell_Frame_CUDA_Kernels.hpp"
@@ -44,18 +45,18 @@ public:
                                 CudaTensor<unsigned int>& HightIndex,
                                 CudaTensor<Float_T>& Interpolation);
 
-    ResizeCell_Frame_CUDA(const std::string& name,
+    ResizeCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                          unsigned int outputsWidth,
                          unsigned int outputsHeight,
                          unsigned int nbOutputs,
                          ResizeMode resizeMode);
-    static std::shared_ptr<ResizeCell> create(const std::string& name,
+    static std::shared_ptr<ResizeCell> create(const DeepNet& deepNet, const std::string& name,
                                                   unsigned int outputsWidth,
                                                   unsigned int outputsHeight,
                                                   unsigned int nbOutputs,
                                                   ResizeMode resizeMode)
     {
-        return std::make_shared<ResizeCell_Frame_CUDA>(name,
+        return std::make_shared<ResizeCell_Frame_CUDA>(deepNet, name,
                                                       outputsWidth,
                                                       outputsHeight,
                                                       nbOutputs,

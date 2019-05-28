@@ -22,6 +22,7 @@
 #define N2D2_LRNCELL_FRAME_H
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "LRNCell.hpp"
 
 namespace N2D2 {
@@ -33,11 +34,11 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    LRNCell_Frame(const std::string& name, unsigned int nbOutputs);
-    static std::shared_ptr<LRNCell> create(const std::string& name,
+    LRNCell_Frame(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
+    static std::shared_ptr<LRNCell> create(const DeepNet& deepNet, const std::string& name,
                                            unsigned int nbOutputs)
     {
-        return std::make_shared<LRNCell_Frame>(name, nbOutputs);
+        return std::make_shared<LRNCell_Frame>(deepNet, name, nbOutputs);
     }
 
     virtual void initialize();

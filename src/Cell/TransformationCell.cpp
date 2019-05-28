@@ -19,15 +19,16 @@
 */
 
 #include "Cell/TransformationCell.hpp"
+#include "DeepNet.hpp"
 #include "Transformation/Transformation.hpp"
 
 const char* N2D2::TransformationCell::Type = "Transformation";
 
-N2D2::TransformationCell::TransformationCell(const std::string& name,
+N2D2::TransformationCell::TransformationCell(const DeepNet& deepNet, const std::string& name,
                                              unsigned int nbOutputs,
                                              const std::shared_ptr
                                              <Transformation>& transformation)
-    : Cell(name, nbOutputs), mTransformation(transformation)
+    : Cell(deepNet, name, nbOutputs), mTransformation(transformation)
 {
     // ctor
 }

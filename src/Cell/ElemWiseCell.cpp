@@ -19,15 +19,16 @@
 */
 
 #include "Cell/ElemWiseCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::ElemWiseCell::Type = "ElemWise";
 
-N2D2::ElemWiseCell::ElemWiseCell(const std::string& name,
+N2D2::ElemWiseCell::ElemWiseCell(const DeepNet& deepNet, const std::string& name,
                          unsigned int nbOutputs,
                          Operation operation,
                          const std::vector<Float_T>& weights,
                          const std::vector<Float_T>& shifts)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mOperation(operation),
       mWeights(weights),
       mShifts(shifts)

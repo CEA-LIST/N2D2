@@ -22,6 +22,7 @@
 #include "N2D2.hpp"
 
 #include "Cell/PaddingCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "Network.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Random.hpp"
@@ -30,21 +31,22 @@ using namespace N2D2;
 
 class PaddingCell_Frame_CUDA_Test : public PaddingCell_Frame_CUDA {
 public:
-    PaddingCell_Frame_CUDA_Test( const std::string& name,
-                            unsigned int nbOutputs,
-                            int topPad,
-                            int botPad,
-                            int leftPad,
-                            int rightPad)
+    PaddingCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                                const std::string& name,
+                                unsigned int nbOutputs,
+                                int topPad,
+                                int botPad,
+                                int leftPad,
+                                int rightPad)
 
-        : Cell(name, nbOutputs),
-          PaddingCell(name,
+        : Cell(deepNet, name, nbOutputs),
+          PaddingCell(deepNet, name,
                       nbOutputs,
                       topPad,
                       botPad,
                       leftPad,
                       rightPad),
-          PaddingCell_Frame_CUDA(name,
+          PaddingCell_Frame_CUDA(deepNet, name,
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -82,7 +84,9 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         inputs(i) = Random::randNormal();
     inputs.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -164,7 +168,9 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     inputsA.synchronizeHToD();
     inputsB.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -261,7 +267,9 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
         inputs(i) = Random::randNormal();
     inputs.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -317,7 +325,9 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     inputsA.synchronizeHToD();
     inputsB.synchronizeHToD();
 
-    PaddingCell_Frame_CUDA padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,

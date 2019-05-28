@@ -24,6 +24,7 @@
 #include "Filler/NormalFiller.hpp"
 #include "GradientCheck.hpp"
 #include "Cell/DeconvCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -46,6 +47,7 @@ N2D2::DeconvCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
 
 template <class T>
 N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
+    const DeepNet& deepNet, 
     const std::string& name,
     const std::vector<unsigned int>& kernelDims,
     unsigned int nbOutputs,
@@ -53,14 +55,14 @@ N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
     const std::vector<int>& paddingDims,
     const std::vector<unsigned int>& dilationDims,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      DeconvCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      DeconvCell(deepNet, name,
                  kernelDims,
                  nbOutputs,
                  strideDims,
                  paddingDims,
                  dilationDims),
-      Cell_Frame_CUDA<T>(name, nbOutputs, activation),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<CudaTensor<T> >()),

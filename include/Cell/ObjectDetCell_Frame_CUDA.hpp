@@ -32,12 +32,13 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 #include <thrust/functional.h>
 
 namespace N2D2 {
 class ObjectDetCell_Frame_CUDA : public virtual ObjectDetCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    ObjectDetCell_Frame_CUDA(const std::string& name,
+    ObjectDetCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                             StimuliProvider& sp,
                             const unsigned int nbOutputs,
                             unsigned int nbAnchors,
@@ -53,7 +54,7 @@ public:
                             const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
                                                     = std::vector<AnchorCell_Frame_Kernels::Anchor>());
 
-    static std::shared_ptr<ObjectDetCell> create(const std::string& name,
+    static std::shared_ptr<ObjectDetCell> create(const DeepNet& deepNet, const std::string& name,
                                                 StimuliProvider& sp,
                                                 const unsigned int nbOutputs,
                                                 unsigned int nbAnchors,
@@ -69,7 +70,7 @@ public:
                                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
                                                                         = std::vector<AnchorCell_Frame_Kernels::Anchor>())
     {
-        return std::make_shared<ObjectDetCell_Frame_CUDA>(name,
+        return std::make_shared<ObjectDetCell_Frame_CUDA>(deepNet, name,
                                                             sp,
                                                             nbOutputs,
                                                             nbAnchors,

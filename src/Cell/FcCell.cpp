@@ -20,13 +20,14 @@
 
 #include "StimuliProvider.hpp"
 #include "Cell/FcCell.hpp"
+#include "DeepNet.hpp"
 #include "Filler/NormalFiller.hpp"
 #include "utils/Gnuplot.hpp"
 
 const char* N2D2::FcCell::Type = "Fc";
 
-N2D2::FcCell::FcCell(const std::string& name, unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
+N2D2::FcCell::FcCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
       mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OC),

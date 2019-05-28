@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/PoolCellGenerator.hpp"
 #include "third_party/half.hpp"
 
@@ -26,7 +27,7 @@ N2D2::PoolCellGenerator::mRegistrar(PoolCell::Type,
                                     N2D2::PoolCellGenerator::generate);
 
 std::shared_ptr<N2D2::PoolCell>
-N2D2::PoolCellGenerator::generate(Network& network,
+N2D2::PoolCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                   StimuliProvider& sp,
                                   const std::vector
                                   <std::shared_ptr<Cell> >& parents,
@@ -121,7 +122,7 @@ N2D2::PoolCellGenerator::generate(Network& network,
     // Cell construction
     std::shared_ptr<PoolCell> cell
         = (dataType == Float32)
-            ?  Registrar<PoolCell>::create<float>(model)(network,
+            ?  Registrar<PoolCell>::create<float>(model)(network, deepNet, 
                                                         section,
                                                         poolDims,
                                                         nbOutputs,
@@ -130,7 +131,7 @@ N2D2::PoolCellGenerator::generate(Network& network,
                                                         pooling,
                                                         activation)
         : (dataType == Float16) ?
-                Registrar<PoolCell>::create<half_float::half>(model)(network,
+                Registrar<PoolCell>::create<half_float::half>(model)(network, deepNet, 
                                                           section,
                                                           poolDims,
                                                           nbOutputs,
@@ -139,7 +140,7 @@ N2D2::PoolCellGenerator::generate(Network& network,
                                                           pooling,
                                                           activation)
         :
-                Registrar<PoolCell>::create<double>(model)(network,
+                Registrar<PoolCell>::create<double>(model)(network, deepNet, 
                                                           section,
                                                           poolDims,
                                                           nbOutputs,

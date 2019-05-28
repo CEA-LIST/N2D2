@@ -23,6 +23,7 @@
 #if CUDNN_VERSION >= 5000
 
 #include "Cell/DropoutCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -44,11 +45,12 @@ N2D2::DropoutCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
     N2D2::Registrar<N2D2::DropoutCell>::Type<double>());
 
 template <class T>
-N2D2::DropoutCell_Frame_CUDA<T>::DropoutCell_Frame_CUDA(const std::string& name,
-                                                     unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      DropoutCell(name, nbOutputs),
-      Cell_Frame_CUDA<T>(name, nbOutputs),
+N2D2::DropoutCell_Frame_CUDA<T>::DropoutCell_Frame_CUDA(const DeepNet& deepNet, 
+                                                        const std::string& name,
+                                                        unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      DropoutCell(deepNet, name, nbOutputs),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs),
       mStatesSize(0),
       mStates(NULL)
 {

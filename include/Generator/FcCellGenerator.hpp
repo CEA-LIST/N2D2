@@ -27,9 +27,12 @@
 #include "utils/IniParser.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class FcCellGenerator : public CellGenerator {
 public:
-    static std::shared_ptr<FcCell> generate(Network& network,
+    static std::shared_ptr<FcCell> generate(Network& network, const DeepNet& deepNet,
                                             StimuliProvider& sp,
                                             const std::vector
                                             <std::shared_ptr<Cell> >& parents,

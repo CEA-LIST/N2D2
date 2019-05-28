@@ -24,6 +24,7 @@
 #include "Cell_Frame_CUDA.hpp"
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
+#include "DeepNet.hpp"
 #include "FcCell.hpp"
 #include "Network.hpp"
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
@@ -40,19 +41,19 @@ public:
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
-    FcCell_Frame_CUDA(const std::string& name,
+    FcCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
                       const std::shared_ptr<Activation>& activation
                       = std::make_shared
                       <TanhActivation_Frame_CUDA<T> >());
     static std::shared_ptr<FcCell>
-    create(Network& /*net*/,
+    create(Network& /*net*/, const DeepNet& deepNet, 
            const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame_CUDA<T> >())
     {
-        return std::make_shared<FcCell_Frame_CUDA>(name, nbOutputs, activation);
+        return std::make_shared<FcCell_Frame_CUDA>(deepNet, name, nbOutputs, activation);
     }
 
     virtual void initialize();

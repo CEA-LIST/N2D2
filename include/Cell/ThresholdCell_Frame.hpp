@@ -26,22 +26,23 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "ThresholdCell.hpp"
 
 namespace N2D2 {
 class ThresholdCell_Frame : public virtual ThresholdCell,
                                  public Cell_Frame<Float_T> {
 public:
-    ThresholdCell_Frame(const std::string& name,
-                             unsigned int nbOutputs,
-                             double threshold);
+    ThresholdCell_Frame(const DeepNet& deepNet, const std::string& name,
+                        unsigned int nbOutputs,
+                        double threshold);
     static std::shared_ptr<ThresholdCell>
-    create(const std::string& name,
+    create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            double threshold)
     {
         return std::make_shared
-            <ThresholdCell_Frame>(name, nbOutputs, threshold);
+            <ThresholdCell_Frame>(deepNet, name, nbOutputs, threshold);
     }
 
     virtual double setOutputTarget(const Tensor<int>& /*targets*/,

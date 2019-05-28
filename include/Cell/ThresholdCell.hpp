@@ -28,10 +28,13 @@
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class ThresholdCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<ThresholdCell>(const std::string&,
+        <std::shared_ptr<ThresholdCell>(const DeepNet&, const std::string&,
                                         unsigned int,
                                         double)>
     RegistryCreate_T;
@@ -51,7 +54,8 @@ public:
         ToZeroInverted
     };
 
-    ThresholdCell(const std::string& name,
+    ThresholdCell(const DeepNet& deepNet, 
+                  const std::string& name,
                   unsigned int nbOutputs,
                   double threshold);
     const char* getType() const

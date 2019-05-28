@@ -20,12 +20,14 @@
 */
 
 #include "Cell/ProposalCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::ProposalCell>
 N2D2::ProposalCell_Frame::mRegistrar("Frame", N2D2::ProposalCell_Frame::create);
 
-N2D2::ProposalCell_Frame::ProposalCell_Frame(const std::string& name,
+N2D2::ProposalCell_Frame::ProposalCell_Frame(const DeepNet& deepNet, 
+                                            const std::string& name,
                                             StimuliProvider& sp,
                                             const unsigned int nbOutputs,
                                             unsigned int nbProposals,
@@ -36,9 +38,11 @@ N2D2::ProposalCell_Frame::ProposalCell_Frame(const std::string& name,
                                             std::vector<double> stdFactor,
                                             std::vector<unsigned int> numParts,
                                             std::vector<unsigned int> numTemplates)
-    : Cell(name, nbOutputs),
-      ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor, numParts, numTemplates),
-      Cell_Frame<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ProposalCell(deepNet, name, sp, nbOutputs, nbProposals, 
+                   scoreIndex, IoUIndex, isNms, meansFactor, 
+                   stdFactor, numParts, numTemplates),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

@@ -19,16 +19,17 @@
 */
 
 #include "Cell/PaddingCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::PaddingCell::Type = "Padding";
 
-N2D2::PaddingCell::PaddingCell(const std::string& name,
+N2D2::PaddingCell::PaddingCell(const DeepNet& deepNet, const std::string& name,
                                unsigned int nbOutputs,
                                int topPad,
                                int botPad,
                                int leftPad,
                                int rightPad)
-    : Cell( name,
+    : Cell(deepNet, name,
             nbOutputs),
       mTopPad(topPad),
       mBotPad(botPad),

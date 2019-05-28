@@ -24,6 +24,8 @@
 
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Cell/FcCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
+#include "Network.hpp"
 #include "third_party/half.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
@@ -33,13 +35,14 @@ using namespace N2D2;
 template <class T>
 class FcCell_Frame_Test_CUDA : public FcCell_Frame_CUDA<T> {
 public:
-    FcCell_Frame_Test_CUDA(const std::string& name,
+    FcCell_Frame_Test_CUDA(const DeepNet& deepNet, 
+                           const std::string& name,
                            unsigned int nbOutputs,
                            const std::shared_ptr
                            <Activation>& activation)
-        : Cell(name, nbOutputs),
-          FcCell(name, nbOutputs),
-          FcCell_Frame_CUDA<T>(name, nbOutputs, activation) {};
+        : Cell(deepNet, name, nbOutputs),
+          FcCell(deepNet, name, nbOutputs),
+          FcCell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation) {};
 
     friend class UnitTest_FcCell_Frame_CUDA_float_addInput__env;
     friend class UnitTest_FcCell_Frame_CUDA_float_addInput;
@@ -72,7 +75,9 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    FcCell_Frame_CUDA<float> fc1("fc1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    FcCell_Frame_CUDA<float> fc1(dn, "fc1", nbOutputs);
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
     ASSERT_EQUALS(fc1.getNbOutputs(), nbOutputs);
@@ -96,9 +101,10 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    FcCell_Frame_Test_CUDA<float> fc1("fc1",
+    FcCell_Frame_Test_CUDA<float> fc1(dn, "fc1",
                                nbOutputs,
                                std::make_shared
                                <TanhActivation_Frame_CUDA<float> >());
@@ -139,11 +145,12 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test_CUDA<float> fc1(
-        "fc1", 16, std::make_shared<TanhActivation_Frame_CUDA<float> >());
-    FcCell_Frame_Test_CUDA<float> fc2("fc2",
+        dn, "fc1", 16, std::make_shared<TanhActivation_Frame_CUDA<float> >());
+    FcCell_Frame_Test_CUDA<float> fc2(dn, "fc2",
                                nbOutputs,
                                std::make_shared
                                <TanhActivation_Frame_CUDA<float> >());
@@ -188,9 +195,10 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
+    DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -264,9 +272,10 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
+    DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -347,11 +356,12 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test_CUDA<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(
@@ -405,7 +415,9 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    FcCell_Frame_CUDA<double> fc1("fc1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    FcCell_Frame_CUDA<double> fc1(dn, "fc1", nbOutputs);
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
     ASSERT_EQUALS(fc1.getNbOutputs(), nbOutputs);
@@ -429,9 +441,10 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    FcCell_Frame_Test_CUDA<double> fc1("fc1",
+    FcCell_Frame_Test_CUDA<double> fc1(dn, "fc1",
                                nbOutputs,
                                std::make_shared
                                <TanhActivation_Frame_CUDA<double> >());
@@ -472,11 +485,12 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test_CUDA<double> fc1(
-        "fc1", 16, std::make_shared<TanhActivation_Frame_CUDA<double> >());
-    FcCell_Frame_Test_CUDA<double> fc2("fc2",
+        dn, "fc1", 16, std::make_shared<TanhActivation_Frame_CUDA<double> >());
+    FcCell_Frame_Test_CUDA<double> fc2(dn, "fc2",
                                nbOutputs,
                                std::make_shared
                                <TanhActivation_Frame_CUDA<double> >());
@@ -521,9 +535,10 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
+    DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -597,9 +612,10 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
+    DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -680,11 +696,12 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test_CUDA<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(
@@ -739,7 +756,9 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    FcCell_Frame_CUDA<half_float::half> fc1("fc1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    FcCell_Frame_CUDA<half_float::half> fc1(dn, "fc1", nbOutputs);
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
     ASSERT_EQUALS(fc1.getNbOutputs(), nbOutputs);
@@ -764,9 +783,10 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         return;     // REQUIRED() not enough (Cublas failure)
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    FcCell_Frame_Test_CUDA<half_float::half> fc1("fc1",
+    FcCell_Frame_Test_CUDA<half_float::half> fc1(dn, "fc1",
                                nbOutputs,
                                std::make_shared
                                <TanhActivation_Frame_CUDA<half_float::half> >());
@@ -808,11 +828,12 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         return;     // REQUIRED() not enough (Cublas failure)
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
-        "fc1", 16, std::make_shared<TanhActivation_Frame_CUDA<half_float::half> >());
-    FcCell_Frame_Test_CUDA<half_float::half> fc2("fc2",
+        dn, "fc1", 16, std::make_shared<TanhActivation_Frame_CUDA<half_float::half> >());
+    FcCell_Frame_Test_CUDA<half_float::half> fc2(dn, "fc2",
                                nbOutputs,
                                std::make_shared
                                <TanhActivation_Frame_CUDA<half_float::half> >());
@@ -859,9 +880,10 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
+    DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -938,9 +960,10 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
+    DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     MNIST_IDX_Database database;
@@ -1024,11 +1047,12 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         return;     // REQUIRED() not enough (Cublas failure)
 
     Network net;
+    DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(

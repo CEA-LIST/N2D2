@@ -28,16 +28,17 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 class FMPCell_Frame_CUDA : public virtual FMPCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    FMPCell_Frame_CUDA(const std::string& name,
+    FMPCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                        double scalingRatio,
                        unsigned int nbOutputs,
                        const std::shared_ptr<Activation>& activation
                        = std::shared_ptr<Activation>());
-    static std::shared_ptr<FMPCell> create(Network& /*net*/,
+    static std::shared_ptr<FMPCell> create(Network& /*net*/, const DeepNet& deepNet, 
                                            const std::string& name,
                                            double scalingRatio,
                                            unsigned int nbOutputs,
@@ -47,7 +48,7 @@ public:
                                            <Activation>())
     {
         return std::make_shared
-            <FMPCell_Frame_CUDA>(name, scalingRatio, nbOutputs, activation);
+            <FMPCell_Frame_CUDA>(deepNet, name, scalingRatio, nbOutputs, activation);
     }
 
     virtual void initialize();

@@ -33,6 +33,7 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -45,17 +46,17 @@ public:
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
-    SoftmaxCell_Frame_CUDA(const std::string& name,
+    SoftmaxCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                            unsigned int nbOutputs,
                            bool withLoss = false,
                            unsigned int groupSize = 0);
-    static std::shared_ptr<SoftmaxCell> create(const std::string& name,
+    static std::shared_ptr<SoftmaxCell> create(const DeepNet& deepNet, const std::string& name,
                                                unsigned int nbOutputs,
                                                bool withLoss = false,
                                                unsigned int groupSize = 0)
     {
         return std::make_shared
-            <SoftmaxCell_Frame_CUDA>(name, nbOutputs, withLoss, groupSize);
+            <SoftmaxCell_Frame_CUDA>(deepNet, name, nbOutputs, withLoss, groupSize);
     }
 
     virtual void initialize();

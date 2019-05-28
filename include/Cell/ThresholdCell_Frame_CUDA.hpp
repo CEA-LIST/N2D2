@@ -31,21 +31,22 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 class ThresholdCell_Frame_CUDA : public virtual ThresholdCell,
                                       public Cell_Frame_CUDA<Float_T> {
 public:
-    ThresholdCell_Frame_CUDA(const std::string& name,
+    ThresholdCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                              unsigned int nbOutputs,
                              double threshold);
     static std::shared_ptr<ThresholdCell>
-    create(const std::string& name,
+    create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            double threshold)
     {
         return std::make_shared
-            <ThresholdCell_Frame_CUDA>(name, nbOutputs, threshold);
+            <ThresholdCell_Frame_CUDA>(deepNet, name, nbOutputs, threshold);
     }
 
     virtual double setOutputTarget(const Tensor<int>& /*targets*/,

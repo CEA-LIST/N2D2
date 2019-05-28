@@ -28,6 +28,7 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -39,7 +40,7 @@ public:
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
-    PoolCell_Frame_CUDA(const std::string& name,
+    PoolCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         const std::vector<unsigned int>& poolDims,
                         unsigned int nbOutputs,
                         const std::vector<unsigned int>& strideDims
@@ -50,6 +51,7 @@ public:
                         const std::shared_ptr<Activation>& activation
                         = std::shared_ptr<Activation>());
     static std::shared_ptr<PoolCell> create(Network& /*net*/,
+        const DeepNet& deepNet, 
         const std::string& name,
         const std::vector<unsigned int>& poolDims,
         unsigned int nbOutputs,
@@ -61,7 +63,7 @@ public:
         const std::shared_ptr<Activation>& activation
             = std::shared_ptr<Activation>())
     {
-        return std::make_shared<PoolCell_Frame_CUDA<T> >(name,
+        return std::make_shared<PoolCell_Frame_CUDA<T> >(deepNet, name,
                                                          poolDims,
                                                          nbOutputs,
                                                          strideDims,

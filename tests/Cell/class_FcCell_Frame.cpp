@@ -20,6 +20,7 @@
 
 #include "N2D2.hpp"
 
+#include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
 #include "Transformation/RescaleTransformation.hpp"
@@ -33,12 +34,13 @@ using namespace N2D2;
 template <class T>
 class FcCell_Frame_Test : public FcCell_Frame<T> {
 public:
-    FcCell_Frame_Test(const std::string& name,
+    FcCell_Frame_Test(const DeepNet& deepNet, 
+                      const std::string& name,
                       unsigned int nbOutputs,
                       const std::shared_ptr<Activation>& activation)
-        : Cell(name, nbOutputs),
-          FcCell(name, nbOutputs),
-          FcCell_Frame<T>(name, nbOutputs, activation) {};
+        : Cell(deepNet, name, nbOutputs),
+          FcCell(deepNet, name, nbOutputs),
+          FcCell_Frame<T>(deepNet, name, nbOutputs, activation) {};
 
     friend class UnitTest_FcCell_Frame_float_addInput__env;
     friend class UnitTest_FcCell_Frame_float_addInput;
@@ -83,8 +85,10 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
+    Network net;
+    DeepNet dn(net);
     FcCell_Frame<float> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
     ASSERT_EQUALS(fc1.getNbOutputs(), nbOutputs);
@@ -106,10 +110,11 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
     fc1.setParameter("NoBias", true);
     fc1.addInput(env);
     fc1.initialize();
@@ -145,12 +150,13 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<float> fc1(
-        "fc1", 16, std::make_shared<TanhActivation_Frame<float> >());
+        dn, "fc1", 16, std::make_shared<TanhActivation_Frame<float> >());
     FcCell_Frame_Test<float> fc2(
-        "fc2", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
+        dn, "fc2", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -189,14 +195,15 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<float> fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<float> fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -281,14 +288,15 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<float> fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<float> fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(env);
@@ -375,10 +383,11 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
 
     fc1.addInput(env);
     fc1.initialize();
@@ -423,9 +432,9 @@ TEST_DATASET(FcCell_Frame_float,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
-
+    DeepNet dn(net);
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
@@ -494,9 +503,9 @@ TEST_DATASET(FcCell_Frame_float,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
-
+    DeepNet dn(net);
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
@@ -570,11 +579,12 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test<float> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(
@@ -625,8 +635,10 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
+    Network net;
+    DeepNet dn(net);
     FcCell_Frame<double> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
     ASSERT_EQUALS(fc1.getNbOutputs(), nbOutputs);
@@ -648,10 +660,11 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
     fc1.setParameter("NoBias", true);
     fc1.addInput(env);
     fc1.initialize();
@@ -687,12 +700,13 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<double> fc1(
-        "fc1", 16, std::make_shared<TanhActivation_Frame<double> >());
+        dn, "fc1", 16, std::make_shared<TanhActivation_Frame<double> >());
     FcCell_Frame_Test<double> fc2(
-        "fc2", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
+        dn, "fc2", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -731,14 +745,15 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<double> fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<double> fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -823,14 +838,15 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<double> fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<double> fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(env);
@@ -917,10 +933,11 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
 
     fc1.addInput(env);
     fc1.initialize();
@@ -965,9 +982,9 @@ TEST_DATASET(FcCell_Frame_double,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
-
+    DeepNet dn(net);
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
@@ -1036,9 +1053,9 @@ TEST_DATASET(FcCell_Frame_double,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
-
+    DeepNet dn(net);
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
@@ -1112,11 +1129,12 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test<double> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(
@@ -1167,8 +1185,10 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
+    Network net;
+    DeepNet dn(net);
     FcCell_Frame<half_float::half> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
 
     ASSERT_EQUALS(fc1.getName(), "fc1");
     ASSERT_EQUALS(fc1.getNbOutputs(), nbOutputs);
@@ -1190,10 +1210,11 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
     fc1.setParameter("NoBias", true);
     fc1.addInput(env);
     fc1.initialize();
@@ -1229,12 +1250,13 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(10U, 32U, 24U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", 16, std::make_shared<TanhActivation_Frame<half_float::half> >());
+        dn, "fc1", 16, std::make_shared<TanhActivation_Frame<half_float::half> >());
     FcCell_Frame_Test<half_float::half> fc2(
-        "fc2", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
+        dn, "fc2", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -1273,14 +1295,15 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<half_float::half> fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<half_float::half> fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(&fc1);
@@ -1365,14 +1388,15 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<half_float::half> fc2(
-        "fc2", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc2", nbOutputs, std::shared_ptr<Activation>());
     FcCell_Frame_Test<half_float::half> fc3(
-        "fc3", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc3", nbOutputs, std::shared_ptr<Activation>());
 
     fc1.addInput(env);
     fc2.addInput(env);
@@ -1459,10 +1483,11 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
+        dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
 
     fc1.addInput(env);
     fc1.initialize();
@@ -1508,9 +1533,9 @@ TEST_DATASET(FcCell_Frame_half,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
-
+    DeepNet dn(net);
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
@@ -1580,9 +1605,9 @@ TEST_DATASET(FcCell_Frame_half,
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
     Network net;
-
+    DeepNet dn(net);
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
@@ -1658,11 +1683,12 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 30U))
 {
     Network net;
+    DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
 
     FcCell_Frame_Test<half_float::half> fc1(
-        "fc1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
     const cv::Mat img0(

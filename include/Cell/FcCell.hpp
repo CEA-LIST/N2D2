@@ -31,6 +31,7 @@
 namespace N2D2 {
 
 class Activation;
+class DeepNet;
 class Filler;
 class Network;
 class Solver;
@@ -38,7 +39,7 @@ class Solver;
 class FcCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<FcCell>(Network&,
+        <std::shared_ptr<FcCell>(Network&, const DeepNet&, 
                                  const std::string&,
                                  unsigned int,
                                  const std::shared_ptr<Activation>&)>
@@ -61,7 +62,7 @@ public:
         // https://www.tensorflow.org/api_docs/python/tf/nn/conv2d
         CO
     };
-    FcCell(const std::string& name, unsigned int nbOutputs);
+    FcCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
     const char* getType() const
     {
         return Type;

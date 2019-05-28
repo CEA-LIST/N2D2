@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/UnpoolCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -29,7 +30,7 @@ N2D2::UnpoolCellGenerator::mRegistrarPost(UnpoolCell::Type + std::string("+"),
                                       N2D2::UnpoolCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::UnpoolCell>
-N2D2::UnpoolCellGenerator::generate(Network& network,
+N2D2::UnpoolCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                     StimuliProvider& sp,
                                     const std::vector
                                     <std::shared_ptr<Cell> >& parents,
@@ -119,7 +120,7 @@ N2D2::UnpoolCellGenerator::generate(Network& network,
 
     // Cell construction
     std::shared_ptr<UnpoolCell> cell = Registrar
-        <UnpoolCell>::create(model)(network,
+        <UnpoolCell>::create(model)(network, deepNet, 
                                   section,
                                   poolDims,
                                   nbOutputs,

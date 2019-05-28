@@ -27,6 +27,7 @@
 
 namespace N2D2 {
 
+class DeepNet;
 class HeteroStimuliProvider;
 class StimuliProvider;
 
@@ -69,7 +70,7 @@ public:
      * @param nbOutputs     Number of outputs maps of the cell (if 1D = number
      *of outputs)
     */
-    Cell(const std::string& name, unsigned int nbOutputs);
+    Cell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
     /// Returns cell unique ID
     CellId_T getId() const
     {
@@ -154,6 +155,10 @@ public:
     {
         // return empty vector if not implemented
         return std::vector<unsigned int>();
+    }
+
+    const DeepNet& getAssociatedDeepNet() const {
+        return mDeepNet;
     }
 
     /**
@@ -347,7 +352,11 @@ protected:
     virtual void setOutputsDims() = 0;
     size_t getNbGroups(const Tensor<bool>& map) const;
 
+protected:
     const CellId_T mId;
+    
+    // DeepNet to which the cell belongs
+    const DeepNet& mDeepNet;
     const std::string mName;
 
     // Input dims

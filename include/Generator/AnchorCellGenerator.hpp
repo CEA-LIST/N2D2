@@ -26,6 +26,9 @@
 #include "utils/IniParser.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class AnchorCellGenerator : public CellGenerator {
 public:
     struct AnchorBBOX_T {
@@ -42,7 +45,7 @@ public:
     };
 
     static std::shared_ptr<AnchorCell>
-    generate(Network& network,
+    generate(Network& network, const DeepNet& deepNet,
              StimuliProvider& sp,
              const std::vector<std::shared_ptr<Cell> >& parents,
              IniParser& iniConfig,

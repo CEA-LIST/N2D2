@@ -19,12 +19,14 @@
 */
 
 #include "Cell/Cell.hpp"
+#include "DeepNet.hpp"
 #include "HeteroStimuliProvider.hpp"
 
 unsigned int N2D2::Cell::mIdCnt = 1;
 
-N2D2::Cell::Cell(const std::string& name, unsigned int nbOutputs)
+N2D2::Cell::Cell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs)
     : mId(mIdCnt++),
+      mDeepNet(deepNet),
       mName(name),
       mOutputsDims(std::vector<size_t>({1U, 1U, nbOutputs})),
       mGroupMap(0),

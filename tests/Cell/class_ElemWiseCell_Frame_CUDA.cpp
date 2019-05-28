@@ -23,22 +23,25 @@
 #include "N2D2.hpp"
 
 #include "Cell/ElemWiseCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
+#include "Network.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
 
 class ElemWiseCell_Frame_CUDA_Test : public ElemWiseCell_Frame_CUDA {
 public:
-    ElemWiseCell_Frame_CUDA_Test(const std::string& name,
-                            unsigned int nbOutputs,
-                            Operation operation,
+    ElemWiseCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                                 const std::string& name,
+                                 unsigned int nbOutputs,
+                                 Operation operation,
                    const std::vector<Float_T>& weights = std::vector<Float_T>(),
                    const std::vector<Float_T>& shifts = std::vector<Float_T>(),
                    const std::shared_ptr<Activation>& activation
                    = std::shared_ptr<Activation>())
-        : Cell(name, nbOutputs),
-          ElemWiseCell(name, nbOutputs, operation, weights, shifts),
-          ElemWiseCell_Frame_CUDA(name, nbOutputs, operation, weights, shifts, activation)
+        : Cell(deepNet, name, nbOutputs),
+          ElemWiseCell(deepNet, name, nbOutputs, operation, weights, shifts),
+          ElemWiseCell_Frame_CUDA(deepNet, name, nbOutputs, operation, weights, shifts, activation)
     {}
 };
 
@@ -46,11 +49,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_sum2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Sum);
 
@@ -94,11 +101,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_sum3)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Sum);
 
@@ -152,6 +163,10 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.0, 2.0, -1.0))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -160,7 +175,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     weights.push_back(wB);
     weights.push_back(wC);
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Sum,
                                      weights);
@@ -217,6 +232,10 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.0, 2.0, -1.0, -0.58, 0.39, 4.2))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -229,7 +248,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     shifts.push_back(sB);
     shifts.push_back(sC);
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Sum,
                                      weights,
@@ -284,11 +303,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_abs_sum2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::AbsSum);
 
@@ -334,11 +357,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_abs_sum3)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::AbsSum);
 
@@ -395,6 +422,10 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.0, 2.0, -1.0))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(2);
 
     const unsigned int nbOutputs = 4;
@@ -403,7 +434,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     weights.push_back(wB);
     weights.push_back(wC);
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::AbsSum,
                                           weights);
@@ -457,11 +488,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_euclidean_sum2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::EuclideanSum);
 
@@ -508,11 +543,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_euclidean_sum3)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::EuclideanSum);
 
@@ -569,6 +608,10 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.0, 2.0, -1.0))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -577,7 +620,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     weights.push_back(wB);
     weights.push_back(wC);
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::EuclideanSum,
                                           weights);
@@ -636,6 +679,10 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.0, 2.0, -1.0, -0.58, 0.39, 4.2))
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
@@ -648,7 +695,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
     shifts.push_back(sB);
     shifts.push_back(sC);
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                           nbOutputs,
                                           ElemWiseCell::EuclideanSum,
                                           weights,
@@ -704,11 +751,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_prod2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Prod);
 
@@ -751,11 +802,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_prod3)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 4;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Prod);
 
@@ -804,11 +859,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_max2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 2;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Max);
 
@@ -853,11 +912,15 @@ TEST(ElemWiseCell_Frame_CUDA,
      propagate_max3)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+    
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 2;
 
-    ElemWiseCell_Frame_CUDA_Test elemWise("elemwise",
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Max);
 

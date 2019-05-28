@@ -32,6 +32,7 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -44,20 +45,20 @@ public:
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
-    BatchNormCell_Frame_CUDA(const std::string& name,
+    BatchNormCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                              unsigned int nbOutputs,
                              const std::shared_ptr
                              <Activation>& activation
                              = std::make_shared
                              <TanhActivation_Frame_CUDA<T> >());
     static std::shared_ptr<BatchNormCell>
-    create(const std::string& name,
+    create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame_CUDA<T> >())
     {
         return std::make_shared
-            <BatchNormCell_Frame_CUDA>(name, nbOutputs, activation);
+            <BatchNormCell_Frame_CUDA>(deepNet, name, nbOutputs, activation);
     }
 
     virtual void initialize();

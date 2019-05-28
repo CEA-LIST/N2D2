@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/ThresholdCellGenerator.hpp"
 #include "third_party/half.hpp"
 
@@ -26,7 +27,7 @@ N2D2::ThresholdCellGenerator::mRegistrar(ThresholdCell::Type,
                                        N2D2::ThresholdCellGenerator::generate);
 
 std::shared_ptr<N2D2::ThresholdCell>
-N2D2::ThresholdCellGenerator::generate(Network& /*network*/,
+N2D2::ThresholdCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                      StimuliProvider& sp,
                                      const std::vector
                                      <std::shared_ptr<Cell> >& parents,
@@ -51,7 +52,8 @@ N2D2::ThresholdCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<ThresholdCell> cell
-        = Registrar<ThresholdCell>::create(model)(section,
+        = Registrar<ThresholdCell>::create(model)(deepNet, 
+                                                  section,
                                                   nbOutputs,
                                                   threshold);
 

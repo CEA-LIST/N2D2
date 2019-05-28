@@ -23,6 +23,7 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/PoolCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -45,6 +46,7 @@ N2D2::PoolCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
 
 template <class T>
 N2D2::PoolCell_Frame_CUDA<T>::PoolCell_Frame_CUDA(
+    const DeepNet& deepNet, 
     const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
@@ -52,14 +54,14 @@ N2D2::PoolCell_Frame_CUDA<T>::PoolCell_Frame_CUDA(
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      PoolCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      PoolCell(deepNet, name,
                poolDims,
                nbOutputs,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame_CUDA<T>(name, nbOutputs, activation)
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation)
 {
     // ctor
     assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);

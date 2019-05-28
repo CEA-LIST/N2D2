@@ -26,10 +26,14 @@
 #include "utils/IniParser.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class SoftmaxCellGenerator : public CellGenerator {
 public:
     static std::shared_ptr<SoftmaxCell>
     generate(Network& network,
+             const DeepNet& deepNet,
              StimuliProvider& sp,
              const std::vector<std::shared_ptr<Cell> >& parents,
              IniParser& iniConfig,

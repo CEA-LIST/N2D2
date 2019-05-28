@@ -20,6 +20,7 @@
 #ifdef CUDA
 
 #include "Cell/ObjectDetCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include <thrust/device_ptr.h>
 
 N2D2::Registrar<N2D2::ObjectDetCell>
@@ -27,7 +28,7 @@ N2D2::ObjectDetCell_Frame_CUDA::mRegistrar("Frame_CUDA", N2D2::ObjectDetCell_Fra
 
 
 
-N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const std::string& name,
+N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                                 StimuliProvider& sp,
                                                 const unsigned int nbOutputs,
                                                 unsigned int nbAnchors,
@@ -39,9 +40,9 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const std::string& name
                                                 std::vector<unsigned int> numTemplates,
                                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
 
-    : Cell(name, nbOutputs),
-      ObjectDetCell(name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
+      ObjectDetCell(deepNet, name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs),
       mAnchors(anchors)
 {
     // ctor

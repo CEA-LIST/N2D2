@@ -19,18 +19,19 @@
 */
 
 #include "Cell/RPCell_Frame.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::RPCell>
 N2D2::RPCell_Frame::mRegistrar("Frame", N2D2::RPCell_Frame::create);
 
-N2D2::RPCell_Frame::RPCell_Frame(const std::string& name,
+N2D2::RPCell_Frame::RPCell_Frame(const DeepNet& deepNet, const std::string& name,
                                  unsigned int nbAnchors,
                                  unsigned int nbProposals,
                                  unsigned int scoreIndex,
                                  unsigned int IoUIndex)
-    : Cell(name, 4),
-      RPCell(name, nbAnchors, nbProposals, scoreIndex, IoUIndex),
-      Cell_Frame<Float_T>(name, 4)
+    : Cell(deepNet, name, 4),
+      RPCell(deepNet, name, nbAnchors, nbProposals, scoreIndex, IoUIndex),
+      Cell_Frame<Float_T>(deepNet, name, 4)
 {
     // ctor
 }

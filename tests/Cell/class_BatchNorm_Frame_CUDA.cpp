@@ -26,6 +26,7 @@
 
 #include "Cell/BatchNormCell_Frame_CUDA.hpp"
 #include "Cell/ConvCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
 #include "utils/UnitTest.hpp"
@@ -35,13 +36,14 @@ using namespace N2D2;
 template <class T>
 class BatchNormCell_Frame_CUDA_Test : public BatchNormCell_Frame_CUDA<T> {
 public:
-    BatchNormCell_Frame_CUDA_Test(const std::string& name,
+    BatchNormCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                                  const std::string& name,
                                   unsigned int nbOutputs,
                                   const std::shared_ptr
                                   <Activation>& activation)
-        : Cell(name, nbOutputs),
-          BatchNormCell(name, nbOutputs),
-          BatchNormCell_Frame_CUDA<T>(name, nbOutputs, activation) {};
+        : Cell(deepNet, name, nbOutputs),
+          BatchNormCell(deepNet, name, nbOutputs),
+          BatchNormCell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation) {};
 
     friend class UnitTest_BatchNormCell_Frame_CUDA_float_setScales;
     friend class UnitTest_BatchNormCell_Frame_CUDA_float_addInput__env;
@@ -62,12 +64,13 @@ TEST(BatchNormCell_Frame_CUDA_float, setScales)
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {10, 10, 1});
 
     BatchNormCell_Frame_CUDA_Test<float> bn1(
-        "bn1", 1, std::shared_ptr<Activation>());
+        dn, "bn1", 1, std::shared_ptr<Activation>());
     BatchNormCell_Frame_CUDA_Test<float> bn2(
-        "bn2", 1, std::shared_ptr<Activation>());
+        dn, "bn2", 1, std::shared_ptr<Activation>());
 
     bn1.addInput(env);
     bn2.addInput(env);
@@ -106,10 +109,11 @@ TEST_DATASET(BatchNormCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
     BatchNormCell_Frame_CUDA_Test<float> bn1(
-        "bn1", 1, std::shared_ptr<Activation>());
+        dn, "bn1", 1, std::shared_ptr<Activation>());
     bn1.addInput(env);
     bn1.initialize();
 
@@ -142,9 +146,10 @@ TEST_DATASET(BatchNormCell_Frame_CUDA_float,
     const unsigned int nbOutputs = 16;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA<float> conv1("conv1",
+    ConvCell_Frame_CUDA<float> conv1(dn, "conv1",
                               std::vector<unsigned int>({3, 3}),
                               nbOutputs,
                               std::vector<unsigned int>({1, 1}),
@@ -154,7 +159,7 @@ TEST_DATASET(BatchNormCell_Frame_CUDA_float,
                               std::make_shared
                               <TanhActivation_Frame_CUDA<float> >());
     BatchNormCell_Frame_CUDA_Test<float> bn1(
-        "bn1", nbOutputs, std::shared_ptr<Activation>());
+        dn, "bn1", nbOutputs, std::shared_ptr<Activation>());
 
     conv1.addInput(env);
     bn1.addInput(&conv1);

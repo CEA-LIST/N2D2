@@ -23,6 +23,7 @@
 #if CUDNN_VERSION >= 3000
 
 #include "Cell/LRNCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -44,11 +45,11 @@ N2D2::LRNCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
     N2D2::Registrar<N2D2::LRNCell>::Type<double>());
 
 template <class T>
-N2D2::LRNCell_Frame_CUDA<T>::LRNCell_Frame_CUDA(const std::string& name,
+N2D2::LRNCell_Frame_CUDA<T>::LRNCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                              unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      LRNCell(name, nbOutputs),
-      Cell_Frame_CUDA<T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      LRNCell(deepNet, name, nbOutputs),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs)
 {
     // ctor
     CHECK_CUDNN_STATUS(cudnnCreateLRNDescriptor(&mLRNDesc));

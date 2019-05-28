@@ -20,16 +20,18 @@
 */
 
 #include "Cell/ROIPoolingCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::ROIPoolingCell::Type = "ROIPooling";
 
-N2D2::ROIPoolingCell::ROIPoolingCell(const std::string& name,
+N2D2::ROIPoolingCell::ROIPoolingCell(const DeepNet& deepNet, 
+                                     const std::string& name,
                                      StimuliProvider& sp,
                                      unsigned int outputsWidth,
                                      unsigned int outputsHeight,
                                      unsigned int nbOutputs,
                                      ROIPooling pooling)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mFlip(this, "Flip", false),
       mIgnorePad(this, "IgnorePadding", 0),
       mStimuliProvider(sp),

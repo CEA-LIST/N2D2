@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "SoftmaxCell.hpp"
 
 namespace N2D2 {
@@ -37,16 +38,16 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    SoftmaxCell_Frame(const std::string& name,
+    SoftmaxCell_Frame(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
                       bool withLoss = false,
                       unsigned int groupSize = 0);
-    static std::shared_ptr<SoftmaxCell> create(const std::string& name,
+    static std::shared_ptr<SoftmaxCell> create(const DeepNet& deepNet, const std::string& name,
                                                unsigned int nbOutputs,
                                                bool withLoss = false,
                                                unsigned int groupSize = 0)
     {
-        return std::make_shared<SoftmaxCell_Frame>(name, nbOutputs, withLoss, groupSize);
+        return std::make_shared<SoftmaxCell_Frame>(deepNet, name, nbOutputs, withLoss, groupSize);
     }
 
     virtual void initialize();

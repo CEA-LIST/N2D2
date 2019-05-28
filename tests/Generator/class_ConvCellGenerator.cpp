@@ -18,7 +18,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Environment.hpp"
+#include "Network.hpp"
 #include "Generator/ConvCellGenerator.hpp"
 #include "utils/UnitTest.hpp"
 
@@ -38,10 +40,11 @@ TEST(ConvCellGenerator, ConvCellGenerator)
     iniConfig.load("ConvCellGenerator.in");
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
 
     std::shared_ptr<ConvCell> convCell = ConvCellGenerator::generate(
-        net, env, std::vector<std::shared_ptr<Cell> >(1), iniConfig, "conv1");
+        net, dn, env, std::vector<std::shared_ptr<Cell> >(1), iniConfig, "conv1");
 
     for (unsigned int output = 0; output < 16; ++output) {
         ASSERT_EQUALS(convCell->isConnection(0, output), true);
@@ -103,14 +106,16 @@ TEST_DATASET(ConvCellGenerator,
     iniConfig.load("ConvCellGenerator_mapping.in");
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
 
     std::shared_ptr<ConvCell> convCell1 = ConvCellGenerator::generate(
-        net, env, std::vector<std::shared_ptr<Cell> >(1), iniConfig, "conv1");
+        net, dn, env, std::vector<std::shared_ptr<Cell> >(1), iniConfig, "conv1");
 
     if (unknownProperty) {
         ASSERT_THROW_ANY(ConvCellGenerator::generate(
             net,
+            dn,
             env,
             std::vector<std::shared_ptr<Cell> >(1, convCell1),
             iniConfig,
@@ -118,6 +123,7 @@ TEST_DATASET(ConvCellGenerator,
     } else {
         std::shared_ptr<ConvCell> convCell2 = ConvCellGenerator::generate(
             net,
+            dn, 
             env,
             std::vector<std::shared_ptr<Cell> >(1, convCell1),
             iniConfig,

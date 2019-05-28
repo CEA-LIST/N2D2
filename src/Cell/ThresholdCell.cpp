@@ -19,13 +19,14 @@
 */
 
 #include "Cell/ThresholdCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::ThresholdCell::Type = "Threshold";
 
-N2D2::ThresholdCell::ThresholdCell(const std::string& name,
+N2D2::ThresholdCell::ThresholdCell(const DeepNet& deepNet, const std::string& name,
                                    unsigned int nbOutputs,
                                    double threshold)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mThreshold(threshold),
       mOperation(this, "Operation", Binary),
       mMaxValue(this, "MaxValue", 1.0)

@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "Cell.hpp"
+#include "DeepNet.hpp"
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
@@ -35,6 +36,7 @@ class Solver;
 class BatchNormCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<BatchNormCell>(
+        const DeepNet&,
         const std::string&,
         unsigned int,
         const std::shared_ptr<Activation>&)> RegistryCreate_T;
@@ -45,7 +47,7 @@ public:
         return rMap;
     }
     static const char* Type;
-    BatchNormCell(const std::string& name, unsigned int nbOutputs);
+    BatchNormCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
     const char* getType() const
     {
         return Type;

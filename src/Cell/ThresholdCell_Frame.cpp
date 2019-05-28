@@ -19,6 +19,7 @@
 */
 
 #include "Cell/ThresholdCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Transformation/ThresholdTransformation.hpp"
 
 N2D2::Registrar<N2D2::ThresholdCell>
@@ -26,12 +27,13 @@ N2D2::ThresholdCell_Frame::mRegistrar(
     "Frame", N2D2::ThresholdCell_Frame::create);
 
 N2D2::ThresholdCell_Frame::ThresholdCell_Frame(
+    const DeepNet& deepNet, 
     const std::string& name,
     unsigned int nbOutputs,
     double threshold)
-    : Cell(name, nbOutputs),
-      ThresholdCell(name, nbOutputs, threshold),
-      Cell_Frame<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ThresholdCell(deepNet, name, nbOutputs, threshold),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "ProposalCell.hpp"
 #include "ProposalCell_Frame_CUDA_Kernels.hpp"
 
@@ -37,7 +38,7 @@ namespace N2D2 {
 class ProposalCell_Frame_CUDA : public virtual ProposalCell, public Cell_Frame_CUDA<Float_T> {
 public:
 
-    ProposalCell_Frame_CUDA(const std::string& name,
+    ProposalCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                             StimuliProvider& sp,
                             const unsigned int nbOutputs,
                             unsigned int nbProposals,
@@ -53,7 +54,7 @@ public:
                             std::vector<unsigned int> numTemplates
                                                 = std::vector<unsigned int>());
 
-    static std::shared_ptr<ProposalCell> create(const std::string& name,
+    static std::shared_ptr<ProposalCell> create(const DeepNet& deepNet, const std::string& name,
                                           StimuliProvider& sp,
                                           const unsigned int nbOutputs,
                                           unsigned int nbProposals,
@@ -69,7 +70,7 @@ public:
                                           std::vector<unsigned int> numTemplates
                                                 = std::vector<unsigned int>())
     {
-        return std::make_shared<ProposalCell_Frame_CUDA>(name,
+        return std::make_shared<ProposalCell_Frame_CUDA>(deepNet, name,
                                                         sp,
                                                         nbOutputs,
                                                         nbProposals,

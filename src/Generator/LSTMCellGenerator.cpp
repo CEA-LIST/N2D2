@@ -18,6 +18,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
+#include "DeepNet.hpp"
 #include "Generator/LSTMCellGenerator.hpp"
 #include "Solver/Solver.hpp"
 #include "third_party/half.hpp"
@@ -27,7 +28,7 @@ N2D2::LSTMCellGenerator::mRegistrar(LSTMCell::Type,
                                     N2D2::LSTMCellGenerator::generate);
 
 std::shared_ptr<N2D2::LSTMCell>
-N2D2::LSTMCellGenerator::generate(Network& network,
+N2D2::LSTMCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                 	StimuliProvider& sp,
                                 	const std::vector
                                 	<std::shared_ptr<Cell> >& parents,
@@ -96,7 +97,7 @@ N2D2::LSTMCellGenerator::generate(Network& network,
 
 	std::shared_ptr<LSTMCell> cell
         = (dataType == Float32)
-            ? Registrar<LSTMCell>::create<float>(model)(network,
+            ? Registrar<LSTMCell>::create<float>(model)(network, deepNet,
 														section,
 														seqLength,
 														batchSize,
@@ -110,7 +111,7 @@ N2D2::LSTMCellGenerator::generate(Network& network,
 														dropout,
 														singleBackpropFeeding)
           : (dataType == Float16)
-            ? Registrar<LSTMCell>::create<half_float::half>(model)(network,
+            ? Registrar<LSTMCell>::create<half_float::half>(model)(network, deepNet,
 																	section,
 																	seqLength,
 																	batchSize,
@@ -123,7 +124,7 @@ N2D2::LSTMCellGenerator::generate(Network& network,
 																	inputMode,
 																	dropout,
 																	singleBackpropFeeding)
-            : Registrar<LSTMCell>::create<double>(model)(network,
+            : Registrar<LSTMCell>::create<double>(model)(network, deepNet,
 															section,
 															seqLength,
 															batchSize,

@@ -19,12 +19,13 @@
 */
 
 #include "Cell/ObjectDetCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::ObjectDetCell>
 N2D2::ObjectDetCell_Frame::mRegistrar("Frame", N2D2::ObjectDetCell_Frame::create);
 
-N2D2::ObjectDetCell_Frame::ObjectDetCell_Frame(const std::string& name,
+N2D2::ObjectDetCell_Frame::ObjectDetCell_Frame(const DeepNet& deepNet, const std::string& name,
                                                 StimuliProvider& sp,
                                                 const unsigned int nbOutputs,
                                                 unsigned int nbAnchors,
@@ -35,9 +36,9 @@ N2D2::ObjectDetCell_Frame::ObjectDetCell_Frame(const std::string& name,
                                                 std::vector<unsigned int> numParts,
                                                 std::vector<unsigned int> numTemplates,
                                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
-    : Cell(name, nbOutputs),
-      ObjectDetCell(name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates, anchors),
-      Cell_Frame<Float_T>(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
+      ObjectDetCell(deepNet, name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates, anchors),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs),
       mAnchors(anchors)
 {
     // ctor

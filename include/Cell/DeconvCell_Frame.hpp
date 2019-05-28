@@ -24,6 +24,7 @@
 #include "Cell_Frame.hpp"
 #include "ConvCell_Frame_Kernels.hpp"
 #include "DeconvCell.hpp"
+#include "DeepNet.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
 
 namespace N2D2 {
@@ -35,7 +36,7 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    DeconvCell_Frame(const std::string& name,
+    DeconvCell_Frame(const DeepNet& deepNet, const std::string& name,
                      const std::vector<unsigned int>& kernelDims,
                      unsigned int nbOutputs,
                      const std::vector<unsigned int>& strideDims
@@ -47,7 +48,7 @@ public:
                        const std::shared_ptr<Activation>& activation
                      = std::make_shared<TanhActivation_Frame<T> >());
     static std::shared_ptr<DeconvCell>
-    create(Network& /*net*/,
+    create(Network& /*net*/, const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
@@ -59,7 +60,7 @@ public:
            const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame<T> >())
     {
-        return std::make_shared<DeconvCell_Frame<T> >(name,
+        return std::make_shared<DeconvCell_Frame<T> >(deepNet, name, 
                                                       kernelDims,
                                                       nbOutputs,
                                                       strideDims,

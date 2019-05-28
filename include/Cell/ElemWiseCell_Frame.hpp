@@ -22,19 +22,20 @@
 #define N2D2_ELEMWISECELL_FRAME_H
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "ElemWiseCell.hpp"
 
 namespace N2D2 {
 class ElemWiseCell_Frame : public virtual ElemWiseCell, public Cell_Frame<Float_T> {
 public:
-    ElemWiseCell_Frame(const std::string& name,
+    ElemWiseCell_Frame(const DeepNet& deepNet, const std::string& name,
                    unsigned int nbOutputs,
                    Operation operation = Sum,
                    const std::vector<Float_T>& weights = std::vector<Float_T>(),
                    const std::vector<Float_T>& shifts = std::vector<Float_T>(),
                    const std::shared_ptr<Activation>& activation
                    = std::shared_ptr<Activation>());
-    static std::shared_ptr<ElemWiseCell> create(Network& /*net*/,
+    static std::shared_ptr<ElemWiseCell> create(Network& /*net*/, const DeepNet& deepNet, 
                                             const std::string& name,
                                             unsigned int nbOutputs,
                                             Operation operation = Sum,
@@ -47,7 +48,7 @@ public:
                                             = std::shared_ptr
                                             <Activation>())
     {
-        return std::make_shared<ElemWiseCell_Frame>(name,
+        return std::make_shared<ElemWiseCell_Frame>(deepNet, name,
                                                 nbOutputs,
                                                 operation,
                                                 weights,

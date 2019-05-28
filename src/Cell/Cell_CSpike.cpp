@@ -20,10 +20,12 @@
 
 #include "Cell/Cell_CSpike.hpp"
 #include "CEnvironment.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
-N2D2::Cell_CSpike::Cell_CSpike(const std::string& name, unsigned int nbOutputs)
-    : Cell(name, nbOutputs)
+N2D2::Cell_CSpike::Cell_CSpike(const DeepNet& deepNet, const std::string& name, 
+                               unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs)
 {
     // ctor
 }

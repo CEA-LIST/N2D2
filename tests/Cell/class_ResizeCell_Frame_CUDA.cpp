@@ -24,6 +24,7 @@
 
 #include "Cell/ResizeCell_Frame_CUDA.hpp"
 #include "containers/Tensor.hpp"
+#include "DeepNet.hpp"
 #include "Network.hpp"
 #include "utils/UnitTest.hpp"
 
@@ -36,14 +37,15 @@ using namespace N2D2;
 
 class ResizeCell_Frame_CUDA_Test: public ResizeCell_Frame_CUDA {
 public:
-    ResizeCell_Frame_CUDA_Test(const std::string& name,
+    ResizeCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                               const std::string& name,
                                unsigned int outputWidth,
                                unsigned int outputHeight,
                                unsigned int nbOutputs,
                                ResizeMode resizeMode):
-        Cell(name, nbOutputs),
-        ResizeCell(name, outputWidth, outputHeight, nbOutputs, resizeMode),
-        ResizeCell_Frame_CUDA(name, outputWidth, outputHeight, nbOutputs, resizeMode)
+        Cell(deepNet, name, nbOutputs),
+        ResizeCell(deepNet, name, outputWidth, outputHeight, nbOutputs, resizeMode),
+        ResizeCell_Frame_CUDA(deepNet, name, outputWidth, outputHeight, nbOutputs, resizeMode)
     {
     }
 
@@ -77,6 +79,9 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
+    Network net;
+    DeepNet dn(net);
+
     cv::theRNG().state = std::numeric_limits<std::uint64_t>::max();
 
     /**
@@ -95,7 +100,7 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
     /**
      * Resize input to outputsProp with N2D2 through propagate
      */
-    ResizeCell_Frame_CUDA_Test resize("r", outputWidth, outputHeight, nbChannels,
+    ResizeCell_Frame_CUDA_Test resize(dn, "r", outputWidth, outputHeight, nbChannels,
                                       ResizeCell::ResizeMode::NearestNeighbor);
 
     Tensor<Float_T> inputTensor = createBatchTensor(inputs.begin(), inputs.end());

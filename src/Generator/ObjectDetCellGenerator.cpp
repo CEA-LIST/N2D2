@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/ObjectDetCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -25,7 +26,7 @@ N2D2::ObjectDetCellGenerator::mRegistrar(ObjectDetCell::Type,
                                         N2D2::ObjectDetCellGenerator::generate);
 
 std::shared_ptr<N2D2::ObjectDetCell>
-N2D2::ObjectDetCellGenerator::generate(Network& /*network*/,
+N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                         StimuliProvider& sp,
                                         const std::vector
                                         <std::shared_ptr<Cell> >& parents,
@@ -175,7 +176,7 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<ObjectDetCell> cell = Registrar
-        <ObjectDetCell>::create(model)(section,
+        <ObjectDetCell>::create(model)(deepNet, section,
                                 sp,
                                 nbOutputs,
                                 nbAnchors,

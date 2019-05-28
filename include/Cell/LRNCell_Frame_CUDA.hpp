@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "LRNCell.hpp"
 
 #include "CudaContext.hpp"
@@ -42,11 +43,11 @@ public:
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
-    LRNCell_Frame_CUDA(const std::string& name, unsigned int nbOutputs);
-    static std::shared_ptr<LRNCell> create(const std::string& name,
+    LRNCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
+    static std::shared_ptr<LRNCell> create(const DeepNet& deepNet, const std::string& name,
                                            unsigned int nbOutputs)
     {
-        return std::make_shared<LRNCell_Frame_CUDA>(name, nbOutputs);
+        return std::make_shared<LRNCell_Frame_CUDA>(deepNet, name, nbOutputs);
     }
 
     virtual void initialize();

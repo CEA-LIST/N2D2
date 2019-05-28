@@ -22,15 +22,16 @@
 #define N2D2_FCCELL_SPIKE_RRAM_H
 
 #include "FcCell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "Synapse_RRAM.hpp"
 
 namespace N2D2 {
 class FcCell_Spike_RRAM : public FcCell_Spike {
 public:
-    FcCell_Spike_RRAM(Network& net,
+    FcCell_Spike_RRAM(Network& net, const DeepNet& deepNet, 
                       const std::string& name,
                       unsigned int nbOutputs);
-    static std::shared_ptr<FcCell> create(Network& net,
+    static std::shared_ptr<FcCell> create(Network& net, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
@@ -38,7 +39,7 @@ public:
                                           = std::shared_ptr
                                           <Activation>())
     {
-        return std::make_shared<FcCell_Spike_RRAM>(net, name, nbOutputs);
+        return std::make_shared<FcCell_Spike_RRAM>(net, deepNet, name, nbOutputs);
     }
 
     virtual void initialize();

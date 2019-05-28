@@ -22,14 +22,15 @@
 #ifdef CUDA
 
 #include "Cell/Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <class T>
-N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const std::string& name,
+N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                        unsigned int nbOutputs,
                                        const std::shared_ptr
                                        <Activation>& activation)
-    : Cell(name, nbOutputs), Cell_Frame_Top(activation)
+    : Cell(deepNet, name, nbOutputs), Cell_Frame_Top(activation)
 {
     // ctor
 }

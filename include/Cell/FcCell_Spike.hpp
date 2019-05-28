@@ -24,6 +24,7 @@
 #include "Xcell.hpp"
 
 #include "Cell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "FcCell.hpp"
 #include "containers/Tensor.hpp"
 
@@ -34,8 +35,8 @@ class NodeIn;
 
 class FcCell_Spike : public virtual FcCell, public Cell_Spike {
 public:
-    FcCell_Spike(Network& net, const std::string& name, unsigned int nbOutputs);
-    static std::shared_ptr<FcCell> create(Network& net,
+    FcCell_Spike(Network& net, const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
+    static std::shared_ptr<FcCell> create(Network& net, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
@@ -43,7 +44,7 @@ public:
                                           = std::shared_ptr
                                           <Activation>())
     {
-        return std::make_shared<FcCell_Spike>(net, name, nbOutputs);
+        return std::make_shared<FcCell_Spike>(net, deepNet, name, nbOutputs);
     }
 
     virtual void initialize();

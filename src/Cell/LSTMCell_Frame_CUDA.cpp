@@ -24,6 +24,7 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/LSTMCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -45,7 +46,7 @@ N2D2::LSTMCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
     N2D2::Registrar<N2D2::LSTMCell>::Type<double>());
 
 template <class T>
-N2D2::LSTMCell_Frame_CUDA<T>::LSTMCell_Frame_CUDA(
+N2D2::LSTMCell_Frame_CUDA<T>::LSTMCell_Frame_CUDA(const DeepNet& deepNet, 
     const std::string& name,
 	unsigned int seqLength,
     unsigned int batchSize,
@@ -58,8 +59,8 @@ N2D2::LSTMCell_Frame_CUDA<T>::LSTMCell_Frame_CUDA(
 	unsigned int inputMode,
     float dropout,
 	bool singleBackpropFeeding)
-    : Cell(name, nbOutputs),
-      LSTMCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      LSTMCell(deepNet, name,
 				seqLength,
 				batchSize,
 				inputDim,
@@ -71,7 +72,7 @@ N2D2::LSTMCell_Frame_CUDA<T>::LSTMCell_Frame_CUDA(
 				inputMode,
                 dropout,
 				singleBackpropFeeding),
-      Cell_Frame_CUDA<T>(name, nbOutputs),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs),
       mWeights(std::make_shared<CudaTensor<T> >()),
 	  mhx(std::make_shared<CudaTensor<T> >()),
 	  mDiffhy(std::make_shared<CudaTensor<T> >()),

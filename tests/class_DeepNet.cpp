@@ -28,6 +28,7 @@
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "DeepNet.hpp"
+#include "Network.hpp"
 #include "Cell/FcCell_Frame.hpp"
 #include "utils/UnitTest.hpp"
 
@@ -58,7 +59,7 @@ TEST(DeepNet, addCell)
     Network net;
     DeepNet deepNet(net);
 
-    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>("conv",
+    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>(deepNet, "conv",
                                         std::vector<unsigned int>{5, 5}, 10));
     deepNet.addCell(convCell, std::vector<std::shared_ptr<Cell> >(1));
 
@@ -76,9 +77,9 @@ TEST(DeepNet, addCell_bis)
     Network net;
     DeepNet deepNet(net);
 
-    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>("conv",
+    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>(deepNet, "conv",
                                         std::vector<unsigned int>{5, 5}, 10));
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 10));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(deepNet, "fc", 10));
     deepNet.addCell(convCell, std::vector<std::shared_ptr<Cell> >(1));
     deepNet.addCell(fcCell, std::vector<std::shared_ptr<Cell> >(1));
 
@@ -99,9 +100,9 @@ TEST(DeepNet, addCell_ter)
     Network net;
     DeepNet deepNet(net);
 
-    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>("conv",
+    std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>(deepNet, "conv",
                                         std::vector<unsigned int>{5, 5}, 10));
-    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>("fc", 10));
+    std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(deepNet, "fc", 10));
     deepNet.addCell(convCell, std::vector<std::shared_ptr<Cell> >(1));
     deepNet.addCell(fcCell, std::vector<std::shared_ptr<Cell> >(1, convCell));
 
@@ -157,7 +158,7 @@ TEST(DeepNet, fuseBatchNormWithConv)
     DeepNet deepNet(net);
 
     std::shared_ptr<ConvCell_Frame<double> > conv1(
-        new ConvCell_Frame<double>("conv1",
+        new ConvCell_Frame<double>(deepNet, "conv1",
         std::vector<unsigned int>({3, 3}),
         nbOutputs,
         std::vector<unsigned int>({1, 1}),
@@ -167,7 +168,7 @@ TEST(DeepNet, fuseBatchNormWithConv)
         std::shared_ptr<Activation>()));
 
     std::shared_ptr<BatchNormCell_Frame<double> > bn1(
-        new BatchNormCell_Frame<double>("bn1",
+        new BatchNormCell_Frame<double>(deepNet, "bn1",
         nbOutputs,
         std::make_shared<RectifierActivation_Frame<double> >()));
 

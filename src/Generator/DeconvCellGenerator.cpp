@@ -19,6 +19,7 @@
 */
 
 #include "Generator/DeconvCellGenerator.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -30,7 +31,7 @@ N2D2::DeconvCellGenerator::mRegistrarPost(DeconvCell::Type + std::string("+"),
                                       N2D2::DeconvCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::DeconvCell>
-N2D2::DeconvCellGenerator::generate(Network& network,
+N2D2::DeconvCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                     StimuliProvider& sp,
                                     const std::vector
                                     <std::shared_ptr<Cell> >& parents,
@@ -143,7 +144,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
     // Cell construction
     std::shared_ptr<DeconvCell> cell
         = (dataType == Float32)
-            ? Registrar<DeconvCell>::create<float>(model)(network,
+            ? Registrar<DeconvCell>::create<float>(model)(network, deepNet,
                                                           section,
                                                           kernelDims,
                                                           nbOutputs,
@@ -152,7 +153,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
                                                           dilationDims,
                                                           activation)
           : (dataType == Float16)
-            ? Registrar<DeconvCell>::create<half_float::half>(model)(network,
+            ? Registrar<DeconvCell>::create<half_float::half>(model)(network, deepNet,
                                                                     section,
                                                                     kernelDims,
                                                                     nbOutputs,
@@ -160,7 +161,7 @@ N2D2::DeconvCellGenerator::generate(Network& network,
                                                                     paddingDims,
                                                                     dilationDims,
                                                                     activation)
-            : Registrar<DeconvCell>::create<double>(model)(network,
+            : Registrar<DeconvCell>::create<double>(model)(network, deepNet,
                                                            section,
                                                            kernelDims,
                                                            nbOutputs,

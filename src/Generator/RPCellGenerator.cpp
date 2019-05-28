@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/RPCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -25,7 +26,7 @@ N2D2::RPCellGenerator::mRegistrar(RPCell::Type,
                                        N2D2::RPCellGenerator::generate);
 
 std::shared_ptr<N2D2::RPCell>
-N2D2::RPCellGenerator::generate(Network& /*network*/,
+N2D2::RPCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                      StimuliProvider& sp,
                                      const std::vector
                                      <std::shared_ptr<Cell> >& parents,
@@ -52,7 +53,7 @@ N2D2::RPCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<RPCell> cell = Registrar
-        <RPCell>::create(model)(section,
+        <RPCell>::create(model)(deepNet, section,
                                 nbAnchors,
                                 nbProposals,
                                 scoreIndex,

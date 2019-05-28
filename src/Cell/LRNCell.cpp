@@ -19,11 +19,12 @@
 */
 
 #include "Cell/LRNCell.hpp"
+#include "DeepNet.hpp"
 
 const char* N2D2::LRNCell::Type = "LRN";
 
-N2D2::LRNCell::LRNCell(const std::string& name, unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
+N2D2::LRNCell::LRNCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
       mN(this, "N", 5U),
       mAlpha(this, "Alpha", 1.0e-4),
       mBeta(this, "Beta", 0.75),

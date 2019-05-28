@@ -27,6 +27,7 @@
 
 #include "BatchNormCell.hpp"
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
 
 namespace N2D2 {
@@ -40,18 +41,18 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    BatchNormCell_Frame(const std::string& name,
+    BatchNormCell_Frame(const DeepNet& deepNet, const std::string& name,
                         unsigned int nbOutputs,
                         const std::shared_ptr<Activation>& activation
                         = std::make_shared<TanhActivation_Frame<T> >());
     static std::shared_ptr<BatchNormCell>
-    create(const std::string& name,
+    create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame<T> >())
     {
         return std::make_shared
-            <BatchNormCell_Frame>(name, nbOutputs, activation);
+            <BatchNormCell_Frame>(deepNet, name, nbOutputs, activation);
     }
 
     virtual void initialize();

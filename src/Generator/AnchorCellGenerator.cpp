@@ -19,6 +19,7 @@
 */
 
 #include "StimuliProvider.hpp"
+#include "DeepNet.hpp"
 #include "Generator/AnchorCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -26,7 +27,7 @@ N2D2::AnchorCellGenerator::mRegistrar(AnchorCell::Type,
                                        N2D2::AnchorCellGenerator::generate);
 
 std::shared_ptr<N2D2::AnchorCell>
-N2D2::AnchorCellGenerator::generate(Network& /*network*/,
+N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                      StimuliProvider& sp,
                                      const std::vector
                                      <std::shared_ptr<Cell> >& parents,
@@ -134,7 +135,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<AnchorCell> cell = Registrar
-        <AnchorCell>::create(model)(section, sp, anchors, scoresCls);
+        <AnchorCell>::create(model)(deepNet, section, sp, anchors, scoresCls);
 
     if (!cell) {
         throw std::runtime_error(

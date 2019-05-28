@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/ProposalCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -26,7 +27,7 @@ N2D2::ProposalCellGenerator::mRegistrar(ProposalCell::Type,
                                        N2D2::ProposalCellGenerator::generate);
 
 std::shared_ptr<N2D2::ProposalCell>
-N2D2::ProposalCellGenerator::generate(Network& /*network*/,
+N2D2::ProposalCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet, 
                                      StimuliProvider& sp,
                                      const std::vector
                                      <std::shared_ptr<Cell> >& parents,
@@ -88,7 +89,7 @@ N2D2::ProposalCellGenerator::generate(Network& /*network*/,
     const unsigned int nbOutputs = withCls ? 5 + nbOutputParts*2 + nbOutputParts + nbOutputTemplates : 4;
     // Cell construction
     std::shared_ptr<ProposalCell> cell = Registrar
-        <ProposalCell>::create(model)(section,
+        <ProposalCell>::create(model)(deepNet, section,
                                 sp,
                                 nbOutputs,
                                 nbProposals,

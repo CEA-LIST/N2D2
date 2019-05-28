@@ -32,22 +32,23 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 class TransformationCell_Frame_CUDA : public virtual TransformationCell,
                                       public Cell_Frame_CUDA<Float_T> {
 public:
-    TransformationCell_Frame_CUDA(const std::string& name,
+    TransformationCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                   unsigned int nbOutputs,
                                   const std::shared_ptr
                                   <Transformation>& transformation);
     static std::shared_ptr<TransformationCell>
-    create(const std::string& name,
+    create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Transformation>& transformation)
     {
         return std::make_shared
-            <TransformationCell_Frame_CUDA>(name, nbOutputs, transformation);
+            <TransformationCell_Frame_CUDA>(deepNet, name, nbOutputs, transformation);
     }
 
     virtual double setOutputTarget(const Tensor<int>& /*targets*/,

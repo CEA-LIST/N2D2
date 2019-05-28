@@ -20,24 +20,25 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/ElemWiseCell_Frame.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::ElemWiseCell>
 N2D2::ElemWiseCell_Frame::mRegistrar("Frame", N2D2::ElemWiseCell_Frame::create);
 
-N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const std::string& name,
+N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const DeepNet& deepNet, const std::string& name,
                                      unsigned int nbOutputs,
                                      Operation operation,
                                      const std::vector<Float_T>& weights,
                                      const std::vector<Float_T>& shifts,
                                      const std::shared_ptr
                                      <Activation>& activation)
-    : Cell(name, nbOutputs),
-      ElemWiseCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      ElemWiseCell(deepNet, name,
                nbOutputs,
                operation,
                weights,
                shifts),
-      Cell_Frame<Float_T>(name, nbOutputs, activation)
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs, activation)
 {
     // ctor
 }

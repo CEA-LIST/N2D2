@@ -19,11 +19,12 @@
 */
 
 #include "Cell/ObjectDetCell.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 const char* N2D2::ObjectDetCell::Type = "ObjectDet";
 
-N2D2::ObjectDetCell::ObjectDetCell(const std::string& name,
+N2D2::ObjectDetCell::ObjectDetCell(const DeepNet& deepNet, const std::string& name,
                                  StimuliProvider& sp,
                                 const unsigned int nbOutputs,
                                 unsigned int nbAnchors,
@@ -34,7 +35,7 @@ N2D2::ObjectDetCell::ObjectDetCell(const std::string& name,
                                  std::vector<unsigned int> numParts,
                                  std::vector<unsigned int> numTemplates,
                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& /*anchors*/)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mStimuliProvider(sp),
       mForegroundRate(this, "ForegroundRate", 0.25),
       mForegroundMinIoU(this, "ForegroundMinIoU", 0.5),

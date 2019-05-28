@@ -19,6 +19,7 @@
 */
 
 #include "Generator/BatchNormCellGenerator.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator> N2D2::BatchNormCellGenerator::mRegistrar(
@@ -29,7 +30,7 @@ N2D2::BatchNormCellGenerator::mRegistrarPost(BatchNormCell::Type
     + std::string("+"), N2D2::BatchNormCellGenerator::postGenerate);
 
 std::shared_ptr<N2D2::BatchNormCell>
-N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
+N2D2::BatchNormCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                        StimuliProvider& sp,
                                        const std::vector
                                        <std::shared_ptr<Cell> >& parents,
@@ -66,14 +67,14 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/,
     // Cell construction
     std::shared_ptr<BatchNormCell> cell
         = (dataType == Float32)
-            ? Registrar<BatchNormCell>::create<float>(model)(section,
+            ? Registrar<BatchNormCell>::create<float>(model)(deepNet, section,
                                                              nbOutputs,
                                                              activation)
           : (dataType == Float16)
-            ? Registrar<BatchNormCell>::create<half_float::half>(model)(section,
+            ? Registrar<BatchNormCell>::create<half_float::half>(model)(deepNet, section,
                                                                  nbOutputs,
                                                                  activation)
-            : Registrar<BatchNormCell>::create<double>(model)(section,
+            : Registrar<BatchNormCell>::create<double>(model)(deepNet, section,
                                                               nbOutputs,
                                                               activation);
 

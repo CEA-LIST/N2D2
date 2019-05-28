@@ -238,7 +238,7 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
 
             // Set up the layer
             std::shared_ptr<Cell> cell
-                = CellGenerator::generate(network,
+                = CellGenerator::generate(network, *deepNet,
                                           *deepNet->getStimuliProvider(),
                                           parentCells,
                                           iniConfig,

@@ -28,6 +28,7 @@
 #include <algorithm>
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "PaddingCell.hpp"
 #include "PaddingCell_Frame_CUDA_Kernels.hpp"
 
@@ -38,20 +39,20 @@
 namespace N2D2 {
 class PaddingCell_Frame_CUDA : public virtual PaddingCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    PaddingCell_Frame_CUDA(const std::string& name,
+    PaddingCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                            unsigned int nbOutputs,
                            int topPad,
                            int botPad,
                            int leftPad,
                            int rightPad);
-    static std::shared_ptr<PaddingCell> create(const std::string& name,
+    static std::shared_ptr<PaddingCell> create(const DeepNet& deepNet, const std::string& name,
                                                 unsigned int nbOutputs,
                                                 int topPad = 0,
                                                 int botPad = 0,
                                                 int leftPad = 0,
                                                 int rightPad = 0)
     {
-        return std::make_shared<PaddingCell_Frame_CUDA>(name,
+        return std::make_shared<PaddingCell_Frame_CUDA>(deepNet, name,
                                                         nbOutputs,
                                                         topPad,
                                                         botPad,

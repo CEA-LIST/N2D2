@@ -26,12 +26,13 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "ObjectDetCell.hpp"
 
 namespace N2D2 {
 class ObjectDetCell_Frame : public virtual ObjectDetCell, public Cell_Frame<Float_T> {
 public:
-    ObjectDetCell_Frame(const std::string& name,
+    ObjectDetCell_Frame(const DeepNet& deepNet, const std::string& name,
                         StimuliProvider& sp,
                         const unsigned int nbOutputs,
                         unsigned int nbAnchors,
@@ -47,7 +48,7 @@ public:
                         const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
                                                 = std::vector<AnchorCell_Frame_Kernels::Anchor>());
 
-    static std::shared_ptr<ObjectDetCell> create(const std::string& name,
+    static std::shared_ptr<ObjectDetCell> create(const DeepNet& deepNet, const std::string& name,
                                                 StimuliProvider& sp,
                                                 const unsigned int nbOutputs,
                                                 unsigned int nbAnchors,
@@ -63,7 +64,7 @@ public:
                                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors 
                                                                         = std::vector<AnchorCell_Frame_Kernels::Anchor>())
     {
-        return std::make_shared<ObjectDetCell_Frame>(name,
+        return std::make_shared<ObjectDetCell_Frame>(deepNet, name,
                                                     sp,
                                                     nbOutputs,
                                                     nbAnchors,

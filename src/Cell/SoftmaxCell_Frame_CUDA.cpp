@@ -22,6 +22,7 @@
 #ifdef CUDA
 
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -43,13 +44,14 @@ N2D2::SoftmaxCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
     N2D2::Registrar<N2D2::SoftmaxCell>::Type<double>());
 
 template <class T>
-N2D2::SoftmaxCell_Frame_CUDA<T>::SoftmaxCell_Frame_CUDA(const std::string& name,
+N2D2::SoftmaxCell_Frame_CUDA<T>::SoftmaxCell_Frame_CUDA(const DeepNet& deepNet, 
+                                                     const std::string& name,
                                                      unsigned int nbOutputs,
                                                      bool withLoss,
                                                      unsigned int groupSize)
-    : Cell(name, nbOutputs),
-      SoftmaxCell(name, nbOutputs, withLoss, groupSize),
-      Cell_Frame_CUDA<T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      SoftmaxCell(deepNet, name, nbOutputs, withLoss, groupSize),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

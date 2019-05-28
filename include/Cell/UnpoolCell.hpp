@@ -35,6 +35,7 @@
 namespace N2D2 {
 
 class Activation;
+class DeepNet;
 class Network;
 
 class UnpoolCell : public virtual Cell {
@@ -46,6 +47,7 @@ public:
 
     typedef std::function
         <std::shared_ptr<UnpoolCell>(Network&,
+                                   const DeepNet&, 
                                    const std::string&,
                                    const std::vector<unsigned int>&,
                                    unsigned int,
@@ -62,7 +64,7 @@ public:
     }
     static const char* Type;
 
-    UnpoolCell(const std::string& name,
+    UnpoolCell(const DeepNet& deepNet, const std::string& name,
              const std::vector<unsigned int>& poolDims,
              unsigned int nbOutputs,
              const std::vector<unsigned int>& strideDims

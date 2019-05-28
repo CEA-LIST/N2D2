@@ -19,7 +19,9 @@
 */
 
 #include "Cell/ConvCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Environment.hpp"
+#include "Network.hpp"
 #include "Generator/MappingGenerator.hpp"
 #include "containers/Matrix.hpp"
 #include "utils/UnitTest.hpp"
@@ -43,9 +45,10 @@ TEST(MappingGenerator, MappingGenerator)
     iniConfig.load("MappingGenerator.in");
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
-        new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
+        new ConvCell_Frame<Float_T>(dn, "conv1", std::vector<unsigned int>({4, 4}), 10));
 
     Tensor<bool> mapping
         = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2",
@@ -93,9 +96,10 @@ TEST(MappingGenerator, MappingGenerator_bis)
     iniConfig.load("MappingGenerator_bis.in");
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
-        new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
+        new ConvCell_Frame<Float_T>(dn, "conv1", std::vector<unsigned int>({4, 4}), 10));
 
     Tensor<bool> mapping
         = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2",
@@ -132,9 +136,10 @@ TEST(MappingGenerator, MappingGenerator_ter)
     iniConfig.load("MappingGenerator_ter.in");
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
-        new ConvCell_Frame<Float_T>("conv1", std::vector<unsigned int>({4, 4}), 10));
+        new ConvCell_Frame<Float_T>(dn, "conv1", std::vector<unsigned int>({4, 4}), 10));
 
     Tensor<bool> mapping
         = MappingGenerator::generate(env, conv1, 10, iniConfig, "conv2",

@@ -30,9 +30,12 @@
 #include "controler/CudaInterface.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class Cell_CSpike_CUDA : public virtual Cell, public Cell_CSpike_Top {
 public:
-    Cell_CSpike_CUDA(const std::string& name, unsigned int nbOutputs);
+    Cell_CSpike_CUDA(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
     virtual void addInput(StimuliProvider& sp,
                           unsigned int channel,
                           unsigned int x0,

@@ -20,6 +20,7 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/ConvCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Filler/NormalFiller.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
 #include "third_party/half.hpp"
@@ -43,7 +44,7 @@ N2D2::ConvCell_Frame<double>::mRegistrar("Frame",
     N2D2::Registrar<N2D2::ConvCell>::Type<double>());
 
 template <class T>
-N2D2::ConvCell_Frame<T>::ConvCell_Frame(const std::string& name,
+N2D2::ConvCell_Frame<T>::ConvCell_Frame(const DeepNet& deepNet, const std::string& name,
                                  const std::vector<unsigned int>& kernelDims,
                                  unsigned int nbOutputs,
                                  const std::vector<unsigned int>& subSampleDims,
@@ -52,15 +53,15 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const std::string& name,
                                  const std::vector<unsigned int>& dilationDims,
                                  const std::shared_ptr
                                  <Activation>& activation)
-    : Cell(name, nbOutputs),
-      ConvCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      ConvCell(deepNet, name,
                kernelDims,
                nbOutputs,
                subSampleDims,
                strideDims,
                paddingDims,
                dilationDims),
-      Cell_Frame<T>(name, nbOutputs, activation),
+      Cell_Frame<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<T> >()),

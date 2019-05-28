@@ -20,6 +20,7 @@
 #ifdef CUDA
 
 #include "Cell/ResizeCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 #include <cudnn.h>
 #include <algorithm>
@@ -31,14 +32,15 @@ N2D2::Registrar<N2D2::ResizeCell>
 N2D2::ResizeCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                        N2D2::ResizeCell_Frame_CUDA::create);
 
-N2D2::ResizeCell_Frame_CUDA::ResizeCell_Frame_CUDA(const std::string& name,
+N2D2::ResizeCell_Frame_CUDA::ResizeCell_Frame_CUDA(const DeepNet& deepNet, 
+                                                 const std::string& name,
                                                  unsigned int outputsWidth,
                                                  unsigned int outputsHeight,
                                                  unsigned int nbOutputs,
                                                  ResizeMode resizeMode)
-    : Cell(name, nbOutputs),
-      ResizeCell(name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ResizeCell(deepNet, name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

@@ -23,13 +23,14 @@
 #include "NodeEnv.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "StimuliProvider.hpp"
 
-N2D2::Cell_Spike::Cell_Spike(Network& net,
+N2D2::Cell_Spike::Cell_Spike(Network& net, const DeepNet& deepNet, 
                              const std::string& name,
                              unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       NetworkObserver(net),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().

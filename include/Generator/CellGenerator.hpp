@@ -31,10 +31,14 @@
 #include "DeepNet.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class CellGenerator {
 public:
     typedef std::function<std::shared_ptr<Cell>(
         Network& network,
+        const DeepNet& deepNet,
         StimuliProvider& sp,
         const std::vector<std::shared_ptr<Cell> >& parents,
         IniParser& iniConfig,
@@ -55,6 +59,7 @@ public:
     static DataType mDefaultDataType;
 
     static std::shared_ptr<Cell> generate(Network& network,
+                                          const DeepNet& deepNet,
                                           StimuliProvider& sp,
                                           const std::vector
                                           <std::shared_ptr<Cell> >& parents,

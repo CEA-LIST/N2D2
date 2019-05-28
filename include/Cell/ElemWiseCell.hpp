@@ -33,6 +33,7 @@
 namespace N2D2 {
 
 class Activation;
+class DeepNet;
 class Network;
 
 class ElemWiseCell : public virtual Cell {
@@ -46,7 +47,7 @@ public:
     };
 
     typedef std::function
-        <std::shared_ptr<ElemWiseCell>(Network&,
+        <std::shared_ptr<ElemWiseCell>(Network&, const DeepNet&, 
                                    const std::string&,
                                    unsigned int,
                                    Operation,
@@ -62,7 +63,7 @@ public:
     }
     static const char* Type;
 
-    ElemWiseCell(const std::string& name,
+    ElemWiseCell(const DeepNet& deepNet, const std::string& name,
              unsigned int nbOutputs,
              Operation operation = Sum,
              const std::vector<Float_T>& weights = std::vector<Float_T>(),

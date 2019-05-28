@@ -20,6 +20,7 @@
 
 #include "Activation/Activation.hpp"
 #include "Cell/DeconvCell.hpp"
+#include "DeepNet.hpp"
 #include "containers/Matrix.hpp"
 #include "Filler/NormalFiller.hpp"
 #include "Solver/Solver.hpp"
@@ -27,13 +28,14 @@
 
 const char* N2D2::DeconvCell::Type = "Deconv";
 
-N2D2::DeconvCell::DeconvCell(const std::string& name,
+N2D2::DeconvCell::DeconvCell(const DeepNet& deepNet, 
+                             const std::string& name,
                              const std::vector<unsigned int>& kernelDims,
                              unsigned int nbOutputs,
                              const std::vector<unsigned int>& strideDims,
                              const std::vector<int>& paddingDims,
                              const std::vector<unsigned int>& dilationDims)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mNoBias(this, "NoBias", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OCHW),

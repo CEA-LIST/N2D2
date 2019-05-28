@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/TransformationCellGenerator.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
@@ -25,7 +26,7 @@ N2D2::TransformationCellGenerator::mRegistrar(
     TransformationCell::Type, N2D2::TransformationCellGenerator::generate);
 
 std::shared_ptr<N2D2::TransformationCell>
-N2D2::TransformationCellGenerator::generate(Network& /*network*/,
+N2D2::TransformationCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                             StimuliProvider& sp,
                                             const std::vector
                                             <std::shared_ptr<Cell> >& parents,
@@ -48,7 +49,7 @@ N2D2::TransformationCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<TransformationCell> cell = Registrar
-        <TransformationCell>::create(model)(section, nbOutputs, transformation);
+        <TransformationCell>::create(model)(deepNet, section, nbOutputs, transformation);
 
     if (!cell) {
         throw std::runtime_error(

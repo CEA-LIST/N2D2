@@ -29,10 +29,13 @@
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class SoftmaxCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<SoftmaxCell>(const std::string&,
+        <std::shared_ptr<SoftmaxCell>(const DeepNet& , const std::string&,
                                         unsigned int,
                                         bool,
                                         unsigned int)>
@@ -45,7 +48,7 @@ public:
     }
     static const char* Type;
 
-    SoftmaxCell(const std::string& name,
+    SoftmaxCell(const DeepNet& deepNet, const std::string& name,
                 unsigned int nbOutputs,
                 bool withLoss = false,
                 unsigned int groupSize = 0);

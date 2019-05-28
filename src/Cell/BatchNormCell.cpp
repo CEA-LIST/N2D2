@@ -19,13 +19,14 @@
 */
 
 #include "Cell/BatchNormCell.hpp"
+#include "DeepNet.hpp"
 #include "utils/Utils.hpp"
 
 const char* N2D2::BatchNormCell::Type = "BatchNorm";
 
-N2D2::BatchNormCell::BatchNormCell(const std::string& name,
+N2D2::BatchNormCell::BatchNormCell(const DeepNet& deepNet, const std::string& name,
                                    unsigned int nbOutputs)
-    : Cell(name, nbOutputs), 
+    : Cell(deepNet, name, nbOutputs), 
       mEpsilon(this, "Epsilon", 0.0),
       mMovingAverageMomentum(this, "MovingAverageMomentum", 0.1)
 {

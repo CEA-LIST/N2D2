@@ -22,26 +22,28 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/UnpoolCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::UnpoolCell>
 N2D2::UnpoolCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                         N2D2::UnpoolCell_Frame_CUDA::create);
 
-N2D2::UnpoolCell_Frame_CUDA::UnpoolCell_Frame_CUDA(const std::string& name,
+N2D2::UnpoolCell_Frame_CUDA::UnpoolCell_Frame_CUDA(const DeepNet& deepNet, 
+    const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      UnpoolCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      UnpoolCell(deepNet, name,
                poolDims,
                nbOutputs,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs, activation),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs, activation),
       mPoolDesc(NULL)
 {
     // ctor

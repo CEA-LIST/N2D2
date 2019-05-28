@@ -29,10 +29,13 @@
 #include "Cell.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class PaddingCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<PaddingCell>(const std::string&,
+        <std::shared_ptr<PaddingCell>(const DeepNet&, const std::string&,
                                       unsigned int,
                                       int,
                                       int,
@@ -47,7 +50,7 @@ public:
     }
     static const char* Type;
 
-    PaddingCell(const std::string& name,
+    PaddingCell(const DeepNet& deepNet, const std::string& name,
                 unsigned int nbOutputs,
                 int topPad,
                 int botPad,

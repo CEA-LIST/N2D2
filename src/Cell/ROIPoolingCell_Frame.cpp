@@ -19,6 +19,7 @@
 */
 
 #include "Cell/ROIPoolingCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "GradientCheck.hpp"
 #include "StimuliProvider.hpp"
 
@@ -26,15 +27,16 @@ N2D2::Registrar<N2D2::ROIPoolingCell>
 N2D2::ROIPoolingCell_Frame::mRegistrar("Frame",
                                        N2D2::ROIPoolingCell_Frame::create);
 
-N2D2::ROIPoolingCell_Frame::ROIPoolingCell_Frame(const std::string& name,
+N2D2::ROIPoolingCell_Frame::ROIPoolingCell_Frame(const DeepNet& deepNet, 
+                                                 const std::string& name,
                                                  StimuliProvider& sp,
                                                  unsigned int outputsWidth,
                                                  unsigned int outputsHeight,
                                                  unsigned int nbOutputs,
                                                  ROIPooling pooling)
-    : Cell(name, nbOutputs),
-      ROIPoolingCell(name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
-      Cell_Frame<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ROIPoolingCell(deepNet, name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
     mInputs.matchingDims({});

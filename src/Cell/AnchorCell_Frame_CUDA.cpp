@@ -22,6 +22,7 @@
 #ifdef CUDA
 #include "ROI/ROI.hpp"
 #include "Cell/AnchorCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::AnchorCell>
@@ -29,13 +30,14 @@ N2D2::AnchorCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                         N2D2::AnchorCell_Frame_CUDA::create);
 
 N2D2::AnchorCell_Frame_CUDA::AnchorCell_Frame_CUDA(
+    const DeepNet& deepNet,
     const std::string& name,
     StimuliProvider& sp,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
-    : Cell(name, 6*anchors.size()),
-      AnchorCell(name, sp, anchors, scoresCls),
-      Cell_Frame_CUDA<Float_T>(name, 6*anchors.size()),
+    : Cell(deepNet, name, 6*anchors.size()),
+      AnchorCell(deepNet, name, sp, anchors, scoresCls),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, 6*anchors.size()),
       mNbLabelsMax(16),
       mCudaGT(NULL)
 {

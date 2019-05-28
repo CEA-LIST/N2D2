@@ -21,6 +21,7 @@
 #ifndef N2D2_FCCELL_TRANSCODE_H
 #define N2D2_FCCELL_TRANSCODE_H
 
+#include "DeepNet.hpp"
 #include "FcCell_Frame.hpp"
 #include "FcCell_Spike.hpp"
 
@@ -39,12 +40,12 @@ public:
         Spike
     };
 
-    FcCell_Transcode(Network& net,
+    FcCell_Transcode(Network& net, const DeepNet& deepNet, 
                      const std::string& name,
                      unsigned int nbOutputs,
                      const std::shared_ptr<Activation>& activation
                      = std::make_shared<TanhActivation_Frame<Float_T> >());
-    static std::shared_ptr<FcCell> create(Network& net,
+    static std::shared_ptr<FcCell> create(Network& net, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
@@ -53,7 +54,7 @@ public:
                                           <TanhActivation_Frame<Float_T> >())
     {
         return std::make_shared
-            <FcCell_Transcode>(net, name, nbOutputs, activation);
+            <FcCell_Transcode>(net, deepNet, name, nbOutputs, activation);
     }
 
     void addInput(StimuliProvider& sp,
@@ -134,14 +135,15 @@ void N2D2::FcCell_Transcode
 template <class FRAME, class SPIKE>
 N2D2::FcCell_Transcode
     <FRAME, SPIKE>::FcCell_Transcode(Network& net,
+                                     const DeepNet& deepNet, 
                                      const std::string& name,
                                      unsigned int nbOutputs,
                                      const std::shared_ptr
                                      <Activation>& activation)
-    : Cell(name, nbOutputs),
-      FcCell(name, nbOutputs),
-      FRAME(name, nbOutputs, activation),
-      SPIKE(net, name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
+      FcCell(deepNet, name, nbOutputs),
+      FRAME(deepNet, name, nbOutputs, activation),
+      SPIKE(net, deepNet, name, nbOutputs),
       mTranscodeMode(Frame)
 {
     // ctor

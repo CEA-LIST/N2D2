@@ -23,6 +23,7 @@
 
 #include "Activation/TanhActivation_Frame.hpp"
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "FcCell.hpp"
 
 namespace N2D2 {
@@ -34,11 +35,11 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    FcCell_Frame(const std::string& name,
+    FcCell_Frame(const DeepNet& deepNet, const std::string& name,
                  unsigned int nbOutputs,
                  const std::shared_ptr<Activation>& activation
                  = std::make_shared<TanhActivation_Frame<T> >());
-    static std::shared_ptr<FcCell> create(Network& /*net*/,
+    static std::shared_ptr<FcCell> create(Network& /*net*/, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
@@ -46,7 +47,7 @@ public:
                                           = std::make_shared
                                           <TanhActivation_Frame<T> >())
     {
-        return std::make_shared<FcCell_Frame>(name, nbOutputs, activation);
+        return std::make_shared<FcCell_Frame>(deepNet, name, nbOutputs, activation);
     }
 
     virtual void initialize();

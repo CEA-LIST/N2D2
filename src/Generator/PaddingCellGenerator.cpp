@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/PaddingCellGenerator.hpp"
 #include "StimuliProvider.hpp"
 
@@ -26,7 +27,7 @@ N2D2::PaddingCellGenerator::mRegistrar(PaddingCell::Type,
                                    N2D2::PaddingCellGenerator::generate);
 
 std::shared_ptr<N2D2::PaddingCell>
-N2D2::PaddingCellGenerator::generate(Network& /*network*/,
+N2D2::PaddingCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet, 
                                  StimuliProvider& sp,
                                  const std::vector
                                  <std::shared_ptr<Cell> >& parents,
@@ -55,7 +56,7 @@ N2D2::PaddingCellGenerator::generate(Network& /*network*/,
 
     // Cell construction
     std::shared_ptr<PaddingCell> cell = Registrar
-        <PaddingCell>::create(model)(section,
+        <PaddingCell>::create(model)(deepNet, section,
                                      nbOutputs,
                                      topPad,
                                      botPad,

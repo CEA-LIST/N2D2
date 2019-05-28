@@ -20,25 +20,26 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/UnpoolCell_Frame.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::UnpoolCell>
 N2D2::UnpoolCell_Frame::mRegistrar("Frame", N2D2::UnpoolCell_Frame::create);
 
-N2D2::UnpoolCell_Frame::UnpoolCell_Frame(const std::string& name,
+N2D2::UnpoolCell_Frame::UnpoolCell_Frame(const DeepNet& deepNet, const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      UnpoolCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      UnpoolCell(deepNet, name,
                poolDims,
                nbOutputs,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame<Float_T>(name, nbOutputs, activation),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs, activation),
       mPoolDesc(poolDims.size(),
                 &poolDims[0],
                 &strideDims[0],

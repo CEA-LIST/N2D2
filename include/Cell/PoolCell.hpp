@@ -34,6 +34,7 @@
 namespace N2D2 {
 
 class Activation;
+class DeepNet;
 class Network;
 
 class PoolCell : public virtual Cell {
@@ -44,15 +45,14 @@ public:
     };
 
     typedef std::function
-        <std::shared_ptr<PoolCell>(Network&,
+        <std::shared_ptr<PoolCell>(Network&, const DeepNet&, 
                                    const std::string&,
                                    const std::vector<unsigned int>&,
                                    unsigned int,
                                    const std::vector<unsigned int>&,
                                    const std::vector<unsigned int>&,
                                    Pooling,
-                                   const std::shared_ptr<Activation>&
-                                       activation)> RegistryCreate_T;
+                                   const std::shared_ptr<Activation>&)> RegistryCreate_T;
 
     static RegistryMap_T& registry()
     {
@@ -61,7 +61,7 @@ public:
     }
     static const char* Type;
 
-    PoolCell(const std::string& name,
+    PoolCell(const DeepNet& deepNet, const std::string& name,
              const std::vector<unsigned int>& poolDims,
              unsigned int nbOutputs,
              const std::vector<unsigned int>& strideDims

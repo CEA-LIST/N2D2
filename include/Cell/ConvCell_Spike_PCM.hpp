@@ -22,12 +22,13 @@
 #define N2D2_CONVCELL_SPIKE_PCM_H
 
 #include "ConvCell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "Synapse_PCM.hpp"
 
 namespace N2D2 {
 class ConvCell_Spike_PCM : public ConvCell_Spike {
 public:
-    ConvCell_Spike_PCM(Network& net,
+    ConvCell_Spike_PCM(Network& net, const DeepNet& deepNet, 
                        const std::string& name,
                        const std::vector<unsigned int>& kernelDims,
                        unsigned int nbOutputs,
@@ -40,7 +41,7 @@ public:
                        const std::vector<unsigned int>& dilationDims
                             = std::vector<unsigned int>(2, 1U));
     static std::shared_ptr<ConvCell>
-    create(Network& net,
+    create(Network& net, const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
@@ -55,7 +56,7 @@ public:
            const std::shared_ptr<Activation>& /*activation*/
            = std::shared_ptr<Activation>())
     {
-        return std::make_shared<ConvCell_Spike_PCM>(net,
+        return std::make_shared<ConvCell_Spike_PCM>(net, deepNet,
                                                     name,
                                                     kernelDims,
                                                     nbOutputs,

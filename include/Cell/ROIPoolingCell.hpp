@@ -29,6 +29,9 @@
 #include "utils/Utils.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class ROIPoolingCell : public virtual Cell {
 public:
     enum ROIPooling {
@@ -39,7 +42,7 @@ public:
     };
 
     typedef std::function
-        <std::shared_ptr<ROIPoolingCell>(const std::string&,
+        <std::shared_ptr<ROIPoolingCell>(const DeepNet&, const std::string&,
                                          StimuliProvider&,
                                          unsigned int,
                                          unsigned int,
@@ -54,7 +57,7 @@ public:
     }
     static const char* Type;
 
-    ROIPoolingCell(const std::string& name,
+    ROIPoolingCell(const DeepNet& deepNet, const std::string& name,
                    StimuliProvider& sp,
                    unsigned int outputsWidth,
                    unsigned int outputsHeight,

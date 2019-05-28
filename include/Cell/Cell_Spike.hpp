@@ -28,12 +28,15 @@
 
 namespace N2D2 {
 
+class DeepNet;
 class NodeIn;
 class NodeOut;
 
 class Cell_Spike : public virtual Cell, public NetworkObserver {
 public:
-    Cell_Spike(Network& net, const std::string& name, unsigned int nbOutputs);
+    Cell_Spike(Network& net, const DeepNet& deepNet, const std::string& name, 
+               unsigned int nbOutputs);
+    
     virtual void addInput(StimuliProvider& sp,
                           unsigned int channel,
                           unsigned int x0,

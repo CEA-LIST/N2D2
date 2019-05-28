@@ -26,6 +26,7 @@
 #include "ConvCell.hpp"
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
+#include "DeepNet.hpp"
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor.hpp"
 
@@ -40,7 +41,7 @@ public:
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 
-    ConvCell_Frame_CUDA(const std::string& name,
+    ConvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         const std::vector<unsigned int>& kernelDims,
                         unsigned int nbOutputs,
                         const std::vector<unsigned int>& subSampleDims
@@ -55,6 +56,7 @@ public:
                     = std::make_shared<TanhActivation_Frame_CUDA<T> >());
     static std::shared_ptr<ConvCell>
     create(Network& /*net*/,
+           const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
@@ -68,7 +70,8 @@ public:
            const std::shared_ptr<Activation>& activation
            = std::make_shared<TanhActivation_Frame_CUDA<T> >())
     {
-        return std::make_shared<ConvCell_Frame_CUDA<T> >(name,
+        return std::make_shared<ConvCell_Frame_CUDA<T> >(deepNet,
+                                                         name,
                                                          kernelDims,
                                                          nbOutputs,
                                                          subSampleDims,

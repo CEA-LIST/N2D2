@@ -27,6 +27,7 @@
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
 #include "containers/Matrix.hpp"
+#include "DeepNet.hpp"
 #include "Filler/NormalFiller.hpp"
 
 N2D2::Registrar<N2D2::ConvCell>
@@ -35,6 +36,7 @@ N2D2::ConvCell_Spike::mRegistrar("Spike",
     N2D2::Registrar<N2D2::ConvCell>::Type<Float_T>());
 
 N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
+                                 const DeepNet& deepNet, 
                                  const std::string& name,
                                  const std::vector<unsigned int>& kernelDims,
                                  unsigned int nbOutputs,
@@ -42,15 +44,15 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
                                  const std::vector<unsigned int>& strideDims,
                                  const std::vector<int>& paddingDims,
                                  const std::vector<unsigned int>& dilationDims)
-    : Cell(name, nbOutputs),
-      ConvCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      ConvCell(deepNet, name, 
                kernelDims,
                nbOutputs,
                subSampleDims,
                strideDims,
                paddingDims,
                dilationDims),
-      Cell_Spike(net, name, nbOutputs),
+      Cell_Spike(net, deepNet, name, nbOutputs),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mWeightsRelInit(this, "WeightsRelInit", 0.0, 0.05),

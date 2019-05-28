@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "RPCell.hpp"
 #include "RPCell_Frame_CUDA_Kernels.hpp"
 
@@ -38,18 +39,18 @@
 namespace N2D2 {
 class RPCell_Frame_CUDA : public virtual RPCell, public Cell_Frame_CUDA<Float_T> {
 public:
-    RPCell_Frame_CUDA(const std::string& name,
+    RPCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                  unsigned int nbAnchors,
                  unsigned int nbProposals,
                  unsigned int scoreIndex = 0,
                  unsigned int IoUIndex = 5);
-    static std::shared_ptr<RPCell> create(const std::string& name,
+    static std::shared_ptr<RPCell> create(const DeepNet& deepNet, const std::string& name,
                                           unsigned int nbAnchors,
                                           unsigned int nbProposals,
                                           unsigned int scoreIndex = 0,
                                           unsigned int IoUIndex = 5)
     {
-        return std::make_shared<RPCell_Frame_CUDA>(name,
+        return std::make_shared<RPCell_Frame_CUDA>(deepNet, name,
                                               nbAnchors,
                                               nbProposals,
                                               scoreIndex,

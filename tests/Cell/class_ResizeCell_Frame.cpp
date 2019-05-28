@@ -22,6 +22,7 @@
 
 #include "Cell/ResizeCell_Frame.hpp"
 #include "containers/Tensor.hpp"
+#include "DeepNet.hpp"
 #include "Network.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Random.hpp"
@@ -35,14 +36,15 @@ using namespace N2D2;
 
 class ResizeCell_Frame_Test: public ResizeCell_Frame {
 public:
-    ResizeCell_Frame_Test(const std::string& name,
+    ResizeCell_Frame_Test(const DeepNet& deepNet,
+                          const std::string& name,
                           unsigned int outputWidth,
                           unsigned int outputHeight,
                           unsigned int nbOutputs,
                           ResizeMode resizeMode):
-        Cell(name, nbOutputs),
-        ResizeCell(name, outputWidth, outputHeight, nbOutputs, resizeMode),
-        ResizeCell_Frame(name, outputWidth, outputHeight, nbOutputs, resizeMode) 
+        Cell(deepNet, name, nbOutputs),
+        ResizeCell(deepNet, name, outputWidth, outputHeight, nbOutputs, resizeMode),
+        ResizeCell_Frame(deepNet, name, outputWidth, outputHeight, nbOutputs, resizeMode) 
     {                                
     }
 
@@ -73,11 +75,14 @@ TEST_DATASET(ResizeCell_Frame,
      std::make_tuple(32, 32, 96, 96, 1),
      std::make_tuple(32, 32, 96, 96, 4))
 {
+    Network net;
+    DeepNet dn(net);
+
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 3;
     ResizeCell::ResizeMode mode = ResizeCell::ResizeMode::BilinearTF;
-    ResizeCell_Frame_Test resize("resize",
+    ResizeCell_Frame_Test resize(dn, "resize",
                                   outputWidth,
                                   outputHeight,
                                   nbOutputs,
@@ -121,6 +126,9 @@ TEST_DATASET(ResizeCell_Frame,
             std::make_tuple(32, 32, 96, 96, 4, 3),
             std::make_tuple(49, 31, 73, 85, 9, 5))
 {
+    Network net;
+    DeepNet dn(net);
+
     cv::theRNG().state = std::numeric_limits<std::uint64_t>::max();
 
     /** 
@@ -139,7 +147,7 @@ TEST_DATASET(ResizeCell_Frame,
     /** 
      * Resize input to outputsProp with N2D2 through propagate
      */
-    ResizeCell_Frame_Test resize("r", outputWidth, outputHeight, nbChannels, 
+    ResizeCell_Frame_Test resize(dn, "r", outputWidth, outputHeight, nbChannels, 
                                       ResizeCell::ResizeMode::NearestNeighbor);
 
     Tensor<Float_T> inputTensor = createBatchTensor(inputs.begin(), inputs.end());

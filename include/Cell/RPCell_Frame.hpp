@@ -26,23 +26,27 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "RPCell.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class RPCell_Frame : public virtual RPCell, public Cell_Frame<Float_T> {
 public:
-    RPCell_Frame(const std::string& name,
+    RPCell_Frame(const DeepNet& deepNet, const std::string& name,
                  unsigned int nbAnchors,
                  unsigned int nbProposals,
                  unsigned int scoreIndex = 0,
                  unsigned int IoUIndex = 5);
-    static std::shared_ptr<RPCell> create(const std::string& name,
+    static std::shared_ptr<RPCell> create(const DeepNet& deepNet, const std::string& name,
                                           unsigned int nbAnchors,
                                           unsigned int nbProposals,
                                           unsigned int scoreIndex = 0,
                                           unsigned int IoUIndex = 5)
     {
-        return std::make_shared<RPCell_Frame>(name,
+        return std::make_shared<RPCell_Frame>(deepNet, name,
                                               nbAnchors,
                                               nbProposals,
                                               scoreIndex,

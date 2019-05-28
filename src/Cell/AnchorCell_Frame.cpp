@@ -20,19 +20,21 @@
 
 #include "ROI/ROI.hpp"
 #include "Cell/AnchorCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::AnchorCell>
 N2D2::AnchorCell_Frame::mRegistrar("Frame", N2D2::AnchorCell_Frame::create);
 
 N2D2::AnchorCell_Frame::AnchorCell_Frame(
+    const DeepNet& deepNet,
     const std::string& name,
     StimuliProvider& sp,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
-    : Cell(name, 6*anchors.size()),
-      AnchorCell(name, sp, anchors, scoresCls),
-      Cell_Frame<Float_T>(name, 6*anchors.size()),
+    : Cell(deepNet, name, 6*anchors.size()),
+      AnchorCell(deepNet, name, sp, anchors, scoresCls),
+      Cell_Frame<Float_T>(deepNet, name, 6*anchors.size()),
       mAnchors(anchors)
 {
     // ctor

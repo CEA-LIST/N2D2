@@ -21,18 +21,19 @@
 #include "Cell/FcCell_Spike_RRAM.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::FcCell>
 N2D2::FcCell_Spike_RRAM::mRegistrar("Spike_RRAM",
     N2D2::FcCell_Spike_RRAM::create,
     N2D2::Registrar<N2D2::FcCell>::Type<Float_T>());
 
-N2D2::FcCell_Spike_RRAM::FcCell_Spike_RRAM(Network& net,
+N2D2::FcCell_Spike_RRAM::FcCell_Spike_RRAM(Network& net, const DeepNet& deepNet, 
                                            const std::string& name,
                                            unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      FcCell(name, nbOutputs),
-      FcCell_Spike(net, name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
+      FcCell(deepNet, name, nbOutputs),
+      FcCell_Spike(net, deepNet, name, nbOutputs),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mWeightsMinMean(this, "WeightsMinMean", 1, 0.1),

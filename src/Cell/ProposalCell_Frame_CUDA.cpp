@@ -21,11 +21,13 @@
 #ifdef CUDA
 
 #include "Cell/ProposalCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::ProposalCell>
 N2D2::ProposalCell_Frame_CUDA::mRegistrar("Frame_CUDA", N2D2::ProposalCell_Frame_CUDA::create);
 
-N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const std::string& name,
+N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const DeepNet& deepNet, 
+                                            const std::string& name,
                                             StimuliProvider& sp,
                                             const unsigned int nbOutputs,
                                             unsigned int nbProposals,
@@ -36,9 +38,11 @@ N2D2::ProposalCell_Frame_CUDA::ProposalCell_Frame_CUDA(const std::string& name,
                                             std::vector<double> stdFactor,
                                             std::vector<unsigned int> numParts,
                                             std::vector<unsigned int> numTemplates)
-    : Cell(name, nbOutputs),
-      ProposalCell(name, sp, nbOutputs, nbProposals, scoreIndex, IoUIndex, isNms, meansFactor, stdFactor, numParts, numTemplates),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ProposalCell(deepNet, name, sp, nbOutputs, nbProposals, 
+                   scoreIndex, IoUIndex, isNms, meansFactor, 
+                   stdFactor, numParts, numTemplates),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

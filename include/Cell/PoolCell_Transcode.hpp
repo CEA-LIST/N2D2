@@ -28,6 +28,7 @@
 #endif
 
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 #include "PoolCell_Spike.hpp"
 #include "utils/Gnuplot.hpp"
 
@@ -40,7 +41,7 @@ public:
         Spike
     };
 
-    PoolCell_Transcode(Network& net,
+    PoolCell_Transcode(Network& net, const DeepNet& deepNet, 
                        const std::string& name,
                        const std::vector<unsigned int>& poolDims,
                        unsigned int nbOutputs,
@@ -52,7 +53,7 @@ public:
                        const std::shared_ptr<Activation>& activation
                        = std::shared_ptr<Activation>());
     static std::shared_ptr<PoolCell>
-    create(Network& net,
+    create(Network& net, const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& poolDims,
            unsigned int nbOutputs,
@@ -64,7 +65,7 @@ public:
            const std::shared_ptr<Activation>& activation
            = std::shared_ptr<Activation>())
     {
-        return std::make_shared<PoolCell_Transcode>(net,
+        return std::make_shared<PoolCell_Transcode>(net, deepNet,
                                                     name,
                                                     poolDims,
                                                     nbOutputs,
@@ -108,6 +109,7 @@ private:
 template <class FRAME, class SPIKE>
 N2D2::PoolCell_Transcode
     <FRAME, SPIKE>::PoolCell_Transcode(Network& net,
+           const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& poolDims,
            unsigned int nbOutputs,
@@ -115,21 +117,21 @@ N2D2::PoolCell_Transcode
            const std::vector<unsigned int>& paddingDims,
            PoolCell::Pooling pooling,
            const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      PoolCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      PoolCell(deepNet, name,
                poolDims,
                nbOutputs,
                strideDims,
                paddingDims,
                pooling),
-      FRAME(name,
+      FRAME(deepNet, name,
             poolDims,
             nbOutputs,
             strideDims,
             paddingDims,
             pooling,
             activation),
-      SPIKE(net,
+      SPIKE(net, deepNet, 
             name,
             poolDims,
             nbOutputs,

@@ -34,6 +34,7 @@ namespace N2D2 {
 
 class Activation;
 class BaseInterface;
+class DeepNet;
 class Filler;
 template<typename T>
 class Matrix;
@@ -44,6 +45,7 @@ class DeconvCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<DeconvCell>(
         Network&,
+        const DeepNet&, 
         const std::string&,
         const std::vector<unsigned int>&,
         unsigned int,
@@ -73,7 +75,7 @@ public:
         HWCO
     };
 
-    DeconvCell(const std::string& name,
+    DeconvCell(const DeepNet& deepNet, const std::string& name,
                const std::vector<unsigned int>& kernelDims,
                unsigned int nbOutputs,
                const std::vector<unsigned int>& strideDims

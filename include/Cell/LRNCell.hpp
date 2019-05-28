@@ -28,10 +28,13 @@
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class LRNCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<LRNCell>(const std::string&, unsigned int)>
+        <std::shared_ptr<LRNCell>(const DeepNet& deepNet, const std::string&, unsigned int)>
     RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -41,7 +44,7 @@ public:
     }
     static const char* Type;
 
-    LRNCell(const std::string& name, unsigned int nbOutputs);
+    LRNCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
     const char* getType() const
     {
         return Type;

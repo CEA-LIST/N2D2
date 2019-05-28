@@ -22,13 +22,14 @@
 #define N2D2_UNPOOLCELL_FRAME_H
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "UnpoolCell.hpp"
 #include "PoolCell_Frame_Kernels.hpp"
 
 namespace N2D2 {
 class UnpoolCell_Frame : public virtual UnpoolCell, public Cell_Frame<Float_T> {
 public:
-    UnpoolCell_Frame(const std::string& name,
+    UnpoolCell_Frame(const DeepNet& deepNet, const std::string& name,
                    const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
                    const std::vector<unsigned int>& strideDims
@@ -39,6 +40,7 @@ public:
                    const std::shared_ptr<Activation>& activation
                    = std::shared_ptr<Activation>());
     static std::shared_ptr<UnpoolCell> create(Network& /*net*/,
+        const DeepNet& deepNet, 
         const std::string& name,
         const std::vector<unsigned int>& poolDims,
         unsigned int nbOutputs,
@@ -50,7 +52,7 @@ public:
         const std::shared_ptr<Activation>& activation
             = std::shared_ptr<Activation>())
     {
-        return std::make_shared<UnpoolCell_Frame>(name,
+        return std::make_shared<UnpoolCell_Frame>(deepNet, name,
                                                 poolDims,
                                                 nbOutputs,
                                                 strideDims,

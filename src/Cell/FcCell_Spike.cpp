@@ -22,6 +22,7 @@
 #include "Filler/NormalFiller.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 #include "Synapse_Static.hpp"
 #include "FloatT.hpp"
 
@@ -30,12 +31,12 @@ N2D2::FcCell_Spike::mRegistrar("Spike",
     N2D2::FcCell_Spike::create,
     N2D2::Registrar<N2D2::FcCell>::Type<Float_T>());
 
-N2D2::FcCell_Spike::FcCell_Spike(Network& net,
+N2D2::FcCell_Spike::FcCell_Spike(Network& net, const DeepNet& deepNet,
                                  const std::string& name,
                                  unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      FcCell(name, nbOutputs),
-      Cell_Spike(net, name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
+      FcCell(deepNet, name, nbOutputs),
+      Cell_Spike(net, deepNet, name, nbOutputs),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mWeightsRelInit(this, "WeightsRelInit", 0.0, 0.05),

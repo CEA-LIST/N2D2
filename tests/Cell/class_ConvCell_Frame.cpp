@@ -22,6 +22,7 @@
 
 #include "Cell/ConvCell_Frame.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
+#include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
 #include "third_party/half.hpp"
@@ -33,7 +34,8 @@ using namespace N2D2;
 template <class T>
 class ConvCell_Frame_Test : public ConvCell_Frame<T> {
 public:
-    ConvCell_Frame_Test(const std::string& name,
+    ConvCell_Frame_Test(const DeepNet& deepNet,
+                        const std::string& name,
                         const std::vector<unsigned int>& kernelDims,
                         unsigned int nbOutputs,
                         const std::vector<unsigned int>& subSampleDims,
@@ -41,15 +43,15 @@ public:
                         const std::vector<int>& paddingDims,
                         const std::vector<unsigned int>& dilationDims,
                         const std::shared_ptr<Activation>& activation)
-        : Cell(name, nbOutputs),
-          ConvCell(name,
+        : Cell(deepNet, name, nbOutputs),
+          ConvCell(deepNet, name,
                    kernelDims,
                    nbOutputs,
                    subSampleDims,
                    strideDims,
                    paddingDims,
                    dilationDims),
-          ConvCell_Frame<T>(name,
+          ConvCell_Frame<T>(deepNet, name,
                          kernelDims,
                          nbOutputs,
                          subSampleDims,
@@ -125,7 +127,10 @@ TEST_DATASET(ConvCell_Frame_float,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    ConvCell_Frame<float> conv1("conv1",
+    Network net;
+    DeepNet dn(net);
+
+    ConvCell_Frame<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -188,9 +193,10 @@ TEST_DATASET(ConvCell_Frame_float,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<float> conv1("conv1",
+    ConvCell_Frame_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -320,9 +326,10 @@ TEST_DATASET(ConvCell_Frame_float,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<float> conv1("conv1",
+    ConvCell_Frame_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({4, 4}),
         16,
         std::vector<unsigned int>({1, 1}),
@@ -330,7 +337,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<float> >());
-    ConvCell_Frame_Test<float> conv2("conv2",
+    ConvCell_Frame_Test<float> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -426,8 +433,9 @@ TEST_DATASET(ConvCell_Frame_float,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
-    ConvCell_Frame_Test<float> conv1("conv1",
+    ConvCell_Frame_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -566,8 +574,9 @@ TEST_DATASET(ConvCell_Frame_float,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
-    ConvCell_Frame_Test<float> conv1("conv1",
+    ConvCell_Frame_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -706,9 +715,10 @@ TEST_DATASET(ConvCell_Frame_float,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<float> conv1("conv1",
+    ConvCell_Frame_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -796,7 +806,10 @@ TEST_DATASET(ConvCell_Frame_double,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    ConvCell_Frame<double> conv1("conv1",
+    Network net;
+    DeepNet dn(net);
+
+    ConvCell_Frame<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -859,9 +872,10 @@ TEST_DATASET(ConvCell_Frame_double,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<double> conv1("conv1",
+    ConvCell_Frame_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -991,9 +1005,10 @@ TEST_DATASET(ConvCell_Frame_double,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<double> conv1("conv1",
+    ConvCell_Frame_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({4, 4}),
         16,
         std::vector<unsigned int>({1, 1}),
@@ -1001,7 +1016,7 @@ TEST_DATASET(ConvCell_Frame_double,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<double> >());
-    ConvCell_Frame_Test<double> conv2("conv2",
+    ConvCell_Frame_Test<double> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1097,8 +1112,9 @@ TEST_DATASET(ConvCell_Frame_double,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
-    ConvCell_Frame_Test<double> conv1("conv1",
+    ConvCell_Frame_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1237,8 +1253,9 @@ TEST_DATASET(ConvCell_Frame_double,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
-    ConvCell_Frame_Test<double> conv1("conv1",
+    ConvCell_Frame_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1377,9 +1394,10 @@ TEST_DATASET(ConvCell_Frame_double,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<double> conv1("conv1",
+    ConvCell_Frame_Test<double> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1467,7 +1485,10 @@ TEST_DATASET(ConvCell_Frame_half,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    ConvCell_Frame<half_float::half> conv1("conv1",
+    Network net;
+    DeepNet dn(net);
+
+    ConvCell_Frame<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1530,9 +1551,10 @@ TEST_DATASET(ConvCell_Frame_half,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1662,9 +1684,10 @@ TEST_DATASET(ConvCell_Frame_half,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({4, 4}),
         16,
         std::vector<unsigned int>({1, 1}),
@@ -1672,7 +1695,7 @@ TEST_DATASET(ConvCell_Frame_half,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<half_float::half> >());
-    ConvCell_Frame_Test<half_float::half> conv2("conv2",
+    ConvCell_Frame_Test<half_float::half> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1768,8 +1791,9 @@ TEST_DATASET(ConvCell_Frame_half,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
-    ConvCell_Frame_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -1908,8 +1932,9 @@ TEST_DATASET(ConvCell_Frame_half,
     const unsigned int nbOutputs = 5;
 
     Network net;
+    DeepNet dn(net);
 
-    ConvCell_Frame_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -2048,9 +2073,10 @@ TEST_DATASET(ConvCell_Frame_half,
     const unsigned int nbOutputs = 10;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_Test<half_float::half> conv1("conv1",
+    ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),

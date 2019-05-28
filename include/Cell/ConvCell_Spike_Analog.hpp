@@ -22,12 +22,13 @@
 #define N2D2_CONVCELL_SPIKE_ANALOG_H
 
 #include "ConvCell_Spike.hpp"
+#include "DeepNet.hpp"
 #include "Synapse_Behavioral.hpp"
 
 namespace N2D2 {
 class ConvCell_Spike_Analog : public ConvCell_Spike {
 public:
-    ConvCell_Spike_Analog(Network& net,
+    ConvCell_Spike_Analog(Network& net, const DeepNet& deepNet, 
                           const std::string& name,
                           const std::vector<unsigned int>& kernelDims,
                           unsigned int nbOutputs,
@@ -41,6 +42,7 @@ public:
                                 = std::vector<unsigned int>(2, 1U));
     static std::shared_ptr<ConvCell>
     create(Network& net,
+           const DeepNet& deepNet, 
            const std::string& name,
            const std::vector<unsigned int>& kernelDims,
            unsigned int nbOutputs,
@@ -56,6 +58,7 @@ public:
            = std::shared_ptr<Activation>())
     {
         return std::make_shared<ConvCell_Spike_Analog>(net,
+                                                       deepNet,
                                                        name,
                                                        kernelDims,
                                                        nbOutputs,

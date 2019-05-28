@@ -20,6 +20,7 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/PoolCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -42,21 +43,22 @@ N2D2::PoolCell_Frame<double>::mRegistrar("Frame",
 
 
 template <class T>
-N2D2::PoolCell_Frame<T>::PoolCell_Frame(const std::string& name,
+N2D2::PoolCell_Frame<T>::PoolCell_Frame(const DeepNet& deepNet, 
+    const std::string& name,
     const std::vector<unsigned int>& poolDims,
     unsigned int nbOutputs,
     const std::vector<unsigned int>& strideDims,
     const std::vector<unsigned int>& paddingDims,
     Pooling pooling,
     const std::shared_ptr<Activation>& activation)
-    : Cell(name, nbOutputs),
-      PoolCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      PoolCell(deepNet, name,
                poolDims,
                nbOutputs,
                strideDims,
                paddingDims,
                pooling),
-      Cell_Frame<T>(name, nbOutputs, activation),
+      Cell_Frame<T>(deepNet, name, nbOutputs, activation),
       mPoolDesc(poolDims.size(),
                 &poolDims[0],
                 &strideDims[0],

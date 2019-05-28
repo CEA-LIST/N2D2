@@ -23,6 +23,8 @@
 #include "N2D2.hpp"
 
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
+#include "Network.hpp"
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 
@@ -31,10 +33,11 @@ using namespace N2D2;
 template <class T>
 class SoftmaxCell_Frame_CUDA_Test : public SoftmaxCell_Frame_CUDA<T> {
 public:
-    SoftmaxCell_Frame_CUDA_Test(const std::string& name, unsigned int nbOutputs)
-        : Cell(name, nbOutputs),
-          SoftmaxCell(name, nbOutputs),
-          SoftmaxCell_Frame_CUDA<T>(name, nbOutputs) {};
+    SoftmaxCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                                const std::string& name, unsigned int nbOutputs)
+        : Cell(deepNet, name, nbOutputs),
+          SoftmaxCell(deepNet, name, nbOutputs),
+          SoftmaxCell_Frame_CUDA<T>(deepNet, name, nbOutputs) {};
 
     friend class UnitTest_SoftmaxCell_Frame_CUDA_float_backPropagate;
     friend class UnitTest_SoftmaxCell_Frame_CUDA_double_backPropagate;
@@ -58,7 +61,9 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    SoftmaxCell_Frame_CUDA<float> softmax1("softmax1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
@@ -122,7 +127,9 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    SoftmaxCell_Frame_CUDA_Test<float> softmax1("softmax1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    SoftmaxCell_Frame_CUDA_Test<float> softmax1(dn, "softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
@@ -183,7 +190,9 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    SoftmaxCell_Frame_CUDA<double> softmax1("softmax1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    SoftmaxCell_Frame_CUDA<double> softmax1(dn, "softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
@@ -247,7 +256,9 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    SoftmaxCell_Frame_CUDA_Test<double> softmax1("softmax1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    SoftmaxCell_Frame_CUDA_Test<double> softmax1(dn, "softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
@@ -308,7 +319,9 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    SoftmaxCell_Frame_CUDA<half_float::half> softmax1("softmax1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    SoftmaxCell_Frame_CUDA<half_float::half> softmax1(dn, "softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);
@@ -375,7 +388,9 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    SoftmaxCell_Frame_CUDA_Test<half_float::half> softmax1("softmax1", nbOutputs);
+    Network net;
+    DeepNet dn(net);
+    SoftmaxCell_Frame_CUDA_Test<half_float::half> softmax1(dn, "softmax1", nbOutputs);
 
     ASSERT_EQUALS(softmax1.getName(), "softmax1");
     ASSERT_EQUALS(softmax1.getNbOutputs(), nbOutputs);

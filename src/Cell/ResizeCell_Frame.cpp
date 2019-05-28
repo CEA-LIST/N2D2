@@ -25,20 +25,21 @@
 #include <stdexcept>
 #include <string>
 
+#include "DeepNet.hpp"
 #include "GradientCheck.hpp"
 
 N2D2::Registrar<N2D2::ResizeCell>
 N2D2::ResizeCell_Frame::mRegistrar("Frame",
                                        N2D2::ResizeCell_Frame::create);
 
-N2D2::ResizeCell_Frame::ResizeCell_Frame(const std::string& name,
+N2D2::ResizeCell_Frame::ResizeCell_Frame(const DeepNet& deepNet, const std::string& name,
                                          unsigned int outputsWidth,
                                          unsigned int outputsHeight,
                                          unsigned int nbOutputs,
                                          ResizeMode resizeMode)
-    : Cell(name, nbOutputs),
-      ResizeCell(name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
-      Cell_Frame<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      ResizeCell(deepNet, name, outputsWidth, outputsHeight, nbOutputs, resizeMode),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

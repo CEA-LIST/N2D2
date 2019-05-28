@@ -22,10 +22,11 @@
 #ifdef CUDA
 
 #include "Cell/Cell_CSpike_CUDA.hpp"
+#include "DeepNet.hpp"
 
-N2D2::Cell_CSpike_CUDA::Cell_CSpike_CUDA(const std::string& name,
+N2D2::Cell_CSpike_CUDA::Cell_CSpike_CUDA(const DeepNet& deepNet, const std::string& name,
                                          unsigned int nbOutputs)
-    : Cell(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs)
 {
     // ctor
 }

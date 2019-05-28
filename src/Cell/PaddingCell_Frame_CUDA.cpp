@@ -23,25 +23,26 @@
 
 #include "GradientCheck.hpp"
 #include "Cell/PaddingCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::PaddingCell>
 N2D2::PaddingCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                      N2D2::PaddingCell_Frame_CUDA::create);
 
-N2D2::PaddingCell_Frame_CUDA::PaddingCell_Frame_CUDA(const std::string& name,
+N2D2::PaddingCell_Frame_CUDA::PaddingCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                                      unsigned int nbOutputs,
                                                     int topPad,
                                                     int botPad,
                                                     int leftPad,
                                                     int rightPad)
-    : Cell(name, nbOutputs),
-      PaddingCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      PaddingCell(deepNet, name,
                   nbOutputs,
                   topPad,
                   botPad,
                   leftPad,
                   rightPad),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs)
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

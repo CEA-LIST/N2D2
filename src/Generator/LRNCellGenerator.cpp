@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/LRNCellGenerator.hpp"
 #include "StimuliProvider.hpp"
 #include "third_party/half.hpp"
@@ -27,7 +28,7 @@ N2D2::LRNCellGenerator::mRegistrar(LRNCell::Type,
                                    N2D2::LRNCellGenerator::generate);
 
 std::shared_ptr<N2D2::LRNCell>
-N2D2::LRNCellGenerator::generate(Network& /*network*/,
+N2D2::LRNCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                  StimuliProvider& sp,
                                  const std::vector
                                  <std::shared_ptr<Cell> >& parents,
@@ -50,11 +51,11 @@ N2D2::LRNCellGenerator::generate(Network& /*network*/,
     // Cell construction
     std::shared_ptr<LRNCell> cell
         = (dataType == Float32)
-            ? Registrar<LRNCell>::create<float>(model)(section, nbOutputs)
+            ? Registrar<LRNCell>::create<float>(model)(deepNet, section, nbOutputs)
           : (dataType == Float16)
-            ? Registrar<LRNCell>::create<half_float::half>(model)(section,
+            ? Registrar<LRNCell>::create<half_float::half>(model)(deepNet, section,
                                                                   nbOutputs)
-            : Registrar<LRNCell>::create<double>(model)(section, nbOutputs);
+            : Registrar<LRNCell>::create<double>(model)(deepNet, section, nbOutputs);
 
     if (!cell) {
         throw std::runtime_error(

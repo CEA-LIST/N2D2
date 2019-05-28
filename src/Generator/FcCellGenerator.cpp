@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/FcCellGenerator.hpp"
 #include "third_party/half.hpp"
 
@@ -26,7 +27,7 @@ N2D2::FcCellGenerator::mRegistrar(FcCell::Type,
                                   N2D2::FcCellGenerator::generate);
 
 std::shared_ptr<N2D2::FcCell>
-N2D2::FcCellGenerator::generate(Network& network,
+N2D2::FcCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                 StimuliProvider& sp,
                                 const std::vector
                                 <std::shared_ptr<Cell> >& parents,
@@ -62,16 +63,16 @@ N2D2::FcCellGenerator::generate(Network& network,
     // Cell construction
     std::shared_ptr<FcCell> cell
         = (dataType == Float32)
-            ? Registrar<FcCell>::create<float>(model)(network,
+            ? Registrar<FcCell>::create<float>(model)(network, deepNet, 
                                                       section,
                                                       nbOutputs,
                                                       activation)
           : (dataType == Float16)
-            ? Registrar<FcCell>::create<half_float::half>(model)(network,
+            ? Registrar<FcCell>::create<half_float::half>(model)(network, deepNet, 
                                                                  section,
                                                                  nbOutputs,
                                                                  activation)
-            : Registrar<FcCell>::create<double>(model)(network,
+            : Registrar<FcCell>::create<double>(model)(network, deepNet, 
                                                        section,
                                                        nbOutputs,
                                                        activation);

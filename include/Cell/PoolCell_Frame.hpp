@@ -22,6 +22,7 @@
 #define N2D2_POOLCELL_FRAME_H
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "PoolCell.hpp"
 #include "PoolCell_Frame_Kernels.hpp"
 
@@ -34,7 +35,7 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    PoolCell_Frame(const std::string& name,
+    PoolCell_Frame(const DeepNet& deepNet, const std::string& name,
                    const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
                    const std::vector<unsigned int>& strideDims
@@ -45,6 +46,7 @@ public:
                    const std::shared_ptr<Activation>& activation
                    = std::shared_ptr<Activation>());
     static std::shared_ptr<PoolCell> create(Network& /*net*/,
+        const DeepNet& deepNet, 
         const std::string& name,
         const std::vector<unsigned int>& poolDims,
         unsigned int nbOutputs,
@@ -56,7 +58,7 @@ public:
         const std::shared_ptr<Activation>& activation
             = std::shared_ptr<Activation>())
     {
-        return std::make_shared<PoolCell_Frame>(name,
+        return std::make_shared<PoolCell_Frame>(deepNet, name,
                                                 poolDims,
                                                 nbOutputs,
                                                 strideDims,

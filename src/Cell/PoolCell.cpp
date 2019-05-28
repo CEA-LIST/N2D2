@@ -19,17 +19,18 @@
 */
 
 #include "Cell/PoolCell.hpp"
+#include "DeepNet.hpp"
 #include "utils/Gnuplot.hpp"
 
 const char* N2D2::PoolCell::Type = "Pool";
 
-N2D2::PoolCell::PoolCell(const std::string& name,
+N2D2::PoolCell::PoolCell(const DeepNet& deepNet, const std::string& name,
                          const std::vector<unsigned int>& poolDims,
                          unsigned int nbOutputs,
                          const std::vector<unsigned int>& strideDims,
                          const std::vector<unsigned int>& paddingDims,
                          Pooling pooling)
-    : Cell(name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
       mPoolDims(poolDims),
       mStrideDims(strideDims),
       mPaddingDims(paddingDims),

@@ -28,10 +28,13 @@
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class ProposalCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<ProposalCell>(const std::string&,
+        <std::shared_ptr<ProposalCell>(const DeepNet& deepNet, const std::string&,
                                         StimuliProvider&,
                                         const unsigned int,
                                         unsigned int,
@@ -51,7 +54,7 @@ public:
     }
     static const char* Type;
 
-    ProposalCell(const std::string& name,
+    ProposalCell(const DeepNet& deepNet, const std::string& name,
                  StimuliProvider& sp,
                  const unsigned int nbOutputs,
                  unsigned int nbProposals,

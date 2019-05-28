@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "DropoutCell.hpp"
 #include "containers/Tensor.hpp"
 
@@ -39,11 +40,11 @@ public:
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
 
-    DropoutCell_Frame(const std::string& name, unsigned int nbOutputs);
-    static std::shared_ptr<DropoutCell> create(const std::string& name,
+    DropoutCell_Frame(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
+    static std::shared_ptr<DropoutCell> create(const DeepNet& deepNet, const std::string& name,
                                                unsigned int nbOutputs)
     {
-        return std::make_shared<DropoutCell_Frame>(name, nbOutputs);
+        return std::make_shared<DropoutCell_Frame>(deepNet, name, nbOutputs);
     }
 
     virtual void initialize();

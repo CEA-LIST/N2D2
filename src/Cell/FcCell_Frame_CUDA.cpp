@@ -25,6 +25,7 @@
 #include "Filler/NormalFiller.hpp"
 #include "GradientCheck.hpp"
 #include "Cell/FcCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -46,13 +47,13 @@ N2D2::FcCell_Frame_CUDA<double>::mRegistrar("Frame_CUDA",
     N2D2::Registrar<N2D2::FcCell>::Type<double>());
 
 template <class T>
-N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const std::string& name,
+N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                            unsigned int nbOutputs,
                                            const std::shared_ptr
                                            <Activation>& activation)
-    : Cell(name, nbOutputs),
-      FcCell(name, nbOutputs),
-      Cell_Frame_CUDA<T>(name, nbOutputs, activation),
+    : Cell(deepNet, name, nbOutputs),
+      FcCell(deepNet, name, nbOutputs),
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mOnesVector(NULL),

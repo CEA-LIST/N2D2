@@ -30,6 +30,9 @@
 #include "controler/Interface.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 template <class T>
 class Cell_Frame : public virtual Cell, public Cell_Frame_Top {
 public:
@@ -41,7 +44,7 @@ public:
      * @param nbOutputs     Number of outputs maps of the cell (if 1D = number
      *of outputs)
     */
-    Cell_Frame(const std::string& name,
+    Cell_Frame(const DeepNet& deepNet, const std::string& name,
                unsigned int nbOutputs,
                const std::shared_ptr<Activation>& activation
                = std::shared_ptr<Activation>());

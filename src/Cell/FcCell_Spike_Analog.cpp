@@ -21,6 +21,7 @@
 #include "Cell/FcCell_Spike_Analog.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::FcCell>
 N2D2::FcCell_Spike_Analog::mRegistrar("Spike_Analog",
@@ -28,11 +29,12 @@ N2D2::FcCell_Spike_Analog::mRegistrar("Spike_Analog",
     N2D2::Registrar<N2D2::FcCell>::Type<Float_T>());
 
 N2D2::FcCell_Spike_Analog::FcCell_Spike_Analog(Network& net,
+                                               const DeepNet& deepNet, 
                                                const std::string& name,
                                                unsigned int nbOutputs)
-    : Cell(name, nbOutputs),
-      FcCell(name, nbOutputs),
-      FcCell_Spike(net, name, nbOutputs),
+    : Cell(deepNet, name, nbOutputs),
+      FcCell(deepNet, name, nbOutputs),
+      FcCell_Spike(net, deepNet, name, nbOutputs),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mWeightsMinMean(this, "WeightsMinMean", 1, 0.1),

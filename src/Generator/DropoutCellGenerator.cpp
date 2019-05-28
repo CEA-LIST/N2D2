@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Generator/DropoutCellGenerator.hpp"
 #include "third_party/half.hpp"
 
@@ -26,7 +27,7 @@ N2D2::DropoutCellGenerator::mRegistrar(DropoutCell::Type,
                                        N2D2::DropoutCellGenerator::generate);
 
 std::shared_ptr<N2D2::DropoutCell>
-N2D2::DropoutCellGenerator::generate(Network& /*network*/,
+N2D2::DropoutCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
                                      StimuliProvider& sp,
                                      const std::vector
                                      <std::shared_ptr<Cell> >& parents,
@@ -50,11 +51,11 @@ N2D2::DropoutCellGenerator::generate(Network& /*network*/,
     // Cell construction
     std::shared_ptr<DropoutCell> cell
         = (dataType == Float32)
-            ? Registrar<DropoutCell>::create<float>(model)(section, nbOutputs)
+            ? Registrar<DropoutCell>::create<float>(model)(deepNet, section, nbOutputs)
           : (dataType == Float16)
-            ? Registrar<DropoutCell>::create<half_float::half>(model)(section,
+            ? Registrar<DropoutCell>::create<half_float::half>(model)(deepNet, section,
                                                                       nbOutputs)
-            : Registrar<DropoutCell>::create<double>(model)(section,
+            : Registrar<DropoutCell>::create<double>(model)(deepNet, section,
                                                             nbOutputs);
 
     if (!cell) {

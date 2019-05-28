@@ -23,6 +23,7 @@
 #include "N2D2.hpp"
 
 #include "Database/MNIST_IDX_Database.hpp"
+#include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
@@ -35,20 +36,21 @@ using namespace N2D2;
 
 class ROIPoolingCell_Frame_CUDA_Test : public ROIPoolingCell_Frame_CUDA {
 public:
-    ROIPoolingCell_Frame_CUDA_Test(const std::string& name,
+    ROIPoolingCell_Frame_CUDA_Test(const DeepNet& deepNet, 
+                                   const std::string& name,
                               StimuliProvider& sp,
                               unsigned int outputsWidth,
                               unsigned int outputsHeight,
                               unsigned int nbOutputs,
                               ROIPooling pooling)
-        : Cell(name, nbOutputs),
-          ROIPoolingCell(name,
+        : Cell(deepNet, name, nbOutputs),
+          ROIPoolingCell(deepNet, name,
                          sp,
                          outputsWidth,
                          outputsHeight,
                          nbOutputs,
                          pooling),
-          ROIPoolingCell_Frame_CUDA(name,
+          ROIPoolingCell_Frame_CUDA(deepNet, name,
                                sp,
                                outputsWidth,
                                outputsHeight,
@@ -70,7 +72,10 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
              std::make_tuple(7U, 10U, 2U))
 {
     StimuliProvider sp(EmptyDatabase, {16, 16, 1}, 5);
-    ROIPoolingCell_Frame_CUDA pool1("pool1",
+
+    Network net;
+    DeepNet dn(net);
+    ROIPoolingCell_Frame_CUDA pool1(dn, "pool1",
                                sp,
                                outputsWidth,
                                outputsHeight,
@@ -104,9 +109,10 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     const unsigned int nbProposals = 2;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ROIPoolingCell_Frame_CUDA_Test pool1("pool1",
+    ROIPoolingCell_Frame_CUDA_Test pool1(dn, "pool1",
                                     env,
                                     outputsWidth,
                                     outputsHeight,
@@ -159,9 +165,10 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     const unsigned int nbProposals = 2;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ConvCell_Frame_CUDA<Float_T> conv1("conv1",
+    ConvCell_Frame_CUDA<Float_T> conv1(dn, "conv1",
         std::vector<unsigned int>({1, 1}),
         nbOutputs,
         std::vector<unsigned int>({1, 1}),
@@ -169,7 +176,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
         std::vector<int>({0, 0}),
         std::vector<unsigned int>({1U, 1U}),
         std::make_shared<TanhActivation_Frame<Float_T> >());
-    ROIPoolingCell_Frame_CUDA_Test pool2("pool2",
+    ROIPoolingCell_Frame_CUDA_Test pool2(dn, "pool2",
                                     env,
                                     outputsWidth,
                                     outputsHeight,
@@ -240,9 +247,10 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
     const unsigned int nbProposals = 2;
 
     Network net;
+    DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    ROIPoolingCell_Frame_CUDA_Test pool1("pool1",
+    ROIPoolingCell_Frame_CUDA_Test pool1(dn, "pool1",
                                     env,
                                     outputsWidth,
                                     outputsHeight,

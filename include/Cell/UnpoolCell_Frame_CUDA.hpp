@@ -22,6 +22,7 @@
 #define N2D2_UNPOOLCELL_FRAME_CUDA_H
 
 #include "Cell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include "UnpoolCell.hpp"
 #include "PoolCell_Frame_CUDA_Kernels.hpp"
 
@@ -33,7 +34,7 @@ namespace N2D2 {
 class UnpoolCell_Frame_CUDA : public virtual UnpoolCell, public Cell_Frame_CUDA<Float_T>
 {
 public:
-    UnpoolCell_Frame_CUDA(const std::string& name,
+    UnpoolCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                    const std::vector<unsigned int>& poolDims,
                    unsigned int nbOutputs,
                    const std::vector<unsigned int>& strideDims
@@ -44,6 +45,7 @@ public:
                    const std::shared_ptr<Activation>& activation
                    = std::shared_ptr<Activation>());
     static std::shared_ptr<UnpoolCell> create(Network& /*net*/,
+        const DeepNet& deepNet, 
         const std::string& name,
         const std::vector<unsigned int>& poolDims,
         unsigned int nbOutputs,
@@ -55,7 +57,7 @@ public:
         const std::shared_ptr<Activation>& activation
             = std::shared_ptr<Activation>())
     {
-        return std::make_shared<UnpoolCell_Frame_CUDA>(name,
+        return std::make_shared<UnpoolCell_Frame_CUDA>(deepNet, name,
                                                        poolDims,
                                                        nbOutputs,
                                                        strideDims,

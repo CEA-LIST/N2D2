@@ -32,12 +32,13 @@
 namespace N2D2 {
 
 class Activation;
+class DeepNet;
 class Network;
 
 class FMPCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<FMPCell>(Network&,
+        <std::shared_ptr<FMPCell>(Network&, const DeepNet&, 
                                   const std::string&,
                                   double,
                                   unsigned int,
@@ -51,7 +52,7 @@ public:
     }
     static const char* Type;
 
-    FMPCell(const std::string& name,
+    FMPCell(const DeepNet& deepNet, const std::string& name,
             double scalingRatio,
             unsigned int nbOutputs);
     const char* getType() const

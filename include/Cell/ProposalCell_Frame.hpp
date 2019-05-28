@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "ProposalCell.hpp"
 
 namespace N2D2 {
@@ -43,7 +44,7 @@ public:
     };
 
 
-    ProposalCell_Frame(const std::string& name,
+    ProposalCell_Frame(const DeepNet& deepNet, const std::string& name,
                         StimuliProvider& sp,
                         const unsigned int nbOutputs,
                         unsigned int nbProposals,
@@ -57,7 +58,7 @@ public:
                         std::vector<unsigned int> numTemplates
                                                 = std::vector<unsigned int>());
 
-    static std::shared_ptr<ProposalCell> create(const std::string& name,
+    static std::shared_ptr<ProposalCell> create(const DeepNet& deepNet, const std::string& name,
                                           StimuliProvider& sp,
                                           const unsigned int nbOutputs,
                                           unsigned int nbProposals,
@@ -73,7 +74,7 @@ public:
                                           std::vector<unsigned int> numTemplates
                                                 = std::vector<unsigned int>())
     {
-        return std::make_shared<ProposalCell_Frame>(name,
+        return std::make_shared<ProposalCell_Frame>(deepNet, name,
                                                     sp,
                                                     nbOutputs,
                                                     nbProposals,

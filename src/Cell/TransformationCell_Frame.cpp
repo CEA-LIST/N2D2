@@ -19,6 +19,7 @@
 */
 
 #include "Cell/TransformationCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Transformation/Transformation.hpp"
 
 N2D2::Registrar<N2D2::TransformationCell>
@@ -26,12 +27,13 @@ N2D2::TransformationCell_Frame::mRegistrar(
     "Frame", N2D2::TransformationCell_Frame::create);
 
 N2D2::TransformationCell_Frame::TransformationCell_Frame(
+    const DeepNet& deepNet, 
     const std::string& name,
     unsigned int nbOutputs,
     const std::shared_ptr<Transformation>& transformation)
-    : Cell(name, nbOutputs),
-      TransformationCell(name, nbOutputs, transformation),
-      Cell_Frame<Float_T>(name, nbOutputs)
+    : Cell(deepNet, name, nbOutputs),
+      TransformationCell(deepNet, name, nbOutputs, transformation),
+      Cell_Frame<Float_T>(deepNet, name, nbOutputs)
 {
     // ctor
 }

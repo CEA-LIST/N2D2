@@ -22,17 +22,18 @@
 #define N2D2_FMPCELL_FRAME_H
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "FMPCell.hpp"
 
 namespace N2D2 {
 class FMPCell_Frame : public virtual FMPCell, public Cell_Frame<Float_T> {
 public:
-    FMPCell_Frame(const std::string& name,
+    FMPCell_Frame(const DeepNet& deepNet, const std::string& name,
                   double scalingRatio,
                   unsigned int nbOutputs,
                   const std::shared_ptr<Activation>& activation
                   = std::shared_ptr<Activation>());
-    static std::shared_ptr<FMPCell> create(Network& /*net*/,
+    static std::shared_ptr<FMPCell> create(Network& /*net*/, const DeepNet& deepNet, 
                                            const std::string& name,
                                            double scalingRatio,
                                            unsigned int nbOutputs,
@@ -42,7 +43,7 @@ public:
                                            <Activation>())
     {
         return std::make_shared
-            <FMPCell_Frame>(name, scalingRatio, nbOutputs, activation);
+            <FMPCell_Frame>(deepNet, name, scalingRatio, nbOutputs, activation);
     }
 
     virtual void initialize();

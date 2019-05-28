@@ -21,19 +21,20 @@
 #ifdef CUDA
 
 #include "Cell/FMPCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 
 N2D2::Registrar<N2D2::FMPCell>
 N2D2::FMPCell_Frame_CUDA::mRegistrar("Frame_CUDA",
                                      N2D2::FMPCell_Frame_CUDA::create);
 
-N2D2::FMPCell_Frame_CUDA::FMPCell_Frame_CUDA(const std::string& name,
+N2D2::FMPCell_Frame_CUDA::FMPCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                              double scalingRatio,
                                              unsigned int nbOutputs,
                                              const std::shared_ptr
                                              <Activation>& activation)
-    : Cell(name, nbOutputs),
-      FMPCell(name, scalingRatio, nbOutputs),
-      Cell_Frame_CUDA<Float_T>(name, nbOutputs, activation)
+    : Cell(deepNet, name, nbOutputs),
+      FMPCell(deepNet, name, scalingRatio, nbOutputs),
+      Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs, activation)
 {
     // ctor
 }

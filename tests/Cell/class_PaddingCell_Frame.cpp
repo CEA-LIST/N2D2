@@ -21,6 +21,7 @@
 #include "N2D2.hpp"
 
 #include "Cell/PaddingCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "Network.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Random.hpp"
@@ -29,21 +30,22 @@ using namespace N2D2;
 
 class PaddingCell_Frame_Test : public PaddingCell_Frame {
 public:
-    PaddingCell_Frame_Test( const std::string& name,
-                            unsigned int nbOutputs,
-                            int topPad,
-                            int botPad,
-                            int leftPad,
-                            int rightPad)
+    PaddingCell_Frame_Test(const DeepNet& deepNet,
+                           const std::string& name,
+                           unsigned int nbOutputs,
+                           int topPad,
+                           int botPad,
+                           int leftPad,
+                           int rightPad)
 
-        : Cell(name, nbOutputs),
-          PaddingCell(name,
+        : Cell(deepNet, name, nbOutputs),
+          PaddingCell(deepNet, name,
                       nbOutputs,
                       topPad,
                       botPad,
                       leftPad,
                       rightPad),
-          PaddingCell_Frame(name,
+          PaddingCell_Frame(deepNet, name,
                             nbOutputs,
                             topPad,
                             botPad,
@@ -78,7 +80,9 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -143,7 +147,9 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -196,7 +202,9 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,
@@ -297,7 +305,9 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    PaddingCell_Frame padding1("padding1",
+    Network net;
+    DeepNet dn(net);
+    PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
                                 botPad,

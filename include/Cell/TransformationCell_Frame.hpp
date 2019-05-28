@@ -26,23 +26,24 @@
 #include <vector>
 
 #include "Cell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "TransformationCell.hpp"
 
 namespace N2D2 {
 class TransformationCell_Frame : public virtual TransformationCell,
                                  public Cell_Frame<Float_T> {
 public:
-    TransformationCell_Frame(const std::string& name,
+    TransformationCell_Frame(const DeepNet& deepNet, const std::string& name,
                              unsigned int nbOutputs,
                              const std::shared_ptr
                              <Transformation>& transformation);
     static std::shared_ptr<TransformationCell>
-    create(const std::string& name,
+    create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Transformation>& transformation)
     {
         return std::make_shared
-            <TransformationCell_Frame>(name, nbOutputs, transformation);
+            <TransformationCell_Frame>(deepNet, name, nbOutputs, transformation);
     }
 
     virtual double setOutputTarget(const Tensor<int>& /*targets*/,

@@ -28,10 +28,13 @@
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
+
+class DeepNet;
+
 class RPCell : public virtual Cell {
 public:
     typedef std::function
-        <std::shared_ptr<RPCell>(const std::string&,
+        <std::shared_ptr<RPCell>(const DeepNet&, const std::string&,
                                  unsigned int,
                                  unsigned int,
                                  unsigned int,
@@ -45,7 +48,7 @@ public:
     }
     static const char* Type;
 
-    RPCell(const std::string& name,
+    RPCell(const DeepNet& deepNet, const std::string& name,
            unsigned int nbAnchors,
            unsigned int nbProposals,
            unsigned int scoreIndex = 0,

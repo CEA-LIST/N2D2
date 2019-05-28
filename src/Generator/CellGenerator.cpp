@@ -19,12 +19,14 @@
 */
 
 #include "Generator/CellGenerator.hpp"
+#include "DeepNet.hpp"
 
 std::string N2D2::CellGenerator::mDefaultModel = "Frame";
 N2D2::DataType N2D2::CellGenerator::mDefaultDataType = N2D2::Float32;
 
 std::shared_ptr<N2D2::Cell>
 N2D2::CellGenerator::generate(Network& network,
+                              const DeepNet& deepNet,
                               StimuliProvider& sp,
                               const std::vector
                               <std::shared_ptr<Cell> >& parents,
@@ -40,7 +42,7 @@ N2D2::CellGenerator::generate(Network& network,
     }
 
     std::shared_ptr<Cell> cell = Registrar
-        <CellGenerator>::create(type)(network, sp, parents, iniConfig, section);
+        <CellGenerator>::create(type)(network, deepNet, sp, parents, iniConfig, section);
 
     iniConfig.setProperty("_NbChannels", cell->getNbChannels());
     iniConfig.setProperty("_ChannelsWidth", cell->getChannelsWidth());

@@ -33,6 +33,7 @@
 
 namespace N2D2 {
 
+class DeepNet;
 class ROI;
 class StimuliProvider;
 
@@ -41,6 +42,7 @@ public:
 
 
     typedef std::function<std::shared_ptr<AnchorCell>(
+        const DeepNet&, 
         const std::string&,
         StimuliProvider&,
         const std::vector<AnchorCell_Frame_Kernels::Anchor>&,
@@ -54,7 +56,7 @@ public:
     }
     static const char* Type;
 
-    AnchorCell(const std::string& name,
+    AnchorCell(const DeepNet& deepNet, const std::string& name,
                StimuliProvider& sp,
                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                unsigned int scoresCls = 1);

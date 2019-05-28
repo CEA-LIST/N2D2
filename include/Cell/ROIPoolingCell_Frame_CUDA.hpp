@@ -33,26 +33,27 @@
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
+#include "DeepNet.hpp"
 
 namespace N2D2 {
 class ROIPoolingCell_Frame_CUDA : public virtual ROIPoolingCell,
                                   public Cell_Frame_CUDA<Float_T>
 {
 public:
-    ROIPoolingCell_Frame_CUDA(const std::string& name,
+    ROIPoolingCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                               StimuliProvider& sp,
                               unsigned int outputsWidth,
                               unsigned int outputsHeight,
                               unsigned int nbOutputs,
                               ROIPooling pooling);
-    static std::shared_ptr<ROIPoolingCell> create(const std::string& name,
+    static std::shared_ptr<ROIPoolingCell> create(const DeepNet& deepNet, const std::string& name,
                                                   StimuliProvider& sp,
                                                   unsigned int outputsWidth,
                                                   unsigned int outputsHeight,
                                                   unsigned int nbOutputs,
                                                   ROIPooling pooling)
     {
-        return std::make_shared<ROIPoolingCell_Frame_CUDA>(name,
+        return std::make_shared<ROIPoolingCell_Frame_CUDA>(deepNet, name,
                                                            sp,
                                                            outputsWidth,
                                                            outputsHeight,

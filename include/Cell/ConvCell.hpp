@@ -31,6 +31,7 @@ namespace N2D2 {
 
 class Activation;
 class BaseInterface;
+class DeepNet;
 class Network;
 class Filler;
 class Solver;
@@ -41,6 +42,7 @@ class ConvCell : public virtual Cell {
 public:
     typedef std::function<std::shared_ptr<ConvCell>(
         Network&,
+        const DeepNet&,
         const std::string&,
         const std::vector<unsigned int>&,
         unsigned int,
@@ -71,7 +73,7 @@ public:
         HWCO
     };
 
-    ConvCell(const std::string& name,
+    ConvCell(const DeepNet& deepNet, const std::string& name,
              const std::vector<unsigned int>& kernelDims,
              unsigned int nbOutputs,
              const std::vector<unsigned int>& subSampleDims

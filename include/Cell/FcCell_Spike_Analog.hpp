@@ -21,16 +21,17 @@
 #ifndef N2D2_FCCELL_SPIKE_ANALOG_H
 #define N2D2_FCCELL_SPIKE_ANALOG_H
 
+#include "DeepNet.hpp"
 #include "FcCell_Spike.hpp"
 #include "Synapse_Behavioral.hpp"
 
 namespace N2D2 {
 class FcCell_Spike_Analog : public FcCell_Spike {
 public:
-    FcCell_Spike_Analog(Network& net,
+    FcCell_Spike_Analog(Network& net, const DeepNet& deepNet, 
                         const std::string& name,
                         unsigned int nbOutputs);
-    static std::shared_ptr<FcCell> create(Network& net,
+    static std::shared_ptr<FcCell> create(Network& net, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
@@ -38,7 +39,7 @@ public:
                                           = std::shared_ptr
                                           <Activation>())
     {
-        return std::make_shared<FcCell_Spike_Analog>(net, name, nbOutputs);
+        return std::make_shared<FcCell_Spike_Analog>(net, deepNet, name, nbOutputs);
     }
 
     virtual void initialize();

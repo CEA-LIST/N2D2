@@ -19,6 +19,7 @@
 */
 
 #include "Cell/DeconvCell_Frame.hpp"
+#include "DeepNet.hpp"
 #include "GradientCheck.hpp"
 #include "Filler/NormalFiller.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
@@ -43,7 +44,7 @@ N2D2::DeconvCell_Frame<double>::mRegistrar("Frame",
     N2D2::Registrar<N2D2::DeconvCell>::Type<double>());
 
 template <class T>
-N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const std::string& name,
+N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const DeepNet& deepNet, const std::string& name,
                                  const std::vector<unsigned int>& kernelDims,
                                  unsigned int nbOutputs,
                                  const std::vector<unsigned int>& strideDims,
@@ -51,14 +52,14 @@ N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const std::string& name,
                                  const std::vector<unsigned int>& dilationDims,
                                  const std::shared_ptr
                                          <Activation>& activation)
-    : Cell(name, nbOutputs),
-      DeconvCell(name,
+    : Cell(deepNet, name, nbOutputs),
+      DeconvCell(deepNet, name,
                  kernelDims,
                  nbOutputs,
                  strideDims,
                  paddingDims,
                  dilationDims),
-      Cell_Frame<T>(name, nbOutputs, activation),
+      Cell_Frame<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<T> >()),
