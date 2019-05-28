@@ -102,13 +102,11 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
         confusionMatrix.resize(nbTargets, nbTargets, 0);
 
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
-    const double xRatio = (labels.dimX() - 1)
-                          / (double)(mCell->getOutputsWidth() - 1);
-    const double yRatio = (labels.dimY() - 1)
-                          / (double)(mCell->getOutputsHeight() - 1);
+    const double xRatio = labels.dimX() / (double)mCell->getOutputsWidth();
+    const double yRatio = labels.dimY() / (double)mCell->getOutputsHeight();
 
     mEstimatedLabels.synchronizeDToH();
-    
+
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
@@ -150,7 +148,6 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
              it != itEnd;
              ++it) {
             const int bbLabel = (*it).cls;
-
             DetectedBB dbb(std::make_shared<RectangularROI<int> >(
                                bbLabel,
                                // RectangularROI<>() bottom right is exclusive,

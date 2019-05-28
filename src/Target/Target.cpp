@@ -1128,10 +1128,17 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     const double yRatio = labels.dimY() / (double)mCell->getOutputsHeight();
 
     const cv::Rect rect = roi->getBoundingRect();
-    const unsigned int x0 = rect.tl().x / xRatio;
-    const unsigned int y0 = rect.tl().y / yRatio;
-    const unsigned int x1 = rect.br().x / xRatio;
-    const unsigned int y1 = rect.br().y / yRatio;
+    // We should get back the coordinates from TargetROIs::process()
+    // ( (*it).j0), (*it).i0, (*it).j1 + 1, (*it).i1 + 1 )
+    // If xRatio and yRatio are integer, no problem
+    // Otherwise, we hope that round() will give the correct result.
+    // It works on simple cases, but I don't have a general demonstration.
+    // Alternatively, we could provide the *output* coordinates to 
+    // getEstimatedLabel(), but that would break existing demo code.
+    const unsigned int x0 = Utils::round(rect.tl().x / xRatio);
+    const unsigned int y0 = Utils::round(rect.tl().y / yRatio);
+    const unsigned int x1 = Utils::round(rect.br().x / xRatio);
+    const unsigned int y1 = Utils::round(rect.br().y / yRatio);
     const unsigned int size = (x1 - x0) * (y1 - y0);
 
     if (size == 0) {
