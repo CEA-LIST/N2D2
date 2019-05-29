@@ -53,6 +53,12 @@ public:
 private:
     double mMinVal;
     double mMaxVal;
+
+    /**
+     * mMoments[0] = nb values
+     * mMoments[1] = sum of values
+     * mMoments[2] = sum of squared values
+     */
     std::vector<double> mMoments;
 };
 }
