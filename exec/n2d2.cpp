@@ -581,7 +581,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         if(opt.weights.empty() && opt.load.empty()) {
             std::cout << "No weights or saved state passed in parameters. "
                       << "The default weights are not normalized. "
-                      << "Use the test database to normalize them before the calibration pass." 
+                      << "Using the test database to normalize them before the calibration pass..." 
                       << std::endl;
 
             test(opt, deepNet, false);
