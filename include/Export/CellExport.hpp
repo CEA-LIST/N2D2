@@ -91,7 +91,7 @@ public:
                     Cell::FreeParametersType freeParameterType = Cell::Multiplicative);
 
 private:
-    static double getScalingForFreeParameterType(Cell::FreeParametersType freeParameterType);
+    static double getScalingForFreeParameterType(const Cell& cell, Cell::FreeParametersType freeParameterType);
 };
 }
 

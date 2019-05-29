@@ -18,8 +18,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Export/CellExport.hpp"
 #include "Cell/Cell.hpp"
+#include "Export/CellExport.hpp"
+#include "Export/DeepNetExport.hpp"
 #include "utils/Utils.hpp"
 
 N2D2::CellExport::Precision N2D2::CellExport::mPrecision = Int8;
@@ -64,7 +65,7 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
 long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double value, 
                                                     Cell::FreeParametersType freeParameterType)
 {
-    const bool sat = (std::abs(value) > 1.0);
+    const bool sat = (freeParameterType == Cell::Additive)?false:(std::abs(value) > 1.0);
     if (sat) {
         value = Utils::clamp(value, -1.0, 1.0);
         std::cout << Utils::cwarning
@@ -94,8 +95,8 @@ long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double val
             mWarnSat = false;
         }
     }
-
-    const double scaling = getScalingForFreeParameterType(freeParameterType);
+    
+    const double scaling = getScalingForFreeParameterType(cell, freeParameterType);
     return getIntApprox(scaling * value, mIntApprox);
 }
 
@@ -106,9 +107,9 @@ bool N2D2::CellExport::generateFreeParameter(const Cell& cell, double value, std
     if (mPrecision > 0) {
         stream << getIntFreeParameter(cell, value, freeParameterType);
 
-        const bool sat = (std::abs(value) > 1.0);
+        const bool sat = (freeParameterType == Cell::Additive)?false:(std::abs(value) > 1.0);
         if (sat) {
-            const double val = getScalingForFreeParameterType(freeParameterType) * value;
+            const double val = getScalingForFreeParameterType(cell, freeParameterType) * value;
             stream << " /*SAT(" << val << ")*/";
         }
 
@@ -130,13 +131,19 @@ bool N2D2::CellExport::generateFreeParameter(const Cell& cell, double value, std
     }
 }
 
-double N2D2::CellExport::getScalingForFreeParameterType(Cell::FreeParametersType freeParameterType) {
-    // Additive free parameters are on 2*mPrecision bytes, we scale by (2**(precision-1)-1)**2
+double N2D2::CellExport::getScalingForFreeParameterType(const Cell& cell, Cell::FreeParametersType freeParameterType) {
+    double scaling = (double) std::pow(2, mPrecision - 1) - 1;
+
+    // For the bias we also need to scale it by the maximum value of the input type.
+    // A bias is just like an extra connection where the input is equal to 1.0.
     if(freeParameterType == Cell::Additive) {
-        return (double) std::pow((std::pow(2, mPrecision - 1) - 1), 2);
+        if(DeepNetExport::isCellInputsUnsigned(cell)) {
+            scaling *= (std::pow(2, (int) mPrecision) - 1);
+        }
+        else {
+            scaling *= (std::pow(2, (int) mPrecision - 1) - 1);
+        }
     }
-    // Other free parameters are on mPrecision bytes, we scale by 2**(precision-1)-1
-    else {
-        return (double) std::pow(2, mPrecision - 1) - 1;
-    }  
+
+    return scaling;
 }
