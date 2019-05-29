@@ -512,8 +512,6 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     } // avoid ignoring return value warning
 #endif
 
-    const std::vector<std::string>& labelsName = getTargetLabelsName();
-
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
