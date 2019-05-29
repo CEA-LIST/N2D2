@@ -286,7 +286,7 @@ N2D2::DeepNetExport::getMapLayer(DeepNet& deepNet,
     return mapping;
 }
 
-bool N2D2::DeepNetExport::isCellUnsigned(DeepNet& deepNet, Cell& cell)
+bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell)
 {
     if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
         // Unsigned cells are not allowed
@@ -294,7 +294,7 @@ bool N2D2::DeepNetExport::isCellUnsigned(DeepNet& deepNet, Cell& cell)
     }
 
     const std::vector<std::shared_ptr<Cell> > parentCells
-        = deepNet.getParentCells(cell.getName());
+        = cell.getAssociatedDeepNet().getParentCells(cell.getName());
     bool unsignedInputs = false;
 
     for (std::vector<std::shared_ptr<Cell> >::const_iterator it
@@ -326,7 +326,7 @@ bool N2D2::DeepNetExport::isCellUnsigned(DeepNet& deepNet, Cell& cell)
                     // PoolCell without activation (linear):
                     // Its output is unsigned if the cell is unsigned
                     // (i.e. has unsigned inputs)
-                    unsignedInput = isCellUnsigned(deepNet, *(*it));
+                    unsignedInput = isCellInputsUnsigned(*(*it));
                 }
             }
         }

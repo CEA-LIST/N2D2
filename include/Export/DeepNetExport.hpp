@@ -55,6 +55,8 @@ public:
                          const std::string& type);
     static void setExportParameters(const std::string& exportParameters);
 
+    static bool isCellInputsUnsigned(const Cell& cell);
+
 protected:
     static std::string getLayerName(DeepNet& deepNet,
                                     const std::vector<std::string>& layer);
@@ -72,7 +74,6 @@ protected:
     static std::string getCellOutputName(DeepNet& deepNet,
                                          const unsigned int layerNumber,
                                          const unsigned int cellNumber);
-    static bool isCellUnsigned(DeepNet& deepNet, Cell& cell);
 };
 }
 
