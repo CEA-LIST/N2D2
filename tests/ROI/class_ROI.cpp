@@ -261,6 +261,7 @@ TEST(PolygonalROI, draw)
 
 TEST(PolygonalROI, extract)
 {
+    // Polygonal points are inclusive
     std::vector<cv::Point> pts;
     pts.push_back(cv::Point(256, 0));
     pts.push_back(cv::Point(383, 255));
@@ -286,8 +287,8 @@ TEST(PolygonalROI, extract)
         throw std::runtime_error(
             "Unable to write image: ROI/PolygonalROI_extract.png");
 
-    ASSERT_EQUALS(extracted.rows, 255);
-    ASSERT_EQUALS(extracted.cols, 255);
+    ASSERT_EQUALS(extracted.rows, 256);
+    ASSERT_EQUALS(extracted.cols, 256);
 }
 
 TEST(PolygonalROI, append)
@@ -316,18 +317,26 @@ TEST(PolygonalROI, append)
 ////////////////////////////////////////////////////////////////////////////////
 TEST(RectangularROI, RectangularROI)
 {
+    // Constructor BR point is exclusive
     RectangularROI<int> roi(1, cv::Point(100, 120), cv::Point(150, 180));
 
     ASSERT_EQUALS(roi.getLabel(), 1);
     ASSERT_EQUALS(roi.points.size(), 4U);
     ASSERT_EQUALS(roi.points[0].x, 100);
     ASSERT_EQUALS(roi.points[0].y, 120);
-    ASSERT_EQUALS(roi.points[1].x, 150);
+    ASSERT_EQUALS(roi.points[1].x, 149);  // internal point is inclusive
     ASSERT_EQUALS(roi.points[1].y, 120);
-    ASSERT_EQUALS(roi.points[2].x, 150);
-    ASSERT_EQUALS(roi.points[2].y, 180);
+    ASSERT_EQUALS(roi.points[2].x, 149);  // internal point is inclusive
+    ASSERT_EQUALS(roi.points[2].y, 179);  // internal point is inclusive
     ASSERT_EQUALS(roi.points[3].x, 100);
-    ASSERT_EQUALS(roi.points[3].y, 180);
+    ASSERT_EQUALS(roi.points[3].y, 179);  // internal point is inclusive
+
+    const cv::Rect rect = roi.getBoundingRect();
+
+    ASSERT_EQUALS(rect.x, 100);
+    ASSERT_EQUALS(rect.y, 120);
+    ASSERT_EQUALS(rect.width, 50);
+    ASSERT_EQUALS(rect.height, 60);
 }
 
 TEST(RectangularROI, RectangularROI__width_height)
@@ -338,12 +347,19 @@ TEST(RectangularROI, RectangularROI__width_height)
     ASSERT_EQUALS(roi.points.size(), 4U);
     ASSERT_EQUALS(roi.points[0].x, 100);
     ASSERT_EQUALS(roi.points[0].y, 120);
-    ASSERT_EQUALS(roi.points[1].x, 150);
+    ASSERT_EQUALS(roi.points[1].x, 149);  // internal point is inclusive
     ASSERT_EQUALS(roi.points[1].y, 120);
-    ASSERT_EQUALS(roi.points[2].x, 150);
-    ASSERT_EQUALS(roi.points[2].y, 180);
+    ASSERT_EQUALS(roi.points[2].x, 149);  // internal point is inclusive
+    ASSERT_EQUALS(roi.points[2].y, 179);  // internal point is inclusive
     ASSERT_EQUALS(roi.points[3].x, 100);
-    ASSERT_EQUALS(roi.points[3].y, 180);
+    ASSERT_EQUALS(roi.points[3].y, 179);  // internal point is inclusive
+
+    const cv::Rect rect = roi.getBoundingRect();
+
+    ASSERT_EQUALS(rect.x, 100);
+    ASSERT_EQUALS(rect.y, 120);
+    ASSERT_EQUALS(rect.width, 50);
+    ASSERT_EQUALS(rect.height, 60);
 }
 
 TEST(RectangularROI, draw)
