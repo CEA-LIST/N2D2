@@ -22,6 +22,7 @@
 #define N2D2_EXPORTC_TYPEDEFS_H
 
 #include "params.h"
+#include <stdint.h>
 
 typedef enum {
     Logistic,
@@ -90,19 +91,19 @@ typedef float UDATA_T;
 typedef float SUM_T;
 typedef SUM_T BDATA_T;
 #elif NB_BITS > 0 && NB_BITS <= 8
-typedef char DATA_T;
-typedef unsigned char UDATA_T;
-typedef int SUM_T;
+typedef int8_t DATA_T;
+typedef uint8_t UDATA_T;
+typedef int32_t SUM_T;
 typedef SUM_T BDATA_T;
 #elif NB_BITS > 8 && NB_BITS <= 16
-typedef short DATA_T;
-typedef unsigned short UDATA_T;
-typedef long long int SUM_T;
+typedef int16_t DATA_T;
+typedef uint16_t UDATA_T;
+typedef int64_t SUM_T;
 typedef SUM_T BDATA_T;
 #elif NB_BITS > 16
-typedef int DATA_T;
-typedef unsigned int UDATA_T;
-typedef long long int SUM_T;
+typedef int32_t DATA_T;
+typedef uint32_t UDATA_T;
+typedef int64_t SUM_T;
 typedef SUM_T BDATA_T;
 #endif
 #endif
