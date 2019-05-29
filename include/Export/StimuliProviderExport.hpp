@@ -86,8 +86,12 @@ public:
 protected:
     static void writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
                                    CellExport::IntApprox approxMethod, 
-                                   std::ofstream& envStimuli);
+                                   std::ofstream& envStimuli,
+                                   bool asBinary = true);
 
+    template<typename T>
+    static void writeToStream(const T& value, std::ofstream& envStimuli, bool asBinary);
+    
     template<typename T>
     static void generateStimulus(StimuliProvider& sp, 
                                  Database::StimuliSet set, 
@@ -107,6 +111,20 @@ protected:
                                               Database::StimuliSet set,
                                               bool normalize = false);
 };
+
+template<typename T>
+inline void StimuliProviderExport::writeToStream(const T& value, std::ofstream& envStimuli, 
+                                                 bool asBinary) 
+{
+    if(asBinary) {
+        envStimuli.write(reinterpret_cast<const char*>(&value), sizeof(value));
+    }
+    else {
+        envStimuli.operator<<(value);
+        envStimuli << ", ";
+    }
+}
+
 }
 
 #endif // N2D2_STIMULIPROVIDEREXPORT_H

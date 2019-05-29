@@ -227,49 +227,50 @@ double StimuliProviderExport::getScaledData(Float_T data, double, CellExport::In
 
 void N2D2::StimuliProviderExport::writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
                                                      CellExport::IntApprox approxMethod, 
-                                                     std::ofstream& envStimuli) 
+                                                     std::ofstream& envStimuli,
+                                                     bool asBinary) 
 {
     if (CellExport::mPrecision == CellExport::Float64) {
         const double val = getScaledData<double>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision == CellExport::Float32 || 
              CellExport::mPrecision == CellExport::Float16) 
     {
         const float val = getScaledData<float>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 8 && unsignedData) {
         const uint8_t val = getScaledData<uint8_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 8 && !unsignedData) {
         const int8_t val = getScaledData<int8_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 16 && unsignedData) {
         const uint16_t val = getScaledData<uint16_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 16 && !unsignedData) {
         const int16_t val = getScaledData<int16_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 32 && unsignedData) {
         const uint32_t val = getScaledData<uint32_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 32 && !unsignedData) {
         const int32_t val = getScaledData<int32_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 64 && unsignedData) {
         const uint64_t val = getScaledData<uint64_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else if (CellExport::mPrecision <= 64 && !unsignedData) {
         const int64_t val = getScaledData<int64_t>(value, scaling, approxMethod);
-        envStimuli.write(reinterpret_cast<const char*>(&val), sizeof(val));
+        writeToStream(val, envStimuli, asBinary);
     }
     else {
         throw std::runtime_error("Unsupported precision.");
