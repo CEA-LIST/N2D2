@@ -164,10 +164,16 @@ size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
 
     // Determine the number of groups
     size_t nbChannelsPerGroup = 0;
-    for (; nbChannelsPerGroup < nbChannels && map(0, nbChannelsPerGroup);
-        ++nbChannelsPerGroup) {}
+    for(size_t ch = 0; ch < nbChannels; ch++) {
+        if(map(0, ch)) {
+            nbChannelsPerGroup++;
+        }
+    }
 
     size_t nbGroups = 0;
+    if(nbChannelsPerGroup == 0) {
+        throw std::runtime_error("nbChannelsPerGroup equals 0. " + std::to_string(nbChannels));
+    }
 
     if (nbChannels % nbChannelsPerGroup == 0)
         nbGroups = nbChannels / nbChannelsPerGroup;
