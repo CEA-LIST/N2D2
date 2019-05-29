@@ -1167,12 +1167,14 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                                                       prevScalingFactor * remainingFactor), 
                                                       Cell::Additive);
 
-                std::cout << (*itCell) << ": "
+                std::cout << std::setprecision(4) << (*itCell) << ": "
                     "scaling = " << scalingFactor << "   "
+                    "previous scaling = " << prevScalingFactor << "   "
                     "target = " << targetFactor << "   "
                     "applied = " << appliedFactor << "   "
                     "shifting = " << shifting << "    "
-                    "remaining = " << remainingFactor << std::endl;
+                    "shifting factor = " << shiftedFactor << "    "
+                    "remaining = " << remainingFactor << "    " << std::endl;
 
                 applied = true;
             }
