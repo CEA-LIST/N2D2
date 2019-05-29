@@ -986,12 +986,14 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
 {
     double prevScalingFactor = 1.0;
     bool nextIsMaxPool = false;
+    bool nextIsAvgPool = false;
 
     for (std::vector<std::vector<std::string> >::const_iterator it
          = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
     {
-        if (nextIsMaxPool) {
+        if (nextIsMaxPool || nextIsAvgPool) {
             nextIsMaxPool = false;
+            nextIsAvgPool = false;
             continue;
         }
 
@@ -1003,6 +1005,12 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 std::cout << "MAX pool following: " << *(*(it + 1)).begin()
                     << std::endl;
                 nextIsMaxPool = true;
+            }
+
+            if (poolCell && poolCell->getPooling() == PoolCell::Average) {
+                std::cout << "AVG pool following: " << *(*(it + 1)).begin()
+                    << std::endl;
+                nextIsAvgPool = true;
             }
         }
 
