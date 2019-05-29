@@ -25,6 +25,7 @@
 // Create a length 624 array to store the state of the generator
 unsigned int N2D2::Random::_mt[624];
 unsigned int N2D2::Random::_mt_index = 0;
+unsigned int N2D2::Random::_mt_init = false;
 
 // Initialize the generator from a seed
 void N2D2::Random::mtSeed(unsigned int seed)
@@ -33,9 +34,12 @@ void N2D2::Random::mtSeed(unsigned int seed)
     _mt_index = 0; // Reset also the index to always start at the same point
     // when we re-initialize the generator
 
-    for (unsigned int i = 1; i < 624; ++i)
+    for (unsigned int i = 1; i < 624; ++i) {
         _mt[i] = (0x6C078965 * (_mt[i - 1] ^ (_mt[i - 1] >> 30)) + i)
                  & 0xFFFFFFFF;
+    }
+
+    _mt_init = true;
 }
 
 // Extract a tempered pseudorandom number based on the index-th value,
@@ -46,6 +50,11 @@ unsigned int N2D2::Random::mtRand()
 #pragma omp critical(Random__mtRand)
 {
     if (_mt_index == 0) {
+        if (!_mt_init) {
+            throw std::domain_error("Random::mtRand(): the generator was not"
+                " initialized with mtSeed().");
+        }
+
         // Generate an array of 624 untempered numbers
         for (unsigned int i = 0; i < 624; ++i) {
             // bit 31 (32nd bit) of MT[i] + bits 0-30 (first 31 bits) of MT[...]

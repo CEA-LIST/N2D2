@@ -77,15 +77,15 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = 10;
     Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
     Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
-    inputs.synchronizeHToD();
 
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
@@ -152,6 +152,9 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = nbInputA + nbInputB;
     Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
     Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
@@ -165,11 +168,6 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    inputsA.synchronizeHToD();
-    inputsB.synchronizeHToD();
-
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
@@ -260,15 +258,15 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = 10;
     Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
     Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
-    inputs.synchronizeHToD();
 
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
@@ -309,6 +307,9 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = nbInputA + nbInputB;
     Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
     Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
@@ -322,11 +323,6 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    inputsA.synchronizeHToD();
-    inputsB.synchronizeHToD();
-
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame_CUDA padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,

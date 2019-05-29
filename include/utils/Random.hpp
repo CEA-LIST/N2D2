@@ -32,6 +32,7 @@ namespace N2D2 {
 namespace Random {
     extern unsigned int _mt[624];
     extern unsigned int _mt_index;
+    extern unsigned int _mt_init;
 
     enum Endpoints {
         ClosedInterval,

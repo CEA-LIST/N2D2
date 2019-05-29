@@ -74,14 +74,15 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 48, 48, 2),
              std::make_tuple(0, -8, 0, -8, 48, 48, 2))
 {
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = 10;
     Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
     Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
 
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
@@ -141,14 +142,15 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 12, 12, 2),
              std::make_tuple(0, -8, 0, -8, 12, 12, 2))
 {
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = 10;
     Tensor<Float_T> inputs({inputWidth, inputHeight, nbOutputs, batchSize});
     Tensor<Float_T> diffOutputs({inputWidth, inputHeight, nbOutputs, batchSize});
     for(unsigned int i = 0; i < inputs.size(); ++i)
         inputs(i) = Random::randNormal();
 
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
@@ -189,6 +191,9 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 5, 3, 48, 48, 2),
              std::make_tuple(0, -8, 0, -8, 1, 1, 48, 48, 2))
 {
+    Network net;
+    DeepNet dn(net);
+
     const unsigned int nbOutputs = nbInputA + nbInputB;
     Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
     Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
@@ -202,8 +207,6 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,
@@ -292,6 +295,9 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 5, 3, 12, 12, 2),
              std::make_tuple(0, -8, 0, -8, 1, 1, 12, 12, 2))
 {
+    Network net;
+    DeepNet dn(net);
+    
     const unsigned int nbOutputs = nbInputA + nbInputB;
     Tensor<Float_T> inputsA({inputWidth, inputHeight, nbInputA, batchSize});
     Tensor<Float_T> inputsB({inputWidth, inputHeight, nbInputB, batchSize});
@@ -305,8 +311,6 @@ TEST_DATASET(PaddingCell_Frame,
     for(unsigned int i = 0; i < inputsB.size(); ++i)
         inputsB(i) = Random::randNormal();
 
-    Network net;
-    DeepNet dn(net);
     PaddingCell_Frame padding1(dn, "padding1",
                                 nbOutputs,
                                 topPad,

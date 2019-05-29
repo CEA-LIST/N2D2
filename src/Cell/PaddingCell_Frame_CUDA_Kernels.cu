@@ -21,7 +21,8 @@
 
 #include "Cell/PaddingCell_Frame_CUDA_Kernels.hpp"
 
-__global__ void cudaSPadding_kernel( unsigned int outputWidth,
+__global__ void cudaSPadding_kernel( unsigned int nbOutputs,
+                                     unsigned int outputWidth,
                                      unsigned int outputHeight,
                                      unsigned int nbChannels,
                                      unsigned int batchSize,
@@ -39,9 +40,13 @@ __global__ void cudaSPadding_kernel( unsigned int outputWidth,
         = (blockIdx.z * blockDim.z + threadIdx.z) * nbChannels*inputWidth*inputHeight; 
 
     const unsigned int outputOffset
-        = (blockIdx.z * blockDim.z + threadIdx.z) * nbChannels*outputWidth*outputHeight;
+        = (blockIdx.z * blockDim.z + threadIdx.z) * nbOutputs*outputWidth*outputHeight;
 
-    for (unsigned int ch = blockIdx.x; ch < nbChannels; ch += gridDim.x) 
+    // nbCh = nbChannels for propagate
+    //      = nbOutputs for back-propagate
+    const unsigned int nbCh = min(nbChannels, nbOutputs);
+
+    for (unsigned int ch = blockIdx.x; ch < nbCh; ch += gridDim.x) 
     {
         for (unsigned int oy = threadIdx.y; oy < outputHeight; oy += blockDim.y) 
         {
@@ -70,32 +75,34 @@ __global__ void cudaSPadding_kernel( unsigned int outputWidth,
 
 }
 
-void N2D2::cudaSPadding(unsigned int outputSizeX,
-                        unsigned int outputSizeY,
-                        unsigned int outputNbChannels,
+void N2D2::cudaSPadding(unsigned int nbOutputs,
+                        unsigned int outputWidth,
+                        unsigned int outputHeight,
+                        unsigned int nbChannels,
                         unsigned int batchSize,
-                        unsigned int inputSizeX,
-                        unsigned int inputSizeY,
-                        int paddingLeft,
-                        int paddingRight,
-                        int paddingTop,
-                        int paddingBot,
+                        unsigned int inputWidth,
+                        unsigned int inputHeight,
+                        int leftPad,
+                        int rightPad,
+                        int topPad,
+                        int botPad,
                         const float* input,
                         float* outputs,
                         const dim3 blocksPerGrid,
                         const dim3 threadsPerBlock)
 {
 
-    cudaSPadding_kernel<<<blocksPerGrid, threadsPerBlock>>>( outputSizeX,
-                                                            outputSizeY, 
-                                                            outputNbChannels,
+    cudaSPadding_kernel<<<blocksPerGrid, threadsPerBlock>>>( nbOutputs,
+                                                            outputWidth,
+                                                            outputHeight, 
+                                                            nbChannels,
                                                             batchSize, 
-                                                            inputSizeX,
-                                                            inputSizeY, 
-                                                            paddingLeft, 
-                                                            paddingRight, 
-                                                            paddingTop, 
-                                                            paddingBot, 
+                                                            inputWidth,
+                                                            inputHeight, 
+                                                            leftPad, 
+                                                            rightPad, 
+                                                            topPad, 
+                                                            botPad, 
                                                             input,
                                                             outputs);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());

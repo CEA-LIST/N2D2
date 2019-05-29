@@ -104,7 +104,8 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
         std::shared_ptr<CudaDeviceTensor<Float_T> > input
             = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
 
-        cudaSPadding(mOutputs.dimX(),
+        cudaSPadding(mOutputs.dimZ(),
+                    mOutputs.dimX(),
                     mOutputs.dimY(),
                     mInputs[k].dimZ(),
                     mOutputs.dimB(),
@@ -119,7 +120,7 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
                     GPU_BLOCK_GRID[k],
                     GPU_THREAD_GRID[k]);
 
-        outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY()*mOutputs.dimB();
+        outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY();
     }
 
     Cell_Frame_CUDA<Float_T>::propagate(inference);
@@ -140,9 +141,10 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
         std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
             = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
-        cudaSPadding(mDiffOutputs[k].dimX(),
+        cudaSPadding(mDiffOutputs[k].dimZ(),
+                    mDiffOutputs[k].dimX(),
                     mDiffOutputs[k].dimY(),
-                    mDiffOutputs[k].dimZ(),
+                    mDiffInputs.dimZ(),
                     mDiffOutputs[k].dimB(),
                     mDiffInputs.dimX(),
                     mDiffInputs.dimY(),
@@ -157,8 +159,7 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
 
         outputOffset += mDiffOutputs[k].dimZ()
                             *mDiffInputs.dimX()
-                            *mDiffInputs.dimY()
-                            *mDiffInputs.dimB();
+                            *mDiffInputs.dimY();
 
         mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
