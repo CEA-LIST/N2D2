@@ -21,6 +21,7 @@
 #include "Export/DeepNetExport.hpp"
 #include "DeepNet.hpp"
 #include "N2D2.hpp"
+#include "Activation/RectifierActivation.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/PoolCell.hpp"
@@ -342,4 +343,27 @@ bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell)
     }
 
     return unsignedInputs;
+}
+
+bool N2D2::DeepNetExport::isCellOutputUnsigned(const Cell& cell) 
+{
+    if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
+        // Unsigned cells are not allowed
+        return false;
+    }
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    if (cellFrame.getActivation() && 
+        cellFrame.getActivation()->getType() == RectifierActivation::Type)
+    {
+        return true;
+    }
+
+    if (cell.getType() == PoolCell::Type && !cellFrame.getActivation()) {
+        // PoolCell without activation (linear), its input type is the same
+        // as its output type.
+        return isCellInputsUnsigned(cell);
+    }
+
+    return false;
 }
