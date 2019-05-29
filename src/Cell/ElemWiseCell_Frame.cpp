@@ -74,7 +74,7 @@ void N2D2::ElemWiseCell_Frame::propagate(bool inference)
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
 
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     std::vector<Tensor<Float_T> > inputs;
 

@@ -124,7 +124,7 @@ void N2D2::FcCell_Frame<T>::load(const std::string& dirName)
 template <class T>
 void N2D2::FcCell_Frame<T>::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
                                     * mOutputs.dimZ();

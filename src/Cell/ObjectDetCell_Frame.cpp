@@ -84,7 +84,7 @@ void N2D2::ObjectDetCell_Frame::initialize()
 
 void N2D2::ObjectDetCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
     const Tensor<Float_T>& input = tensor_cast<Float_T>(mInputs[0]);
     const Tensor<Float_T>& input_templates = mMaxTemplates > 0 ? tensor_cast<Float_T>(mInputs[1]) : Tensor<Float_T>();
     const Tensor<Float_T>& input_parts = mMaxParts > 0 ? tensor_cast<Float_T>(mInputs[2]) : Tensor<Float_T>();

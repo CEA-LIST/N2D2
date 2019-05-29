@@ -72,7 +72,7 @@ void N2D2::DropoutCell_Frame<T>::initialize()
 template <class T>
 void N2D2::DropoutCell_Frame<T>::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     unsigned int offset = 0;
 

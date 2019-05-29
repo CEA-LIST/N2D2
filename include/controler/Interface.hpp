@@ -193,6 +193,18 @@ public:
     virtual void synchronizeHToD() const;
     template <typename... Args> void synchronizeHToD(Args... args) const;
 
+    /** Synchronize Device To Host-based data  */
+    virtual void synchronizeDToHBased() const;
+
+    /** Synchronize Host-based data To Device */
+    virtual void synchronizeHBasedToD() const;
+
+    /** Synchronize Device-based data To Host  */
+    virtual void synchronizeDBasedToH() const;
+
+    /** Synchronize Host data To Device-based */
+    virtual void synchronizeHToDBased() const;
+
     inline void setValid();
     inline void clearValid();
     virtual ~Interface();
@@ -606,6 +618,46 @@ void N2D2::Interface<T, STACKING_DIM>::synchronizeHToD(Args... args) const
                                 dataOffset.first,
                                 typename make_indices<sizeof...(Args)>::type(),
                                 args...);
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::Interface<T, STACKING_DIM>::synchronizeDToHBased() const
+{
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+        (*it)->synchronizeDToHBased();
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::Interface<T, STACKING_DIM>::synchronizeHBasedToD() const
+{
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+        (*it)->synchronizeHBasedToD();
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::Interface<T, STACKING_DIM>::synchronizeDBasedToH() const
+{
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+        (*it)->synchronizeDBasedToH();
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::Interface<T, STACKING_DIM>::synchronizeHToDBased() const
+{
+    for (typename std::vector<tensor_type*>::const_iterator it = mData.begin(),
+                                                            itEnd = mData.end();
+         it != itEnd;
+         ++it)
+        (*it)->synchronizeHToDBased();
 }
 
 template <class T, int STACKING_DIM>

@@ -40,7 +40,7 @@ N2D2::ThresholdCell_Frame::ThresholdCell_Frame(
 
 void N2D2::ThresholdCell_Frame::propagate(bool /*inference*/)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     if (mInputs.size() > 1)
         throw std::runtime_error("ThresholdCell can only have one input");

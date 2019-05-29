@@ -43,7 +43,7 @@ void N2D2::RPCell_Frame::initialize()
 
 void N2D2::RPCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const Tensor<Float_T>& input0 = tensor_cast<Float_T>(mInputs[0]);
 

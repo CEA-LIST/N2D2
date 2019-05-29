@@ -99,7 +99,7 @@ void N2D2::ResizeCell_Frame::initialize()
 
 void N2D2::ResizeCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     switch(mResizeMode) {
         case Bilinear:

@@ -57,7 +57,7 @@ void N2D2::FMPCell_Frame::initialize()
 
 void N2D2::FMPCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     if (!inference)
         mInputsBackProp.assign({mInputs[0].dimX(),

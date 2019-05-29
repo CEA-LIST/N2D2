@@ -75,7 +75,7 @@ void N2D2::PaddingCell_Frame::initialize()
 
 void N2D2::PaddingCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     unsigned int offset = 0;
 

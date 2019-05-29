@@ -400,7 +400,7 @@ void N2D2::Cell_Frame<T>::discretizeSignals(unsigned int nbLevels,
                                          const Signals& signals)
 {
     if (signals & In) {
-        mInputs.synchronizeDToH();
+        mInputs.synchronizeDBasedToH();
 
         for (Interface<>::iterator itTensor = mInputs.begin(),
                                    itTensorEnd = mInputs.end();
@@ -417,7 +417,7 @@ void N2D2::Cell_Frame<T>::discretizeSignals(unsigned int nbLevels,
             *(*itTensor) = input;
         }
 
-        mInputs.synchronizeHToD();
+        mInputs.synchronizeHToDBased();
     }
 
     if (signals & Out) {

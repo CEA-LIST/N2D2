@@ -191,7 +191,7 @@ void N2D2::AnchorCell_Frame::initialize()
 
 void N2D2::AnchorCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const Tensor<Float_T>& inputsCls = tensor_cast<Float_T>(mInputs[0]);
     const Tensor<Float_T>& inputsCoords = (mInputs.size() > 1)

@@ -211,6 +211,18 @@ public:
     // synchronizeHToD(std::initializer_list):
     template <typename... Args> void synchronizeHToD(Args... args) const;
 
+    /** Synchronize Device To Host-based data  */
+    virtual void synchronizeDToHBased() const {};
+
+    /** Synchronize Host-based data To Device */
+    virtual void synchronizeHBasedToD() const {};
+
+    /** Synchronize Device-based data To Host  */
+    virtual void synchronizeDBasedToH() const {};
+
+    /** Synchronize Host data To Device-based */
+    virtual void synchronizeHToDBased() const {};
+
     virtual BaseTensor& operator=(const BaseTensor& base) = 0;
 
     size_t nbDims() const

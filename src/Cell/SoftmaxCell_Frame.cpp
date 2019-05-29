@@ -79,7 +79,7 @@ void N2D2::SoftmaxCell_Frame<T>::initialize()
 template <class T>
 void N2D2::SoftmaxCell_Frame<T>::propagate(bool /*inference*/)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
     const unsigned int groupStride = mGroupSize > 0 ? mGroupSize : getNbOutputs();
 
     const Tensor<T>& input = tensor_cast<T>(mInputs[0]);

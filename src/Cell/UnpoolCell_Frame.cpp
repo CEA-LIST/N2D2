@@ -84,7 +84,7 @@ void N2D2::UnpoolCell_Frame::initialize()
 
 void N2D2::UnpoolCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const float alpha = 1.0f;
     float beta = 0.0f;

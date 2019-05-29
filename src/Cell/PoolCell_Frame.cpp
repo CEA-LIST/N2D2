@@ -102,7 +102,7 @@ void N2D2::PoolCell_Frame<T>::initialize()
 template <class T>
 void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const T alpha = T(1.0);
     T beta = T(0.0);

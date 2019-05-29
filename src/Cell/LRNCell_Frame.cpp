@@ -74,7 +74,7 @@ void N2D2::LRNCell_Frame<T>::propagate(bool /*inference*/)
                                  "doesn't match for local response "
                                  "normalization accross channels\n");
 
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     T beta(0.0f);
 

@@ -64,8 +64,6 @@ N2D2::BatchNormCell_Frame<T>::BatchNormCell_Frame(
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::initialize()
 {
-    mInputs.synchronizeDToH();
-
     if (mInputs.dimZ() != mOutputs.dimZ()) {
         throw std::domain_error("BatchNormCell_Frame<T>::initialize():"
                                 " the number of output channels must be equal "
@@ -160,7 +158,7 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
     unsigned int outputOffset = 0;
 
     for (unsigned int k = 0, kSize = mInputs.size(); k < kSize; ++k) {

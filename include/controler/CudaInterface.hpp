@@ -65,18 +65,6 @@ public:
     */
     void push_back(cuda_tensor_type* tensor, size_t refs = 1);
 
-    /** Synchronize Device To Host-based data  */
-    void synchronizeDToHBased() const;
-
-    /** Synchronize Host-based data To Device */
-    void synchronizeHBasedToD() const;
-
-    /** Synchronize Device-based data To Host  */
-    void synchronizeDBasedToH() const;
-
-    /** Synchronize Host data To Device-based */
-    void synchronizeHToDBased() const;
-
     virtual cuda_tensor_type& back();
     virtual const cuda_tensor_type& back() const;
     virtual cuda_tensor_type& operator[](unsigned int t);
@@ -123,42 +111,6 @@ void N2D2::CudaInterface<T, STACKING_DIM>::push_back(cuda_tensor_type* tensor,
                                                      size_t refs)
 {
     Interface<T, STACKING_DIM>::push_back(tensor, refs);
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeDToHBased() const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeDToHBased();
-    }
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeHBasedToD() const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeHBasedToD();
-    }
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeDBasedToH() const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeDBasedToH();
-    }
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::synchronizeHToDBased() const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->synchronizeHToDBased();
-    }
 }
 
 template <class T, int STACKING_DIM>

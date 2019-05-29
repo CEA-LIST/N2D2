@@ -90,7 +90,7 @@ void N2D2::ProposalCell_Frame::initialize()
 
 void N2D2::ProposalCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const Float_T normX = 1.0 / (mStimuliProvider.getSizeX() - 1) ;
     const Float_T normY = 1.0 / (mStimuliProvider.getSizeY() - 1) ;

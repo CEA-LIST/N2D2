@@ -87,7 +87,7 @@ void N2D2::ROIPoolingCell_Frame::initialize()
 
 void N2D2::ROIPoolingCell_Frame::propagate(bool inference)
 {
-    mInputs.synchronizeDToH();
+    mInputs.synchronizeDBasedToH();
 
     const float alpha = 1.0f;
     float beta = 0.0f;
