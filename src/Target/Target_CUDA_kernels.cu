@@ -230,8 +230,8 @@ void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
     const unsigned int dimZ = (nbOutputs > 1) ? nbOutputs : 2;
-    const unsigned int sizeX = (x1 - x0 + 1);
-    const unsigned int sizeY = (y1 - y0 + 1);
+    const unsigned int sizeX = (x1 - x0);
+    const unsigned int sizeY = (y1 - y0);
 
     const unsigned int groupSize = (sizeX * sizeY < maxSize)
                                        ? sizeX * sizeY
