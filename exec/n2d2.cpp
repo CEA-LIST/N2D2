@@ -536,10 +536,6 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     if (!afterCalibration) {
         deepNet->normalizeFreeParameters();
         deepNet->exportNetworkFreeParameters("weights_normalized");
-
-        deepNet->normalizeOutputsRange(outputsRange, 0.25);
-        deepNet->exportNetworkFreeParameters(
-            "weights_range_normalized");
     }    
     
 }
@@ -585,7 +581,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                       << std::endl;
 
             test(opt, deepNet, false);
-            deepNet->importNetworkFreeParameters("weights_normalized");
         }
 
         const double stimuliRange = StimuliProviderExport::getStimuliRange(
