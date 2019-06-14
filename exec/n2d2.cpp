@@ -589,6 +589,11 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             + "/stimuli_before_calibration",
                                             Database::Test);
 
+        if (stimuliRange == 0.0) {
+            throw std::runtime_error("Stimuli range is 0."
+                " Is there any stimulus? (required for calibration!)");
+        }
+
         if (stimuliRange != 1.0) {
             // For calibration, normalizes the input in the full range of
             // export data precision

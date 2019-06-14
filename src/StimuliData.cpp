@@ -89,24 +89,29 @@ N2D2::StimuliData::Size N2D2::StimuliData::getMeanSize() const
 {
     Size mean;
 
-    for (std::vector<Size>::const_iterator it = mSize.begin(),
-                                           itEnd = mSize.end();
-         it != itEnd;
-         ++it) {
-        mean.dimX += (*it).dimX;
-        mean.dimY += (*it).dimY;
-        mean.dimZ += (*it).dimZ;
-    }
+    if (!mSize.empty()) {
+        for (std::vector<Size>::const_iterator it = mSize.begin(),
+                                            itEnd = mSize.end();
+            it != itEnd;
+            ++it) {
+            mean.dimX += (*it).dimX;
+            mean.dimY += (*it).dimY;
+            mean.dimZ += (*it).dimZ;
+        }
 
-    mean.dimX /= mSize.size();
-    mean.dimY /= mSize.size();
-    mean.dimZ /= mSize.size();
+        mean.dimX /= mSize.size();
+        mean.dimY /= mSize.size();
+        mean.dimZ /= mSize.size();
+    }
 
     return mean;
 }
 
 void N2D2::StimuliData::logSizeRange() const
 {
+    if (mValue.empty())
+        return;
+
     const std::string fileName = mName + "/sizeRange.dat";
 
     std::ofstream data(fileName.c_str());
@@ -166,6 +171,9 @@ void N2D2::StimuliData::logSizeRange() const
 
 void N2D2::StimuliData::logValueRange() const
 {
+    if (mValue.empty())
+        return;
+
     const std::string fileName = mName + "/valueRange.dat";
 
     std::ofstream data(fileName.c_str());
@@ -230,13 +238,30 @@ void N2D2::StimuliData::logValueRange() const
                  "'' using ($3+$0/1.0e12):($0+1):4 with xerrorbars notitle");
 }
 
-void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
+unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
 {
     clear();
 
     const std::string& cacheName = mName + "/_cache";
 
-    if (!loadDataCache(cacheName)) {
+    // For progression visualization
+    unsigned int toLoad = 0;
+
+    const std::vector<Database::StimuliSet> stimuliSets
+        = mProvider.getDatabase().getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator it
+            = stimuliSets.begin(),
+            itEnd = stimuliSets.end();
+            it != itEnd;
+            ++it) {
+        toLoad += mProvider.getDatabase().getNbStimuli(*it);
+    }
+
+    std::cout << mName << " processing " << toLoad << " stimuli"
+        << std::flush;
+
+    if (toLoad > 0 && !loadDataCache(cacheName)) {
         const unsigned int batchSize = mProvider.getBatchSize();
         mProvider.setBatchSize(0);
 
@@ -253,9 +278,6 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         Float_T globalValueMin = std::numeric_limits<Float_T>::max();
         Float_T globalValueMax = -std::numeric_limits<Float_T>::max();
 
-        const std::vector<Database::StimuliSet> stimuliSets
-            = mProvider.getDatabase().getStimuliSets(setMask);
-
         const std::string& meanDataFile = mName + "/meanData.bin";
         bool computeMeanData = mMeanData
                                 && !std::ifstream(meanDataFile.c_str()).good();
@@ -266,19 +288,6 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
                                && !std::ifstream(stdDevDataFile.c_str()).good();
         cv::Mat M2Data;
 
-        // For progression visualization
-        unsigned int toLoad = 0;
-
-        for (std::vector<Database::StimuliSet>::const_iterator it
-             = stimuliSets.begin(),
-             itEnd = stimuliSets.end();
-             it != itEnd;
-             ++it) {
-            toLoad += mProvider.getDatabase().getNbStimuli(*it);
-        }
-
-        std::cout << mName << " processing " << toLoad << " stimuli"
-            << std::flush;
         mSize.resize(toLoad);
         mValue.resize(toLoad);
 
@@ -458,8 +467,6 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
             loaded += nbStimuli;
         }
 
-        std::cout << std::endl;
-
         assert(loaded == toLoad);
 
         mMinSize = Size(minSizeX, minSizeY, minSizeZ);
@@ -469,7 +476,7 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         mGlobalValue.maxVal = globalValueMax;
 
         // Compute global mean
-        const double globalMean = sumMean / sumCount;
+        const double globalMean = (sumCount > 0) ? sumMean / sumCount : 0.0;
         mGlobalValue.mean = globalMean;
 
         // Compute global stdDev
@@ -481,7 +488,8 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
             sqSum += count[k] * delta * delta;
         }
 
-        mGlobalValue.stdDev = std::sqrt((sumM2 + sqSum) / (sumCount - 1));
+        mGlobalValue.stdDev = (sumCount > 1)
+            ? std::sqrt((sumM2 + sqSum) / (sumCount - 1)) : 0.0;
 
         if (computeMeanData || computeStdDevData) {
             BinaryCvMat::write(meanDataFile, meanData);
@@ -528,6 +536,10 @@ void N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
         mProvider.setCachePath(cachePath);
         saveDataCache(cacheName);
     }
+
+    std::cout << std::endl;
+
+    return toLoad;
 }
 
 bool N2D2::StimuliData::loadDataCache(const std::string& fileName)

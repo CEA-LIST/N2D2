@@ -311,8 +311,15 @@ std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
 
     StimuliData::Value globalValue
         = getStimuliData(sp, dirName, set).getGlobalValue();
-    const double dataRange = std::max(std::abs(globalValue.minVal),
-                                      std::abs(globalValue.maxVal));
+    double dataRange = std::max(std::abs(globalValue.minVal),
+                                std::abs(globalValue.maxVal));
+
+    if (dataRange == 0.0) {
+        std::cout << Utils::cwarning << "No data (range is 0.0), use a"
+            " default data range of 1.0." << Utils::cdef << std::endl;
+        dataRange = 1.0;
+    }
+
     const bool unsignedData = (globalValue.minVal >= 0
                                && DeepNetExport::mUnsignedData);
 
