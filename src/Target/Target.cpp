@@ -398,15 +398,34 @@ void N2D2::Target::process(Database::StimuliSet set)
                                 (unsigned int)std::floor((y + 1) * yRatio));
 
                             // +1 takes into account ignore target (-1)
-                            std::vector<int> targetHist(labels.dimB() + 1, 0);
+                            std::vector<int> targetHist(nbTargets + 1, 0);
 
                             for (unsigned int yl = yl0; yl < yl1; ++yl) {
                                 for (unsigned int xl = xl0; xl < xl1; ++xl) {
-                                    assert(getLabelTarget(
-                                        labels(xl, yl, 0, batchPos)) >= -1);
+                                    const int target = getLabelTarget(
+                                        labels(xl, yl, 0, batchPos));
 
-                                    ++targetHist[getLabelTarget(
-                                        labels(xl, yl, 0, batchPos)) + 1];
+                                    // Target range checking
+                                    if (target >= (int)nbTargets) {
+#pragma omp critical(Target__process)
+                                        {
+                                            std::cout << Utils::cwarning
+                                                << "Stimulus #" << id
+                                                << " has target "
+                                                << target
+                                                << " @ (" << xl << "," << yl
+                                                << ") but number of output "
+                                                "target is " << nbTargets
+                                                << Utils::cdef << std::endl;
+
+                                            throw std::runtime_error(
+                                                "Target::process(): target out "
+                                                "of range.");
+                                        }
+                                    }
+
+                                    assert(target >= -1);
+                                    ++targetHist[target + 1];
                                 }
                             }
 
@@ -441,24 +460,6 @@ void N2D2::Target::process(Database::StimuliSet set)
                                 mTargets(x, y, 0, batchPos)
                                     = std::distance(targetHist.begin(),
                                                     maxElem) - 1; // -1 = ignore
-                            }
-
-                            // Target range checking
-                            if (mTargets(x, y, 0, batchPos) >= (int)nbTargets) {
-#pragma omp critical(Target__process)
-                                {
-                                    std::cout << Utils::cwarning << "Stimulus #"
-                                        << id << " has target "
-                                        << mTargets(x, y, 0, batchPos)
-                                        << " @ (" << x << "," << y << ") but "
-                                        "number of output target is "
-                                        << nbTargets << Utils::cdef
-                                        << std::endl;
-
-                                    throw std::runtime_error(
-                                        "Target::process(): target out of "
-                                        "range.");
-                                }
                             }
                         }
                     }
