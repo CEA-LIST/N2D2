@@ -32,27 +32,20 @@ void cudaGetEstimatedTarget_kernel( const unsigned int topN,
                                     float* estimatedLabelsValue,
                                     int* estimatedLabels)
 {
-    unsigned int outputMax = 0;
-    float maxVal = 0.0f;
-
-	const int index = threadIdx.x + blockIdx.x*blockDim.x;
-	const int probabilityMapSize = targetWidth*targetHeight*nbClass;
-    const int batchInputOffset = (nbClass > 1) 
-                                    ? probabilityMapSize*blockIdx.z
-                                    : targetWidth*targetHeight*blockIdx.z;
-
+    const int batchInputOffset = targetWidth*targetHeight*nbClass*blockIdx.z;
     const int batchOutputOffset = targetWidth*targetHeight*topN*blockIdx.z;
 
-    if (index < targetWidth*targetHeight) {
-        if(nbClass > 1)
-        {
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < targetWidth * targetHeight; i += stride) {
+        if(nbClass > 1) {
             //__syncthreads();
-            if(topN > 1)
-            {
+            if(topN > 1) {
                 extern __shared__ float local_tmp[];
                 for(unsigned int cls = 0; cls < nbClass; ++cls)
                     local_tmp[threadIdx.x*nbClass + cls]
-                        = input[index + cls*targetWidth*targetHeight + batchInputOffset];
+                        = input[i + cls*targetWidth*targetHeight + batchInputOffset];
 
                 float tmpValue = 0.0f;
                 int tmpIdx = 0;
@@ -62,22 +55,22 @@ void cudaGetEstimatedTarget_kernel( const unsigned int topN,
                     idxData[threadIdx.x*nbClass + cls] = cls;
 
                 //Sorting in a descending order
-                for (int i = 0; i < nbClass; ++i) {
-                    for (int j = 0; j < nbClass; ++j) {
-                        if(local_tmp[threadIdx.x*nbClass + j] 
-                                < local_tmp[threadIdx.x*nbClass + i])
+                for (int x = 0; x < nbClass; ++x) {
+                    for (int y = 0; y < nbClass; ++y) {
+                        if(local_tmp[threadIdx.x*nbClass + y] 
+                                < local_tmp[threadIdx.x*nbClass + x])
                         {
                             tmpValue 
-                                = local_tmp[threadIdx.x*nbClass + i];
-                            local_tmp[threadIdx.x*nbClass + i] 
-                                = local_tmp[threadIdx.x*nbClass + j];
-                            local_tmp[threadIdx.x*nbClass + j] 
+                                = local_tmp[threadIdx.x*nbClass + x];
+                            local_tmp[threadIdx.x*nbClass + x] 
+                                = local_tmp[threadIdx.x*nbClass + y];
+                            local_tmp[threadIdx.x*nbClass + y] 
                                 = tmpValue;
 
-                            tmpIdx = idxData[threadIdx.x*nbClass + i];
-                            idxData[threadIdx.x*nbClass + i] 
-                                = idxData[threadIdx.x*nbClass + j];
-                            idxData[threadIdx.x*nbClass + j] = tmpIdx;
+                            tmpIdx = idxData[threadIdx.x*nbClass + x];
+                            idxData[threadIdx.x*nbClass + x] 
+                                = idxData[threadIdx.x*nbClass + y];
+                            idxData[threadIdx.x*nbClass + y] = tmpIdx;
                         }
                     }
                 }
@@ -85,45 +78,44 @@ void cudaGetEstimatedTarget_kernel( const unsigned int topN,
                 //Write to output
                 for (unsigned int cls = 0; cls < topN; ++cls) 
                 {
-                    estimatedLabelsValue[index + cls*targetWidth*targetHeight + batchOutputOffset] 
+                    estimatedLabelsValue[i + cls*targetWidth*targetHeight + batchOutputOffset] 
                             = local_tmp[threadIdx.x*nbClass + cls];
-                    estimatedLabels[index + cls*targetWidth*targetHeight + batchOutputOffset] 
+                    estimatedLabels[i + cls*targetWidth*targetHeight + batchOutputOffset] 
                             = idxData[threadIdx.x*nbClass + cls];
 
                 }
 
             }
-            else
-            {
-                maxVal = input[index + batchInputOffset];
+            else {
+                unsigned int outputMax = 0;
+                float maxVal = input[i + batchInputOffset];
 
                 for (unsigned int cls = 1; cls < nbClass; ++cls) {
-                    float tmp = input[index + cls*targetWidth*targetHeight + batchInputOffset];
+                    const float tmp = input[i + cls*targetWidth*targetHeight
+                                            + batchInputOffset];
+
                     if (tmp > maxVal) {
                         outputMax = cls;
                         maxVal = tmp;
                     }
-                    
                 }
-                estimatedLabels[index + batchOutputOffset] = outputMax;
-                estimatedLabelsValue[index + batchOutputOffset] = maxVal;
+
+                estimatedLabels[i + batchOutputOffset] = outputMax;
+                estimatedLabelsValue[i + batchOutputOffset] = maxVal;
 
             }
         }
-        else if(nbClass == 1)
-        {
+        else if (nbClass == 1) {
             const int estimatedLabel
-                = (input[index + batchInputOffset] > threshold);
+                = (input[i + batchInputOffset] > threshold);
 
-            estimatedLabels[index + batchOutputOffset] = estimatedLabel;
-            estimatedLabelsValue[index + batchOutputOffset]
+            estimatedLabels[i + batchOutputOffset] = estimatedLabel;
+            estimatedLabelsValue[i + batchOutputOffset]
                 = (estimatedLabel == 1)
-                    ? input[index + batchInputOffset]
-                    : (1.0 - input[index + batchInputOffset]);
+                    ? input[i + batchInputOffset]
+                    : (1.0 - input[i + batchInputOffset]);
         }
-
     }
-
 }
 
 __global__
