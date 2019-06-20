@@ -528,14 +528,6 @@ void cudaSROIPoolingBackwardMax_kernel(const float alpha,
     }
 }
 
-static unsigned int nextDivisor(unsigned int target, unsigned int value)
-{
-    unsigned int v = value;
-    while (target % v != 0)
-        ++v;
-    return v;
-}
-
 void N2D2::cudaSROIPoolingForwardBilinear(const cudaDeviceProp& deviceProp,
                                    const float alpha,
                                    float* proposals,
@@ -566,8 +558,10 @@ void N2D2::cudaSROIPoolingForwardBilinear(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
@@ -621,8 +615,10 @@ void N2D2::cudaSROIPoolingForwardAverage(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
@@ -673,8 +669,10 @@ void N2D2::cudaSROIPoolingForwardMax(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
@@ -724,8 +722,10 @@ void N2D2::cudaSROIPoolingBackwardAverage(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (channelsWidth * channelsHeight < maxSize)
                                        ? channelsWidth * channelsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, channelsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
@@ -776,8 +776,10 @@ void N2D2::cudaSROIPoolingBackwardMax(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (channelsWidth * channelsHeight < maxSize)
                                        ? channelsWidth * channelsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, channelsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};

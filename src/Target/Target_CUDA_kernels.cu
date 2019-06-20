@@ -160,14 +160,6 @@ void cudaGetEstimatedLabel_kernel(const float* value,
     }
 }
 
-static unsigned int nextDivisor(unsigned int target, unsigned int value)
-{
-    unsigned int v = value;
-    while (target % v != 0)
-        ++v;
-    return v;
-}
-
 void N2D2::cudaGetEstimatedTarget(const unsigned int topN,
                                   const unsigned int nbClass,
                                   const unsigned int targetHeight,
@@ -228,8 +220,10 @@ void N2D2::cudaGetEstimatedLabel(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (sizeX * sizeY < maxSize)
                                        ? sizeX * sizeY
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, sizeX));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)sizeX);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {dimZ, 1, 1};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};

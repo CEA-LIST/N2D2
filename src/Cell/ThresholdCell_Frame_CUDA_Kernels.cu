@@ -64,14 +64,6 @@ void cudaSThreshold_kernel(float* inputs,
     }
 }
 
-static unsigned int nextDivisor(unsigned int target, unsigned int value)
-{
-    unsigned int v = value;
-    while (target % v != 0)
-        ++v;
-    return v;
-}
-
 void N2D2::cudaSThreshold(const cudaDeviceProp& deviceProp,
                           float* inputs,
                           unsigned int dimX,
@@ -89,8 +81,10 @@ void N2D2::cudaSThreshold(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (dimX * dimY < maxSize)
                                        ? dimX * dimY
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, dimX));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)dimX);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {dimZ, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};

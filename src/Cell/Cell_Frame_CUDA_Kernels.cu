@@ -377,14 +377,6 @@ void cudaDSetOutputTargets_kernel(int* targets,
     }
 }
 
-static unsigned int nextDivisor(unsigned int target, unsigned int value)
-{
-    unsigned int v = value;
-    while (target % v != 0)
-        ++v;
-    return v;
-}
-
 void N2D2::cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
@@ -399,10 +391,14 @@ void N2D2::cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
 
-    const dim3 blocksPerGrid = {1, 1, batchSize};
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+
+    const dim3 blocksPerGrid
+        = {1, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
     int* hostErr = new int[3];
@@ -469,8 +465,10 @@ double N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
@@ -525,8 +523,10 @@ double N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
@@ -578,8 +578,10 @@ double N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};

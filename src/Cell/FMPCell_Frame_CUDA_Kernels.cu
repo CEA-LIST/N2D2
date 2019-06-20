@@ -102,14 +102,6 @@ __global__ void cudaSFMPPropagate_kernel(const float alpha,
     }
 }
 
-static unsigned int nextDivisor(unsigned int target, unsigned int value)
-{
-    unsigned int v = value;
-    while (target % v != 0)
-        ++v;
-    return v;
-}
-
 void N2D2::cudaSFMPPropagate(const cudaDeviceProp& deviceProp,
                              const float alpha,
                              float* inputs,
@@ -132,8 +124,10 @@ void N2D2::cudaSFMPPropagate(const cudaDeviceProp& deviceProp,
     const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
                                        ? outputsWidth * outputsHeight
                                        : maxSize;
-    const unsigned int groupWidth
-        = min(prefMultiple, nextDivisor(groupSize, outputsWidth));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};

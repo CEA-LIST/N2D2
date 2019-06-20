@@ -325,8 +325,10 @@ void N2D2::cudaUpdateActivity(int * inputs,
     const unsigned int groupSize = inputsDimX * inputsDimY < maxNbThreads ?
         inputsDimX * inputsDimY : maxNbThreads;
 
-    const unsigned int groupX = min(warpSize,
-        nextDivisor(groupSize, inputsDimX));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)inputsDimX);
+
+    const unsigned int groupX = min(warpSize, reqWidth);
 
     const dim3 blocksPerGrid = {inputsDimZ, 1, batchSize};
     const dim3 threadsPerBlocks = {groupX, groupSize/groupX, 1};
@@ -473,8 +475,10 @@ void N2D2::cudaUpdateBatchFiringRate(unsigned int * firingRate,
     const unsigned int groupSize = inputsDimX * inputsDimY < maxNbThreads ?
         inputsDimX * inputsDimY : maxNbThreads;
 
-    const unsigned int groupX = min(warpSize,
-        nextDivisor(groupSize, inputsDimX));
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)inputsDimX);
+
+    const unsigned int groupX = min(warpSize, reqWidth);
 
     const dim3 blocksPerGrid = {inputsDimZ, 1, 1};
     const dim3 threadsPerBlocks = {groupX, groupSize/groupX, 1};
