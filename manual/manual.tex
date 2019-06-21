@@ -1564,7 +1564,40 @@ Test=1.0
 \end{lstlisting}
 
 
+\paragraph{\emph{Speech Commands Dataset}}
+Use with Speech Commands Data Set, released by the Google \citep{speechcommandsv2}.
+
+\begin{lstlisting}[language=ini]
+[database]
+Type=DIR_Database
+DataPath=\${N2D2_DATA}/speech_commands_v0.02
+ValidExtensions=wav
+IgnoreMasks=*/_background_noise_
+Learn=0.6
+Validation=0.2
+\end{lstlisting}
+
+
 \subsubsection{Other built-in databases}
+
+\paragraph{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Actitracker_Database!}{Actitracker\_Database}}
+Actitracker database, released by the WISDM Lab \citep{Lockhart2011}.
+
+\begin{center}
+ \begin{tabular}{| p{5cm} | p{10cm} | }
+ \hline
+ Option [default value] & Description\\
+ \hline\hline
+  \lstinline!Learn! [0.6] & Fraction of data used for the learning \\
+  \lstinline!Validation! [0.2] & Fraction of data used for the validation \\
+  \lstinline!UseUnlabeledForTest! [0] & If true, use the unlabeled dataset for the test \\
+  \lstinline!DataPath! & Path to the database \\
+  \noindent [\lstinline!$N2D2_DATA!/WISDM\_at\_v2.0] & \\
+ \hline
+\end{tabular}
+\end{center}
+
 
 \paragraph{\texorpdfstring{%%
 \lstinline[basicstyle=\ttfamily\bfseries]!CIFAR10_Database!}{CIFAR10\_Database}}
