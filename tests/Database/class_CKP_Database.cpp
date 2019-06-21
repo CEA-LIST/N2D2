@@ -36,6 +36,8 @@ TEST_DATASET(CKP_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("cohn-kanade-images")));
 
+    Random::mtSeed(0);
+
     CKP_Database db(learn, validation);
     db.load(N2D2_DATA("cohn-kanade-images"));
 

@@ -34,6 +34,8 @@ TEST_DATASET(CIFAR10_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("cifar-10-batches-bin")));
 
+    Random::mtSeed(0);
+
     CIFAR10_Database db(validation);
     db.load(N2D2_DATA("cifar-10-batches-bin"));
 
@@ -55,6 +57,8 @@ TEST_DATASET(CIFAR100_Database,
              std::make_tuple(1.0))
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("cifar-100-binary")));
+
+    Random::mtSeed(0);
 
     CIFAR100_Database db(validation);
     db.load(N2D2_DATA("cifar-100-binary"));

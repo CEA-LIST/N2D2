@@ -28,12 +28,13 @@ using namespace N2D2;
 
 TEST(KITTI_Database, load)
 {
-
     REQUIRED(UnitTest::DirExists(N2D2_DATA("KITTI")));
 
     REQUIRED(UnitTest::DirExists(N2D2_DATA("training/")));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("training/label_02")));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("training/image_02")));
+
+    Random::mtSeed(0);
 
     KITTI_Database db(0.9);
 

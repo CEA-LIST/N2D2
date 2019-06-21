@@ -29,6 +29,8 @@ TEST(LITISRouen_Database, load)
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("data_rouen")));
 
+    Random::mtSeed(0);
+
     LITISRouen_Database db(0.4, 0.4);
     db.load(N2D2_DATA("data_rouen"));
 

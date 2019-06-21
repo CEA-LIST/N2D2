@@ -37,6 +37,8 @@ TEST_DATASET(GTSDB_DIR_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("FullIJCNN2013")));
 
+    Random::mtSeed(0);
+
     GTSDB_DIR_Database db(learn, validation);
     db.load(N2D2_DATA("FullIJCNN2013"));
 
@@ -70,6 +72,8 @@ TEST_DATASET(GTSRB_DIR_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("GTSRB")));
 
+    Random::mtSeed(0);
+
     GTSRB_DIR_Database db(validation);
     db.load(N2D2_DATA("GTSRB"));
 
@@ -100,6 +104,8 @@ TEST_DATASET(GTSRB_DIR_Database,
              std::make_tuple(1.0))
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("GTSRB")));
+
+    Random::mtSeed(0);
 
     GTSRB_DIR_Database db(validation);
     db.load(N2D2_DATA("GTSRB"), "", true);

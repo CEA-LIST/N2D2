@@ -36,6 +36,8 @@ TEST_DATASET(FDDB_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("FDDB")));
 
+    Random::mtSeed(0);
+
     FDDB_Database db(learn, validation);
     db.load(N2D2_DATA("FDDB"));
 

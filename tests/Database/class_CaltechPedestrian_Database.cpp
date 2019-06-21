@@ -38,6 +38,8 @@ TEST_DATASET(CaltechPedestrian_Database,
     REQUIRED(
         UnitTest::DirExists(N2D2_DATA("CaltechPedestrians/data-USA/images")));
 
+    Random::mtSeed(0);
+
     CaltechPedestrian_Database db(validation, singleLabel, incAmbiguous);
     db.load(N2D2_DATA("CaltechPedestrians/data-USA/images"),
             N2D2_DATA("CaltechPedestrians/data-USA/annotations"));

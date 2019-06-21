@@ -34,6 +34,8 @@ TEST_DATASET(MNIST_IDX_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
+    Random::mtSeed(0);
+
     MNIST_IDX_Database db(validation);
     db.load(N2D2_DATA("mnist"));
 

@@ -34,6 +34,8 @@ TEST(IMDBWIKI_Database, load)
     REQUIRED(UnitTest::DirExists(N2D2_DATA("IMDB-WIKI/wiki")));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("IMDB-WIKI/imdb")));
 
+    Random::mtSeed(0);
+
     IMDBWIKI_Database db(1, 0, 0, 1.0, 0.0);
     db.load(N2D2_DATA("IMDB-WIKI"), N2D2_DATA("IMDB-WIKI/imdb_metadata"));
 

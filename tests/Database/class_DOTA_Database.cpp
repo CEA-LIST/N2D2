@@ -29,6 +29,8 @@ TEST(DOTA_Database, loadAllStimuli)
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("DOTA/train")));
 
+    Random::mtSeed(0);
+
     DOTA_Database db(0.9, false);
     db.load(N2D2_DATA("DOTA"));
 

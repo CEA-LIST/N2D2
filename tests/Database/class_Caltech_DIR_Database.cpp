@@ -255,6 +255,8 @@ TEST_DATASET(Caltech256_DIR_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("256_ObjectCategories")));
 
+    Random::mtSeed(0);
+
     Caltech256_DIR_Database db(learn, validation, incClutter);
     db.load(N2D2_DATA("256_ObjectCategories"));
 

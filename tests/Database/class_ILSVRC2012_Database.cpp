@@ -29,6 +29,8 @@ TEST(ILSVRC2012_Database, loadAllStimuli)
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("ILSVRC2012/train")));
 
+    Random::mtSeed(0);
+
     ILSVRC2012_Database db(0.9, false);
     db.load(N2D2_DATA("ILSVRC2012"), N2D2_DATA("ILSVRC2012/synsets.txt"));
 
