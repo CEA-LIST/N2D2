@@ -776,13 +776,13 @@ void N2D2::FcCell_Frame_CUDA<T>::discretizeFreeParameters(unsigned int nbLevels)
 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange() const
+N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
 {
     mSynapses.synchronizeDToH();
     mBias.synchronizeDToH();
 
     mSynchronized = true;
-    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRange();
+    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRange(withAdditiveParameters);
     mSynchronized = false;
 
     mSynapses.synchronizeHToD();

@@ -734,7 +734,7 @@ void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
-std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(bool withAdditiveParameters)
     const
 {
     Float_T wMin = 0.0;
@@ -756,7 +756,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange()
             }
         }
 
-        if (!mNoBias) {
+        if (withAdditiveParameters && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);
 

@@ -1008,7 +1008,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::discretizeFreeParameters(unsigned int nbLevel
 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange() const
+N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeDToH();
@@ -1017,7 +1017,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange() const
 
     mSynchronized = true;
     const std::pair<Float_T, Float_T> range
-        = ConvCell::getFreeParametersRange();
+        = ConvCell::getFreeParametersRange(withAdditiveParameters);
     mSynchronized = false;
 
     for (unsigned int i = 0; i < mInputs.size(); ++i)

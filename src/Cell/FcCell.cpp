@@ -369,8 +369,7 @@ void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
     }
 }
 
-std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange()
-    const
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(bool withAdditiveParameters) const
 {
     const unsigned int channelsSize = getInputsSize();
 
@@ -386,7 +385,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange()
             if (weight(0) > wMax)  wMax = weight(0);
         }
 
-        if (!mNoBias) {
+        if (withAdditiveParameters && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);
 

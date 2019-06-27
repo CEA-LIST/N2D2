@@ -113,7 +113,7 @@ public:
     void writeMap(const std::string& fileName) const;
     void randomizeFreeParameters(double stdDev);
     virtual void discretizeFreeParameters(unsigned int nbLevels);
-    virtual std::pair<Float_T, Float_T> getFreeParametersRange() const;
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
     virtual void processFreeParameters(const std::function
                                <double(const double&)>& func,
                                        FreeParametersType type = All);

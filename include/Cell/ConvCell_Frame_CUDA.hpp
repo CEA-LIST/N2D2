@@ -119,7 +119,7 @@ public:
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
     void discretizeFreeParameters(unsigned int nbLevels);
-    std::pair<Float_T, Float_T> getFreeParametersRange() const;
+    std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
     void processFreeParameters(const std::function
                                <double(const double&)>& func,
                                FreeParametersType type = All);

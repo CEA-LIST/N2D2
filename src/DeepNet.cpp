@@ -812,7 +812,7 @@ N2D2::Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
             }
 
             Float_T wMin, wMax;
-            std::tie(wMin, wMax) = cell->getFreeParametersRange();
+            std::tie(wMin, wMax) = cell->getFreeParametersRange(false);
 
             const Float_T wMaxAbs = std::max(-wMin, wMax);
             wNorm = std::max(wMaxAbs, wNorm);

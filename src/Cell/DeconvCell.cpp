@@ -719,7 +719,7 @@ void N2D2::DeconvCell::discretizeFreeParameters(unsigned int nbLevels)
 }
 
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::DeconvCell::getFreeParametersRange() const
+N2D2::DeconvCell::getFreeParametersRange(bool withAdditiveParameters) const
 {
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
@@ -740,7 +740,7 @@ N2D2::DeconvCell::getFreeParametersRange() const
             }
         }
 
-        if (!mNoBias) {
+        if (withAdditiveParameters && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);
 
