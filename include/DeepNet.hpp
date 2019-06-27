@@ -81,7 +81,7 @@ public:
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
     void rescaleAdditiveParameters(Float_T rescaleFactor);
-    Float_T normalizeFreeParameters(double normFactor = 1.0);
+    void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeOutputsRange(const std::map
                                <std::string, RangeStats>& outputsRange,
                                double normFactor,

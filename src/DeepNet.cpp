@@ -801,7 +801,7 @@ void N2D2::DeepNet::rescaleAdditiveParameters(Float_T rescaleFactor) {
     }
 }
 
-N2D2::Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
+void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
 {
     Float_T bNorm = 1.0;
 
@@ -824,7 +824,7 @@ N2D2::Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
             Float_T wMin, wMax;
             std::tie(wMin, wMax) = cell->getFreeParametersRange(false);
 
-            const Float_T wMaxAbs = std::max(-wMin, wMax);
+            const Float_T wMaxAbs = std::max(std::abs(wMin), std::abs(wMax));
             wNorm = std::max(wMaxAbs, wNorm);
         }
 
@@ -846,8 +846,6 @@ N2D2::Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
                                                   wNorm));
         }
     }
-
-    return bNorm;
 }
 
 void
