@@ -137,16 +137,16 @@ void N2D2::Actitracker_Database::loadRaw(const std::string& fileName)
     for (unsigned int s = 0; s < nbSegments; ++s) {
         const unsigned int start = s * overlap;
 
-        Tensor<float> data({mWindowSize, 3});
+        Tensor<float> data({3, mWindowSize});
 
-        std::map<int, unsigned int> labels;
-        int maxLabel = 0;
+        std::map<int, unsigned int> labels; // label -> nb_times_in_window
+        int maxLabel = 0; // Most present label in the window
         unsigned int maxLabelCount = 0;
 
         for (unsigned int i = 0; i < mWindowSize; ++i) {
-            data(i, 0) = rawData[start + i].xAcceleration;
-            data(i, 1) = rawData[start + i].yAcceleration;
-            data(i, 2) = rawData[start + i].zAcceleration;
+            data(0, i) = rawData[start + i].xAcceleration;
+            data(1, i) = rawData[start + i].yAcceleration;
+            data(2, i) = rawData[start + i].zAcceleration;
 
             const int label = labelID(rawData[start + i].activity);
             std::map<int, unsigned int>::iterator it;
