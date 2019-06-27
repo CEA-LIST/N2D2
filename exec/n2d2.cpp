@@ -608,6 +608,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             sp->addOnTheFlyTransformation(RangeAffineTransformation(
                 RangeAffineTransformation::Divides, stimuliRange),
                 Database::TestOnly);
+
+            deepNet->rescaleAdditiveParameters(stimuliRange);
         }
 
         // Globally disable logistic activation, in order to evaluate the

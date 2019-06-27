@@ -791,6 +791,16 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
     }
 }
 
+void N2D2::DeepNet::rescaleAdditiveParameters(Float_T rescaleFactor) {
+    for (auto it = mLayers.begin() + 1; it != mLayers.end(); ++it) {
+        for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
+            auto& cell = (*mCells.find(*itCell)).second;
+            cell->processFreeParameters([&](double v) { return v/rescaleFactor; }, 
+                                        Cell::Additive);
+        }
+    }
+}
+
 N2D2::Float_T N2D2::DeepNet::normalizeFreeParameters(double normFactor)
 {
     Float_T bNorm = 1.0;
