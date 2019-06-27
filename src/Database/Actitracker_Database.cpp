@@ -52,6 +52,10 @@ void N2D2::Actitracker_Database::load(const std::string& dataPath,
 
 void N2D2::Actitracker_Database::loadRaw(const std::string& fileName)
 {
+    // Set activities labels in alphabetical order
+    mLabelsName = {"Downstairs", "Jogging", "Sitting", "Standing", "Upstairs", "Walking"};
+    
+    const std::size_t nbActivities = mLabelsName.size();
     const unsigned int nbMsgMax = 100;
 
     // 1. Read data
@@ -162,10 +166,17 @@ void N2D2::Actitracker_Database::loadRaw(const std::string& fileName)
         std::ostringstream nameStr;
         nameStr << Utils::baseName(fileName) << "[" << start << ":"
             << (start + mWindowSize) << "]";
-
         mStimuli.push_back(Stimulus(nameStr.str(), maxLabel));
         mStimuliSets(Unpartitioned).push_back(mStimuli.size() - 1);
 
         mStimuliData.push_back((cv::Mat)data);
+    }
+
+    // The call to labelID may add new unexpected activies in mLabelsName
+    if(nbActivities != mLabelsName.size()) {
+        throw std::runtime_error("Unexpected activities. "
+                                 "We got " + std::to_string(mLabelsName.size()) + 
+                                 " activities while we expected " + std::to_string(nbActivities) + 
+                                 " activities");
     }
 }
