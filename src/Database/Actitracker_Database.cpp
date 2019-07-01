@@ -169,7 +169,17 @@ void N2D2::Actitracker_Database::loadRaw(const std::string& fileName)
         mStimuli.push_back(Stimulus(nameStr.str(), maxLabel));
         mStimuliSets(Unpartitioned).push_back(mStimuli.size() - 1);
 
-        mStimuliData.push_back((cv::Mat)data);
+        /**
+         * When converting a N2D2::Tensor to a cv::Mat, the 'N2D2::Tensor<T>::operator cv::Mat()'
+         * method directly passes the pointer of the data in the Tensor to the created cv::Mat.
+         * The returned cv::Mat is thus a shalow copy of the data in the Tensor that will 
+         * become invalid at the end of the method as the Tensor data will be deleted. 
+         * Make a clone to avoid this.
+         * 
+         * TODO: Modifiy 'N2D2::Tensor<T>::operator cv::Mat()', not intuitive and source of errors.
+         */
+        cv::Mat data_mat = data;
+        mStimuliData.push_back(data_mat.clone());
     }
 
     // The call to labelID may add new unexpected activies in mLabelsName
