@@ -1649,16 +1649,19 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
                    fileExtension.begin(),
                    ::tolower);
 
-    if (mStimuli[id].label == -1) {
-        if(!Registrar<DataFile>::exists(fileExtension)) {
-            throw std::runtime_error("Unsupported extension '" + fileExtension + "'.");
-        }
+    cv::Mat labels;
 
+    if (Registrar<DataFile>::exists(fileExtension)) {
         std::shared_ptr<DataFile> dataFile = Registrar
             <DataFile>::create(fileExtension)();
-        
+        labels = dataFile->readLabel(mStimuli[id].name);
+    }
+
+    if (mStimuli[id].label == -1 || !labels.empty()) {
+        std::shared_ptr<DataFile> dataFile = Registrar
+            <DataFile>::create(fileExtension)();
+
         const int defaultLabel = getDefaultLabelID();
-        cv::Mat labels = dataFile->readLabel(mStimuli[id].name);
 
         // Composite stimulus
         // Construct the labels matrix with the ROIs
