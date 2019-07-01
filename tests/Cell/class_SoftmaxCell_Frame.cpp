@@ -131,6 +131,7 @@ TEST_DATASET(SoftmaxCell_Frame_float,
     softmax1.addInput(inputs, diffOutputs);
 
     ASSERT_NOTHROW_ANY(softmax1.checkGradient(1.0e-3, 1.0e-2));
+    diffOutputs.clearValid();
 
     inputs.fill(0.0);
 
@@ -251,6 +252,7 @@ TEST_DATASET(SoftmaxCell_Frame_double,
     softmax1.addInput(inputs, diffOutputs);
 
     ASSERT_NOTHROW_ANY(softmax1.checkGradient(1.0e-3, 1.0e-3));
+    diffOutputs.clearValid();
 
     inputs.fill(0.0);
 
@@ -374,6 +376,7 @@ TEST_DATASET(SoftmaxCell_Frame_half,
     softmax1.addInput(inputs, diffOutputs);
 
     ASSERT_NOTHROW_ANY(softmax1.checkGradient(1.0, 1.0));
+    diffOutputs.clearValid();
 
     inputs.fill(half_float::half(0.0f));
 
