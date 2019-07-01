@@ -86,7 +86,7 @@ TEST(MNIST_IDX_Database, getStimulusLabelsData)
     ASSERT_EQUALS(labels.channels(), 1);
     ASSERT_EQUALS(labels.rows, 1);
     ASSERT_EQUALS(labels.cols, 1);
-    ASSERT_EQUALS(labels.at<int>(0, 0), 5);    // first stimulus is a 5
+    ASSERT_EQUALS(labels.at<int>(0, 0), 1);    // first stimulus is a 1
 }
 
 RUN_TESTS()
