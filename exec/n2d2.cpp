@@ -574,14 +574,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
-        if(opt.weights.empty() && opt.load.empty()) {
-            std::cout << "No weights or saved state passed in parameters. "
-                      << "The default weights are not normalized. "
-                      << "Using the test database to normalize them before the calibration pass..." 
-                      << std::endl;
-
-            test(opt, deepNet, false);
-        }
+        deepNet->normalizeFreeParameters();
 
         const double stimuliRange = StimuliProviderExport::getStimuliRange(
                                             *sp,
