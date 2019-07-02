@@ -53,8 +53,8 @@ void N2D2::Actitracker_Database::load(const std::string& dataPath,
 void N2D2::Actitracker_Database::loadRaw(const std::string& fileName)
 {
     // Set activities labels in alphabetical order
-    mLabelsName = {"Downstairs", "Jogging", "Sitting", "Standing", "Upstairs", "Walking"};
-    
+    mLabelsName = {"Jogging", "LyingDown", "Sitting", "Stairs", "Standing", "Walking"};
+
     const std::size_t nbActivities = mLabelsName.size();
     const unsigned int nbMsgMax = 100;
 
