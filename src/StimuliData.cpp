@@ -238,7 +238,8 @@ void N2D2::StimuliData::logValueRange() const
                  "'' using ($3+$0/1.0e12):($0+1):4 with xerrorbars notitle");
 }
 
-unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
+unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
+                                         bool noRaw)
 {
     clear();
 
@@ -310,7 +311,8 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask)
              ++it) {
             const unsigned int nbStimuli
                 = mProvider.getDatabase().getNbStimuli(*it);
-            const bool rawData = (mProvider.getNbTransformations(*it) == 0);
+            const bool rawData = (mProvider.getNbTransformations(*it) == 0
+                                    && !noRaw);
 
 #pragma omp parallel for schedule(dynamic) reduction(+:sumMean,sumCount,sumM2)
 // min and max reduction not supported by MSVC, using double-checked locking instead.

@@ -284,7 +284,7 @@ N2D2::StimuliData N2D2::StimuliProviderExport::getStimuliData(
     Database::StimuliSet set)
 {
     StimuliData stimuliData(dirName + "_stats", sp);
-    stimuliData.generate(sp.getDatabase().getStimuliSetMask(set));
+    stimuliData.generate(sp.getDatabase().getStimuliSetMask(set), true);
     stimuliData.logValueRange();
     return stimuliData;
 }

@@ -65,7 +65,8 @@ public:
 
     StimuliData(const std::string& name, StimuliProvider& provider);
     StimuliData(const StimuliData& stimuliData);
-    unsigned int generate(Database::StimuliSetMask setMask = Database::All);
+    unsigned int generate(Database::StimuliSetMask setMask = Database::All,
+                          bool noRaw = false);
     void displayData() const;
     void clear();
 
