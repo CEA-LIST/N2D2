@@ -562,10 +562,10 @@ void N2D2::Target::process(Database::StimuliSet set)
 #endif
             outputsBaseTensor.synchronizeDToH();
             process_Frame(outputsBaseTensor, batchSize);
+#ifdef CUDA
 
             mEstimatedLabels.hostBased() = true;
             mEstimatedLabelsValue.hostBased() = true;
-#ifdef CUDA
         }
 #endif
 
