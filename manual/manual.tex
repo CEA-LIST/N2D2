@@ -983,7 +983,7 @@ Other program options related to the exports:
 \end{center}
 
 \subsubsection{\texorpdfstring{%%
-\lstinline[basicstyle=\ttfamily\bfseries]!C! export\protect\iponly}{C export}}
+\lstinline[basicstyle=\ttfamily\bfseries]!C! export}{C export}}
 
 Test the exported network:
 \begin{lstlisting}
@@ -1019,7 +1019,7 @@ T: Target    E: Estimated
 \end{lstlisting}
 
 \subsubsection{\texorpdfstring{%%
-\lstinline[basicstyle=\ttfamily\bfseries]!CPP_OpenCL! export\protect\iponly}
+\lstinline[basicstyle=\ttfamily\bfseries]!CPP_OpenCL! export}
 {CPP\_OpenCL export}}
 The OpenCL export can run the generated program in GPU or CPU architectures.
 Compilation features:
@@ -1166,7 +1166,7 @@ make
 \end{lstlisting}
 
 \subsubsection{\texorpdfstring{%%
-\lstinline[basicstyle=\ttfamily\bfseries]!C_HLS! export\protect\iponly}
+\lstinline[basicstyle=\ttfamily\bfseries]!C_HLS! export}
 {C\_HLS export}}
 
 Test the exported network:
@@ -1182,6 +1182,68 @@ Vivado\textregistered{} HLS:
 vivado_hls -f run_hls.tcl
 \end{lstlisting}
 
+\subsubsection{\texorpdfstring{%%
+\lstinline[basicstyle=\ttfamily\bfseries]!Layer compatibility table!}
+{Layer compatibility table}}
+
+Layer compatibility table in function of the export type:
+
+\begin{table}[htbp]
+\centering
+\renewcommand\arraystretch{1.2}
+\begin{tabular}{|c|c|c|c|c|}\hline
+\multirow{2}{*}{\ttfamily\bfseries Layer compatibility table}
+    & \multicolumn{4}{c|}{\ttfamily\bfseries Export Type}    \\
+    \cline{2-5}
+    & C & HLS & OpenCL & TensorRT            \\
+  \hline
+  Convolution
+    & Yes & Yes & Yes & Yes \\
+  \hline
+  Pooling
+    & Yes & Yes & Yes & Yes \\
+  \hline
+  FullyConnected
+    & Yes & Yes & Yes & Yes \\
+  \hline
+  Softmax
+    & Yes & No & Yes & Yes \\
+  \hline
+  FractionalMaxPooling
+    & Yes & No & Yes & No \\
+  \hline
+  Deconvolution
+    & No & No & No & Yes \\
+  \hline
+  ElemWise
+    & No & No & No & Yes \\
+  \hline
+  Resize
+    & Yes & No & No & Yes \\
+  \hline
+  Padding
+    & No & No & No & Yes \\
+  \hline
+  LRN
+    & No & No & No & Yes \\
+  \hline
+  Anchor
+    & No & No & No & Yes \\
+  \hline
+  ObjectDetector
+    & No & No & No & Yes \\
+  \hline
+  ROIPooling
+    & No & No & No & Yes \\
+  \hline
+  RegionProposal
+    & No & No & No & Yes \\
+  \hline
+
+\end{tabular}
+\end{table}
+
+Batchnormalization is not mentionned because batchnorm parameters are automatically fused with convolutions parameters with the command "-fuse". 
 \clearpage
 
 \section{INI file interface}
