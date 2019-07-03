@@ -23,7 +23,6 @@
 
 #include "Export/C/C_CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
-#include "License.hpp"
 
 namespace N2D2 {
 class C_DeepNetExport : public DeepNetExport {

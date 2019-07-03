@@ -24,7 +24,6 @@
 #include "Export/C/C_DeepNetExport.hpp"
 #include "Export/C_HLS/C_HLS_CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
-#include "License.hpp"
 
 namespace N2D2 {
 class C_HLS_DeepNetExport : public DeepNetExport {

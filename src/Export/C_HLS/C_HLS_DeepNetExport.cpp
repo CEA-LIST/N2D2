@@ -28,8 +28,6 @@ N2D2::C_HLS_DeepNetExport::mRegistrar("C_HLS",
 void N2D2::C_HLS_DeepNetExport::generate(DeepNet& deepNet,
                                          const std::string& dirName)
 {
-    flexlm_acquire_license("N2D2-IP_Export_C_HLS");
-
     Utils::createDirectories(dirName + "/include");
     Utils::createDirectories(dirName + "/src");
 
@@ -40,8 +38,6 @@ void N2D2::C_HLS_DeepNetExport::generate(DeepNet& deepNet,
 
     generateDeepNetProgram(deepNet, "network", dirName + "/src/network.c");
     generateTcl(deepNet, dirName);
-
-    flexlm_release_license("N2D2-IP_Export_C_HLS");
 }
 
 void N2D2::C_HLS_DeepNetExport::generateDeepNetHeader(DeepNet& deepNet,

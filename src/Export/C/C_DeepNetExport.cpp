@@ -29,8 +29,6 @@ N2D2::C_DeepNetExport::mRegistrar("C", N2D2::C_DeepNetExport::generate);
 void N2D2::C_DeepNetExport::generate(DeepNet& deepNet,
                                      const std::string& dirName)
 {
-    flexlm_acquire_license("N2D2-IP_Export_C");
-
     Utils::createDirectories(dirName + "/include");
     Utils::createDirectories(dirName + "/src");
 
@@ -39,8 +37,6 @@ void N2D2::C_DeepNetExport::generate(DeepNet& deepNet,
     generateDeepNetHeader(deepNet, "network", dirName + "/include/network.h");
 
     generateDeepNetProgram(deepNet, "network", dirName + "/src/network.c");
-
-    flexlm_release_license("N2D2-IP_Export_C");
 }
 
 void N2D2::C_DeepNetExport::generateParamsHeader(const std::string& fileName)
