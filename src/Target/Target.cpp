@@ -562,6 +562,9 @@ void N2D2::Target::process(Database::StimuliSet set)
 #endif
             outputsBaseTensor.synchronizeDToH();
             process_Frame(outputsBaseTensor, batchSize);
+
+            mEstimatedLabels.hostBased() = true;
+            mEstimatedLabelsValue.hostBased() = true;
 #ifdef CUDA
         }
 #endif
@@ -572,8 +575,8 @@ void N2D2::Target::process(Database::StimuliSet set)
             static bool display = true;
 
             if (set == Database::Test && display) {
-                mEstimatedLabels.synchronizeDToH();
-                mEstimatedLabelsValue.synchronizeDToH();
+                mEstimatedLabels.synchronizeDBasedToH();
+                mEstimatedLabelsValue.synchronizeDBasedToH();
 
                 std::cout << "[";
 
@@ -745,8 +748,8 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                     + fileName);
         }
 
-        mEstimatedLabels.synchronizeDToH();
-        mEstimatedLabelsValue.synchronizeDToH();
+        mEstimatedLabels.synchronizeDBasedToH();
+        mEstimatedLabelsValue.synchronizeDBasedToH();
 
         for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
@@ -881,8 +884,8 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
     const unsigned int nbTargets = getNbTargets();
 
-    mEstimatedLabels.synchronizeDToH();
-    mEstimatedLabelsValue.synchronizeDToH();
+    mEstimatedLabels.synchronizeDBasedToH();
+    mEstimatedLabelsValue.synchronizeDBasedToH();
 
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
