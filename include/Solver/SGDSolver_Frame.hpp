@@ -105,16 +105,22 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
         }
     }
 
+    T clampMin, clampMax;
+    std::tie(clampMin, clampMax) = getClamping<T>();
+
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // if outside the loop for better performance
-        if (mClamping) {
-            //#pragma omp parallel for
+        // Clamping
+        if (clampMin != std::numeric_limits<T>::min()
+            || clampMax != std::numeric_limits<T>::max())
+        {
             for (int index = 0; index < (int)data.size(); ++index) {
                 continuousData(index) = Utils::clamp<T>(
                     continuousData(index)
-                        + rateDiff * diffData(index), T(-1.0), T(1.0));
+                        + rateDiff * diffData(index), clampMin, clampMax);
             }
-        } else {
+        }
+        else {
             //#pragma omp parallel for
             for (int index = 0; index < (int)data.size(); ++index)
                 continuousData(index) += rateDiff * diffData(index);
@@ -142,10 +148,13 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
             }
 
             // data = data + mMomentumData
-            if (mClamping)
-                continuousData(index) = Utils::clamp
-                    <T>(continuousData(index) + mMomentumData(index),
-                        T(-1.0), T(1.0));
+            if (clampMin != std::numeric_limits<T>::min()
+                || clampMax != std::numeric_limits<T>::max())
+            {
+                continuousData(index) = Utils::clamp<T>(
+                    continuousData(index) + mMomentumData(index),
+                        clampMin, clampMax);
+            }
             else
                 continuousData(index) += mMomentumData(index);
         }

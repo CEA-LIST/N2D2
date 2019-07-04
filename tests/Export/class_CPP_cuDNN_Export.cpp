@@ -116,7 +116,7 @@ TEST(CPP_cuDNN_Export, generate)
                              "Solvers.LearningRatePolicy=StepDecay\n"
                              "Solvers.LearningRateStepSize=20000\n"
                              "Solvers.LearningRateDecay=0.996\n"
-                             "Solvers.Clamping=1\n";
+                             "Solvers.Clamping=-1.0:1.0\n";
 
     UnitTest::FileWriteContent("net_test.ini", data);
 

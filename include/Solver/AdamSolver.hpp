@@ -62,6 +62,7 @@ public:
     virtual ~AdamSolver() {};
 
 protected:
+    template <class T> std::pair<T, T> getClamping() const;
     virtual void saveInternal(std::ostream& state, std::ostream& log) const;
     virtual void loadInternal(std::istream& state);
 
@@ -75,8 +76,8 @@ protected:
     Parameter<double> mEpsilon;
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
-    /// If true, don't clamp the weights between -1 and 1 during learning
-    Parameter<bool> mClamping;
+    /// Weights clamping, format: "min:max", or ":max", or "min:", or empty
+    Parameter<std::string> mClamping;
 
     unsigned long long int mNbSteps;
     double mMinVal;
@@ -87,6 +88,30 @@ protected:
 private:
     virtual AdamSolver* doClone() const = 0;
 };
+}
+
+template <class T>
+std::pair<T, T> N2D2::AdamSolver::getClamping() const {
+    T clampMin = std::numeric_limits<T>::min();
+    T clampMax = std::numeric_limits<T>::max();
+
+    if (!((std::string)mClamping).empty()) {
+        const std::vector<std::string> clamping = Utils::split(mClamping, ":");
+
+        if (clamping.size() != 2) {
+#pragma omp critical
+            throw std::runtime_error("AdamSolver::getClamping():"
+                " wrong format for clamping");
+        }
+
+        if (!clamping[0].empty())
+            clampMin = T(std::atof(clamping[0].c_str()));
+
+        if (!clamping[1].empty())
+            clampMax = T(std::atof(clamping[1].c_str()));
+    }
+
+    return std::make_pair(clampMin, clampMax);
 }
 
 #endif // N2D2_ADAMSOLVER_H

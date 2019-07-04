@@ -33,7 +33,7 @@ N2D2::SGDSolver::SGDSolver()
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
       mQuantizationLevels(this, "QuantizationLevels", 0U),
-      mClamping(this, "Clamping", false),
+      mClamping(this, "Clamping", ""),
       mIterationPass(0),
       mNbIterations(0),
       mMinVal(0.0),

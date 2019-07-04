@@ -28,7 +28,7 @@ N2D2::AdamSolver::AdamSolver()
       mBeta2(this, "Beta2", 0.999),
       mEpsilon(this, "Epsilon", 1.0e-8),
       mQuantizationLevels(this, "QuantizationLevels", 0U),
-      mClamping(this, "Clamping", false),
+      mClamping(this, "Clamping", ""),
       mNbSteps(0),
       mMinVal(0.0),
       mMaxVal(0.0),

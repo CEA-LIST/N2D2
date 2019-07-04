@@ -76,6 +76,9 @@ void AdamSolver_Frame_CUDA<half_float::half>::update(
                                      cudaMemcpyDeviceToDevice));
     }
 
+    half_float::half clampMin, clampMax;
+    std::tie(clampMin, clampMax) = getClamping<half_float::half>();
+
     CudaTensor<half_float::half>& cudaContinuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
@@ -154,11 +157,11 @@ void AdamSolver_Frame_CUDA<half_float::half>::update(
               mTmpData.getDevicePtr(),
               cudaContinuousData.getDevicePtr());
 
-    if (mClamping) {
-        cudaHclamp(cudaContinuousData.getDevicePtr(),
-                   data.size(),
-                   half_float::half(-1.0f),
-                   half_float::half(1.0f));
+    if (clampMin != std::numeric_limits<half_float::half>::min()
+        || clampMax != std::numeric_limits<half_float::half>::max())
+    {
+        cudaHclamp(cudaContinuousData.getDevicePtr(), data.size(),
+                   clampMin, clampMax);
     }
 
     if (mQuantizationLevels > 0) {
@@ -201,6 +204,9 @@ void AdamSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
                                      data.size() * sizeof(float),
                                      cudaMemcpyDeviceToDevice));
     }
+
+    float clampMin, clampMax;
+    std::tie(clampMin, clampMax) = getClamping<float>();
 
     CudaTensor<float>& cudaContinuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
@@ -293,8 +299,12 @@ void AdamSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
                                     cudaContinuousData.getDevicePtr(),
                                     1));
 
-    if (mClamping)
-        cudaSclamp(cudaContinuousData.getDevicePtr(), data.size(), -1.0f, 1.0f);
+    if (clampMin != std::numeric_limits<float>::min()
+        || clampMax != std::numeric_limits<float>::max())
+    {
+        cudaSclamp(cudaContinuousData.getDevicePtr(), data.size(),
+                   clampMin, clampMax);
+    }
 
     if (mQuantizationLevels > 0) {
         std::tie(mMinVal, mMaxVal)
@@ -336,6 +346,9 @@ void AdamSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
                                      data.size() * sizeof(double),
                                      cudaMemcpyDeviceToDevice));
     }
+
+    double clampMin, clampMax;
+    std::tie(clampMin, clampMax) = getClamping<double>();
 
     CudaTensor<double>& cudaContinuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
@@ -428,8 +441,12 @@ void AdamSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
                                     cudaContinuousData.getDevicePtr(),
                                     1));
 
-    if (mClamping)
-        cudaDclamp(cudaContinuousData.getDevicePtr(), data.size(), -1.0, 1.0);
+    if (clampMin != std::numeric_limits<double>::min()
+        || clampMax != std::numeric_limits<double>::max())
+    {
+        cudaDclamp(cudaContinuousData.getDevicePtr(), data.size(),
+                   clampMin, clampMax);
+    }
 
     if (mQuantizationLevels > 0) {
         std::tie(mMinVal, mMaxVal)

@@ -94,6 +94,9 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
         std::copy(data.begin(), data.end(), mContinuousData.begin());
     }
 
+    T clampMin, clampMax;
+    std::tie(clampMin, clampMax) = getClamping<T>();
+
     Tensor<T>& continuousData
         = (mQuantizationLevels > 0) ? mContinuousData : data;
 
@@ -118,9 +121,12 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
         continuousData(index) += alpha * mMomentum1Data(index)
             / (std::sqrt(mMomentum2Data(index)) + epsilon);
 
-        if (mClamping) {
+        // Clamping
+        if (clampMin != std::numeric_limits<T>::min()
+            || clampMax != std::numeric_limits<T>::max())
+        {
             continuousData(index) = Utils::clamp<T>(continuousData(index),
-                T(-1.0), T(1.0));
+                clampMin, clampMax);
         }
     }
 
