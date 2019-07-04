@@ -46,6 +46,9 @@
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{amsfonts}
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 
 
 %% Line Spacing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1182,9 +1185,7 @@ Vivado\textregistered{} HLS:
 vivado_hls -f run_hls.tcl
 \end{lstlisting}
 
-\subsubsection{\texorpdfstring{%%
-\lstinline[basicstyle=\ttfamily\bfseries]!Layer compatibility table!}
-{Layer compatibility table}}
+\subsubsection{Layer compatibility table}
 
 Layer compatibility table in function of the export type:
 
@@ -1192,58 +1193,58 @@ Layer compatibility table in function of the export type:
 \centering
 \renewcommand\arraystretch{1.2}
 \begin{tabular}{|c|c|c|c|c|}\hline
-\multirow{2}{*}{\ttfamily\bfseries Layer compatibility table}
-    & \multicolumn{4}{c|}{\ttfamily\bfseries Export Type}    \\
+\multirow{2}{*}{\bfseries Layer compatibility table}
+    & \multicolumn{4}{c|}{\bfseries Export Type}    \\
     \cline{2-5}
-    & C & HLS & OpenCL & TensorRT            \\
+    & \ttfamily\bfseries C & \ttfamily\bfseries C\_HLS & \ttfamily\bfseries CPP\_OpenCL & \ttfamily\bfseries CPP\_TensorRT            \\
   \hline
-  Convolution
-    & Yes & Yes & Yes & Yes \\
+  Conv
+    & \textcolor{green}\cmark & \textcolor{green}\cmark & \textcolor{green}\cmark & \textcolor{green}\cmark \\
   \hline
-  Pooling
-    & Yes & Yes & Yes & Yes \\
+  Pool
+    & \textcolor{green}\cmark & \textcolor{green}\cmark & \textcolor{green}\cmark & \textcolor{green}\cmark \\
   \hline
-  FullyConnected
-    & Yes & Yes & Yes & Yes \\
+  Fc
+    & \textcolor{green}\cmark & \textcolor{green}\cmark & \textcolor{green}\cmark & \textcolor{green}\cmark \\
   \hline
   Softmax
-    & Yes & No & Yes & Yes \\
+    & \textcolor{green}\cmark & \textcolor{red}\xmark & \textcolor{green}\cmark & \textcolor{green}\cmark \\
   \hline
-  FractionalMaxPooling
-    & Yes & No & Yes & No \\
+  FMP
+    & \textcolor{green}\cmark & \textcolor{red}\xmark & \textcolor{green}\cmark & \textcolor{red}\xmark \\
   \hline
-  Deconvolution
-    & No & No & No & Yes \\
+  Deconv
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
   ElemWise
-    & No & No & No & Yes \\
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
   Resize
-    & Yes & No & No & Yes \\
+    & \textcolor{green}\cmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
   Padding
-    & No & No & No & Yes \\
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
   LRN
-    & No & No & No & Yes \\
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
   Anchor
-    & No & No & No & Yes \\
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
-  ObjectDetector
-    & No & No & No & Yes \\
+  ObjectDet
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
   ROIPooling
-    & No & No & No & Yes \\
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
-  RegionProposal
-    & No & No & No & Yes \\
+  RP
+    & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{red}\xmark & \textcolor{green}\cmark \\
   \hline
 
 \end{tabular}
 \end{table}
 
-Batchnormalization is not mentionned because batchnorm parameters are automatically fused with convolutions parameters with the command "-fuse". 
+BatchNorm is not mentionned because batch normalization parameters are automatically fused with convolutions parameters with the command "-fuse". 
 \clearpage
 
 \section{INI file interface}
