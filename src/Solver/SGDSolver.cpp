@@ -146,6 +146,7 @@ void N2D2::SGDSolver::logSchedule(const std::string& fileName,
                                   unsigned int epochSize,
                                   unsigned int maxSteps)
 {
+    const unsigned int maxLogSteps = 10000;
     const unsigned int iterationPass = mIterationPass;
     const unsigned int nbIterations = mNbIterations;
 
@@ -167,8 +168,9 @@ void N2D2::SGDSolver::logSchedule(const std::string& fileName,
 
     double prevLearningRate = 0.0;
     unsigned int nextLog = mLogSteps;
+    const unsigned int minStride = std::max(1U, maxSteps / maxLogSteps);
 
-    for (unsigned int step = 0; step < maxSteps; ++step) {
+    for (unsigned int step = 0, prevStep = 0; step < maxSteps; ++step) {
         const unsigned int i = step * batchSize;
         const double learningRate = getLearningRate(batchSize, true);
         const bool isLog = (i >= nextLog || step == maxSteps - 1);
@@ -178,14 +180,19 @@ void N2D2::SGDSolver::logSchedule(const std::string& fileName,
         {
             const unsigned int epoch = (epochSize > 0)
                 ? (i / epochSize) : 0;
-            log << step
-                << " " << mNbIterations
-                << " " << epoch
-                << " " << learningRate
-                << " " << ((isLog) ? "1" : "0") << "\n";
 
-            if (isLog)
-                nextLog += mLogSteps;
+            if (prevStep == 0 || step >= prevStep + minStride) {
+                log << step
+                    << " " << mNbIterations
+                    << " " << epoch
+                    << " " << learningRate
+                    << " " << ((isLog) ? "1" : "0") << "\n";
+
+                prevStep = step;
+
+                if (isLog)
+                    nextLog += mLogSteps;
+            }
 
             prevLearningRate = learningRate;
         }

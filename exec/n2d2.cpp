@@ -1565,13 +1565,27 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::shared_ptr<Database> database = deepNet->getDatabase();
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
 
+    std::cout << "[LOG] Stimuli transformations flow (transformations.png)"
+        << std::endl;
     sp->logTransformations("transformations.dot");
-
+    std::cout << "[LOG] Network graph (" << Utils::baseName(opt.iniConfig)
+        << ".png)" << std::endl;
     DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
+    std::cout << "[LOG] Network SVG graph (" << Utils::baseName(opt.iniConfig)
+        << ".svg)" << std::endl;
     DrawNet::draw(*deepNet, Utils::baseName(opt.iniConfig) + ".svg");
+    std::cout << "[LOG] Network stats (stats/*)" << std::endl;
     deepNet->logStats("stats");
+    std::cout << "[LOG] Solvers scheduling (schedule/*)" << std::endl;
+    deepNet->logSchedule("schedule");
+    std::cout << "[LOG] Layer's receptive fields (receptive_fields.log)"
+        << std::endl;
     deepNet->logReceptiveFields("receptive_fields.log");
+    std::cout << "[LOG] Labels mapping (*.Target/labels_mapping.log)"
+        << std::endl;
     deepNet->logLabelsMapping("labels_mapping.log");
+    std::cout << "[LOG] Labels legend (*.Target/labels_legend.png)"
+        << std::endl;
     deepNet->logLabelsLegend("labels_legend.png");
 
     if (!opt.weights.empty())
@@ -1582,6 +1596,7 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         deepNet->checkGradient(1.0e-3, 1.0e-3);
     }
 
+    std::cout << "[LOG] Learn frame samples (frames/frame*)" << std::endl;
     // Reconstruct some frames to see the pre-processing
     Utils::createDirectories("frames");
 
@@ -1613,6 +1628,7 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         }
     }
 
+    std::cout << "[LOG] Test frame samples (frames/test_frame*)" << std::endl;
     for (unsigned int i = 0, size = std::min(10U,
                                     database->getNbStimuli(Database::Test));
             i < size;
@@ -1625,6 +1641,10 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     }
 
     if (opt.preSamples >= 0) {
+        std::cout << "[LOG] Frame #" << opt.preSamples
+            << " pre-samples (pre_samples_" << opt.preSamples << ")"
+            << std::endl;
+
         if (opt.preSamples >= (int)database->getNbStimuli(Database::Learn)) {
             throw std::runtime_error("Pre-sample stimulus ID is higher "
                         "than the number of stimuli in the Learn dataset");

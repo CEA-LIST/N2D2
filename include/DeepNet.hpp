@@ -180,6 +180,7 @@ public:
     void logDiffInputs(const std::string& dirName,
                        unsigned int batchPos = 0) const;
     void logFreeParameters(const std::string& dirName) const;
+    void logSchedule(const std::string& dirName) const;
     void logStats(const std::string& dirName) const;
     void logSpikeStats(const std::string& dirName,
                        unsigned int nbPatterns) const;

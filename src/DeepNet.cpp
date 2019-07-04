@@ -29,12 +29,14 @@
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
+#include "Cell/DeconvCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
 #include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "utils/Utils.hpp"
+#include "Solver/Solver.hpp"
 
 N2D2::DeepNet::DeepNet(Network& net)
     : mName(this, "Name", ""),
@@ -1414,6 +1416,73 @@ void N2D2::DeepNet::logFreeParameters(const std::string& dirName) const
          it != itEnd;
          ++it) {
         (*it).second->logFreeParameters(dirName + "/" + (*it).first);
+    }
+}
+
+void N2D2::DeepNet::logSchedule(const std::string& dirName) const
+{
+    Utils::createDirectories(dirName);
+
+    std::vector<std::pair<std::string, std::shared_ptr<Solver> > > solvers;
+
+    for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+         = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it)
+    {
+        const std::shared_ptr<Cell> cell = (*it).second;
+
+        // BatchNorm
+        const std::shared_ptr<BatchNormCell> cellBatchNorm
+            = std::dynamic_pointer_cast<BatchNormCell>(cell);
+
+        if (cellBatchNorm) {
+            solvers.push_back(std::make_pair((*it).first + "_scale",
+                                             cellBatchNorm->getScaleSolver()));
+            solvers.push_back(std::make_pair((*it).first + "_bias",
+                                             cellBatchNorm->getBiasSolver()));
+        }
+
+        // Conv
+        const std::shared_ptr<ConvCell> cellConv
+            = std::dynamic_pointer_cast<ConvCell>(cell);
+
+        if (cellConv) {
+            solvers.push_back(std::make_pair((*it).first + "_bias",
+                                             cellConv->getBiasSolver()));
+            solvers.push_back(std::make_pair((*it).first + "_weights",
+                                             cellConv->getWeightsSolver()));
+        }
+
+        // Deconv
+        const std::shared_ptr<DeconvCell> cellDeconv
+            = std::dynamic_pointer_cast<DeconvCell>(cell);
+
+        if (cellDeconv) {
+            solvers.push_back(std::make_pair((*it).first + "_bias",
+                                             cellDeconv->getBiasSolver()));
+            solvers.push_back(std::make_pair((*it).first + "_weights",
+                                             cellDeconv->getWeightsSolver()));
+        }
+
+        // Fc
+        const std::shared_ptr<FcCell> cellFc
+            = std::dynamic_pointer_cast<FcCell>(cell);
+
+        if (cellFc) {
+            solvers.push_back(std::make_pair((*it).first + "_bias",
+                                             cellFc->getBiasSolver()));
+            solvers.push_back(std::make_pair((*it).first + "_weights",
+                                             cellFc->getWeightsSolver()));
+        }
+    }
+
+#pragma omp parallel for
+    for (int i = 0; i < (int)solvers.size(); ++i) {
+        if (solvers[i].second) {
+            solvers[i].second->logSchedule(dirName + "/"
+                    + solvers[i].first + "_schedule.log",
+                mStimuliProvider->getBatchSize(),
+                mDatabase->getNbStimuli(Database::Learn));
+        }
     }
 }
 

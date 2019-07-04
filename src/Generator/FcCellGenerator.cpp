@@ -117,23 +117,6 @@ N2D2::FcCellGenerator::generate(Network& network, const DeepNet& deepNet,
                                                         "WeightsSolver.");
     }
 
-    // Log solver scheduling
-    Utils::createDirectories("schedule");
-
-    if (cell->getBiasSolver()) {
-        cell->getBiasSolver()->logSchedule("schedule/"
-                + section + "_bias_schedule.log",
-            sp.getBatchSize(),
-            sp.getDatabase().getNbStimuli(Database::Learn));
-    }
-
-    if (cell->getWeightsSolver()) {
-        cell->getWeightsSolver()->logSchedule("schedule/"
-                + section + "_weights_schedule.log",
-            sp.getBatchSize(),
-            sp.getDatabase().getNbStimuli(Database::Learn));
-    }
-
     cell->setParameters(params);
 
     // Load configuration file (if exists)
