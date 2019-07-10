@@ -78,8 +78,13 @@ void N2D2::Synapse_PCM::setRelativeWeight(double relWeight)
 {
     if (((bipolar && relWeight < -1.0) || (!bipolar && relWeight < 0.0))
         || relWeight > 1.0)
-        throw std::domain_error("Relative weight is out of range (must be in "
-                                "[0,1] or [-1,1] range)");
+    {
+        std::ostringstream msgStr;
+        msgStr << "Relative weight (" << relWeight << ") is out of range"
+            " (must be in [0,1] or [-1,1] range)";
+
+        throw std::domain_error(msgStr.str());
+    }
 
     const unsigned int devSize = devices.size();
     const unsigned int devHalfSize = devSize / 2;

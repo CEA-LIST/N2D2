@@ -64,16 +64,21 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
     setOutputsDims();
 
     // Define input-output connections
-    if (!mapping.empty() && (mapping.dimX() != getNbOutputs()
-                             || mapping.dimY() != 1))
+    if (!mapping.empty() && (mapping.nbDims() != 1
+                            || mapping.size() != getNbOutputs()))
     {
-        throw std::runtime_error("Cell_Spike::addInput(): mapping length must "
-                                 "be equal to the number of outputs");
+        std::ostringstream msgStr;
+        msgStr << "Cell_Spike::addInput(): mapping must be 1D and its size ("
+            << mapping.size() << ") must be equal to the number of outputs ("
+            << getNbOutputs() << ")";
+
+        throw std::runtime_error(msgStr.str());
     }
 
-    mMapping.append((!mapping.empty())
+    // Use push_back() instead of append() here because the argument is 1D
+    mMapping.push_back((!mapping.empty())
         ? mapping
-        : Tensor<bool>({getNbOutputs(), 1}, true));
+        : Tensor<bool>({getNbOutputs()}, true));
 
     mInputs.reserve(getInputsSize());
 
@@ -105,10 +110,14 @@ void N2D2::Cell_Spike::addInput(StimuliProvider& sp,
     if (height == 0)
         height = sp.getSizeY() - y0;
 
-    if (!mapping.empty() && mapping.dimY() != nbChannels)
-        throw std::runtime_error("Cell_Spike::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "filters");
+    if (!mapping.empty() && mapping.dimY() != nbChannels) {
+        std::ostringstream msgStr;
+        msgStr << "Cell_Spike::addInput(): number of mapping "
+            "rows (" << mapping.dimY() << ") must be equal to the number of "
+            "input filters (" << nbChannels << ")";
+
+        throw std::runtime_error(msgStr.str());
+    }
 
     for (unsigned int channel = 0; channel < nbChannels; ++channel) {
         // Cell_Spike:: prefix needed to avoid ambiguity with Transcode model
@@ -138,10 +147,14 @@ void N2D2::Cell_Spike::addInput(Cell* cell, const Tensor<bool>& mapping)
     // Define input-output connections
     const unsigned int cellNbOutputs = cellSpike->getNbOutputs();
 
-    if (!mapping.empty() && mapping.dimX() != cellNbOutputs)
-        throw std::runtime_error("Cell_Spike::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
+    if (!mapping.empty() && mapping.dimY() != cellNbOutputs) {
+        std::ostringstream msgStr;
+        msgStr << "Cell_Spike::addInput(): number of mapping "
+            "rows (" << mapping.dimY() << ") must be equal to the number of "
+            "input filters (" << cellNbOutputs << ")";
+
+        throw std::runtime_error(msgStr.str());
+    }
 
     mMapping.append((!mapping.empty())
         ? mapping

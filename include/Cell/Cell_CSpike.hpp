@@ -62,7 +62,7 @@ public:
     {
         return mOutputs;
     };
-    bool isCuda() const
+    virtual bool isCuda() const
     {
         return false;
     }

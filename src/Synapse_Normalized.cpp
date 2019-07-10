@@ -40,9 +40,13 @@ N2D2::Synapse_Normalized::Synapse_Normalized(Time_T delay_,
 
 void N2D2::Synapse_Normalized::setRelativeWeight(double relWeight)
 {
-    if (relWeight < 0.0 || relWeight > 1.0)
-        throw std::domain_error(
-            "Relative weight is out of range (must be >= 0.0 and <= 1.0)");
+    if (relWeight < 0.0 || relWeight > 1.0) {
+        std::ostringstream msgStr;
+        msgStr << "Relative weight (" << relWeight << ") is out of range"
+            " (must be >= 0.0 and <= 1.0)";
+
+        throw std::domain_error(msgStr.str());
+    }
 
     weight = relWeight;
 }

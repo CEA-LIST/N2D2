@@ -534,6 +534,12 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                                 outputsRange);
 
     if (!afterCalibration) {
+        // Necessary for spike transcoding
+        deepNet->normalizeOutputsRange(outputsRange, 0.25);
+        deepNet->exportNetworkFreeParameters(
+            "weights_range_normalized");
+
+        // Normalize all weights
         deepNet->normalizeFreeParameters();
         deepNet->exportNetworkFreeParameters("weights_normalized");
     }    
@@ -1340,6 +1346,8 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
               std::shared_ptr<Environment>& env, Network& net, 
               Monitor& monitorEnv, Monitor& monitorOut) 
 {
+    deepNet->importNetworkFreeParameters("weights_range_normalized");
+
     std::shared_ptr<Database> database = deepNet->getDatabase();
     
     Utils::createDirectories("stimuli");

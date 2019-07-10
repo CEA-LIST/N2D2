@@ -106,15 +106,19 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     }
 
     // Set up the environment
+    bool isEnv = true;
+
     if (iniConfig.isSection("cenv"))
         deepNet->setStimuliProvider(CEnvironmentGenerator::generate(
             *deepNet->getDatabase(), iniConfig, "cenv"));
     else if (iniConfig.isSection("env"))
         deepNet->setStimuliProvider(EnvironmentGenerator::generate(
             network, *deepNet->getDatabase(), iniConfig, "env"));
-    else
+    else {
         deepNet->setStimuliProvider(StimuliProviderGenerator::generate(
             *deepNet->getDatabase(), iniConfig, "sp"));
+        isEnv = false;
+    }
 
     // Construct network tree
     // std::cout << "Construct network tree..." << std::endl;
@@ -258,30 +262,6 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
                 deepNet->addTarget(target);
             }
 
-
-
-#ifdef CUDA
-            std::shared_ptr<Cell_CSpike_Top> cellCSpike_Top =
-                std::dynamic_pointer_cast<Cell_CSpike_Top>(cell);
-            if (cellCSpike_Top){
-                std::shared_ptr<CMonitor> monitor;
-                if (cellCSpike_Top->isCuda()) {
-                    monitor = std::make_shared<CMonitor_CUDA>();
-                }
-                else {
-                    monitor = std::make_shared<CMonitor>();
-                }
-                monitor->add(cellCSpike_Top->getOutputs());
-                deepNet->addCMonitor((*it), monitor);
-                 /*std::ostringstream gradientMonitorName;
-                gradientMonitorName << (*it) << "_gradient";
-                std::shared_ptr<CMonitor>
-                    gradientMonitor(new CMonitor_CUDA());
-                gradientMonitor->add(cellCSpike_Top->getDeltas());
-                deepNet->addCMonitor(gradientMonitorName.str(),
-                                     gradientMonitor);*/
-            }
-#else
             std::shared_ptr<Cell_CSpike> cellCSpike = std::dynamic_pointer_cast
                 <Cell_CSpike>(cell);
              // Monitor for the cell
@@ -289,8 +269,18 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
             std::shared_ptr<Cell_Spike> cellSpike = std::dynamic_pointer_cast
                 <Cell_Spike>(cell);
 
-            if (cellCSpike){
-                std::shared_ptr<CMonitor> monitor(new CMonitor());
+            if (cellCSpike) {
+                std::shared_ptr<CMonitor> monitor;
+#ifdef CUDA
+                if (cellCSpike->isCuda()) {
+                    monitor = std::make_shared<CMonitor_CUDA>();
+                }
+                else {
+#endif
+                    monitor = std::make_shared<CMonitor>();
+#ifdef CUDA
+                }
+#endif
                 monitor->add(cellCSpike->getOutputs());
                 deepNet->addCMonitor((*it), monitor);
             }
@@ -301,8 +291,8 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
                 deepNet->addMonitor((*it), monitor);
 
             }
-#endif
-            else {
+            else if (isEnv) {
+                // Don't warn if we are using a StimuliProvider
                 std::cout << "Warning: No monitor could be added to Cell: " +
                     cell->getName() << std::endl;
             }
