@@ -70,10 +70,11 @@ __global__ void cudaUpdateActivity_kernel(int * inputs,
 
                     const unsigned int inputsIdx =
                         x + y*inputsDimX + channel*inputsDimX*inputsDimY;
-                    char act = inputs[inputsIdx + batchInputOffset];
-                    unsigned int actAbs = abs((int) act);
+                    int act = inputs[inputsIdx + batchInputOffset];
+                    unsigned int actAbs = abs(act);
+                    char spike = act == 0 ? 0 : act/abs(act);
 
-                    activity[inputsIdx + batchInputOffset] = act;
+                    activity[inputsIdx + batchInputOffset] = spike;
                     firingRate[inputsIdx + batchInputOffset] += actAbs;
                     exampleFiringRate[inputsIdx + batchInputOffset] += actAbs;
                     totalOutput[inputsIdx + batchInputOffset] += act;

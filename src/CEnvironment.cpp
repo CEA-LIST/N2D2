@@ -144,6 +144,31 @@ void N2D2::CEnvironment::setBatchSize(unsigned int batchSize)
 
 }
 
+
+void N2D2::CEnvironment::readBatch(Database::StimuliSet set,
+                                      unsigned int startIndex)
+{
+    const unsigned int batchSize
+        = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
+
+    // Fill mData batch elements which are not used with 0
+    if (batchSize < mBatchSize) {
+        std::fill(mRelationalData[0].begin(), mRelationalData[0].end(), 0);
+    }
+
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        batchRef[batchPos]
+            = mDatabase.getStimulusID(set, startIndex + batchPos);
+
+#pragma omp parallel for schedule(dynamic) if (batchSize > 1)
+    for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
+        readStimulus(batchRef[batchPos], set, batchPos);
+
+    std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
+}
+
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
     if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
@@ -281,16 +306,7 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
 {
     StimuliProvider::readStimulus(id, set, batchPos);
 
-    if (mRelationalData.size() == 1){
-        //mRelationalData.clear();
-        //for (unsigned int i=0; i<mData.size(); ++i) {
-        //    mRelationalData[0](i) = mData(i);
-        //}
-#ifdef CUDA
-        mRelationalData[0].synchronizeHToD();
-#endif
-    }
-    else {
+    if (mRelationalData.size() != 1){
         throw std::runtime_error("CEnvironment::readStimulus: "
                                  "mRelationalData.size() != 1");
     }

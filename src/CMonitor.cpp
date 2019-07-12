@@ -309,6 +309,36 @@ unsigned int N2D2::CMonitor::calcTotalBatchActivity(Time_T start,
 
 
 
+void N2D2::CMonitor::logExampleFiringRate(const std::string& fileName)
+{
+
+    std::ofstream data(fileName.c_str());
+
+    if (!data.good())
+        throw std::runtime_error("Could not create firing rate log file: "
+                                 + fileName);
+
+    for (unsigned int channel=0; channel<(*mInputs).dimZ(); ++channel) {
+        for (unsigned int y=0; y<(*mInputs).dimY(); ++y) {
+            for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
+                unsigned int nodeId =
+                    channel*(*mInputs).dimY()*(*mInputs).dimX() +
+                    y*(*mInputs).dimX() + x;
+                unsigned int rate = 0;
+                for (unsigned int batch=0; batch<(*mInputs).dimB(); ++batch) {
+                    rate += mExampleFiringRate(x, y, channel, batch);
+                }
+                data << nodeId << " " << rate << "\n";
+            }
+        }
+    }
+
+
+    data.close();
+
+}
+
+
 void N2D2::CMonitor::logFiringRate(const std::string& fileName,
                                     bool plot,
                                     Time_T start,

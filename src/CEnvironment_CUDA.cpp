@@ -38,6 +38,21 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 
 }
 
+void N2D2::CEnvironment_CUDA::readBatch(Database::StimuliSet set,
+                                      unsigned int startIndex)
+{
+    CEnvironment::readBatch(set, startIndex);
+    mRelationalData[0].synchronizeHToD();
+
+}
+
+
+void N2D2::CEnvironment_CUDA::readRandomBatch(Database::StimuliSet set)
+{
+    StimuliProvider::readRandomBatch(set);
+    mRelationalData[0].synchronizeHToD();
+}
+
 
 void N2D2::CEnvironment_CUDA::initialize()
 {

@@ -156,7 +156,7 @@ public:
     /// Read a whole random batch from the StimuliSet @p set, apply all the
     /// transformations and put the results in
     /// mData and mLabelsData
-    void readRandomBatch(Database::StimuliSet set);
+    virtual void readRandomBatch(Database::StimuliSet set);
 
 //TODO: Required for spiking neural network batch parallelization
 /*
@@ -177,7 +177,7 @@ public:
     /// Read a whole batch from the StimuliSet @p set, apply all the
     /// transformations and put the results in
     /// mData and mLabelsData
-    void readBatch(Database::StimuliSet set, unsigned int startIndex);
+    virtual void readBatch(Database::StimuliSet set, unsigned int startIndex);
     void streamBatch(int startIndex = -1);
 
 //TODO: Required for spiking neural network batch parallelization

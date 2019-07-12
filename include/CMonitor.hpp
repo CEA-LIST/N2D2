@@ -153,6 +153,7 @@ public:
         return mOutputsActivity;
     }
 
+    void logExampleFiringRate(const std::string& fileName);
     /// Create a file to store firing rates and plot them if demanded by
     /// generating a gnuplot file.
     void logFiringRate(const std::string& fileName, bool plot = false,

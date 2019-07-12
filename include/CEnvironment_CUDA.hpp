@@ -36,6 +36,10 @@ public:
                      unsigned int nbSubStimuli = 1,
                      bool compositeStimuli = false);
 
+    virtual void readBatch(Database::StimuliSet set,
+                                      unsigned int startIndex);
+    virtual void readRandomBatch(Database::StimuliSet set);
+
     virtual void initialize();
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
     virtual void reset(Time_T timestamp);

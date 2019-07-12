@@ -54,6 +54,9 @@ public:
                     unsigned int subIdx=0);
     void setBatchSize(unsigned int batchSize);
 
+    virtual void readBatch(Database::StimuliSet set,
+                                      unsigned int startIndex);
+
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
 
     virtual void readStimulus(Database::StimulusID id,
@@ -184,6 +187,11 @@ public:
         return mNbSubStimuli;
     };
 
+    Time_T getStopStimulusTime()
+    {
+        return mStopStimulusTime;
+    };
+
     void clearTickOutput();
 
     virtual ~CEnvironment();
@@ -226,7 +234,7 @@ protected:
 
     Parameter<bool> mNoConversion;
     Parameter<Float_T> mScaling;
-    Parameter<unsigned int> mStopStimulusTime;
+    Parameter<Time_T> mStopStimulusTime;
     Parameter<bool> mReadAerData;
     Parameter<std::string> mStreamPath;
     unsigned int mNbSubStimuli;
