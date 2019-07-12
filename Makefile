@@ -140,7 +140,9 @@ ifeq ($(CXX),icpc)
   LDFLAGS:=$(LDFLAGS) -w2 -Wall -Wcheck $(OPT)
 else
   ifndef DEBUG
-    OPT:=-Werror
+    ifndef NOWERROR
+      OPT:=-Werror
+    endif
 
     ifdef CHECK_COVERAGE
       OPT:=$(OPT) -O0 -g
