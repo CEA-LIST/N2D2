@@ -1061,6 +1061,174 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
     }
 }
 
+void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
+{
+    const std::string dirPath = mName + "/" + dirName;
+    Utils::createDirectories(dirPath);
+
+    if (mTargets.dimX() == 1 && mTargets.dimY() == 1)
+        return;
+
+    if (mDataAsTarget)
+        return;
+
+    const unsigned int nbTargets = getNbTargets();
+    const double xRatio = mStimuliProvider->getSizeX()
+        / (double)mEstimatedLabels.dimX();
+    const double yRatio = mStimuliProvider->getSizeY()
+        / (double)mEstimatedLabels.dimY();
+    const int scale = xRatio;
+
+    if (xRatio != yRatio || xRatio != scale) {
+        std::cout << Utils::cwarning << "Target::logEstimatedLabelsJSON(): "
+            "x-ratio (" << xRatio << ") and y-ratio (" << yRatio << ") do not "
+            "match and/or are not integers" << Utils::cdef << std::endl;
+    }
+
+    mEstimatedLabels.synchronizeDBasedToH();
+    mEstimatedLabelsValue.synchronizeDBasedToH();
+
+    const time_t now = std::time(0);
+    tm* localNow = std::localtime(&now);
+    std::string time = std::asctime(localNow);
+    time.pop_back(); // remove \n introduced by std::asctime()
+
+    const std::string fileExtension
+        = (!((std::string)mImageLogFormat).empty())
+            ? (std::string)mImageLogFormat
+            : std::string("jpg");
+            
+#pragma omp parallel for if (mTargets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+        const int id = mStimuliProvider->getBatch()[batchPos];
+
+        if (id < 0) {
+            // Invalid stimulus in batch (can occur for the last batch of the
+            // set)
+            continue;
+        }
+
+        const Tensor<int> target = mTargets[batchPos][0];
+        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
+        const Tensor<Float_T> estimatedLabelsValue
+            = mEstimatedLabelsValue[batchPos][0];
+
+        const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
+            ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
+            : TensorLabels_T();
+
+        if (!mask.empty() && mask.dims() != target.dims()) {
+            std::ostringstream errorStr;
+            errorStr << "Mask dims (" << mask.dims() << ") from MaskLabelTarget"
+                " does not match target dims (" << target.dims() << ") for"
+                " target \"" << mName << "\"";
+
+#pragma omp critical(Target__logEstimatedLabelsJSON)
+            throw std::runtime_error(errorStr.str());
+        }
+
+        std::map<int, Tensor<bool> > estimatedBitmaps;
+
+        for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
+            for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
+                if (estimatedLabels(ox, oy) != mNoDisplayLabel) {
+                    std::map<int, Tensor<bool> >::iterator itBitmap;
+                    std::tie(itBitmap, std::ignore) = estimatedBitmaps.insert(
+                        std::make_pair(estimatedLabels(ox, oy),
+                                    Tensor<bool>(estimatedLabels.dims(), false)));
+
+                    Tensor<bool>& bitmap = (*itBitmap).second;
+
+                    if (mask.empty() || mask(ox, oy) == mMaskedLabel)
+                        bitmap(ox, oy) = true;
+                }
+            }
+        }
+
+        std::ostringstream imgFile;
+        imgFile << std::setw(10) << std::setfill('0') << id;
+        std::string fileName = dirPath + "/" + imgFile.str()
+            + "." + fileExtension;
+
+        // Input image
+        cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+        cv::Mat inputImg8U;
+        // inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+
+        // Normalize image
+        cv::Mat inputImgNorm;
+        cv::normalize(
+            inputImg.reshape(1), inputImgNorm, 0, 255, cv::NORM_MINMAX);
+        inputImg = inputImgNorm.reshape(inputImg.channels());
+        inputImg.convertTo(inputImg8U, CV_8U);
+
+        if (!cv::imwrite(fileName, inputImg8U)) {
+#pragma omp critical(Target__logEstimatedLabelsJSON)
+            throw std::runtime_error("Unable to write image: " + fileName);
+        }
+
+        fileName += ".json";
+
+        std::ofstream jsonData(fileName.c_str());
+
+        if (!jsonData.good()) {
+#pragma omp critical(Target__logEstimatedLabelsJSON)
+            throw std::runtime_error("Could not create JSON file: " + fileName);
+        }
+
+        jsonData << "{\"annotations\": [";
+
+        for (std::map<int, Tensor<bool> >::const_iterator it
+            = estimatedBitmaps.begin(), itEnd = estimatedBitmaps.end();
+            it != itEnd; ++it)
+        {
+            if (it != estimatedBitmaps.begin())
+                jsonData << ",";
+
+            jsonData << "{\"class_id\": " << (*it).first << ","
+                "\"info\": [\"BITMAP_CLASS_" << (*it).first << "\","
+                    "false,"
+                    "{\"CreationDate\": \"" << time << "\","
+                        "\"Source\": \"N2D2\"}"
+                "],"
+                "\"type\": \"pixelwise\","
+                "\"origin\": [0, 0],"
+                "\"scale\": " << (-scale) << ","
+                "\"size\": [" << (*it).second.dimX() << ","
+                    << (*it).second.dimY() << "],"
+                "\"data\": [";
+
+            unsigned int p = 0;
+            unsigned int c0 = 0;
+            unsigned int c255 = 0;
+
+            while (p < (*it).second.size()) {
+                if (p > 0)
+                    jsonData << ",";
+
+                while (p < (*it).second.size() && !(*it).second(p)) {
+                    ++p;
+                    ++c0;
+                }
+
+                while (p < (*it).second.size() && (*it).second(p)) {
+                    ++p;
+                    ++c255;
+                }
+
+                jsonData << c0 << "," << c255;
+
+                c0 = 0;
+                c255 = 0;
+            }
+
+            jsonData << "]}";
+        }
+
+        jsonData << "]}";
+    }
+}
+
 void N2D2::Target::logLabelsLegend(const std::string& fileName) const
 {
     if (mDataAsTarget)
