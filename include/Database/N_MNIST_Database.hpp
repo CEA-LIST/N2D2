@@ -27,20 +27,26 @@
 namespace N2D2 {
 class N_MNIST_Database : public AER_Database {
 public:
-    N_MNIST_Database();
+    N_MNIST_Database(double validation = 0.0);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     //virtual cv::Mat getStimulusData(StimulusID id);
-    virtual std::vector<AerReadEvent> loadAerStimulusData(StimuliSet set,
-                                                          StimulusID id,
-                                                          Time_T start,
-                                                          Time_T stop,
-                                                          unsigned int repetitions=1,
-                                                          unsigned int partialStimulus=0);
+    virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData,
+                                                StimuliSet set,
+                                                StimulusID id);
+
+    virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData,
+                                                    StimuliSet set,
+                                                    StimulusID id,
+                                                    Time_T start,
+                                                    Time_T stop,
+                                                    unsigned int repetitions=1,
+                                                    unsigned int partialStimulus=0);
     virtual ~N_MNIST_Database() {};
 
 protected:
+    double mValidation;
 };
 }
 

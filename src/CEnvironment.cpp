@@ -313,61 +313,6 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
 }
 
 
-
-void N2D2::CEnvironment::readRandomAerStimulus(Database::StimuliSet set,
-                                        Time_T start,
-                                        Time_T stop,
-                                        unsigned int repetitions,
-                                        unsigned int partialStimulus,
-                                        std::vector<Database::StimulusID>& Ids)
-{
-    const Database::StimulusID id = getRandomID(set);
-    readAerStimulus(set, id, start, stop, repetitions, partialStimulus);
-    Ids.push_back(id);
-}
-
-void N2D2::CEnvironment::readAerStimulus(Database::StimuliSet set,
-                                        Database::StimulusID id,
-                                        Time_T start,
-                                        Time_T stop,
-                                        unsigned int repetitions,
-                                        unsigned int partialStimulus,
-                                        std::vector<Database::StimulusID>& Ids)
-{
-    readAerStimulus(set, id, start, stop, repetitions, partialStimulus);
-    Ids.push_back(id);
-}
-
-
-
-void N2D2::CEnvironment::readAerStimulus(Database::StimuliSet set,
-                                            Database::StimulusID id,
-                                            Time_T start,
-                                            Time_T stop,
-                                            unsigned int repetitions,
-                                            unsigned int partialStimulus)
-{
-    Database * base = &mDatabase;
-    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(base);
-
-
-    if (aerDatabase) {
-        //TODO: Implement getStimulusData in AER_Database and load into mData
-        //std::cout << "Reading from AER database" << std::endl;
-        std::vector<AerReadEvent> events =
-            aerDatabase->loadAerStimulusData(set, id, start, stop, repetitions, partialStimulus);
-        mAerData.clear();
-        for (std::vector<AerReadEvent>::iterator it=events.begin();
-        it!=events.end(); ++it) {
-            mAerData.push_back(*it);
-        }
-
-        // TODO: Try to solve with swap
-        //mAerData.swap(aerDatabase->loadAerStimulusData(id));
-    }
-}
-
-
 void N2D2::CEnvironment::readAerStream(Time_T start,
                                     Time_T stop,
                                     unsigned int repetitions)

@@ -48,7 +48,12 @@ public:
     //                  const std::string& labelPath,
     //                  bool /*extractROIs*/);
     //virtual cv::Mat getStimulusData(StimulusID id);
-    virtual std::vector<AerReadEvent> loadAerStimulusData(StimuliSet set,
+    virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData,
+                                            StimuliSet set,
+                                          StimulusID id)=0;
+
+    virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData, 
+                                          StimuliSet set,
                                           StimulusID id,
                                           Time_T start,
                                           Time_T stop,

@@ -22,13 +22,15 @@
 #include "Database/N_MNIST_Database.hpp"
 #include <bitset>
 
-N2D2::N_MNIST_Database::N_MNIST_Database()
-    : AER_Database()
+N2D2::N_MNIST_Database::N_MNIST_Database(double validation)
+    : AER_Database(), mValidation(validation)
 
 {
     // ctor
 }
 
+
+/// This loads the database and partitions it into learning and testing samples
 void N2D2::N_MNIST_Database::load(const std::string& dataPath,
                                     const std::string& /*labelPath*/,
                                     bool /*extractROIs*/)
@@ -53,7 +55,8 @@ void N2D2::N_MNIST_Database::load(const std::string& dataPath,
         }
     }
 
-    partitionStimuli(nbTrainImages, Database::Learn);
+    // Assign loaded stimuli to learning and validation set
+    partitionStimuli(1.0 - mValidation, mValidation, 0.0);
 
     unsigned int nbTestImages = 10000;
 
@@ -77,12 +80,78 @@ void N2D2::N_MNIST_Database::load(const std::string& dataPath,
             }
         }
     }
-    partitionStimuli(nbTestImages, Database::Test);
+
+    // Assign loaded stimuli to test set
+    partitionStimuli(0.0, 0.0, 1.0);
+
 }
 
 
 
-std::vector<N2D2::AerReadEvent> N2D2::N_MNIST_Database::loadAerStimulusData(
+void N2D2::N_MNIST_Database::loadAerStimulusData(
+                                            std::vector<AerReadEvent>& aerData,
+                                            StimuliSet set,
+                                            StimulusID id)
+{
+
+
+    std::string filename = mStimuli[mStimuliSets(set)[id]].name;
+
+    std::vector<AerReadEvent> stimu;
+
+    std::ifstream data(filename, std::ios::in|std::ios::binary|std::ios::ate);
+
+    if (data.good()) {
+
+            std::streampos size;
+            char * memblock;
+            size = data.tellg(); // Get pointer to end of file
+            memblock = new char [size]; // Allocate memory for data
+            data.seekg(0, std::ios::beg); // Set pointer to beginning
+            data.read(memblock, size);
+            data.close();
+
+            unsigned int nbEvents = (unsigned int)((int)size/5);
+
+            for (unsigned int ev = 0; ev < nbEvents; ++ev) {
+
+                unsigned int offset = 5*ev;
+
+                unsigned int xCoor =
+                            (unsigned int)((unsigned char)memblock[offset]);
+                unsigned int yCoor =
+                            (unsigned int)((unsigned char)memblock[offset+1]);
+
+                 // Use unsigned int because only 24 bit
+                unsigned int bitstring = ((unsigned char)memblock[offset+2]);
+                bitstring =
+                    (bitstring << 8) | (unsigned char)memblock[offset+3];
+                bitstring =
+                    (bitstring << 8) | (unsigned char)memblock[offset+4];
+                bitstring = bitstring << 8;
+
+                // Bit 24 represents sign
+                unsigned int sign = static_cast<unsigned int>(bitstring >> 31);
+                // Bit 23-0 represent time
+                unsigned int time = static_cast<unsigned int>((bitstring << 1)
+                                                                >> (32-23));
+
+                aerData.push_back(AerReadEvent(xCoor, yCoor, sign, time));
+
+            }
+
+            delete[] memblock;
+    }
+    else {
+        throw std::runtime_error("N_MNIST_Database::loadAerStimulusData: "
+                                    "Could not open AER file: " + filename);
+    }
+}
+
+
+/// This is only used in clock-simulation
+void N2D2::N_MNIST_Database::loadAerStimulusData(
+                                                std::vector<AerReadEvent>& aerData,
                                                 StimuliSet set,
                                                 StimulusID id,
                                                 Time_T start,
@@ -201,21 +270,16 @@ std::vector<N2D2::AerReadEvent> N2D2::N_MNIST_Database::loadAerStimulusData(
 
     double scalingFactor = ((double)intervalSize)/(lastTime-startTime);
 
-    std::vector<AerReadEvent> scaledStimu;
-
     for (unsigned int i=0; i < repetitions; ++i) {
         for(std::vector<AerReadEvent>::iterator it=stimu.begin();
         it!=stimu.end(); ++it) {
             Time_T scaledTime = std::floor((((*it).time-startTime)
                                             *scalingFactor) + i*intervalSize);
 
-            scaledStimu.push_back(AerReadEvent((*it).x, (*it).y,
+            aerData.push_back(AerReadEvent((*it).x, (*it).y,
                                                (*it).channel, scaledTime));
         }
     }
-
-    return scaledStimu;
-
 }
 
 

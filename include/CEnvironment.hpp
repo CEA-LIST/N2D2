@@ -63,28 +63,6 @@ public:
                       Database::StimuliSet set,
                       unsigned int batchPos = 0);
 
-    virtual void readAerStimulus(Database::StimuliSet set,
-                         Database::StimulusID id,
-                        Time_T start,
-                        Time_T stop,
-                        unsigned int repetitions,
-                        unsigned int partialStimulus);
-
-    virtual void readAerStimulus(Database::StimuliSet set,
-                        Database::StimulusID id,
-                        Time_T start,
-                        Time_T stop,
-                        unsigned int repetitions,
-                        unsigned int partialStimulus,
-                        std::vector<Database::StimulusID>& Ids);
-
-    virtual void readRandomAerStimulus(Database::StimuliSet set,
-                                Time_T start,
-                                Time_T stop,
-                                unsigned int repetitions,
-                                unsigned int partialStimulus,
-                                std::vector<Database::StimulusID>& Ids);
-
     virtual void readAerStream(std::string dataPath,
                         Time_T start,
                         Time_T stop,

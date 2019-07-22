@@ -31,12 +31,12 @@ N2D2::N_MNIST_DatabaseGenerator::generate(IniParser& iniConfig,
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    //const double validation = iniConfig.getProperty<double>("Validation", 0.0);
+    const double validation = iniConfig.getProperty<double>("Validation", 0.0);
     const std::string dataPath = Utils::expandEnvVars(
         iniConfig.getProperty<std::string>("DataPath", N2D2_DATA("N-MNIST")));
 
     std::shared_ptr<N_MNIST_Database> database = std::make_shared
-        <N_MNIST_Database>();
+        <N_MNIST_Database>(validation);
     database->setParameters(iniConfig.getSection(section, true));
     database->load(dataPath);
     return database;

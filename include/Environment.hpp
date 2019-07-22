@@ -31,6 +31,9 @@
 #include "Network.hpp"
 #include "SpikeGenerator.hpp"
 #include "StimuliProvider.hpp"
+#include "utils/Parameterizable.hpp"
+#include "Database/AER_Database.hpp"
+
 
 namespace N2D2 {
 
@@ -87,6 +90,32 @@ public:
     inline unsigned int getNbNodes() const;
     inline unsigned int getNbNodes(unsigned int channel,
                                    unsigned int batchPos = 0) const;
+
+    virtual void readAerStimulus(Database::StimuliSet set,
+                                        Database::StimulusID id);
+
+    Database::StimulusID readRandomAerStimulus(Database::StimuliSet set);
+
+    virtual void readAerStimulus(Database::StimuliSet set,
+                        Database::StimulusID id,
+                        Time_T start,
+                        Time_T stop,
+                        unsigned int repetitions,
+                        unsigned int partialStimulus);
+
+    Database::StimulusID readRandomAerStimulus(Database::StimuliSet set,
+                                Time_T start,
+                                Time_T stop,
+                                unsigned int repetitions,
+                                unsigned int partialStimulus);
+
+    
+
+    bool isAerMode()
+    {
+        return mReadAerData;
+    };
+
     virtual ~Environment();
 
 protected:
@@ -95,6 +124,9 @@ protected:
     Network& mNetwork;
     /// For each scale, tensor (x, y, channel, batch)
     Tensor<NodeEnv*> mNodes;
+
+    std::vector<AerReadEvent> mAerData;
+    Parameter<bool> mReadAerData;
 };
 
 // DEPRECATED: legacy special empty database

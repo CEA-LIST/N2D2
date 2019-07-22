@@ -223,6 +223,7 @@ public:
         fuse =        opts.parse("-fuse", "fuse BatchNorm with Conv for test and export");
         bench =       opts.parse("-bench", "learning speed benchmarking");
         learnStdp =   opts.parse("-learn-stdp", 0U, "number of STDP learning steps");
+        presentTime =   opts.parse("-present-time", 1.0, "presentation time in Us");
         avgWindow =   opts.parse("-ws", 10000U, "average window to compute success rate "
                                                 "during learning");
         testIndex =   opts.parse("-test-index", -1, "test a single specific stimulus index"
@@ -293,6 +294,7 @@ public:
     bool fuse;
     bool bench;
     unsigned int learnStdp;
+    double presentTime;
     unsigned int avgWindow;
     int testIndex;
     int testId;
@@ -1274,20 +1276,31 @@ void learnStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
     for (unsigned int i = 0; i < opt.learnStdp; ++i) {
         const bool logStep = (i + 1) % opt.log == 0 || i == opt.learnStdp - 1;
 
+        Time_T presentTime = (Time_T)(opt.presentTime * TimeUs);
+
         // Run
-        std::cout << "Learn from " << i* TimeUs / (double)TimeS << "s to "
-                    << (i + 1) * TimeUs / (double)TimeS << "s..."
+        std::cout << "Learn from " << presentTime / (double)TimeS << "s to "
+                    << (i + 1) * presentTime / (double)TimeS << "s..."
                     << std::endl;
 
-        const Database::StimulusID id
-            = env->readRandomStimulus(Database::Learn);
-        env->propagate(i * TimeUs, (i + 1) * TimeUs);
-        net.run((i + 1) * TimeUs);
+        Database::StimulusID id;
+        if (env->isAerMode()) {
+            id = env->readRandomAerStimulus(Database::Learn,
+                                            i * presentTime,
+                                            (i + 1) * presentTime,
+                                            1,
+                                            0);
+        }
+        else {
+            id = env->readRandomStimulus(Database::Learn);
+        }
+        env->propagate(i * presentTime, (i + 1) * presentTime);
+        net.run((i + 1) * presentTime);
 
         // Check activity
         std::vector<std::pair<std::string, long long int> > activity
             = deepNet->update(
-                logStep, i * TimeUs, (i + 1) * TimeUs, logStep);
+                logStep, i * presentTime, (i + 1) * presentTime, logStep);
 
         monitorEnv.update();
 
@@ -1331,7 +1344,7 @@ void learnStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
             deepNet->logSpikeStats("stats_learning_spike", i + 1);
         }
 
-        net.reset((i + 1) * TimeUs);
+        net.reset((i + 1) * presentTime);
     }
 
     deepNet->exportNetworkFreeParameters("./");
@@ -1604,48 +1617,53 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         deepNet->checkGradient(1.0e-3, 1.0e-3);
     }
 
-    std::cout << "[LOG] Learn frame samples (frames/frame*)" << std::endl;
-    // Reconstruct some frames to see the pre-processing
-    Utils::createDirectories("frames");
+    std::shared_ptr<Environment> env = std::dynamic_pointer_cast
+        <Environment>(deepNet->getStimuliProvider());
 
-    for (unsigned int i = 0, size = std::min(10U,
-                                    database->getNbStimuli(Database::Learn));
-            i < size;
-            ++i) {
-        std::ostringstream fileName;
-        fileName << "frames/frame_" << i << ".dat";
+    if (!(env && env->isAerMode())) {
+        std::cout << "[LOG] Learn frame samples (frames/frame*)" << std::endl;
+        // Reconstruct some frames to see the pre-processing
+        Utils::createDirectories("frames");
 
-        sp->readStimulus(Database::Learn, i);
-        StimuliProvider::logData(fileName.str(), sp->getData()[0]);
+        for (unsigned int i = 0, size = std::min(10U,
+                                        database->getNbStimuli(Database::Learn));
+                i < size;
+                ++i) {
+            std::ostringstream fileName;
+            fileName << "frames/frame_" << i << ".dat";
 
-        const Tensor<int> labelsData = sp->getLabelsData()[0];
+            sp->readStimulus(Database::Learn, i);
+            StimuliProvider::logData(fileName.str(), sp->getData()[0]);
 
-        if (labelsData.dimX() > 1 || labelsData.dimY() > 1) {
-            fileName.str(std::string());
-            fileName << "frames/frame_" << i << "_label.dat";
+            const Tensor<int> labelsData = sp->getLabelsData()[0];
 
-            Tensor<Float_T> displayLabelsData(labelsData.dims());
+            if (labelsData.dimX() > 1 || labelsData.dimY() > 1) {
+                fileName.str(std::string());
+                fileName << "frames/frame_" << i << "_label.dat";
 
-            for (unsigned int index = 0; index < labelsData.size();
-                ++index)
-            {
-                displayLabelsData(index) = labelsData(index);
+                Tensor<Float_T> displayLabelsData(labelsData.dims());
+
+                for (unsigned int index = 0; index < labelsData.size();
+                    ++index)
+                {
+                    displayLabelsData(index) = labelsData(index);
+                }
+
+                StimuliProvider::logData(fileName.str(), displayLabelsData);
             }
-
-            StimuliProvider::logData(fileName.str(), displayLabelsData);
         }
-    }
 
-    std::cout << "[LOG] Test frame samples (frames/test_frame*)" << std::endl;
-    for (unsigned int i = 0, size = std::min(10U,
-                                    database->getNbStimuli(Database::Test));
-            i < size;
-            ++i) {
-        std::ostringstream fileName;
-        fileName << "frames/test_frame_" << i << ".dat";
+        std::cout << "[LOG] Test frame samples (frames/test_frame*)" << std::endl;
+        for (unsigned int i = 0, size = std::min(10U,
+                                        database->getNbStimuli(Database::Test));
+                i < size;
+                ++i) {
+            std::ostringstream fileName;
+            fileName << "frames/test_frame_" << i << ".dat";
 
-        sp->readStimulus(Database::Test, i);
-        StimuliProvider::logData(fileName.str(), sp->getData()[0]);
+            sp->readStimulus(Database::Test, i);
+            StimuliProvider::logData(fileName.str(), sp->getData()[0]);
+        }
     }
 
     if (opt.preSamples >= 0) {
@@ -1839,7 +1857,6 @@ int main(int argc, char* argv[]) try
             }
         }
     }
-
 
     if (opt.testIndex >= 0 || opt.testId >= 0) {
         const int label = (opt.testId >= 0)

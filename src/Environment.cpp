@@ -34,7 +34,9 @@ N2D2::Environment::Environment(Network& network,
                                bool compositeStimuli)
     : StimuliProvider(database, size, batchSize, compositeStimuli),
       mNetwork(network),
-      mNodes(mData.dims(), NULL)
+      mNodes(mData.dims(), NULL),
+      mReadAerData(this, "ReadAerData", false)
+
 {
     // ctor
     // Create default nodes, if the Environment has no transformation
@@ -110,24 +112,35 @@ void N2D2::Environment::addChannel(const CompositeTransformation
 
 void N2D2::Environment::propagate(Time_T start, Time_T end)
 {
-    assert(mNodes.size() == mData.size());
+    if (mReadAerData) {
+        for (std::vector<AerReadEvent>::const_iterator it = mAerData.begin(),
+                                                itEnd = mAerData.end(); 
+                                                it != itEnd; ++it) {
+            unsigned idx = (*it).x + (*it).y * mNodes.dimX() 
+                + (*it).channel * mNodes.dimX() * mNodes.dimY();
+            mNodes(idx)->incomingSpike(NULL, (*it).time+start, 1);
+        }
+    }
+    else {
+        assert(mNodes.size() == mData.size());
 
-    SpikeGenerator::checkParameters();
+        SpikeGenerator::checkParameters();
 
-    for (Tensor<NodeEnv*>::const_iterator it = mNodes.begin(),
-                                            itBegin = mNodes.begin(),
-                                            itEnd = mNodes.end();
-         it != itEnd;
-         ++it) {
-        std::pair<Time_T, int> event = std::make_pair(start, 0);
+        for (Tensor<NodeEnv*>::const_iterator it = mNodes.begin(),
+                                                itBegin = mNodes.begin(),
+                                                itEnd = mNodes.end();
+            it != itEnd;
+            ++it) {
+                std::pair<Time_T, int> event = std::make_pair(start, 0);
 
-        do {
-            SpikeGenerator::nextEvent(event, mData(it - itBegin), start, end);
+                do {
+                    SpikeGenerator::nextEvent(event, mData(it - itBegin), start, end);
 
-            if (event.second != 0)
-                (*it)->incomingSpike(
-                    NULL, event.first, (event.second < 0) ? 1 : 0);
-        } while (event.second != 0);
+                    if (event.second != 0)
+                        (*it)->incomingSpike(
+                            NULL, event.first, (event.second < 0) ? 1 : 0);
+                } while (event.second != 0);
+        }
     }
 }
 
@@ -152,6 +165,57 @@ N2D2::Environment::testFrame(unsigned int channel, Time_T start, Time_T end)
 
         for (unsigned int i = 0; i < size; ++i)
             channelNodes(i)->incomingSpike(NULL, start + i * dt);
+    }
+}
+
+
+
+N2D2::Database::StimulusID N2D2::Environment::readRandomAerStimulus(
+                                            Database::StimuliSet set)
+{
+    const Database::StimulusID id = getRandomID(set);
+    readAerStimulus(set, id);
+    return id;
+}
+
+N2D2::Database::StimulusID N2D2::Environment::readRandomAerStimulus(
+                                            Database::StimuliSet set,
+                                            Time_T start,
+                                            Time_T stop,
+                                            unsigned int repetitions,
+                                            unsigned int partialStimulus)
+{
+    const Database::StimulusID id = getRandomID(set);
+    readAerStimulus(set, id, start, stop, repetitions, partialStimulus);
+    return id;
+}
+
+void N2D2::Environment::readAerStimulus(Database::StimuliSet set,
+                                        Database::StimulusID id)
+{
+    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
+
+
+    if (aerDatabase) {
+        mAerData.clear();
+        aerDatabase->loadAerStimulusData(mAerData, set, id);
+    }
+}
+
+
+void N2D2::Environment::readAerStimulus(Database::StimuliSet set,
+                                            Database::StimulusID id,
+                                            Time_T start,
+                                            Time_T stop,
+                                            unsigned int repetitions,
+                                            unsigned int partialStimulus)
+{
+    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
+
+    if (aerDatabase) {
+        mAerData.clear();
+        aerDatabase->loadAerStimulusData(mAerData, set, id, start, 
+                                    stop, repetitions, partialStimulus);
     }
 }
 
