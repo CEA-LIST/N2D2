@@ -92,7 +92,7 @@ private:
 
 template <class T>
 std::pair<T, T> N2D2::AdamSolver::getClamping() const {
-    T clampMin = std::numeric_limits<T>::min();
+    T clampMin = std::numeric_limits<T>::lowest();
     T clampMax = std::numeric_limits<T>::max();
 
     if (!((std::string)mClamping).empty()) {

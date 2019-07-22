@@ -127,7 +127,7 @@ void SGDSolver_Frame_CUDA<half_float::half>::update(
                   cudaContinuousData.getDevicePtr());
     }
 
-    if (clampMin != std::numeric_limits<half_float::half>::min()
+    if (clampMin != std::numeric_limits<half_float::half>::lowest()
         || clampMax != std::numeric_limits<half_float::half>::max())
     {
         cudaHclamp(cudaContinuousData.getDevicePtr(), data.size(),
@@ -236,7 +236,7 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
                                         1));
     }
 
-    if (clampMin != std::numeric_limits<float>::min()
+    if (clampMin != std::numeric_limits<float>::lowest()
         || clampMax != std::numeric_limits<float>::max())
     {
         cudaSclamp(cudaContinuousData.getDevicePtr(), data.size(),
@@ -345,7 +345,7 @@ void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
                                         1));
     }
 
-    if (clampMin != std::numeric_limits<double>::min()
+    if (clampMin != std::numeric_limits<double>::lowest()
         || clampMax != std::numeric_limits<double>::max())
     {
         cudaDclamp(cudaContinuousData.getDevicePtr(), data.size(),

@@ -139,7 +139,7 @@ const char* const EnumStrings<N2D2::SGDSolver::LearningRatePolicy>::data[]
 
 template <class T>
 std::pair<T, T> N2D2::SGDSolver::getClamping() const {
-    T clampMin = std::numeric_limits<T>::min();
+    T clampMin = std::numeric_limits<T>::lowest();
     T clampMax = std::numeric_limits<T>::max();
 
     if (!((std::string)mClamping).empty()) {

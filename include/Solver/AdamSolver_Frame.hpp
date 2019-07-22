@@ -122,7 +122,7 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
             / (std::sqrt(mMomentum2Data(index)) + epsilon);
 
         // Clamping
-        if (clampMin != std::numeric_limits<T>::min()
+        if (clampMin != std::numeric_limits<T>::lowest()
             || clampMax != std::numeric_limits<T>::max())
         {
             continuousData(index) = Utils::clamp<T>(continuousData(index),

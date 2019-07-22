@@ -111,7 +111,7 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
     if (mMomentum == 0.0 && mDecay == 0.0) {
         // if outside the loop for better performance
         // Clamping
-        if (clampMin != std::numeric_limits<T>::min()
+        if (clampMin != std::numeric_limits<T>::lowest()
             || clampMax != std::numeric_limits<T>::max())
         {
             for (int index = 0; index < (int)data.size(); ++index) {
@@ -148,7 +148,7 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
             }
 
             // data = data + mMomentumData
-            if (clampMin != std::numeric_limits<T>::min()
+            if (clampMin != std::numeric_limits<T>::lowest()
                 || clampMax != std::numeric_limits<T>::max())
             {
                 continuousData(index) = Utils::clamp<T>(
