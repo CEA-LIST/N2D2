@@ -55,6 +55,9 @@ N2D2::FcCell_Frame<T>::FcCell_Frame(const DeepNet& deepNet, const std::string& n
       // setParameter() or loadParameters().,
       mDropConnect(this, "DropConnect", 1.0),
       mLockRandom(false)
+     ,mSynapses({true,true,false,true})
+     ,mDiffSynapses({true,true,false,true})
+     ,mDropConnectMask({true,true,false,true})
 {
     // ctor
     mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);

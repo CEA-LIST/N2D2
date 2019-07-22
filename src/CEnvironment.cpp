@@ -37,7 +37,8 @@ N2D2::CEnvironment::CEnvironment(Database& database,
       mStopStimulusTime(this, "StopStimulusTime", 0),
       mReadAerData(this, "ReadAerData", false),
       mStreamPath(this, "StreamPath", ""),
-      mNbSubStimuli(nbSubStimuli)
+      mNbSubStimuli(nbSubStimuli),
+      mNextEvent({true, true, false, true})
 {
    //ctor
     std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});

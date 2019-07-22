@@ -26,6 +26,7 @@
 N2D2::Cell_CSpike::Cell_CSpike(const DeepNet& deepNet, const std::string& name, 
                                unsigned int nbOutputs)
     : Cell(deepNet, name, nbOutputs)
+  , mInputs({true,true,false,true})
 {
     // ctor
 }

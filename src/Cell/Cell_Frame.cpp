@@ -29,6 +29,8 @@ N2D2::Cell_Frame<T>::Cell_Frame(const DeepNet& deepNet, const std::string& name,
                              const std::shared_ptr
                              <Activation>& activation)
     : Cell(deepNet, name, nbOutputs), Cell_Frame_Top(activation)
+  ,mInputs     ({true,true,false,true})
+  ,mDiffOutputs({true,true,false,true})
 {
     // ctor
 }

@@ -67,6 +67,8 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const DeepNet& deepNet, const std::strin
       mBias(std::make_shared<Tensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
       mConvDesc(subSampleDims, strideDims, paddingDims, dilationDims)
+      ,mSharedSynapses({true,true,false,true})
+      ,mDiffSharedSynapses({true,true,false,true})
 {
     // ctor
     if (kernelDims.size() != 2) {

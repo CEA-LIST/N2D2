@@ -66,6 +66,8 @@ N2D2::DeconvCell_Frame<T>::DeconvCell_Frame(const DeepNet& deepNet, const std::s
       mDiffBias({1, 1, getNbOutputs(), 1}),
       mConvDesc(std::vector<unsigned int>({1, 1}), strideDims, paddingDims,
                 dilationDims)
+     ,mSharedSynapses({true,true,false,true})
+     ,mDiffSharedSynapses({true,true,false,true})
 {
     // ctor
     if (kernelDims.size() != 2) {

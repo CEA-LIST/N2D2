@@ -18,6 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifndef _WIN32
+
 #include "N2D2.hpp"
 
 #include "controler/Interface.hpp"
@@ -28,7 +30,7 @@ using namespace N2D2;
 
 TEST(Interface, Interface)
 {
-    const Interface<double> interface;
+    const Interface<double> interface = {true, true, false, true};
 
     ASSERT_EQUALS(interface.dimZ(), 0U);
     ASSERT_EQUALS(interface.dimB(), 0U);
@@ -46,7 +48,7 @@ TEST_DATASET(Interface,
              std::make_tuple(34U, 12U))
 {
     Tensor<int> A({dimX, dimY, 1, 1});
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
 
     ASSERT_EQUALS(interface.dimZ(), 0U);
     ASSERT_EQUALS(interface.dimB(), 0U);
@@ -76,7 +78,7 @@ TEST_DATASET(Interface,
              std::make_tuple(4U, 3U, 1U, 2U, 1U),
              std::make_tuple(4U, 3U, 3U, 5U, 10U))
 {
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
     Tensor<int> A1({dimX, dimY, dimZ1, dimB});
     Tensor<int> A2({dimX, dimY, dimZ2, dimB});
 
@@ -104,7 +106,7 @@ TEST_DATASET(Interface,
              std::make_tuple(2U, 2U, 1U, 2U, 2U, 1U, 1U, 1U),
              std::make_tuple(3U, 4U, 1U, 1U, 3U, 4U, 1U, 5U))
 {
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
     Tensor<int> A1({dimX1, dimY1, dimZ1, dimB1});
     Tensor<int> A2({dimX2, dimY2, dimZ2, dimB2});
 
@@ -131,7 +133,7 @@ TEST_DATASET(Interface,
 {
     Random::mtSeed(0);
 
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
     Tensor<int> A1({dimX, dimY, dimZ1, dimB});
     Tensor<int> A2({dimX, dimY, dimZ2, dimB});
 
@@ -193,7 +195,7 @@ TEST_DATASET(Interface,
 {
     Random::mtSeed(0);
 
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
     Tensor<int> A1({dimX, dimY, dimZ1, dimB}, 0);
     Tensor<int> A2({dimX, dimY, dimZ2, dimB}, 23);
 
@@ -239,7 +241,7 @@ TEST_DATASET(Interface,
              std::make_tuple(-10),
              std::make_tuple(125))
 {
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
     Tensor<int> A1({8, 8, 3, 4});
     Tensor<int> A2({8, 8, 5, 4});
 
@@ -267,7 +269,7 @@ TEST_DATASET(Interface,
 
 TEST(Interface, clear)
 {
-    Interface<int> interface;
+    Interface<int> interface({true, true, false, true});
     Tensor<int> A1({1, 2, 3, 4});
     Tensor<int> A2({1, 2, 5, 4});
 
@@ -283,3 +285,8 @@ TEST(Interface, clear)
 }
 
 RUN_TESTS()
+#else
+
+void main() {}
+
+#endif

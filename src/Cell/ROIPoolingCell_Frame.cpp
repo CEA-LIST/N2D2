@@ -37,6 +37,7 @@ N2D2::ROIPoolingCell_Frame::ROIPoolingCell_Frame(const DeepNet& deepNet,
     : Cell(deepNet, name, nbOutputs),
       ROIPoolingCell(deepNet, name, sp, outputsWidth, outputsHeight, nbOutputs, pooling),
       Cell_Frame<Float_T>(deepNet, name, nbOutputs)
+    ,mArgMax({true,true,false,true})
 {
     // ctor
     mInputs.matchingDims({});

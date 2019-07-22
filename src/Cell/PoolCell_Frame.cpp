@@ -63,6 +63,7 @@ N2D2::PoolCell_Frame<T>::PoolCell_Frame(const DeepNet& deepNet,
                 &poolDims[0],
                 &strideDims[0],
                 &paddingDims[0])
+    ,mArgMax({true,true,false,true})
 {
     // ctor
     assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);

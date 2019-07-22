@@ -44,6 +44,7 @@ N2D2::UnpoolCell_Frame::UnpoolCell_Frame(const DeepNet& deepNet, const std::stri
                 &poolDims[0],
                 &strideDims[0],
                 &paddingDims[0])
+    ,mArgMax({true,true,false,true})
 {
     // ctor
     assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);

@@ -37,7 +37,7 @@
 
 namespace N2D2 {
 
-class Synapse;
+struct Synapse;
 
 /**
  * Abstract neuron base class, which provides the minimum interface required for
