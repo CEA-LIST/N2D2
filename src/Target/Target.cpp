@@ -1072,7 +1072,6 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
     if (mDataAsTarget)
         return;
 
-    const unsigned int nbTargets = getNbTargets();
     const double xRatio = mStimuliProvider->getSizeX()
         / (double)mEstimatedLabels.dimX();
     const double yRatio = mStimuliProvider->getSizeY()

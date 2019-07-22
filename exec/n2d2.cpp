@@ -275,7 +275,7 @@ public:
 
         // Ensures that the seed is the same for the test than for the learning (to
         // avoid including learned stimuli in the test set)
-        if (seed == 0 && learn == 0) {
+        if (seed == 0 && learn == 0 && learnStdp == 0) {
             seed = Network::readSeed("seed.dat");
         }
     }
@@ -1804,7 +1804,8 @@ int main(int argc, char* argv[]) try
             else
                 deepNet->load("net_state");
         }
-        else if (opt.load.empty() && opt.weights.empty()) {
+        else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty())
+        {
             if (database.getNbStimuli(Database::Validation) > 0)
                 deepNet->importNetworkFreeParameters("weights_validation");
             else
