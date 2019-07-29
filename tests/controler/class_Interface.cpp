@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#if not defined(_MSC_VER) || _MSC_VER<1910
+#if !defined(_MSC_VER) || _MSC_VER<1910
 
 #include "N2D2.hpp"
 
