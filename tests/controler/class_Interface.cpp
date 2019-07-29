@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef _WIN32
+#if not defined(_MSC_VER) || _MSC_VER<1910
 
 #include "N2D2.hpp"
 
@@ -285,8 +285,9 @@ TEST(Interface, clear)
 }
 
 RUN_TESTS()
-#else
 
-void main() {}
+#else // _MSC_VER
 
-#endif
+int main() { return -1; }
+
+#endif // _MSC_VER
