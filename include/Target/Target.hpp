@@ -149,7 +149,11 @@ public:
     void logLabelsMapping(const std::string& fileName) const;
     virtual void process(Database::StimuliSet set);
     virtual void logEstimatedLabels(const std::string& dirName) const;
-    virtual void logEstimatedLabelsJSON(const std::string& dirName) const;
+    virtual void logEstimatedLabelsJSON(const std::string& dirName,
+                                        std::string fileName = "",
+                                        unsigned int xOffset = 0,
+                                        unsigned int yOffset = 0,
+                                        bool append = false) const;
     virtual void logLabelsLegend(const std::string& fileName) const;
     const TensorLabels_T& getEstimatedLabels() const
     {

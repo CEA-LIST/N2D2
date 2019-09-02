@@ -1061,7 +1061,11 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
     }
 }
 
-void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
+void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
+                                          std::string fileName,
+                                          unsigned int xOffset,
+                                          unsigned int yOffset,
+                                          bool append) const
 {
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
@@ -1084,8 +1088,11 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
             "match and/or are not integers" << Utils::cdef << std::endl;
     }
 
+    const bool signedMapping
+        = mStimuliProvider->getParameter<bool>("DataSignedMapping");
+
     mEstimatedLabels.synchronizeDBasedToH();
-    mEstimatedLabelsValue.synchronizeDBasedToH();
+    //mEstimatedLabelsValue.synchronizeDBasedToH();
 
     const time_t now = std::time(0);
     tm* localNow = std::localtime(&now);
@@ -1109,12 +1116,14 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
 
         const Tensor<int> target = mTargets[batchPos][0];
         const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        const Tensor<Float_T> estimatedLabelsValue
-            = mEstimatedLabelsValue[batchPos][0];
+        //const Tensor<Float_T> estimatedLabelsValue
+        //    = mEstimatedLabelsValue[batchPos][0];
 
         const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
             ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
             : TensorLabels_T();
+
+        mask.synchronizeDBasedToH();
 
         if (!mask.empty() && mask.dims() != target.dims()) {
             std::ostringstream errorStr;
@@ -1130,68 +1139,61 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
 
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
-                if (estimatedLabels(ox, oy) != mNoDisplayLabel) {
+                if (estimatedLabels(ox, oy) != mNoDisplayLabel
+                    && (mask.empty() || mask(ox, oy) == mMaskedLabel)) {
                     std::map<int, Tensor<bool> >::iterator itBitmap;
                     std::tie(itBitmap, std::ignore) = estimatedBitmaps.insert(
                         std::make_pair(estimatedLabels(ox, oy),
                                     Tensor<bool>(estimatedLabels.dims(), false)));
 
-                    Tensor<bool>& bitmap = (*itBitmap).second;
-
-                    if (mask.empty() || mask(ox, oy) == mMaskedLabel)
-                        bitmap(ox, oy) = true;
+                    (*itBitmap).second(ox, oy) = true;
                 }
             }
         }
 
-        std::ostringstream imgFile;
-        imgFile << std::setw(10) << std::setfill('0') << id;
-        std::string fileName = dirPath + "/" + imgFile.str()
-            + "." + fileExtension;
-
+        if (fileName.empty()) {
+            std::ostringstream imgFile;
+            imgFile << std::setw(10) << std::setfill('0') << id;
+            fileName = dirPath + "/" + imgFile.str()
+                + "." + fileExtension;
+        }
+/*
         // Input image
         cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
         cv::Mat inputImg8U;
-        // inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+        inputImg.convertTo(inputImg8U, CV_8U, 255.0, (signedMapping) ? 127.5 : 0.0);
 
         // Normalize image
-        cv::Mat inputImgNorm;
-        cv::normalize(
-            inputImg.reshape(1), inputImgNorm, 0, 255, cv::NORM_MINMAX);
-        inputImg = inputImgNorm.reshape(inputImg.channels());
-        inputImg.convertTo(inputImg8U, CV_8U);
+        //cv::Mat inputImgNorm;
+        //cv::normalize(
+        //    inputImg.reshape(1), inputImgNorm, 0, 255, cv::NORM_MINMAX);
+        //inputImg = inputImgNorm.reshape(inputImg.channels());
+        //inputImg.convertTo(inputImg8U, CV_8U);
 
         if (!cv::imwrite(fileName, inputImg8U)) {
 #pragma omp critical(Target__logEstimatedLabelsJSON)
             throw std::runtime_error("Unable to write image: " + fileName);
         }
-
+*/
         fileName += ".json";
 
-        std::ofstream jsonData(fileName.c_str());
-
-        if (!jsonData.good()) {
-#pragma omp critical(Target__logEstimatedLabelsJSON)
-            throw std::runtime_error("Could not create JSON file: " + fileName);
-        }
-
-        jsonData << "{\"annotations\": [";
+        std::ostringstream jsonDataBuffer;
 
         for (std::map<int, Tensor<bool> >::const_iterator it
             = estimatedBitmaps.begin(), itEnd = estimatedBitmaps.end();
             it != itEnd; ++it)
         {
             if (it != estimatedBitmaps.begin())
-                jsonData << ",";
+                jsonDataBuffer << ",";
 
-            jsonData << "{\"class_id\": " << (*it).first << ","
+            jsonDataBuffer << "{\"class_id\": " << (*it).first << ","
                 "\"info\": [\"BITMAP_CLASS_" << (*it).first << "\","
                     "false,"
                     "{\"CreationDate\": \"" << time << "\","
                         "\"Source\": \"N2D2\"}"
                 "],"
                 "\"type\": \"pixelwise\","
-                "\"origin\": [0, 0],"
+                "\"origin\": [" << xOffset << ", " << yOffset << "],"
                 "\"scale\": " << (-scale) << ","
                 "\"size\": [" << (*it).second.dimX() << ","
                     << (*it).second.dimY() << "],"
@@ -1203,7 +1205,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
 
             while (p < (*it).second.size()) {
                 if (p > 0)
-                    jsonData << ",";
+                    jsonDataBuffer << ",";
 
                 while (p < (*it).second.size() && !(*it).second(p)) {
                     ++p;
@@ -1215,16 +1217,51 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName) const
                     ++c255;
                 }
 
-                jsonData << c0 << "," << c255;
+                jsonDataBuffer << c0 << "," << c255;
 
                 c0 = 0;
                 c255 = 0;
             }
 
-            jsonData << "]}";
+            jsonDataBuffer << "]}";
         }
 
-        jsonData << "]}";
+        jsonDataBuffer << "]}";
+
+        std::fstream jsonData;
+        bool newFile = true;
+
+        if (append) {
+            newFile = false;
+            jsonData.open(fileName.c_str(),
+                          std::ofstream::in | std::ofstream::out);
+        }
+        else
+            jsonData.open(fileName.c_str(), std::ofstream::out);
+
+        if (append && !jsonData.good()) {
+            newFile = true;
+            jsonData.open(fileName.c_str(),
+                          std::ofstream::in | std::ofstream::out | std::ofstream::app);
+        }
+
+        //std::ofstream jsonData(fileName.c_str(),
+        //    (append) ? std::fstream::app
+        //             : std::fstream::out);
+
+        if (!jsonData.good()) {
+#pragma omp critical(Target__logEstimatedLabelsJSON)
+            throw std::runtime_error("Could not create JSON file: " + fileName);
+        }
+
+        if (newFile)
+            jsonData << "{\"annotations\": [" << jsonDataBuffer.str();
+        else {
+            jsonData.seekp(-2, jsonData.end); // Go before "]}"
+            jsonData.write(",", sizeof(char));
+            jsonData.write(jsonDataBuffer.str().c_str(),
+                           sizeof(char) * jsonDataBuffer.str().size());
+        }
     }
 }
 
@@ -1415,7 +1452,7 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
 
     const std::vector<Float_T>::const_iterator it
         = std::max_element(bbLabels.begin(), bbLabels.end());
-    return std::make_pair(it - bbLabels.begin(), (*it) / size);
+    return std::make_pair(it - bbLabels.begin(), (*it)/* / size*/);
 }
 
 void N2D2::Target::clear(Database::StimuliSet /*set*/)

@@ -138,6 +138,13 @@ void cudaGetEstimatedLabel_kernel(const float* value,
     const unsigned int dimZ = (nbOutputs > 1) ? nbOutputs : 2;
 
     for (unsigned int z = blockIdx.x; z < dimZ; z += gridDim.x) {
+        __shared__ unsigned int count;
+
+        if (threadIdx.x == 0 && threadIdx.y == 0)
+            count = 0;
+
+        __syncthreads();
+
         for (unsigned int y = y0 + threadIdx.y; y < y1; y += blockDim.y) {
             for (unsigned int x = x0 + threadIdx.x; x < x1; x += blockDim.x) {
                 const unsigned int idx = x + outputWidth
@@ -154,8 +161,15 @@ void cudaGetEstimatedLabel_kernel(const float* value,
                         val *= maskValue[maskIdx];
 
                     atomicAdd(bbLabels + z, val);
+                    atomicAdd(&count, 1);
                 }
             }
+        }
+
+        __syncthreads();
+
+        if (threadIdx.x == 0 && threadIdx.y == 0) {
+            bbLabels[z] /= count;
         }
     }
 }
