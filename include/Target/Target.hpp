@@ -32,7 +32,7 @@
 #include "utils/Registrar.hpp"
 #include "FloatT.hpp"
 
-#ifdef CUDA
+#if defined(CUDA) && !defined(NO_CUDA_DRIVER)
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
 #include "containers/CudaTensor.hpp"
@@ -61,7 +61,7 @@ public:
         return rMap;
     }
 
-#ifdef CUDA
+#if defined(CUDA) && !defined(NO_CUDA_DRIVER)
     typedef CudaTensor<int> TensorLabels_T;
     typedef CudaTensor<Float_T> TensorLabelsValue_T;
 #else
@@ -138,7 +138,7 @@ public:
     void setDefaultTarget(int output);
     void process_Frame(BaseTensor& values,
                        const int batchSize);
-#ifdef CUDA
+#if defined(CUDA) && !defined(NO_CUDA_DRIVER)
     void process_Frame_CUDA(CudaBaseTensor& values,
                             const int batchSize);
 #endif

@@ -71,6 +71,8 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
              std::make_tuple(10U, 7U, 1U),
              std::make_tuple(7U, 10U, 2U))
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     StimuliProvider sp(EmptyDatabase, {16, 16, 1}, 5);
 
     Network net;

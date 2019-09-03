@@ -30,7 +30,7 @@
 
 #include "Database/Database.hpp"
 #include "Transformation/CompositeTransformation.hpp"
-#ifdef CUDA
+#if defined(CUDA) && !defined(NO_CUDA_DRIVER)
 #include "containers/CudaTensor.hpp"
 #else
 #include "containers/Tensor.hpp"
@@ -58,7 +58,7 @@ public:
         operator()(Database::StimuliSet set) const;
     };
 
-#ifdef CUDA
+#if defined(CUDA) && !defined(NO_CUDA_DRIVER)
     typedef CudaTensor<Float_T> TensorData_T;
 #else
     typedef Tensor<Float_T> TensorData_T;

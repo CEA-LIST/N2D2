@@ -18,6 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#define NO_CUDA_DRIVER
+
 #include "Environment.hpp"
 #include "N2D2.hpp"
 #include "Cell/FcCell_Frame.hpp"

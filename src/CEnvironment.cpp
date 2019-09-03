@@ -41,7 +41,7 @@ N2D2::CEnvironment::CEnvironment(Database& database,
 {
    //ctor
     std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});
-    for (unsigned int k=0; k<mNbSubStimuli; k++){
+    for (unsigned int k=0; k<nbSubStimuli; k++){
 #ifdef CUDA
         mTickData.push_back(new CudaTensor<int>(dims));
         mTickDataTraces.push_back(new CudaTensor<Float_T>(dims));

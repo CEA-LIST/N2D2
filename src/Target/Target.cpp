@@ -1088,8 +1088,8 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             "match and/or are not integers" << Utils::cdef << std::endl;
     }
 
-    const bool signedMapping
-        = mStimuliProvider->getParameter<bool>("DataSignedMapping");
+    //const bool signedMapping
+    //    = mStimuliProvider->getParameter<bool>("DataSignedMapping");
 
     mEstimatedLabels.synchronizeDBasedToH();
     //mEstimatedLabelsValue.synchronizeDBasedToH();
