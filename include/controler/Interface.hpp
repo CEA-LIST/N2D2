@@ -115,8 +115,9 @@ public:
     typedef typename std::vector<tensor_type*>::const_iterator const_iterator;
 
     template <class U, int V> Interface(const Interface<U, V>& interface);
-    Interface(std::initializer_list<bool> matchingDim
-                = std::initializer_list<bool>({true, true, false, true}));
+    Interface(std::initializer_list<bool> matchingDim);
+    Interface();
+
     void matchingDims(std::initializer_list<bool> matchingDims_)
     {
         mMatchingDim = matchingDims_;
@@ -276,6 +277,13 @@ N2D2::Interface<T, STACKING_DIM>::Interface(
 {
     // ctor
 }
+template <class T, int STACKING_DIM>
+N2D2::Interface<T, STACKING_DIM>::Interface()
+    : mMatchingDim({true, true, false, true})
+{
+    // ctor
+}
+
 
 template <class T, int STACKING_DIM>
 size_t N2D2::Interface<T, STACKING_DIM>::dataSize() const
