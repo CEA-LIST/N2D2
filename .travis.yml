@@ -69,6 +69,7 @@ cache:
   apt: true
 
 before_install:
+  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
   - sudo apt-get update -qq
   - sudo apt-get install -y libopencv-dev libcv-dev libhighgui-dev
   - sudo apt-get install -y gnuplot
