@@ -57,6 +57,11 @@ public:
                                   paddingDims,
                                   pooling) {};
 
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_addInput__env_half;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_addInput_half;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_propagate_input_check_half;
+    friend class UnitTest_PoolCell_Frame_EXT_CUDA_propagate_2_input_check_half;
+
     friend class UnitTest_PoolCell_Frame_EXT_CUDA_addInput__env_float;
     friend class UnitTest_PoolCell_Frame_EXT_CUDA_addInput_float;
     friend class UnitTest_PoolCell_Frame_EXT_CUDA_propagate_input_check_float;
@@ -118,7 +123,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    PoolCell_Frame_EXT_CUDA_Test<double> pool1(dn, "pool1",
+    PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
                                    std::vector<unsigned int>({strideX, strideY}),
@@ -197,13 +202,13 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
-    PoolCell_Frame_EXT_CUDA_Test<double> pool1(dn, "pool1",
+    PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool1(dn, "pool1",
                                        std::vector<unsigned int>({4, 4}),
                                        1,
                                        std::vector<unsigned int>({2, 2}),
                                        std::vector<unsigned int>({0, 0}),
                                        PoolCell::Max);
-    PoolCell_Frame_EXT_CUDA_Test<double> pool2(dn, "pool2",
+    PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool2(dn, "pool2",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
                                    std::vector<unsigned int>({strideX, strideY}),
@@ -287,7 +292,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     Network net;
     DeepNet dn(net);
-    PoolCell_Frame_EXT_CUDA_Test<double> pool1(dn, "pool1",
+    PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
                                    std::vector<unsigned int>({strideX, strideY}),
@@ -374,7 +379,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
                     }
 
                     ASSERT_EQUALS_DELTA(
-                        out(ox, oy, output, batch), poolValue, 1e-12);
+                        out(ox, oy, output, batch), poolValue, 1e-3);
                 }
             }
         }
@@ -429,7 +434,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     Network net;
     DeepNet dn(net);
-    PoolCell_Frame_EXT_CUDA_Test<double> pool1(dn, "pool1",
+    PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
                                    nbOutputs,
                                    std::vector<unsigned int>({strideX, strideY}),
@@ -522,7 +527,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
                     }
 
                     ASSERT_EQUALS_DELTA(
-                        out(ox, oy, output, batch), poolValue, 1e-12);
+                        out(ox, oy, output, batch), poolValue, 1e-3);
                 }
             }
         }
