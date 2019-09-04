@@ -71,19 +71,24 @@ protected:
 
 template <typename T> class CudaDeviceTensor : public CudaBaseDeviceTensor {
 public:
-    inline CudaDeviceTensor(const CudaBaseTensor& base, T* dataDevice = NULL);
+    inline CudaDeviceTensor(const CudaBaseTensor& base,
+        const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner
+            = std::shared_ptr<CudaDeviceTensor<T> >(),
+        size_t dataDeviceOffset = 0);
     inline void fill(const T& value);
-    T* getDevicePtr() const
+    T* getDevicePtr() const;
+    void setDevicePtr(T* dataDevice)
     {
-        return mDataDevice;
-    }
-     void setDevicePtr(T* dataDevice)
-    {
+        if (mDataDeviceOwner) {
+            throw std::runtime_error("setDevicePtr(): "
+                                     "data device owner is not null!");
+        }
+
         mDataDevice = dataDevice;
     }
     bool isOwner() const
     {
-        return mDataDeviceOwner;
+        return (!mDataDeviceOwner);
     }
     const cudnnTensorDescriptor_t& getCudnnTensorDesc() const;
     const std::type_info* getType() const
@@ -95,8 +100,9 @@ public:
     virtual ~CudaDeviceTensor();
 
 protected:
-    T* mDataDevice;
-    const bool mDataDeviceOwner;
+    mutable T* mDataDevice;
+    const std::shared_ptr<CudaDeviceTensor<T> > mDataDeviceOwner;
+    const size_t mDataDeviceOffset;
     mutable cudnnTensorDescriptor_t mTensor;
 };
 
@@ -242,6 +248,11 @@ protected:
     CudaTensor(const Tensor<T>& base,
                const std::shared_ptr<CudaDeviceTensor<T> >& deviceTensor,
                bool hostBased);
+    CudaTensor(const Tensor<T>& base,
+               const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner,
+               size_t dataDeviceOffset,
+               bool hostBased);
+
     template <typename U>
     void syncFill(typename std::enable_if<std::is_pod<U>::value, U>::type value);
     template <typename U>
@@ -389,15 +400,31 @@ N2D2::CudaBaseDeviceTensor::CudaBaseDeviceTensor(const CudaBaseTensor& base)
 
 template <typename T>
 N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
-                                            T* dataDevice)
+    const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner,
+    size_t dataDeviceOffset)
     : CudaBaseDeviceTensor(base),
-      mDataDevice(dataDevice),
-      mDataDeviceOwner(dataDevice == NULL),
+      mDataDevice(NULL),
+      mDataDeviceOwner(dataDeviceOwner),
+      mDataDeviceOffset(dataDeviceOffset),
       mTensor(NULL)
 {
     // ctor
-    if (mDataDeviceOwner && base.size() > 0)
-        CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice, base.size() * sizeof(T)));
+}
+
+template <typename T>
+T* N2D2::CudaDeviceTensor<T>::getDevicePtr() const
+{
+    if (mDataDeviceOwner)
+        return mDataDeviceOwner->getDevicePtr() + mDataDeviceOffset;
+    else {
+        if (mDataDevice == NULL) {
+            // Lazy memory allocation
+            CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice,
+                                         mCudaBaseTensor.size() * sizeof(T)));
+        }
+
+        return mDataDevice;
+    }
 }
 
 template <typename T>
@@ -450,7 +477,7 @@ const cudnnTensorDescriptor_t& N2D2::CudaDeviceTensor<T>::getCudnnTensorDesc()
 
 template <typename T>
 void N2D2::CudaDeviceTensor<T>::fill(const T& value) {
-    thrust_fill(mDataDevice, mCudaBaseTensor.size(), value);
+    thrust_fill(getDevicePtr(), mCudaBaseTensor.size(), value);
 }
 
 template <typename T>
@@ -467,7 +494,7 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
             = dynamic_cast<const CudaDeviceTensor<float>&>(device);
 
         thrust_copy(deviceTensor.getDevicePtr(),
-                    mDataDevice,
+                    getDevicePtr(),
                     mCudaBaseTensor.size());
     }
     else if (device.getType() == &typeid(half_float::half)) {
@@ -475,7 +502,7 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
             = dynamic_cast<const CudaDeviceTensor<half_float::half>&>(device);
 
         thrust_copy(deviceTensor.getDevicePtr(),
-                    mDataDevice,
+                    getDevicePtr(),
                     mCudaBaseTensor.size());
     }
     else if (device.getType() == &typeid(double)) {
@@ -483,7 +510,7 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
             = dynamic_cast<const CudaDeviceTensor<double>&>(device);
 
         thrust_copy(deviceTensor.getDevicePtr(),
-                    mDataDevice,
+                    getDevicePtr(),
                     mCudaBaseTensor.size());
     }
     else {
@@ -496,7 +523,7 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
 
 template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
 {
-    if (mDataDeviceOwner && mDataDevice != NULL) {
+    if (mDataDevice != NULL) {
         cudaFree(mDataDevice);
         mDataDevice = NULL;
     }
@@ -561,6 +588,26 @@ N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base,
       mDeviceTensor(deviceTensor)
 {
     // ctor
+}
+
+template <typename T>
+N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base,
+    const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner,
+    size_t dataDeviceOffset,
+    bool hostBased)
+    : BaseTensor(base),
+      Tensor<T>(base),
+      CudaBaseTensor(hostBased)
+{
+    // ctor
+    // Constructor used to extract a sub-tensor with operator[] and rows().
+    // It ensures that the CudaDeviceTensor base is correct (*this).
+    // The constructor with deviceTensor only is not usable, as there is no
+    // way to pass to the constructor a CudaDeviceTensor with the right base.
+    // As the base size() is used, it must be correct for sub-tensors.
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this,
+                                                           dataDeviceOwner,
+                                                           dataDeviceOffset);
 }
 
 template <typename T>
@@ -709,8 +756,8 @@ N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i)
 {
     return CudaTensor<T>(
         Tensor<T>::operator[](i),
-        std::make_shared<CudaDeviceTensor<T> >(*this,
-                                mDeviceTensor->getDevicePtr() + i * mSizeM1),
+        mDeviceTensor,
+        i * mSizeM1,
         mHostBased);
 }
 
@@ -719,8 +766,8 @@ const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i) const
 {
     return CudaTensor<T>(
         Tensor<T>::operator[](i),
-        std::make_shared<CudaDeviceTensor<T> >(*this,
-                                mDeviceTensor->getDevicePtr() + i * mSizeM1),
+        mDeviceTensor,
+        i * mSizeM1,
         mHostBased);
 }
 
@@ -729,8 +776,8 @@ N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb)
 {
     return CudaTensor<T>(
         Tensor<T>::rows(j0, nb),
-        std::make_shared<CudaDeviceTensor<T> >(*this,
-                                mDeviceTensor->getDevicePtr() + j0 * mSizeM1),
+        mDeviceTensor,
+        j0 * mSizeM1,
         mHostBased);
 }
 
@@ -739,8 +786,8 @@ const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb) const
 {
     return CudaTensor<T>(
         Tensor<T>::rows(j0, nb),
-        std::make_shared<CudaDeviceTensor<T> >(*this,
-                                mDeviceTensor->getDevicePtr() + j0 * mSizeM1),
+        mDeviceTensor,
+        j0 * mSizeM1,
         mHostBased);
 }
 
