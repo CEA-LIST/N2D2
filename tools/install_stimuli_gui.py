@@ -45,10 +45,10 @@ data = {
 
     "Caltech-256" : ["", 1300, "http://www.vision.caltech.edu/Image_Datasets/Caltech256/256_ObjectCategories.tar"],
 
-    "GSTRB" : ["", 490, "http://benchmark.ini.rub.de/Dataset/GTSRB_Final_Training_Images.zip",\
-        "http://benchmark.ini.rub.de/Dataset/GTSRB_Final_Test_Images.zip"],
+    "GSTRB" : ["", 490, "https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Training_Images.zip",\
+        "https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Test_Images.zip"],
 
-    "GTSRB-FinalTest" : ["GTSRB", 0, "http://benchmark.ini.rub.de/Dataset/GTSRB_Final_Test_GT.zip"],
+    "GTSRB-FinalTest" : ["GTSRB", 0, "https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Test_GT.zip"],
 
     "Speech" : ["speech",100,"http://www.festvox.org/examples/cstr_us_ked_timit/packed/cmu_us_ked_timit.tar.bz2"],
     "IMDB" : ["IMDB-WIKI",295000,"https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/imdb_0.tar",\
