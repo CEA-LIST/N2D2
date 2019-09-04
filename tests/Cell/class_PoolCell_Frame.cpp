@@ -18,8 +18,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#define NO_CUDA_DRIVER
-
 #include <tuple>
 #include "N2D2.hpp"
 #include "Database/MNIST_IDX_Database.hpp"

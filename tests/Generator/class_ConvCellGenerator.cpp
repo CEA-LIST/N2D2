@@ -18,8 +18,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#define NO_CUDA_DRIVER
-
 #include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"

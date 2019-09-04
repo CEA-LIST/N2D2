@@ -18,8 +18,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#define NO_CUDA_DRIVER
-
 #include "Database/DIR_Database.hpp"
 #include "Generator/StimuliProviderGenerator.hpp"
 #include "Transformation/ChannelExtractionTransformation.hpp"
