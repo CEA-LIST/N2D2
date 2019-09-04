@@ -70,6 +70,8 @@ TEST_DATASET(Caltech101_DIR_Database,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("101_ObjectCategories")));
 
+    Random::mtSeed(0);
+
     Caltech101_DIR_Database db(learn, validation, incClutter);
     db.load(N2D2_DATA("101_ObjectCategories"));
 

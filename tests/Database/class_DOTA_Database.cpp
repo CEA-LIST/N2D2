@@ -34,7 +34,8 @@ TEST(DOTA_Database, loadAllStimuli)
     DOTA_Database db(0.9, false);
     db.load(N2D2_DATA("DOTA"));
 
-    const unsigned int nbStimuli = 1411;
+    // train/images/P1872.jpg is invalid and is to be removed, hence the -1
+    const unsigned int nbStimuli = 1411 - 1;
     const unsigned int nbStimuliVal = 458;
     const unsigned int nbLabels = 15;
 
@@ -47,7 +48,8 @@ TEST(DOTA_Database, loadAllStimuli)
     ASSERT_EQUALS(db.getNbStimuli(Database::Unpartitioned), 0U);
     ASSERT_EQUALS(db.getNbLabels(), nbLabels);
 
-    ASSERT_EQUALS(db.getNbROIs(), 127843U);
+    //ASSERT_EQUALS(db.getNbROIs(), 127843U);
+    ASSERT_EQUALS(db.getNbROIs(), 127657U); // because P1872.jpg
 
     for (unsigned int label = 0; label < nbLabels; ++label) {
         std::cout << label << ": "
@@ -56,7 +58,8 @@ TEST(DOTA_Database, loadAllStimuli)
     }
 
     ASSERT_EQUALS(db.getLabelName(0), "plane");
-    ASSERT_EQUALS(db.getNbROIsWithLabel(0), 10586U);
+    //ASSERT_EQUALS(db.getNbROIsWithLabel(0), 10586U);
+    ASSERT_EQUALS(db.getNbROIsWithLabel(0), 10414U);
     ASSERT_EQUALS(db.getLabelName(1), "large-vehicle");
     ASSERT_EQUALS(db.getNbROIsWithLabel(1), 21356U);
     ASSERT_EQUALS(db.getLabelName(14), "helicopter");

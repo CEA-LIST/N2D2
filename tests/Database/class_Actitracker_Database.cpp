@@ -48,18 +48,18 @@ TEST(Actitracker_Database, load)
     ASSERT_EQUALS(db.getNbStimuli(), nbSegments);
     ASSERT_EQUALS(db.getNbLabels(), 6U);
 
-    ASSERT_EQUALS(db.getLabelName(0), "Walking");
-    ASSERT_EQUALS(db.getNbStimuliWithLabel(0), 27903U);
+    ASSERT_EQUALS(db.getLabelName(0), "Jogging");
+    ASSERT_EQUALS(db.getNbStimuliWithLabel(0), 9752U);
     ASSERT_EQUALS(db.getLabelName(1), "LyingDown");
     ASSERT_EQUALS(db.getNbStimuliWithLabel(1), 6135U);
-    ASSERT_EQUALS(db.getLabelName(2), "Standing");
-    ASSERT_EQUALS(db.getNbStimuliWithLabel(2), 6416U);
-    ASSERT_EQUALS(db.getLabelName(3), "Sitting");
-    ASSERT_EQUALS(db.getNbStimuliWithLabel(3), 14751U);
-    ASSERT_EQUALS(db.getLabelName(4), "Jogging");
-    ASSERT_EQUALS(db.getNbStimuliWithLabel(4), 9752U);
-    ASSERT_EQUALS(db.getLabelName(5), "Stairs");
-    ASSERT_EQUALS(db.getNbStimuliWithLabel(5), 1280U);
+    ASSERT_EQUALS(db.getLabelName(2), "Sitting");
+    ASSERT_EQUALS(db.getNbStimuliWithLabel(2), 14751U);
+    ASSERT_EQUALS(db.getLabelName(3), "Stairs");
+    ASSERT_EQUALS(db.getNbStimuliWithLabel(3), 1280U);
+    ASSERT_EQUALS(db.getLabelName(4), "Standing");
+    ASSERT_EQUALS(db.getNbStimuliWithLabel(4), 6416U);
+    ASSERT_EQUALS(db.getLabelName(5), "Walking");
+    ASSERT_EQUALS(db.getNbStimuliWithLabel(5), 27903U);
 }
 
 RUN_TESTS()
