@@ -28,9 +28,13 @@ class PadCropTransformation : public Transformation {
 public:
     using Transformation::apply;
 
-    enum PaddingBackground {
-        BlackColor,
-        MeanColor
+    enum BorderType {
+        ConstantBorder = cv::BORDER_CONSTANT,
+        ReplicateBorder = cv::BORDER_REPLICATE,
+        ReflectBorder = cv::BORDER_REFLECT,
+        WrapBorder = cv::BORDER_WRAP,
+        MinusOneReflectBorder = cv::BORDER_REFLECT_101,
+        MeanBorder
     };
 
     static const char* Type;
@@ -70,6 +74,7 @@ private:
                  unsigned int matHeight,
                  unsigned int width,
                  unsigned int height,
+                 int borderType,
                  const cv::Scalar& bgColor,
                  std::vector<std::shared_ptr<ROI> >& labelsROI) const;
 
@@ -77,15 +82,17 @@ private:
     const unsigned int mHeight;
 
     /// Padding background color
-    Parameter<PaddingBackground> mPaddingBackground;
+    Parameter<BorderType> mBorderType;
+    Parameter<std::vector<double> > mBorderValue;
 };
 }
 
 namespace {
 template <>
 const char* const EnumStrings
-    <N2D2::PadCropTransformation::PaddingBackground>::data[]
-    = {"BlackColor", "MeanColor"};
+    <N2D2::PadCropTransformation::BorderType>::data[]
+    = {"ConstantBorder", "ReplicateBorder", "ReflectBorder", "WrapBorder",
+        "MinusOneReflectBorder", "MeanBorder"};
 }
 
 #endif // N2D2_PADCROPTRANSFORMATION_H

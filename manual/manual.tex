@@ -2912,10 +2912,16 @@ Pad/crop the image to a specified size.
   image \\
   \cellcolor{requiredcolor}\lstinline!Height! & Height of the padded/cropped
    image \\
-  \lstinline!PaddingBackground! [\lstinline!MeanColor!] & Background color
+  \lstinline!BorderType! [\lstinline!MinusOneReflectBorder!] & Border type
   used when padding. Possible values: \\
-   & \lstinline!MeanColor!: pad with the mean color of the image \\
-   & \lstinline!BlackColor!: pad with black \\
+   & \lstinline!ConstantBorder!: pad with \lstinline!BorderValue! \\
+   & \lstinline!ReplicateBorder!: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh \\
+   & \lstinline!ReflectBorder!: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb \\
+   & \lstinline!WrapBorder!: it will look like cdefgh|abcdefgh|abcdefg \\
+   & \lstinline!MinusOneReflectBorder!: same as \lstinline!ReflectBorder! but with a slight change, like gfedcb|abcdefgh|gfedcba \\
+   & \lstinline!MeanBorder!: pad with the mean color of the image \\
+   \lstinline!BorderValue! [0.0 0.0 0.0] & Background color
+   used when padding with \lstinline!BorderType! is \lstinline!ConstantBorder! \\
  \hline
 \end{tabular}
 \end{center}
@@ -3063,6 +3069,16 @@ Extract a slice from an image.
   \lstinline!RandomScalingRange! [0.8 1.2] & Range of the random scaling (if \lstinline!RandomRotation! is enabled) \\
   \lstinline!AllowPadding! [0] & If true, zero-padding is allowed if the image
   is smaller than the slice to extract \\
+  \lstinline!BorderType! [\lstinline!MinusOneReflectBorder!] & Border type
+  used when padding. Possible values: \\
+   & \lstinline!ConstantBorder!: pad with \lstinline!BorderValue! \\
+   & \lstinline!ReplicateBorder!: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh \\
+   & \lstinline!ReflectBorder!: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb \\
+   & \lstinline!WrapBorder!: it will look like cdefgh|abcdefgh|abcdefg \\
+   & \lstinline!MinusOneReflectBorder!: same as \lstinline!ReflectBorder! but with a slight change, like gfedcb|abcdefgh|gfedcba \\
+   & \lstinline!MeanBorder!: pad with the mean color of the image \\
+   \lstinline!BorderValue! [0.0 0.0 0.0] & Background color
+   used when padding with \lstinline!BorderType! is \lstinline!ConstantBorder! \\
  \hline
 \end{tabular}
 \end{center}

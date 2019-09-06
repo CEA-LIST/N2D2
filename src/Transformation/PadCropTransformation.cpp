@@ -26,7 +26,8 @@ N2D2::PadCropTransformation::PadCropTransformation(unsigned int width,
                                                    unsigned int height)
     : mWidth(width),
       mHeight(height),
-      mPaddingBackground(this, "PaddingBackground", MeanColor)
+      mBorderType(this, "BorderType", MinusOneReflectBorder),
+      mBorderValue(this, "BorderValue", std::vector<double>())
 {
     // ctor
 }
@@ -35,7 +36,8 @@ N2D2::PadCropTransformation::PadCropTransformation(
     const PadCropTransformation& trans)
     : mWidth(trans.mWidth),
       mHeight(trans.mHeight),
-      mPaddingBackground(this, "PaddingBackground", trans.mPaddingBackground)
+      mBorderType(this, "BorderType", trans.mBorderType),
+      mBorderValue(this, "BorderValue", trans.mBorderValue)
 {
     // copy-ctor
 }
@@ -46,10 +48,19 @@ void N2D2::PadCropTransformation::apply(cv::Mat& frame,
                                         <std::shared_ptr<ROI> >& labelsROI,
                                         int /*id*/)
 {
-    const cv::Scalar color = (mPaddingBackground == BlackColor)
-                                 ? cv::Scalar::all(0)
-                                 : cv::mean(frame);
-    padCrop(frame, frame.cols, frame.rows, mWidth, mHeight, color, labelsROI);
+    const int borderType = (mBorderType == MeanBorder)
+                                ? cv::BORDER_CONSTANT
+                                : mBorderType;
+
+    std::vector<double> bgColorValue = mBorderValue;
+    bgColorValue.resize(4, 0.0);
+    const cv::Scalar bgColor = (mBorderType == MeanBorder)
+        ? cv::mean(frame)
+        : cv::Scalar(bgColorValue[0], bgColorValue[1],
+                     bgColorValue[2], bgColorValue[3]);
+
+    padCrop(frame, frame.cols, frame.rows, mWidth, mHeight, borderType, bgColor,
+        labelsROI);
 
     if (labels.rows > 1 || labels.cols > 1) {
         std::vector<std::shared_ptr<ROI> > emptyLabelsROI;
@@ -58,6 +69,7 @@ void N2D2::PadCropTransformation::apply(cv::Mat& frame,
                 labels.rows,
                 mWidth,
                 mHeight,
+                cv::BORDER_CONSTANT,
                 cv::Scalar::all(-1),
                 emptyLabelsROI);
     }
@@ -74,6 +86,7 @@ void N2D2::PadCropTransformation::reverse(cv::Mat& frame,
             mHeight,
             frame.cols,
             frame.rows,
+            cv::BORDER_CONSTANT,
             cv::Scalar::all(-1),
             labelsROI);
 }
@@ -84,6 +97,7 @@ N2D2::PadCropTransformation::padCrop(cv::Mat& mat,
                                      unsigned int matHeight,
                                      unsigned int width,
                                      unsigned int height,
+                                     int borderType,
                                      const cv::Scalar& bgColor,
                                      std::vector
                                      <std::shared_ptr<ROI> >& labelsROI) const
@@ -106,7 +120,7 @@ N2D2::PadCropTransformation::padCrop(cv::Mat& mat,
                                std::max(0, bottom),
                                std::max(0, left),
                                std::max(0, right),
-                               cv::BORDER_CONSTANT,
+                               borderType,
                                bgColor);
             mat = frameBorder;
         }

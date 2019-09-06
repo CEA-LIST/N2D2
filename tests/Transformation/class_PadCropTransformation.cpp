@@ -29,22 +29,22 @@ TEST_DATASET(PadCropTransformation,
              apply,
              (unsigned int width,
               unsigned int height,
-              PadCropTransformation::PaddingBackground paddingBackground),
-             std::make_tuple(200, 160, PadCropTransformation::BlackColor),
-             std::make_tuple(160, 200, PadCropTransformation::BlackColor),
-             std::make_tuple(512, 512, PadCropTransformation::BlackColor),
-             std::make_tuple(700, 512, PadCropTransformation::BlackColor),
-             std::make_tuple(512, 700, PadCropTransformation::BlackColor),
-             std::make_tuple(700, 300, PadCropTransformation::BlackColor),
-             std::make_tuple(300, 700, PadCropTransformation::BlackColor),
-             std::make_tuple(700, 800, PadCropTransformation::BlackColor),
-             std::make_tuple(800, 700, PadCropTransformation::BlackColor),
-             std::make_tuple(700, 512, PadCropTransformation::MeanColor),
-             std::make_tuple(512, 700, PadCropTransformation::MeanColor),
-             std::make_tuple(700, 300, PadCropTransformation::MeanColor),
-             std::make_tuple(300, 700, PadCropTransformation::MeanColor),
-             std::make_tuple(700, 800, PadCropTransformation::MeanColor),
-             std::make_tuple(800, 700, PadCropTransformation::MeanColor))
+              PadCropTransformation::BorderType borderType),
+             std::make_tuple(200, 160, PadCropTransformation::ConstantBorder),
+             std::make_tuple(160, 200, PadCropTransformation::ConstantBorder),
+             std::make_tuple(512, 512, PadCropTransformation::ConstantBorder),
+             std::make_tuple(700, 512, PadCropTransformation::ConstantBorder),
+             std::make_tuple(512, 700, PadCropTransformation::ConstantBorder),
+             std::make_tuple(700, 300, PadCropTransformation::ConstantBorder),
+             std::make_tuple(300, 700, PadCropTransformation::ConstantBorder),
+             std::make_tuple(700, 800, PadCropTransformation::ConstantBorder),
+             std::make_tuple(800, 700, PadCropTransformation::ConstantBorder),
+             std::make_tuple(700, 512, PadCropTransformation::MeanBorder),
+             std::make_tuple(512, 700, PadCropTransformation::MeanBorder),
+             std::make_tuple(700, 300, PadCropTransformation::MeanBorder),
+             std::make_tuple(300, 700, PadCropTransformation::MeanBorder),
+             std::make_tuple(700, 800, PadCropTransformation::MeanBorder),
+             std::make_tuple(800, 700, PadCropTransformation::MeanBorder))
 {
     RectangularROI<int> roi1(64, cv::Point(0, 0), 256, 256);
     RectangularROI<int> roi2(128, cv::Point(256, 0), 256, 256);
@@ -56,7 +56,7 @@ TEST_DATASET(PadCropTransformation,
     roi3.append(labels);
 
     PadCropTransformation trans(width, height);
-    trans.setParameter("PaddingBackground", paddingBackground);
+    trans.setParameter("BorderType", borderType);
 
     cv::Mat img = cv::imread("tests_data/Lenna.png",
 #if CV_MAJOR_VERSION >= 3
@@ -74,7 +74,7 @@ TEST_DATASET(PadCropTransformation,
 
     std::ostringstream fileName;
     fileName << "PadCropTransformation_apply(W" << width << "_H" << height
-             << "_P" << paddingBackground << ")[frame].png";
+             << "_" << borderType << ")[frame].png";
 
     Utils::createDirectories("Transformation");
     if (!cv::imwrite("Transformation/" + fileName.str(), img))
@@ -87,7 +87,7 @@ TEST_DATASET(PadCropTransformation,
     if (width > 512 || height > 512) {
         const cv::Vec3b value = img.at<cv::Vec3b>(0, 0);
 
-        if (paddingBackground == PadCropTransformation::BlackColor) {
+        if (borderType == PadCropTransformation::ConstantBorder) {
             ASSERT_EQUALS(value[0], 0);
             ASSERT_EQUALS(value[1], 0);
             ASSERT_EQUALS(value[2], 0);
@@ -100,7 +100,7 @@ TEST_DATASET(PadCropTransformation,
 
     fileName.str(std::string());
     fileName << "PadCropTransformation_apply(W" << width << "_H" << height
-             << "_P" << paddingBackground << ")[labels].png";
+             << "_" << borderType << ")[labels].png";
 
     if (!cv::imwrite("Transformation/" + fileName.str(), labels))
         throw std::runtime_error("Unable to write image: Transformation/"
