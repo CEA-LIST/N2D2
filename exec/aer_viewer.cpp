@@ -61,6 +61,9 @@ int main(int argc, char* argv[])
         env->addChannelTransformation(-FilterTransformationLaplacian);
     }
 
+    // Fix issue "Cannot run aer_viewer #33"
+    fedisableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
+
     Aer aer(env);
 
     if (Utils::fileExtension(videoFile) != "dat") {
