@@ -36,6 +36,12 @@ void N2D2::DropoutCell::getStats(Stats& stats) const
     stats.nbNodes += getOutputsSize();
 }
 
+std::vector<unsigned int> N2D2::DropoutCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    return outputField;
+}
+
 void N2D2::DropoutCell::setOutputsDims()
 {
     mOutputsDims = mInputsDims;

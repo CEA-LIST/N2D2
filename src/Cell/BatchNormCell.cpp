@@ -243,6 +243,12 @@ void N2D2::BatchNormCell::importFreeParameters(const std::string& fileName,
     }
 }
 
+std::vector<unsigned int> N2D2::BatchNormCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    return outputField;
+}
+
 void N2D2::BatchNormCell::getStats(Stats& stats) const
 {
     stats.nbNodes += getOutputsSize();

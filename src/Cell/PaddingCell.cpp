@@ -39,6 +39,12 @@ N2D2::PaddingCell::PaddingCell(const DeepNet& deepNet, const std::string& name,
     // ctor
 }
 
+std::vector<unsigned int> N2D2::PaddingCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    return outputField;
+}
+
 void N2D2::PaddingCell::getStats(Stats& stats) const
 {
     stats.nbNodes += getOutputsSize();

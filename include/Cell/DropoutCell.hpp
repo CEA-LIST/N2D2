@@ -50,6 +50,9 @@ public:
         return Type;
     };
     void getStats(Stats& stats) const;
+    std::vector<unsigned int> getReceptiveField(
+                                const std::vector<unsigned int>& outputField
+                                        = std::vector<unsigned int>()) const;
     virtual ~DropoutCell() {};
 
 protected:

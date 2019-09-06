@@ -36,6 +36,12 @@ N2D2::ElemWiseCell::ElemWiseCell(const DeepNet& deepNet, const std::string& name
     // ctor
 }
 
+std::vector<unsigned int> N2D2::ElemWiseCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    return outputField;
+}
+
 void N2D2::ElemWiseCell::getStats(Stats& stats) const
 {
     stats.nbNodes += getOutputsSize();

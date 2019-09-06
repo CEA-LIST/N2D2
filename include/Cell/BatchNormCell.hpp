@@ -104,6 +104,9 @@ public:
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
     void getStats(Stats& stats) const;
+    std::vector<unsigned int> getReceptiveField(
+                                const std::vector<unsigned int>& outputField
+                                        = std::vector<unsigned int>()) const;
     virtual ~BatchNormCell() {};
 
 protected:
