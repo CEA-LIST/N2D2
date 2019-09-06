@@ -50,7 +50,7 @@ void N2D2::PadCropTransformation::apply(cv::Mat& frame,
 {
     const int borderType = (mBorderType == MeanBorder)
                                 ? cv::BORDER_CONSTANT
-                                : mBorderType;
+                                : (int)mBorderType;
 
     std::vector<double> bgColorValue = mBorderValue;
     bgColorValue.resize(4, 0.0);
