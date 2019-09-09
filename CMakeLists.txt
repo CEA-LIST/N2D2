@@ -63,12 +63,12 @@ endfunction()
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-
-    list(APPEND CUDA_NVCC_FLAGS -std=c++11;-arch=sm_30;)
+    list(APPEND CUDA_NVCC_FLAGS "-arch=sm_30;")
     if (MSVC)
-        list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-MD;)
+        set(CUDA_NVCC_FLAGS_DEBUG "-D_DEBUG;")
+        list(APPEND CUDA_NVCC_FLAGS "-MD;")
     else()
-        list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-fPIC;)
+        list(APPEND CUDA_NVCC_FLAGS "-Xcompiler;-fPIC;")
     endif()
 endmacro()
 
@@ -82,14 +82,21 @@ project(N2D2)
 
 # n2d2_lib target
 file(GLOB_RECURSE src_files "src/*.cpp")
-add_library(n2d2_lib STATIC ${src_files})
+file(GLOB_RECURSE hdr_files "include/*.h" "include/*.hpp")
+
+if(MSVC)
+    source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src"     PREFIX "Source Files" FILES ${src_files})
+    source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${hdr_files})
+endif()
+
+add_library(n2d2_lib STATIC ${src_files} ${hdr_files})
 
 target_include_directories(n2d2_lib PUBLIC "include")
 target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DIR}\")
 
 if(MSVC)
     # TODO clean-up warnings
-    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297)
+    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297 /MP)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
     target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -Wno-unused-variable -fsigned-char)
@@ -108,7 +115,7 @@ find_package(Gnuplot REQUIRED)
 find_package(OpenMP QUIET)
 if(OpenMP_FOUND)
     target_compile_options(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
-    target_link_libraries(n2d2_lib ${OpenMP_CXX_FLAGS})
+    target_link_libraries(n2d2_lib ${OpenMP_CXX_LIBRARIES})
     target_compile_definitions(n2d2_lib PUBLIC OPENMP=1)
 endif()
 
@@ -171,6 +178,8 @@ if(CUDA_FOUND)
     cuda_include_directories("${CMAKE_CURRENT_LIST_DIR}/include/")
     cuda_add_library(n2d2_lib_cuda STATIC ${src_files_cuda})
 
+    set_property(TARGET n2d2_lib_cuda PROPERTY CUDA_STANDARD 11)
+    
     # CUDA
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
     target_link_libraries(n2d2_lib_cuda ${CUDA_LIBRARIES})
