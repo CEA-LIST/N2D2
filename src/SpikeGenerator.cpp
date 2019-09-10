@@ -84,8 +84,11 @@ void N2D2::SpikeGenerator::nextEvent(std::pair<Time_T, int>& event,
         Time_T t = event.first;
         Time_T dt = 0;
 
-        if (mStimulusType == Poissonian)
+        if (mStimulusType == Poissonian) {
+            // The time between arrivals in a Poisson process is exponentially
+            // distributed
             dt = (Time_T)Random::randExponential(periodMean);
+        }
         else if (mStimulusType == Linear) {
             if (freq >= 1.0/(end-start)){
                 dt = (Time_T) std::llround(1.0/freq);
