@@ -150,7 +150,7 @@ public:
     virtual void process(Database::StimuliSet set);
     virtual void logEstimatedLabels(const std::string& dirName) const;
     virtual void logEstimatedLabelsJSON(const std::string& dirName,
-                                        std::string fileName = "",
+                                        const std::string& fileName = "",
                                         unsigned int xOffset = 0,
                                         unsigned int yOffset = 0,
                                         bool append = false) const;

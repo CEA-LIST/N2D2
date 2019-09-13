@@ -187,6 +187,7 @@ public:
     void log(const std::string& baseName, Database::StimuliSet set) const;
     void logLabelsMapping(const std::string& fileName) const;
     void logEstimatedLabels(const std::string& dirName) const;
+    void logEstimatedLabelsJSON(const std::string& dirName) const;
     void logLabelsLegend(const std::string& fileName) const;
     void logTimings(const std::string& fileName,
                     const std::vector

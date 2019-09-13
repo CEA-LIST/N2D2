@@ -106,6 +106,11 @@ public:
     void logDetectedBB(const std::string& fileName,
                        unsigned int batchPos = 0) const;
     virtual void logEstimatedLabels(const std::string& dirName) const;
+    virtual void logEstimatedLabelsJSON(const std::string& dirName,
+                                        const std::string& fileName = "",
+                                        unsigned int xOffset = 0,
+                                        unsigned int yOffset = 0,
+                                        bool append = false) const;
     virtual void log(const std::string& fileName, Database::StimuliSet set);
     virtual void clear(Database::StimuliSet set);
 

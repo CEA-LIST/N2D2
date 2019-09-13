@@ -2420,6 +2420,17 @@ void N2D2::DeepNet::logEstimatedLabels(const std::string& dirName) const
     }
 }
 
+void N2D2::DeepNet::logEstimatedLabelsJSON(const std::string& dirName) const
+{
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabelsJSON(dirName);
+    }
+}
+
 void N2D2::DeepNet::logLabelsLegend(const std::string& dirName) const
 {
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets

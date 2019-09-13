@@ -233,6 +233,7 @@ public:
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
                                                      "stimulus (0 = no log)");
+        logJSON =     opts.parse("-log-json", "log JSON annotations");
         logDbStats =  opts.parse("-log-db-stats", "log database stimuli and ROIs stats");
         genConfig =   opts.parse("-cfg", "save base configuration and exit");
         genExport =   opts.parse("-export", std::string(), "generate an export and exit");
@@ -300,6 +301,7 @@ public:
     int testId;
     bool check;
     unsigned int logOutputs;
+    bool logJSON;
     bool logDbStats;
     bool genConfig;
     std::string genExport;
@@ -354,6 +356,9 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
         deepNet->reportOutputsRange(outputsRange);
         deepNet->reportOutputsHistogram(outputsHistogram);
         deepNet->logEstimatedLabels(testName);
+
+        if (opt.logJSON)
+            deepNet->logEstimatedLabelsJSON(testName);
 
         if (opt.logOutputs > 0 && b == (opt.logOutputs - 1) / batchSize) {
             const unsigned int batchPos = (opt.logOutputs - 1) % batchSize;

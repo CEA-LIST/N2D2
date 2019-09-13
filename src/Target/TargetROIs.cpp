@@ -553,8 +553,10 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
         }
 
         // Draw image
-        if (!cv::imwrite(fileName, drawEstimatedLabels(batchPos)))
+        if (!cv::imwrite(fileName, drawEstimatedLabels(batchPos))) {
+#pragma omp critical(TargetROIs__logEstimatedLabels)
             throw std::runtime_error("Unable to write image: " + fileName);
+        }
 
         // Log ROIs
         logDetectedBB(fileName, batchPos);
@@ -569,6 +571,145 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     ret = system(cmd.c_str());
     if (ret < 0) {
     } // avoid ignoring return value warning
+}
+
+void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
+                                              const std::string& fileName,
+                                              unsigned int xOffset,
+                                              unsigned int yOffset,
+                                              bool append) const
+{
+    const std::string dirPath = mName + "/" + dirName;
+    Utils::createDirectories(dirPath);
+
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
+
+    const time_t now = std::time(0);
+    tm* localNow = std::localtime(&now);
+    std::string time = std::asctime(localNow);
+    time.pop_back(); // remove \n introduced by std::asctime()
+
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
+
+#pragma omp parallel for if (mTargets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+        const int id = mStimuliProvider->getBatch()[batchPos];
+
+        if (id < 0) {
+            // Invalid stimulus in batch (can occur for the last batch of the
+            // set)
+            continue;
+        }
+
+        std::string jsonName(fileName);
+
+        if (jsonName.empty()) {
+            std::ostringstream imgFile;
+
+            if (validDatabase) {
+                imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+
+                const std::string baseName = Utils::baseName(imgFile.str());
+                const std::string fileBaseName = Utils::fileBaseName(baseName);
+                std::string fileExtension = Utils::fileExtension(baseName);
+
+                if (!((std::string)mImageLogFormat).empty()) {
+                    // Keep "[x,y]" after file extension, appended by
+                    // getStimulusName() in case of slicing
+                    fileExtension.replace(0, fileExtension.find_first_of('['),
+                                        mImageLogFormat);
+                }
+
+                jsonName = dirPath + "/" + fileBaseName + "." + fileExtension;
+            }
+            else {
+                imgFile << std::setw(10) << std::setfill('0') << id;
+
+                const std::string fileExtension
+                    = (!((std::string)mImageLogFormat).empty())
+                        ? (std::string)mImageLogFormat
+                        : std::string("jpg");
+
+                jsonName = dirPath + "/" + imgFile.str() + "." + fileExtension;
+            }
+        }
+
+        jsonName += ".box.json";
+
+        std::ostringstream jsonDataBuffer;
+
+        const std::vector<DetectedBB>& detectedBB = mDetectedBB[batchPos];
+
+        for (std::vector<DetectedBB>::const_iterator it
+                = detectedBB.begin(),
+                itEnd = detectedBB.end();
+                it != itEnd;
+                ++it)
+        {
+            const cv::Rect rect = (*it).bb->getBoundingRect();
+
+            if (it != detectedBB.begin())
+                jsonDataBuffer << ",";
+    
+            jsonDataBuffer << "{\"class_id\": " << (*it).bb->getLabel() << ","
+                "\"info\": [\"BOX_" << (*it).score << "\","
+                    "false,"
+                    "{\"CreationDate\": \"" << time << "\","
+                        "\"Source\": \"N2D2\","
+                        "\"ClassName\": \"" << labelsName[(*it).bb->getLabel()]
+                            << "\","
+                        "\"Confidence\": \"" << (*it).score << "\"}"
+                "],"
+                "\"type\": \"polygon\","
+                "\"points\": ["
+                    "[" << xOffset + rect.x << ", "
+                        << yOffset + rect.y << "],"
+                    "[" << xOffset + rect.x + rect.width << ", "
+                        << yOffset + rect.y << "],"
+                    "[" << xOffset + rect.x + rect.width << ", "
+                        << yOffset + rect.y + rect.height << "],"
+                    "[" << xOffset + rect.x << ", "
+                        << yOffset + rect.y + rect.height << "]]}";
+        }
+
+        jsonDataBuffer << "]}";
+
+        std::fstream jsonData;
+        bool newFile = true;
+
+        if (append) {
+            newFile = false;
+            jsonData.open(jsonName.c_str(),
+                          std::ofstream::in | std::ofstream::out);
+        }
+        else
+            jsonData.open(jsonName.c_str(), std::ofstream::out);
+
+        if (append && !jsonData.good()) {
+            newFile = true;
+            jsonData.open(jsonName.c_str(),
+                          std::ofstream::in | std::ofstream::out | std::ofstream::app);
+        }
+
+        //std::ofstream jsonData(jsonName.c_str(),
+        //    (append) ? std::fstream::app
+        //             : std::fstream::out);
+
+        if (!jsonData.good()) {
+#pragma omp critical(TargetROIs__logEstimatedLabelsJSON)
+            throw std::runtime_error("Could not create JSON file: " + jsonName);
+        }
+
+        if (newFile)
+            jsonData << "{\"annotations\": [" << jsonDataBuffer.str();
+        else {
+            jsonData.seekp(-2, jsonData.end); // Go before "]}"
+            jsonData.write(",", sizeof(char));
+            jsonData.write(jsonDataBuffer.str().c_str(),
+                           sizeof(char) * jsonDataBuffer.str().size());
+        }
+    }
 }
 
 void N2D2::TargetROIs::log(const std::string& fileName,

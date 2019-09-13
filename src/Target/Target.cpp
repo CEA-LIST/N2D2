@@ -1062,7 +1062,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 }
 
 void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
-                                          std::string fileName,
+                                          const std::string& fileName,
                                           unsigned int xOffset,
                                           unsigned int yOffset,
                                           bool append) const
@@ -1076,6 +1076,8 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     if (mDataAsTarget)
         return;
 
+    const bool validDatabase
+        = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
     const double xRatio = mStimuliProvider->getSizeX()
         / (double)mEstimatedLabels.dimX();
     const double yRatio = mStimuliProvider->getSizeY()
@@ -1098,11 +1100,6 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     tm* localNow = std::localtime(&now);
     std::string time = std::asctime(localNow);
     time.pop_back(); // remove \n introduced by std::asctime()
-
-    const std::string fileExtension
-        = (!((std::string)mImageLogFormat).empty())
-            ? (std::string)mImageLogFormat
-            : std::string("jpg");
             
 #pragma omp parallel for if (mTargets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
@@ -1151,11 +1148,37 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             }
         }
 
-        if (fileName.empty()) {
+        std::string jsonName(fileName);
+
+        if (jsonName.empty()) {
             std::ostringstream imgFile;
-            imgFile << std::setw(10) << std::setfill('0') << id;
-            fileName = dirPath + "/" + imgFile.str()
-                + "." + fileExtension;
+
+            if (validDatabase) {
+                imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+
+                const std::string baseName = Utils::baseName(imgFile.str());
+                const std::string fileBaseName = Utils::fileBaseName(baseName);
+                std::string fileExtension = Utils::fileExtension(baseName);
+
+                if (!((std::string)mImageLogFormat).empty()) {
+                    // Keep "[x,y]" after file extension, appended by
+                    // getStimulusName() in case of slicing
+                    fileExtension.replace(0, fileExtension.find_first_of('['),
+                                        mImageLogFormat);
+                }
+
+                jsonName = dirPath + "/" + fileBaseName + "." + fileExtension;
+            }
+            else {
+                imgFile << std::setw(10) << std::setfill('0') << id;
+
+                const std::string fileExtension
+                    = (!((std::string)mImageLogFormat).empty())
+                        ? (std::string)mImageLogFormat
+                        : std::string("jpg");
+
+                jsonName = dirPath + "/" + imgFile.str() + "." + fileExtension;
+            }
         }
 /*
         // Input image
@@ -1175,7 +1198,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             throw std::runtime_error("Unable to write image: " + fileName);
         }
 */
-        fileName += ".json";
+        jsonName += ".json";
 
         std::ostringstream jsonDataBuffer;
 
@@ -1194,7 +1217,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                 "],"
                 "\"type\": \"pixelwise\","
                 "\"origin\": [" << xOffset << ", " << yOffset << "],"
-                "\"scale\": " << (-scale) << ","
+                "\"scale\": " << ((scale > 1) ? (-scale) : scale) << ","
                 "\"size\": [" << (*it).second.dimX() << ","
                     << (*it).second.dimY() << "],"
                 "\"data\": [";
@@ -1233,25 +1256,25 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
 
         if (append) {
             newFile = false;
-            jsonData.open(fileName.c_str(),
+            jsonData.open(jsonName.c_str(),
                           std::ofstream::in | std::ofstream::out);
         }
         else
-            jsonData.open(fileName.c_str(), std::ofstream::out);
+            jsonData.open(jsonName.c_str(), std::ofstream::out);
 
         if (append && !jsonData.good()) {
             newFile = true;
-            jsonData.open(fileName.c_str(),
+            jsonData.open(jsonName.c_str(),
                           std::ofstream::in | std::ofstream::out | std::ofstream::app);
         }
 
-        //std::ofstream jsonData(fileName.c_str(),
+        //std::ofstream jsonData(jsonName.c_str(),
         //    (append) ? std::fstream::app
         //             : std::fstream::out);
 
         if (!jsonData.good()) {
 #pragma omp critical(Target__logEstimatedLabelsJSON)
-            throw std::runtime_error("Could not create JSON file: " + fileName);
+            throw std::runtime_error("Could not create JSON file: " + jsonName);
         }
 
         if (newFile)
