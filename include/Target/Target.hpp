@@ -163,6 +163,8 @@ public:
     {
         return mEstimatedLabelsValue;
     };
+    TensorLabelsValue_T getEstimatedLabels(const std::shared_ptr<ROI>& roi,
+                                            unsigned int batchPos = 0) const;
     std::pair<int, Float_T> getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                               unsigned int batchPos = 0) const;
     const std::vector<Float_T>& getLoss() const

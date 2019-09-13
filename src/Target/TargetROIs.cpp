@@ -47,7 +47,8 @@ N2D2::TargetROIs::TargetROIs(const std::string& name,
       mFilterMinAspectRatio(this, "FilterMinAspectRatio", 0.0),
       mFilterMaxAspectRatio(this, "FilterMaxAspectRatio", 0.0),
       mMergeMaxHDist(this, "MergeMaxHDist", 1U),
-      mMergeMaxVDist(this, "MergeMaxVDist", 1U)
+      mMergeMaxVDist(this, "MergeMaxVDist", 1U),
+      mScoreTopN(this, "ScoreTopN", 1U)
 {
     // ctor
 }
@@ -161,14 +162,40 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                            0.0,
                            false);
 
-            int label;
-            Float_T score;
-            std::tie(label, score) = (mROIsLabelTarget)
-                ? mROIsLabelTarget->getEstimatedLabel(dbb.bb, batchPos)
-                : getEstimatedLabel(dbb.bb, batchPos);
+            if (mScoreTopN > 1) {
+                TensorLabelsValue_T bbLabels = (mROIsLabelTarget)
+                    ? mROIsLabelTarget->getEstimatedLabels(dbb.bb, batchPos)
+                    : getEstimatedLabels(dbb.bb, batchPos);
 
-            dbb.bb->setLabel(label);
-            dbb.score = score;
+                std::vector<int> labelIdx(bbLabels.size());
+                std::iota(labelIdx.begin(), labelIdx.end(), 0);
+
+                // sort indexes based on comparing values in
+                // bbLabels. Sort in descending order.
+                std::partial_sort(labelIdx.begin(),
+                    labelIdx.begin() + mScoreTopN,
+                    labelIdx.end(),
+                    [&bbLabels](int i1, int i2)
+                        {return bbLabels(i1) > bbLabels(i2);});
+
+                dbb.bb->setLabel(labelIdx[0]);
+                dbb.score = bbLabels(labelIdx[0]);
+
+                for (unsigned int i = 1; i < mScoreTopN; ++i) {
+                    dbb.scoreTopN.push_back(
+                        std::make_pair(labelIdx[i], bbLabels(labelIdx[i])));
+                }
+            }
+            else {
+                int label;
+                Float_T score;
+                std::tie(label, score) = (mROIsLabelTarget)
+                    ? mROIsLabelTarget->getEstimatedLabel(dbb.bb, batchPos)
+                    : getEstimatedLabel(dbb.bb, batchPos);
+
+                dbb.bb->setLabel(label);
+                dbb.score = score;
+            }
 
             detectedBB.push_back(dbb);
         }
@@ -659,7 +686,22 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
                         "\"Source\": \"N2D2\","
                         "\"ClassName\": \"" << labelsName[(*it).bb->getLabel()]
                             << "\","
-                        "\"Confidence\": \"" << (*it).score << "\"}"
+                        "\"Confidence\": \"" << (*it).score << "\"";
+
+            for (std::vector<std::pair<int, double> >::const_iterator itScore
+                    = (*it).scoreTopN.begin(),
+                    itScoreBegin = (*it).scoreTopN.begin(),
+                    itScoreEnd = (*it).scoreTopN.end();
+                    itScore != itScoreEnd;
+                    ++itScore)
+            {
+                jsonDataBuffer << ",\"ClassName-" << (itScore - itScoreBegin + 1)
+                    << "\": \"" << labelsName[(*itScore).first] << "\""
+                    << ",\"Confidence-" << (itScore - itScoreBegin + 1)
+                    << "\": \"" << (*itScore).second << "\"";
+            }
+
+            jsonDataBuffer << "}"
                 "],"
                 "\"type\": \"polygon\","
                 "\"points\": ["

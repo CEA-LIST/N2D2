@@ -1351,9 +1351,9 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
                                  + fileName);
 }
 
-std::pair<int, N2D2::Float_T>
-N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
-                                unsigned int batchPos) const
+N2D2::Target::TensorLabelsValue_T
+N2D2::Target::getEstimatedLabels(const std::shared_ptr<ROI>& roi,
+                                 unsigned int batchPos) const
 {
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     const double xRatio = labels.dimX() / (double)mCell->getOutputsWidth();
@@ -1472,6 +1472,15 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
 #ifdef CUDA
     }
 #endif
+
+    return bbLabels;
+}
+
+std::pair<int, N2D2::Float_T>
+N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
+                                unsigned int batchPos) const
+{
+    const TensorLabelsValue_T bbLabels = getEstimatedLabels(roi, batchPos);
 
     const std::vector<Float_T>::const_iterator it
         = std::max_element(bbLabels.begin(), bbLabels.end());

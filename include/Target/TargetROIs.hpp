@@ -52,6 +52,7 @@ public:
 
         std::shared_ptr<ROI> bb;
         double score;
+        std::vector<std::pair<int, double> > scoreTopN;
         std::shared_ptr<ROI> roi;
         double matching;
         bool duplicate;
@@ -123,6 +124,7 @@ protected:
     Parameter<double> mFilterMaxAspectRatio;
     Parameter<unsigned int> mMergeMaxHDist;
     Parameter<unsigned int> mMergeMaxVDist;
+    Parameter<unsigned int> mScoreTopN;
 
     std::vector<std::vector<DetectedBB> > mDetectedBB;
     std::map<Database::StimuliSet, Score> mScoreSet;
