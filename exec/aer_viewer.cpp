@@ -25,6 +25,13 @@
 #include "Transformation/FilterTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 
+#include <cfenv>
+#ifdef WIN32
+#pragma FENV_ACCESS (on)
+#else
+//#pragma STDC FENV_ACCESS on
+#endif
+
 using namespace N2D2;
 
 int main(int argc, char* argv[])
@@ -62,7 +69,12 @@ int main(int argc, char* argv[])
     }
 
     // Fix issue "Cannot run aer_viewer #33"
+#ifdef WIN32
+    fenv_t excepts;
+    feholdexcept(&excepts);
+#else
     fedisableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
+#endif
 
     Aer aer(env);
 
