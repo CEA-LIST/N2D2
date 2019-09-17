@@ -397,6 +397,34 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(boo
     return std::make_pair(wMin, wMax);
 }
 
+
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRangePerOutput(
+            std::size_t output, bool withAdditiveParameters) const 
+{
+    const unsigned int channelsSize = getInputsSize();
+
+    Float_T wMin = 0.0;
+    Float_T wMax = 0.0;
+
+    for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+        Tensor<Float_T> weight;
+        getWeight(output, channel, weight);
+
+        if (weight(0) < wMin)  wMin = weight(0);
+        if (weight(0) > wMax)  wMax = weight(0);
+    }
+
+    if (withAdditiveParameters && !mNoBias) {
+        Tensor<Float_T> bias;
+        getBias(output, bias);
+
+        if (bias(0) < wMin)  wMin = bias(0);
+        if (bias(0) > wMax)  wMax = bias(0);
+    }
+
+    return std::make_pair(wMin, wMax);
+}
+
 void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 {
     const unsigned int channelsSize = getInputsSize();
@@ -422,30 +450,35 @@ void N2D2::FcCell::randomizeFreeParameters(double stdDev)
     }
 }
 
-void N2D2::FcCell::processFreeParameters(const std::function
-                                         <double(const double&)>& func,
+void N2D2::FcCell::processFreeParametersPerOutput(std::function<double(double)> func, 
+                                                  std::size_t output,
+                                                  FreeParametersType type) 
+{
+    const std::size_t channelsSize = getInputsSize();
+    if (type == All || type == Multiplicative) {
+        for (std::size_t channel = 0; channel < channelsSize; ++channel) {
+            Tensor<Float_T> weight;
+            getWeight(output, channel, weight);
+            weight(0) = func(weight(0));
+
+            setWeight(output, channel, weight);
+        }
+    }
+
+    if ((type == All || type == Additive) && !mNoBias) {
+        Tensor<Float_T> bias;
+        getBias(output, bias);
+        bias(0) = func(bias(0));
+
+        setBias(output, bias);
+    }
+}
+
+void N2D2::FcCell::processFreeParameters(std::function<double(double)> func,
                                          FreeParametersType type)
 {
-    const unsigned int channelsSize = getInputsSize();
-
-    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        if (type == All || type == Multiplicative) {
-            for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-                Tensor<double> weight;
-                getWeight(output, channel, weight);
-                weight(0) = func(weight(0));
-
-                setWeight(output, channel, weight);
-            }
-        }
-
-        if ((type == All || type == Additive) && !mNoBias) {
-            Tensor<double> bias;
-            getBias(output, bias);
-            bias(0) = func(bias(0));
-
-            setBias(output, bias);
-        }
+    for (std::size_t output = 0; output < getNbOutputs(); ++output) {
+        processFreeParametersPerOutput(func, output, type);
     }
 }
 

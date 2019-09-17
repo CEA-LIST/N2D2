@@ -332,9 +332,19 @@ public:
     virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool /*withAdditiveParameters*/ = true) const {
         return std::pair<Float_T, Float_T>();
     };
-    virtual void processFreeParameters(const std::function
-                                       <double(const double&)>& /*func*/,
+
+    virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(
+            std::size_t /*output*/, 
+            bool /* withAdditiveParameters*/ = true) const 
+    {
+        return std::pair<Float_T, Float_T>();
+    };
+
+    virtual void processFreeParameters(std::function<double(double)> /*func*/,
                                        FreeParametersType /*type*/ = All) {};
+    virtual void processFreeParametersPerOutput(std::function<double(double)> /*func*/,
+                                                std::size_t /*output*/,
+                                                FreeParametersType /*type*/ = All) {};
     bool isFullMap() const {
         return (groupMap() == 1);
     }

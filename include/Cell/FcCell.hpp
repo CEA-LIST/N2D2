@@ -114,9 +114,15 @@ public:
     void randomizeFreeParameters(double stdDev);
     virtual void discretizeFreeParameters(unsigned int nbLevels);
     virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
-    virtual void processFreeParameters(const std::function
-                               <double(const double&)>& func,
+    virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
+                                                                   bool withAdditiveParameters) const;
+    
+    virtual void processFreeParameters(std::function<double(double)> func,
                                        FreeParametersType type = All);
+    virtual void processFreeParametersPerOutput(std::function<double(double)> /*func*/,
+                                                std::size_t /*output*/,
+                                                FreeParametersType /*type*/ = All);
+    
     void getStats(Stats& stats) const;
     virtual ~FcCell() {};
 

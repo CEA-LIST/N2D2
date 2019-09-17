@@ -119,10 +119,17 @@ public:
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
     void discretizeFreeParameters(unsigned int nbLevels);
+    
     std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
-    void processFreeParameters(const std::function
-                               <double(const double&)>& func,
+    std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
+                                                                bool withAdditiveParameters) const;
+    
+    void processFreeParameters(std::function<double(double)> func,
                                FreeParametersType type = All);
+    void processFreeParametersPerOutput(std::function<double(double)> /*func*/,
+                                        std::size_t /*output*/,
+                                        FreeParametersType /*type*/ = All);
+
     virtual ~ConvCell_Frame_CUDA();
 
 protected:

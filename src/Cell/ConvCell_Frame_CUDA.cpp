@@ -1029,9 +1029,31 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters
 }
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(const std::function
-                                                <double(const double&)>& func,
-                                                        FreeParametersType type)
+std::pair<N2D2::Float_T, N2D2::Float_T>
+N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output,
+                                                              bool withAdditiveParameters) const
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    const std::pair<Float_T, Float_T> range
+        = ConvCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
+    mSynchronized = false;
+
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeHToD();
+
+    mBias->synchronizeHToD();
+
+    return range;
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<double(double)> func,
+                                                         FreeParametersType type)
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
         mSharedSynapses[i].synchronizeDToH();
@@ -1040,6 +1062,26 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(const std::function
 
     mSynchronized = true;
     ConvCell::processFreeParameters(func, type);
+    mSynchronized = false;
+
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeHToD();
+
+    mBias->synchronizeHToD();
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<double(double)> func,
+                                                                  std::size_t output,
+                                                                  FreeParametersType type)
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    ConvCell::processFreeParametersPerOutput(func, output, type);
     mSynchronized = false;
 
     for (unsigned int i = 0; i < mInputs.size(); ++i)
