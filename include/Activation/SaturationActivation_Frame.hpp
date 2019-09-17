@@ -58,16 +58,7 @@ void N2D2::SaturationActivation_Frame<T>::propagate(BaseTensor& baseData,
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    if (mShifting > 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) /= (1 << mShifting);
-    }
-    else if (mShifting < 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) *= (1 << (-mShifting));
-    }
+    mScaling.propagate(data);
 
     const T threshold(mThreshold);
 
@@ -107,6 +98,7 @@ void N2D2::SaturationActivation_Frame
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+    
 
     if (mQuantizationLevels > 0) {
 #pragma omp parallel for if (diffData.size() > 1024)
@@ -116,16 +108,6 @@ void N2D2::SaturationActivation_Frame
         }
     }
 
-    if (mShifting > 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            diffData(index) /= (1 << mShifting);
-    }
-    else if (mShifting < 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            diffData(index) *= (1 << (-mShifting));
-    }
 
     const T threshold(mThreshold);
 
@@ -134,6 +116,8 @@ void N2D2::SaturationActivation_Frame
         diffData(index)
             *= (data(index) > -threshold && data(index) < threshold)
                     ? 1.0f : 0.0f;
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 #endif // N2D2_SATURATIONACTIVATION_FRAME_H

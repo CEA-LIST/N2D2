@@ -78,7 +78,10 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
+
     if (!LogisticActivationDisabled) {
+        mScaling.propagate(cudaData);
+
         const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
         const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
@@ -116,10 +119,10 @@ void N2D2::LogisticActivation_Frame_CUDA
     if (LogisticActivationDisabled)
         return;
 
-    if (!this->mWithLoss) {
-        CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
-        CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
+    CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
+    CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
 
+    if (!this->mWithLoss) {
         const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
         const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
@@ -137,6 +140,8 @@ void N2D2::LogisticActivation_Frame_CUDA
                                     cudaDiffData.getCudnnTensorDesc(),
                                     cudaDiffData.getDevicePtr()));
     }
+    
+    mScaling.backPropagate(cudaData, cudaDiffData);
 }
 
 template <class T>

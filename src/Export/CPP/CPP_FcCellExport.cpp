@@ -67,7 +67,8 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(FcCell& cell,
                        
         header << "#define " << prefix << "_SHIFT "
            << ((cellFrame->getActivation())
-                   ? cellFrame->getActivation()->getParameter<int>("Shifting")
+                   ? +cellFrame->getActivation()->getActivationScaling()
+                               .getSingleShiftScaling().getScalingPerOutput()[0]
                    : 0) << "\n";
     }
 

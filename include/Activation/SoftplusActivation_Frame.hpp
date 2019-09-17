@@ -52,6 +52,8 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData,
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
+    mScaling.propagate(data);
+
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)data.size(); ++index) {
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
@@ -81,6 +83,7 @@ void N2D2::SoftplusActivation_Frame
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
 
+
     if (mQuantizationLevels > 0) {
 #pragma omp parallel for if (diffData.size() > 1024)
         for (int index = 0; index < (int)diffData.size(); ++index) {
@@ -92,6 +95,8 @@ void N2D2::SoftplusActivation_Frame
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)diffData.size(); ++index)
         diffData(index) *= (1.0f - std::exp(-data(index)));
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_H

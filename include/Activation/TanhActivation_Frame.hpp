@@ -49,6 +49,8 @@ void N2D2::TanhActivation_Frame<T>::propagate(BaseTensor& baseData,
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
+    mScaling.propagate(data);
+
     if (mAlpha != 1.0) {
         const T alpha(mAlpha);
 
@@ -78,6 +80,7 @@ void N2D2::TanhActivation_Frame
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
 
+
     if (mQuantizationLevels > 0) {
 #pragma omp parallel for if (diffData.size() > 1024)
         for (int index = 0; index < (int)diffData.size(); ++index) {
@@ -97,6 +100,8 @@ void N2D2::TanhActivation_Frame
         for (int index = 0; index < (int)diffData.size(); ++index)
             diffData(index) *= (1.0f - data(index) * data(index));
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 #endif // N2D2_TANHACTIVATION_FRAME_H

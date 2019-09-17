@@ -58,16 +58,7 @@ void N2D2::LinearActivation_Frame<T>::propagate(BaseTensor& baseData,
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    if (mShifting > 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) /= (1 << mShifting);
-    }
-    else if (mShifting < 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) *= (1 << (-mShifting));
-    }
+    mScaling.propagate(data);
 
     if (mClipping != 0.0) {
         const T clipping(mClipping);
@@ -107,6 +98,7 @@ template <class T>
 void N2D2::LinearActivation_Frame
     <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
 {
+    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
 
     if (mQuantizationLevels > 0) {
@@ -117,20 +109,9 @@ void N2D2::LinearActivation_Frame
         }
     }
 
-    if (mShifting > 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index) /= (1 << mShifting);
-    }
-    else if (mShifting < 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index) *= (1 << (-mShifting));
-    }
+
 
     if (mClipping != 0.0) {
-        Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-
         const T clipping(mClipping);
 
 #pragma omp parallel for if (data.size() > 1024)
@@ -139,6 +120,8 @@ void N2D2::LinearActivation_Frame
                 *= (data(index) > -clipping && data(index) < clipping)
                         ? 1.0f : 0.0f;
     }
+
+    mScaling.backPropagate(data, diffData);
 }
 
 #endif // N2D2_LINEARACTIVATION_FRAME_H

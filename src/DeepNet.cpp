@@ -1146,8 +1146,13 @@ N2D2::DeepNet::normalizeOutputsRange(const std::map
                 appliedFactor = prevScalingFactor
                                             * (remainingFactor / shiftedFactor);
 
-                if (activation)
-                    activation->setParameter<int>("Shifting", shifting);
+                if (activation) {
+                    activation->setActivationScaling(
+                        ActivationScaling::singleShiftScaling(
+                            std::vector<unsigned char>(cell->getNbOutputs(), shifting)
+                        )
+                    );
+                }
                 else if (shifting != 0) {
                     std::cout << Utils::cwarning
                         << "DeepNet::normalizeOutputsRange(): no activation "

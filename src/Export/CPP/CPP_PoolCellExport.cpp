@@ -90,7 +90,8 @@ void N2D2::CPP_PoolCellExport::generateHeaderConstants(PoolCell& cell,
 
         header << "#define " << prefix << "_SHIFT "
            << ((cellFrame->getActivation())
-                   ? cellFrame->getActivation()->getParameter<int>("Shifting")
+                   ? +cellFrame->getActivation()->getActivationScaling()
+                               .getSingleShiftScaling().getScalingPerOutput()[0]
                    : 0) << "\n";
     }
 

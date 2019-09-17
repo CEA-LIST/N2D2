@@ -62,6 +62,8 @@ void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(
     CudaTensor<half_float::half>& data,
     bool /*inference*/)
 {
+    mScaling.propagate(data);
+
     cudaHSoftplus_propagate(data.getDevicePtr(),
                             data.getDevicePtr(),
                             data.size());
@@ -76,6 +78,8 @@ template <>
 void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
                                                      bool /*inference*/)
 {
+    mScaling.propagate(data);
+
     cudaSSoftplus_propagate(data.getDevicePtr(),
                             data.getDevicePtr(),
                             data.size());
@@ -90,6 +94,8 @@ template <>
 void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
                                                       bool /*inference*/)
 {
+    mScaling.propagate(data);
+
     cudaDSoftplus_propagate(data.getDevicePtr(),
                             data.getDevicePtr(),
                             data.size());
@@ -114,6 +120,8 @@ void SoftplusActivation_Frame_CUDA
     cudaHSoftplus_backPropagate(data.getDevicePtr(),
                                 diffData.getDevicePtr(),
                                 data.size());
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -126,6 +134,8 @@ void SoftplusActivation_Frame_CUDA
     cudaSSoftplus_backPropagate(data.getDevicePtr(),
                                 diffData.getDevicePtr(),
                                 data.size());
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -138,6 +148,8 @@ void SoftplusActivation_Frame_CUDA
     cudaDSoftplus_backPropagate(data.getDevicePtr(),
                                 diffData.getDevicePtr(),
                                 data.size());
+    
+    mScaling.backPropagate(data, diffData);
 }
 }
 

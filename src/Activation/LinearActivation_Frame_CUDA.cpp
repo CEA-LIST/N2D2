@@ -60,11 +60,12 @@ void LinearActivation_Frame_CUDA<half_float::half>::propagate(
     CudaTensor<half_float::half>& data,
     bool inference)
 {
-    if (mShifting != 0) {
+    mScaling.propagate(data);
+    
+    if (mClipping != 0) {
         cudaHSaturation_propagate(data.getDevicePtr(),
                                   data.getDevicePtr(),
                                   data.size(),
-                                  (int)mShifting,
                                   half_float::half(mClipping));
     }
 
@@ -106,11 +107,12 @@ template <>
 void LinearActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
                                                    bool inference)
 {
-    if (mShifting != 0) {
+    mScaling.propagate(data);
+
+    if (mClipping != 0) {
         cudaSSaturation_propagate(data.getDevicePtr(),
                                   data.getDevicePtr(),
                                   data.size(),
-                                  (int)mShifting,
                                   (float)mClipping);
     }
 
@@ -152,11 +154,12 @@ template <>
 void LinearActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
                                                     bool inference)
 {
-    if (mShifting != 0) {
+    mScaling.propagate(data);
+
+    if (mClipping != 0) {
         cudaDSaturation_propagate(data.getDevicePtr(),
                                   data.getDevicePtr(),
                                   data.size(),
-                                  (int)mShifting,
                                   (double)mClipping);
     }
 
@@ -206,13 +209,14 @@ void LinearActivation_Frame_CUDA
                    half_float::half(1.0f));
     }
 
-    if (mShifting != 0) {
+    if (mClipping != 0) {
         cudaHSaturation_backPropagate(data.getDevicePtr(),
                                       diffData.getDevicePtr(),
                                       data.size(),
-                                      (int)mShifting,
                                       half_float::half(mClipping));
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -222,13 +226,14 @@ void LinearActivation_Frame_CUDA
     if (mQuantizationLevels > 0)
         cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
 
-    if (mShifting != 0) {
+    if (mClipping != 0) {
         cudaSSaturation_backPropagate(data.getDevicePtr(),
                                       diffData.getDevicePtr(),
                                       data.size(),
-                                      (int)mShifting,
                                       (float)mClipping);
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -238,13 +243,14 @@ void LinearActivation_Frame_CUDA
     if (mQuantizationLevels > 0)
         cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
 
-    if (mShifting != 0) {
+    if (mClipping != 0) {
         cudaDSaturation_backPropagate(data.getDevicePtr(),
                                       diffData.getDevicePtr(),
                                       data.size(),
-                                      (int)mShifting,
                                       (double)mClipping);
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 }
 

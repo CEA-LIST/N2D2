@@ -19,10 +19,10 @@
 */
 
 #include "Activation/Activation.hpp"
+#include "Activation/ActivationScaling.hpp"
 
 N2D2::Activation::Activation()
-    : mShifting(this, "Shifting", 0),
-      mQuantizationLevels(this, "QuantizationLevels", 0U),
+    : mQuantizationLevels(this, "QuantizationLevels", 0U),
       mQuantizationDelay(this, "QuantizationDelay", 1000000U),
       mMovingAverage(this, "MovingAverage", EMA),
       mMA_Window(this, "MA_Window", 10000U),
@@ -30,9 +30,19 @@ N2D2::Activation::Activation()
       mLog2RoundingRate(this, "Log2RoundingRate", 0.0),
       mLog2RoundingPower(this, "Log2RoundingPower", 1.0),
       mNbSteps(0),
-      mPreQuantizeScaling(1.0)
+      mPreQuantizeScaling(1.0),
+      mScaling()
 {
     // ctor
+}
+
+
+const N2D2::ActivationScaling& N2D2::Activation::getActivationScaling() const {
+    return mScaling;
+}
+
+void N2D2::Activation::setActivationScaling(ActivationScaling scaling) {
+    mScaling = std::move(scaling);
 }
 
 void N2D2::Activation::setPreQuantizeScaling(double scaling) {

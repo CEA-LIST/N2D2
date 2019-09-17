@@ -63,11 +63,14 @@ void SaturationActivation_Frame_CUDA<half_float::half>::propagate(
     CudaTensor<half_float::half>& data,
     bool inference)
 {
-    cudaHSaturation_propagate(data.getDevicePtr(),
-                              data.getDevicePtr(),
-                              data.size(),
-                              (int)mShifting,
-                              half_float::half(mThreshold));
+    mScaling.propagate(data);
+
+    if (mThreshold != 0) {
+        cudaHSaturation_propagate(data.getDevicePtr(),
+                                  data.getDevicePtr(),
+                                  data.size(),
+                                  half_float::half(mThreshold));
+    }
 
     if (mQuantizationLevels > 0) {
         if (!inference) {
@@ -103,11 +106,14 @@ template <>
 void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
                                                        bool inference)
 {
-    cudaSSaturation_propagate(data.getDevicePtr(),
-                              data.getDevicePtr(),
-                              data.size(),
-                              (int)mShifting,
-                              (float)mThreshold);
+    mScaling.propagate(data);
+
+    if (mThreshold != 0) {
+        cudaSSaturation_propagate(data.getDevicePtr(),
+                                  data.getDevicePtr(),
+                                  data.size(),
+                                  (float)mThreshold);
+    }
 
     if (mQuantizationLevels > 0) {
         if (!inference) {
@@ -143,11 +149,14 @@ template <>
 void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
                                                         bool inference)
 {
-    cudaDSaturation_propagate(data.getDevicePtr(),
-                              data.getDevicePtr(),
-                              data.size(),
-                              (int)mShifting,
-                              (double)mThreshold);
+    mScaling.propagate(data);
+
+    if (mThreshold != 0) {
+        cudaDSaturation_propagate(data.getDevicePtr(),
+                                  data.getDevicePtr(),
+                                  data.size(),
+                                  (double)mThreshold);
+    }
 
     if (mQuantizationLevels > 0) {
         if (!inference) {
@@ -191,11 +200,14 @@ void SaturationActivation_Frame_CUDA
                    half_float::half(1.0f));
     }
 
-    cudaHSaturation_backPropagate(data.getDevicePtr(),
-                                  diffData.getDevicePtr(),
-                                  data.size(),
-                                  (int)mShifting,
-                                  half_float::half(mThreshold));
+    if (mThreshold != 0) {
+        cudaHSaturation_backPropagate(data.getDevicePtr(),
+                                    diffData.getDevicePtr(),
+                                    data.size(),
+                                    half_float::half(mThreshold));
+    }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -205,11 +217,14 @@ void SaturationActivation_Frame_CUDA
     if (mQuantizationLevels > 0)
         cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
 
-    cudaSSaturation_backPropagate(data.getDevicePtr(),
-                                  diffData.getDevicePtr(),
-                                  data.size(),
-                                  (int)mShifting,
-                                  (float)mThreshold);
+    if (mThreshold != 0) {
+        cudaSSaturation_backPropagate(data.getDevicePtr(),
+                                    diffData.getDevicePtr(),
+                                    data.size(),
+                                    (float)mThreshold);
+    }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -219,11 +234,14 @@ void SaturationActivation_Frame_CUDA
     if (mQuantizationLevels > 0)
         cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
 
-    cudaDSaturation_backPropagate(data.getDevicePtr(),
-                                  diffData.getDevicePtr(),
-                                  data.size(),
-                                  (int)mShifting,
-                                  (double)mThreshold);
+    if (mThreshold != 0) {
+        cudaDSaturation_backPropagate(data.getDevicePtr(),
+                                    diffData.getDevicePtr(),
+                                    data.size(),
+                                    (double)mThreshold);
+    }
+    
+    mScaling.backPropagate(data, diffData);
 }
 }
 

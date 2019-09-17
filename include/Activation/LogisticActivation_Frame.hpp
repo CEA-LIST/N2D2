@@ -64,6 +64,8 @@ void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData,
 
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
+    mScaling.propagate(data);
+
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)data.size(); ++index){
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
@@ -97,6 +99,7 @@ void N2D2::LogisticActivation_Frame
 
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+    
 
     if (mQuantizationLevels > 0) {
 #pragma omp parallel for if (diffData.size() > 1024)
@@ -111,6 +114,8 @@ void N2D2::LogisticActivation_Frame
         for (int index = 0; index < (int)diffData.size(); ++index)
             diffData(index) *= data(index) * (1.0f - data(index));
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 #endif // N2D2_LOGISTICACTIVATION_FRAME_H

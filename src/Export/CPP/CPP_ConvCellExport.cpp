@@ -112,7 +112,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(ConvCell& cell,
                        
         header << "#define " << prefix << "_SHIFT "
            << ((cellFrame->getActivation())
-                   ? cellFrame->getActivation()->getParameter<int>("Shifting")
+                   ? +cellFrame->getActivation()->getActivationScaling()
+                               .getSingleShiftScaling().getScalingPerOutput()[0]
                    : 0) << "\n";
     }
 

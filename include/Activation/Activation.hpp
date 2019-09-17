@@ -21,8 +21,11 @@
 #ifndef N2D2_ACTIVATION_H
 #define N2D2_ACTIVATION_H
 
+#include <iosfwd>
+#include <vector>
+
+#include "Activation/ActivationScaling.hpp"
 #include "utils/Parameterizable.hpp"
-#include "utils/Utils.hpp"
 
 namespace N2D2 {
 
@@ -36,21 +39,24 @@ public:
     };
 
     Activation();
+    virtual ~Activation() {};
+
     virtual const char* getType() const = 0;
     virtual void propagate(BaseTensor& data, bool inference = false) = 0;
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData) = 0;
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
+
     void setPreQuantizeScaling(double scaling);
-    virtual ~Activation() {};
+
+    const ActivationScaling& getActivationScaling() const;
+    void setActivationScaling(ActivationScaling scaling);
 
 protected:
     virtual void saveInternal(std::ostream& /*state*/,
                               std::ostream& /*log*/) const {};
     virtual void loadInternal(std::istream& /*state*/) {};
 
-    /// Shifting
-    Parameter<int> mShifting;
     /// Quantization levels (0 = no quantization)
     Parameter<unsigned int> mQuantizationLevels;
     /// Number of steps before quantization starts
@@ -69,9 +75,11 @@ protected:
     /// Rounding power, or progressivity,
     /// from 0.0 (no progressivity) to 1.0 or more (progressive)
     Parameter<double> mLog2RoundingPower;
-
+    
     unsigned long long int mNbSteps;
     double mPreQuantizeScaling;
+
+    ActivationScaling mScaling;
 };
 }
 

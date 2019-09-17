@@ -62,7 +62,9 @@ void RectifierActivation_Frame_CUDA<half_float::half>::propagate(
     CudaTensor<half_float::half>& data,
     bool inference)
 {
-    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+    mScaling.propagate(data);
+
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
 
@@ -82,7 +84,6 @@ void RectifierActivation_Frame_CUDA<half_float::half>::propagate(
             data.getDevicePtr(),
             data.size(),
             half_float::half(mLeakSlope),
-            (int)mShifting,
             half_float::half(mClipping));
     }
 
@@ -120,7 +121,9 @@ template <>
 void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
                                                       bool inference)
 {
-    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+    mScaling.propagate(data);
+
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
 
@@ -137,7 +140,7 @@ void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
     else {
         cudaSRectifier_propagate(
             data.getDevicePtr(), data.getDevicePtr(), data.size(),
-            (double)mLeakSlope, (int)mShifting, (double)mClipping);
+            (double)mLeakSlope, (double)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
@@ -174,7 +177,9 @@ template <>
 void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
                                                        bool inference)
 {
-    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+    mScaling.propagate(data);
+
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const double alpha = 1.0f;
         const double beta = 0.0f;
 
@@ -191,7 +196,7 @@ void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
     else {
         cudaDRectifier_propagate(
             data.getDevicePtr(), data.getDevicePtr(), data.size(),
-            (double)mLeakSlope, (int)mShifting, (double)mClipping);
+            (double)mLeakSlope, (double)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
@@ -236,7 +241,7 @@ void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(
                    half_float::half(1.0f));
     }
 
-    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
 
@@ -259,9 +264,10 @@ void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(
                                      diffData.getDevicePtr(),
                                      data.size(),
                                      half_float::half(mLeakSlope),
-                                     (int)mShifting,
                                      half_float::half(mClipping));
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -272,7 +278,7 @@ void RectifierActivation_Frame_CUDA<float>::backPropagate(
     if (mQuantizationLevels > 0)
         cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
 
-    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
 
@@ -295,9 +301,10 @@ void RectifierActivation_Frame_CUDA<float>::backPropagate(
                                      diffData.getDevicePtr(),
                                      data.size(),
                                      (double)mLeakSlope,
-                                     (int)mShifting,
                                      (double)mClipping);
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 template <>
@@ -308,7 +315,7 @@ void RectifierActivation_Frame_CUDA<double>::backPropagate(
     if (mQuantizationLevels > 0)
         cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
 
-    if (mLeakSlope == 0.0 && mShifting == 0 && mClipping == 0.0) {
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const double alpha = 1.0f;
         const double beta = 0.0f;
 
@@ -331,9 +338,10 @@ void RectifierActivation_Frame_CUDA<double>::backPropagate(
                                      diffData.getDevicePtr(),
                                      data.size(),
                                      (double)mLeakSlope,
-                                     (int)mShifting,
                                      (double)mClipping);
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 }
 

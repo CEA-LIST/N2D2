@@ -58,16 +58,7 @@ void N2D2::RectifierActivation_Frame<T>::propagate(BaseTensor& baseData,
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    if (mShifting > 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) /= (1 << mShifting);
-    }
-    else if (mShifting < 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) *= (1 << (-mShifting));
-    }
+    mScaling.propagate(data);
 
     if (mClipping > 0.0) {
 #pragma omp parallel for if (data.size() > 1024)
@@ -115,6 +106,7 @@ void N2D2::RectifierActivation_Frame
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
 
+
     if (mQuantizationLevels > 0) {
 #pragma omp parallel for if (diffData.size() > 1024)
         for (int index = 0; index < (int)diffData.size(); ++index) {
@@ -123,16 +115,6 @@ void N2D2::RectifierActivation_Frame
         }
     }
 
-    if (mShifting > 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            diffData(index) /= (1 << mShifting);
-    }
-    else if (mShifting < 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            diffData(index) *= (1 << (-mShifting));
-    }
 
     if (mClipping > 0.0) {
 #pragma omp parallel for if (data.size() > 1024)
@@ -147,6 +129,8 @@ void N2D2::RectifierActivation_Frame
         for (int index = 0; index < (int)diffData.size(); ++index)
             diffData(index) *= (data(index) > 0) ? 1.0f : (T)mLeakSlope;
     }
+    
+    mScaling.backPropagate(data, diffData);
 }
 
 #endif // N2D2_RECTIFIERACTIVATION_FRAME_H

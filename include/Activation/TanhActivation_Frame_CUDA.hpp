@@ -73,6 +73,8 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
+    mScaling.propagate(cudaData);
+
     const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
     const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
@@ -125,6 +127,8 @@ void N2D2::TanhActivation_Frame_CUDA
                                 &beta,
                                 cudaDiffData.getCudnnTensorDesc(),
                                 cudaDiffData.getDevicePtr()));
+    
+    mScaling.backPropagate(cudaData, cudaDiffData);
 }
 
 template <class T>
