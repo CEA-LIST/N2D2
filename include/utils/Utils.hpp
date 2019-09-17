@@ -320,6 +320,8 @@ namespace Utils {
     std::vector<std::string> split(const std::string& value,
                                    const std::string& delimiters,
                                    bool trimEmpty = false);
+    template<typename ForwardIt>
+    std::string join(ForwardIt begin, ForwardIt end, char separator = ',');
     std::string upperCase(const std::string& str);
     std::string lowerCase(const std::string& str);
     unsigned int countSubstring(const std::string& str, const std::string& sub);
@@ -507,6 +509,12 @@ namespace Utils {
     template<class ForwardIt>
     ForwardIt max_abs_element(ForwardIt first, ForwardIt last);
 
+    template<class T>
+    T max_abs(const T& a, const T& b);
+
+    template<class RandomAccessIt>
+    bool all_same(RandomAccessIt first, RandomAccessIt last);
+
     template <class charT, class traits>
     std::basic_ostream<charT, traits>& cwarning(std::basic_ostream
                                                 <charT, traits>& stream);
@@ -648,6 +656,11 @@ namespace Utils {
     struct scaling_type<double> {
         typedef double type;
     };
+
+    template<typename T, typename... Args>
+    std::unique_ptr<T> make_unique(Args&&... args) {
+        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
 }
 
 template <class T>
@@ -957,6 +970,20 @@ inline ForwardIt N2D2::Utils::max_abs_element(ForwardIt first, ForwardIt last) {
                             });
 }
 
+template<class T>
+inline T N2D2::Utils::max_abs(const T& a, const T& b) {
+    return std::max(std::abs(a), std::abs(b));
+}
+
+template<class RandomAccessIt>
+inline bool N2D2::Utils::all_same(RandomAccessIt first, RandomAccessIt last) {
+    if(first == last) {
+        return true;
+    }
+
+    return std::equal(first + 1, last, first);
+}
+
 template <class charT, class traits>
 std::basic_ostream<charT, traits>&
 N2D2::Utils::cwarning(std::basic_ostream<charT, traits>& stream)
@@ -1177,6 +1204,25 @@ std::istream& operator>>(std::istream& is, std::vector<std::string>& vec)
 
     return is;
 }
+}
+
+
+template<typename ForwardIt>
+inline std::string N2D2::Utils::join(ForwardIt begin, ForwardIt end, char separator) {
+    if(begin == end) {
+        return "";
+    }
+
+    std::stringstream str;
+
+    str << *begin;
+    ++begin;
+
+    for(; begin != end; ++begin) {
+        str << separator << " " << *begin;
+    }
+
+    return str.str();
 }
 
 #endif // N2D2_UTILS_H
