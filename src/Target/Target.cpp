@@ -1155,19 +1155,20 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             std::ostringstream imgFile;
 
             if (validDatabase) {
-                imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+                imgFile << mStimuliProvider->getDatabase()
+                                        .getStimulusName(id, false);
 
                 const std::string baseName = Utils::baseName(imgFile.str());
                 const std::string fileBaseName = Utils::fileBaseName(baseName);
                 std::string fileExtension = Utils::fileExtension(baseName);
-
+/*
                 if (!((std::string)mImageLogFormat).empty()) {
                     // Keep "[x,y]" after file extension, appended by
                     // getStimulusName() in case of slicing
                     fileExtension.replace(0, fileExtension.find_first_of('['),
                                         mImageLogFormat);
                 }
-
+*/
                 jsonName = dirPath + "/" + fileBaseName + "." + fileExtension;
             }
             else {
@@ -1210,6 +1211,24 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             if (it != estimatedBitmaps.begin())
                 jsonDataBuffer << ",";
 
+            unsigned int xSliceOffset = 0;
+            unsigned int ySliceOffset = 0;
+
+            if (validDatabase) {
+                const ROI* slice
+                    = mStimuliProvider->getDatabase().getStimulusSlice(id);
+
+                if (slice != NULL) {
+                    const cv::Rect bbRect = slice->getBoundingRect();
+                    xSliceOffset = bbRect.x;
+                    ySliceOffset = bbRect.y;
+
+                    // If there is multiple slices, append MUST be true
+                    // because 2nd argument of getStimulusName() is true
+                    append = true;
+                }
+            }
+
             jsonDataBuffer << "{\"class_id\": " << (*it).first << ","
                 "\"info\": [\"BITMAP_CLASS_" << (*it).first << "\","
                     "false,"
@@ -1217,7 +1236,8 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                         "\"Source\": \"N2D2\"}"
                 "],"
                 "\"type\": \"pixelwise\","
-                "\"origin\": [" << xOffset << ", " << yOffset << "],"
+                "\"origin\": [" << xSliceOffset + xOffset << ", "
+                    << ySliceOffset + yOffset << "],"
                 "\"scale\": " << ((scale > 1) ? (-scale) : scale) << ","
                 "\"size\": [" << (*it).second.dimX() << ","
                     << (*it).second.dimY() << "],"

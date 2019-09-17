@@ -635,19 +635,20 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
             std::ostringstream imgFile;
 
             if (validDatabase) {
-                imgFile << mStimuliProvider->getDatabase().getStimulusName(id);
+                imgFile << mStimuliProvider->getDatabase()
+                                        .getStimulusName(id, false);
 
                 const std::string baseName = Utils::baseName(imgFile.str());
                 const std::string fileBaseName = Utils::fileBaseName(baseName);
                 std::string fileExtension = Utils::fileExtension(baseName);
-
+/*
                 if (!((std::string)mImageLogFormat).empty()) {
                     // Keep "[x,y]" after file extension, appended by
                     // getStimulusName() in case of slicing
                     fileExtension.replace(0, fileExtension.find_first_of('['),
                                         mImageLogFormat);
                 }
-
+*/
                 jsonName = dirPath + "/" + fileBaseName + "." + fileExtension;
             }
             else {
@@ -678,7 +679,25 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
 
             if (it != detectedBB.begin())
                 jsonDataBuffer << ",";
-    
+
+            unsigned int xSliceOffset = 0;
+            unsigned int ySliceOffset = 0;
+
+            if (validDatabase) {
+                const ROI* slice
+                    = mStimuliProvider->getDatabase().getStimulusSlice(id);
+
+                if (slice != NULL) {
+                    const cv::Rect bbRect = slice->getBoundingRect();
+                    xSliceOffset = bbRect.x;
+                    ySliceOffset = bbRect.y;
+
+                    // If there is multiple slices, append MUST be true
+                    // because 2nd argument of getStimulusName() is true
+                    append = true;
+                }
+            }
+
             jsonDataBuffer << "{\"class_id\": " << (*it).bb->getLabel() << ","
                 "\"info\": [\"BOX_" << (*it).score << "\","
                     "false,"
@@ -705,14 +724,14 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
                 "],"
                 "\"type\": \"polygon\","
                 "\"points\": ["
-                    "[" << xOffset + rect.x << ", "
-                        << yOffset + rect.y << "],"
-                    "[" << xOffset + rect.x + rect.width << ", "
-                        << yOffset + rect.y << "],"
-                    "[" << xOffset + rect.x + rect.width << ", "
-                        << yOffset + rect.y + rect.height << "],"
-                    "[" << xOffset + rect.x << ", "
-                        << yOffset + rect.y + rect.height << "]]}";
+                    "[" << xSliceOffset + xOffset + rect.x << ", "
+                        << ySliceOffset + yOffset + rect.y << "],"
+                    "[" << xSliceOffset + xOffset + rect.x + rect.width << ", "
+                        << ySliceOffset + yOffset + rect.y << "],"
+                    "[" << xSliceOffset + xOffset + rect.x + rect.width << ", "
+                        << ySliceOffset + yOffset + rect.y + rect.height << "],"
+                    "[" << xSliceOffset + xOffset + rect.x << ", "
+                        << ySliceOffset + yOffset + rect.y + rect.height << "]]}";
         }
 
         jsonDataBuffer << "]}";

@@ -258,11 +258,15 @@ public:
 
     // Getters
     inline StimulusID getStimulusID(StimuliSet set, unsigned int index) const;
-    std::string getStimulusName(StimulusID id) const;
+    std::string getStimulusName(StimulusID id, bool appendSlice = true) const;
     inline std::string getStimulusName(StimuliSet set,
-                                       unsigned int index) const;
+                                       unsigned int index,
+                                       bool appendSlice = true) const;
     inline int getStimulusLabel(StimulusID id) const;
     inline int getStimulusLabel(StimuliSet set, unsigned int index) const;
+    inline const ROI* getStimulusSlice(StimulusID id) const;
+    inline const ROI* getStimulusSlice(StimuliSet set, unsigned int index)
+        const;
     //inline const std::vector<ROI*>& getStimulusROIs(StimulusID id) const;
     //inline const std::vector<ROI*>& getStimulusROIs(StimuliSet set,
     //                                                unsigned int index) const;
@@ -444,9 +448,10 @@ N2D2::Database::getStimulusID(StimuliSet set, unsigned int index) const
 }
 
 std::string N2D2::Database::getStimulusName(StimuliSet set,
-                                            unsigned int index) const
+                                            unsigned int index,
+                                            bool appendSlice) const
 {
-    return getStimulusName(getStimulusID(set, index));
+    return getStimulusName(getStimulusID(set, index), appendSlice);
 }
 
 int N2D2::Database::getStimulusLabel(StimulusID id) const
@@ -459,6 +464,17 @@ int N2D2::Database::getStimulusLabel(StimuliSet set, unsigned int index) const
 {
     return getStimulusLabel(getStimulusID(set, index));
 }
+
+const N2D2::ROI* N2D2::Database::getStimulusSlice(StimulusID id) const {
+    return mStimuli[id].slice;
+}
+
+const N2D2::ROI* N2D2::Database::getStimulusSlice(StimuliSet set,
+                                                  unsigned int index) const
+{
+    return getStimulusSlice(getStimulusID(set, index));
+}
+
 /*
 const std::vector<N2D2::ROI*>&
 N2D2::Database::getStimulusROIs(StimulusID id) const

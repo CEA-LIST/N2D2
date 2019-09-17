@@ -1305,11 +1305,12 @@ sortedLabels.end(); it != itEnd; ++it) {
 }
 */
 
-std::string N2D2::Database::getStimulusName(StimulusID id) const
+std::string N2D2::Database::getStimulusName(StimulusID id,
+                                            bool appendSlice) const
 {
     assert(id < mStimuli.size());
 
-    if (mStimuli[id].slice != NULL) {
+    if (mStimuli[id].slice != NULL && appendSlice) {
         const cv::Rect bbRect = mStimuli[id].slice->getBoundingRect();
 
         std::stringstream nameStr;
