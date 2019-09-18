@@ -22,11 +22,9 @@
 #include "Export/CPP/CPP_LRNCellExport.hpp"
 
 N2D2::Registrar<N2D2::LRNCellExport>
-N2D2::CPP_LRNCellExport::mRegistrar(
-    "CPP", N2D2::CPP_LRNCellExport::generate);
+N2D2::CPP_LRNCellExport::mRegistrar("CPP", N2D2::CPP_LRNCellExport::generate);
 
-void N2D2::CPP_LRNCellExport::generate(LRNCell& cell,
-                                             const std::string& dirName)
+void N2D2::CPP_LRNCellExport::generate(const LRNCell& cell, const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
@@ -46,40 +44,30 @@ void N2D2::CPP_LRNCellExport::generate(LRNCell& cell,
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::CPP_LRNCellExport::generateHeaderConstants(LRNCell& cell,
-                                                        std::ofstream& header)
+void N2D2::CPP_LRNCellExport::generateHeaderConstants(const LRNCell& cell, std::ofstream& header)
 {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
                                                     cell.getName()));
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
-           << "\n"
-              "#define " << prefix << "_OUTPUTS_WIDTH "
-           << cell.getOutputsWidth() << "\n"
-                                        "#define " << prefix
-           << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
-                                                               "#define "
-           << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth()
-           << "\n"
-              "#define " << prefix << "_CHANNELS_HEIGHT "
-           << cell.getChannelsHeight() << "\n\n";
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n\n";
 
-    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_OUTPUTS_WIDTH*" << prefix
-           << "_OUTPUTS_HEIGHT)\n"
-              "#define " << prefix << "_CHANNELS_SIZE (" << prefix
-           << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
+                                                        << prefix << "_OUTPUTS_WIDTH*" 
+                                                        << prefix << "_OUTPUTS_HEIGHT)\n"
+           << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
+                                                         << prefix << "_CHANNELS_WIDTH*" 
+                                                         << prefix << "_CHANNELS_HEIGHT)\n"
+           << "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix << "_OUTPUTS_SIZE, " 
+                                                           << prefix << "_CHANNELS_SIZE))\n\n";
 }
 
-void N2D2::CPP_LRNCellExport::generateHeaderFreeParameters(LRNCell
-                                                                 & cell,
-                                                                 std::ofstream
-                                                                 & header)
+void N2D2::CPP_LRNCellExport::generateHeaderFreeParameters(const LRNCell& cell,
+                                                           std::ofstream& header)
 {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
                                                         cell.getName()));

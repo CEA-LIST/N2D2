@@ -33,20 +33,16 @@ namespace N2D2 {
 
 class CPP_ConvCellExport : public ConvCellExport {
 public:
-    static void generate(ConvCell& cell, const std::string& dirName);
-    static void generateHeaderFreeParameters(ConvCell& cell,
-                                             std::ofstream& header);
+    static void generate(const ConvCell& cell, const std::string& dirName);
+    static void generateHeaderFreeParameters(const ConvCell& cell,  std::ofstream& header);
 
-    static void generateHeaderConstants(ConvCell& cell,
-                                        std::ofstream& header);
+    static void generateHeaderConstants(const ConvCell& cell, std::ofstream& header);
 
-    static void generateHeaderBias(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderBiasVariable(ConvCell& cell,
-                                           std::ofstream& header);
-    static void generateHeaderBiasValues(ConvCell& cell,
-                                                      std::ofstream& header);
+    static void generateHeaderBias(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderBiasVariable(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderBiasValues(const ConvCell& cell, std::ofstream& header);
 
-    static void generateHeaderWeights(ConvCell& cell, std::ofstream& header);
+    static void generateHeaderWeights(const ConvCell& cell, std::ofstream& header);
 
 private:
     static Registrar<ConvCellExport> mRegistrar;

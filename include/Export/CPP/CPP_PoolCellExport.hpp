@@ -32,15 +32,15 @@ namespace N2D2 {
 **/
 class CPP_PoolCellExport : public PoolCellExport {
 public:
-    static void generate(PoolCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(PoolCell& cell,
+    static void generate(const PoolCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const PoolCell& cell,
                                         std::ofstream& header);
 
-    static void generateHeaderConnections(PoolCell& cell,
+    static void generateHeaderConnections(const PoolCell& cell,
                                           std::ofstream& header);
-    static void generateHeaderConnectionsVariable(PoolCell& cell,
+    static void generateHeaderConnectionsVariable(const PoolCell& cell,
                                                   std::ofstream& header);
-    static void generateHeaderConnectionsValues(PoolCell& cell,
+    static void generateHeaderConnectionsValues(const PoolCell& cell,
                                                 std::ofstream& header);
 
 private:

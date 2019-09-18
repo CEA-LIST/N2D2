@@ -39,7 +39,7 @@ static const N2D2::Registrar<N2D2::C_CellExport> registrarType(
 
 
 
-void N2D2::C_ResizeCellExport::generate(ResizeCell& cell, const std::string& dirName) {
+void N2D2::C_ResizeCellExport::generate(const ResizeCell& cell, const std::string& dirName) {
     Utils::createDirectories(dirName + "/include");
 
     const std::string identifier = Utils::CIdentifier(cell.getName());

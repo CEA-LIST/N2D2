@@ -27,7 +27,7 @@ N2D2::Registrar<N2D2::C_CellExport>
 N2D2::C_ConvCellExport::mRegistrarType(ConvCell::Type,
                                        N2D2::C_ConvCellExport::getInstance);
 
-void N2D2::C_ConvCellExport::generate(ConvCell& cell,
+void N2D2::C_ConvCellExport::generate(const ConvCell& cell,
                                       const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/include");
@@ -47,86 +47,58 @@ void N2D2::C_ConvCellExport::generate(ConvCell& cell,
     C_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::C_ConvCellExport::generateHeaderConstants(ConvCell& cell,
-                                                     std::ofstream& header)
-{
+void N2D2::C_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std::ofstream& header) {
     // Constants
-    const unsigned int oxSize
-        = (unsigned int)((cell.getChannelsWidth() + 2 * cell.getPaddingX()
-                          - cell.getKernelWidth() + cell.getStrideX())
-                         / (double)cell.getStrideX());
-    const unsigned int oySize
-        = (unsigned int)((cell.getChannelsHeight() + 2 * cell.getPaddingY()
-                          - cell.getKernelHeight() + cell.getStrideY())
-                         / (double)cell.getStrideY());
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
+    const std::size_t oxSize = (std::size_t) (
+        (cell.getChannelsWidth() + 2*cell.getPaddingX() - cell.getKernelWidth() + cell.getStrideX())/
+        static_cast<double>(cell.getStrideX())
+    );
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
-           << "\n"
-              "#define " << prefix << "_OUTPUTS_WIDTH "
-           << cell.getOutputsWidth() << "\n"
-                                        "#define " << prefix
-           << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
-                                                               "#define "
-           << prefix << "_OX_SIZE " << oxSize << "\n"
-                                                 "#define " << prefix
-           << "_OY_SIZE " << oySize << "\n"
-                                       "#define " << prefix
-           << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
-                                                               "#define "
-           << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight()
-           << "\n"
-              "#define " << prefix << "_KERNEL_WIDTH " << cell.getKernelWidth()
-           << "\n"
-              "#define " << prefix << "_KERNEL_HEIGHT "
-           << cell.getKernelHeight() << "\n"
-                                        "#define " << prefix << "_SUB_SAMPLE_X "
-           << cell.getSubSampleX() << "\n"
-                                      "#define " << prefix << "_SUB_SAMPLE_Y "
-           << cell.getSubSampleY() << "\n"
-                                      "#define " << prefix << "_STRIDE_X "
-           << cell.getStrideX() << "\n"
-                                   "#define " << prefix << "_STRIDE_Y "
-           << cell.getStrideY() << "\n"
-                                   "#define " << prefix << "_PADDING_X "
-           << cell.getPaddingX() << "\n"
-                                    "#define " << prefix << "_PADDING_Y "
-           << cell.getPaddingY() << "\n\n";
+    const std::size_t oySize = (std::size_t)(
+        (cell.getChannelsHeight() + 2*cell.getPaddingY() - cell.getKernelHeight() + cell.getStrideY())/
+        static_cast<double>(cell.getStrideY())
+    );
+    
+        
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_OX_SIZE " << oxSize << "\n"
+           << "#define " << prefix << "_OY_SIZE " << oySize << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
+           << "#define " << prefix << "_KERNEL_WIDTH " << cell.getKernelWidth() << "\n"
+           << "#define " << prefix << "_KERNEL_HEIGHT " << cell.getKernelHeight() << "\n"
+           << "#define " << prefix << "_SUB_SAMPLE_X " << cell.getSubSampleX() << "\n"
+           << "#define " << prefix << "_SUB_SAMPLE_Y " << cell.getSubSampleY() << "\n"
+           << "#define " << prefix << "_STRIDE_X " << cell.getStrideX() << "\n"
+           << "#define " << prefix << "_STRIDE_Y " << cell.getStrideY() << "\n"
+           << "#define " << prefix << "_PADDING_X " << cell.getPaddingX() << "\n"
+           << "#define " << prefix << "_PADDING_Y " << cell.getPaddingY() << "\n\n";
 
-    if (cellFrame != NULL) {
-        header << "#define " << prefix << "_ACTIVATION "
-               << ((cellFrame->getActivation())
-                       ? cellFrame->getActivation()->getType()
-                       : "Linear") << "\n";
 
-        header << "#define " << prefix << "_SHIFT "
-           << ((cellFrame->getActivation())
-                   ? +cellFrame->getActivation()->getActivationScaling()
-                               .getSingleShiftScaling().getScalingPerOutput()[0]
-                   : 0) << "\n";
-    }
+    C_CellExport::generateActivation(cell, header);
+    C_CellExport::generateActivationScaling(cell, header);
 }
 
-void N2D2::C_ConvCellExport::generateHeaderFreeParameters(ConvCell& cell,
+void N2D2::C_ConvCellExport::generateHeaderFreeParameters(const ConvCell& cell,
                                                           std::ofstream& header)
 {
     generateHeaderBias(cell, header);
     generateHeaderWeights(cell, header);
 }
 
-void N2D2::C_ConvCellExport::generateHeaderBias(ConvCell& cell,
+void N2D2::C_ConvCellExport::generateHeaderBias(const ConvCell& cell,
                                                 std::ofstream& header)
 {
     generateHeaderBiasVariable(cell, header);
     generateHeaderBiasValues(cell, header);
 }
 
-void N2D2::C_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
+void N2D2::C_ConvCellExport::generateHeaderBiasVariable(const ConvCell& cell,
                                                         std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -135,35 +107,34 @@ void N2D2::C_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
            << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
 }
 
-void N2D2::C_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
+void N2D2::C_ConvCellExport::generateHeaderBiasValues(const ConvCell& cell,
                                                       std::ofstream& header)
 {
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    Tensor<Float_T> bias;
+
     header << "{";
-
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        if (output > 0)
-            header << ", ";
-
-        if (cell.getParameter<bool>("NoBias"))
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
+        if (cell.getParameter<bool>("NoBias")) {
             header << "0";
+        }
         else {
-            Tensor<Float_T> bias;
             cell.getBias(output, bias);
 
             CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
             CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         }
-    }
 
+        header << ", ";
+    }
     header << "};\n";
 }
 
-void N2D2::C_ConvCellExport::generateHeaderWeights(ConvCell& cell,
+void N2D2::C_ConvCellExport::generateHeaderWeights(const ConvCell& cell,
                                                    std::ofstream& header)
 {
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < cell.getNbChannels();
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
+        for (std::size_t channel = 0; channel < cell.getNbChannels();
              ++channel) {
             if (!cell.isConnection(channel, output))
                 continue;
@@ -178,7 +149,7 @@ void N2D2::C_ConvCellExport::generateHeaderWeights(ConvCell& cell,
 }
 
 void N2D2::C_ConvCellExport::generateHeaderKernelWeightsVariable(
-    ConvCell& cell,
+    const ConvCell& cell,
     std::ofstream& header,
     unsigned int output,
     unsigned int channel)
@@ -192,7 +163,7 @@ void N2D2::C_ConvCellExport::generateHeaderKernelWeightsVariable(
 }
 
 void
-N2D2::C_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
+N2D2::C_ConvCellExport::generateHeaderKernelWeightsValues(const ConvCell& cell,
                                                           std::ofstream& header,
                                                           unsigned int output,
                                                           unsigned int channel)
@@ -205,13 +176,13 @@ N2D2::C_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
 
     header << "{\n";
 
-    for (unsigned int sy = 0; sy < cell.getKernelHeight(); ++sy) {
+    for (std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
         if (sy > 0)
             header << ",\n";
 
         header << "    {";
 
-        for (unsigned int sx = 0; sx < cell.getKernelWidth(); ++sx) {
+        for (std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
             if (sx > 0)
                 header << ", ";
 
@@ -225,9 +196,8 @@ N2D2::C_ConvCellExport::generateHeaderKernelWeightsValues(ConvCell& cell,
     header << "};\n";
 }
 
-void N2D2::C_ConvCellExport::generateHeaderWeightsVariable(ConvCell& cell,
-                                                           std::ofstream
-                                                           & header)
+void N2D2::C_ConvCellExport::generateHeaderWeightsVariable(const ConvCell& cell,
+                                                           std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
@@ -239,7 +209,7 @@ void N2D2::C_ConvCellExport::generateHeaderWeightsVariable(ConvCell& cell,
               "[" << prefix << "_NB_OUTPUTS][" << prefix << "_NB_CHANNELS] = ";
 }
 
-void N2D2::C_ConvCellExport::generateHeaderWeightsValues(ConvCell& cell,
+void N2D2::C_ConvCellExport::generateHeaderWeightsValues(const ConvCell& cell,
                                                          std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -247,13 +217,13 @@ void N2D2::C_ConvCellExport::generateHeaderWeightsValues(ConvCell& cell,
 
     header << "{\n";
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ",\n";
 
         header << "    {";
 
-        for (unsigned int channel = 0; channel < cell.getNbChannels();
+        for (std::size_t channel = 0; channel < cell.getNbChannels();
              ++channel) {
             if (channel > 0)
                 header << ", ";

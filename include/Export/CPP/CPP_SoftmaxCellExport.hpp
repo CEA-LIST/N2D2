@@ -33,8 +33,8 @@ namespace N2D2 {
 **/
 class CPP_SoftmaxCellExport : public SoftmaxCellExport {
 public:
-    static void generate(SoftmaxCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(SoftmaxCell& cell,
+    static void generate(const SoftmaxCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const SoftmaxCell& cell,
                                         std::ofstream& header);
 
 private:

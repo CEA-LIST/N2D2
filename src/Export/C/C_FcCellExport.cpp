@@ -29,7 +29,7 @@ N2D2::Registrar<N2D2::C_CellExport>
 N2D2::C_FcCellExport::mRegistrarType(FcCell::Type,
                                      N2D2::C_FcCellExport::getInstance);
 
-void N2D2::C_FcCellExport::generate(FcCell& cell, const std::string& dirName)
+void N2D2::C_FcCellExport::generate(const FcCell& cell, const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/include");
 
@@ -48,35 +48,21 @@ void N2D2::C_FcCellExport::generate(FcCell& cell, const std::string& dirName)
     C_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::C_FcCellExport::generateHeaderConstants(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderConstants(const FcCell& cell,
                                                    std::ofstream& header)
 {
     // Constants
-    const unsigned int channelsSize = cell.getInputsSize();
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
+    const std::size_t channelsSize = cell.getInputsSize();
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << channelsSize << "\n\n";
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << channelsSize << "\n\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
-
-    if (cellFrame != NULL) {
-        header << "#define " << prefix << "_ACTIVATION "
-               << ((cellFrame->getActivation())
-                       ? cellFrame->getActivation()->getType()
-                       : "Linear") << "\n";
-
-        header << "#define " << prefix << "_SHIFT "
-           << ((cellFrame->getActivation())
-                   ? +cellFrame->getActivation()->getActivationScaling()
-                               .getSingleShiftScaling().getScalingPerOutput()[0]
-                   : 0) << "\n";
-    }
+    C_CellExport::generateActivation(cell, header);
+    C_CellExport::generateActivationScaling(cell, header);
 }
 
-void N2D2::C_FcCellExport::generateHeaderFreeParameters(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderFreeParameters(const FcCell& cell,
                                                         std::ofstream& header)
 {
     generateHeaderBias(cell, header);
@@ -87,14 +73,14 @@ void N2D2::C_FcCellExport::generateHeaderFreeParameters(FcCell& cell,
         generateHeaderWeights(cell, header);
 }
 
-void N2D2::C_FcCellExport::generateHeaderBias(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderBias(const FcCell& cell,
                                               std::ofstream& header)
 {
     generateHeaderBiasVariable(cell, header);
     generateHeaderBiasValues(cell, header);
 }
 
-void N2D2::C_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderBiasVariable(const FcCell& cell,
                                                       std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -103,38 +89,37 @@ void N2D2::C_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
            << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
 }
 
-void N2D2::C_FcCellExport::generateHeaderBiasValues(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderBiasValues(const FcCell& cell,
                                                     std::ofstream& header)
 {
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    Tensor<Float_T> bias;
+    
     header << "{";
-
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        if (output > 0)
-            header << ", ";
-
-        if (cell.getParameter<bool>("NoBias"))
+    for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        if (cell.getParameter<bool>("NoBias")) {
             header << "0";
+        }
         else {
-            Tensor<Float_T> bias;
             cell.getBias(output, bias);
 
             CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
             CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         }
-    }
 
+        header << ", ";
+    }
     header << "};\n";
 }
 
-void N2D2::C_FcCellExport::generateHeaderWeights(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderWeights(const FcCell& cell,
                                                  std::ofstream& header)
 {
     generateHeaderWeightsVariable(cell, header);
     generateHeaderWeightsValues(cell, header);
 }
 
-void N2D2::C_FcCellExport::generateHeaderWeightsVariable(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderWeightsVariable(const FcCell& cell,
                                                          std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -149,19 +134,19 @@ void N2D2::C_FcCellExport::generateHeaderWeightsVariable(FcCell& cell,
               "[" << prefix << "_NB_CHANNELS] = \n";
 }
 
-void N2D2::C_FcCellExport::generateHeaderWeightsValues(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderWeightsValues(const FcCell& cell,
                                                        std::ofstream& header)
 {
-    const unsigned int channelsSize = cell.getInputsSize();
+    const std::size_t channelsSize = cell.getInputsSize();
 
     header << "{\n";
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ",\n";
 
         header << "    {";
 
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+        for (std::size_t channel = 0; channel < channelsSize; ++channel) {
             if (channel > 0)
                 header << ", ";
 
@@ -178,19 +163,19 @@ void N2D2::C_FcCellExport::generateHeaderWeightsValues(FcCell& cell,
     header << "};\n\n";
 }
 
-void N2D2::C_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
+void N2D2::C_FcCellExport::generateHeaderWeightsSparse(const FcCell& cell,
                                                        std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
-    const unsigned int channelsSize = cell.getInputsSize();
+    const std::size_t channelsSize = cell.getInputsSize();
 
     std::vector<double> weights;
-    std::vector<unsigned int> offsets;
-    unsigned int offset = 0;
+    std::vector<std::size_t> offsets;
+    std::size_t offset = 0;
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
+        for (std::size_t channel = 0; channel < channelsSize; ++channel) {
             Tensor<double> weight;
             cell.getWeight(output, channel, weight);
 
@@ -203,13 +188,13 @@ void N2D2::C_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
         }
     }
 
-    const unsigned int nbWeights = weights.size();
+    const std::size_t nbWeights = weights.size();
 
     header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
            << "static WDATA_T " << identifier << "_weights_sparse["
            << prefix << "_NB_WEIGHTS] = {\n";
 
-    for (unsigned int i = 0; i < nbWeights; ++i) {
+    for (std::size_t i = 0; i < nbWeights; ++i) {
         if (i > 0)
             header << ", ";
 
@@ -221,7 +206,7 @@ void N2D2::C_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
     header << "static unsigned short " << identifier << "_weights_offsets["
            << prefix << "_NB_WEIGHTS] = {\n";
 
-    for (unsigned int i = 0; i < nbWeights; ++i) {
+    for (std::size_t i = 0; i < nbWeights; ++i) {
         if (i > 0)
             header << ", ";
 
@@ -295,7 +280,7 @@ void N2D2::C_FcCellExport::generateCellFunction(
                                                 parentCells[0]->getName()));
 
             std::stringstream prefixParentsCell;
-            for (unsigned int i = 0; i < parentCells.size(); ++i)
+            for (std::size_t i = 0; i < parentCells.size(); ++i)
                 prefixParentsCell << Utils::upperCase(parentCells[i]->getName())
                                      + "_";
 

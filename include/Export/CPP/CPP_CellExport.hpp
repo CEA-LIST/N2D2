@@ -45,9 +45,12 @@ public:
         return rMap;
     }
 
-    static void generateHeaderBegin(Cell& cell, std::ofstream& header);
-    static void generateHeaderIncludes(Cell& cell, std::ofstream& header);
-    static void generateHeaderEnd(Cell& cell, std::ofstream& header);
+    static void generateHeaderBegin(const Cell& cell, std::ofstream& header);
+    static void generateHeaderIncludes(const Cell& cell, std::ofstream& header);
+    static void generateHeaderEnd(const Cell& cell, std::ofstream& header);
+
+    static void generateActivation(const Cell& cell, std::ofstream& header);
+    static void generateActivationScaling(const Cell& cell, std::ofstream& header);
 
     inline static std::unique_ptr<CPP_CellExport> getInstance(Cell& cell);
 

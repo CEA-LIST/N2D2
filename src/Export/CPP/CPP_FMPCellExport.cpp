@@ -23,11 +23,9 @@
 #include "Export/CPP/CPP_FMPCellExport.hpp"
 
 N2D2::Registrar<N2D2::FMPCellExport>
-N2D2::CPP_FMPCellExport::mRegistrar(
-    "CPP", N2D2::CPP_FMPCellExport::generate);
+N2D2::CPP_FMPCellExport::mRegistrar("CPP", N2D2::CPP_FMPCellExport::generate);
 
-void N2D2::CPP_FMPCellExport::generate(FMPCell& cell,
-                                       const std::string& dirName)
+void N2D2::CPP_FMPCellExport::generate(const FMPCell& cell, const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
@@ -48,67 +46,46 @@ void N2D2::CPP_FMPCellExport::generate(FMPCell& cell,
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::CPP_FMPCellExport::generateHeaderConstants(FMPCell& cell,
-                                                             std::ofstream
-                                                             & header)
+void N2D2::CPP_FMPCellExport::generateHeaderConstants(const FMPCell& cell, std::ofstream& header)
 {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
                                                             cell.getName()));
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
-           << "\n"
-              "#define " << prefix << "_OUTPUTS_WIDTH "
-           << cell.getOutputsWidth() << "\n"
-                                        "#define " << prefix
-           << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
-                                                               "#define "
-           << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth()
-           << "\n"
-              "#define " << prefix << "_CHANNELS_HEIGHT "
-           << cell.getChannelsHeight() << "\n"
-                                          "#define " << prefix
-           << "_OVERLAPPING " << cell.getParameter<bool>("Overlapping")
-           << "\n"
-              "#define " << prefix << "_PSEUDO_RANDOM "
-           << cell.getParameter<bool>("PseudoRandom") << "\n";
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT "  << cell.getChannelsHeight() << "\n"
+           << "#define " << prefix << "_OVERLAPPING " << cell.getParameter<bool>("Overlapping") << "\n"
+           << "#define " << prefix << "_PSEUDO_RANDOM " << cell.getParameter<bool>("PseudoRandom") << "\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
+    CPP_CellExport::generateActivation(cell, header);
 
-    if (cellFrame != NULL) {
-        header << "#define " << prefix << "_ACTIVATION "
-               << ((cellFrame->getActivation())
-                       ? cellFrame->getActivation()->getType()
-                       : "Linear") << "\n";
-    }
-
-    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_OUTPUTS_WIDTH*" << prefix
-           << "_OUTPUTS_HEIGHT)\n"
-              "#define " << prefix << "_CHANNELS_SIZE (" << prefix
-           << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
+                                                        << prefix << "_OUTPUTS_WIDTH*" 
+                                                        << prefix << "_OUTPUTS_HEIGHT)\n"
+           << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
+                                                         << prefix << "_CHANNELS_WIDTH*" 
+                                                         << prefix << "_CHANNELS_HEIGHT)\n"
+           << "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix << "_OUTPUTS_SIZE, " 
+                                                           << prefix << "_CHANNELS_SIZE))\n\n";
 }
 
-void N2D2::CPP_FMPCellExport::generateHeaderConnections(FMPCell& cell,
-                                                               std::ofstream
-                                                               & header)
+void N2D2::CPP_FMPCellExport::generateHeaderConnections(const FMPCell& cell, std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
     if (!cell.isUnitMap()) {
         const std::string prefix = Utils::upperCase(identifier);
 
-        header << "#define " << prefix << "_MAPPING_SIZE (" << prefix
-               << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n"
-               << "static char " << identifier
-               << "_mapping_flatten[" << prefix << "_MAPPING_SIZE] = {\n";
+        header << "#define " << prefix << "_MAPPING_SIZE (" << prefix << "_NB_OUTPUTS*" 
+                                                            << prefix << "_NB_CHANNELS)\n";
+        
+        header << "static char " << identifier << "_mapping_flatten[" << prefix << "_MAPPING_SIZE] = {\n";
 
-        for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-            for (unsigned int channel = 0; channel < cell.getNbChannels();
+        for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
+            for (std::size_t channel = 0; channel < cell.getNbChannels();
                  ++channel) {
                 if (output > 0 || channel > 0)
                     header << ", ";
@@ -124,8 +101,7 @@ void N2D2::CPP_FMPCellExport::generateHeaderConnections(FMPCell& cell,
     }
 }
 
-void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
-                                                        std::ofstream& header)
+void N2D2::CPP_FMPCellExport::generateHeaderGrid(const FMPCell& cell, std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
@@ -144,8 +120,7 @@ void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
 
     if (cell.getParameter<bool>("PseudoRandom")) {
 
-        header << "#define " << prefix << "_GRIDX_SIZE (" << prefix
-               << "_OUTPUTS_WIDTH)\n"
+        header << "#define " << prefix << "_GRIDX_SIZE (" << prefix << "_OUTPUTS_WIDTH)\n"
                << "static unsigned int " << identifier
                << "_gridx_flatten[" << prefix << "_OUTPUTS_WIDTH] = {\n";
 
@@ -157,8 +132,7 @@ void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
         }
         header << "};\n\n";
 
-        header << "#define " << prefix << "_GRIDY_SIZE (" << prefix
-               << "_OUTPUTS_HEIGHT)\n"
+        header << "#define " << prefix << "_GRIDY_SIZE (" << prefix << "_OUTPUTS_HEIGHT)\n"
                << "static unsigned int " << identifier
                << "_gridy_flatten[" << prefix << "_OUTPUTS_HEIGHT] = {\n";
 
@@ -197,8 +171,7 @@ void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
         for (unsigned int i = 1; i < gridY.size(); ++i)
             gridY[i] += gridY[i - 1];
 
-        header << "#define " << prefix << "_GRIDX_SIZE (" << prefix
-               << "_OUTPUTS_WIDTH)\n"
+        header << "#define " << prefix << "_GRIDX_SIZE (" << prefix << "_OUTPUTS_WIDTH)\n"
                << "static unsigned int " << cell.getName() << "_gridx_flatten["
                << prefix << "_OUTPUTS_WIDTH] = {\n";
 
@@ -209,8 +182,7 @@ void N2D2::CPP_FMPCellExport::generateHeaderGrid(FMPCell& cell,
         }
         header << "};\n\n";
 
-        header << "#define " << prefix << "_GRIDY_SIZE (" << prefix
-               << "_OUTPUTS_HEIGHT)\n"
+        header << "#define " << prefix << "_GRIDY_SIZE (" << prefix << "_OUTPUTS_HEIGHT)\n"
                << "static unsigned int " << cell.getName() << "_gridy_flatten["
                << prefix << "_OUTPUTS_HEIGHT] = {\n";
 

@@ -35,7 +35,7 @@ class ResizeCell;
 
 class C_ResizeCellExport: public C_CellExport {
 public:
-    static void generate(ResizeCell& cell, const std::string& dirName);
+    static void generate(const ResizeCell& cell, const std::string& dirName);
 
     static std::unique_ptr<C_ResizeCellExport> getInstance(Cell& cell);
     void generateCellData(Cell& cell,

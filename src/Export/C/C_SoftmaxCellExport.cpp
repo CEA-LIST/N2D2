@@ -26,7 +26,7 @@ N2D2::C_SoftmaxCellExport::mRegistrar("C", N2D2::C_SoftmaxCellExport::generate);
 N2D2::Registrar<N2D2::C_CellExport> N2D2::C_SoftmaxCellExport::mRegistrarType(
     SoftmaxCell::Type, N2D2::C_SoftmaxCellExport::getInstance);
 
-void N2D2::C_SoftmaxCellExport::generate(SoftmaxCell& cell,
+void N2D2::C_SoftmaxCellExport::generate(const SoftmaxCell& cell,
                                          const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/include");
@@ -46,26 +46,19 @@ void N2D2::C_SoftmaxCellExport::generate(SoftmaxCell& cell,
     C_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::C_SoftmaxCellExport::generateHeaderConstants(SoftmaxCell& cell,
+void N2D2::C_SoftmaxCellExport::generateHeaderConstants(const SoftmaxCell& cell,
                                                         std::ofstream& header)
 {
     // Constants
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
-           << "\n"
-              "#define " << prefix << "_OUTPUTS_WIDTH "
-           << cell.getOutputsWidth() << "\n"
-                                        "#define " << prefix
-           << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
-                                                               "#define "
-           << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth()
-           << "\n"
-              "#define " << prefix << "_CHANNELS_HEIGHT "
-           << cell.getChannelsHeight() << "\n\n";
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n\n";
 }
 
 std::unique_ptr<N2D2::C_SoftmaxCellExport>

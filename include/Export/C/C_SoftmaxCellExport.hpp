@@ -34,9 +34,9 @@ namespace N2D2 {
 */
 class C_SoftmaxCellExport : public SoftmaxCellExport, public C_CellExport {
 public:
-    static void generate(SoftmaxCell& cell, const std::string& dirName);
+    static void generate(const SoftmaxCell& cell, const std::string& dirName);
 
-    static void generateHeaderConstants(SoftmaxCell& cell,
+    static void generateHeaderConstants(const SoftmaxCell& cell,
                                         std::ofstream& header);
 
     static std::unique_ptr<C_SoftmaxCellExport> getInstance(Cell& cell);

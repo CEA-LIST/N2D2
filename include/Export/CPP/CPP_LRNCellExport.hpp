@@ -32,11 +32,9 @@ namespace N2D2 {
 **/
 class CPP_LRNCellExport : public LRNCellExport {
 public:
-    static void generate(LRNCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(LRNCell& cell,
-                                        std::ofstream& header);
-    static void generateHeaderFreeParameters(LRNCell& cell,
-                                             std::ofstream& header);
+    static void generate(const LRNCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const LRNCell& cell, std::ofstream& header);
+    static void generateHeaderFreeParameters(const LRNCell& cell, std::ofstream& header);
 
 private:
     static Registrar<LRNCellExport> mRegistrar;

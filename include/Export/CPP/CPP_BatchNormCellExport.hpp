@@ -33,19 +33,19 @@ namespace N2D2 {
 **/
 class CPP_BatchNormCellExport : public BatchNormCellExport {
 public:
-    static void generate(BatchNormCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(BatchNormCell& cell,
+    static void generate(const BatchNormCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const BatchNormCell& cell,
                                         std::ofstream& header);
-    static void generateHeaderFreeParameters(BatchNormCell& cell,
+    static void generateHeaderFreeParameters(const BatchNormCell& cell,
                                              std::ofstream& header);
 
-    static void generateHeaderEpsilon(BatchNormCell& cell,
+    static void generateHeaderEpsilon(const BatchNormCell& cell,
                                       std::ofstream& header);
-    static void generateHeaderBias(BatchNormCell& cell, std::ofstream& header);
-    static void generateHeaderVariance(BatchNormCell& cell,
+    static void generateHeaderBias(const BatchNormCell& cell, std::ofstream& header);
+    static void generateHeaderVariance(const BatchNormCell& cell,
                                        std::ofstream& header);
-    static void generateHeaderMean(BatchNormCell& cell, std::ofstream& header);
-    static void generateHeaderScale(BatchNormCell& cell, std::ofstream& header);
+    static void generateHeaderMean(const BatchNormCell& cell, std::ofstream& header);
+    static void generateHeaderScale(const BatchNormCell& cell, std::ofstream& header);
 
 private:
     static Registrar<BatchNormCellExport> mRegistrar;

@@ -18,10 +18,12 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Activation/Activation.hpp"
+#include "Activation/ActivationScalingMode.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Export/C/C_CellExport.hpp"
 
-void N2D2::C_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header)
-{
+void N2D2::C_CellExport::generateHeaderBegin(const Cell& cell, std::ofstream& header) {
     // Append date & time to the file.
     const time_t now = std::time(0);
     tm* localNow = std::localtime(&now);
@@ -38,16 +40,55 @@ void N2D2::C_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header)
            << prefix << "_LAYER_H\n\n";
 }
 
-void N2D2::C_CellExport::generateHeaderIncludes(Cell& /*cell*/,
-                                                std::ofstream& header)
-{
+void N2D2::C_CellExport::generateHeaderIncludes(const Cell& /*cell*/, std::ofstream& header) {
     header << "#include \"typedefs.h\"\n";
 }
 
-void N2D2::C_CellExport::generateHeaderEnd(Cell& cell, std::ofstream& header)
-{
+void N2D2::C_CellExport::generateHeaderEnd(const Cell& cell, std::ofstream& header) {
     header << "#endif // N2D2_EXPORTC_"
            << Utils::upperCase(Utils::CIdentifier(cell.getName()))
            << "_LAYER_H" << std::endl;
     header.close();
 }
+
+void N2D2::C_CellExport::generateActivation(const Cell& cell, std::ofstream& header) {
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    header << "#define " << prefix << "_ACTIVATION "  
+                         << (cellFrame.getActivation()?cellFrame.getActivation()->getType():
+                                                       "Linear") 
+                         << "\n";
+}
+
+void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstream& header) {
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    if (cellFrame.getActivation() == nullptr) {
+        header << "#define " << prefix << "_SHIFT 0\n";
+        return;
+    }
+    
+    const Activation& activation = *cellFrame.getActivation();
+    if(activation.getActivationScaling().getMode() == ActivationScalingMode::NONE) {
+        header << "#define " << prefix << "_SHIFT 0\n";
+    }
+    else if(activation.getActivationScaling().getMode() == ActivationScalingMode::SINGLE_SHIFT) {
+        const std::vector<unsigned char>& scaling = activation.getActivationScaling()
+                                                              .getSingleShiftScaling()
+                                                              .getScalingPerOutput();
+        if(!Utils::all_same(scaling.begin(), scaling.end())) {
+            throw std::runtime_error("Single-shift with a global scaling per layer is the only activaion "
+                                     "scaling mode supported by the export.");
+        }
+
+        header << "#define " << prefix << "_SHIFT " << +scaling.front() << "\n";
+    }
+    else {
+        throw std::runtime_error("Single-shift with a global scaling per layer is the only activaion "
+                                 "scaling mode supported by the export.");
+    }
+
+    header << "\n";
+} 

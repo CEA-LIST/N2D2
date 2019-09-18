@@ -27,9 +27,7 @@ N2D2::Registrar<N2D2::C_CellExport>
 N2D2::C_PoolCellExport::mRegistrarType(PoolCell::Type,
                                        N2D2::C_PoolCellExport::getInstance);
 
-void N2D2::C_PoolCellExport::generate(PoolCell& cell,
-                                      const std::string& dirName)
-{
+void N2D2::C_PoolCellExport::generate(const PoolCell& cell, const std::string& dirName) {
     Utils::createDirectories(dirName + "/include");
 
     const std::string fileName = dirName + "/include/"
@@ -50,68 +48,34 @@ void N2D2::C_PoolCellExport::generate(PoolCell& cell,
     C_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::C_PoolCellExport::generateHeaderConstants(PoolCell& cell,
-                                                     std::ofstream& header)
-{
+void N2D2::C_PoolCellExport::generateHeaderConstants(const PoolCell& cell, std::ofstream& header) {
     // Constants
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
-           << "\n"
-              "#define " << prefix << "_OUTPUTS_WIDTH "
-           << cell.getOutputsWidth() << "\n"
-                                        "#define " << prefix
-           << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
-                                                               "#define "
-           << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth()
-           << "\n"
-              "#define " << prefix << "_CHANNELS_HEIGHT "
-           << cell.getChannelsHeight() << "\n"
-                                          "#define " << prefix << "_POOL_WIDTH "
-           << cell.getPoolWidth() << "\n"
-                                     "#define " << prefix << "_POOL_HEIGHT "
-           << cell.getPoolHeight() << "\n"
-                                      "#define " << prefix << "_PADDING_X "
-           << cell.getPaddingX() << "\n"
-                                      "#define " << prefix << "_PADDING_Y "
-           << cell.getPaddingY() << "\n"
-                                      "#define " << prefix << "_STRIDE_X "
-           << cell.getStrideX() << "\n"
-                                   "#define " << prefix << "_STRIDE_Y "
-           << cell.getStrideY() << "\n"
-                                   "#define " << prefix << "_POOLING "
-           << cell.getPooling() << "\n\n";
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT "  << cell.getChannelsHeight() << "\n"
+           << "#define " << prefix << "_POOL_WIDTH " << cell.getPoolWidth() << "\n"
+           << "#define " << prefix << "_POOL_HEIGHT " << cell.getPoolHeight() << "\n"
+           << "#define " << prefix << "_PADDING_X " << cell.getPaddingX() << "\n"
+           << "#define " << prefix << "_PADDING_Y " << cell.getPaddingY() << "\n"
+           << "#define " << prefix << "_STRIDE_X " << cell.getStrideX() << "\n"
+           << "#define " << prefix << "_STRIDE_Y " << cell.getStrideY() << "\n"
+           << "#define " << prefix << "_POOLING " << cell.getPooling() << "\n\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
-
-    if (cellFrame != NULL) {
-        header << "#define " << prefix << "_ACTIVATION "
-               << ((cellFrame->getActivation())
-                       ? cellFrame->getActivation()->getType()
-                       : "Linear") << "\n";
-
-        header << "#define " << prefix << "_SHIFT "
-           << ((cellFrame->getActivation())
-                   ? +cellFrame->getActivation()->getActivationScaling()
-                               .getSingleShiftScaling().getScalingPerOutput()[0]
-                   : 0) << "\n";
-    }
+    C_CellExport::generateActivation(cell, header);
+    C_CellExport::generateActivationScaling(cell, header);
 }
 
-void N2D2::C_PoolCellExport::generateHeaderConnections(PoolCell& cell,
-                                                       std::ofstream& header)
-{
+void N2D2::C_PoolCellExport::generateHeaderConnections(const PoolCell& cell, std::ofstream& header) {
     generateHeaderConnectionsVariable(cell, header);
     generateHeaderConnectionsValues(cell, header);
 }
 
-void N2D2::C_PoolCellExport::generateHeaderConnectionsVariable(PoolCell& cell,
-                                                               std::ofstream
-                                                               & header)
-{
+void N2D2::C_PoolCellExport::generateHeaderConnectionsVariable(const PoolCell& cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
@@ -119,20 +83,16 @@ void N2D2::C_PoolCellExport::generateHeaderConnectionsVariable(PoolCell& cell,
            << "_NB_OUTPUTS][" << prefix << "_NB_CHANNELS] = ";
 }
 
-void N2D2::C_PoolCellExport::generateHeaderConnectionsValues(PoolCell& cell,
-                                                             std::ofstream
-                                                             & header)
-{
+void N2D2::C_PoolCellExport::generateHeaderConnectionsValues(const PoolCell& cell, std::ofstream& header) {
     header << "{";
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ",\n";
 
         header << "    {";
 
-        for (unsigned int channel = 0; channel < cell.getNbChannels();
-             ++channel) {
+        for (std::size_t channel = 0; channel < cell.getNbChannels(); ++channel) {
             if (channel > 0)
                 header << ", ";
 

@@ -33,10 +33,10 @@ namespace N2D2 {
 **/
 class CPP_FMPCellExport : public FMPCellExport {
 public:
-    static void generate(FMPCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(FMPCell& cell, std::ofstream& header);
-    static void generateHeaderConnections(FMPCell& cell, std::ofstream& header);
-    static void generateHeaderGrid(FMPCell& cell, std::ofstream& header);
+    static void generate(const FMPCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const FMPCell& cell, std::ofstream& header);
+    static void generateHeaderConnections(const FMPCell& cell, std::ofstream& header);
+    static void generateHeaderGrid(const FMPCell& cell, std::ofstream& header);
 
 private:
     static Registrar<FMPCellExport> mRegistrar;

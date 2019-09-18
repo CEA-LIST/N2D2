@@ -23,10 +23,9 @@
 #include "Export/CPP/CPP_BatchNormCellExport.hpp"
 
 N2D2::Registrar<N2D2::BatchNormCellExport>
-N2D2::CPP_BatchNormCellExport::mRegistrar(
-    "CPP", N2D2::CPP_BatchNormCellExport::generate);
+N2D2::CPP_BatchNormCellExport::mRegistrar("CPP", N2D2::CPP_BatchNormCellExport::generate);
 
-void N2D2::CPP_BatchNormCellExport::generate(BatchNormCell& cell,
+void N2D2::CPP_BatchNormCellExport::generate(const BatchNormCell& cell,
                                              const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/dnn");
@@ -47,48 +46,32 @@ void N2D2::CPP_BatchNormCellExport::generate(BatchNormCell& cell,
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderConstants(BatchNormCell& cell,
-                                                            std::ofstream
-                                                            & header)
+void N2D2::CPP_BatchNormCellExport::generateHeaderConstants(const BatchNormCell& cell,
+                                                            std::ofstream& header)
 {
-    const std::string prefix = Utils::upperCase(Utils::CIdentifier(
-                                                    cell.getName()));
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
-    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
-           << "\n"
-              "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
-           << "\n"
-              "#define " << prefix << "_OUTPUTS_WIDTH "
-           << cell.getOutputsWidth() << "\n"
-                                        "#define " << prefix
-           << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
-                                                               "#define "
-           << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth()
-           << "\n"
-              "#define " << prefix << "_CHANNELS_HEIGHT "
-           << cell.getChannelsHeight() << "\n\n";
+    header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
+    CPP_CellExport::generateActivation(cell, header);
 
-    if (cellFrame != NULL) {
-        header << "#define " << prefix << "_ACTIVATION "
-               << cellFrame->getActivation()->getType() << "\n";
-    }
-
-    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_OUTPUTS_WIDTH*" << prefix
-           << "_OUTPUTS_HEIGHT)\n"
-              "#define " << prefix << "_CHANNELS_SIZE (" << prefix
-           << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
+                                                        << prefix << "_OUTPUTS_WIDTH*" 
+                                                        << prefix << "_OUTPUTS_HEIGHT)\n"
+           << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
+                                                         << prefix << "_CHANNELS_WIDTH*" 
+                                                         << prefix << "_CHANNELS_HEIGHT)\n"
+           << "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix << "_OUTPUTS_SIZE, " 
+                                                           << prefix << "_CHANNELS_SIZE))\n\n";
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderFreeParameters(BatchNormCell
-                                                                 & cell,
-                                                                 std::ofstream
-                                                                 & header)
+void N2D2::CPP_BatchNormCellExport::generateHeaderFreeParameters(const BatchNormCell& cell,
+                                                                 std::ofstream& header)
 {
     generateHeaderEpsilon(cell, header);
     generateHeaderBias(cell, header);
@@ -97,7 +80,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderFreeParameters(BatchNormCell
     generateHeaderScale(cell, header);
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderEpsilon(BatchNormCell& cell,
+void N2D2::CPP_BatchNormCellExport::generateHeaderEpsilon(const BatchNormCell& cell,
                                                           std::ofstream& header)
 {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
@@ -106,7 +89,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderEpsilon(BatchNormCell& cell,
            << "_EPSILON = " << cell.getParameter<double>("Epsilon") << ";\n";
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderBias(BatchNormCell& cell,
+void N2D2::CPP_BatchNormCellExport::generateHeaderBias(const BatchNormCell& cell,
                                                        std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -117,7 +100,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderBias(BatchNormCell& cell,
 
     header << "{";
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
 
@@ -130,9 +113,8 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderBias(BatchNormCell& cell,
     header << "};\n";
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
-                                                           std::ofstream
-                                                           & header)
+void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(const BatchNormCell& cell,
+                                                           std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
@@ -140,7 +122,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
     header << "static WDATA_T " << identifier
         << "_variances[" << prefix << "_NB_OUTPUTS] = {\n";
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
 
@@ -153,7 +135,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(BatchNormCell& cell,
     header << "};\n\n";
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
+void N2D2::CPP_BatchNormCellExport::generateHeaderMean(const BatchNormCell& cell,
                                                        std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -162,7 +144,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
     header << "static WDATA_T " << identifier
         << "_means[" << prefix << "_NB_OUTPUTS] = {\n";
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
 
@@ -175,7 +157,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderMean(BatchNormCell& cell,
     header << "};\n\n";
 }
 
-void N2D2::CPP_BatchNormCellExport::generateHeaderScale(BatchNormCell& cell,
+void N2D2::CPP_BatchNormCellExport::generateHeaderScale(const BatchNormCell& cell,
                                                         std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -184,7 +166,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderScale(BatchNormCell& cell,
     header << "static WDATA_T " << identifier
         << "_scales[" << prefix << "_NB_OUTPUTS] = {\n";
 
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (output > 0)
             header << ", ";
 

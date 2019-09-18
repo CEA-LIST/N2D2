@@ -34,30 +34,30 @@ namespace N2D2 {
 */
 class C_ConvCellExport : public ConvCellExport, public C_CellExport {
 public:
-    static void generate(ConvCell& cell, const std::string& dirName);
+    static void generate(const ConvCell& cell, const std::string& dirName);
 
-    static void generateHeaderConstants(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderFreeParameters(ConvCell& cell,
+    static void generateHeaderConstants(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderFreeParameters(const ConvCell& cell,
                                              std::ofstream& header);
 
-    static void generateHeaderBias(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderBiasVariable(ConvCell& cell,
+    static void generateHeaderBias(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderBiasVariable(const ConvCell& cell,
                                            std::ofstream& header);
-    static void generateHeaderBiasValues(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderWeights(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderKernelWeightsVariable(ConvCell& cell,
+    static void generateHeaderBiasValues(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderWeights(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderKernelWeightsVariable(const ConvCell& cell,
                                                     std::ofstream& header,
                                                     unsigned int output,
                                                     unsigned int channel);
-    static void generateHeaderKernelWeightsValues(ConvCell& cell,
+    static void generateHeaderKernelWeightsValues(const ConvCell& cell,
                                                   std::ofstream& header,
                                                   unsigned int output,
                                                   unsigned int channel);
-    static void generateHeaderWeightsVariable(ConvCell& cell,
+    static void generateHeaderWeightsVariable(const ConvCell& cell,
                                               std::ofstream& header);
-    static void generateHeaderWeightsValues(ConvCell& cell,
+    static void generateHeaderWeightsValues(const ConvCell& cell,
                                             std::ofstream& header);
-    static void generateHeaderWeightsSparse(ConvCell& cell,
+    static void generateHeaderWeightsSparse(const ConvCell& cell,
                                             std::ofstream& header);
 
     static std::unique_ptr<C_ConvCellExport> getInstance(Cell& cell);

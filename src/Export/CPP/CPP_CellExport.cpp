@@ -18,11 +18,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Export/C/C_CellExport.hpp"
 #include "Export/CPP/CPP_CellExport.hpp"
+#include "Export/DeepNetExport.hpp"
 #include "utils/Utils.hpp"
 
-void N2D2::CPP_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header)
-{
+void N2D2::CPP_CellExport::generateHeaderBegin(const Cell& cell, std::ofstream& header) {
     // Append date & time to the file.
     const time_t now = std::time(0);
     tm* localNow = std::localtime(&now);
@@ -39,18 +41,26 @@ void N2D2::CPP_CellExport::generateHeaderBegin(Cell& cell, std::ofstream& header
            << prefix << "_LAYER_H\n\n";
 }
 
-void N2D2::CPP_CellExport::generateHeaderIncludes(Cell& /*cell*/,
-                                                std::ofstream& header)
-{
+void N2D2::CPP_CellExport::generateHeaderIncludes(const Cell& /*cell*/, std::ofstream& header) {
     header << "#include \"../../include/typedefs.h\"\n";
     header << "#include \"../../include/utils.h\"\n";
 }
 
-void N2D2::CPP_CellExport::generateHeaderEnd(Cell& cell, std::ofstream& header)
-{
-    header << "#endif // N2D2_EXPORTC_"
-        << Utils::upperCase(Utils::CIdentifier(cell.getName()))
-        << "_LAYER_H" << std::endl;
-    header.close();
+void N2D2::CPP_CellExport::generateHeaderEnd(const Cell& cell, std::ofstream& header) {
+    header << "#endif " 
+           << "// N2D2_EXPORTC_" << Utils::upperCase(Utils::CIdentifier(cell.getName())) << "_LAYER_H\n";
 }
 
+void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& header) {
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    header << "#define " << prefix << "_ACTIVATION "  
+                         << (cellFrame.getActivation()?cellFrame.getActivation()->getType():
+                                                       "Linear") 
+                         << "\n";
+}
+
+void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofstream& header) {
+    C_CellExport::generateActivationScaling(cell, header);
+}

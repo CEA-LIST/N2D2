@@ -60,7 +60,8 @@ void N2D2::CPP_DeepNetExport::generateParamsHeader(const std::string& fileName)
                     "#define N2D2_EXPORTC_PARAMS_H\n\n";
 
     // Constants
-    paramsHeader << "#define NB_BITS " << (int)CellExport::mPrecision << "\n\n";
+    paramsHeader << "#define NB_BITS " << (int)CellExport::mPrecision << "\n"
+                 << "#define UNSIGNED_DATA " << DeepNetExport::mUnsignedData << "\n\n";
 
     paramsHeader << "#endif // N2D2_EXPORTC_PARAMS_H" << std::endl;
 }
@@ -89,16 +90,12 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
     const std::shared_ptr<StimuliProvider> sp = deepNet.getStimuliProvider();
 
     // Constants
-    envHeader
-        << "#define ENV_SIZE_X " << sp->getSizeX() << "\n"
-                                                      "#define ENV_SIZE_Y "
-        << sp->getSizeY() << "\n"
-                             "#define ENV_NB_OUTPUTS " << sp->getNbChannels()
-        << "\n\n"
-           "#define ENV_DATA_UNSIGNED " << mEnvDataUnsigned
-        << "\n\n"
-           "#define ENV_OUTPUTS_SIZE (ENV_NB_OUTPUTS*ENV_SIZE_X*ENV_SIZE_Y)\n"
-           "#define ENV_BUFFER_SIZE (ENV_OUTPUTS_SIZE)\n\n";
+    envHeader << "#define ENV_SIZE_X " << sp->getSizeX() << "\n"
+              << "#define ENV_SIZE_Y " << sp->getSizeY() << "\n"
+              << "#define ENV_NB_OUTPUTS " << sp->getNbChannels() << "\n\n"
+              << "#define ENV_DATA_UNSIGNED " << mEnvDataUnsigned << "\n\n"
+              << "#define ENV_OUTPUTS_SIZE (ENV_NB_OUTPUTS*ENV_SIZE_X*ENV_SIZE_Y)\n"
+              << "#define ENV_BUFFER_SIZE (ENV_OUTPUTS_SIZE)\n\n";
 
     const std::vector<std::shared_ptr<Target> > outputTargets
                                                     =  deepNet.getTargets();
