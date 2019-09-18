@@ -803,50 +803,72 @@ void N2D2::DeepNet::rescaleAdditiveParameters(Float_T rescaleFactor) {
     }
 }
 
-void N2D2::DeepNet::normalizeFreeParameters(double normFactor)
-{
+void N2D2::DeepNet::normalizeFreeParameters(double normFactor) {
     Float_T bNorm = 1.0;
 
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
-    {
-        Float_T wNorm = 0.0;
-
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-            itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
-        {
-            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-
-            if (bNorm != 1.0) {
-                cell->processFreeParameters(std::bind(std::divides<double>(),
-                                                      std::placeholders::_1,
-                                                      bNorm), Cell::Additive);
-            }
-
-            Float_T wMin, wMax;
-            std::tie(wMin, wMax) = cell->getFreeParametersRange(false);
-
-            const Float_T wMaxAbs = std::max(std::abs(wMin), std::abs(wMax));
-            wNorm = std::max(wMaxAbs, wNorm);
+    for (auto itLayer = mLayers.begin() + 1; itLayer != mLayers.end(); ++itLayer) {
+        if(itLayer->size() != 1) {
+            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
         }
 
-        // Don't normalize the layer if all free parameters are equal to 0
-        if(wNorm == 0.0) {
+        std::shared_ptr<Cell>& cell = mCells.at(itLayer->front());
+        assert(cell != nullptr);
+        const auto wMinMax = cell->getFreeParametersRange(false);
+        const Float_T norm = Utils::max_abs(wMinMax.first, wMinMax.second)/normFactor;
+
+
+        if (bNorm != 1.0) {
+            assert(bNorm > 0.0);
+            cell->processFreeParameters([&](double d) { return d/bNorm; }, Cell::Additive);
+        }
+
+        if(norm != 0.0) {
+            cell->processFreeParameters([&](double d) { return d/norm; });
+            bNorm *= norm;
+        }
+    }
+}
+
+void N2D2::DeepNet::normalizeFreeParametersPerOutputChannel(double normFactor) {
+    Float_T bNorm = 1.0;
+
+    for (auto itLayer = mLayers.begin() + 1; itLayer != mLayers.end(); ++itLayer) {
+        if(itLayer->size() != 1) {
+            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
+        }
+
+        std::shared_ptr<Cell>& cell = mCells.at(itLayer->front());
+        assert(cell != nullptr);
+        std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+        std::shared_ptr<Activation> activation = cellFrame->getActivation();
+
+        if(!activation) {
             continue;
         }
 
-        wNorm /= normFactor;
-        bNorm *= wNorm;
-
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-            itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
-        {
-            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-
-            cell->processFreeParameters(std::bind(std::divides<double>(),
-                                                  std::placeholders::_1,
-                                                  wNorm));
+        if (bNorm != 1.0) {
+            assert(bNorm > 0.0);
+            cell->processFreeParameters([&](double d) { return d/bNorm; }, Cell::Additive);
         }
+        
+        auto wMinMax = cell->getFreeParametersRange(false);
+        const Float_T maxNorm = Utils::max_abs(wMinMax.first, wMinMax.second);
+
+        std::vector<Float_T> norms(cell->getNbOutputs());
+        for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
+            wMinMax = cell->getFreeParametersRangePerOutput(output, false);
+            norms[output] = std::max(std::min(maxNorm, 0.1f), Utils::max_abs(wMinMax.first, wMinMax.second))/normFactor;
+        }
+
+
+        std::vector<double> scalings(cell->getNbOutputs());
+        for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
+            cell->processFreeParametersPerOutput([&](double d) { return d/norms[output]; }, output);
+            scalings[output] = norms[output]/maxNorm;
+        }
+
+        activation->setActivationScaling(ActivationScaling::floatingPointScaling(std::move(scalings)));
+        bNorm *= maxNorm;
     }
 }
 
