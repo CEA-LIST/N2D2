@@ -133,6 +133,8 @@ public:
     void clearConfusionMatrix(Database::StimuliSet set);
     void clearMisclassified(Database::StimuliSet set);
     void clearScore(Database::StimuliSet set);
+    void computeScore(Database::StimuliSet set);
+
     virtual void process(Database::StimuliSet set);
     virtual void log(const std::string& fileName, Database::StimuliSet set);
     virtual void clear(Database::StimuliSet set);

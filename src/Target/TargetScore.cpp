@@ -394,11 +394,8 @@ void N2D2::TargetScore::clearScore(Database::StimuliSet set)
     clearConfusionMatrix(set);
     clearMisclassified(set);
 }
-
-void N2D2::TargetScore::process(Database::StimuliSet set)
+void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 {
-    Target::process(set);
-
     const unsigned int nbTargets = getNbTargets();
 
     ConfusionMatrix<unsigned long long int>& confusionMatrix
@@ -533,6 +530,12 @@ void N2D2::TargetScore::process(Database::StimuliSet set)
                                 mBatchTopNSuccess.end());
         mScoreTopNSet[set].success.push_back(getBatchAverageTopNSuccess());
     }
+}
+
+void N2D2::TargetScore::process(Database::StimuliSet set)
+{
+    Target::process(set);
+    computeScore(set);
 }
 
 void N2D2::TargetScore::log(const std::string& fileName,

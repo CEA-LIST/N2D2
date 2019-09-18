@@ -331,187 +331,173 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
                    << getLabelTarget(label) << "\n";
 }
 
-void N2D2::Target::process(Database::StimuliSet set)
+void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
 {
     const unsigned int nbTargets = getNbTargets();
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
 
-    if (mDataAsTarget) {
-        if (set == Database::Learn) {
-            std::shared_ptr<Cell_Frame_Top> targetCell
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
+    if (mTargets.empty()) {
+        mTargets.resize({mCell->getOutputsWidth(), mCell->getOutputsHeight(), 1,
+            labels.dimB()});
+        mEstimatedLabels.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
+        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
+    }
 
-            // Set targets
-            mLoss.push_back(targetCell->
-                            setOutputTargets(mStimuliProvider->getData()));
-        }
-    } else {
-        const Tensor<int>& labels = mStimuliProvider->getLabelsData();
+    if (mPopulateTargets && validDatabase) {
+        // Generate targets
+        const size_t size = mTargets.dimB() * mTargets.dimY();
 
-        if (mTargets.empty()) {
-            mTargets.resize({mCell->getOutputsWidth(),
-                            mCell->getOutputsHeight(),
-                            1,
-                            labels.dimB()});
-            mEstimatedLabels.resize({mCell->getOutputsWidth(),
-                                    mCell->getOutputsHeight(),
-                                    mTargetTopN,
-                                    labels.dimB()});
-            mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
-                                         mCell->getOutputsHeight(),
-                                         mTargetTopN,
-                                         labels.dimB()});
-        }
-
-        if (mPopulateTargets && validDatabase) {
-            // Generate targets
-            const size_t size = mTargets.dimB() * mTargets.dimY();
-
-            if (mTargets.dimX() != labels.dimX()
-                || mTargets.dimY() != labels.dimY())
-            {
-                const double xRatio = labels.dimX() / (double)mTargets.dimX();
-                const double yRatio = labels.dimY() / (double)mTargets.dimY();
+        if (mTargets.dimX() != labels.dimX()
+            || mTargets.dimY() != labels.dimY()) {
+            const double xRatio = labels.dimX() / (double)mTargets.dimX();
+            const double yRatio = labels.dimY() / (double)mTargets.dimY();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
 #pragma omp parallel for if (mTargets.dimB() > 4 && size > 16)
 #endif
-                for (int batchPos = 0; batchPos < (int)mTargets.dimB();
-                    ++batchPos)
-                {
-                    for (int y = 0; y < (int)mTargets.dimY(); ++y) {
-                        const int id
-                            = mStimuliProvider->getBatch()[batchPos];
-
-                        if (id < 0)
-                            continue;
-
-                        for (int x = 0; x < (int)mTargets.dimX(); ++x) {
-                            const unsigned int xl0 = std::floor(x * xRatio);
-                            const unsigned int xl1 = std::max(xl0 + 1,
-                                (unsigned int)std::floor((x + 1) * xRatio));
-                            const unsigned int yl0 = std::floor(y * yRatio);
-                            const unsigned int yl1 = std::max(yl0 + 1,
-                                (unsigned int)std::floor((y + 1) * yRatio));
-
-                            // +1 takes into account ignore target (-1)
-                            std::vector<int> targetHist(nbTargets + 1, 0);
-
-                            for (unsigned int yl = yl0; yl < yl1; ++yl) {
-                                for (unsigned int xl = xl0; xl < xl1; ++xl) {
-                                    const int target = getLabelTarget(
-                                        labels(xl, yl, 0, batchPos));
-
-                                    // Target range checking
-                                    if (target >= (int)nbTargets) {
-#pragma omp critical(Target__process)
-                                        {
-                                            std::cout << Utils::cwarning
-                                                << "Stimulus #" << id
-                                                << " has target "
-                                                << target
-                                                << " @ (" << xl << "," << yl
-                                                << ") but number of output "
-                                                "target is " << nbTargets
-                                                << Utils::cdef << std::endl;
-
-                                            throw std::runtime_error(
-                                                "Target::process(): target out "
-                                                "of range.");
-                                        }
-                                    }
-
-                                    assert(target >= -1);
-                                    ++targetHist[target + 1];
-                                }
-                            }
-
-                            if (mWeakTarget >= -1) {
-                                // initialize original index locations
-                                // first index is -1 (ignore)
-                                std::vector<int> targetHistIdx(
-                                        targetHist.size());
-                                std::iota(targetHistIdx.begin(),
-                                        targetHistIdx.end(), -1); // -1 = ignore
-
-                                // sort indexes based on comparing values in 
-                                // targetHist. Sort in descending order.
-                                std::partial_sort(targetHistIdx.begin(),
-                                    targetHistIdx.begin() + 2,
-                                    targetHistIdx.end(),
-                                    [&targetHist](int i1, int i2)
-                                        {return targetHist[i1 + 1]
-                                                    > targetHist[i2 + 1];});
-
-                                mTargets(x, y, 0, batchPos)
-                                    = (targetHistIdx[0] == mWeakTarget
-                                        && targetHistIdx[1] > 0)
-                                            ? targetHistIdx[1]
-                                            : targetHistIdx[0];
-                            }
-                            else {
-                                std::vector<int>::iterator maxElem
-                                    = std::max_element(targetHist.begin(),
-                                                       targetHist.end());
-
-                                mTargets(x, y, 0, batchPos)
-                                    = std::distance(targetHist.begin(),
-                                                    maxElem) - 1; // -1 = ignore
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                // one-to-one mapping
-#pragma omp parallel for if (mTargets.dimB() > 64 && size > 256)
-                for (int batchPos = 0; batchPos < (int)mTargets.dimB();
-                    ++batchPos)
-                {
+            for (int batchPos = 0; batchPos < (int)mTargets.dimB();
+                 ++batchPos) {
+                for (int y = 0; y < (int)mTargets.dimY(); ++y) {
                     const int id = mStimuliProvider->getBatch()[batchPos];
 
                     if (id < 0)
                         continue;
 
-                    // target only has 1 channel, whereas label has as many
-                    // channels as environment channels
-                    const Tensor<int> label = labels[batchPos][0];
-                    Tensor<int> target = mTargets[batchPos][0];
+                    for (int x = 0; x < (int)mTargets.dimX(); ++x) {
+                        const unsigned int xl0 = std::floor(x * xRatio);
+                        const unsigned int xl1 = std::max(xl0 + 1,
+                            (unsigned int)std::floor((x + 1) * xRatio));
+                        const unsigned int yl0 = std::floor(y * yRatio);
+                        const unsigned int yl1 = std::max(yl0 + 1,
+                            (unsigned int)std::floor((y + 1) * yRatio));
 
-                    for (int index = 0; index < (int)label.size(); ++index) {
-                        target(index) = getLabelTarget(label(index));
+                        // +1 takes into account ignore target (-1)
+                        std::vector<int> targetHist(nbTargets + 1, 0);
 
-                        // Target range checking
-                        if (target(index) >= (int)nbTargets) {
+                        for (unsigned int yl = yl0; yl < yl1; ++yl) {
+                            for (unsigned int xl = xl0; xl < xl1; ++xl) {
+                                const int target = getLabelTarget(
+                                    labels(xl, yl, 0, batchPos));
+
+                                // Target range checking
+                                if (target >= (int)nbTargets) {
 #pragma omp critical(Target__process)
-                            {
-                                std::cout << Utils::cwarning << "Stimulus #"
-                                    << id << " has target "
-                                    << target(index)
-                                    << " @ (" << index << ") but "
-                                    "number of output target is "
-                                    << nbTargets << Utils::cdef
-                                    << std::endl;
+                                    {
+                                        std::cout << Utils::cwarning
+                                                  << "Stimulus #" << id
+                                                  << " has target " << target
+                                                  << " @ (" << xl << "," << yl
+                                                  << ") but number of output "
+                                                     "target is "
+                                                  << nbTargets << Utils::cdef
+                                                  << std::endl;
 
-                                throw std::runtime_error(
-                                    "Target::process(): target out of "
-                                    "range.");
+                                        throw std::runtime_error(
+                                            "Target::process(): target out "
+                                            "of range.");
+                                    }
+                                }
+
+                                assert(target >= -1);
+                                ++targetHist[target + 1];
                             }
+                        }
+
+                        if (mWeakTarget >= -1) {
+                            // initialize original index locations
+                            // first index is -1 (ignore)
+                            std::vector<int> targetHistIdx(targetHist.size());
+                            std::iota(targetHistIdx.begin(),
+                                targetHistIdx.end(), -1); // -1 = ignore
+
+                            // sort indexes based on comparing values in
+                            // targetHist. Sort in descending order.
+                            std::partial_sort(targetHistIdx.begin(),
+                                targetHistIdx.begin() + 2, targetHistIdx.end(),
+                                [&targetHist](int i1, int i2) {
+                                    return targetHist[i1 + 1]
+                                        > targetHist[i2 + 1];
+                                });
+
+                            mTargets(x, y, 0, batchPos)
+                                = (targetHistIdx[0] == mWeakTarget
+                                      && targetHistIdx[1] > 0)
+                                ? targetHistIdx[1]
+                                : targetHistIdx[0];
+                        }
+                        else {
+                            std::vector<int>::iterator maxElem
+                                = std::max_element(
+                                    targetHist.begin(), targetHist.end());
+
+                            mTargets(x, y, 0, batchPos)
+                                = std::distance(targetHist.begin(),
+                                      maxElem)
+                                - 1; // -1 = ignore
                         }
                     }
                 }
             }
         }
+        else {
+            // one-to-one mapping
+#pragma omp parallel for if (mTargets.dimB() > 64 && size > 256)
+            for (int batchPos = 0; batchPos < (int)mTargets.dimB();
+                 ++batchPos) {
+                const int id = mStimuliProvider->getBatch()[batchPos];
 
-        std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
-            <Cell_Frame_Top>(mCell);
-        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
-            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+                if (id < 0)
+                    continue;
 
+                // target only has 1 channel, whereas label has as many
+                // channels as environment channels
+                const Tensor<int> label = labels[batchPos][0];
+                Tensor<int> target = mTargets[batchPos][0];
+
+                for (int index = 0; index < (int)label.size(); ++index) {
+                    target(index) = getLabelTarget(label(index));
+
+                    // Target range checking
+                    if (target(index) >= (int)nbTargets) {
+#pragma omp critical(Target__process)
+                        {
+                            std::cout << Utils::cwarning << "Stimulus #" << id
+                                      << " has target " << target(index)
+                                      << " @ (" << index
+                                      << ") but "
+                                         "number of output target is "
+                                      << nbTargets << Utils::cdef << std::endl;
+
+                            throw std::runtime_error(
+                                "Target::process(): target out of "
+                                "range.");
+                        }
+                    }
+                }
+            }
+        }
+    }    
+
+    std::shared_ptr<Cell_Frame_Top> targetCell 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
+
+    if (mDataAsTarget) {
         if (set == Database::Learn && targetCell) {
+            // Update target values from input data
+            mLoss.push_back(
+                targetCell->setOutputTargets(mStimuliProvider->getData()));
+        }
+    }
+    else {
+        //Set label associated to mTargets
+        if (set == Database::Learn && targetCell) {
+            
             // Set targets
             if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
                 for (unsigned int batchPos = 0; batchPos < mTargets.dimB();
@@ -527,11 +513,30 @@ void N2D2::Target::process(Database::StimuliSet set)
 
                 mLoss.push_back(targetCell->setOutputTarget(
                     mTargets, mTargetValue, mDefaultValue));
-            } else
+            }
+            else {
                 mLoss.push_back(targetCell->setOutputTargets(
                     mTargets, mTargetValue, mDefaultValue));
+            }
         }
 
+    }
+
+}
+
+void N2D2::Target::process(Database::StimuliSet set)
+{
+
+    if (!mDataAsTarget) {
+        std::shared_ptr<Cell_Frame_Top> targetCell 
+            = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
+        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
+            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+
+        targetLabelProvider(set);
+
+        BaseTensor& outputsBaseTensor = (targetCell)
+            ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
         // Find batchSize to ignore invalid stimulus in batch (can occur for the 
         // last batch of the set)
         int batchSize = 0;
@@ -547,16 +552,23 @@ void N2D2::Target::process(Database::StimuliSet set)
             }
         }
 
-        BaseTensor& outputsBaseTensor = (targetCell)
-            ? targetCell->getOutputs()
-            : targetCellCSpike->getOutputsActivity();
 
 #ifdef CUDA
         CudaBaseTensor* outputsCudaBaseTensor 
                 = dynamic_cast<CudaBaseTensor*>(&outputsBaseTensor);
 
         if (outputsCudaBaseTensor != NULL) {
-            process_Frame_CUDA(*outputsCudaBaseTensor, batchSize);
+            const unsigned int nbOutputs = outputsCudaBaseTensor->dimZ();
+
+            if (mTargetTopN > nbOutputs) {
+                throw std::runtime_error("Target::process_Frame_CUDA(): target 'TopN' "
+                                        "parameter must be <= to the network "
+                                        "output size");
+            }
+            std::shared_ptr<CudaDeviceTensor<Float_T> > value
+                = cuda_device_tensor_cast<Float_T>(*outputsCudaBaseTensor);
+                
+            process_Frame_CUDA(value->getDevicePtr(), batchSize);
         }
         else {
 #endif
@@ -603,27 +615,16 @@ void N2D2::Target::process(Database::StimuliSet set)
 }
 
 #ifdef CUDA
-void N2D2::Target::process_Frame_CUDA(CudaBaseTensor& values,
+void N2D2::Target::process_Frame_CUDA(Float_T* values,
                                       const int batchSize)
-{
-    const unsigned int nbOutputs = values.dimZ();
-
-    if (mTargetTopN > nbOutputs) {
-        throw std::runtime_error("Target::process_Frame_CUDA(): target 'TopN' "
-                                "parameter must be <= to the network "
-                                "output size");
-    }
-
-    std::shared_ptr<CudaDeviceTensor<Float_T> > value
-        = cuda_device_tensor_cast<Float_T>(values);
-
+{ 
     cudaGetEstimatedTarget( mTargetTopN,
                             mCell->getNbOutputs(),
                             mCell->getOutputsHeight(),
                             mCell->getOutputsWidth(),
                             batchSize,
                             mBinaryThreshold,
-                            value->getDevicePtr(),
+                            values,
                             mEstimatedLabelsValue.getDevicePtr(),
                             mEstimatedLabels.getDevicePtr());
 }
