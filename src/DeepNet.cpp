@@ -25,6 +25,11 @@
 #include "Environment.hpp"
 #include "Monitor.hpp"
 #include "NodeEnv.hpp"
+#include "Activation/ActivationScalingMode.hpp"
+#include "Activation/LinearActivation.hpp"
+#include "Activation/LogisticActivation.hpp"
+#include "Activation/RectifierActivation.hpp"
+#include "Activation/SaturationActivation.hpp"
 #include "Cell/BatchNormCell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
@@ -35,7 +40,11 @@
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
+#include "Export/CellExport.hpp"
+#include "Export/DeepNetExport.hpp"
 #include "utils/Utils.hpp"
+#include "RangeStats.hpp"
+#include "Histogram.hpp"
 #include "Solver/Solver.hpp"
 
 N2D2::DeepNet::DeepNet(Network& net)
@@ -796,7 +805,7 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
 void N2D2::DeepNet::rescaleAdditiveParameters(Float_T rescaleFactor) {
     for (auto it = mLayers.begin() + 1; it != mLayers.end(); ++it) {
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
-            auto& cell = (*mCells.find(*itCell)).second;
+            auto& cell = mCells.at(*itCell);
             cell->processFreeParameters([&](double v) { return v/rescaleFactor; }, 
                                         Cell::Additive);
         }
@@ -872,355 +881,263 @@ void N2D2::DeepNet::normalizeFreeParametersPerOutputChannel(double normFactor) {
     }
 }
 
-void
-N2D2::DeepNet::normalizeOutputsRange(const std::map
-                                     <std::string, RangeStats>& outputsRange,
-                                     double normFactor,
-                                     double useMean,
-                                     double stdDevOffset)
+std::vector<std::vector<unsigned char>> N2D2::DeepNet::approxRescaleWithShifts(Cell& cell, 
+                                                        const std::vector<double>& scalingPerOutput, 
+                                                        std::size_t nbShifts) const
 {
-    // const std::map<std::string, RangeStats>::const_iterator itEnvRange =
-    // outputsRange.find(*(*mLayers.begin()).begin());
+    /**
+     * Return a pair of the precision of the approximation and a vector of shifts.
+     */
+    auto approximateWith = [&](double scaling, std::size_t nbShifts) 
+                                -> std::pair<double , std::vector<unsigned char>> 
+    {
+        static const double ROUNDING_THRESHOLD = 0.98;
 
-    double prevScalingFactor = 1.0;
-
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin() + 1,
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
-        bool nextIsPool = false;
-
-        if (it + 1 != itEnd) {
-            std::shared_ptr<PoolCell> poolCell = std::dynamic_pointer_cast
-                <PoolCell>((*mCells.find(*(*(it + 1)).begin())).second);
-
-            if (poolCell) {
-                std::cout << "Poolcell following" << std::endl;
-                nextIsPool = true;
-            }
+        if(nbShifts == 0) {
+            throw std::runtime_error("Can't approximate the scaling with 0 shift.");
         }
 
-        double scalingFactor = 0.0;
+        if(scaling < 1.0) {
+            throw std::runtime_error("Scaling factor " + std::to_string(scaling) + " must be >= 1.0.");
+        }
 
-        if (useMean) {
-            std::string layerName;
-            double nbElements = 0.0;
-            double sum = 0.0;
-            double sumSquare = 0.0;
+        std::vector<unsigned char> shifts;
 
-            for (std::vector<std::string>::const_iterator itCell
-                 = (nextIsPool) ? (*(it + 1)).begin() : (*it).begin(),
-                 itCellEnd = (nextIsPool) ? (*(it + 1)).end() : (*it).end();
-                 itCell != itCellEnd;
-                 ++itCell)
-            {
-                if (!layerName.empty())
-                    layerName += "_";
-
-                layerName += (*itCell);
-
-                const std::map<std::string, RangeStats>::const_iterator itRange
-                    = outputsRange.find(*itCell);
-
-                if (itRange != outputsRange.end()) {
-                    nbElements += (*itRange).second.moments()[0];
-                    sum += (*itRange).second.moments()[1];
-                    sumSquare += (*itRange).second.moments()[2];
-                }
-                else {
-                    throw std::runtime_error("Missing range stats for cell: "
-                                             + (*itCell));
-                }
+        double precision = 0.0;
+        while(nbShifts > 0) {
+            if(precision == 1.0) {
+                break;
             }
 
-            const double mean = sum / nbElements;
-            const double meanSquare = sumSquare / nbElements;
-            const double stdDev = std::sqrt(meanSquare - mean * mean);
+            const std::size_t shift = std::ceil(std::log2(scaling/(1.0 - precision)));
+            precision += scaling/std::pow(2, shift);
 
-            scalingFactor = mean + stdDevOffset * stdDev;
+            shifts.push_back(static_cast<unsigned char>(shift));
+            nbShifts--;
+        }
 
-            std::cout << "Scaling factor " << layerName << " = "
-                << scalingFactor << " (mean: " << mean << " | stddev: "
-                << stdDev << ")" << std::endl;
+        assert(precision <= 1.0);
+        
+        if(precision >= ROUNDING_THRESHOLD && precision <= 1.0) {
+            precision = 1.0;
         }
         else {
-            for (std::vector<std::string>::const_iterator itCell
-                 = (nextIsPool) ? (*(it + 1)).begin() : (*it).begin(),
-                 itCellEnd = (nextIsPool) ? (*(it + 1)).end() : (*it).end();
-                 itCell != itCellEnd;
-                 ++itCell)
-            {
-                const std::map<std::string, RangeStats>::const_iterator itRange
-                    = outputsRange.find(*itCell);
-
-                if (itRange != outputsRange.end()) {
-                    scalingFactor
-                        = std::max(scalingFactor, (*itRange).second.maxVal());
-                }
-                else {
-                    throw std::runtime_error("Missing range stats for cell: "
-                                             + (*itCell));
-                }
-            }
+            precision += scaling/std::pow(2, shifts.back());
+            shifts.back() = shifts.back() - 1;
         }
 
-        scalingFactor /= normFactor;
+        assert(precision >= 1.0);
 
-        const double appliedFactor = scalingFactor / prevScalingFactor;
-        bool applied = false;
+        return std::make_pair(precision, shifts);
+    };
 
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-                                                      itCellEnd = (*it).end();
-             itCell != itCellEnd;
-             ++itCell)
-        {
-            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+    std::vector<std::vector<unsigned char>> shiftsPerOutput(cell.getNbOutputs());
+    for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        auto shift1_approx = approximateWith(1/scalingPerOutput[output], 1);
+        auto shift2_approx = approximateWith(1/scalingPerOutput[output], 2);
 
-            if (cellFrame && cellFrame->getActivation()
-                && cellFrame->getActivation()->getType()
-                   == std::string("Rectifier"))
-            {
-/*
-                const int shifting = (appliedFactor > 1.0)
-                    ? Utils::round(log2(appliedFactor))
-                    : -Utils::round(log2(1.0 / appliedFactor));
-
-                cellFrame->getActivation()->setParameter<int>("Shifting",
-                    shifting);
-
-                std::cout << Utils::cnotice << "Shifting " << (*itCell)
-                    << " = " << shifting << Utils::cdef << std::endl;
-*/
-
-                cell->processFreeParameters(std::bind(std::divides<double>(),
-                                                      std::placeholders::_1,
-                                                      appliedFactor));
-
-                applied = true;
-            }
+        double rescaleOutputsBy;
+        if(nbShifts == 1 || shift1_approx.first <= shift2_approx.first) {
+            shiftsPerOutput[output] = std::move(shift1_approx.second);
+            rescaleOutputsBy = 1/shift1_approx.first;
+        }
+        else {
+            shiftsPerOutput[output] = std::move(shift2_approx.second);
+            rescaleOutputsBy = 1/shift2_approx.first;
         }
 
-        if (applied)
-            prevScalingFactor = scalingFactor;
+
+        cell.processFreeParametersPerOutput([&](double d){ 
+                                                return rescaleOutputsBy*d; 
+                                            }, output);
+    }
+
+    return shiftsPerOutput;
+}
+
+double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
+                                       const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                                       const std::unordered_map<std::string, RangeStats>& outputsRange,
+                                       std::size_t nbBits, ClippingMode actClippingMode) const 
+{
+    switch(actClippingMode) {
+        case ClippingMode::KL_DIVERGENCE:
+            return outputsHistogram.at(cellName).calibrateKLDivergence(nbBits);
+        default: {
+            const auto& range = outputsRange.at(cellName);
+            return Utils::max_abs(range.minVal(), range.maxVal());
+        }
     }
 }
 
-void
-N2D2::DeepNet::normalizeOutputsRange(const std::map
-                                     <std::string, Histogram>& outputsHistogram,
-                                     const std::map
-                                     <std::string, RangeStats>& outputsRange,
-                                     unsigned int nbLevels,
-                                     unsigned int nbPasses)
+void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
+                                         ActivationScalingMode actScalingMode) const 
+{
+    assert(activation.getActivationScaling().getMode() == ActivationScaling::FLOAT_MULT);
+
+    const std::vector<double>& scalingPerOutput = activation.getActivationScaling()
+                                                            .getFloatingPointScaling()
+                                                            .getScalingPerOutput();
+    if(actScalingMode == ActivationScalingMode::FLOAT_MULT) {
+        // Nothing to do.
+    }
+    else if(actScalingMode == ActivationScalingMode::FIXED_MULT) {
+        const std::size_t nbFractionalBits = FixedPointScaling::DEFAULT_NB_FRACTIONAL_BITS;
+        
+        std::vector<std::int32_t> scalingFixedPoint;
+        for(auto sc: scalingPerOutput) {
+            assert(sc <= 1.0);
+            scalingFixedPoint.push_back(std::round(sc * (1ull << nbFractionalBits)));
+        }
+
+        activation.setActivationScaling(ActivationScaling::fixedPointScaling(nbFractionalBits, 
+                                                                             scalingFixedPoint));
+    }
+    else if(actScalingMode == ActivationScalingMode::SINGLE_SHIFT) {
+        std::vector<unsigned char> shifts;
+        for(const auto& shift: approxRescaleWithShifts(cell, scalingPerOutput, 1)) {
+            assert(shift.size() == 1);
+            shifts.push_back(shift[0]);
+        }
+
+        activation.setActivationScaling(ActivationScaling::singleShiftScaling(shifts));
+    }
+    else if(actScalingMode == ActivationScalingMode::DOUBLE_SHIFT) {
+        std::vector<std::pair<unsigned char, unsigned char>> shifts;
+        for(const auto& shift: approxRescaleWithShifts(cell, scalingPerOutput, 2)) {
+            assert(shift.size() == 1 || shift.size() == 2);
+            if(shift.size() == 2) {
+                shifts.push_back({shift[0], shift[1] - shift[0]});
+            }
+            else {
+                shifts.push_back({shift[0], DoubleShiftScaling::NO_SHIFT});
+            }
+        }
+
+        activation.setActivationScaling(ActivationScaling::doubleShiftScaling(shifts));
+    }
+    else {
+        throw std::runtime_error("Unsupported scaling mode.");
+    }
+}
+
+void N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& activation,
+                                             double scalingFactor, double prevScalingFactor,
+                                             std::size_t nbBits) const 
+{
+    const ActivationScalingMode scalingMode = activation.getActivationScaling().getMode();
+    
+    std::vector<double> scalingPerOutput(cell.getNbOutputs());
+    for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        if(scalingMode == ActivationScalingMode::NONE) {
+            scalingPerOutput[output] = 1 / (scalingFactor / prevScalingFactor);
+        }
+        else if(scalingMode == ActivationScalingMode::FLOAT_MULT) {
+            const double actScaling = activation.getActivationScaling()
+                                                .getFloatingPointScaling()
+                                                .getScalingPerOutput()[output];
+            scalingPerOutput[output] = actScaling / (scalingFactor / prevScalingFactor);
+        }
+        else {
+            throw std::runtime_error("Unsupported scaling mode.");
+        }
+
+
+        const std::string activationType = activation.getType();
+        const std::size_t range = (1 << nbBits);
+        assert(range >= 4);
+
+        if(activationType == RectifierActivation::Type) {
+            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?range/2-1:range/4-1;
+        }
+        else if(activationType == LogisticActivation::Type || 
+                activationType == LogisticActivation::TypeWithLoss) 
+        {
+            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?range*2-1:range-1;
+        }
+        else {
+            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?range-1:range/2-1;
+        }
+
+        if(scalingPerOutput[output] > 1.0) {
+            // TODO Check in which cases this can happen
+            throw std::runtime_error("Only scalings per output <= 1.0 are currently supported.");
+        }
+    }
+
+    activation.setActivationScaling(ActivationScaling::floatingPointScaling(std::move(scalingPerOutput)));
+}
+
+void N2D2::DeepNet::normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                                          const std::unordered_map<std::string, RangeStats>& outputsRange,
+                                          std::size_t nbBits,
+                                          ClippingMode actClippingMode,
+                                          ActivationScalingMode actScalingMode)
 {
     double prevScalingFactor = 1.0;
     bool nextIsMaxPool = false;
-    bool nextIsAvgPool = false;
 
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin() + 1, itEnd = mLayers.end(); it != itEnd; ++it)
-    {
-        if (nextIsMaxPool || nextIsAvgPool) {
+    for (auto itLayer = mLayers.begin() + 1; itLayer != mLayers.end(); ++itLayer) {
+        if(itLayer->size() != 1) {
+            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
+        }
+
+        std::shared_ptr<Cell>& cell = mCells.at(itLayer->front());
+        std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+        if(!cellFrame || (cell->getType() == PoolCell::Type)) {
             nextIsMaxPool = false;
-            nextIsAvgPool = false;
             continue;
         }
 
-        if (it + 1 != itEnd) {
-            std::shared_ptr<PoolCell> poolCell = std::dynamic_pointer_cast
-                <PoolCell>((*mCells.find(*(*(it + 1)).begin())).second);
-
-            if (poolCell && poolCell->getPooling() == PoolCell::Max) {
-                std::cout << "MAX pool following: " << *(*(it + 1)).begin()
-                    << std::endl;
-                nextIsMaxPool = true;
-            }
-
-            if (poolCell && poolCell->getPooling() == PoolCell::Average) {
-                std::cout << "AVG pool following: " << *(*(it + 1)).begin()
-                    << std::endl;
-                nextIsAvgPool = true;
-            }
+        if (itLayer + 1 != mLayers.end() && (itLayer + 1)->size() == 1) {
+            const auto& nextCell = mCells.at((itLayer + 1)->front());
+            nextIsMaxPool = nextCell->getType() == PoolCell::Type && 
+                            dynamic_cast<const PoolCell&>(*nextCell).getPooling() == PoolCell::Max;
         }
 
-        double scalingFactor = 0.0;
-        double appliedFactor = 0.0;
-        bool applied = false;
 
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-             itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
+
+        const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
+        if(!activation) {
+            throw std::runtime_error("Missing activation function for cell " + cell->getName() + ".");
+        }
+        
+
+        double scalingFactor;
+        if(activation->getType() == RectifierActivation::Type || 
+           (activation->getType() == LinearActivation::Type && cell->getNbOutputs() > 2) || 
+           (activation->getType() == SaturationActivation::Type && cell->getNbOutputs() > 2))
         {
-            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
-
-            if (!cellFrame)
-                continue;
-
-            const std::shared_ptr<Activation> activation
-                = cellFrame->getActivation();
-            const std::string activationType = (activation)
-                ? activation->getType() : "Linear";
-
-            std::map<std::string, Histogram>::const_iterator itHistogram;
-            std::map<std::string, RangeStats>::const_iterator itRange;
-
-            const std::vector<std::string>::const_iterator itCellStats
-                = (nextIsMaxPool) ? (*(it + 1)).begin() : itCell;
-            itHistogram = outputsHistogram.find(*itCellStats);
-            itRange = outputsRange.find(*itCellStats);
-
-            if (itHistogram == outputsHistogram.end()) {
-                throw std::runtime_error("Missing histogram for cell: "
-                                         + (*itCellStats));
-            }
-
-            if (itRange == outputsRange.end()) {
-                throw std::runtime_error("Missing range stats for cell: "
-                                         + (*itCellStats));
-            }
-
-            if (activationType == "Rectifier"
-                || (*itRange).second.minVal() >= 0.0
-                    // e.g. average pooling following a Rectifier
-                || (activationType == "Linear" && cell->getNbOutputs() > 2))
-                    // Here we assume that this layer is the preceding layer of
-                    // a softmax with more than 2 channels.
-                    // In this case, the full range is required as several
-                    // values can be very high.
-            {
-                double threshold = std::max(std::abs((*itRange).second.minVal()), 
-                                            std::abs((*itRange).second.maxVal()));
-
-                if (nbPasses > 0) {
-                    Histogram hist = (*itHistogram).second;
-
-                    // First pass
-                    threshold = hist.calibrateKL(nbLevels);
-
-                    // More passes
-                    for (unsigned int p = 1; p < nbPasses; ++p) {
-                        hist.truncate(threshold);
-                        threshold = hist.calibrateKL(nbLevels);
-                    }
-                }
-
-                scalingFactor = std::max(scalingFactor, threshold);
-            }
-            else {
-                // Here we assume that this layer has a logistic activation
-                // (or is preceding a 2 channels softmax, which is equivalent)
-                // The loss function minimization tends to push
-                // the output values to either -inf (wrong class) or +inf
-                // (correct class)
-                // Therefore, high precision is required towards 0 in order to
-                // be able to distinguish the two.
-                scalingFactor = std::max(scalingFactor,
-                            std::abs((*itRange).second.stdDev()) / nbLevels);
-                        // mean() cannot be used because it can be 0.0 or close
-            }
-/*
-            else {
-                // Here we assume that this layer is the preceding layer of a
-                // softmax with more than 2 channels.
-                // In this case, the full range is required as several values
-                // can be very high.
-                scalingFactor = std::max(scalingFactor,
-                                         (*itRange).second.maxVal);
-            }
-*/
+            const std::string cellStats = nextIsMaxPool?(itLayer + 1)->front():itLayer->front();
+            scalingFactor = getCellThreshold(cellStats, 
+                                             outputsHistogram, outputsRange, 
+                                             nbBits, actClippingMode);
+        }
+        else {
+            scalingFactor = getCellThreshold(itLayer->front(),
+                                             outputsHistogram, outputsRange, 
+                                             nbBits, ClippingMode::NONE);
         }
 
-        const double targetFactor = scalingFactor / prevScalingFactor;
 
-        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
-             itCellEnd = (*it).end(); itCell != itCellEnd; ++itCell)
-        {
-            std::shared_ptr<Cell> cell = (*mCells.find(*itCell)).second;
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (!cellFrame)
-                continue;
+        
+        rescaleActivationOutputs(*cell, *activation, scalingFactor, prevScalingFactor, nbBits);
+        approximateRescaling(*cell, *activation, actScalingMode);
 
-            const std::shared_ptr<Activation>& activation
-                = cellFrame->getActivation();
-            const std::string activationType = (activation)
-                ? activation->getType() : "Linear";
+        cell->processFreeParameters([&](double d) { return d/prevScalingFactor; },
+                                    Cell::Additive);
+        
 
-            if (activationType == "Rectifier"
-                || activationType == "Logistic"
-                || activationType == "LogisticWithLoss"
-                || activationType == "Linear")
-            {
-                const int shifting = (targetFactor > 1.0)
-                    ? Utils::round(log2(targetFactor))
-                    : -Utils::round(log2(1.0 / targetFactor));
-                const double shiftedFactor = (shifting >= 0)
-                    ? 1.0 / (1 << shifting)
-                    : (1 << (-shifting));
-                // max(1, ...) is used to avoid weights truncation
-                const double remainingFactor = std::max(1.0,
-                                                targetFactor * shiftedFactor);
-                appliedFactor = prevScalingFactor
-                                            * (remainingFactor / shiftedFactor);
+        std::cout << std::setprecision(4) << cell->getName() << ": "
+                  << "scalingFactor = " << scalingFactor << "   ";
+        std::cout << std::endl;
 
-                if (activation) {
-                    activation->setActivationScaling(
-                        ActivationScaling::singleShiftScaling(
-                            std::vector<unsigned char>(cell->getNbOutputs(), shifting)
-                        )
-                    );
-                }
-                else if (shifting != 0) {
-                    std::cout << Utils::cwarning
-                        << "DeepNet::normalizeOutputsRange(): no activation "
-                        "for cell " << (*itCell) << ", unable to add Shifting"
-                        << Utils::cdef << std::endl;
-                }
-
-                if (activationType == "Rectifier" || activationType == "Linear")
-                {
-                    if (activation)
-                        activation->setParameter<double>("Clipping", 1.0);
-                    else {
-                        std::cout << Utils::cwarning
-                            << "DeepNet::normalizeOutputsRange(): no "
-                            "activation for cell " << (*itCell) << ", unable "
-                            "to add Clipping" << Utils::cdef << std::endl;
-                    }
-                }
-
-                cell->processFreeParameters(std::bind(std::divides<double>(),
-                                                      std::placeholders::_1,
-                                                      remainingFactor), 
-                                                      Cell::Multiplicative);
-                
-                cell->processFreeParameters(std::bind(std::divides<double>(),
-                                                      std::placeholders::_1,
-                                                      prevScalingFactor * remainingFactor), 
-                                                      Cell::Additive);
-
-                std::cout << std::setprecision(4) << (*itCell) << ": "
-                    "scaling = " << scalingFactor << "   "
-                    "previous scaling = " << prevScalingFactor << "   "
-                    "target = " << targetFactor << "   "
-                    "applied = " << appliedFactor << "   "
-                    "shifting = " << shifting << "    "
-                    "shifting factor = " << shiftedFactor << "    "
-                    "remaining = " << remainingFactor << "    " << std::endl;
-
-                applied = true;
-            }
-        }
-
-        if (applied)
-            prevScalingFactor = appliedFactor;
+        prevScalingFactor = scalingFactor;
     }
 }
+
 
 /**
  * Ref: https://tkv.io/posts/fusing-batchnorm-and-conv/
@@ -2635,18 +2552,11 @@ void N2D2::DeepNet::logReceptiveFields(const std::string& fileName) const
     gnuplot << "plot 1/0";
 }
 
-void
-N2D2::DeepNet::reportOutputsRange(std::map
-                                  <std::string, RangeStats>& outputsRange) const
-{
+void N2D2::DeepNet::reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const {
     if (outputsRange.empty()) {
         // Populate outputsRange first to avoid thread issues
-        for (unsigned int i = 0; i < mLayers.size(); ++i) {
-            for (std::vector<std::string>::const_iterator
-                 itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
-                 itCell != itCellEnd;
-                 ++itCell)
-            {
+        for (auto itLayer = mLayers.begin(); itLayer != mLayers.end(); ++itLayer) {
+            for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
                 outputsRange.insert(std::make_pair(*itCell, RangeStats()));
             }
         }
@@ -2654,16 +2564,11 @@ N2D2::DeepNet::reportOutputsRange(std::map
 
 #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)mLayers.size(); ++i) {
-        for (std::vector<std::string>::const_iterator
-             itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
-             itCell != itCellEnd;
-             ++itCell)
-        {
+        for(auto itCell = mLayers[i].begin(); itCell != mLayers[i].end(); ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame;
 
             if (mCells.find(*itCell) != mCells.end()) {
-                cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(
-                                                (*mCells.find(*itCell)).second);
+                cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells.at(*itCell));
                 cellFrame->getOutputs().synchronizeDToH();
             }
 
@@ -2671,57 +2576,49 @@ N2D2::DeepNet::reportOutputsRange(std::map
                 ? tensor_cast<Float_T>(cellFrame->getOutputs())
                 : mStimuliProvider->getData();
 
-            const std::map<std::string, RangeStats>::iterator itRange
-                = outputsRange.find(*itCell);
-            (*itRange).second = std::for_each(
-                outputs.begin(), outputs.end(), (*itRange).second);
+            RangeStats& rangeStats = outputsRange.at(*itCell);
+            for(auto output : outputs) {
+                rangeStats(output);
+            }
         }
     }
 }
 
-void
-N2D2::DeepNet::reportOutputsHistogram(std::map
-                            <std::string, Histogram>& outputsHistogram) const
+void N2D2::DeepNet::reportOutputsHistogram(
+                        std::unordered_map<std::string, Histogram>& outputsHistogram,
+                        const std::unordered_map<std::string, RangeStats>& outputsRange,
+                        std::size_t nbBits, ClippingMode actClippingMode) const
 {
+    if(actClippingMode == ClippingMode::NONE) {
+        return;
+    }
+
+    const unsigned int nbBins = getNbBinsForClippingMode(nbBits, actClippingMode);
+
     if (outputsHistogram.empty()) {
         // Populate outputsHistogram first to avoid thread issues
-        for (unsigned int i = 0; i < mLayers.size(); ++i) {
-            for (std::vector<std::string>::const_iterator
-                 itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
-                 itCell != itCellEnd;
-                 ++itCell)
-            {
-                std::shared_ptr<Cell_Frame_Top> cellFrame;
+        for (auto itLayer = mLayers.begin(); itLayer != mLayers.end(); ++itLayer) {
+            for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+                const auto range = outputsRange.at(*itCell);
+                const bool isCellOutputUnsigned = (itLayer == mLayers.begin())?
+                                            DeepNetExport::mEnvDataUnsigned:
+                                            DeepNetExport::isCellOutputUnsigned(*mCells.at(*itCell));
 
-                if (mCells.find(*itCell) != mCells.end()) {
-                    cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(
-                                                (*mCells.find(*itCell)).second);
-                    cellFrame->getOutputs().synchronizeDToH();
-                }
-
-                const Tensor<Float_T>& outputs = (cellFrame)
-                    ? tensor_cast<Float_T>(cellFrame->getOutputs())
-                    : mStimuliProvider->getData();
-
-                const Float_T maxVal = std::abs(*Utils::max_abs_element(outputs.begin(), outputs.end()));
-                outputsHistogram.insert(std::make_pair(*itCell,
-                                                    Histogram(0.0, maxVal)));
+                const Float_T val = Utils::max_abs(range.minVal(), range.maxVal());
+                const Float_T min = isCellOutputUnsigned?0:-val;
+                const Float_T max = val;
+                outputsHistogram.insert(std::make_pair(*itCell, Histogram(min, max, nbBins)));
             }
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)mLayers.size(); ++i) {
-        for (std::vector<std::string>::const_iterator
-             itCell = mLayers[i].begin(), itCellEnd = mLayers[i].end();
-             itCell != itCellEnd;
-             ++itCell)
-        {
+        for(auto itCell = mLayers[i].begin(); itCell != mLayers[i].end(); ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame;
 
             if (mCells.find(*itCell) != mCells.end()) {
-                cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(
-                                                (*mCells.find(*itCell)).second);
+                cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells.at(*itCell));
                 cellFrame->getOutputs().synchronizeDToH();
             }
 
@@ -2729,13 +2626,9 @@ N2D2::DeepNet::reportOutputsHistogram(std::map
                 ? tensor_cast<Float_T>(cellFrame->getOutputs())
                 : mStimuliProvider->getData();
 
-            const Float_T maxVal = std::abs(*Utils::max_abs_element(outputs.begin(), outputs.end()));
-
-            const std::map<std::string, Histogram>::iterator itHistogram
-                = outputsHistogram.find(*itCell);
-            (*itHistogram).second.enlarge(maxVal);
+            Histogram& hist = outputsHistogram.at(*itCell);
             for(Float_T val: outputs) {
-                (*itHistogram).second(std::abs(val));
+                hist(val);
             }
         }
     }

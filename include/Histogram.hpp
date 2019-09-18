@@ -29,40 +29,73 @@
 
 namespace N2D2 {
 
+enum class ClippingMode {
+    NONE,
+    KL_DIVERGENCE
+};
+
+inline ClippingMode parseClippingMode(const std::string& str) {
+    if(str == "None") {
+        return ClippingMode::NONE;
+    }
+
+    if(str == "KL-Divergence") {
+        return ClippingMode::KL_DIVERGENCE;
+    }
+
+    throw std::runtime_error("Unknown clipping mode '" + str + "'.");
+}
+
+inline unsigned int getNbBinsForClippingMode(std::size_t nbBits, 
+                                             ClippingMode clippingMode)
+{
+    switch (clippingMode) {
+        case ClippingMode::KL_DIVERGENCE:
+            return std::min((1 << nbBits)*32, 65536);
+        default:
+            return 0;
+    }
+}
+
 class Histogram {
 public:
-    Histogram(double minVal_ = 0.0,
-              double maxVal_ = 1000.0,
-              unsigned int nbBins_ = 100000);
+    Histogram() = default;
+    Histogram(double minVal, double maxVal, unsigned int nbBins);
+
     void operator()(double value, unsigned long long int count = 1);
+
     unsigned int enlarge(double value);
     unsigned int truncate(double value);
-    inline double getBinWidth() const;
-    inline double getBinValue(unsigned int binIdx) const;
+
+    std::size_t getNbBins() const;
+    double getBinWidth() const;
+    double getBinValue(unsigned int binIdx) const;
     unsigned int getBinIdx(double value) const;
-    void log(const std::string& fileName,
-             const std::map<std::string, double>& thresholds
-                = std::map<std::string, double>()) const;
-    Histogram quantize(double newMaxVal,
-                       unsigned int newNbBins = 128) const;
-    double calibrateKL(unsigned int nbLevels = 128,
-                       double maxError = 1.0e-3,
-                       unsigned int maxIters = 100) const;
+
+    double calibrateKLDivergence(std::size_t nbBits) const;
+    
     void save(std::ostream& state) const;
     void load(std::istream& state);
 
-    static double KLDivergence(const Histogram& ref,
-                               const Histogram& quant);
-    static void saveOutputsHistogram(const std::string& fileName,
-                         const std::map
-                         <std::string, Histogram>& outputsHistogram);
-    static void loadOutputsHistogram(const std::string& fileName,
-                         std::map<std::string, Histogram>& outputsHistogram);
-    static void logOutputsHistogram(const std::string& fileName,
-                         const std::map
-                         <std::string, Histogram>& outputsHistogram,
-                         unsigned int nbLevels = 128);
 
+    void log(const std::string& fileName,
+             const std::unordered_map<std::string, double>& thresholds
+                = std::unordered_map<std::string, double>()) const;
+
+    static void saveOutputsHistogram(const std::string& fileName,
+                    const std::unordered_map<std::string, Histogram>& outputsHistogram);
+    static void loadOutputsHistogram(const std::string& fileName,
+                    std::unordered_map<std::string, Histogram>& outputsHistogram);
+    static void logOutputsHistogram(const std::string& fileName,
+                    const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                    std::size_t nbBits);
+
+private:
+    static double KLDivergence(const Histogram& ref, const Histogram& quant);
+
+    Histogram quantize(double newMinVal,
+                       double newMaxVal,
+                       unsigned int newNbBins) const;
 private:
     double mMinVal;
     double mMaxVal;
@@ -74,14 +107,16 @@ private:
 };
 }
 
-double N2D2::Histogram::getBinWidth() const
-{
+inline double N2D2::Histogram::getBinWidth() const {
     return ((mMaxVal - mMinVal) / (double)mNbBins);
 }
 
-double N2D2::Histogram::getBinValue(unsigned int binIdx) const
-{
+inline double N2D2::Histogram::getBinValue(unsigned int binIdx) const {
     return (mMinVal + (binIdx + 0.5) * getBinWidth());
+}
+
+inline std::size_t N2D2::Histogram::getNbBins() const {
+    return mNbBins;
 }
 
 #endif // N2D2_HISTOGRAM_H

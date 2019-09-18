@@ -51,8 +51,11 @@
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Environment.hpp"
+#include "Histogram.hpp"
 #include "NodeEnv.hpp"
+#include "RangeStats.hpp"
 #include "StimuliProvider.hpp"
+#include "Activation/ActivationScalingMode.hpp"
 #include "Activation/LogisticActivation.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/SoftmaxCell.hpp"
@@ -241,10 +244,17 @@ public:
         calibration = opts.parse("-calib", 0, "number of stimuli used for the calibration "
                                               "(0 = no calibration, -1 = use the full "
                                               "test dataset)");
-        nbCalibrationPasses = opts.parse("-calib-passes", 2, "number of KL passes for determining "
-                                                             "the layer output values distribution "
-                                                             "truncation threshold (0 = use the "
-                                                             "max. value, no truncation)");
+        actClippingMode = parseClippingMode(
+                           opts.parse("-act-clipping-mode", std::string("None"), 
+                                          "activation clipping mode on export, "
+                                          "can be 'None' or 'KL-Divergence'"));
+        actScalingMode = parseActivationScalingMode(
+                           opts.parse("-act-rescaling-mode", std::string("Single-shift"), 
+                                          "activation scaling mode on export, "
+                                          "can be 'Floating-point', 'Fixed-point', 'Single-shift' "
+                                          "or 'Double-shift'"));
+        actRescalePerOutput = opts.parse("-act-rescale-per-output", false, 
+                                              "rescale activation per output on export");
         timeStep =    opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
         saveTestSet = opts.parse("-save-test-set", std::string(), "save the test dataset to a "
                                                                   "specified location");
@@ -307,7 +317,9 @@ public:
     std::string genExport;
     int nbBits;
     int calibration;
-    unsigned int nbCalibrationPasses;
+    ClippingMode actClippingMode;
+    ActivationScalingMode actScalingMode;
+    bool actRescalePerOutput;
     bool exportNoUnsigned;
     double timeStep;
     std::string saveTestSet;
@@ -323,9 +335,6 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
     std::shared_ptr<Database> database = deepNet->getDatabase();
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
-
-    std::map<std::string, RangeStats> outputsRange;
-    std::map<std::string, Histogram> outputsHistogram;
     
     std::vector<std::pair<std::string, double> > timings, cumTimings;
 
@@ -353,8 +362,6 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
         deepNet->test(Database::Test, &timings);
 
-        deepNet->reportOutputsRange(outputsRange);
-        deepNet->reportOutputsHistogram(outputsHistogram);
         deepNet->logEstimatedLabels(testName);
 
         if (opt.logJSON)
@@ -534,22 +541,6 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
             }
         }
     }
-
-    Histogram::logOutputsHistogram(testName + "_outputs_histogram",
-                                    outputsHistogram);
-    RangeStats::logOutputsRange(testName + "_outputs_range.dat",
-                                outputsRange);
-
-    if (!afterCalibration) {
-        // Necessary for spike transcoding
-        deepNet->normalizeOutputsRange(outputsRange, 0.25);
-        deepNet->exportNetworkFreeParameters(
-            "weights_range_normalized");
-
-        // Normalize all weights
-        deepNet->normalizeFreeParameters();
-        deepNet->exportNetworkFreeParameters("weights_normalized");
-    }    
     
 }
 
@@ -560,39 +551,50 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     bool afterCalibration = false;
     try {
-        if (!opt.weights.empty())
+        if (!opt.weights.empty()) {
             deepNet->importNetworkFreeParameters(opt.weights);
+        }
         else if (opt.load.empty()) {
-            if (database->getNbStimuli(Database::Validation) > 0)
+            if (database->getNbStimuli(Database::Validation) > 0) {
                 deepNet->importNetworkFreeParameters("weights_validation");
-            else
+            }
+            else {
                 deepNet->importNetworkFreeParameters("weights");
+            }
         }
     }
     catch (const std::exception& e) {
-        std::cout << Utils::cwarning << e.what()
-            << Utils::cdef << std::endl;
+        std::cout << Utils::cwarning << e.what() << Utils::cdef << std::endl;
     }
 
     deepNet->removeDropout();
 
-    if (opt.fuse)
+    if (opt.fuse) {
         deepNet->fuseBatchNormWithConv();
+    }
+
 
     std::stringstream exportDir;
     exportDir << "export_" << opt.genExport << "_"
                 << ((opt.nbBits > 0) ? "int" : "float") << std::abs(opt.nbBits);
 
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
+    DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::getScaling(*sp, 
+                                                                        exportDir.str() + "/stimuli",
+                                                                        Database::Test).second;
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
-        deepNet->normalizeFreeParameters();
+        if(opt.actRescalePerOutput) {
+            deepNet->normalizeFreeParametersPerOutputChannel();
+        }
+        else {
+            deepNet->normalizeFreeParameters();
+        }
 
         const double stimuliRange = StimuliProviderExport::getStimuliRange(
                                             *sp,
-                                            exportDir.str()
-                                            + "/stimuli_before_calibration",
+                                            exportDir.str() + "/stimuli_before_calibration",
                                             Database::Test);
 
         if (stimuliRange == 0.0) {
@@ -629,13 +631,13 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         const std::string outputsHistogramFile
             = exportDir.str() + "/calibration/outputs_histogram.bin";
 
-        std::map<std::string, RangeStats> outputsRange;
-        std::map<std::string, Histogram> outputsHistogram;
+        std::unordered_map<std::string, RangeStats> outputsRange;
+        std::unordered_map<std::string, Histogram> outputsHistogram;
 
         bool loadPrevState = false;
 
-        if (std::ifstream(outputsRangeFile.c_str()).good()
-            && std::ifstream(outputsHistogramFile.c_str()).good())
+        if (std::ifstream(outputsRangeFile.c_str()).good() && 
+            std::ifstream(outputsHistogramFile.c_str()).good())
         {
             std::cout << "Load previously saved RangeStats and Histogram"
                 " for the calibration? (y/n) ";
@@ -652,13 +654,9 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         if (loadPrevState) {
             RangeStats::loadOutputsRange(outputsRangeFile, outputsRange);
-            Histogram::loadOutputsHistogram(outputsHistogramFile,
-                                            outputsHistogram);
+            Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
         else {
-            unsigned int nextLog = opt.log;
-            unsigned int nextReport = opt.report;
-
             const unsigned int nbTest = (opt.calibration > 0)
                 ? std::min((unsigned int)opt.calibration,
                             database->getNbStimuli(Database::Test))
@@ -666,41 +664,55 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             const unsigned int batchSize = sp->getBatchSize();
             const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
+
+            std::cout << "Calculating calibration data range..." << std::endl;
+            unsigned int nextReport = opt.report;
             for (unsigned int b = 0; b < nbBatch; ++b) {
                 const unsigned int i = b * batchSize;
 
                 sp->readBatch(Database::Test, i);
                 deepNet->test(Database::Test);
                 deepNet->reportOutputsRange(outputsRange);
-                deepNet->reportOutputsHistogram(outputsHistogram);
 
                 if (i >= nextReport || b == nbBatch - 1) {
                     nextReport += opt.report;
                     std::cout << "Calibration data #" << i << std::endl;
                 }
+            }
 
-                if (i >= nextLog || b == nbBatch - 1)
-                    nextLog += opt.report;
+
+            std::cout << "Calculating calibration data histogram..." << std::endl;
+            nextReport = opt.report;
+            for (unsigned int b = 0; b < nbBatch; ++b) {
+                const unsigned int i = b * batchSize;
+
+                sp->readBatch(Database::Test, i);
+                deepNet->test(Database::Test);
+                deepNet->reportOutputsHistogram(outputsHistogram, outputsRange, 
+                                                opt.nbBits, opt.actClippingMode);
+
+                if (i >= nextReport || b == nbBatch - 1) {
+                    nextReport += opt.report;
+                    std::cout << "Calibration data #" << i << std::endl;
+                }
             }
 
             RangeStats::saveOutputsRange(outputsRangeFile, outputsRange);
-            Histogram::saveOutputsHistogram(outputsHistogramFile,
-                                            outputsHistogram);
+            Histogram::saveOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
 
         RangeStats::logOutputsRange(exportDir.str() + "/calibration"
                                     "/outputs_range.dat", outputsRange);
         Histogram::logOutputsHistogram(exportDir.str() + "/calibration"
-                                    "/outputs_histogram", outputsHistogram);
+                                       "/outputs_histogram", outputsHistogram, opt.nbBits);
 
         std::cout << "Calibration (" << opt.nbBits << " bits):" << std::endl;
 
-        const unsigned int nbLevels = std::pow(2, opt.nbBits - 1);
-
         deepNet->normalizeOutputsRange(outputsHistogram, outputsRange,
-                                        nbLevels, opt.nbCalibrationPasses);
+                                       opt.nbBits, opt.actClippingMode, opt.actScalingMode);
 
         // For following test simulation
+        const unsigned int nbLevels = std::pow(2, opt.nbBits - 1);
         deepNet->setParameter("SignalsDiscretization", nbLevels);
         deepNet->setParameter("FreeParametersDiscretization", nbLevels);
 

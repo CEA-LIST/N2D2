@@ -138,6 +138,7 @@ void N2D2::C_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
 void N2D2::C_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
                                                       std::ofstream& header)
 {
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
     header << "{";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
@@ -150,8 +151,8 @@ void N2D2::C_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
             Tensor<Float_T> bias;
             cell.getBias(output, bias);
 
-            CellExport::generateFreeParameter(
-                cell, bias(0), header, Cell::Additive);
+            CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
+            CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         }
     }
 

@@ -85,8 +85,7 @@ void N2D2::RangeStats::load(std::istream& state) {
 }
 
 void N2D2::RangeStats::saveOutputsRange(const std::string& fileName,
-                               const std::map
-                               <std::string, RangeStats>& outputsRange)
+                               const std::unordered_map<std::string, RangeStats>& outputsRange)
 {
     std::ofstream state(fileName.c_str(), std::fstream::binary);
 
@@ -96,9 +95,7 @@ void N2D2::RangeStats::saveOutputsRange(const std::string& fileName,
     const size_t mapSize = outputsRange.size();
     state.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
 
-    for (std::map<std::string, RangeStats>::const_iterator it
-         = outputsRange.begin(), itEnd = outputsRange.end(); it != itEnd; ++it)
-    {
+    for (auto it = outputsRange.begin(); it != outputsRange.end(); ++it) {
         const size_t nameSize = (*it).first.size();
         const std::string& nameStr = (*it).first;
         state.write(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
@@ -113,7 +110,7 @@ void N2D2::RangeStats::saveOutputsRange(const std::string& fileName,
 }
 
 void N2D2::RangeStats::loadOutputsRange(const std::string& fileName,
-                               std::map<std::string, RangeStats>& outputsRange)
+                                        std::unordered_map<std::string, RangeStats>& outputsRange)
 {
     std::ifstream state(fileName.c_str(), std::fstream::binary);
 
@@ -130,7 +127,7 @@ void N2D2::RangeStats::loadOutputsRange(const std::string& fileName,
         state.read(reinterpret_cast<char*>(&nameStr[0]),
                     nameSize * sizeof(nameStr[0]));
 
-        std::map<std::string, RangeStats>::iterator it;
+        std::unordered_map<std::string, RangeStats>::iterator it;
         std::tie(it, std::ignore)
             = outputsRange.insert(std::make_pair(nameStr, RangeStats()));
 
@@ -150,17 +147,14 @@ void N2D2::RangeStats::loadOutputsRange(const std::string& fileName,
 }
 
 void N2D2::RangeStats::logOutputsRange(const std::string& fileName,
-                               const std::map
-                               <std::string, RangeStats>& outputsRange)
+                            const std::unordered_map<std::string, RangeStats>& outputsRange)
 {
     std::ofstream rangeData(fileName.c_str());
 
     if (!rangeData.good())
         throw std::runtime_error("Could not open range file: " + fileName);
 
-    for (std::map<std::string, RangeStats>::const_iterator it
-         = outputsRange.begin(), itEnd = outputsRange.end(); it != itEnd; ++it)
-    {
+    for (auto it = outputsRange.begin(); it != outputsRange.end(); ++it) {
         rangeData << (*it).first << " " << (*it).second.mMinVal
                   << " " << (*it).second.mMaxVal << " "
                   << (*it).second.mean() << " "

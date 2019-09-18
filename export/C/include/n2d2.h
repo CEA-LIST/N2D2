@@ -87,27 +87,16 @@ static inline unsigned char usat8(int x) {
                                           x);
 }
 */
-static inline DATA_T sat32(SUM_T x, char rs)
-{
-#if NB_BITS < 0
-    const SUM_T y = x;
-#else
-    const SUM_T y = (x >> rs);
-#endif
-    return (DATA_T)((y > DATA_T_MAX) ? DATA_T_MAX :
-                    (y < DATA_T_MIN) ? DATA_T_MIN :
-                                       y);
+static inline DATA_T sat32(SUM_T x) {
+    return (DATA_T)((x > DATA_T_MAX) ? DATA_T_MAX :
+                    (x < DATA_T_MIN) ? DATA_T_MIN :
+                                       x);
 }
 
-static inline UDATA_T usat32(SUM_T x, char rs) {
-#if NB_BITS < 0
-    const SUM_T y = x;
-#else
-    const SUM_T y = (x >> rs);
-#endif
-    return (UDATA_T)((y > UDATA_T_MAX) ? UDATA_T_MAX :
-                     (y < 0)           ? 0 :
-                                         y);
+static inline UDATA_T usat32(SUM_T x) {
+    return (UDATA_T)((x > UDATA_T_MAX) ? UDATA_T_MAX :
+                     (x < 0)           ? 0 :
+                                         x);
 }
 
 static inline char msb32(int32_t x)
@@ -170,22 +159,14 @@ sat(SUM_T weightedSum, ActivationFunction_T func, int shift)
         return nl32_tanh(weightedSum);
 #endif
     case Saturation:
-        return sat32(weightedSum, NB_BITS - 1);
+        return sat32(weightedSum);
 
     case Logistic:
     case LogisticWithLoss:
 #if NB_BITS < 0
         return 1.0 / (1.0 + exp(-weightedSum));
 #else
-  #if BINARY_THRESHOLD != 0
-        weightedSum >>= 2;      // divide by 4
-        weightedSum += (DATA_T_MAX << (NB_BITS - 1));
-        return MAX((DATA_T)0, sat32(weightedSum, NB_BITS));
-  #else
-        // Use the full NB_BITS dynamic. Mapping is:
-        // for NB_BITS = 8: [-2,2] -> [-128,128]
-        return sat32(weightedSum, NB_BITS);
-  #endif
+        return sat32(weightedSum);
 #endif
 
     case Rectifier:
@@ -193,10 +174,9 @@ sat(SUM_T weightedSum, ActivationFunction_T func, int shift)
         return MAX((SUM_T)0, weightedSum);
 #else
   #if defined(UNSIGNED_DATA) && UNSIGNED_DATA
-        // Keep one more bit because the output data is considered unsigned
-        return usat32(MAX((SUM_T)0, weightedSum), NB_BITS - 2);
+        return usat32(MAX((SUM_T)0, weightedSum));
   #else
-        return sat32(MAX((SUM_T)0, weightedSum), NB_BITS - 1);
+        return sat32(MAX((SUM_T)0, weightedSum));
   #endif
 #endif
 
@@ -204,11 +184,7 @@ sat(SUM_T weightedSum, ActivationFunction_T func, int shift)
 #if NB_BITS < 0
         return weightedSum;
 #else
-        // Max value is 2^(NB_BITS-1)*2^(NB_BITS-1) = 2^(2*NB_BITS-2)
-        // ex. NB_BITS = 8 ==> -128*-128=16384
-        // Output max value is 2^(NB_BITS-1) ==> must be shifted by NB_BITS - 1
-        // 16384>>7 = 128
-        return sat32(weightedSum, NB_BITS - 1);
+        return sat32(weightedSum);
 #endif
 
     default:
@@ -237,20 +213,14 @@ usat(SUM_T weightedSum, ActivationFunction_T func, int shift)
         return nl32_tanh(weightedSum);
 #endif
     case Saturation:
-        return sat32(weightedSum, NB_BITS);
+        return sat32(weightedSum);
 
     case Logistic:
     case LogisticWithLoss:
 #if NB_BITS < 0
         return 1.0 / (1.0 + exp(-weightedSum));
 #else
-  #if BINARY_THRESHOLD != 0
-        weightedSum >>= 3;      // divide by 4 & divide by 2 (because unsigned)
-        weightedSum += (DATA_T_MAX << (NB_BITS - 1));
-        return MAX((DATA_T)0, sat32(weightedSum, NB_BITS));
-  #else
-        return sat32(weightedSum, NB_BITS + 1);
-  #endif
+        return sat32(weightedSum);
 #endif
 
     case Rectifier:
@@ -258,10 +228,9 @@ usat(SUM_T weightedSum, ActivationFunction_T func, int shift)
         return MAX((SUM_T)0, weightedSum);
 #else
   #if defined(UNSIGNED_DATA) && UNSIGNED_DATA
-        // Keep one more bit because the output data is considered unsigned
-        return usat32(MAX((SUM_T)0, weightedSum), NB_BITS - 1);
+        return usat32(MAX((SUM_T)0, weightedSum));
   #else
-        return sat32(MAX((SUM_T)0, weightedSum), NB_BITS);
+        return sat32(MAX((SUM_T)0, weightedSum));
   #endif
 #endif
 
@@ -269,11 +238,7 @@ usat(SUM_T weightedSum, ActivationFunction_T func, int shift)
 #if NB_BITS < 0
         return weightedSum;
 #else
-        // Max value is 2^NB_BITS*2^(NB_BITS-1) = 2^(2*NB_BITS-1)
-        // ex. NB_BITS = 8 ==> -256*-128=32768
-        // Output max value is 2^(NB_BITS-1) ==> must be shifted by NB_BITS
-        // 32768>>8 = 128
-        return sat32(weightedSum, NB_BITS);
+        return sat32(weightedSum);
 #endif
 
     default:

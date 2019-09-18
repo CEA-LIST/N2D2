@@ -83,6 +83,11 @@ public:
                                   const std::string& dirName,
                                   Database::StimuliSet set);
 
+    static std::pair<double, bool> getScaling(StimuliProvider& sp,
+                                              const std::string& dirName,
+                                              Database::StimuliSet set,
+                                              bool normalize = false);
+
 protected:
     static void writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
                                    CellExport::IntApprox approxMethod, 
@@ -106,10 +111,6 @@ protected:
     static StimuliData getStimuliData(StimuliProvider& sp,
                                       const std::string& dirName,
                                       Database::StimuliSet set);
-    static std::pair<double, bool> getScaling(StimuliProvider& sp,
-                                              const std::string& dirName,
-                                              Database::StimuliSet set,
-                                              bool normalize = false);
 };
 
 template<typename T>

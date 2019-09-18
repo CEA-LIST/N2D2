@@ -23,23 +23,29 @@
 #include "utils/Utils.hpp"
 #include "utils/Gnuplot.hpp"
 
-N2D2::Histogram::Histogram(double minVal_,
-                           double maxVal_,
-                           unsigned int nbBins_)
-    : mMinVal(minVal_),
-      mMaxVal(maxVal_),
-      mNbBins(nbBins_),
-      mValues(nbBins_, 0),
+
+N2D2::Histogram::Histogram(double minVal, double maxVal, unsigned int nbBins)
+    : mMinVal(minVal),
+      mMaxVal(maxVal),
+      mNbBins(nbBins),
+      mValues(nbBins, 0),
       mNbValues(0),
       mMaxBin(0)
 {
-    // ctor
+    if(mNbBins <= 0) {
+        throw std::runtime_error("Number of bins must be > 0.");
+    }
 }
 
-void N2D2::Histogram::operator()(double value, unsigned long long int count)
-{
-    const unsigned int binIdx = getBinIdx(value);
+void N2D2::Histogram::operator()(double value, unsigned long long int count) {
+    if(value > mMaxVal || value < mMinVal) {
+        throw std::runtime_error(std::to_string(value) + " not between [" + 
+                                    std::to_string(mMinVal) + ";" + 
+                                    std::to_string(mMaxVal) + 
+                                 "]");
+    }
 
+    const unsigned int binIdx = getBinIdx(value);
     if (binIdx > mMaxBin)
         mMaxBin = binIdx;
 
@@ -50,9 +56,13 @@ void N2D2::Histogram::operator()(double value, unsigned long long int count)
 unsigned int N2D2::Histogram::enlarge(double value)
 {
     if (value > mMaxVal) {
-        const double binWidth = getBinWidth();
+        double binWidth = getBinWidth();
+        if(binWidth == 0) {
+            binWidth = value - mMaxVal;
+        }
 
         mNbBins += (unsigned int)std::ceil((value - mMaxVal) / binWidth);
+
         mValues.resize(mNbBins, 0);
         mMaxVal = mMinVal + mNbBins * binWidth;
 
@@ -92,8 +102,7 @@ unsigned int N2D2::Histogram::getBinIdx(double value) const
 }
 
 void N2D2::Histogram::log(const std::string& fileName,
-                                   const std::map<std::string, double>&
-                                        thresholds) const
+                          const std::unordered_map<std::string, double>& thresholds) const
 {
     std::ofstream histData(fileName.c_str());
 
@@ -104,7 +113,7 @@ void N2D2::Histogram::log(const std::string& fileName,
 
     for (unsigned int bin = 0; bin <= mMaxBin; ++bin) {
         histData << bin << " " << getBinValue(bin) << " " << mValues[bin]
-            << " " << (mValues[bin] / (double)mNbValues) << "\n";
+            << " " << ((mNbValues != 0)?(mValues[bin] / (double)mNbValues):0) << "\n";
     }
 
     histData.close();
@@ -119,9 +128,7 @@ void N2D2::Histogram::log(const std::string& fileName,
 
     unsigned int i = 0;
 
-    for (std::map<std::string, double>::const_iterator it = thresholds.begin(),
-        itEnd = thresholds.end(); it != itEnd; ++it)
-    {
+    for (auto it = thresholds.begin(); it != thresholds.end(); ++it) {
         std::stringstream cmdStr;
         cmdStr << "arrow from " << (*it).second << ", "
             "graph 0 to " << (*it).second << ", graph 1 nohead "
@@ -145,53 +152,48 @@ void N2D2::Histogram::log(const std::string& fileName,
     gnuplot.plot(fileName, "using 2:4 with points");
 }
 
-N2D2::Histogram N2D2::Histogram::quantize(
-    double newMaxVal,
-    unsigned int newNbBins) const
-{
-    Histogram hist(mMinVal, newMaxVal, newNbBins);
 
-    for (unsigned int bin = 0; bin <= mMaxBin; ++bin)
-        hist(getBinValue(bin), mValues[bin]);
+double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
+    if(mNbValues == 0) {
+        return 0.0;
+    }
+
+    const bool isUnsigned = mMinVal >= 0.0;
+    const std::size_t nbQuantizedBins = 1 << nbBits;
+
+    double threshold = mMaxVal;
+    double bestThreshold = threshold;
+    double bestDivergence = std::numeric_limits<double>::max();;
+
+    while(threshold > 0.0) {
+        const double divergence = KLDivergence(*this, quantize(isUnsigned?0:-threshold, 
+                                                               threshold, nbQuantizedBins));
+        if(divergence < bestDivergence) {
+            bestDivergence = divergence;
+            bestThreshold = threshold;
+        }
+
+        threshold -= 0.01;
+    }
+
+    return bestThreshold;
+}
+
+N2D2::Histogram N2D2::Histogram::quantize(double newMinVal, double newMaxVal,
+                                          unsigned int newNbBins) const
+{
+    Histogram hist(newMinVal, newMaxVal, newNbBins);
+
+    for (unsigned int bin = 0; bin <= mMaxBin; ++bin) {
+        const double value = Utils::clamp(getBinValue(bin), hist.mMinVal, hist.mMaxVal);
+        hist(value, mValues[bin]);
+    }
 
     assert(mNbValues == hist.mNbValues);
     return hist;
 }
 
-double N2D2::Histogram::calibrateKL(unsigned int nbLevels,
-                                             double maxError,
-                                             unsigned int maxIters) const
-{
-    double lowerVal = mMinVal;
-    double upperVal = getBinValue(mMaxBin);
-    unsigned int iter = 0;
-
-    while ((upperVal - lowerVal) > maxError && iter < maxIters) {
-        const double middleVal = (upperVal + lowerVal) / 2.0;
-        const double middleLowerVal = (middleVal + lowerVal) / 2.0;
-        const double middleUpperVal = (upperVal + middleVal) / 2.0;
-        const double lowerDiv = KLDivergence(*this,
-                                            quantize(middleLowerVal, nbLevels));
-        const double upperDiv = KLDivergence(*this,
-                                            quantize(middleUpperVal, nbLevels));
-
-        if (upperDiv < lowerDiv)
-            lowerVal = middleLowerVal;
-        else
-            upperVal = middleUpperVal;
-
-        // DEBUG
-        //std::cout << "div = " << ((upperDiv < lowerDiv) ? upperDiv : lowerDiv)
-        //    << "   [" << lowerVal << ", " << upperVal << "]" << std::endl;
-        ++iter;
-    }
-
-    return (upperVal + lowerVal) / 2.0;
-}
-
-double N2D2::Histogram::KLDivergence(const Histogram& ref,
-                                              const Histogram& quant)
-{
+double N2D2::Histogram::KLDivergence(const Histogram& ref, const Histogram& quant) {
     assert(ref.mNbValues == quant.mNbValues);
     assert(ref.mMaxBin >= quant.mMaxBin);
     assert(ref.mMaxVal >= quant.mMaxVal);
@@ -249,8 +251,7 @@ void N2D2::Histogram::load(std::istream& state) {
 }
 
 void N2D2::Histogram::saveOutputsHistogram(const std::string& fileName,
-                               const std::map
-                               <std::string, Histogram>& outputsHistogram)
+                        const std::unordered_map<std::string, Histogram>& outputsHistogram)
 {
     std::ofstream state(fileName.c_str(), std::fstream::binary);
 
@@ -260,10 +261,7 @@ void N2D2::Histogram::saveOutputsHistogram(const std::string& fileName,
     const size_t mapSize = outputsHistogram.size();
     state.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
 
-    for (std::map<std::string, Histogram>::const_iterator it
-         = outputsHistogram.begin(), itEnd = outputsHistogram.end();
-         it != itEnd; ++it)
-    {
+    for (auto it = outputsHistogram.begin(); it != outputsHistogram.end(); ++it) {
         const size_t nameSize = (*it).first.size();
         const std::string& nameStr = (*it).first;
         state.write(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
@@ -278,7 +276,7 @@ void N2D2::Histogram::saveOutputsHistogram(const std::string& fileName,
 }
 
 void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
-                            std::map<std::string, Histogram>& outputsHistogram)
+                        std::unordered_map<std::string, Histogram>& outputsHistogram)
 {
     std::ifstream state(fileName.c_str(), std::fstream::binary);
 
@@ -295,7 +293,7 @@ void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
         state.read(reinterpret_cast<char*>(&nameStr[0]),
                     nameSize * sizeof(nameStr[0]));
 
-        std::map<std::string, Histogram>::iterator it;
+        std::unordered_map<std::string, Histogram>::iterator it;
         std::tie(it, std::ignore)
             = outputsHistogram.insert(std::make_pair(nameStr, Histogram()));
 
@@ -315,48 +313,48 @@ void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
 }
 
 void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
-                               const std::map
-                               <std::string, Histogram>& outputsHistogram,
-                               unsigned int nbLevels)
+                        const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                        std::size_t nbBits)
 {
     Utils::createDirectories(dirName);
 
-    for (std::map<std::string, Histogram>::const_iterator it
-         = outputsHistogram.begin(), itEnd = outputsHistogram.end();
-         it != itEnd; ++it)
-    {
-        std::map<std::string, double> thresholds;
+    for (auto it = outputsHistogram.begin(); it != outputsHistogram.end(); ++it) {
+        std::unordered_map<std::string, double> thresholds;
 
         Histogram hist = (*it).second;
 
         // First pass
-        double threshold = hist.calibrateKL(nbLevels);
+        double threshold = hist.calibrateKLDivergence(nbBits);
         thresholds["KL 1-pass"] = threshold;
 
         // Second pass on truncated hist
         hist.truncate(threshold);
-        threshold = hist.calibrateKL(nbLevels);
+        threshold = hist.calibrateKLDivergence(nbBits);
         thresholds["KL 2-passes"] = threshold;
 
         // Third pass
         hist.truncate(threshold);
-        threshold = hist.calibrateKL(nbLevels);
+        threshold = hist.calibrateKLDivergence(nbBits);
         thresholds["KL 3-passes"] = threshold;
 
         // Fourth pass
         hist.truncate(threshold);
-        threshold = hist.calibrateKL(nbLevels);
+        threshold = hist.calibrateKLDivergence(nbBits);
         thresholds["KL 4-passes"] = threshold;
 
         // Fifth pass
         hist.truncate(threshold);
-        threshold = hist.calibrateKL(nbLevels);
+        threshold = hist.calibrateKLDivergence(nbBits);
         thresholds["KL 5-passes"] = threshold;
 
         (*it).second.log(dirName + "/" + (*it).first + ".dat",
                                   thresholds);
-        (*it).second.quantize(threshold).log(dirName + "/"
-                                            + (*it).first + "_quant.dat");
+
+        const bool isUnsigned = hist.mMinVal >= 0.0;
+        const std::size_t nbQuantizedBins = 1 << nbBits;
+        const Histogram quantized = (*it).second.quantize(isUnsigned?0:-threshold, threshold, 
+                                                          nbQuantizedBins);
+        quantized.log(dirName + "/" + (*it).first + "_quant.dat");
 
         //std::cout << (*it).first << ": " << threshold << std::endl;
     }

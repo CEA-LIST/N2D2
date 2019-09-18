@@ -27,6 +27,8 @@
 
 namespace N2D2 {
 
+class Cell_Frame_Top;
+
 /**
  * Base class for methods commun to every cell type for any export type
  * ANY CELL, ANY EXPORT
@@ -89,6 +91,14 @@ public:
     static long long int getIntApprox(double value, IntApprox method = Round);
     static long long int getIntFreeParameter(const Cell& cell, double value, 
                     Cell::FreeParametersType freeParameterType = Cell::Multiplicative);
+
+    /**
+     * If the ActivationScalingMode of the cell activation is a SINGLE_SHIFT, 
+     * then add a ' + HALF' to the stream so that the rounding of the scaling can be
+     * merged into the bias of the cell.
+     */
+    static void generateSingleShiftHalfAddition(const Cell_Frame_Top& cell, std::size_t output, 
+                                                std::ostream& stream);
 
 private:
     static double getScalingForFreeParameterType(const Cell& cell, Cell::FreeParametersType freeParameterType);

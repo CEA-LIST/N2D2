@@ -42,13 +42,11 @@ public:
     void load(std::istream& state);
 
     static void saveOutputsRange(const std::string& fileName,
-                               const std::map
-                               <std::string, RangeStats>& outputsRange);
+                        const std::unordered_map<std::string, RangeStats>& outputsRange);
     static void loadOutputsRange(const std::string& fileName,
-                               std::map<std::string, RangeStats>& outputsRange);
+                         std::unordered_map<std::string, RangeStats>& outputsRange);
     static void logOutputsRange(const std::string& fileName,
-                         const std::map
-                         <std::string, RangeStats>& outputsRange);
+                         const std::unordered_map<std::string, RangeStats>& outputsRange);
 
 private:
     double mMinVal;

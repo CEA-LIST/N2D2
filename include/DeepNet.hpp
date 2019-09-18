@@ -25,11 +25,12 @@
 #include <string>
 #include <vector>
 
+#include "Activation/ActivationScalingMode.hpp"
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
 #include "Network.hpp"
-#include "RangeStats.hpp"
 #include "Histogram.hpp"
+
 
 #include "Target/Target.hpp"
 
@@ -42,9 +43,12 @@
 
 namespace N2D2 {
 
+class Activation;
 class CMonitor;
-class Monitor;
 class Gnuplot;
+class Monitor;
+class RangeStats;
+
 
 class DeepNet : public Parameterizable {
 public:
@@ -85,17 +89,11 @@ public:
     void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeFreeParametersPerOutputChannel(double normFactor = 1.0);
     
-    void normalizeOutputsRange(const std::map
-                               <std::string, RangeStats>& outputsRange,
-                               double normFactor,
-                               double useMean = true,
-                               double stdDevOffset = 0.0);
-    void normalizeOutputsRange(const std::map
-                               <std::string, Histogram>& outputsHistogram,
-                               const std::map
-                               <std::string, RangeStats>& outputsRange,
-                               unsigned int nbLevels = 128,
-                               unsigned int nbPasses = 1);
+    void normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                               const std::unordered_map<std::string, RangeStats>& outputsRange,
+                               std::size_t nbBits,
+                               ClippingMode actClippingMode,
+                               ActivationScalingMode actScalingMode);
 
     void fuseBatchNormWithConv();
     void removeDropout();
@@ -196,16 +194,36 @@ public:
                     const std::vector
                     <std::pair<std::string, double> >& timings) const;
     void logReceptiveFields(const std::string& fileName) const;
-    void reportOutputsRange(std::map
-                            <std::string, RangeStats>& outputsRange) const;
-    void reportOutputsHistogram(std::map
-                            <std::string, Histogram>& outputsHistogram) const;
+    void reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const;
+    void reportOutputsHistogram(std::unordered_map<std::string, Histogram>& outputsHistogram,
+                                const std::unordered_map<std::string, RangeStats>& outputsRange,
+                                std::size_t nbBits, ClippingMode actClippingMode) const;
 
     virtual ~DeepNet() {};
 
     static void drawHistogram(std::string title, const std::string& dataFileName,
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
                    Gnuplot& p);
+
+private:
+    double getCellThreshold(const std::string& cellName,
+                            const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                            const std::unordered_map<std::string, RangeStats>& outputsRange,
+                            std::size_t nbBits, ClippingMode actClippingMode) const;
+    
+    void rescaleActivationOutputs(const Cell& cell, Activation& activation,
+                                  double scalingFactor, double prevScalingFactor,
+                                  std::size_t nbBits) const;
+
+    void approximateRescaling(Cell& cell, Activation& activation,
+                              ActivationScalingMode actScalingMode) const;
+    
+    /**
+     * Approximate the multiplicative scaling factor by an addition of shifts.
+     */
+    std::vector<std::vector<unsigned char>> approxRescaleWithShifts(Cell& cell, 
+                                                const std::vector<double>& scalingPerOutput, 
+                                                std::size_t nbShifts) const;
 
 protected:
     Parameter<std::string> mName;

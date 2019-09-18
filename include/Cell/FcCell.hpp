@@ -124,12 +124,12 @@ public:
                                                 FreeParametersType /*type*/ = All);
     
     void getStats(Stats& stats) const;
+    virtual void setWeight(unsigned int output, unsigned int channel,
+                           const BaseTensor& value) = 0;
     virtual ~FcCell() {};
 
 protected:
     virtual void setOutputsDims() {};
-    virtual void setWeight(unsigned int output, unsigned int channel,
-                           const BaseTensor& value) = 0;
     virtual void setBias(unsigned int output, const BaseTensor& value) = 0;
     std::map<unsigned int, unsigned int> outputsRemap() const;
 

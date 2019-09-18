@@ -1486,7 +1486,11 @@ rbfcell_propagate_2d(unsigned int nbChannels,
         outputs[outputOffset + output] = nl32_exp(normSquared);
 #else
         normSquared += 2 * 16129;
-        DATA_T val = sat32((SUM_T)normSquared, 9);
+
+#if NB_BITS > 0
+        normSquared >>= 9;
+#endif        
+        DATA_T val = sat32((SUM_T)normSquared);
         /*
                 normSquared+= ((2*16129) >> -rs);
 
@@ -1543,7 +1547,11 @@ rbfcell_upropagate_2d(unsigned int nbChannels,
         outputs[outputOffset + output] = nl32_exp(normSquared);
 #else
         normSquared += 2 * 16129;
-        DATA_T val = sat32((SUM_T)normSquared, 9);
+
+#if NB_BITS > 0
+        normSquared >>= 9;
+#endif
+        DATA_T val = sat32((SUM_T)normSquared);
 
         outputs[outputOffset + output] = (val < 0) ? 0 : val;
 #endif
@@ -1585,7 +1593,11 @@ void rbfcell_propagate(unsigned int nbChannels,
         outputs[outputOffset + output] = nl32_exp(normSquared);
 #else
         normSquared += 2 * 16129;
-        DATA_T val = sat32((SUM_T)normSquared, 9);
+
+#if NB_BITS > 0
+        normSquared >>= 9;
+#endif
+        DATA_T val = sat32((SUM_T)normSquared);
 
         outputs[outputOffset + output] = (val < 0) ? 0 : val;
 #endif
