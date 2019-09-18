@@ -83,11 +83,13 @@ public:
                                   const std::string& dirName,
                                   Database::StimuliSet set);
 
+    /**
+     * Return a pair of scaling and a bool indicating if the stimuli are unsigned.
+     */
     static std::pair<double, bool> getScaling(StimuliProvider& sp,
                                               const std::string& dirName,
                                               Database::StimuliSet set,
                                               bool normalize = false);
-
 protected:
     static void writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
                                    CellExport::IntApprox approxMethod, 
