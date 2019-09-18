@@ -1139,6 +1139,42 @@ void N2D2::DeepNet::normalizeOutputsRange(const std::unordered_map<std::string, 
 }
 
 
+void N2D2::DeepNet::clipWeights(std::size_t nbBits, ClippingMode wtClippingMode) {
+    if(wtClippingMode == ClippingMode::NONE) {
+        return;
+    }
+
+    const unsigned int nbBins = getNbBinsForClippingMode(nbBits, wtClippingMode);
+
+    for (auto it = mLayers.begin() + 1; it != mLayers.end(); ++it) {
+        for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
+            const auto& cell = mCells.at(*itCell);
+
+            const auto range = cell->getFreeParametersRange(false);
+            const Float_T val = Utils::max_abs(range.first, range.second);
+
+            Histogram hist(-val, val, nbBins);
+            cell->processFreeParameters([&](double wt) { 
+                hist(wt);
+                return wt; 
+            }, Cell::Multiplicative);
+
+            double threshold;
+            switch(wtClippingMode) {
+                case ClippingMode::KL_DIVERGENCE:
+                    threshold = hist.calibrateKLDivergence(nbBits);
+                    break;
+                default:
+                    throw std::runtime_error("Unsupported clipping mode.");
+            }
+
+            cell->processFreeParameters([&](double wt) { 
+                return Utils::clamp(wt, -threshold, threshold); 
+            }, Cell::Multiplicative);
+        }
+    }
+}
+
 /**
  * Ref: https://tkv.io/posts/fusing-batchnorm-and-conv/
 */

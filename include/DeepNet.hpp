@@ -89,6 +89,7 @@ public:
     void normalizeFreeParameters(double normFactor = 1.0);
     void normalizeFreeParametersPerOutputChannel(double normFactor = 1.0);
     
+    void clipWeights(std::size_t nbBits, ClippingMode wtClippingMode);
     void normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                const std::unordered_map<std::string, RangeStats>& outputsRange,
                                std::size_t nbBits,

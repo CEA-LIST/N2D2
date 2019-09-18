@@ -244,6 +244,10 @@ public:
         calibration = opts.parse("-calib", 0, "number of stimuli used for the calibration "
                                               "(0 = no calibration, -1 = use the full "
                                               "test dataset)");
+        wtClippingMode = parseClippingMode(
+                           opts.parse("-wt-clipping-mode", std::string("None"), 
+                                          "weights clipping mode on export, "
+                                          "can be 'None', 'MSE' or 'KL-Diveregence'"));
         actClippingMode = parseClippingMode(
                            opts.parse("-act-clipping-mode", std::string("None"), 
                                           "activation clipping mode on export, "
@@ -317,6 +321,7 @@ public:
     std::string genExport;
     int nbBits;
     int calibration;
+    ClippingMode wtClippingMode;
     ClippingMode actClippingMode;
     ActivationScalingMode actScalingMode;
     bool actRescalePerOutput;
@@ -585,6 +590,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
+        deepNet->clipWeights(opt.nbBits, opt.wtClippingMode);
+
         if(opt.actRescalePerOutput) {
             deepNet->normalizeFreeParametersPerOutputChannel();
         }
