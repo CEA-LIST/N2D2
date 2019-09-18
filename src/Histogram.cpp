@@ -152,6 +152,70 @@ void N2D2::Histogram::log(const std::string& fileName,
     gnuplot.plot(fileName, "using 2:4 with points");
 }
 
+double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
+    if(mNbValues == 0) {
+        return 0.0;
+    }
+
+    const bool isUnsigned = mMinVal >= 0.0;
+
+    // Normalized number of values for each bin
+    std::vector<double> nrmNbValues(mValues.begin(), mValues.end());
+    const double sum = std::accumulate(nrmNbValues.begin(), nrmNbValues.end(), 0.0);
+    assert(sum > 0);
+    for(auto& v: nrmNbValues) {
+        v /= sum;
+    }
+
+
+    // Value in the middle of each bin
+    std::vector<double> midBinValues(nrmNbValues.size());
+
+    const double binWidth = getBinWidth();
+    midBinValues[0] = mMinVal + 0.5*binWidth;
+    for(std::size_t ibin = 1; ibin < midBinValues.size(); ibin++) {
+        midBinValues[ibin] = midBinValues[ibin-1] + binWidth;
+    }
+
+
+    // Get threshold that minimizes the MSE
+    const double max_threshold = Utils::max_abs(mMinVal, mMaxVal);
+    const double step = 0.001*max_threshold;
+
+    double minMSE = std::numeric_limits<double>::max();
+    double bestThreshold = max_threshold;
+
+    for(double th = step; th <= max_threshold + 0.00001; th += step) {
+        const double mse = MSE(nrmNbValues, midBinValues, th, nbBits, isUnsigned);
+        if(mse < minMSE) {
+            minMSE = mse;
+            bestThreshold = th;
+        }
+    }
+
+    return bestThreshold;
+}
+
+double N2D2::Histogram::MSE(const std::vector<double>& nrmNbValues, const std::vector<double>& midBinValues, 
+                            double threshold, std::size_t nbBits, bool isUnsigned) const
+{
+    assert(nbBits > 1);
+    assert(midBinValues.size() == nrmNbValues.size());
+
+    const double min_val = isUnsigned?0:-((1 << (nbBits - 1)) - 1);
+    const double max_val = isUnsigned?((1 << nbBits) - 1):((1 << (nbBits - 1)) - 1);
+    const double scaling = max_val/threshold;
+
+
+    double mse = 0.0;
+    for(std::size_t ibin = 0; ibin < midBinValues.size(); ibin++) {
+        const double approx = Utils::clamp(std::round(midBinValues[ibin]*scaling), min_val, max_val)/scaling;
+        mse += std::pow(midBinValues[ibin] - approx, 2) * nrmNbValues[ibin];
+    }
+
+    return mse;
+}
+
 
 double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
     if(mNbValues == 0) {

@@ -963,6 +963,8 @@ double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
     switch(actClippingMode) {
         case ClippingMode::KL_DIVERGENCE:
             return outputsHistogram.at(cellName).calibrateKLDivergence(nbBits);
+        case ClippingMode::MSE:
+            return outputsHistogram.at(cellName).calibrateMSE(nbBits);
         default: {
             const auto& range = outputsRange.at(cellName);
             return Utils::max_abs(range.minVal(), range.maxVal());
@@ -1163,6 +1165,9 @@ void N2D2::DeepNet::clipWeights(std::size_t nbBits, ClippingMode wtClippingMode)
             switch(wtClippingMode) {
                 case ClippingMode::KL_DIVERGENCE:
                     threshold = hist.calibrateKLDivergence(nbBits);
+                    break;
+                case ClippingMode::MSE:
+                    threshold = hist.calibrateMSE(nbBits);
                     break;
                 default:
                     throw std::runtime_error("Unsupported clipping mode.");

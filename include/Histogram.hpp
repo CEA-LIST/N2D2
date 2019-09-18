@@ -31,12 +31,17 @@ namespace N2D2 {
 
 enum class ClippingMode {
     NONE,
+    MSE,
     KL_DIVERGENCE
 };
 
 inline ClippingMode parseClippingMode(const std::string& str) {
     if(str == "None") {
         return ClippingMode::NONE;
+    }
+
+    if(str == "MSE") {
+        return ClippingMode::MSE;
     }
 
     if(str == "KL-Divergence") {
@@ -50,6 +55,8 @@ inline unsigned int getNbBinsForClippingMode(std::size_t nbBits,
                                              ClippingMode clippingMode)
 {
     switch (clippingMode) {
+        case ClippingMode::MSE:
+            return std::min(1 << nbBits, 65536);
         case ClippingMode::KL_DIVERGENCE:
             return std::min((1 << nbBits)*32, 65536);
         default:
@@ -72,6 +79,7 @@ public:
     double getBinValue(unsigned int binIdx) const;
     unsigned int getBinIdx(double value) const;
 
+    double calibrateMSE(std::size_t nbBits) const;
     double calibrateKLDivergence(std::size_t nbBits) const;
     
     void save(std::ostream& state) const;
@@ -93,6 +101,9 @@ public:
 private:
     static double KLDivergence(const Histogram& ref, const Histogram& quant);
 
+    double MSE(const std::vector<double>& nrmNbValues, const std::vector<double>& midBinValues, 
+               double threshold, std::size_t nbBits, bool isUnsigned) const;
+                
     Histogram quantize(double newMinVal,
                        double newMaxVal,
                        unsigned int newNbBins) const;

@@ -249,9 +249,9 @@ public:
                                           "weights clipping mode on export, "
                                           "can be 'None', 'MSE' or 'KL-Diveregence'"));
         actClippingMode = parseClippingMode(
-                           opts.parse("-act-clipping-mode", std::string("None"), 
+                           opts.parse("-act-clipping-mode", std::string("MSE"), 
                                           "activation clipping mode on export, "
-                                          "can be 'None' or 'KL-Divergence'"));
+                                          "can be 'None', 'MSE' or 'KL-Divergence'"));
         actScalingMode = parseActivationScalingMode(
                            opts.parse("-act-rescaling-mode", std::string("Single-shift"), 
                                           "activation scaling mode on export, "
