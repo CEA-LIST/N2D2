@@ -186,7 +186,7 @@ public:
     }
 
 public:
-    static const unsigned char NO_SHIFT = std::numeric_limits<unsigned char>::max();
+    static const unsigned char NO_SHIFT;
 
 private:
     std::vector<std::pair<unsigned char, unsigned char>> mScalingPerOutput;
@@ -227,22 +227,22 @@ public:
     }
 
     const FloatingPointScaling& getFloatingPointScaling() const {
-        assert(mMode == FLOAT_MULT);
+        assert(mMode == ActivationScalingMode::FLOAT_MULT);
         return static_cast<const FloatingPointScaling&>(*mScaling);
     }
 
     const FixedPointScaling& getFixedPointScaling() const {
-        assert(mMode == FIXED_MULT);
+        assert(mMode == ActivationScalingMode::FIXED_MULT);
         return static_cast<const FixedPointScaling&>(*mScaling);
     }
 
     const SingleShiftScaling& getSingleShiftScaling() const {
-        assert(mMode == SINGLE_SHIFT);
+        assert(mMode == ActivationScalingMode::SINGLE_SHIFT);
         return static_cast<const SingleShiftScaling&>(*mScaling);
     }
 
     const DoubleShiftScaling& getDoubleShiftScaling() const {
-        assert(mMode == DOUBLE_SHIFT);
+        assert(mMode == ActivationScalingMode::DOUBLE_SHIFT);
         return static_cast<const DoubleShiftScaling&>(*mScaling);
     }
 

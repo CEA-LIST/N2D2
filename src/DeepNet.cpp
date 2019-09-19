@@ -975,7 +975,7 @@ double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
 void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
                                          ActivationScalingMode actScalingMode) const 
 {
-    assert(activation.getActivationScaling().getMode() == ActivationScaling::FLOAT_MULT);
+    assert(activation.getActivationScaling().getMode() == ActivationScalingMode::FLOAT_MULT);
 
     const std::vector<double>& scalingPerOutput = activation.getActivationScaling()
                                                             .getFloatingPointScaling()
