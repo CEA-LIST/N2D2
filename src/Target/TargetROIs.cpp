@@ -677,6 +677,9 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
 
         const std::vector<DetectedBB>& detectedBB = mDetectedBB[batchPos];
 
+        if (detectedBB.empty())
+            continue;
+
         for (std::vector<DetectedBB>::const_iterator it
                 = detectedBB.begin(),
                 itEnd = detectedBB.end();

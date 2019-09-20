@@ -1157,6 +1157,9 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             }
         }
 
+        if (estimatedBitmaps.empty())
+            continue;
+
         std::string jsonName(fileName);
 
         if (jsonName.empty()) {
