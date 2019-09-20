@@ -27,6 +27,9 @@
 #ifdef CUDA
 #include "Target/Target_CUDA_kernels.hpp"
 #endif
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 N2D2::Registrar<N2D2::Target> N2D2::Target::mRegistrar("Target",
                                                        N2D2::Target::create);
@@ -1101,8 +1104,13 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     tm* localNow = std::localtime(&now);
     std::string time = std::asctime(localNow);
     time.pop_back(); // remove \n introduced by std::asctime()
-            
-#pragma omp parallel for if (mTargets.dimB() > 4)
+
+#ifdef _OPENMP
+    omp_lock_t appendLock;
+    omp_init_lock(&appendLock);
+#endif
+
+#pragma omp parallel for if (mTargets.dimB() > 4) schedule(dynamic)
     for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
 
@@ -1272,6 +1280,10 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
 
         jsonDataBuffer << "]}";
 
+#ifdef _OPENMP
+        if (append && omp_in_parallel())
+            omp_set_lock(&appendLock);
+#endif
         std::fstream jsonData;
         bool newFile = true;
 
@@ -1306,7 +1318,16 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             jsonData.write(jsonDataBuffer.str().c_str(),
                            sizeof(char) * jsonDataBuffer.str().size());
         }
+
+#ifdef _OPENMP
+        if (append && omp_in_parallel())
+            omp_unset_lock(&appendLock);
+#endif
     }
+
+#ifdef _OPENMP
+    omp_destroy_lock(&appendLock);
+#endif
 }
 
 void N2D2::Target::logLabelsLegend(const std::string& fileName) const
