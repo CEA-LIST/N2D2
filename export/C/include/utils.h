@@ -31,11 +31,11 @@
 #endif
 
 #if defined(__cplusplus)
-#define UNUSED(x)       // = nothing
+#define N2D2_UNUSED(x)       // = nothing
 #elif defined(__GNUC__)
-#define UNUSED(x)       x##_UNUSED __attribute__((unused))
+#define N2D2_UNUSED(x)       x##_UNUSED __attribute__((unused))
 #else
-#define UNUSED(x)       x##_UNUSED
+#define N2D2_UNUSED(x)       x##_UNUSED
 #endif
 
 #ifndef WIN32
