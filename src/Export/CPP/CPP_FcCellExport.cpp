@@ -98,7 +98,7 @@ void N2D2::CPP_FcCellExport::generateHeaderBiasValues(const FcCell & cell, std::
         else {
             cell.getBias(output, bias);
             CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
-            CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
+            CellExport::generateShiftScalingHalfAddition(cellFrame, output, header);
         }
 
         header << ", ";
