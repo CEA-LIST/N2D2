@@ -96,4 +96,82 @@ TEST(Histogram, test_get) {
     ASSERT_EQUALS(hist.getBinIdx(-23.4 + hist.getBinWidth()*5), 5);
 }
 
+TEST(Histogram, test_enlarge_symetric) {
+    const std::vector<double> values = {3.4, 19, -10, 20, 41, -23.4, -23.39, 
+                                        7.2, -8.2, 3.4, 20.1, 22.3, 0, 1};
+    const auto minMax = std::minmax_element(values.begin(), values.end());
+    const std::size_t nbBins = 11;
+
+    Histogram hist(*minMax.first, *minMax.second, nbBins);
+    for(auto v: values) {
+        hist(v);
+    }
+
+    const double oldBinWidth = hist.getBinWidth();
+    ASSERT_TRUE(hist.getBins() == 
+                std::vector<std::size_t>({2, 0, 2, 1, 3, 1, 0, 4, 0, 0, 1}));
+
+    // Enlarge, should at 2 bins at the begining and 2 bins at the end
+    hist.enlarge(-30, true);
+
+    ASSERT_EQUALS_DELTA(oldBinWidth, hist.getBinWidth(), 1e-6);
+    ASSERT_EQUALS(nbBins + 2*2, hist.getNbBins());
+    
+    ASSERT_EQUALS_DELTA(hist.getMinVal(), *minMax.first - 2*oldBinWidth, 1e-6);
+    ASSERT_EQUALS_DELTA(hist.getMaxVal(), *minMax.second + 2*oldBinWidth, 1e-6);
+
+    ASSERT_TRUE(hist.getBins() == 
+                std::vector<std::size_t>({0, 0, 2, 0, 2, 1, 3, 1, 0, 4, 0, 0, 1, 0, 0}));
+}
+
+TEST(Histogram, test_enlarge_asymetric_min) {
+    const std::vector<double> values = {3.4, 19, -10, 20, 41, -23.4, -23.39, 
+                                        7.2, -8.2, 3.4, 20.1, 22.3, 0, 1};
+    const auto minMax = std::minmax_element(values.begin(), values.end());
+    const std::size_t nbBins = 11;
+
+    Histogram hist(*minMax.first, *minMax.second, nbBins);
+    for(auto v: values) {
+        hist(v);
+    }
+
+    const double oldBinWidth = hist.getBinWidth();
+    // Enlarge, should at 2 bins at the begining 
+    hist.enlarge(-30, false);
+
+    ASSERT_EQUALS_DELTA(oldBinWidth, hist.getBinWidth(), 1e-6);
+    ASSERT_EQUALS(nbBins + 2, hist.getNbBins());
+    
+    ASSERT_EQUALS_DELTA(hist.getMinVal(), *minMax.first - 2*oldBinWidth, 1e-6);
+    ASSERT_EQUALS_DELTA(hist.getMaxVal(), *minMax.second, 1e-6);
+
+    ASSERT_TRUE(hist.getBins() == 
+                std::vector<std::size_t>({0, 0, 2, 0, 2, 1, 3, 1, 0, 4, 0, 0, 1}));
+}
+
+TEST(Histogram, test_enlarge_asymetric_max) {
+    const std::vector<double> values = {3.4, 19, -10, 20, 41, -23.4, -23.39, 
+                                        7.2, -8.2, 3.4, 20.1, 22.3, 0, 1};
+    const auto minMax = std::minmax_element(values.begin(), values.end());
+    const std::size_t nbBins = 11;
+
+    Histogram hist(*minMax.first, *minMax.second, nbBins);
+    for(auto v: values) {
+        hist(v);
+    }
+
+    const double oldBinWidth = hist.getBinWidth();
+    // Enlarge, should at 2 bins at the end 
+    hist.enlarge(50, false);
+
+    ASSERT_EQUALS_DELTA(oldBinWidth, hist.getBinWidth(), 1e-6);
+    ASSERT_EQUALS(nbBins + 2, hist.getNbBins());
+    
+    ASSERT_EQUALS_DELTA(hist.getMinVal(), *minMax.first, 1e-6);
+    ASSERT_EQUALS_DELTA(hist.getMaxVal(), *minMax.second + 2*oldBinWidth, 1e-6);
+
+    ASSERT_TRUE(hist.getBins() == 
+                std::vector<std::size_t>({2, 0, 2, 1, 3, 1, 0, 4, 0, 0, 1, 0, 0}));
+}
+
 RUN_TESTS()
