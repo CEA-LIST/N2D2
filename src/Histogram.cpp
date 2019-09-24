@@ -98,35 +98,33 @@ void N2D2::Histogram::operator()(double value, std::size_t count) {
     mNbValues += count;
 }
 
-void N2D2::Histogram::enlarge(double value)
-{
-    if (value > mMaxVal) {
-        double binWidth = getBinWidth();
-        if(binWidth == 0) {
-            binWidth = value - mMaxVal;
-        }
+void N2D2::Histogram::enlarge(double value, bool symetric) {
+    const double currBinWidth = getBinWidth();
 
-        mNbBins += (std::size_t)std::ceil((value - mMaxVal) / binWidth);
-
-        mValues.resize(mNbBins, 0);
-        mMaxVal = mMinVal + mNbBins * binWidth;
-
-        assert(mMaxVal >= value);
+    
+    std::size_t newNbBins;
+    if(value < mMinVal) {
+        newNbBins = static_cast<std::size_t>(std::ceil((mMinVal - value) / getBinWidth()));
     }
-}
-
-void N2D2::Histogram::truncate(double value) {
-    if (value < mMaxVal) {
-        const std::size_t newMaxBin = getBinIdx(value);
-        mMaxVal = mMinVal + (newMaxBin + 1) * getBinWidth();
-
-        for (std::size_t bin = newMaxBin + 1; bin <= mMaxBin; ++bin)
-            mValues[newMaxBin] += mValues[bin];
-
-        mMaxBin = newMaxBin;
-        mNbBins = (newMaxBin + 1);
-        mValues.resize(mNbBins);
+    else if(value > mMaxVal) {
+        newNbBins = static_cast<std::size_t>(std::ceil((value - mMaxVal) / getBinWidth()));
     }
+    else {
+        return;
+    }
+
+    
+    if(symetric || value < mMinVal) {
+        mValues.insert(mValues.begin(), newNbBins, 0);
+        mMinVal = mMinVal - newNbBins*currBinWidth;
+    }
+    
+    if(symetric || value > mMaxVal) {
+        mValues.insert(mValues.end(), newNbBins, 0);
+        mMaxVal = mMaxVal + newNbBins*currBinWidth;
+    }
+
+    mNbBins = mValues.size();
 }
 
 void N2D2::Histogram::log(const std::string& fileName,
@@ -150,7 +148,6 @@ void N2D2::Histogram::log(const std::string& fileName,
     gnuplot.setYlabel("Normalized number of counts");
     gnuplot.set("grid");
     gnuplot.set("key off");
-    gnuplot.set("xrange [0:]");
     gnuplot.set("logscale y");
 
     std::size_t i = 0;
@@ -406,7 +403,7 @@ void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
 
 void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
                         const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                        std::size_t nbBits)
+                        std::size_t nbBits, ClippingMode clippingMode)
 {
     Utils::createDirectories(dirName);
 
@@ -414,38 +411,13 @@ void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
         std::unordered_map<std::string, double> thresholds;
 
         Histogram hist = (*it).second;
+        if(clippingMode == ClippingMode::KL_DIVERGENCE) {
+            thresholds["KL"] = hist.calibrateKLDivergence(nbBits);
+        }
+        else if(clippingMode == ClippingMode::MSE) {
+            thresholds["MSE"] = hist.calibrateMSE(nbBits);
+        }
 
-        // First pass
-        double threshold = hist.calibrateKLDivergence(nbBits);
-        thresholds["KL 1-pass"] = threshold;
-
-        // Second pass on truncated hist
-        hist.truncate(threshold);
-        threshold = hist.calibrateKLDivergence(nbBits);
-        thresholds["KL 2-passes"] = threshold;
-
-        // Third pass
-        hist.truncate(threshold);
-        threshold = hist.calibrateKLDivergence(nbBits);
-        thresholds["KL 3-passes"] = threshold;
-
-        // Fourth pass
-        hist.truncate(threshold);
-        threshold = hist.calibrateKLDivergence(nbBits);
-        thresholds["KL 4-passes"] = threshold;
-
-        // Fifth pass
-        hist.truncate(threshold);
-        threshold = hist.calibrateKLDivergence(nbBits);
-        thresholds["KL 5-passes"] = threshold;
-
-        (*it).second.log(dirName + "/" + (*it).first + ".dat",
-                                  thresholds);
-
-        const bool isUnsigned = hist.mMinVal >= 0.0;
-        const std::size_t nbQuantizedBins = 1 << nbBits;
-        const Histogram quantized = (*it).second.quantize(isUnsigned?0:-threshold, threshold, 
-                                                          nbQuantizedBins);
-        quantized.log(dirName + "/" + (*it).first + "_quant.dat");
+        (*it).second.log(dirName + "/" + (*it).first + ".dat", thresholds);
     }
 }

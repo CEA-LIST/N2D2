@@ -711,7 +711,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         RangeStats::logOutputsRange(exportDir.str() + "/calibration"
                                     "/outputs_range.dat", outputsRange);
         Histogram::logOutputsHistogram(exportDir.str() + "/calibration"
-                                       "/outputs_histogram", outputsHistogram, opt.nbBits);
+                                       "/outputs_histogram", outputsHistogram, 
+                                       opt.nbBits, opt.actClippingMode);
 
         std::cout << "Calibration (" << opt.nbBits << " bits):" << std::endl;
 

@@ -80,8 +80,12 @@ public:
 
     const std::vector<std::size_t>& getBins() const;
 
-    void enlarge(double value);
-    void truncate(double value);
+    /**
+     * Enlarge the histogram if value is < getMinVal() or > getMaxVal().
+     * If symetric is true, enlarge the histogram on the left and 
+     * on the right changing both minVal and maxVal.
+     */
+    void enlarge(double value, bool symetric);
 
     double calibrateMSE(std::size_t nbBits) const;
     double calibrateKLDivergence(std::size_t nbBits) const;
@@ -99,7 +103,7 @@ public:
                     std::unordered_map<std::string, Histogram>& outputsHistogram);
     static void logOutputsHistogram(const std::string& fileName,
                     const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                    std::size_t nbBits);
+                    std::size_t nbBits, ClippingMode clippingMode);
 
 private:
     static double KLDivergence(const Histogram& ref, const Histogram& quant);
