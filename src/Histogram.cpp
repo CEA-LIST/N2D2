@@ -24,9 +24,8 @@
 #include "utils/Gnuplot.hpp"
 
 
-N2D2::Histogram::Histogram(double minVal, double maxVal, unsigned int nbBins)
-    : mMinVal(minVal),
-      mMaxVal(maxVal),
+N2D2::Histogram::Histogram(double minVal, double maxVal, std::size_t nbBins)
+    : mMinVal(minVal), mMaxVal(maxVal),
       mNbBins(nbBins),
       mValues(nbBins, 0),
       mNbValues(0),
@@ -35,25 +34,71 @@ N2D2::Histogram::Histogram(double minVal, double maxVal, unsigned int nbBins)
     if(mNbBins <= 0) {
         throw std::runtime_error("Number of bins must be > 0.");
     }
+
+    if(mMaxVal <= mMinVal) {
+        throw std::runtime_error("mMinVal must be strictly smaller than mMaxVal.");
+    }
 }
 
-void N2D2::Histogram::operator()(double value, unsigned long long int count) {
-    if(value > mMaxVal || value < mMinVal) {
-        throw std::runtime_error(std::to_string(value) + " not between [" + 
-                                    std::to_string(mMinVal) + ";" + 
-                                    std::to_string(mMaxVal) + 
-                                 "]");
+double N2D2::Histogram::getBinWidth() const {
+    assert(mNbBins > 0);
+    return (mMaxVal - mMinVal) / mNbBins;
+}
+
+double N2D2::Histogram::getBinValue(std::size_t binIdx) const {
+    if(binIdx >= mNbBins) {
+        throw std::out_of_range("binIdx must be < mNbBins");
     }
 
-    const unsigned int binIdx = getBinIdx(value);
-    if (binIdx > mMaxBin)
+    return (mMinVal + (binIdx + 0.5) * getBinWidth());
+}
+
+std::size_t N2D2::Histogram::getNbBins() const {
+    return mNbBins;
+}
+
+std::size_t N2D2::Histogram::getBinIdx(double value) const {
+    assert(getBinWidth() > 0);
+    
+    const double clampedValue = Utils::clamp(value, mMinVal, mMaxVal);
+    std::size_t binIdx = static_cast<std::size_t>((clampedValue - mMinVal) / getBinWidth() + 1e-6);
+    if(binIdx == mNbBins) {
+        binIdx--;
+    }
+
+    return binIdx;
+}
+
+double N2D2::Histogram::getMinVal() const {
+    return mMinVal;
+}
+
+double N2D2::Histogram::getMaxVal() const {
+    return mMaxVal;
+}
+
+const std::vector<std::size_t>& N2D2::Histogram::getBins() const {
+    return mValues;
+}
+
+void N2D2::Histogram::operator()(double value, std::size_t count) {
+    if(value > mMaxVal || value < mMinVal) {
+        throw std::out_of_range(std::to_string(value) + " not between [" + 
+                                    std::to_string(mMinVal) + ";" + 
+                                    std::to_string(mMaxVal) + 
+                                "]");
+    }
+
+    const std::size_t binIdx = getBinIdx(value);
+    if (binIdx > mMaxBin) {
         mMaxBin = binIdx;
+    }
 
     mValues[binIdx] += count;
     mNbValues += count;
 }
 
-unsigned int N2D2::Histogram::enlarge(double value)
+void N2D2::Histogram::enlarge(double value)
 {
     if (value > mMaxVal) {
         double binWidth = getBinWidth();
@@ -61,44 +106,27 @@ unsigned int N2D2::Histogram::enlarge(double value)
             binWidth = value - mMaxVal;
         }
 
-        mNbBins += (unsigned int)std::ceil((value - mMaxVal) / binWidth);
+        mNbBins += (std::size_t)std::ceil((value - mMaxVal) / binWidth);
 
         mValues.resize(mNbBins, 0);
         mMaxVal = mMinVal + mNbBins * binWidth;
 
         assert(mMaxVal >= value);
     }
-
-    return mNbBins;
 }
 
-unsigned int N2D2::Histogram::truncate(double value) {
+void N2D2::Histogram::truncate(double value) {
     if (value < mMaxVal) {
-        const unsigned int newMaxBin = getBinIdx(value);
+        const std::size_t newMaxBin = getBinIdx(value);
         mMaxVal = mMinVal + (newMaxBin + 1) * getBinWidth();
 
-        for (unsigned int bin = newMaxBin + 1; bin <= mMaxBin; ++bin)
+        for (std::size_t bin = newMaxBin + 1; bin <= mMaxBin; ++bin)
             mValues[newMaxBin] += mValues[bin];
 
         mMaxBin = newMaxBin;
         mNbBins = (newMaxBin + 1);
         mValues.resize(mNbBins);
     }
-
-    return mNbBins;
-}
-
-unsigned int N2D2::Histogram::getBinIdx(double value) const
-{
-    const double clampedValue = Utils::clamp(value, mMinVal, mMaxVal);
-    unsigned int binIdx = (mMaxVal != mMinVal)
-        ? (unsigned int)(mNbBins * (clampedValue - mMinVal) / (mMaxVal - mMinVal))
-        : 0;
-
-    if (binIdx == mNbBins)
-        --binIdx;
-
-    return  binIdx;
 }
 
 void N2D2::Histogram::log(const std::string& fileName,
@@ -107,11 +135,10 @@ void N2D2::Histogram::log(const std::string& fileName,
     std::ofstream histData(fileName.c_str());
 
     if (!histData.good()) {
-        throw std::runtime_error("Could not open histogram file: "
-                                 + fileName);
+        throw std::runtime_error("Could not open histogram file: " + fileName);
     }
 
-    for (unsigned int bin = 0; bin <= mMaxBin; ++bin) {
+    for (std::size_t bin = 0; bin <= mMaxBin; ++bin) {
         histData << bin << " " << getBinValue(bin) << " " << mValues[bin]
             << " " << ((mNbValues != 0)?(mValues[bin] / (double)mNbValues):0) << "\n";
     }
@@ -126,7 +153,7 @@ void N2D2::Histogram::log(const std::string& fileName,
     gnuplot.set("xrange [0:]");
     gnuplot.set("logscale y");
 
-    unsigned int i = 0;
+    std::size_t i = 0;
 
     for (auto it = thresholds.begin(); it != thresholds.end(); ++it) {
         std::stringstream cmdStr;
@@ -196,7 +223,8 @@ double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
     return bestThreshold;
 }
 
-double N2D2::Histogram::MSE(const std::vector<double>& nrmNbValues, const std::vector<double>& midBinValues, 
+double N2D2::Histogram::MSE(const std::vector<double>& nrmNbValues, 
+                            const std::vector<double>& midBinValues, 
                             double threshold, std::size_t nbBits, bool isUnsigned) const
 {
     assert(nbBits > 1);
@@ -244,11 +272,11 @@ double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
 }
 
 N2D2::Histogram N2D2::Histogram::quantize(double newMinVal, double newMaxVal,
-                                          unsigned int newNbBins) const
+                                          std::size_t newNbBins) const
 {
     Histogram hist(newMinVal, newMaxVal, newNbBins);
 
-    for (unsigned int bin = 0; bin <= mMaxBin; ++bin) {
+    for (std::size_t bin = 0; bin <= mMaxBin; ++bin) {
         const double value = Utils::clamp(getBinValue(bin), hist.mMinVal, hist.mMaxVal);
         hist(value, mValues[bin]);
     }
@@ -264,15 +292,15 @@ double N2D2::Histogram::KLDivergence(const Histogram& ref, const Histogram& quan
 
     double qNorm = 0.0;
 
-    for (unsigned int bin = 0; bin <= ref.mMaxBin; ++bin) {
-        const unsigned int quantIdx = quant.getBinIdx(ref.getBinValue(bin));
+    for (std::size_t bin = 0; bin <= ref.mMaxBin; ++bin) {
+        const std::size_t quantIdx = quant.getBinIdx(ref.getBinValue(bin));
         qNorm += quant.mValues[quantIdx];
     }
 
     double divergence = 0.0;
 
-    for (unsigned int bin = 0; bin <= ref.mMaxBin; ++bin) {
-        const unsigned int quantIdx = quant.getBinIdx(ref.getBinValue(bin));
+    for (std::size_t bin = 0; bin <= ref.mMaxBin; ++bin) {
+        const std::size_t quantIdx = quant.getBinIdx(ref.getBinValue(bin));
 
         // Sum of p and q over bin [0,ref.mMaxBin] must be 1
         const double p = (ref.mValues[bin] / (double)ref.mNbValues);
@@ -293,7 +321,7 @@ void N2D2::Histogram::save(std::ostream& state) const {
     state.write(reinterpret_cast<const char*>(&mMinVal), sizeof(mMinVal));
     state.write(reinterpret_cast<const char*>(&mMaxVal), sizeof(mMaxVal));
     state.write(reinterpret_cast<const char*>(&mNbBins), sizeof(mNbBins));
-    const size_t valuesSize = mValues.size();
+    const std::size_t valuesSize = mValues.size();
     state.write(reinterpret_cast<const char*>(&valuesSize), sizeof(valuesSize));
     state.write(reinterpret_cast<const char*>(&mValues[0]),
                 valuesSize * sizeof(mValues[0]));
@@ -305,7 +333,7 @@ void N2D2::Histogram::load(std::istream& state) {
     state.read(reinterpret_cast<char*>(&mMinVal), sizeof(mMinVal));
     state.read(reinterpret_cast<char*>(&mMaxVal), sizeof(mMaxVal));
     state.read(reinterpret_cast<char*>(&mNbBins), sizeof(mNbBins));
-    size_t valuesSize;
+    std::size_t valuesSize;
     state.read(reinterpret_cast<char*>(&valuesSize), sizeof(valuesSize));
     mValues.resize(valuesSize);
     state.read(reinterpret_cast<char*>(&mValues[0]),
@@ -322,11 +350,11 @@ void N2D2::Histogram::saveOutputsHistogram(const std::string& fileName,
     if (!state.good())
         throw std::runtime_error("Could not create state file: " + fileName);
 
-    const size_t mapSize = outputsHistogram.size();
+    const std::size_t mapSize = outputsHistogram.size();
     state.write(reinterpret_cast<const char*>(&mapSize), sizeof(mapSize));
 
     for (auto it = outputsHistogram.begin(); it != outputsHistogram.end(); ++it) {
-        const size_t nameSize = (*it).first.size();
+        const std::size_t nameSize = (*it).first.size();
         const std::string& nameStr = (*it).first;
         state.write(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
         state.write(reinterpret_cast<const char*>(&nameStr[0]),
@@ -347,11 +375,11 @@ void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
     if (!state.good())
         throw std::runtime_error("Could not open state file: " + fileName);
 
-    size_t mapSize;
+    std::size_t mapSize;
     state.read(reinterpret_cast<char*>(&mapSize), sizeof(mapSize));
 
     for (size_t n = 0; n < mapSize; ++n) {
-        size_t nameSize;
+        std::size_t nameSize;
         state.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
         std::string nameStr(nameSize, ' ');
         state.read(reinterpret_cast<char*>(&nameStr[0]),
@@ -359,7 +387,7 @@ void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
 
         std::unordered_map<std::string, Histogram>::iterator it;
         std::tie(it, std::ignore)
-            = outputsHistogram.insert(std::make_pair(nameStr, Histogram()));
+            = outputsHistogram.insert(std::make_pair(nameStr, Histogram(0, 1, 1)));
 
         (*it).second.load(state);
     }
@@ -419,7 +447,5 @@ void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
         const Histogram quantized = (*it).second.quantize(isUnsigned?0:-threshold, threshold, 
                                                           nbQuantizedBins);
         quantized.log(dirName + "/" + (*it).first + "_quant.dat");
-
-        //std::cout << (*it).first << ": " << threshold << std::endl;
     }
 }

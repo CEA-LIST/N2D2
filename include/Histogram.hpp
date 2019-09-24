@@ -22,10 +22,10 @@
 #ifndef N2D2_HISTOGRAM_H
 #define N2D2_HISTOGRAM_H
 
+#include <iosfwd>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <iostream>
-#include <map>
 
 namespace N2D2 {
 
@@ -51,8 +51,8 @@ inline ClippingMode parseClippingMode(const std::string& str) {
     throw std::runtime_error("Unknown clipping mode '" + str + "'.");
 }
 
-inline unsigned int getNbBinsForClippingMode(std::size_t nbBits, 
-                                             ClippingMode clippingMode)
+inline std::size_t getNbBinsForClippingMode(std::size_t nbBits, 
+                                            ClippingMode clippingMode)
 {
     switch (clippingMode) {
         case ClippingMode::MSE:
@@ -66,25 +66,28 @@ inline unsigned int getNbBinsForClippingMode(std::size_t nbBits,
 
 class Histogram {
 public:
-    Histogram() = default;
-    Histogram(double minVal, double maxVal, unsigned int nbBins);
+    Histogram(double minVal, double maxVal, std::size_t nbBins);
 
-    void operator()(double value, unsigned long long int count = 1);
-
-    unsigned int enlarge(double value);
-    unsigned int truncate(double value);
+    void operator()(double value, std::size_t count = 1);
 
     std::size_t getNbBins() const;
     double getBinWidth() const;
-    double getBinValue(unsigned int binIdx) const;
-    unsigned int getBinIdx(double value) const;
+    double getBinValue(std::size_t binIdx) const;
+    std::size_t getBinIdx(double value) const;
+
+    double getMinVal() const;
+    double getMaxVal() const;
+
+    const std::vector<std::size_t>& getBins() const;
+
+    void enlarge(double value);
+    void truncate(double value);
 
     double calibrateMSE(std::size_t nbBits) const;
     double calibrateKLDivergence(std::size_t nbBits) const;
     
     void save(std::ostream& state) const;
     void load(std::istream& state);
-
 
     void log(const std::string& fileName,
              const std::unordered_map<std::string, double>& thresholds
@@ -106,28 +109,16 @@ private:
                 
     Histogram quantize(double newMinVal,
                        double newMaxVal,
-                       unsigned int newNbBins) const;
+                       std::size_t newNbBins) const;
 private:
     double mMinVal;
     double mMaxVal;
-    unsigned int mNbBins;
-    std::vector<unsigned long long int> mValues;
-    unsigned long long int mNbValues;
-    unsigned int mMaxBin;
+    std::size_t mNbBins;
+    std::vector<std::size_t> mValues;
+    std::size_t mNbValues;
+    std::size_t mMaxBin;
 
 };
-}
-
-inline double N2D2::Histogram::getBinWidth() const {
-    return ((mMaxVal - mMinVal) / (double)mNbBins);
-}
-
-inline double N2D2::Histogram::getBinValue(unsigned int binIdx) const {
-    return (mMinVal + (binIdx + 0.5) * getBinWidth());
-}
-
-inline std::size_t N2D2::Histogram::getNbBins() const {
-    return mNbBins;
 }
 
 #endif // N2D2_HISTOGRAM_H

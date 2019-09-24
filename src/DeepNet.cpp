@@ -1156,7 +1156,7 @@ void N2D2::DeepNet::clipWeights(std::size_t nbBits, ClippingMode wtClippingMode)
         return;
     }
 
-    const unsigned int nbBins = getNbBinsForClippingMode(nbBits, wtClippingMode);
+    const std::size_t nbBins = getNbBinsForClippingMode(nbBits, wtClippingMode);
 
     for (auto it = mLayers.begin() + 1; it != mLayers.end(); ++it) {
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
@@ -2644,7 +2644,7 @@ void N2D2::DeepNet::reportOutputsHistogram(
         return;
     }
 
-    const unsigned int nbBins = getNbBinsForClippingMode(nbBits, actClippingMode);
+    const std::size_t nbBins = getNbBinsForClippingMode(nbBits, actClippingMode);
 
     if (outputsHistogram.empty()) {
         // Populate outputsHistogram first to avoid thread issues
