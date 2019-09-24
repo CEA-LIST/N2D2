@@ -151,33 +151,15 @@ double N2D2::CellExport::getScalingForFreeParameterType(const Cell& cell, Cell::
 }
 
 
-void N2D2::CellExport::generateShiftScalingHalfAddition(const Cell_Frame_Top& cellFrame, std::size_t output, 
-                                                        std::ostream& stream)
+void N2D2::CellExport::generateSingleShiftHalfAddition(const Cell_Frame_Top& cellFrame, std::size_t output, 
+                                                       std::ostream& stream)
 {
     if(cellFrame.getActivation()->getActivationScaling().getMode() == ActivationScalingMode::SINGLE_SHIFT) {
         const std::size_t shift = cellFrame.getActivation()->getActivationScaling()
                                                             .getSingleShiftScaling()
                                                             .getScalingPerOutput()[output];
-        const std::size_t half = 1 << (shift - 1);
+        const std::size_t haf = 1 << (shift - 1);
 
-        stream << " + " << half;
-    }
-    else if(cellFrame.getActivation()->getActivationScaling().getMode() == ActivationScalingMode::DOUBLE_SHIFT) {
-        const std::pair<unsigned char, unsigned char> shift = cellFrame.getActivation()
-                                                                      ->getActivationScaling()
-                                                                       .getDoubleShiftScaling()
-                                                                       .getScalingPerOutput()[output];
-        
-        const std::size_t half = 1 << (shift.first - 1);
-
-        if(shift.second == DoubleShiftScaling::NO_SHIFT) {
-            stream << " + " << half;
-        }
-        else {
-            stream << " + " << static_cast<std::size_t>(
-                                   std::ceil(1.0*half*std::pow(2, shift.second)/
-                                                     (std::pow(2, shift.second) + 1))
-                               );
-        }
+        stream << " + " << haf;
     }
 }

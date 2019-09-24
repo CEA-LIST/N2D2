@@ -122,7 +122,7 @@ void N2D2::C_ConvCellExport::generateHeaderBiasValues(const ConvCell& cell,
             cell.getBias(output, bias);
 
             CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
-            CellExport::generateShiftScalingHalfAddition(cellFrame, output, header);
+            CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         }
 
         header << ", ";
