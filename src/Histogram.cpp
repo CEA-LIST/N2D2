@@ -230,7 +230,7 @@ double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
     const bool isUnsigned = mMinVal >= 0.0;
     const std::size_t nbQuantizedBins = 1 << nbBits;
 
-    double threshold = mMaxVal;
+    double threshold = Utils::max_abs(mMinVal, mMaxVal);
     double bestThreshold = threshold;
     double bestDivergence = std::numeric_limits<double>::max();;
 
