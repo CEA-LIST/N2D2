@@ -120,8 +120,6 @@ private:
     std::size_t mNbBins;
     std::vector<std::size_t> mValues;
     std::size_t mNbValues;
-    std::size_t mMaxBin;
-
 };
 }
 

@@ -28,8 +28,7 @@ N2D2::Histogram::Histogram(double minVal, double maxVal, std::size_t nbBins)
     : mMinVal(minVal), mMaxVal(maxVal),
       mNbBins(nbBins),
       mValues(nbBins, 0),
-      mNbValues(0),
-      mMaxBin(0)
+      mNbValues(0)
 {
     if(mNbBins <= 0) {
         throw std::runtime_error("Number of bins must be > 0.");
@@ -89,12 +88,7 @@ void N2D2::Histogram::operator()(double value, std::size_t count) {
                                 "]");
     }
 
-    const std::size_t binIdx = getBinIdx(value);
-    if (binIdx > mMaxBin) {
-        mMaxBin = binIdx;
-    }
-
-    mValues[binIdx] += count;
+    mValues[getBinIdx(value)] += count;
     mNbValues += count;
 }
 
@@ -136,7 +130,7 @@ void N2D2::Histogram::log(const std::string& fileName,
         throw std::runtime_error("Could not open histogram file: " + fileName);
     }
 
-    for (std::size_t bin = 0; bin <= mMaxBin; ++bin) {
+    for (std::size_t bin = 0; bin < mNbBins; ++bin) {
         histData << bin << " " << getBinValue(bin) << " " << mValues[bin]
             << " " << ((mNbValues != 0)?(mValues[bin] / (double)mNbValues):0) << "\n";
     }
@@ -273,7 +267,7 @@ N2D2::Histogram N2D2::Histogram::quantize(double newMinVal, double newMaxVal,
 {
     Histogram hist(newMinVal, newMaxVal, newNbBins);
 
-    for (std::size_t bin = 0; bin <= mMaxBin; ++bin) {
+    for (std::size_t bin = 0; bin < mNbBins; ++bin) {
         const double value = Utils::clamp(getBinValue(bin), hist.mMinVal, hist.mMaxVal);
         hist(value, mValues[bin]);
     }
@@ -284,22 +278,21 @@ N2D2::Histogram N2D2::Histogram::quantize(double newMinVal, double newMaxVal,
 
 double N2D2::Histogram::KLDivergence(const Histogram& ref, const Histogram& quant) {
     assert(ref.mNbValues == quant.mNbValues);
-    assert(ref.mMaxBin >= quant.mMaxBin);
     assert(ref.mMaxVal >= quant.mMaxVal);
 
     double qNorm = 0.0;
 
-    for (std::size_t bin = 0; bin <= ref.mMaxBin; ++bin) {
+    for (std::size_t bin = 0; bin < ref.mNbBins; ++bin) {
         const std::size_t quantIdx = quant.getBinIdx(ref.getBinValue(bin));
         qNorm += quant.mValues[quantIdx];
     }
 
     double divergence = 0.0;
 
-    for (std::size_t bin = 0; bin <= ref.mMaxBin; ++bin) {
+    for (std::size_t bin = 0; bin < ref.mNbBins; ++bin) {
         const std::size_t quantIdx = quant.getBinIdx(ref.getBinValue(bin));
 
-        // Sum of p and q over bin [0,ref.mMaxBin] must be 1
+        // Sum of p and q over bin [0,ref.mNbBins) must be 1
         const double p = (ref.mValues[bin] / (double)ref.mNbValues);
         const double q = (quant.mValues[quantIdx] / qNorm);
 
@@ -323,7 +316,6 @@ void N2D2::Histogram::save(std::ostream& state) const {
     state.write(reinterpret_cast<const char*>(&mValues[0]),
                 valuesSize * sizeof(mValues[0]));
     state.write(reinterpret_cast<const char*>(&mNbValues), sizeof(mNbValues));
-    state.write(reinterpret_cast<const char*>(&mMaxBin), sizeof(mMaxBin));
 }
 
 void N2D2::Histogram::load(std::istream& state) {
@@ -336,7 +328,6 @@ void N2D2::Histogram::load(std::istream& state) {
     state.read(reinterpret_cast<char*>(&mValues[0]),
                 valuesSize * sizeof(mValues[0]));
     state.read(reinterpret_cast<char*>(&mNbValues), sizeof(mNbValues));
-    state.read(reinterpret_cast<char*>(&mMaxBin), sizeof(mMaxBin));
 }
 
 void N2D2::Histogram::saveOutputsHistogram(const std::string& fileName,
