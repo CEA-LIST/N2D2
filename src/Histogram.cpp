@@ -178,33 +178,21 @@ double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
     const bool isUnsigned = mMinVal >= 0.0;
 
     // Normalized number of values for each bin
-    std::vector<double> nrmNbValues(mValues.begin(), mValues.end());
-    const double sum = std::accumulate(nrmNbValues.begin(), nrmNbValues.end(), 0.0);
-    assert(sum > 0);
-    for(auto& v: nrmNbValues) {
-        v /= sum;
-    }
-
-
-    // Value in the middle of each bin
-    std::vector<double> midBinValues(nrmNbValues.size());
-
-    const double binWidth = getBinWidth();
-    midBinValues[0] = mMinVal + 0.5*binWidth;
-    for(std::size_t ibin = 1; ibin < midBinValues.size(); ibin++) {
-        midBinValues[ibin] = midBinValues[ibin-1] + binWidth;
+    std::vector<double> normalizedValues(mValues.begin(), mValues.end());
+    for(auto& v: normalizedValues) {
+        v /= mNbValues;
     }
 
 
     // Get threshold that minimizes the MSE
-    const double max_threshold = Utils::max_abs(mMinVal, mMaxVal);
-    const double step = 0.001*max_threshold;
+    const double maxThreshold = Utils::max_abs(mMinVal, mMaxVal);
+    const double step = 0.001*maxThreshold;
 
     double minMSE = std::numeric_limits<double>::max();
-    double bestThreshold = max_threshold;
+    double bestThreshold = maxThreshold;
 
-    for(double th = step; th <= max_threshold + 0.00001; th += step) {
-        const double mse = MSE(nrmNbValues, midBinValues, th, nbBits, isUnsigned);
+    for(double th = step; th <= maxThreshold + 0.00001; th += step) {
+        const double mse = MSE(normalizedValues, th, nbBits, isUnsigned);
         if(mse < minMSE) {
             minMSE = mse;
             bestThreshold = th;
@@ -214,22 +202,20 @@ double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
     return bestThreshold;
 }
 
-double N2D2::Histogram::MSE(const std::vector<double>& nrmNbValues, 
-                            const std::vector<double>& midBinValues, 
+double N2D2::Histogram::MSE(const std::vector<double>& normalizedValues, 
                             double threshold, std::size_t nbBits, bool isUnsigned) const
 {
     assert(nbBits > 1);
-    assert(midBinValues.size() == nrmNbValues.size());
 
-    const double min_val = isUnsigned?0:-((1 << (nbBits - 1)) - 1);
-    const double max_val = isUnsigned?((1 << nbBits) - 1):((1 << (nbBits - 1)) - 1);
-    const double scaling = max_val/threshold;
+    const double minVal = isUnsigned?0:-((1 << (nbBits - 1)) - 1);
+    const double maxVal = isUnsigned?((1 << nbBits) - 1):((1 << (nbBits - 1)) - 1);
+    const double scaling = maxVal/threshold;
 
 
     double mse = 0.0;
-    for(std::size_t ibin = 0; ibin < midBinValues.size(); ibin++) {
-        const double approx = Utils::clamp(std::round(midBinValues[ibin]*scaling), min_val, max_val)/scaling;
-        mse += std::pow(midBinValues[ibin] - approx, 2) * nrmNbValues[ibin];
+    for(std::size_t bin = 0; bin < mNbBins; bin++) {
+        const double approx = Utils::clamp(std::round(getBinValue(bin)*scaling), minVal, maxVal)/scaling;
+        mse += std::pow(getBinValue(bin) - approx, 2) * normalizedValues[bin];
     }
 
     return mse;

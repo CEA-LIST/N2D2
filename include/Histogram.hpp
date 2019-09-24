@@ -108,7 +108,7 @@ public:
 private:
     static double KLDivergence(const Histogram& ref, const Histogram& quant);
 
-    double MSE(const std::vector<double>& nrmNbValues, const std::vector<double>& midBinValues, 
+    double MSE(const std::vector<double>& normalizedValues, 
                double threshold, std::size_t nbBits, bool isUnsigned) const;
                 
     Histogram quantize(double newMinVal,
