@@ -586,7 +586,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
     DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::getScaling(*sp, 
                                                                         exportDir.str() + "/stimuli",
-                                                                        Database::Test).second;
+                                                                        Database::Validation).second;
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
@@ -602,7 +602,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         const double stimuliRange = StimuliProviderExport::getStimuliRange(
                                             *sp,
                                             exportDir.str() + "/stimuli_before_calibration",
-                                            Database::Test);
+                                            Database::Validation);
 
         if (stimuliRange == 0.0) {
             throw std::runtime_error("Stimuli range is 0."
@@ -622,7 +622,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
             sp->addOnTheFlyTransformation(RangeAffineTransformation(
                 RangeAffineTransformation::Divides, stimuliRange),
-                Database::TestOnly);
+                Database::NoLearn);
 
             deepNet->rescaleAdditiveParameters(stimuliRange);
         }
@@ -664,12 +664,12 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
         else {
-            const unsigned int nbTest = (opt.calibration > 0)
+            const unsigned int nbStimuli = (opt.calibration > 0)
                 ? std::min((unsigned int)opt.calibration,
-                            database->getNbStimuli(Database::Test))
-                : database->getNbStimuli(Database::Test);
+                            database->getNbStimuli(Database::Validation))
+                : database->getNbStimuli(Database::Validation);
             const unsigned int batchSize = sp->getBatchSize();
-            const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+            const unsigned int nbBatch = std::ceil(nbStimuli / (double)batchSize);
 
 
             std::cout << "Calculating calibration data range..." << std::endl;
@@ -677,13 +677,13 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             for (unsigned int b = 0; b < nbBatch; ++b) {
                 const unsigned int i = b * batchSize;
 
-                sp->readBatch(Database::Test, i);
-                deepNet->test(Database::Test);
+                sp->readBatch(Database::Validation, i);
+                deepNet->test(Database::Validation);
                 deepNet->reportOutputsRange(outputsRange);
 
                 if (i >= nextReport || b == nbBatch - 1) {
                     nextReport += opt.report;
-                    std::cout << "Calibration data #" << i << std::endl;
+                    std::cout << "Calibration data " << i << "/" << nbStimuli << std::endl;
                 }
             }
 
@@ -693,14 +693,14 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             for (unsigned int b = 0; b < nbBatch; ++b) {
                 const unsigned int i = b * batchSize;
 
-                sp->readBatch(Database::Test, i);
-                deepNet->test(Database::Test);
+                sp->readBatch(Database::Validation, i);
+                deepNet->test(Database::Validation);
                 deepNet->reportOutputsHistogram(outputsHistogram, outputsRange, 
                                                 opt.nbBits, opt.actClippingMode);
 
                 if (i >= nextReport || b == nbBatch - 1) {
                     nextReport += opt.report;
-                    std::cout << "Calibration data #" << i << std::endl;
+                    std::cout << "Calibration data " << i << "/" << nbStimuli << std::endl;
                 }
             }
 
@@ -724,7 +724,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         deepNet->setParameter("FreeParametersDiscretization", nbLevels);
 
         // Clear the targets for the test that will occur afterward...
-        deepNet->clear(Database::Test);
+        deepNet->clear(Database::Validation);
 
         LogisticActivationDisabled = false;
         afterCalibration = true;
