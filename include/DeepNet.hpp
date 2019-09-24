@@ -212,9 +212,9 @@ private:
                             const std::unordered_map<std::string, RangeStats>& outputsRange,
                             std::size_t nbBits, ClippingMode actClippingMode) const;
     
-    void rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                  double scalingFactor, double prevScalingFactor,
-                                  std::size_t nbBits) const;
+    double rescaleActivationOutputs(const Cell& cell, Activation& activation,
+                                    double scalingFactor, double prevScalingFactor,
+                                    std::size_t nbBits) const;
 
     void approximateRescaling(Cell& cell, Activation& activation,
                               ActivationScalingMode actScalingMode) const;

@@ -1023,14 +1023,15 @@ void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
     }
 }
 
-void N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                             double scalingFactor, double prevScalingFactor,
-                                             std::size_t nbBits) const 
+double N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& activation,
+                                               double scalingFactor, double prevScalingFactor,
+                                               std::size_t nbBits) const 
 {
     const ActivationScalingMode scalingMode = activation.getActivationScaling().getMode();
     
     std::vector<double> scalingPerOutput(cell.getNbOutputs());
-    for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+    std::size_t output = 0;
+    while(output < cell.getNbOutputs()) {
         if(scalingMode == ActivationScalingMode::NONE) {
             scalingPerOutput[output] = 1 / (scalingFactor / prevScalingFactor);
         }
@@ -1062,12 +1063,20 @@ void N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& activ
         }
 
         if(scalingPerOutput[output] > 1.0) {
-            // TODO Check in which cases this can happen
-            throw std::runtime_error("Only scalings per output <= 1.0 are currently supported.");
+            std::cout << Utils::cwarning << "Scaling per output > 1.0." << Utils::cdef << std::endl;
+
+            // Grow the scalingFactor so that scalingPerOutput[output] would be equal to 1.0 
+            // and restart the loop.
+            scalingFactor *= scalingPerOutput[output];
+            output = 0;
+        }
+        else {
+            output++;
         }
     }
 
     activation.setActivationScaling(ActivationScaling::floatingPointScaling(std::move(scalingPerOutput)));
+    return scalingFactor;
 }
 
 void N2D2::DeepNet::normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
@@ -1125,7 +1134,8 @@ void N2D2::DeepNet::normalizeOutputsRange(const std::unordered_map<std::string, 
 
 
         
-        rescaleActivationOutputs(*cell, *activation, scalingFactor, prevScalingFactor, nbBits);
+        scalingFactor = rescaleActivationOutputs(*cell, *activation, 
+                                                 scalingFactor, prevScalingFactor, nbBits);
         approximateRescaling(*cell, *activation, actScalingMode);
 
         cell->processFreeParameters([&](double d) { return d/prevScalingFactor; },
