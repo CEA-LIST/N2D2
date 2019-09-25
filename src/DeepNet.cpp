@@ -2628,8 +2628,20 @@ void N2D2::DeepNet::reportOutputsRange(std::unordered_map<std::string, RangeStat
                 : mStimuliProvider->getData();
 
             RangeStats& rangeStats = outputsRange.at(*itCell);
-            for(auto output : outputs) {
-                rangeStats(output);
+            assert(outputs.size() == outputs.dimB()*outputs.dimZ()*outputs.dimY()*outputs.dimX());
+            
+            for(std::size_t batch = 0; batch < outputs.dimB(); batch++) {
+                if(mStimuliProvider->getBatch().at(batch) == -1) {
+                    continue;
+                }
+
+                for(std::size_t ch = 0; ch < outputs.dimZ(); ch++) {
+                    for(std::size_t y = 0; y < outputs.dimY(); y++) {
+                        for(std::size_t x = 0; x < outputs.dimX(); x++) {
+                            rangeStats(outputs(x, y, ch, batch));
+                        }
+                    }
+                }
             }
         }
     }
@@ -2677,9 +2689,22 @@ void N2D2::DeepNet::reportOutputsHistogram(
                 ? tensor_cast<Float_T>(cellFrame->getOutputs())
                 : mStimuliProvider->getData();
 
+
             Histogram& hist = outputsHistogram.at(*itCell);
-            for(Float_T val: outputs) {
-                hist(val);
+            assert(outputs.size() == outputs.dimB()*outputs.dimZ()*outputs.dimY()*outputs.dimX());
+
+            for(std::size_t batch = 0; batch < outputs.dimB(); batch++) {
+                if(mStimuliProvider->getBatch().at(batch) == -1) {
+                    continue;
+                }
+
+                for(std::size_t ch = 0; ch < outputs.dimZ(); ch++) {
+                    for(std::size_t y = 0; y < outputs.dimY(); y++) {
+                        for(std::size_t x = 0; x < outputs.dimX(); x++) {
+                            hist(outputs(x, y, ch, batch));
+                        }
+                    }
+                }
             }
         }
     }
