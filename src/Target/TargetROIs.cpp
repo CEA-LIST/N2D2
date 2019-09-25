@@ -710,6 +710,7 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
             }
 
             jsonDataBuffer << "{\"class_id\": " << (*it).bb->getLabel() << ","
+                "\"class_name\": \"" << labelsName[(*it).bb->getLabel()] << "\","
                 "\"info\": [\"BOX_" << (*it).score << "\","
                     "false,"
                     "{\"CreationDate\": \"" << time << "\","

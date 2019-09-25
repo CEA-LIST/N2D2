@@ -1080,6 +1080,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     if (mDataAsTarget)
         return;
 
+    const std::vector<std::string>& labelsName = getTargetLabelsName();
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
     const double xRatio = mStimuliProvider->getSizeX()
@@ -1241,6 +1242,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             }
 
             jsonDataBuffer << "{\"class_id\": " << (*it).first << ","
+                "\"class_name\": \"" << labelsName[(*it).first] << "\","
                 "\"info\": [\"BITMAP_CLASS_" << (*it).first << "\","
                     "false,"
                     "{\"CreationDate\": \"" << time << "\","
