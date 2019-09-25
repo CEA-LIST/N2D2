@@ -35,7 +35,7 @@ N2D2::Database::Database(bool loadDataInMemory)
       mROIsMargin(this, "ROIsMargin", 0U),
       mRandomPartitioning(this, "RandomPartitioning", true),
       mDataFileLabel(this, "DataFileLabel", true),
-      mForceCompositeLabel(this, "ForceCompositeLabel", true),
+      mForceCompositeLabel(this, "ForceCompositeLabel", false),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1)
 {
