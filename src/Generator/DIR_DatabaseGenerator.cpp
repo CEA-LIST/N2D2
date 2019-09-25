@@ -54,6 +54,10 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
         const int labelDepth = iniConfig.getProperty<int>("LabelDepth", 1);
         const std::string roiFile = Utils::expandEnvVars(
             iniConfig.getProperty<std::string>("ROIFile", ""));
+        const std::string roiDir = Utils::expandEnvVars(
+            iniConfig.getProperty<std::string>("ROIDir", ""));
+        const std::string roiExt = Utils::expandEnvVars(
+            iniConfig.getProperty<std::string>("ROIExtension", "json"));
         const bool perLabel = iniConfig.getProperty
                               <bool>("PerLabelPartitioning", true);
         const bool equivLabel = iniConfig.getProperty
@@ -87,6 +91,9 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
 
         if (!roiFile.empty())
             database->loadROIs(roiFile, "", true);
+
+        if (!roiDir.empty())
+            database->loadROIsDir(roiDir, roiExt, depth);
 
         if (perLabel) {
             if (!iniConfig.isProperty("Test"))

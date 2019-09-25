@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "ROI/BitmapROI.hpp"
 #include "ROI/CircularROI.hpp"
 #include "ROI/EllipticROI.hpp"
 #include "ROI/PolygonalROI.hpp"
@@ -465,6 +466,299 @@ TEST(RectangularROI, append__overlap)
     ASSERT_EQUALS(labels.at<int>(0, 118), -1);
     ASSERT_EQUALS(labels.at<int>(0, 127), -1);
     ASSERT_EQUALS(labels.at<int>(0, 128), 150);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// BitmapROI
+////////////////////////////////////////////////////////////////////////////////
+TEST_DATASET(BitmapROI,
+             BitmapROI,
+             (cv::Point origin, int scale, cv::Size size),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(472, 472), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(352, 352), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 432), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 192), 4, cv::Size(40, 80)))
+{
+    cv::Mat data(size, CV_8UC1);
+    data(cv::Rect(0, 0, size.width / 2, size.height / 4)) = 1;
+    data(cv::Rect(size.width / 3, size.height / 4, size.width / 3, 3 * size.height / 4)) = 1;
+    data(cv::Rect(2 * size.width / 3, 7 * size.height / 8, size.width / 3, size.height / 8)) = 1;
+
+    BitmapROI<int> roi(1, origin, scale, data);
+    ASSERT_EQUALS(roi.getLabel(), 1);
+
+    const cv::Rect rect = roi.getBoundingRect();
+    ASSERT_EQUALS(rect.x, origin.x);
+    ASSERT_EQUALS(rect.y, origin.y);
+    ASSERT_EQUALS(rect.width, size.width * scale);
+    ASSERT_EQUALS(rect.height, size.height * scale);
+}
+
+TEST_DATASET(BitmapROI,
+             draw,
+             (cv::Point origin, int scale, cv::Size size),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(472, 472), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(352, 352), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 432), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 192), 4, cv::Size(40, 80)))
+{
+    cv::Mat data = cv::Mat::zeros(size, CV_8UC1);
+    data(cv::Rect(0, 0, size.width / 2, size.height / 4)) = 1;
+    data(cv::Rect(size.width / 3, size.height / 4, size.width / 3, 3 * size.height / 4)) = 1;
+    data(cv::Rect(2 * size.width / 3, 7 * size.height / 8, size.width / 3, size.height / 8)) = 1;
+
+    Utils::createDirectories("ROI");
+
+    if (!cv::imwrite("ROI/BitmapROI_pattern.png", 255 * data))
+        throw std::runtime_error(
+            "Unable to write image: ROI/BitmapROI_pattern.png");
+
+    BitmapROI<int> roi(1, origin, scale, data);
+
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
+
+    if (!img.data)
+        throw std::runtime_error(
+            "Could not open or find image: tests_data/Lenna.png");
+
+    roi.draw(img);
+
+    std::ostringstream fileName;
+    fileName << "ROI/BitmapROI_draw"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << ".png";
+
+    if (!cv::imwrite(fileName.str().c_str(), img))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+}
+
+TEST_DATASET(BitmapROI,
+             append,
+             (cv::Point origin, int scale, cv::Size size),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(472, 472), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(352, 352), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 432), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 192), 4, cv::Size(40, 80)))
+{
+    cv::Mat data = cv::Mat::zeros(size, CV_8UC1);
+    data(cv::Rect(0, 0, size.width / 2, size.height / 4)) = 1;
+    data(cv::Rect(size.width / 3, size.height / 4, size.width / 3, 3 * size.height / 4)) = 1;
+    data(cv::Rect(2 * size.width / 3, 7 * size.height / 8, size.width / 3, size.height / 8)) = 1;
+
+    // No transform.
+    BitmapROI<int> roi(255, origin, scale, data);
+
+    cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(0));
+    roi.append(labels);
+
+    Utils::createDirectories("ROI");
+
+    std::ostringstream fileName;
+    fileName << "ROI/BitmapROI_append"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << ".png";
+
+    if (!cv::imwrite(fileName.str().c_str(), labels))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+
+    // Rescale
+    BitmapROI<int> roiRescale(255, origin, scale, data);
+    roiRescale.rescale(0.5, 2.0);
+
+    cv::Mat labelsRescale(512, 512, CV_32SC1, cv::Scalar(0));
+    roiRescale.append(labelsRescale);
+
+    fileName.str(std::string());
+    fileName << "ROI/BitmapROI_append"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << "_rescale.png";
+
+    if (!cv::imwrite(fileName.str().c_str(), labelsRescale))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+
+    // PadCrop
+    BitmapROI<int> roiPadCrop(255, origin, scale, data);
+    roiPadCrop.padCrop(50, 50, 100, 100);
+    roiPadCrop.padCrop(-50, -50, 512, 512);
+
+    cv::Mat labelsPadCrop(512, 512, CV_32SC1, cv::Scalar(0));
+    roiPadCrop.append(labelsPadCrop);
+
+    // Debug rectangle
+    cv::rectangle(labelsPadCrop,
+                  cv::Rect(50, 50, 100, 100),
+                  cv::Scalar(128));
+
+    fileName.str(std::string());
+    fileName << "ROI/BitmapROI_append"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << "_padcrop.png";
+
+    if (!cv::imwrite(fileName.str().c_str(), labelsPadCrop))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+
+    // Flip
+    BitmapROI<int> roiFlip(255, origin, scale, data);
+    roiFlip.flip(512, 512, true, true);
+
+    cv::Mat labelsFlip(512, 512, CV_32SC1, cv::Scalar(0));
+    roiFlip.append(labelsFlip);
+
+    fileName.str(std::string());
+    fileName << "ROI/BitmapROI_append"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << "_flip.png";
+
+    if (!cv::imwrite(fileName.str().c_str(), labelsFlip))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+}
+
+TEST_DATASET(BitmapROI,
+             append__margin,
+             (cv::Point origin, int scale, cv::Size size),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(472, 472), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(352, 352), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 432), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 192), 4, cv::Size(40, 80)))
+{
+    const int backgroundLabel = 50;
+
+    cv::Mat data = cv::Mat::zeros(size, CV_8UC1);
+    data(cv::Rect(0, 0, size.width / 2, size.height / 4)) = 1;
+    data(cv::Rect(size.width / 3, size.height / 4, size.width / 3, 3 * size.height / 4)) = 1;
+    data(cv::Rect(2 * size.width / 3, 7 * size.height / 8, size.width / 3, size.height / 8)) = 1;
+
+    BitmapROI<int> roi(255, origin, scale, data);
+
+    cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(backgroundLabel));
+    roi.append(labels, 10, backgroundLabel);
+
+    Utils::createDirectories("ROI");
+
+    std::ostringstream fileName;
+    fileName << "ROI/BitmapROI_append__margin"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << ".png";
+
+    if (!cv::imwrite(fileName.str().c_str(), labels))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+}
+
+TEST_DATASET(BitmapROI,
+             append__overlap,
+             (cv::Point origin1, int scale1, cv::Size size1,
+              cv::Point origin2, int scale2, cv::Size size2),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 40),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 40),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 40),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 472), 1, cv::Size(40, 40),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 352), 4, cv::Size(40, 40),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 80),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 80),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 80),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 80),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 432), 1, cv::Size(40, 80),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 192), 4, cv::Size(40, 80),
+                             cv::Point(352, 192), 4, cv::Size(40, 80)))
+{
+    const int backgroundLabel = 50;
+
+    cv::Mat data1 = cv::Mat::zeros(size1, CV_8UC1);
+    data1(cv::Rect(0, 0, size1.width / 2, size1.height / 4)) = 1;
+    data1(cv::Rect(size1.width / 3, size1.height / 4, size1.width / 3, 3 * size1.height / 4)) = 1;
+    data1(cv::Rect(2 * size1.width / 3, 7 * size1.height / 8, size1.width / 3, size1.height / 8)) = 1;
+
+    cv::Mat data2 = cv::Mat::zeros(size2, CV_8UC1);
+    data2(cv::Rect(0, 0, size2.width / 2, size2.height / 4)) = 1;
+    data2(cv::Rect(size2.width / 3, size2.height / 4, size2.width / 3, 3 * size2.height / 4)) = 1;
+    data2(cv::Rect(2 * size2.width / 3, 7 * size2.height / 8, size2.width / 3, size2.height / 8)) = 1;
+
+    BitmapROI<int> roi1(255, origin1, scale1, data1);
+    BitmapROI<int> roi2(150, origin2, scale2, data2);
+
+    cv::Mat labels(512, 512, CV_32SC1, cv::Scalar(backgroundLabel));
+    roi2.append(labels, 10, backgroundLabel);
+    roi1.append(labels, 10, backgroundLabel);
+
+    Utils::createDirectories("ROI");
+
+    std::ostringstream fileName;
+    fileName << "ROI/BitmapROI_append__overlap"
+        << "_O" << origin1.x << "x" << origin1.y
+        << "_S" << scale1
+        << "_" << size1.width << "x" << size1.height
+        << ".png";
+
+    if (!cv::imwrite(fileName.str().c_str(), labels))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
 }
 
 RUN_TESTS()

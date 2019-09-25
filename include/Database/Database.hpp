@@ -140,7 +140,7 @@ public:
 
     Database(bool loadDataInMemory = false);
     virtual void loadROIs(const std::string& fileName,
-                          const std::string& relPath,
+                          const std::string& relPath = "",
                           bool noImageSize = false);
     virtual void loadROIsDir(const std::string& dirName,
                              const std::string& fileExt = "",

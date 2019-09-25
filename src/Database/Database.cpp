@@ -19,6 +19,8 @@
 */
 
 #include "DataFile/DataFile.hpp"
+#include "LabelFile/LabelFile.hpp"
+#include "LabelFile/CsvLabelFile.hpp"
 #include "Database/Database.hpp"
 #include "ROI/RectangularROI.hpp"
 #include "utils/Gnuplot.hpp"
@@ -42,12 +44,6 @@ void N2D2::Database::loadROIs(const std::string& fileName,
                               const std::string& relPath,
                               bool noImageSize)
 {
-    std::ifstream dataRoi(fileName.c_str());
-
-    if (!dataRoi.good())
-        throw std::runtime_error(
-            "Database::loadROIs(): could not open ROI data file: " + fileName);
-
     // Create default label for no ROI
     if (!((std::string)mDefaultLabel).empty())
         labelID(mDefaultLabel);
@@ -56,87 +52,48 @@ void N2D2::Database::loadROIs(const std::string& fileName,
     const std::map<std::string, StimulusID> stimuliName
         = getRelPathStimuli(fileName, relPath);
 
-    std::string line;
+    // Read label
+    std::string fileExtension = Utils::fileExtension(fileName);
+    std::transform(fileExtension.begin(),
+                    fileExtension.end(),
+                    fileExtension.begin(),
+                    ::tolower);
 
-    while (std::getline(dataRoi, line)) {
-        // Remove optional comments
-        line.erase(std::find(line.begin(), line.end(), '#'), line.end());
-        // Left trim & right trim (right trim necessary for extra "!value.eof()"
-        // check later)
-        line.erase(
-            line.begin(),
-            std::find_if(line.begin(),
-                         line.end(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace))));
-        line.erase(std::find_if(line.rbegin(),
-                                line.rend(),
-                                std::not1(std::ptr_fun<int, int>(std::isspace)))
-                       .base(),
-                   line.end());
+    std::shared_ptr<LabelFile> labelFile = Registrar
+        <LabelFile>::create(fileExtension)();
 
-        if (line.empty())
-            continue;
+    if (std::shared_ptr<CsvLabelFile> csvLabelFile
+        = std::dynamic_pointer_cast<CsvLabelFile>(labelFile))
+    {
+        csvLabelFile->noImageSize(noImageSize);
+    }
 
-        std::stringstream values(line);
-        values.imbue(csvLocale);
+    const std::map<std::string, std::vector<ROI*> >& ROIs
+        = labelFile->read(fileName,
+                std::bind(&Database::labelID, this, std::placeholders::_1));
 
-        std::string name;
-
-        if (!(values >> name))
-            throw std::runtime_error("Unreadable line in data file: "
-                                     + fileName);
-
-        // There is a ROI
-        if (!noImageSize) {
-            unsigned int width, height;
-
-            if (!(Utils::signChecked<unsigned int>(values) >> width)
-                || !(Utils::signChecked<unsigned int>(values) >> height)) {
-                std::cout << Utils::cwarning
-                          << "Warning: unreadable image size value on line \""
-                          << line << "\" in data file: " << fileName
-                          << Utils::cdef << std::endl;
-                continue;
-            }
-        }
-
-        // x2 and y2 are assumed to be exclusive
-        double x1, y1, x2, y2;
-        std::string label;
-
-        if (!(values >> x1)
-            || !(values >> y1)
-            || !(values >> x2)
-            || !(values >> y2)
-            || !(values >> label)) {
-            throw std::runtime_error("Unreadable value in data file: "
-                                     + fileName);
-        }
-
-        if (x1 < 0 || x2 < 0 || y1 < 0 || y2 < 0) {
-            std::cout << Utils::cwarning
-                      << "Warning: negative coordinates on line \""
-                      << line << "\" in data file: " << fileName
-                      << Utils::cdef << std::endl;
-        }
-
-        if (!values.eof())
-            throw std::runtime_error("Extra data at end of line in data file: "
-                                     + fileName);
-
+    for (std::map<std::string, std::vector<ROI*> >::const_iterator
+        it = ROIs.begin(), itEnd = ROIs.end(); it != itEnd; ++it)
+    {
         // Find corresponding stimulus
-        std::map<std::string, StimulusID>::const_iterator it
-            = stimuliName.find(name);
+        std::map<std::string, StimulusID>::const_iterator itStimulus
+            = stimuliName.find((*it).first);
 
-        if (it != stimuliName.end()) {
-            mStimuli[(*it).second].ROIs.push_back(
-                new RectangularROI<int>(labelID(label),
-                                        RectangularROI<int>::Point_T(x1, y1),
-                                        RectangularROI<int>::Point_T(x2, y2)));
-        } else {
+        // Support for "double extension" for label files, like .box.json
+        if (itStimulus == stimuliName.end())
+            itStimulus = stimuliName.find(Utils::fileBaseName((*it).first));
+
+        if (itStimulus != stimuliName.end()) {
+            std::vector<ROI*>& stimulusROIs
+                = mStimuli[(*itStimulus).second].ROIs;
+
+            stimulusROIs.insert(stimulusROIs.end(),
+                (*it).second.begin(), (*it).second.end());
+        }
+        else {
             std::cout << Utils::cwarning
-                      << "Warning: ignoring ROI for non-existant stimulus: \""
-                      << name << "\"" << Utils::cdef << std::endl;
+                        << "Warning: ignoring ROI for non-existant stimulus: \""
+                        << (*it).first << "\"" << Utils::cdef << std::endl;
         }
     }
 }
@@ -1652,7 +1609,9 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
 
     cv::Mat labels;
 
-    if (Registrar<DataFile>::exists(fileExtension)) {
+    if (Registrar<DataFile>::exists(fileExtension)
+        && mStimuli[id].ROIs.empty())  // if ROIs exist, they take precedence
+    {
         std::shared_ptr<DataFile> dataFile = Registrar
             <DataFile>::create(fileExtension)();
         labels = dataFile->readLabel(mStimuli[id].name);
