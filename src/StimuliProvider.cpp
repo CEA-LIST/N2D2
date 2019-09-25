@@ -742,7 +742,8 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
             std::stringstream msg;
             msg << "StimuliProvider::readStimulus(): expected data size is "
                 << dataRefPos.dims() << ", but size after transformations is "
-                << data.dims();
+                << data.dims() << " for stimulus: "
+                << mDatabase.getStimulusName(id);
 
 #pragma omp critical
             throw std::runtime_error(msg.str());
@@ -763,7 +764,8 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
             std::stringstream msg;
             msg << "StimuliProvider::readStimulus(): expected labels size is "
                 << labelsRefPos.dims() << ", but size after transformations is "
-                << labels.dims();
+                << labels.dims() << " for stimulus: "
+                << mDatabase.getStimulusName(id);
 
 #pragma omp critical
             throw std::runtime_error(msg.str());

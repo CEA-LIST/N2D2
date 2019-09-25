@@ -34,6 +34,7 @@ N2D2::Database::Database(bool loadDataInMemory)
     : mDefaultLabel(this, "DefaultLabel", ""),
       mROIsMargin(this, "ROIsMargin", 0U),
       mRandomPartitioning(this, "RandomPartitioning", true),
+      mDataFileLabel(this, "DataFileLabel", true),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1)
 {
@@ -1609,9 +1610,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
 
     cv::Mat labels;
 
-    if (Registrar<DataFile>::exists(fileExtension)
-        && mStimuli[id].ROIs.empty())  // if ROIs exist, they take precedence
-    {
+    if (mDataFileLabel && Registrar<DataFile>::exists(fileExtension)) {
         std::shared_ptr<DataFile> dataFile = Registrar
             <DataFile>::create(fileExtension)();
         labels = dataFile->readLabel(mStimuli[id].name);
