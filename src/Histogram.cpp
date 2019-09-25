@@ -175,37 +175,27 @@ double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
         return 0.0;
     }
 
-    const bool isUnsigned = mMinVal >= 0.0;
+    double threshold = Utils::max_abs(mMinVal, mMaxVal);
+    double bestThreshold = threshold;
+    double bestMSE = std::numeric_limits<double>::max();
 
-    // Normalized number of values for each bin
-    std::vector<double> normalizedValues(mValues.begin(), mValues.end());
-    for(auto& v: normalizedValues) {
-        v /= mNbValues;
-    }
-
-
-    // Get threshold that minimizes the MSE
-    const double maxThreshold = Utils::max_abs(mMinVal, mMaxVal);
-    const double step = 0.001*maxThreshold;
-
-    double minMSE = std::numeric_limits<double>::max();
-    double bestThreshold = maxThreshold;
-
-    for(double th = step; th <= maxThreshold + 0.00001; th += step) {
-        const double mse = MSE(normalizedValues, th, nbBits, isUnsigned);
-        if(mse < minMSE) {
-            minMSE = mse;
-            bestThreshold = th;
+    while(threshold > 0.0) {
+        const double mse = MSE(threshold, nbBits);
+        if(mse < bestMSE) {
+            bestMSE = mse;
+            bestThreshold = threshold;
         }
+        
+        threshold -= 0.01;
     }
 
     return bestThreshold;
 }
 
-double N2D2::Histogram::MSE(const std::vector<double>& normalizedValues, 
-                            double threshold, std::size_t nbBits, bool isUnsigned) const
-{
+double N2D2::Histogram::MSE(double threshold, std::size_t nbBits) const {
     assert(nbBits > 1);
+
+    const bool isUnsigned = mMinVal >= 0.0;
 
     const double minVal = isUnsigned?0:-((1 << (nbBits - 1)) - 1);
     const double maxVal = isUnsigned?((1 << nbBits) - 1):((1 << (nbBits - 1)) - 1);
@@ -215,7 +205,9 @@ double N2D2::Histogram::MSE(const std::vector<double>& normalizedValues,
     double mse = 0.0;
     for(std::size_t bin = 0; bin < mNbBins; bin++) {
         const double approx = Utils::clamp(std::round(getBinValue(bin)*scaling), minVal, maxVal)/scaling;
-        mse += std::pow(getBinValue(bin) - approx, 2) * normalizedValues[bin];
+        const double normalizedValue = 1.0*mValues[bin]/mNbValues;
+
+        mse += std::pow(getBinValue(bin) - approx, 2) * normalizedValue;
     }
 
     return mse;
