@@ -56,7 +56,6 @@ inline std::size_t getNbBinsForClippingMode(std::size_t nbBits,
 {
     switch (clippingMode) {
         case ClippingMode::MSE:
-            return std::min(1 << nbBits, 65536);
         case ClippingMode::KL_DIVERGENCE:
             return std::min((1 << nbBits)*32, 65536);
         default:
