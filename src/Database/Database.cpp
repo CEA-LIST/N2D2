@@ -35,6 +35,7 @@ N2D2::Database::Database(bool loadDataInMemory)
       mROIsMargin(this, "ROIsMargin", 0U),
       mRandomPartitioning(this, "RandomPartitioning", true),
       mDataFileLabel(this, "DataFileLabel", true),
+      mForceCompositeLabel(this, "ForceCompositeLabel", true),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1)
 {
@@ -548,7 +549,10 @@ void N2D2::Database::plotStats(
          it != itEnd;
          ++it)
     {
-        labelData << "\"" << getLabelName((*it).first) << "\" "
+        const std::string labelName = ((*it).first != -1)
+            ? getLabelName((*it).first) : "-1";
+
+        labelData << "\"" << labelName << "\" "
             << (*it).second << "\n";
     }
 
@@ -1291,7 +1295,10 @@ N2D2::Database::getStimulusROIs(StimulusID id) const
                    std::back_inserter(stimulusROIs),
                    std::bind(&ROI::clone, std::placeholders::_1));
 
-    if (mStimuli[id].label >= 0 && !stimulusROIs.empty()) {
+    if (mStimuli[id].label >= 0
+        && !stimulusROIs.empty()
+        && !mForceCompositeLabel)
+    {
         unsigned int nbLabelROIs = 0;
 
         for (std::vector<std::shared_ptr<ROI> >::iterator
@@ -1322,6 +1329,7 @@ N2D2::Database::getStimulusROIs(StimulusID id) const
         }
 
         if (nbLabelROIs > 1) {
+#pragma omp critical(Database__getStimulusROIs)
             throw std::runtime_error("Database::getStimulusROIs(): "
                                      "number of ROIs should be 1 for "
                                      "non-composite stimuli");
@@ -1526,7 +1534,7 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
 {
     // Initialize mStimuliDepth using the first stimulus
     if (mStimuliDepth == -1) {
-        #pragma omp critical
+#pragma omp critical(Database__loadStimulusData)
         if (mStimuliDepth == -1) {
             std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
             std::transform(fileExtension.begin(),
@@ -1571,7 +1579,10 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
         data = dataConverted;
     }
 
-    if (mStimuli[id].label >= 0 && !mStimuli[id].ROIs.empty()) {
+    if (mStimuli[id].label >= 0
+        && !mStimuli[id].ROIs.empty()
+        && !mForceCompositeLabel)
+    {
         bool extracted = false;
 
         for (std::vector<ROI*>::const_iterator
@@ -1586,6 +1597,7 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
                     extracted = true;
                 }
                 else {
+#pragma omp critical(Database__loadStimulusData)
                     throw std::runtime_error("Database::loadStimulusData():"
                         " number of ROIs should be 1 for non-composite"
                         " stimuli");
@@ -1616,7 +1628,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         labels = dataFile->readLabel(mStimuli[id].name);
     }
 
-    if (mStimuli[id].label == -1 || !labels.empty()) {
+    if (mStimuli[id].label == -1 || !labels.empty() || mForceCompositeLabel) {
         std::shared_ptr<DataFile> dataFile = Registrar
             <DataFile>::create(fileExtension)();
 
@@ -1650,6 +1662,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
             }
             catch (const std::exception& e)
             {
+#pragma omp critical(Database__loadStimulusLabelsData)
                 std::cout << Utils::cwarning << "Could not append ROI #"
                     << (it - mStimuli[id].ROIs.begin()) << " to stimulus "
                     << mStimuli[id].name << " (" << stimulus.cols
@@ -1663,6 +1676,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         // Non-composite stimulus
         if (!mStimuli[id].ROIs.empty()) {
             if (mStimuli[id].ROIs.size() != 1) {
+#pragma omp critical(Database__loadStimulusLabelsData)
                 throw std::runtime_error("Database::loadStimulusLabelsData(): "
                                          "number of ROIs should be 1 for "
                                          "non-composite"

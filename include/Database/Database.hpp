@@ -331,6 +331,8 @@ protected:
     Parameter<bool> mRandomPartitioning;
     // If true, load image label with DataFile::readLabel()
     Parameter<bool> mDataFileLabel;
+    // If true, force composite labels, discarding the stimulus label ID
+    Parameter<bool> mForceCompositeLabel;
 
     /**
      * TABLES
