@@ -37,13 +37,16 @@ N2D2::IMDBWIKI_DatabaseGenerator::generate(IniParser& iniConfig,
     const bool WikiSet = iniConfig.getProperty<bool>("WikiSet", true);
     const bool IMDBSet = iniConfig.getProperty<bool>("IMDBSet", false);
     const bool CropFrame = iniConfig.getProperty<bool>("CropFrame", false);
+    const bool useNameAsLabel = iniConfig.getProperty<bool>("UseNameAsLabel",
+                                                            false);
     const std::string dataPath = iniConfig.getProperty<std::string>(
         "DataPath", N2D2_DATA("IMDB-WIKI"));
     const std::string labelPath = iniConfig.getProperty<std::string>(
         "LabelPath", N2D2_DATA("IMDB-WIKI/imdb_metadata"));
 
     std::shared_ptr<IMDBWIKI_Database> database = std::make_shared
-        <IMDBWIKI_Database>(WikiSet, IMDBSet, CropFrame, learn, validation);
+        <IMDBWIKI_Database>(WikiSet, IMDBSet, CropFrame, useNameAsLabel,
+            learn, validation);
     database->setParameters(iniConfig.getSection(section, true));
     database->load(dataPath, labelPath);
     return database;

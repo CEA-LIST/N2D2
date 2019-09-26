@@ -243,12 +243,18 @@ public:
                      StimuliSet set = Unpartitioned);
     int addLabel(const std::string& labelName);
     void removeStimulus(StimulusID id);
+    void removeStimuli(const std::vector<StimulusID>& ids);
     void removeLabel(int label);
     inline void removeLabel(const std::string& labelName);
+    void removeLabels(const std::vector<int>& labels);
     // void mergeLabels(const std::vector<int>& labels, const std::string&
     // newName = "");
     // inline void mergeLabels(const std::vector<std::string>& names, const
     // std::string& newName = "");
+
+    void sortAndDropLabels(unsigned int nbKeep,
+                           bool ascending = true,
+                           StimuliSetMask setMask = All);
 
     // Setters
     inline void setStimulusLabel(StimulusID id, const std::string& labelName);

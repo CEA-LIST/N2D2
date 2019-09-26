@@ -47,6 +47,16 @@ N2D2::DatabaseGenerator::generate(IniParser& iniConfig,
         database->load("", labelPath);
     }
 
+    if (iniConfig.isSection(section + ".sortAndDropLabels")) {
+        iniConfig.currentSection(section + ".sortAndDropLabels");
+
+        const unsigned int nbKeep
+            = iniConfig.getProperty<unsigned int>("NbKeep");
+        const bool ascending = iniConfig.getProperty<bool>("Ascending", true);
+
+        database->sortAndDropLabels(nbKeep, ascending);
+    }
+
     if (iniConfig.isSection(section + ".filterROIs")) {
         iniConfig.currentSection(section + ".filterROIs");
 

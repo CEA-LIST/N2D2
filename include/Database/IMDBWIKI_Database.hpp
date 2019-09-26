@@ -50,6 +50,7 @@ public:
     IMDBWIKI_Database(bool WikiSet,
                       bool IMDBSet,
                       bool CropFrame,
+                      bool useNameAsLabel,
                       double learn,
                       double validation);
     virtual void load(const std::string& dataPath,
@@ -65,6 +66,7 @@ protected:
     bool mWiki;
     bool mIMDB;
     bool mCrop;
+    bool mUseNameAsLabel;
     double mLearn;
     double mValidation;
     unsigned int mNbCorruptedFrames;

@@ -27,11 +27,17 @@ N2D2::IMDBWIKI_Database::csvIMDBLocale(std::locale(),
                                        new N2D2::Utils::streamIgnore(";"));
 
 N2D2::IMDBWIKI_Database::IMDBWIKI_Database(
-    bool WikiSet, bool IMDBSet, bool CropFrame, double learn, double validation)
+    bool WikiSet,
+    bool IMDBSet,
+    bool CropFrame,
+    bool useNameAsLabel,
+    double learn, double
+    validation)
     : DIR_Database(),
       mWiki(WikiSet),
       mIMDB(IMDBSet),
       mCrop(CropFrame),
+      mUseNameAsLabel(useNameAsLabel),
       mLearn(learn),
       mValidation(validation),
       mNbCorruptedFrames(0)
@@ -106,40 +112,46 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
         }
         else {
             std::ostringstream labelStr;
-            if (facesParam[face].gender != 0.0
-                && facesParam[face].gender != 1.0)
-            {
-                ++nbMsg;
 
-                if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
-                    std::cout << Utils::cnotice
-                              << "Gender type not defined for frame "
-                              << dirPath + "/" + facesParam[face].full_path
-                              << Utils::cdef << std::endl;
-                }
-
-                labelStr << "?";
+            if (mUseNameAsLabel) {
+                labelStr << facesParam[face].name;
             }
-            else
-                labelStr << ((facesParam[face].gender == 0.0) ? "F" : "M");
+            else {
+                if (facesParam[face].gender != 0.0
+                    && facesParam[face].gender != 1.0)
+                {
+                    ++nbMsg;
 
-            labelStr << "-";
+                    if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
+                        std::cout << Utils::cnotice
+                                << "Gender type not defined for frame "
+                                << dirPath + "/" + facesParam[face].full_path
+                                << Utils::cdef << std::endl;
+                    }
 
-            if (age < 0.0 || age > 99.0) {
-                ++nbMsg;
-
-                if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
-                    std::cout << Utils::cnotice
-                              << "Age out of bound (negative or greater than 100 "
-                                 "years old) for frame "
-                              << dirPath + "/" + facesParam[face].full_path
-                              << Utils::cdef << std::endl;
+                    labelStr << "?";
                 }
+                else
+                    labelStr << ((facesParam[face].gender == 0.0) ? "F" : "M");
 
-                labelStr << "?";
+                labelStr << "-";
+
+                if (age < 0.0 || age > 99.0) {
+                    ++nbMsg;
+
+                    if (nbMsgMax > 0 && nbMsg < nbMsgMax) {
+                        std::cout << Utils::cnotice
+                                << "Age out of bound (negative or greater than 100 "
+                                    "years old) for frame "
+                                << dirPath + "/" + facesParam[face].full_path
+                                << Utils::cdef << std::endl;
+                    }
+
+                    labelStr << "?";
+                }
+                else
+                    labelStr << age;
             }
-            else
-                labelStr << age;
 
             if (!mCrop) {
                 mStimuli.push_back(

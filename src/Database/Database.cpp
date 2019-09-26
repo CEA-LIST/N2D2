@@ -1215,6 +1215,65 @@ void N2D2::Database::removeStimulus(StimulusID id)
     mStimuli.erase(mStimuli.begin() + id);
 }
 
+void N2D2::Database::removeStimuli(const std::vector<StimulusID>& ids)
+{
+    std::vector<StimulusID> sortedIds(ids);
+    std::sort(sortedIds.begin(), sortedIds.end());
+
+    std::map<int, int> stimuliMapping;
+    int offset = 0;
+
+    // mStimuli.erase() is very slow, better create a new vector and swap!
+    std::vector<Stimulus> newStimuli;
+
+    for (unsigned int i = 0, size = mStimuli.size(); i < size; ++i) {
+        if (std::binary_search(sortedIds.begin(), sortedIds.end(), i)) {
+            stimuliMapping.insert(std::make_pair(i, -1));
+            //mStimuli.erase(mStimuli.begin() + (i - offset));
+            ++offset;
+        }
+        else {
+            stimuliMapping.insert(std::make_pair(i, i - offset));
+            newStimuli.push_back(mStimuli[i]);
+        }
+    }
+
+    mStimuli.swap(newStimuli);
+
+    std::vector<StimuliSet> stimuliSets;
+    stimuliSets.push_back(Learn);
+    stimuliSets.push_back(Validation);
+    stimuliSets.push_back(Test);
+    stimuliSets.push_back(Unpartitioned);
+
+    for (std::vector<Database::StimuliSet>::const_iterator it
+         = stimuliSets.begin(), itEnd = stimuliSets.end();
+         it != itEnd;
+         ++it)
+    {
+        // mStimuliSets(*it).erase() is very slow...
+        std::vector<StimulusID> newStimuliSet;
+
+        for (int idx = mStimuliSets(*it).size() - 1; idx >= 0; --idx)
+        {
+            const int id = mStimuliSets(*it)[idx];
+            const int newId = stimuliMapping[id];
+
+            //if (newId == -1) {
+            //    mStimuliSets(*it)
+            //        .erase(mStimuliSets(*it).begin() + idx);
+            //}
+            //else
+            //    mStimuliSets(*it)[idx] = newId;
+
+            if (newId != -1)
+                newStimuliSet.push_back(newId);
+        }
+
+        mStimuliSets(*it).swap(newStimuliSet);
+    }
+}
+
 void N2D2::Database::removeLabel(int label)
 {
     for (int id = mStimuli.size() - 1; id >= 0; --id) {
@@ -1226,6 +1285,43 @@ void N2D2::Database::removeLabel(int label)
 
     mLabelsName.erase(mLabelsName.begin() + label);
 }
+
+void N2D2::Database::removeLabels(const std::vector<int>& labels)
+{
+    std::vector<int> sortedLabels(labels);
+    std::sort(sortedLabels.begin(), sortedLabels.end());
+
+    std::map<int, int> labelsMapping;
+    int offset = 0;
+
+    for (unsigned int i = 0, size = mLabelsName.size(); i < size; ++i) {
+        if (std::binary_search(sortedLabels.begin(), sortedLabels.end(), i)) {
+            labelsMapping.insert(std::make_pair(i, -1));
+            mLabelsName.erase(mLabelsName.begin() + (i - offset));
+            ++offset;
+        }
+        else
+            labelsMapping.insert(std::make_pair(i, i - offset));
+    }
+
+    std::vector<StimulusID> stimuliToRemove;
+
+    for (int id = mStimuli.size() - 1; id >= 0; --id) {
+        const int label = mStimuli[id].label;
+
+        if (label >= 0) {
+            const int newLabel = labelsMapping[label];
+
+            if (newLabel == -1)
+                stimuliToRemove.push_back(id);
+            else
+                mStimuli[id].label = newLabel;
+        }
+    }
+
+    removeStimuli(stimuliToRemove);
+}
+
 /*
 // NO TESTED
 void N2D2::Database::mergeLabels(const std::vector<int>& labels, const
@@ -1266,6 +1362,55 @@ sortedLabels.end(); it != itEnd; ++it) {
         mLabelsName.erase(mLabelsName.begin() + label);
 }
 */
+
+void N2D2::Database::sortAndDropLabels(unsigned int nbKeep,
+                                       bool ascending,
+                                       StimuliSetMask setMask)
+{
+    std::vector<unsigned int> nbStimuliWithLabel(mLabelsName.size(), 0);
+
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+         = stimuliSets.begin(),
+         itSetEnd = stimuliSets.end();
+         itSet != itSetEnd;
+         ++itSet)
+    {
+        const unsigned int size = mStimuliSets(*itSet).size();
+
+        for (int i = 0; i < (int)size; ++i) {
+            const StimulusID id = mStimuliSets(*itSet)[i];
+
+            if (mStimuli[id].label >= 0)
+                ++nbStimuliWithLabel.at(mStimuli[id].label);
+        }
+    }
+
+    const unsigned int keep = std::min(nbKeep,
+                                       (unsigned int)mLabelsName.size());
+
+    std::vector<int> labelIdx(mLabelsName.size());
+    std::iota(labelIdx.begin(), labelIdx.end(), 0);
+
+    // Sort indexes based on comparing values in nbStimuliWithLabel
+    if (ascending) {
+        std::partial_sort(labelIdx.begin(),
+            labelIdx.begin() + keep,
+            labelIdx.end(),
+            [&nbStimuliWithLabel](int i1, int i2)
+                {return nbStimuliWithLabel[i1] < nbStimuliWithLabel[i2];});
+    }
+    else {
+        std::partial_sort(labelIdx.begin(),
+            labelIdx.begin() + keep,
+            labelIdx.end(),
+            [&nbStimuliWithLabel](int i1, int i2)
+                {return nbStimuliWithLabel[i1] > nbStimuliWithLabel[i2];});
+    }
+
+    removeLabels(std::vector<int>(labelIdx.begin() + keep, labelIdx.end()));
+}
 
 std::string N2D2::Database::getStimulusName(StimulusID id,
                                             bool appendSlice) const
