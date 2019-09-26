@@ -996,8 +996,8 @@ void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
          * of an uint32_t to gain a bit more precision.
          */
         const std::size_t limit = std::numeric_limits<std::int32_t>::max();
-         // We need to keep enough bits for the non-fractional part
-        const std::size_t maxNbFractionalBits = 39;
+         // We need to keep enough bits for the non-fractional part (64-maxNbFractionalBits).
+        const std::size_t maxNbFractionalBits = 36;
 
         std::size_t nbFractionalBits = 30;
         assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
