@@ -883,7 +883,7 @@ void N2D2::DeepNet::normalizeFreeParametersPerOutputChannel(double normFactor) {
 
 std::vector<std::vector<unsigned char>> N2D2::DeepNet::approxRescaleWithShifts(Cell& cell, 
                                                         const std::vector<double>& scalingPerOutput, 
-                                                        std::size_t nbShifts) const
+                                                        std::size_t nbShifts)
 {
     /**
      * Return a pair of the precision of the approximation and a vector of shifts.
@@ -958,7 +958,7 @@ std::vector<std::vector<unsigned char>> N2D2::DeepNet::approxRescaleWithShifts(C
 double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
                                        const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                        const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                       std::size_t nbBits, ClippingMode actClippingMode) const 
+                                       std::size_t nbBits, ClippingMode actClippingMode) 
 {
     switch(actClippingMode) {
         case ClippingMode::KL_DIVERGENCE:
@@ -973,7 +973,7 @@ double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
 }
 
 void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
-                                         ActivationScalingMode actScalingMode) const 
+                                         ActivationScalingMode actScalingMode) 
 {
     assert(activation.getActivationScaling().getMode() == ActivationScalingMode::FLOAT_MULT);
 
@@ -1047,7 +1047,7 @@ void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
 
 double N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& activation,
                                                double scalingFactor, double prevScalingFactor,
-                                               std::size_t nbBits) const 
+                                               std::size_t nbBits)
 {
     const ActivationScalingMode scalingMode = activation.getActivationScaling().getMode();
     

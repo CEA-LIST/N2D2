@@ -207,24 +207,24 @@ public:
                    Gnuplot& p);
 
 private:
-    double getCellThreshold(const std::string& cellName,
-                            const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                            const std::unordered_map<std::string, RangeStats>& outputsRange,
-                            std::size_t nbBits, ClippingMode actClippingMode) const;
+    static double getCellThreshold(const std::string& cellName,
+                                   const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                                   const std::unordered_map<std::string, RangeStats>& outputsRange,
+                                   std::size_t nbBits, ClippingMode actClippingMode);
     
-    double rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                    double scalingFactor, double prevScalingFactor,
-                                    std::size_t nbBits) const;
+    static double rescaleActivationOutputs(const Cell& cell, Activation& activation,
+                                           double scalingFactor, double prevScalingFactor,
+                                           std::size_t nbBits);
 
-    void approximateRescaling(Cell& cell, Activation& activation,
-                              ActivationScalingMode actScalingMode) const;
+    static void approximateRescaling(Cell& cell, Activation& activation,
+                                     ActivationScalingMode actScalingMode);
     
     /**
      * Approximate the multiplicative scaling factor by an addition of shifts.
      */
-    std::vector<std::vector<unsigned char>> approxRescaleWithShifts(Cell& cell, 
+    static std::vector<std::vector<unsigned char>> approxRescaleWithShifts(Cell& cell, 
                                                 const std::vector<double>& scalingPerOutput, 
-                                                std::size_t nbShifts) const;
+                                                std::size_t nbShifts);
 
 protected:
     Parameter<std::string> mName;
