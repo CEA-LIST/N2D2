@@ -2634,13 +2634,9 @@ void N2D2::DeepNet::reportOutputsRange(std::unordered_map<std::string, RangeStat
                 if(mStimuliProvider->getBatch().at(batch) == -1) {
                     continue;
                 }
-
-                for(std::size_t ch = 0; ch < outputs.dimZ(); ch++) {
-                    for(std::size_t y = 0; y < outputs.dimY(); y++) {
-                        for(std::size_t x = 0; x < outputs.dimX(); x++) {
-                            rangeStats(outputs(x, y, ch, batch));
-                        }
-                    }
+                
+                for(Float_T val: outputs[batch]) {
+                    rangeStats(val);
                 }
             }
         }
@@ -2698,12 +2694,8 @@ void N2D2::DeepNet::reportOutputsHistogram(
                     continue;
                 }
 
-                for(std::size_t ch = 0; ch < outputs.dimZ(); ch++) {
-                    for(std::size_t y = 0; y < outputs.dimY(); y++) {
-                        for(std::size_t x = 0; x < outputs.dimX(); x++) {
-                            hist(outputs(x, y, ch, batch));
-                        }
-                    }
+                for(Float_T val: outputs[batch]) {
+                    hist(val);
                 }
             }
         }
