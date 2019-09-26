@@ -984,11 +984,33 @@ void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
         // Nothing to do.
     }
     else if(actScalingMode == ActivationScalingMode::FIXED_MULT) {
-        const std::size_t nbFractionalBits = FixedPointScaling::DEFAULT_NB_FRACTIONAL_BITS;
+        const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
+        assert(maxScaling <= 1.0);
         
+        /**
+         * Find the highest nbFractionalBits so that the scaling 
+         * 'std::round(sc * (1ull << nbFractionalBits)' of each output
+         * can be stored in an int32_t an thus in scalingFixedPoint.
+         * 
+         * TODO With unsigned activation like ReLU we could use the maximum
+         * of an uint32_t to gain a bit more precision.
+         */
+        const std::size_t limit = std::numeric_limits<std::int32_t>::max();
+         // We need to keep enough bits for the non-fractional part
+        const std::size_t maxNbFractionalBits = 39;
+
+        std::size_t nbFractionalBits = 30;
+        assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
+        while(std::round(maxScaling * (1ull << (nbFractionalBits + 1))) < limit && 
+              nbFractionalBits + 1 <= maxNbFractionalBits) 
+        {
+            nbFractionalBits++;
+        }
+        
+        
+
         std::vector<std::int32_t> scalingFixedPoint;
         for(auto sc: scalingPerOutput) {
-            assert(sc <= 1.0);
             scalingFixedPoint.push_back(std::round(sc * (1ull << nbFractionalBits)));
         }
 

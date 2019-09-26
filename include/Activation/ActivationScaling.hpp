@@ -128,8 +128,6 @@ private:
  */
 class FixedPointScaling: public AbstractScaling {
 public:
-    static const std::size_t DEFAULT_NB_FRACTIONAL_BITS = 30;
-
     FixedPointScaling(std::size_t nbFractionalBits, std::vector<std::int32_t> scaling)
            : mNbFractionalBits(nbFractionalBits), mScalingPerOutput(std::move(scaling))
     {}
