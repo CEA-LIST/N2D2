@@ -757,7 +757,7 @@ void N2D2::Database::extractSlices(unsigned int width,
                         // Copy ROI
                         ROI* roi = (*itROIs)->clonePtr();
 
-                        if (mStimuli[id].label == -1) {
+                        if (mStimuli[id].label == -1 || mForceCompositeLabel) {
                             // Composite stimuli
                             // Crop ROI
                             roi->padCrop(x, y, width, height);
