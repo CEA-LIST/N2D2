@@ -64,7 +64,7 @@ void N2D2::IMDBWIKI_Database::load(const std::string& dataPath,
             loadStimuli(dataPath + "/wiki_crop", labelPath + "/wiki.csv");
     }
 
-    partitionStimuli(mLearn, mValidation, 1.0 - mLearn - mValidation);
+    partitionStimuliPerLabel(mLearn, mValidation, 1.0 - mLearn - mValidation);
 }
 
 void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
