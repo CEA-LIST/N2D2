@@ -881,78 +881,75 @@ void N2D2::DeepNet::normalizeFreeParametersPerOutputChannel(double normFactor) {
     }
 }
 
-std::vector<std::vector<unsigned char>> N2D2::DeepNet::approxRescaleWithShifts(Cell& cell, 
-                                                        const std::vector<double>& scalingPerOutput, 
-                                                        std::size_t nbShifts)
+std::pair<std::vector<unsigned char>, double> N2D2::DeepNet::approximateRescalingWithPowerOf2Divs(
+                                                        double scaling, std::size_t nbDivisions) 
 {
-    /**
-     * Return a pair of the precision of the approximation and a vector of shifts.
-     */
-    auto approximateWith = [&](double scaling, std::size_t nbShifts) 
-                                -> std::pair<double , std::vector<unsigned char>> 
-    {
-        static const double ROUNDING_THRESHOLD = 0.98;
+    static const double ROUNDING_THRESHOLD = 0.98;
 
-        if(nbShifts == 0) {
-            throw std::runtime_error("Can't approximate the scaling with 0 shift.");
+    assert(nbDivisions > 0);
+    assert(scaling <= 1.0);
+
+    std::vector<unsigned char> powerOf2Divs;
+
+    double precision = 0.0;
+    while(nbDivisions > 0) {
+        if(precision == 1.0) {
+            break;
         }
 
-        if(scaling < 1.0) {
-            throw std::runtime_error("Scaling factor " + std::to_string(scaling) + " must be >= 1.0.");
-        }
+        const std::size_t exponent = std::ceil(std::log2(1.0/(scaling*(1.0 - precision))));
+        precision += 1.0/(scaling*std::pow(2, exponent));
 
-        std::vector<unsigned char> shifts;
+        powerOf2Divs.push_back(static_cast<unsigned char>(exponent));
+        nbDivisions--;
+    }
 
-        double precision = 0.0;
-        while(nbShifts > 0) {
-            if(precision == 1.0) {
-                break;
-            }
+    assert(precision <= 1.0);
+    
+    if(precision >= ROUNDING_THRESHOLD) {
+        precision = 1.0;
+    }
+    else {
+        precision += 1.0/(scaling*std::pow(2, powerOf2Divs.back()));
+        powerOf2Divs.back() = powerOf2Divs.back() - 1;
+    }
 
-            const std::size_t shift = std::ceil(std::log2(scaling/(1.0 - precision)));
-            precision += scaling/std::pow(2, shift);
+    assert(precision >= 1.0);
 
-            shifts.push_back(static_cast<unsigned char>(shift));
-            nbShifts--;
-        }
+    return std::make_pair(powerOf2Divs, precision);
+}
 
-        assert(precision <= 1.0);
-        
-        if(precision >= ROUNDING_THRESHOLD && precision <= 1.0) {
-            precision = 1.0;
-        }
-        else {
-            precision += scaling/std::pow(2, shifts.back());
-            shifts.back() = shifts.back() - 1;
-        }
-
-        assert(precision >= 1.0);
-
-        return std::make_pair(precision, shifts);
-    };
-
-    std::vector<std::vector<unsigned char>> shiftsPerOutput(cell.getNbOutputs());
+std::vector<std::vector<unsigned char>> N2D2::DeepNet::approximateRescalingsWithPowerOf2Divs(Cell& cell, 
+                                                        const std::vector<double>& scalingPerOutput, 
+                                                        std::size_t nbDivisions)
+{
+    std::vector<std::vector<unsigned char>> exponentsPerOutput(cell.getNbOutputs());
     for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
-        auto shift1_approx = approximateWith(1/scalingPerOutput[output], 1);
-        auto shift2_approx = approximateWith(1/scalingPerOutput[output], 2);
+        if(nbDivisions != 1 && nbDivisions != 2) {
+            throw std::runtime_error("Currently only an approximation with 1 or 2 divisions is supported.");
+        }
+
+        const auto singleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 1);
+        const auto doubleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 2);
 
         double rescaleOutputsBy;
-        if(nbShifts == 1 || shift1_approx.first <= shift2_approx.first) {
-            shiftsPerOutput[output] = std::move(shift1_approx.second);
-            rescaleOutputsBy = 1/shift1_approx.first;
+        if(nbDivisions == 1 || singleDivApprox.second <= doubleDivApprox.second) {
+            exponentsPerOutput[output] = std::move(singleDivApprox.first);
+            rescaleOutputsBy = 1/singleDivApprox.second;
         }
         else {
-            shiftsPerOutput[output] = std::move(shift2_approx.second);
-            rescaleOutputsBy = 1/shift2_approx.first;
+            exponentsPerOutput[output] = std::move(doubleDivApprox.first);
+            rescaleOutputsBy = 1/doubleDivApprox.second;
         }
 
-
+        // Rescale the weights and biasses of the cell to compensate the lost precision
+        // of the approximation.
         cell.processFreeParametersPerOutput([&](double d){ 
                                                 return rescaleOutputsBy*d; 
                                             }, output);
     }
 
-    return shiftsPerOutput;
+    return exponentsPerOutput;
 }
 
 double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
@@ -972,8 +969,8 @@ double N2D2::DeepNet::getCellThreshold(const std::string& cellName,
     }
 }
 
-void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
-                                         ActivationScalingMode actScalingMode) 
+void N2D2::DeepNet::approximateRescalings(Cell& cell, Activation& activation,
+                                          ActivationScalingMode actScalingMode) 
 {
     assert(activation.getActivationScaling().getMode() == ActivationScalingMode::FLOAT_MULT);
 
@@ -1019,22 +1016,22 @@ void N2D2::DeepNet::approximateRescaling(Cell& cell, Activation& activation,
     }
     else if(actScalingMode == ActivationScalingMode::SINGLE_SHIFT) {
         std::vector<unsigned char> shifts;
-        for(const auto& shift: approxRescaleWithShifts(cell, scalingPerOutput, 1)) {
-            assert(shift.size() == 1);
-            shifts.push_back(shift[0]);
+        for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 1)) {
+            assert(powOf2Exponents.size() == 1);
+            shifts.push_back(powOf2Exponents[0]);
         }
 
         activation.setActivationScaling(ActivationScaling::singleShiftScaling(shifts));
     }
     else if(actScalingMode == ActivationScalingMode::DOUBLE_SHIFT) {
         std::vector<std::pair<unsigned char, unsigned char>> shifts;
-        for(const auto& shift: approxRescaleWithShifts(cell, scalingPerOutput, 2)) {
-            assert(shift.size() == 1 || shift.size() == 2);
-            if(shift.size() == 2) {
-                shifts.push_back({shift[0], shift[1] - shift[0]});
+        for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 2)) {
+            assert(powOf2Exponents.size() == 1 || powOf2Exponents.size() == 2);
+            if(powOf2Exponents.size() == 2) {
+                shifts.push_back({powOf2Exponents[0], powOf2Exponents[1] - powOf2Exponents[0]});
             }
             else {
-                shifts.push_back({shift[0], DoubleShiftScaling::NO_SHIFT});
+                shifts.push_back({powOf2Exponents[0], DoubleShiftScaling::NO_SHIFT});
             }
         }
 
@@ -1085,8 +1082,6 @@ double N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& act
         }
 
         if(scalingPerOutput[output] > 1.0) {
-            std::cout << Utils::cwarning << "Scaling per output > 1.0." << Utils::cdef << std::endl;
-
             // Grow the scalingFactor so that scalingPerOutput[output] would be equal to 1.0 
             // and restart the loop.
             scalingFactor *= scalingPerOutput[output];
@@ -1158,7 +1153,7 @@ void N2D2::DeepNet::normalizeOutputsRange(const std::unordered_map<std::string, 
         
         scalingFactor = rescaleActivationOutputs(*cell, *activation, 
                                                  scalingFactor, prevScalingFactor, nbBits);
-        approximateRescaling(*cell, *activation, actScalingMode);
+        approximateRescalings(*cell, *activation, actScalingMode);
 
         cell->processFreeParameters([&](double d) { return d/prevScalingFactor; },
                                     Cell::Additive);

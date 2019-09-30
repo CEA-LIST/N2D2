@@ -216,15 +216,34 @@ private:
                                            double scalingFactor, double prevScalingFactor,
                                            std::size_t nbBits);
 
-    static void approximateRescaling(Cell& cell, Activation& activation,
-                                     ActivationScalingMode actScalingMode);
+    static void approximateRescalings(Cell& cell, Activation& activation,
+                                      ActivationScalingMode actScalingMode);
     
-    /**
-     * Approximate the multiplicative scaling factor by an addition of shifts.
-     */
-    static std::vector<std::vector<unsigned char>> approxRescaleWithShifts(Cell& cell, 
+    static std::vector<std::vector<unsigned char>> approximateRescalingsWithPowerOf2Divs(Cell& cell, 
                                                 const std::vector<double>& scalingPerOutput, 
-                                                std::size_t nbShifts);
+                                                std::size_t nbDivisions);
+
+    /**
+     * Approximate the multiplicative scaling factor by an addition of power of two divisions.
+     * 
+     * The following multiplication '1231 * 0.0119 = 14.6489' can be approximate with 
+     *
+     * - one power of two divison:
+     *       1231/128 = 9.6172 (precision of (1/0.0119)/128 = 0.6565)
+     * 
+     * - two power of two divisions:
+     *       1231/128 + 1231/256 = 14.4258 (precision of (1/0.0119)/128 + (1/0.0119)/256 = 0.9848)
+     * 
+     * - three power of two divisions:
+     *       1231/128 + 1231/256 + 1231/8192 = 14.5760 (precision  of (1/0.0119)/128 + 
+     *                                                                (1/0.0119)/256 + 
+     *                                                                (1/0.0119)/8192 = 0.9950)
+     * 
+     * 
+     * Return a pair with a vector of exponents and the precision of the approximation.
+     */
+    static std::pair<std::vector<unsigned char>, double> approximateRescalingWithPowerOf2Divs(
+                                                double scaling, std::size_t nbDivisions);
 
 protected:
     Parameter<std::string> mName;
