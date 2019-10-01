@@ -879,7 +879,8 @@ void N2D2::Database::load(const std::string& /*dataPath*/,
 
 void N2D2::Database::save(const std::string& dataPath,
                           StimuliSetMask setMask,
-                          CompositeTransformation trans)
+                          CompositeTransformation trans,
+                          bool subDirPerClass)
 {
     Utils::createDirectories(dataPath);
 
@@ -911,9 +912,17 @@ void N2D2::Database::save(const std::string& dataPath,
 #pragma omp parallel for schedule(dynamic)
         for (int i = 0; i < size; ++i) {
             const StimulusID id = mStimuliSets(*itSet)[i];
+            const int labelID = getStimulusLabel(id);
 
             std::ostringstream fileName;
-            fileName << dataPath << "/" << Utils::baseName(getStimulusName(id));
+            fileName << dataPath;
+
+            if (subDirPerClass && labelID >= 0) {
+                fileName << "/" << getLabelName(labelID);
+                Utils::createDirectories(fileName.str());
+            }
+
+            fileName << "/" << Utils::baseName(getStimulusName(id));
 
             cv::Mat data = getStimulusData(id).clone(); // make sure the
             // database image will not be altered

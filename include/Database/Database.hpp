@@ -207,7 +207,8 @@ public:
     virtual void save(const std::string& dataPath,
                       StimuliSetMask setMask,
                       CompositeTransformation trans
-                        = CompositeTransformation());
+                        = CompositeTransformation(),
+                      bool subDirPerClass = true);
     void partitionStimuli(unsigned int nbStimuli, StimuliSet set);
     void partitionStimuli(double learn, double validation, double test);
     void partitionStimuliPerLabel(unsigned int nbStimuliPerLabel,
