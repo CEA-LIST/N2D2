@@ -1805,13 +1805,12 @@ int main(int argc, char* argv[]) try
     }
 
     if (!opt.saveTestSet.empty()) {
-        CompositeTransformation trans;
-/*
         StimuliProvider& sp = *deepNet->getStimuliProvider();
-        trans.push_back(SliceExtractionTransformation(sp.getSizeX(),
-                                                      sp.getSizeY()));
-        trans[0]->setParameter<bool>("AllowPadding", true);
-*/
+
+        CompositeTransformation trans;
+        trans.push_back(sp.getTransformation(Database::Test));
+        trans.push_back(sp.getOnTheFlyTransformation(Database::Test));
+
         database.save(opt.saveTestSet, Database::TestOnly, trans);
     }
 
