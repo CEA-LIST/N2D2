@@ -169,8 +169,8 @@ private:
 /**
  * Scale values with a double shift: 
  * 
- * const std::size_t HALF = 1 << (mScalingPerOutput[o].first - 1);
- * return (data + (data >> mScalingPerOutput[o].second) + HALF) >> mScalingPerOutput[o].first;
+ * const std::size_t HALF = 1 << (mScalingPerOutput[o].second - 1);
+ * return (data + (data << mScalingPerOutput[o].first) + HALF) >> mScalingPerOutput[o].second;
  * 
  * TODO Implement scaling and improve documentation.
  */
@@ -182,9 +182,6 @@ public:
     const std::vector<std::pair<unsigned char, unsigned char>>& getScalingPerOutput() const {
         return mScalingPerOutput;
     }
-
-public:
-    static const unsigned char NO_SHIFT;
 
 private:
     std::vector<std::pair<unsigned char, unsigned char>> mScalingPerOutput;

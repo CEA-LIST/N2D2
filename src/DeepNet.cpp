@@ -889,27 +889,29 @@ std::pair<std::vector<unsigned char>, double> N2D2::DeepNet::approximateRescalin
     assert(nbDivisions > 0);
     assert(scaling <= 1.0);
 
-    std::vector<unsigned char> powerOf2Divs;
 
     double precision = 0.0;
-    while(nbDivisions > 0) {
+
+    std::vector<unsigned char> powerOf2Divs(nbDivisions);
+    for(std::size_t iDiv = 0; iDiv < nbDivisions; iDiv++) {
         if(precision == 1.0) {
-            break;
+            powerOf2Divs[iDiv-1]++;
+            powerOf2Divs[iDiv] = powerOf2Divs[iDiv-1];
         }
+        else {
+            const std::size_t exponent = std::ceil(std::log2(1.0/(scaling*(1.0 - precision))));
+            precision += 1.0/(scaling*std::pow(2, exponent));
 
-        const std::size_t exponent = std::ceil(std::log2(1.0/(scaling*(1.0 - precision))));
-        precision += 1.0/(scaling*std::pow(2, exponent));
-
-        powerOf2Divs.push_back(static_cast<unsigned char>(exponent));
-        nbDivisions--;
+            powerOf2Divs[iDiv] = static_cast<unsigned char>(exponent);
+        }
     }
 
     assert(precision <= 1.0);
-    
+
     if(precision >= ROUNDING_THRESHOLD) {
         precision = 1.0;
     }
-    else {
+    else if(precision < 1.0) {
         precision += 1.0/(scaling*std::pow(2, powerOf2Divs.back()));
         powerOf2Divs.back() = powerOf2Divs.back() - 1;
     }
@@ -925,21 +927,21 @@ std::vector<std::vector<unsigned char>> N2D2::DeepNet::approximateRescalingsWith
 {
     std::vector<std::vector<unsigned char>> exponentsPerOutput(cell.getNbOutputs());
     for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
-        if(nbDivisions != 1 && nbDivisions != 2) {
-            throw std::runtime_error("Currently only an approximation with 1 or 2 divisions is supported.");
-        }
-
-        const auto singleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 1);
-        const auto doubleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 2);
-
         double rescaleOutputsBy;
-        if(nbDivisions == 1 || singleDivApprox.second <= doubleDivApprox.second) {
+        if(nbDivisions == 1) {
+            const auto singleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 1);
+
             exponentsPerOutput[output] = std::move(singleDivApprox.first);
             rescaleOutputsBy = 1/singleDivApprox.second;
         }
-        else {
+        else if(nbDivisions == 2) {
+            const auto doubleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 2);
+
             exponentsPerOutput[output] = std::move(doubleDivApprox.first);
             rescaleOutputsBy = 1/doubleDivApprox.second;
+        }
+        else {
+            throw std::runtime_error("Currently only an approximation with 1 or 2 divisions is supported.");
         }
 
         // Rescale the weights and biasses of the cell to compensate the lost precision
@@ -1026,13 +1028,9 @@ void N2D2::DeepNet::approximateRescalings(Cell& cell, Activation& activation,
     else if(actScalingMode == ActivationScalingMode::DOUBLE_SHIFT) {
         std::vector<std::pair<unsigned char, unsigned char>> shifts;
         for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 2)) {
-            assert(powOf2Exponents.size() == 1 || powOf2Exponents.size() == 2);
-            if(powOf2Exponents.size() == 2) {
-                shifts.push_back({powOf2Exponents[0], powOf2Exponents[1] - powOf2Exponents[0]});
-            }
-            else {
-                shifts.push_back({powOf2Exponents[0], DoubleShiftScaling::NO_SHIFT});
-            }
+            assert(powOf2Exponents.size() == 2);
+            assert(powOf2Exponents[0] <= powOf2Exponents[1]);
+            shifts.push_back({powOf2Exponents[1] - powOf2Exponents[0], powOf2Exponents[1]});
         }
 
         activation.setActivationScaling(ActivationScaling::doubleShiftScaling(shifts));
