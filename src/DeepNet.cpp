@@ -1178,9 +1178,13 @@ void N2D2::DeepNet::clipWeights(std::size_t nbBits, ClippingMode wtClippingMode)
             const auto& cell = mCells.at(*itCell);
 
             const auto range = cell->getFreeParametersRange(false);
-            const Float_T val = Utils::max_abs(range.first, range.second);
+            const Float_T maxWeight = Utils::max_abs(range.first, range.second);
 
-            Histogram hist(-val, val, nbBins);
+            if(maxWeight == 0) {
+                continue;
+            }
+
+            Histogram hist(-maxWeight, maxWeight, nbBins);
             cell->processFreeParameters([&](double wt) { 
                 hist(wt);
                 return wt; 
