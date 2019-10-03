@@ -855,28 +855,33 @@ void N2D2::DeepNet::normalizeFreeParametersPerOutputChannel(double normFactor) {
             continue;
         }
 
+
         if (bNorm != 1.0) {
             assert(bNorm > 0.0);
             cell->processFreeParameters([&](double d) { return d/bNorm; }, Cell::Additive);
         }
-        
-        auto wMinMax = cell->getFreeParametersRange(false);
+
+        const auto wMinMax = cell->getFreeParametersRange(false);
         const Float_T maxNorm = Utils::max_abs(wMinMax.first, wMinMax.second);
 
-        std::vector<Float_T> norms(cell->getNbOutputs());
+        if(maxNorm == 0) {
+            continue;
+        }
+
+        std::vector<double> actScalingPerOutput(cell->getNbOutputs());
         for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
-            wMinMax = cell->getFreeParametersRangePerOutput(output, false);
-            norms[output] = std::max(std::min(maxNorm, 0.1f), Utils::max_abs(wMinMax.first, wMinMax.second))/normFactor;
+            const auto woMinMax = cell->getFreeParametersRangePerOutput(output, false);
+            const Float_T norm = std::max(std::min(maxNorm, 0.1f), 
+                                          Utils::max_abs(woMinMax.first, woMinMax.second))/normFactor;
+
+            cell->processFreeParametersPerOutput([&](double d) { return d/norm; }, output);
+            actScalingPerOutput[output] = norm/maxNorm;
         }
 
 
-        std::vector<double> scalings(cell->getNbOutputs());
-        for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
-            cell->processFreeParametersPerOutput([&](double d) { return d/norms[output]; }, output);
-            scalings[output] = norms[output]/maxNorm;
-        }
-
-        activation->setActivationScaling(ActivationScaling::floatingPointScaling(std::move(scalings)));
+        activation->setActivationScaling(ActivationScaling::floatingPointScaling(
+                                            std::move(actScalingPerOutput
+                                        )));
         bNorm *= maxNorm;
     }
 }
