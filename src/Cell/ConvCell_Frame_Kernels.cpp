@@ -83,11 +83,11 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
                         if (!maps.empty() && !maps(output, channel))
                             continue;
 
-                        if (sxMin == 0 && syMin == 0 && sxMax == 3 && syMax
-                                                                      == 3) {
+                        if (sxMin == 0 && syMin == 0
+                            && sxMax == 3 && syMax == 3)
+                        {
                             // Loop unrolling for 3x3 conv
-                            weightedSum
-                                = weightedSum
+                            weightedSum = weightedSum
                                   + sharedSynapses(0, 0, channel, output)
                                     * inputs(ix + 0, iy + 0, channel, batchPos)
                                   + sharedSynapses(1, 0, channel, output)
@@ -181,6 +181,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
         = desc.stride[1] * (unsigned int)((diffOutputs.dimY() + 2 * desc.padding[1]
                                          - sharedSynapses.dimY() + desc.stride[1])
                                         / (double)desc.stride[1]);
+    const bool noSubSample = (desc.subSample[0] == 1 && desc.subSample[1] == 1);
 
     const unsigned int size = diffOutputs.dimB() * diffOutputs.dimZ();
 
@@ -196,6 +197,12 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                 for (unsigned int ix = 0; ix < diffOutputs.dimX(); ++ix) {
                     const unsigned int ixPad = ix + desc.padding[0];
                     const unsigned int iyPad = iy + desc.padding[1];
+                    unsigned int sxMin = ixPad % desc.stride[0]
+                        + std::max<int>(ixPad - (ixPad % desc.stride[0])
+                            - oxStride + desc.stride[0], 0);
+                    unsigned int syMin = iyPad % desc.stride[1]
+                        + std::max<int>(iyPad - (iyPad % desc.stride[1])
+                            - oyStride + desc.stride[1], 0);
                     const unsigned int sxMax
                         = std::min<unsigned int>(sharedSynapses.dimX(), ixPad + 1);
                     const unsigned int syMax
@@ -203,35 +210,96 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
 
                     T gradient(0.0);
 
-                    for (unsigned int sy = iyPad % desc.stride[1],
-                                      sx0 = ixPad % desc.stride[0];
-                         sy < syMax;
-                         sy += desc.stride[1]) {
-                        if (iyPad >= oyStride + sy)
+                    for (unsigned int output = 0;
+                            output < diffInputs.dimZ();
+                            ++output)
+                    {
+                        if (!maps.empty() && !maps(output, channel))
                             continue;
 
-                        for (unsigned int sx = sx0; sx < sxMax;
-                             sx += desc.stride[0]) {
-                            // Border conditions
-                            if (ixPad >= oxStride + sx)
-                                continue;
+                        if (noSubSample
+                            && syMax - syMin == 3 && desc.stride[1] == 1
+                            && sxMax - sxMin == 3 && desc.stride[0] == 1)
+                        {
+                            // Loop unrolling for 3x3 conv, with stride 1
+                            const unsigned int ox = (ixPad - sxMin);
+                            const unsigned int oy = (iyPad - syMin);
 
-                            // Output node coordinates
-                            const unsigned int ox = (ixPad - sx) / desc.stride[0];
-                            const unsigned int oy = (iyPad - sy) / desc.stride[1];
+                            gradient = gradient
+                                + sharedSynapses(sxMin + 0, syMin + 0, channel, output)
+                                    * diffInputs((ox - 0),
+                                                (oy - 0),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 1, syMin + 0, channel, output)
+                                    * diffInputs((ox - 1),
+                                                (oy - 0),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 2, syMin + 0, channel, output)
+                                    * diffInputs((ox - 2),
+                                                (oy - 0),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 0, syMin + 1, channel, output)
+                                    * diffInputs((ox - 0),
+                                                (oy - 1),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 1, syMin + 1, channel, output)
+                                    * diffInputs((ox - 1),
+                                                (oy - 1),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 2, syMin + 1, channel, output)
+                                    * diffInputs((ox - 2),
+                                                (oy - 1),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 0, syMin + 2, channel, output)
+                                    * diffInputs((ox - 0),
+                                                (oy - 2),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 1, syMin + 2, channel, output)
+                                    * diffInputs((ox - 1),
+                                                (oy - 2),
+                                                output,
+                                                batchPos)
+                                + sharedSynapses(sxMin + 2, syMin + 2, channel, output)
+                                    * diffInputs((ox - 2),
+                                                (oy - 2),
+                                                output,
+                                                batchPos);
+                        }
+                        else {
+                            for (unsigned int sy = syMin; sy < syMax;
+                                sy += desc.stride[1])
+                            {
+                                for (unsigned int sx = sxMin; sx < sxMax;
+                                    sx += desc.stride[0])
+                                {
+                                    // Output node coordinates
+                                    const unsigned int ox = (ixPad - sx) / desc.stride[0];
+                                    const unsigned int oy = (iyPad - sy) / desc.stride[1];
 
-                            for (unsigned int output = 0;
-                                 output < diffInputs.dimZ();
-                                 ++output) {
-                                if (!maps.empty() && !maps(output, channel))
-                                    continue;
-
-                                gradient
-                                    += sharedSynapses(sx, sy, channel, output)
-                                       * diffInputs(ox / desc.subSample[0],
-                                                    oy / desc.subSample[1],
-                                                    output,
-                                                    batchPos);
+                                    if (noSubSample) {
+                                        gradient
+                                            += sharedSynapses(sx, sy, channel, output)
+                                                * diffInputs(ox,
+                                                            oy,
+                                                            output,
+                                                            batchPos);
+                                    }
+                                    else {
+                                        gradient
+                                            += sharedSynapses(sx, sy, channel, output)
+                                                * diffInputs(ox / desc.subSample[0],
+                                                            oy / desc.subSample[1],
+                                                            output,
+                                                            batchPos);
+                                    }
+                                }
                             }
                         }
                     }
@@ -265,6 +333,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const T* alpha,
         = (unsigned int)((inputs.dimY() + 2 * desc.padding[1]
                           - diffSharedSynapses.dimY() + desc.stride[1])
                          / (double)desc.stride[1]);
+    const bool noSubSample = (desc.subSample[0] == 1 && desc.subSample[1] == 1);
 
     const unsigned int size = diffInputs.dimZ() * inputs.dimZ();
 
@@ -311,11 +380,20 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const T* alpha,
                                     = (int)(oy * desc.stride[1] + sy)
                                       - desc.padding[1];
 
-                                gradient += inputs(ix, iy, channel, batchPos)
-                                            * diffInputs(ox / desc.subSample[0],
-                                                         oy / desc.subSample[1],
-                                                         output,
-                                                         batchPos);
+                                if (noSubSample) {
+                                    gradient += inputs(ix, iy, channel, batchPos)
+                                                * diffInputs(ox,
+                                                            oy,
+                                                            output,
+                                                            batchPos);
+                                }
+                                else {
+                                    gradient += inputs(ix, iy, channel, batchPos)
+                                                * diffInputs(ox / desc.subSample[0],
+                                                            oy / desc.subSample[1],
+                                                            output,
+                                                            batchPos);
+                                }
                             }
                         }
                     }
