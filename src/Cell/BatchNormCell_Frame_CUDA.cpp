@@ -75,8 +75,11 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
     mMode = CUDNN_BATCHNORM_SPATIAL;
     mNbPropagate = 0;
 
-    if (mEpsilon == 0.0)
-        mEpsilon = CUDNN_BN_MIN_EPSILON;
+    if (mEpsilon == 0.0) {
+        // CUDNN_BN_MIN_EPSILON cannot be used anymore!
+        // CUDNN_BN_MIN_EPSILON is set to 0.0 since cuDNN 7.5.0
+        mEpsilon = 1.0e-5;
+    }
 
     cudnnTensorDescriptor_t derivedBnDesc;
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&derivedBnDesc));
