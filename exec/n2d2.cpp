@@ -719,11 +719,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         deepNet->normalizeOutputsRange(outputsHistogram, outputsRange,
                                        opt.nbBits, opt.actClippingMode, opt.actScalingMode);
 
-        // For following test simulation
-        const unsigned int nbLevels = std::pow(2, opt.nbBits - 1);
-        deepNet->setParameter("SignalsDiscretization", nbLevels);
-        deepNet->setParameter("FreeParametersDiscretization", nbLevels);
-
         // Clear the targets for the test that will occur afterward...
         deepNet->clear(Database::Validation);
 
