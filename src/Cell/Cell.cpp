@@ -164,62 +164,51 @@ size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
 
     // Determine the number of groups
     size_t nbChannelsPerGroup = 0;
-    for(size_t ch = 0; ch < nbChannels; ch++) {
-        if(map(0, ch)) {
-            nbChannelsPerGroup++;
-        }
-    }
+    for (; nbChannelsPerGroup < nbChannels && map(0, nbChannelsPerGroup);
+        ++nbChannelsPerGroup) {}
 
-    size_t nbGroups = 0;
-    if(nbChannelsPerGroup == 0) {
-        throw std::runtime_error("nbChannelsPerGroup equals 0. " + std::to_string(nbChannels));
-    }
+    if (nbChannelsPerGroup == 0 || nbChannels % nbChannelsPerGroup != 0)
+        return 0;
 
-    if (nbChannels % nbChannelsPerGroup == 0)
-        nbGroups = nbChannels / nbChannelsPerGroup;
+    const size_t nbGroups = nbChannels / nbChannelsPerGroup;
+
+    if (nbOutputs % nbGroups != 0)
+        return 0;
+
+    const size_t nbOutputsPerGroup = nbOutputs / nbGroups;
 
     // Check that there are really only groups, with nbGroups groups
     size_t outputGroupOffset = 0;
     size_t channelGroupOffset = 0;
 
     for (size_t group = 0; group < nbGroups; ++group) {
-        const size_t outputGroupSize = (nbOutputs - outputGroupOffset)
-                                            / (nbGroups - group);
-
         for (size_t output = outputGroupOffset;
-            output < outputGroupOffset + outputGroupSize; ++output)
+            output < outputGroupOffset + nbOutputsPerGroup; ++output)
         {
             size_t channel = 0;
 
             for (; channel < channelGroupOffset; ++channel) {
-                if (map(output, channel)) {
-                    nbGroups = 0;
-                    goto loops_break;
-                }
+                if (map(output, channel))
+                    return 0;
             }
 
             for (; channel < channelGroupOffset + nbChannelsPerGroup;
                 ++channel)
             {
-                if (!map(output, channel)) {
-                    nbGroups = 0;
-                    goto loops_break;
-                }
+                if (!map(output, channel))
+                    return 0;
             }
 
             for (; channel < nbChannels; ++channel)
             {
-                if (map(output, channel)) {
-                    nbGroups = 0;
-                    goto loops_break;
-                }
+                if (map(output, channel))
+                    return 0;
             }
         }
 
-        outputGroupOffset += outputGroupSize;
+        outputGroupOffset += nbOutputsPerGroup;
         channelGroupOffset += nbChannelsPerGroup;
     }
 
-loops_break:
     return nbGroups;
 }

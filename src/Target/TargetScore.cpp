@@ -20,6 +20,9 @@
 
 #include "Target/TargetScore.hpp"
 #include "StimuliProvider.hpp"
+#include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/Cell_CSpike_Top.hpp"
 
 N2D2::Registrar<N2D2::Target>
 N2D2::TargetScore::mRegistrar("TargetScore", N2D2::TargetScore::create);
@@ -57,7 +60,7 @@ bool N2D2::TargetScore::newValidationScore(double validationScore)
 
 bool N2D2::TargetScore::newValidationTopNScore(double validationTopNScore)
 {
-    if (mTargetTopN > 1) {
+    if (!mDataAsTarget && mTargetTopN > 1) {
         const std::deque<double>& success
             = getTopNScore(Database::Learn).success;
         mValidationTopNScore.push_back(
@@ -83,7 +86,7 @@ double N2D2::TargetScore::getBatchAverageSuccess() const
 
 double N2D2::TargetScore::getBatchAverageTopNSuccess() const
 {
-    if (mTargetTopN > 1)
+    if (!mDataAsTarget && mTargetTopN > 1)
         return (mBatchTopNSuccess.size() > 0)
                    ? std::accumulate(mBatchTopNSuccess.begin(),
                                      mBatchTopNSuccess.end(),
@@ -113,7 +116,7 @@ double N2D2::TargetScore::getAverageSuccess(Database::StimuliSet set,
 double N2D2::TargetScore::getAverageTopNSuccess(Database::StimuliSet set,
                                                 unsigned int avgWindow) const
 {
-    if (!(mTargetTopN > 1))
+    if (mDataAsTarget || !(mTargetTopN > 1))
         return 0.0;
 
     assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
@@ -136,7 +139,6 @@ double N2D2::TargetScore::getAverageScore(Database::StimuliSet set,
 {
     assert(mScoreSet.find(set) != mScoreSet.end());
 
-    const unsigned int nbTargets = getNbTargets();
     const ConfusionMatrix<unsigned long long int>& confusionMatrix
         = (*mScoreSet.find(set)).second.confusionMatrix;
 
@@ -148,10 +150,11 @@ double N2D2::TargetScore::getAverageScore(Database::StimuliSet set,
 
     double avgScore = 0.0;
 
-    for (unsigned int target = 0; target < nbTargets; ++target)
+    for (unsigned int target = 0; target < conf.size(); ++target)
         avgScore += conf[target].getMetric(metric);
 
-    avgScore /= nbTargets;
+    if (conf.size() > 0)
+        avgScore /= conf.size();
 
     return avgScore;
 }
@@ -159,12 +162,11 @@ double N2D2::TargetScore::getAverageScore(Database::StimuliSet set,
 double N2D2::TargetScore::getAverageTopNScore(Database::StimuliSet set,
     ConfusionTableMetric metric) const
 {
-    if (!(mTargetTopN > 1))
+    if (mDataAsTarget || !(mTargetTopN > 1))
         return 0.0;
 
     assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
 
-    const unsigned int nbTargets = getNbTargets();
     const ConfusionMatrix<unsigned long long int>& confusionMatrix
         = (*mScoreTopNSet.find(set)).second.confusionMatrix;
 
@@ -176,10 +178,11 @@ double N2D2::TargetScore::getAverageTopNScore(Database::StimuliSet set,
 
     double avgScore = 0.0;
 
-    for (unsigned int target = 0; target < nbTargets; ++target)
+    for (unsigned int target = 0; target < conf.size(); ++target)
         avgScore += conf[target].getMetric(metric);
 
-    avgScore /= nbTargets;
+    if (conf.size() > 0)
+        avgScore /= conf.size();
 
     return avgScore;
 }
@@ -255,7 +258,7 @@ void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
                                        Database::StimuliSet set,
                                        unsigned int avgWindow) const
 {
-    if (mTargetTopN > 1) {
+    if (!mDataAsTarget && mTargetTopN > 1) {
         assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
 
         const std::string dataFileName = mName + "/SuccessTopN_" + fileName
@@ -327,14 +330,21 @@ void N2D2::TargetScore::logConfusionMatrix(const std::string& fileName,
 {
     assert(mScoreSet.find(set) != mScoreSet.end());
 
+    const std::vector<std::string>& labelsName = (!mDataAsTarget)
+        ? getTargetLabelsName()
+        : std::vector<std::string>();
+
     (*mScoreSet.find(set)).second.confusionMatrix.log(
-        mName + "/ConfusionMatrix_" + fileName + ".dat", getTargetLabelsName());
+        mName + "/ConfusionMatrix_" + fileName + ".dat", labelsName);
 }
 
 void N2D2::TargetScore::logMisclassified(const std::string& fileName,
                                          Database::StimuliSet set) const
 {
     assert(mScoreSet.find(set) != mScoreSet.end());
+
+    if (mDataAsTarget)
+        return;
 
     std::ofstream data((mName + "/Misclassified_" + fileName + ".dat").c_str());
 
@@ -396,125 +406,203 @@ void N2D2::TargetScore::clearScore(Database::StimuliSet set)
 }
 void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 {
-    const unsigned int nbTargets = getNbTargets();
+    if (mDataAsTarget) {
+        const Float_T confusionRangeMin = 0.0;
+        const Float_T confusionRangeMax = 1.0;
+        const unsigned int confusionQuantSteps = 10;
 
-    ConfusionMatrix<unsigned long long int>& confusionMatrix
-        = mScoreSet[set].confusionMatrix;
-    std::vector<std::pair<unsigned int, unsigned int> >& misclassified
-        = mScoreSet[set].misclassified;
+        ConfusionMatrix<unsigned long long int>& confusionMatrix
+            = mScoreSet[set].confusionMatrix;
 
-    if (confusionMatrix.empty())
-        confusionMatrix.resize(nbTargets, nbTargets, 0);
+        if (confusionMatrix.empty())
+            confusionMatrix.resize(confusionQuantSteps, confusionQuantSteps, 0);
 
-    mBatchSuccess.assign(mTargets.dimB(), -1.0);
+        std::shared_ptr<Cell_Frame_Top> targetCell 
+            = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
+        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
+            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
-    mEstimatedLabels.synchronizeDBasedToH();
-    mEstimatedLabelsValue.synchronizeDBasedToH();
+        if (targetCell)
+            targetCell->getOutputs().synchronizeDToH();
+        else
+            targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
-    if (mTargetTopN > 1)
-        mBatchTopNSuccess.assign(mTargets.dimB(), -1.0);
+        const Tensor<Float_T>& values
+            = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
+                           : tensor_cast<Float_T>
+                                (targetCellCSpike->getOutputsActivity());
 
-#pragma omp parallel for if (mTargets.dimB() > 4 && mTargets[0].size() > 1)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
-        const int id = mStimuliProvider->getBatch()[batchPos];
+        mBatchSuccess.assign(values.dimB(), -1.0);
 
-        if (id < 0) {
-            // Invalid stimulus in batch (can occur for the last batch of the
-            // set)
-            continue;
-        }
+#pragma omp parallel for if (values.dimB() > 4 && values[0].size() > 1)
+        for (int batchPos = 0; batchPos < (int)values.dimB(); ++batchPos) {
+            const int id = mStimuliProvider->getBatch()[batchPos];
 
-        const Tensor<int> target = mTargets[batchPos];
-        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
-
-        if (target.size() == 1) {
-            if (target(0) >= 0) {
-#pragma omp atomic
-                confusionMatrix(target(0), estimatedLabels(0)) += 1ULL;
-
-                mBatchSuccess[batchPos] = (estimatedLabels(0) == target(0));
-
-                if (!mBatchSuccess[batchPos]) {
-#pragma omp critical(TargetScore__process)
-                    misclassified.push_back(
-                        std::make_pair(id, estimatedLabels(0)));
-                }
-
-                // Top-N case :
-                if (mTargetTopN > 1) {
-                    unsigned int topNscore = 0;
-
-                    for (unsigned int n = 0; n < mTargetTopN; ++n) {
-                        if (estimatedLabels(n) == target(0))
-                            ++topNscore;
-                    }
-
-                    mBatchTopNSuccess[batchPos] = (topNscore > 0);
-                }
-            }
-        } else {
-            ConfusionMatrix<unsigned long long int> confusion(nbTargets,
-                                                              nbTargets,
-                                                              0);
-
-            std::vector<unsigned int> nbHits(nbTargets, 0);
-            std::vector<unsigned int> nbHitsTopN(nbTargets, 0);
-            std::vector<unsigned int> nbLabels(nbTargets, 0);
-
-            for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
-                for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
-                    if (target(ox, oy, 0) >= 0) {
-                        confusion(target(ox, oy, 0),
-                                        estimatedLabels(ox, oy, 0)) += 1;
-
-                        ++nbLabels[target(ox, oy, 0)];
-
-                        if (target(ox, oy, 0)
-                            == (int)estimatedLabels(ox, oy, 0))
-                            ++nbHits[target(ox, oy, 0)];
-
-                        // Top-N case :
-                        if (mTargetTopN > 1) {
-                            unsigned int topNscore = 0;
-
-                            for (unsigned int n = 0; n < mTargetTopN; ++n) {
-                                if (estimatedLabels(ox, oy, n)
-                                    == target(ox, oy, 0))
-                                    ++topNscore;
-                            }
-
-                            if (topNscore > 0)
-                                ++nbHitsTopN[target(ox, oy, 0)];
-                        }
-                    }
-                }
+            if (id < 0) {
+                // Invalid stimulus in batch (can occur for the last batch of the
+                // set)
+                continue;
             }
 
-            double success = 0.0;
-            double successTopN = 0.0;
-            unsigned int nbValidTargets = 0;
+            const Tensor<Float_T> target = mStimuliProvider->getData()[batchPos];
+            const Tensor<Float_T> estimated = values[batchPos];
 
-            for (unsigned int t = 0; t < nbTargets; ++t) {
-                if (nbLabels[t] > 0) {
-                    success += nbHits[t] / (double)nbLabels[t];
-                    successTopN += nbHitsTopN[t] / (double)nbLabels[t];
-                    ++nbValidTargets;
-                }
+            ConfusionMatrix<unsigned long long int> confusion(
+                confusionQuantSteps, confusionQuantSteps, 0);
+
+            double mse = 0.0;
+
+            for (size_t index = 0; index < target.size(); ++index) {
+                const double err = target(index) - estimated(index);
+                mse += err * err;
+
+                const unsigned int t = Utils::clamp<unsigned int>(
+                    Utils::round((confusionQuantSteps - 1)
+                        * (target(index) - confusionRangeMin)
+                            / (double)(confusionRangeMax - confusionRangeMin)),
+                    0U, confusionQuantSteps - 1);
+                const unsigned int e = Utils::clamp<unsigned int>(
+                    Utils::round((confusionQuantSteps - 1)
+                        * (estimated(index) - confusionRangeMin)
+                            / (double)(confusionRangeMax - confusionRangeMin)),
+                    0U, confusionQuantSteps - 1);
+
+                confusion(t, e) += 1ULL;
             }
 
-            mBatchSuccess[batchPos] = (nbValidTargets > 0) ?
-                (success / nbValidTargets) : 1.0;
+            if (target.size() > 0)
+                mse /= target.size();
 
-            if (mTargetTopN > 1) {
-                mBatchTopNSuccess[batchPos] = (nbValidTargets > 0) ?
-                    (successTopN / nbValidTargets) : 1.0;
-            }
+            mBatchSuccess[batchPos] = mse;
 
 #pragma omp critical(TargetScore__process)
             std::transform(confusionMatrix.begin(), confusionMatrix.end(),
-                           confusion.begin(),
-                           confusionMatrix.begin(),
-                           std::plus<unsigned long long int>());
+                        confusion.begin(),
+                        confusionMatrix.begin(),
+                        std::plus<unsigned long long int>());
+        }
+    }
+    else {
+        const unsigned int nbTargets = getNbTargets();
+
+        ConfusionMatrix<unsigned long long int>& confusionMatrix
+            = mScoreSet[set].confusionMatrix;
+        std::vector<std::pair<unsigned int, unsigned int> >& misclassified
+            = mScoreSet[set].misclassified;
+
+        if (confusionMatrix.empty())
+            confusionMatrix.resize(nbTargets, nbTargets, 0);
+
+        mBatchSuccess.assign(mTargets.dimB(), -1.0);
+
+        mEstimatedLabels.synchronizeDBasedToH();
+        mEstimatedLabelsValue.synchronizeDBasedToH();
+
+        if (mTargetTopN > 1)
+            mBatchTopNSuccess.assign(mTargets.dimB(), -1.0);
+
+#pragma omp parallel for if (mTargets.dimB() > 4 && mTargets[0].size() > 1)
+        for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+            const int id = mStimuliProvider->getBatch()[batchPos];
+
+            if (id < 0) {
+                // Invalid stimulus in batch (can occur for the last batch of the
+                // set)
+                continue;
+            }
+
+            const Tensor<int> target = mTargets[batchPos];
+            const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
+
+            if (target.size() == 1) {
+                if (target(0) >= 0) {
+#pragma omp atomic
+                    confusionMatrix(target(0), estimatedLabels(0)) += 1ULL;
+
+                    mBatchSuccess[batchPos] = (estimatedLabels(0) == target(0));
+
+                    if (!mBatchSuccess[batchPos]) {
+#pragma omp critical(TargetScore__process)
+                        misclassified.push_back(
+                            std::make_pair(id, estimatedLabels(0)));
+                    }
+
+                    // Top-N case :
+                    if (mTargetTopN > 1) {
+                        unsigned int topNscore = 0;
+
+                        for (unsigned int n = 0; n < mTargetTopN; ++n) {
+                            if (estimatedLabels(n) == target(0))
+                                ++topNscore;
+                        }
+
+                        mBatchTopNSuccess[batchPos] = (topNscore > 0);
+                    }
+                }
+            } else {
+                ConfusionMatrix<unsigned long long int> confusion(nbTargets,
+                                                                nbTargets,
+                                                                0);
+
+                std::vector<unsigned int> nbHits(nbTargets, 0);
+                std::vector<unsigned int> nbHitsTopN(nbTargets, 0);
+                std::vector<unsigned int> nbLabels(nbTargets, 0);
+
+                for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
+                    for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
+                        if (target(ox, oy, 0) >= 0) {
+                            confusion(target(ox, oy, 0),
+                                            estimatedLabels(ox, oy, 0)) += 1;
+
+                            ++nbLabels[target(ox, oy, 0)];
+
+                            if (target(ox, oy, 0)
+                                == (int)estimatedLabels(ox, oy, 0))
+                                ++nbHits[target(ox, oy, 0)];
+
+                            // Top-N case :
+                            if (mTargetTopN > 1) {
+                                unsigned int topNscore = 0;
+
+                                for (unsigned int n = 0; n < mTargetTopN; ++n) {
+                                    if (estimatedLabels(ox, oy, n)
+                                        == target(ox, oy, 0))
+                                        ++topNscore;
+                                }
+
+                                if (topNscore > 0)
+                                    ++nbHitsTopN[target(ox, oy, 0)];
+                            }
+                        }
+                    }
+                }
+
+                double success = 0.0;
+                double successTopN = 0.0;
+                unsigned int nbValidTargets = 0;
+
+                for (unsigned int t = 0; t < nbTargets; ++t) {
+                    if (nbLabels[t] > 0) {
+                        success += nbHits[t] / (double)nbLabels[t];
+                        successTopN += nbHitsTopN[t] / (double)nbLabels[t];
+                        ++nbValidTargets;
+                    }
+                }
+
+                mBatchSuccess[batchPos] = (nbValidTargets > 0) ?
+                    (success / nbValidTargets) : 1.0;
+
+                if (mTargetTopN > 1) {
+                    mBatchTopNSuccess[batchPos] = (nbValidTargets > 0) ?
+                        (successTopN / nbValidTargets) : 1.0;
+                }
+
+#pragma omp critical(TargetScore__process)
+                std::transform(confusionMatrix.begin(), confusionMatrix.end(),
+                            confusion.begin(),
+                            confusionMatrix.begin(),
+                            std::plus<unsigned long long int>());
+            }
         }
     }
 
@@ -524,7 +612,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                         mBatchSuccess.end());
     mScoreSet[set].success.push_back(getBatchAverageSuccess());
 
-    if (mTargetTopN > 1) {
+    if (!mDataAsTarget && mTargetTopN > 1) {
         mBatchTopNSuccess.erase(std::remove(mBatchTopNSuccess.begin(),
                                             mBatchTopNSuccess.end(), -1.0),
                                 mBatchTopNSuccess.end());

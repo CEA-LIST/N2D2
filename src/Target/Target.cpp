@@ -336,6 +336,19 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
 
 void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
 {
+    std::shared_ptr<Cell_Frame_Top> targetCell 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
+
+    if (mDataAsTarget) {
+        if (set == Database::Learn && targetCell) {
+            // Update target values from input data
+            mLoss.push_back(
+                targetCell->setOutputTargets(mStimuliProvider->getData()));
+        }
+
+        return;
+    }
+
     const unsigned int nbTargets = getNbTargets();
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
@@ -485,58 +498,43 @@ void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
                 }
             }
         }
-    }    
-
-    std::shared_ptr<Cell_Frame_Top> targetCell 
-        = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
-
-    if (mDataAsTarget) {
-        if (set == Database::Learn && targetCell) {
-            // Update target values from input data
-            mLoss.push_back(
-                targetCell->setOutputTargets(mStimuliProvider->getData()));
-        }
     }
-    else {
-        //Set label associated to mTargets
-        if (set == Database::Learn && targetCell) {
-            
-            // Set targets
-            if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
-                for (unsigned int batchPos = 0; batchPos < mTargets.dimB();
-                     ++batchPos) {
-                    if (mTargets(0, batchPos) < 0) {
-                        std::cout << Utils::cwarning
-                                  << "Target::setTargetsValue(): ignore label "
-                                     "with 1D output for stimuli ID "
-                                  << mStimuliProvider->getBatch()[batchPos]
-                                  << Utils::cdef << std::endl;
-                    }
+
+    //Set label associated to mTargets
+    if (set == Database::Learn && targetCell) {
+        
+        // Set targets
+        if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
+            for (unsigned int batchPos = 0; batchPos < mTargets.dimB();
+                    ++batchPos) {
+                if (mTargets(0, batchPos) < 0) {
+                    std::cout << Utils::cwarning
+                                << "Target::setTargetsValue(): ignore label "
+                                    "with 1D output for stimuli ID "
+                                << mStimuliProvider->getBatch()[batchPos]
+                                << Utils::cdef << std::endl;
                 }
+            }
 
-                mLoss.push_back(targetCell->setOutputTarget(
-                    mTargets, mTargetValue, mDefaultValue));
-            }
-            else {
-                mLoss.push_back(targetCell->setOutputTargets(
-                    mTargets, mTargetValue, mDefaultValue));
-            }
+            mLoss.push_back(targetCell->setOutputTarget(
+                mTargets, mTargetValue, mDefaultValue));
         }
-
+        else {
+            mLoss.push_back(targetCell->setOutputTargets(
+                mTargets, mTargetValue, mDefaultValue));
+        }
     }
-
 }
 
 void N2D2::Target::process(Database::StimuliSet set)
 {
+    targetLabelProvider(set);
 
     if (!mDataAsTarget) {
         std::shared_ptr<Cell_Frame_Top> targetCell 
             = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
-
-        targetLabelProvider(set);
 
         BaseTensor& outputsBaseTensor = (targetCell)
             ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();

@@ -201,8 +201,8 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
                     for (unsigned int channel = 0; channel < mInputs[k].dimZ();
                          ++channel) {
                         if (!isConnection(nbChannels + channel, output))
-                            mSharedSynapses.back()[channel][output] = Tensor
-                                <T>(mKernelDims, T(0.0));
+                            mSharedSynapses.back()[channel][output]
+                                                                .fill(T(0.0));
                     }
                 }
             }
