@@ -1072,16 +1072,22 @@ double N2D2::DeepNet::rescaleActivationOutputs(const Cell& cell, Activation& act
         const std::size_t range = (1 << nbBits);
         assert(range >= 4);
 
+        const double unsignedMax = std::pow(2, nbBits) - 1;
+        const double signedMax = std::pow(2, nbBits - 1) - 1;
+
         if(activationType == RectifierActivation::Type) {
-            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?range/2-1:range/4-1;
+            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?unsignedMax*signedMax/unsignedMax:
+                                                                                  signedMax*signedMax/unsignedMax;
         }
         else if(activationType == LogisticActivation::Type || 
                 activationType == LogisticActivation::TypeWithLoss) 
         {
-            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?range*2-1:range-1;
+            scalingPerOutput[output] /= 2*(DeepNetExport::isCellInputsUnsigned(cell)?unsignedMax*signedMax/signedMax:
+                                                                                     signedMax*signedMax/signedMax);
         }
         else {
-            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?range-1:range/2-1;
+            scalingPerOutput[output] /= DeepNetExport::isCellInputsUnsigned(cell)?unsignedMax*signedMax/signedMax:
+                                                                                  signedMax*signedMax/signedMax;
         }
 
         if(scalingPerOutput[output] > 1.0) {
