@@ -270,8 +270,8 @@ the API cudnnGetConvolutionForwardMaxCount().
                             maxAlgoIterations,
                             &returnAlgoCounts,
                             &returnFwdAlgo[0]));
-        std::cout << "Layer " << mName << "(" << k  << ")"
-            << " cuDNN forward algorithm heuristic results: " << std::endl;
+        // std::cout << "Layer " << mName << "(" << k  << ")"
+        //     << " cuDNN forward algorithm heuristic results: " << std::endl;
 
         for(unsigned int fwdAlgo = 0; fwdAlgo < (unsigned int) maxAlgoIterations; ++fwdAlgo)
         {
@@ -308,9 +308,9 @@ the API cudnnGetConvolutionForwardMaxCount().
                                 : "Undetermined Algorithm";
 
 
-            std::cout << "----> Forward convolution algorithm: " << algoName
-                << " [" << returnFwdAlgo[fwdAlgo].time << " ms][" << returnFwdAlgo[fwdAlgo].memory / 1.0e6 << " MB]"
-                << std::endl;
+            // std::cout << "----> Forward convolution algorithm: " << algoName
+            //     << " [" << returnFwdAlgo[fwdAlgo].time << " ms][" << returnFwdAlgo[fwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
         }
         mFwdAlgo.push_back(returnFwdAlgo[0].algo);
 #else
@@ -382,9 +382,9 @@ the API cudnnGetConvolutionForwardMaxCount().
                                 : "Undetermined Algorithm";
 
 
-            std::cout << "----> Backward filter convolution algorithm: " << algoName
-                << " [" << returnBwdFilterAlgo[bwdAlgo].time << " ms][" << returnBwdFilterAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
-                << std::endl;
+            // std::cout << "----> Backward filter convolution algorithm: " << algoName
+            //     << " [" << returnBwdFilterAlgo[bwdAlgo].time << " ms][" << returnBwdFilterAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
         }
         mBwdFilterAlgo.push_back(returnBwdFilterAlgo[0].algo);
 
@@ -433,9 +433,9 @@ the API cudnnGetConvolutionForwardMaxCount().
                                 : "Undetermined Algorithm";
 
 
-            std::cout << "----> Backward data convolution algorithm: " << algoName
-                << " [" << returnBwdDataAlgo[bwdAlgo].time << " ms][" << returnBwdDataAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
-                << std::endl;
+            // std::cout << "----> Backward data convolution algorithm: " << algoName
+            //     << " [" << returnBwdDataAlgo[bwdAlgo].time << " ms][" << returnBwdDataAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
         }
 
         mBwdDataAlgo.push_back(returnBwdDataAlgo[0].algo);
