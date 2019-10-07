@@ -107,8 +107,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderBias(const BatchNormCell& cell
         Tensor<double> bias;
         cell.getBias(output, bias);
 
-        CellExport::generateFreeParameter(
-            cell, bias(0), header);
+        CellExport::generateFreeParameter(bias(0), header);
     }
     header << "};\n";
 }
@@ -129,8 +128,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderVariance(const BatchNormCell& 
         Tensor<double> variance;
         cell.getVariance(output, variance);
 
-        CellExport::generateFreeParameter(
-            cell, variance(0), header);
+        CellExport::generateFreeParameter(variance(0), header);
     }
     header << "};\n\n";
 }
@@ -151,8 +149,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderMean(const BatchNormCell& cell
         Tensor<double> mean;
         cell.getMean(output, mean);
 
-        CellExport::generateFreeParameter(
-            cell, mean(0), header);
+        CellExport::generateFreeParameter(mean(0), header);
     }
     header << "};\n\n";
 }
@@ -173,8 +170,7 @@ void N2D2::CPP_BatchNormCellExport::generateHeaderScale(const BatchNormCell& cel
         Tensor<double> scale;
         cell.getScale(output, scale);
 
-        CellExport::generateFreeParameter(
-            cell, scale(0), header);
+        CellExport::generateFreeParameter(scale(0), header);
     }
 
     header << "};\n\n";

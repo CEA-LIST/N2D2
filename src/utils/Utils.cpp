@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <cmath>
 #include "utils/Utils.hpp"
 
 std::tuple<double, double, double>
@@ -679,3 +680,8 @@ void cv::vconcat(const std::vector<cv::Mat>& src, cv::Mat& dst)
     }
 }
 #endif
+
+bool N2D2::Utils::isIntegral(double value) {
+    double integralPart;
+    return std::modf(value, &integralPart) == 0.0;
+}

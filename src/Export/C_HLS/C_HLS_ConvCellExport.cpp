@@ -102,10 +102,7 @@ void N2D2::C_HLS_ConvCellExport::generateHeaderWeights(ConvCell& cell,
                         if (sx > 0)
                             header << ", ";
 
-                        CellExport::generateFreeParameter(
-                            cell,
-                            kernel(sx, sy),
-                            header);
+                        CellExport::generateFreeParameter(kernel(sx, sy), header);
                     }
 
                     header << "}";
@@ -165,8 +162,7 @@ void N2D2::C_HLS_ConvCellExport::generateHeaderWeights(ConvCell& cell,
                     if (sx > 0)
                         header << ", ";
 
-                    CellExport::generateFreeParameter(
-                        cell, kernel(sx, sy), header);
+                    CellExport::generateFreeParameter(kernel(sx, sy), header);
                 }
 
                 header << "}";

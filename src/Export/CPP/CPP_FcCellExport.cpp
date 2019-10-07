@@ -97,7 +97,7 @@ void N2D2::CPP_FcCellExport::generateHeaderBiasValues(const FcCell & cell, std::
         }
         else {
             cell.getBias(output, bias);
-            CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive);
+            CellExport::generateFreeParameter(bias(0), header);
             CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         }
 
@@ -141,7 +141,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(const FcCell & cell, st
         if (i > 0)
             header << ", ";
 
-        CellExport::generateFreeParameter(cell, weights[i], header, Cell::Multiplicative);
+        CellExport::generateFreeParameter(weights[i], header);
     }
 
     header << "};\n\n";
@@ -193,7 +193,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsValues(const FcCell & cell, st
             Tensor<Float_T> weight;
             cell.getWeight(output, channel, weight);
 
-            CellExport::generateFreeParameter(cell, weight(0), header, Cell::Multiplicative);
+            CellExport::generateFreeParameter(weight(0), header);
             header << ", ";
         }
     }

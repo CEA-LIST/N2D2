@@ -89,8 +89,7 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
             Tensor<Float_T> bias;
             cell.getBias(output, bias);
 
-            CellExport::generateFreeParameter(
-                cell, bias(0), header, Cell::Additive);
+            CellExport::generateFreeParameter(bias(0), header);
         }
     }
 
@@ -126,9 +125,7 @@ void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderWeights(ConvCell& cell,
                     if (!cell.isConnection(channel, output))
                         header << "0";
                     else
-                        CellExport::generateFreeParameter(
-                            cell, kernel(sx, sy),
-                            header, Cell::Multiplicative);
+                        CellExport::generateFreeParameter(kernel(sx, sy), header);
                 }
             }
         }

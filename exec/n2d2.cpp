@@ -48,6 +48,7 @@
 #include "N2D2.hpp"
 
 #include "DeepNet.hpp"
+#include "DeepNetQuantization.hpp"
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Environment.hpp"
@@ -590,13 +591,15 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
-        deepNet->clipWeights(opt.nbBits, opt.wtClippingMode);
+        DeepNetQuantization dnQuantization(*deepNet);
+
+        dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
 
         if(opt.actRescalePerOutput) {
-            deepNet->normalizeFreeParametersPerOutputChannel();
+            dnQuantization.normalizeFreeParametersPerOutputChannel();
         }
         else {
-            deepNet->normalizeFreeParameters();
+            dnQuantization.normalizeFreeParameters();
         }
 
         const double stimuliRange = StimuliProviderExport::getStimuliRange(
@@ -624,7 +627,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 RangeAffineTransformation::Divides, stimuliRange),
                 Database::NoLearn);
 
-            deepNet->rescaleAdditiveParameters(stimuliRange);
+            dnQuantization.rescaleAdditiveParameters(stimuliRange);
         }
 
         // Globally disable logistic activation, in order to evaluate the
@@ -679,7 +682,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 sp->readBatch(Database::Validation, i);
                 deepNet->test(Database::Validation);
-                deepNet->reportOutputsRange(outputsRange);
+                dnQuantization.reportOutputsRange(outputsRange);
 
                 if (i >= nextReport || b == nbBatch - 1) {
                     nextReport += opt.report;
@@ -695,8 +698,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 sp->readBatch(Database::Validation, i);
                 deepNet->test(Database::Validation);
-                deepNet->reportOutputsHistogram(outputsHistogram, outputsRange, 
-                                                opt.nbBits, opt.actClippingMode);
+                dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 
+                                                           opt.nbBits, opt.actClippingMode);
 
                 if (i >= nextReport || b == nbBatch - 1) {
                     nextReport += opt.report;
@@ -716,8 +719,10 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         std::cout << "Calibration (" << opt.nbBits << " bits):" << std::endl;
 
-        deepNet->normalizeOutputsRange(outputsHistogram, outputsRange,
-                                       opt.nbBits, opt.actClippingMode, opt.actScalingMode);
+        dnQuantization.normalizeOutputsRange(outputsHistogram, outputsRange,
+                                       opt.nbBits, opt.actClippingMode);
+
+        dnQuantization.quantizeNormalizedNetwork(opt.nbBits, opt.actScalingMode);
 
         // Clear the targets for the test that will occur afterward...
         deepNet->clear(Database::Validation);

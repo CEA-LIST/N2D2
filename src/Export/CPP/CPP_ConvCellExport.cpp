@@ -123,7 +123,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderBiasValues(const ConvCell& cell, st
         }
         else {
             cell.getBias(output, bias);
-            CellExport::generateFreeParameter(cell, bias(0), header, Cell::Additive, true);
+            CellExport::generateFreeParameter(bias(0), header, true);
             CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         }
 
@@ -167,8 +167,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
                         header << "0";
                     }
                     else {
-                        CellExport::generateFreeParameter(cell, kernel(sx, sy), header, 
-                                                          Cell::Multiplicative);
+                        CellExport::generateFreeParameter(kernel(sx, sy), header);
                     }
 
                     i++;

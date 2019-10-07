@@ -27,7 +27,6 @@
 
 N2D2::CellExport::Precision N2D2::CellExport::mPrecision = Int8;
 N2D2::CellExport::IntApprox N2D2::CellExport::mIntApprox = Round;
-bool N2D2::CellExport::mWarnSat = true;
 
 void N2D2::CellExport::generate(Cell& cell,
                                 const std::string& dirName,
@@ -64,59 +63,21 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
     return 0;
 }
 
-long long int N2D2::CellExport::getIntFreeParameter(const Cell& cell, double value, 
-                                                    Cell::FreeParametersType freeParameterType)
-{
-    const bool sat = (freeParameterType == Cell::Additive)?false:(std::abs(value) > 1.0);
-    if (sat) {
-        value = Utils::clamp(value, -1.0, 1.0);
-        std::cout << Utils::cwarning
-                  << "Warning: free parameter saturation in \""
-                  << cell.getName() << "\"" << Utils::cdef << std::endl;
-
-        if (mWarnSat) {
-            std::cout << "Saturation detected! This may lead to poor network"
-                " performance...\n"
-                "Consider using normalized free parameters for ReLU-only"
-                " activations\n"
-                "  (-w weights_normalized).\n"
-                "Continue anyway (will not stop again)? (y/n) ";
-
-            std::string cmd;
-
-            do {
-                std::cin >> cmd;
-            }
-            while (cmd != "y" && cmd != "n");
-
-            if (cmd == "n") {
-                std::cout << "Exiting..." << std::endl;
-                std::exit(0);
-            }
-
-            mWarnSat = false;
-        }
+long long int N2D2::CellExport::getIntFreeParameter(double value) {
+    if(!Utils::isIntegral(value)) {
+        throw std::runtime_error("Can't export a non-integral double as integral parameter.");
     }
-    
-    const double scaling = getScalingForFreeParameterType(cell, freeParameterType);
-    return getIntApprox(scaling * value, mIntApprox);
+
+    return static_cast<long long int>(value);
 }
 
-bool N2D2::CellExport::generateFreeParameter(const Cell& cell, double value, std::ostream& stream,
-                                             Cell::FreeParametersType freeParameterType,
+void N2D2::CellExport::generateFreeParameter(double value, std::ostream& stream,
                                              bool typeAccuracy)
 {
     if (mPrecision > 0) {
-        stream << getIntFreeParameter(cell, value, freeParameterType);
-
-        const bool sat = (freeParameterType == Cell::Additive)?false:(std::abs(value) > 1.0);
-        if (sat) {
-            const double val = getScalingForFreeParameterType(cell, freeParameterType) * value;
-            stream << " /*SAT(" << val << ")*/";
-        }
-
-        return sat;
-    } else {
+        stream << getIntFreeParameter(value);
+    } 
+    else {
         if (mPrecision == Float64)
             stream << std::showpoint
                    << std::setprecision(std::numeric_limits<double>::digits10
@@ -129,27 +90,8 @@ bool N2D2::CellExport::generateFreeParameter(const Cell& cell, double value, std
             if(typeAccuracy)
                 stream << "f";
         }
-        return false;
     }
 }
-
-double N2D2::CellExport::getScalingForFreeParameterType(const Cell& cell, Cell::FreeParametersType freeParameterType) {
-    double scaling = (double) std::pow(2, mPrecision - 1) - 1;
-
-    // For the bias we also need to scale it by the maximum value of the input type.
-    // A bias is just like an extra connection where the input is equal to 1.0.
-    if(freeParameterType == Cell::Additive) {
-        if(DeepNetExport::isCellInputsUnsigned(cell)) {
-            scaling *= (std::pow(2, (int) mPrecision) - 1);
-        }
-        else {
-            scaling *= (std::pow(2, (int) mPrecision - 1) - 1);
-        }
-    }
-
-    return scaling;
-}
-
 
 void N2D2::CellExport::generateSingleShiftHalfAddition(const Cell_Frame_Top& cellFrame, std::size_t output, 
                                                        std::ostream& stream)

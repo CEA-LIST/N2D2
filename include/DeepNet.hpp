@@ -25,13 +25,9 @@
 #include <string>
 #include <vector>
 
-#include "Activation/ActivationScalingMode.hpp"
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
 #include "Network.hpp"
-#include "Histogram.hpp"
-
-
 #include "Target/Target.hpp"
 
 #ifdef CUDA
@@ -43,11 +39,9 @@
 
 namespace N2D2 {
 
-class Activation;
 class CMonitor;
 class Gnuplot;
 class Monitor;
-class RangeStats;
 
 
 class DeepNet : public Parameterizable {
@@ -83,18 +77,6 @@ public:
     void cReset(Time_T timestamp = 0);
     void initializeCMonitors(unsigned int nbTimesteps);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
-
-    void rescaleAdditiveParameters(Float_T rescaleFactor);
-
-    void normalizeFreeParameters(double normFactor = 1.0);
-    void normalizeFreeParametersPerOutputChannel(double normFactor = 1.0);
-    
-    void clipWeights(std::size_t nbBits, ClippingMode wtClippingMode);
-    void normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                               const std::unordered_map<std::string, RangeStats>& outputsRange,
-                               std::size_t nbBits,
-                               ClippingMode actClippingMode,
-                               ActivationScalingMode actScalingMode);
 
     void fuseBatchNormWithConv();
     void removeDropout();
@@ -195,55 +177,12 @@ public:
                     const std::vector
                     <std::pair<std::string, double> >& timings) const;
     void logReceptiveFields(const std::string& fileName) const;
-    void reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const;
-    void reportOutputsHistogram(std::unordered_map<std::string, Histogram>& outputsHistogram,
-                                const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                std::size_t nbBits, ClippingMode actClippingMode) const;
 
     virtual ~DeepNet() {};
 
     static void drawHistogram(std::string title, const std::string& dataFileName,
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
                    Gnuplot& p);
-
-private:
-    static double getCellThreshold(const std::string& cellName,
-                                   const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                                   const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                   std::size_t nbBits, ClippingMode actClippingMode);
-    
-    static double rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                           double scalingFactor, double prevScalingFactor,
-                                           std::size_t nbBits);
-
-    static void approximateRescalings(Cell& cell, Activation& activation,
-                                      ActivationScalingMode actScalingMode);
-    
-    static std::vector<std::vector<unsigned char>> approximateRescalingsWithPowerOf2Divs(Cell& cell, 
-                                                const std::vector<double>& scalingPerOutput, 
-                                                std::size_t nbDivisions);
-
-    /**
-     * Approximate the multiplicative scaling factor by an addition of power of two divisions.
-     * 
-     * The following multiplication '1231 * 0.0119 = 14.6489' can be approximate with 
-     *
-     * - one power of two divison:
-     *       1231/128 = 9.6172 (precision of (1/0.0119)/128 = 0.6565)
-     * 
-     * - two power of two divisions:
-     *       1231/128 + 1231/256 = 14.4258 (precision of (1/0.0119)/128 + (1/0.0119)/256 = 0.9848)
-     * 
-     * - three power of two divisions:
-     *       1231/128 + 1231/256 + 1231/8192 = 14.5760 (precision  of (1/0.0119)/128 + 
-     *                                                                (1/0.0119)/256 + 
-     *                                                                (1/0.0119)/8192 = 0.9950)
-     * 
-     * 
-     * Return a pair with a vector of exponents and the precision of the approximation.
-     */
-    static std::pair<std::vector<unsigned char>, double> approximateRescalingWithPowerOf2Divs(
-                                                double scaling, std::size_t nbDivisions);
 
 protected:
     Parameter<std::string> mName;

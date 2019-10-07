@@ -502,6 +502,8 @@ namespace Utils {
     template <class T>
     inline const T& clamp(const T& x, const T& min, const T& max);
 
+    bool isIntegral(double value);
+    
     /**
      * Return an iterator to the largest absolute value in the range [first, last). 
      * Returns 'last' if the range is empty.
