@@ -334,8 +334,8 @@ void N2D2::DeepNetQuantization::normalizeOutputsRange(const std::unordered_map<s
 
 
         
-        scalingFactor = rescaleActivationOutputs(*cell, *activation, 
-                                                 scalingFactor, prevScalingFactor);
+        rescaleActivationOutputs(*cell, *activation, 
+                                 scalingFactor, prevScalingFactor);
 
         cell->processFreeParameters([&](double d) { return d/prevScalingFactor; },
                                     Cell::Additive);
@@ -537,8 +537,8 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
     }
 }
 
-double N2D2::DeepNetQuantization::rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                               double scalingFactor, double prevScalingFactor)
+void N2D2::DeepNetQuantization::rescaleActivationOutputs(const Cell& cell, Activation& activation,
+                                                         double scalingFactor, double prevScalingFactor)
 {
     const ActivationScalingMode scalingMode = activation.getActivationScaling().getMode();
     
@@ -559,7 +559,6 @@ double N2D2::DeepNetQuantization::rescaleActivationOutputs(const Cell& cell, Act
     }
 
     activation.setActivationScaling(ActivationScaling::floatingPointScaling(std::move(scalingPerOutput)));
-    return scalingFactor;
 }
 
 void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activation& activation, 
