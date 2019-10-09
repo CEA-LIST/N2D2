@@ -624,6 +624,9 @@ void N2D2::DeepNetQuantization::quantizeFreeParemeters(Cell& cell, std::size_t n
     }, Cell::Multiplicative);
 
     cell.processFreeParameters([&](double bias) { 
+        // For the bias we also need to scale it by the maximum value of the input type.
+        // A bias is just like an extra connection where the input is equal to 1.0.
+        
         double scaling = (double) std::pow(2, nbBits - 1) - 1;
         if(DeepNetExport::isCellInputsUnsigned(cell)) {
             scaling *= std::pow(2, nbBits) - 1;

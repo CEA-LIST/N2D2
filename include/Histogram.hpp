@@ -82,7 +82,7 @@ public:
     /**
      * Enlarge the histogram if value is < getMinVal() or > getMaxVal().
      * If symetric is true, enlarge the histogram on the left and 
-     * on the right changing both minVal and maxVal.
+     * on the right in the same way changing both minVal and maxVal.
      */
     void enlarge(double value, bool symetric);
 
