@@ -581,19 +581,19 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
         const std::string activationType = activation.getType();
         if(activationType == RectifierActivation::Type) {
             scaling /= DeepNetExport::isCellInputsUnsigned(cell)?
-                            unsignedMax*signedMax/unsignedMax:
+                            signedMax*unsignedMax/unsignedMax:
                             signedMax*signedMax/unsignedMax;
         }
         else if(activationType == LogisticActivation::Type || 
                 activationType == LogisticActivation::TypeWithLoss) 
         {
             scaling /= 2*(DeepNetExport::isCellInputsUnsigned(cell)?
-                            unsignedMax*signedMax/signedMax:
+                            signedMax*unsignedMax/signedMax:
                             signedMax*signedMax/signedMax);
         }
         else {
             scaling /= DeepNetExport::isCellInputsUnsigned(cell)?
-                            unsignedMax*signedMax/signedMax:
+                            signedMax*unsignedMax/signedMax:
                             signedMax*signedMax/signedMax;
         }
     }
