@@ -723,10 +723,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                        opt.nbBits, opt.actClippingMode);
 
         dnQuantization.quantizeNormalizedNetwork(opt.nbBits, opt.actScalingMode);
-
-        // Clear the targets for the test that will occur afterward...
-        deepNet->clear(Database::Validation);
-
+        
         LogisticActivationDisabled = false;
         afterCalibration = true;
     }
@@ -739,8 +736,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                     false,
                                     deepNet.get());
 
-    // Must come after because StimuliProviderExport::generate() sets
-    // mEnvDataUnsigned
     DeepNetExport::generate(*deepNet, exportDir.str(), opt.genExport);
 
     return afterCalibration;
