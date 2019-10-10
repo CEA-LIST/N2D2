@@ -40,7 +40,7 @@
 
 namespace N2D2 {
 
-class StimuliProvider : virtual public Parameterizable {
+class StimuliProvider : virtual public Parameterizable, public std::enable_shared_from_this<StimuliProvider> {
 public:
     struct Transformations {
         CompositeTransformation cacheable;

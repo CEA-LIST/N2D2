@@ -332,6 +332,7 @@ public:
     Tensor(const std::vector<size_t>& dims,
              InputIterator first,
              InputIterator last);
+    explicit Tensor(const std::vector<size_t>& dims, T* dataPtr);
     Tensor(const cv::Mat& mat, bool signedMapping = false);
     iterator begin()
     {

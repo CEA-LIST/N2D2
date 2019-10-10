@@ -373,3 +373,17 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
 
     return deepNet;
 }
+
+
+#ifdef PYBIND
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+namespace N2D2 {
+void init_DeepNetGenerator(py::module &m) {
+    py::class_<DeepNetGenerator>(m, "DeepNetGenerator")
+    .def_static("generate", &DeepNetGenerator::generate, py::arg("network"), py::arg("fileName"));
+}
+}
+#endif

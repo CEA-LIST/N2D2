@@ -108,7 +108,9 @@ N2D2::Network::Network(unsigned int seed)
         sigaction(SIGSEGV, &action, NULL);
     }
 
+  #if !defined(PYBIND)
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW /*| FE_UNDERFLOW*/);
+  #endif
 #endif
 
 #if defined(_GLIBCXX_PARALLEL)
@@ -316,3 +318,26 @@ unsigned int N2D2::Network::readSeed(const std::string& fileName)
 
     return seed;
 }
+
+#ifdef PYBIND
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+namespace N2D2 {
+void init_Network(py::module &m) {
+    py::class_<Network>(m, "Network")
+    .def(py::init<unsigned int>(), py::arg("seed") = 0)
+    .def("run", &Network::run, py::arg("stop") = 0, py::arg("clearActivity") = true)
+    .def("stop", &Network::stop, py::arg("stop") = 0, py::arg("discard") = false)
+    .def("reset", &Network::reset, py::arg("timestamp") = 0)
+    .def("save", &Network::save, py::arg("dirName"))
+    .def("load", &Network::load, py::arg("dirName"))
+    .def("getSpikeRecording", (const std::unordered_map<NodeId_T, NodeEvents_T>& (Network::*)()) &Network::getSpikeRecording)
+    .def("getSpikeRecording", (const NodeEvents_T& (Network::*)(NodeId_T)) &Network::getSpikeRecording, py::arg("nodeId"))
+    .def("getFirstEvent", &Network::getFirstEvent)
+    .def("getLastEvent", &Network::getLastEvent)
+    .def("getLoadSavePath", &Network::getLoadSavePath);
+}
+}
+#endif

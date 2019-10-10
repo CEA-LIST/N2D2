@@ -34,7 +34,7 @@ N2D2::Environment::Environment(Network& network,
                                bool compositeStimuli)
     : StimuliProvider(database, size, batchSize, compositeStimuli),
       mNetwork(network),
-      mNodes(mData.dims(), NULL),
+      mNodes(mData.dims(), (NodeEnv*)NULL),
       mReadAerData(this, "ReadAerData", false)
 
 {
@@ -82,7 +82,7 @@ void N2D2::Environment::addChannel(const CompositeTransformation
     dataSize.push_back(mBatchSize);
 
     if (!mChannelsTransformations.empty()) {
-        Tensor<NodeEnv*> nodes(dataSize, NULL);
+        Tensor<NodeEnv*> nodes(dataSize, (NodeEnv*)NULL);
 
         for (unsigned int b = 0; b < nodes.dimB(); ++b) {
             for (unsigned int z = 0; z < nodes.dimZ(); ++z) {

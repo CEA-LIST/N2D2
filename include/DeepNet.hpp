@@ -44,7 +44,7 @@ class Gnuplot;
 class Monitor;
 
 
-class DeepNet : public Parameterizable {
+class DeepNet : public Parameterizable, public std::enable_shared_from_this<DeepNet> {
 public:
     DeepNet(Network& net);
     void addCell(const std::shared_ptr<Cell>& cell,

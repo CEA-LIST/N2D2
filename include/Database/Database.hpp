@@ -64,7 +64,7 @@ class ROI;
  *   + Extract one or multiple ROIs from an initial dataset to create as many
  * corresponding stimuli
 */
-class Database : public Parameterizable {
+class Database : public Parameterizable, public std::enable_shared_from_this<Database> {
 public:
     /// Each stimulus in the database has a unique StimulusID, like the ID field
     /// of a relational database.

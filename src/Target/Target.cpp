@@ -594,18 +594,10 @@ void N2D2::Target::process(Database::StimuliSet set)
                 std::cout << "[";
 
                 for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
-                    if (i == mEstimatedLabels(0, 0, 0, 0))
-                    {
-                        std::cout << std::setprecision(2)
-                            << std::fixed
-                            << "(" << mEstimatedLabelsValue(0, 0, i, 0)
-                            << ") ";
-                    }
-                    else {
-                        std::cout << std::setprecision(2)
-                            << std::fixed
-                            << mEstimatedLabelsValue(0, 0, i, 0) << " ";
-                    }
+                    std::cout << mEstimatedLabels(0, 0, i, 0) << ":"
+                        << std::setprecision(2)
+                        << std::fixed
+                        << mEstimatedLabelsValue(0, 0, i, 0) << " ";
                 }
 
                 std::cout << "]" << std::endl;
@@ -1536,3 +1528,46 @@ void N2D2::Target::clear(Database::StimuliSet /*set*/)
 {
     mLoss.clear();
 }
+
+
+#ifdef PYBIND
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+
+namespace N2D2 {
+void init_Target(py::module &m) {
+    py::class_<Target, std::shared_ptr<Target>>(m, "Target", py::multiple_inheritance())
+    .def("getName", &Target::getName)
+    .def("getType", &Target::getType)
+    .def("getCell", &Target::getCell)
+    .def("getStimuliProvider", &Target::getStimuliProvider)
+    .def("getNbTargets", &Target::getNbTargets)
+    .def("getTargetTopN", &Target::getTargetTopN)
+    .def("getTargetValue", &Target::getTargetValue)
+    .def("getDefaultValue", &Target::getDefaultValue)
+    .def("setMaskLabelTarget", &Target::setMaskLabelTarget, py::arg("target"))
+    .def("labelsMapping", &Target::labelsMapping, py::arg("fileName"), py::arg("createMissingLabels") = false)
+    .def("setLabelTarget", &Target::setLabelTarget, py::arg("label"), py::arg("output"))
+    .def("setDefaultTarget", &Target::setDefaultTarget, py::arg("output"))
+    .def("getLabelTarget", &Target::getLabelTarget, py::arg("label"))
+    .def("getDefaultTarget", &Target::getDefaultTarget)
+    .def("getTargetLabels", &Target::getTargetLabels, py::arg("output"))
+    .def("getTargetLabelsName", &Target::getTargetLabelsName)
+    .def("logLabelsMapping", &Target::logLabelsMapping, py::arg("fileName"))
+    .def("targetLabelProvider", &Target::targetLabelProvider, py::arg("set"))
+    .def("process", &Target::process, py::arg("set"))
+    .def("logEstimatedLabels", &Target::logEstimatedLabels, py::arg("dirName"))
+    .def("logEstimatedLabelsJSON", &Target::logEstimatedLabelsJSON, py::arg("dirName"), py::arg("fileName") = "", py::arg("xOffset") = 0, py::arg("yOffset") = 0, py::arg("append") = false)
+    .def("logLabelsLegend", &Target::logLabelsLegend, py::arg("fileName"))
+    .def("getEstimatedLabels", (const Target::TensorLabels_T& (Target::*)() const) &Target::getEstimatedLabels)
+    .def("getEstimatedLabelsValue", &Target::getEstimatedLabelsValue)
+    .def("getEstimatedLabels", (Target::TensorLabelsValue_T (Target::*)(const std::shared_ptr<ROI>&, unsigned int) const) &Target::getEstimatedLabels, py::arg("roi"), py::arg("batchPos") = 0)
+    .def("getEstimatedLabel", &Target::getEstimatedLabel, py::arg("roi"), py::arg("batchPos") = 0)
+    .def("getLoss", &Target::getLoss)
+    .def("log", &Target::log, py::arg("fileName"), py::arg("set"))
+    .def("clear", &Target::clear, py::arg("set"));
+}
+}
+#endif

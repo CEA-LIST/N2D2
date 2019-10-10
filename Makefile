@@ -57,7 +57,7 @@ ifdef CUDA
   CPPFLAGS:=$(CPPFLAGS) -isystem $(CUDA_INC_PATH) -DCUDA
   LDFLAGS:=$(LDFLAGS) $(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) \
     -lcudart -lcublas -lcudadevrt -lcudnn
-  NVFLAGS:=$(CPPFLAGS) -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
+  NVFLAGS:=$(CPPFLAGS) --compiler-options '-fPIC' -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
     -lm -lstdc++ -arch=sm_30 -maxrregcount 64
 
   NVFLAGS:=$(NVFLAGS) -gencode arch=compute_30,code=sm_30 \
@@ -98,6 +98,10 @@ ifdef MONGODB
 
   LDFLAGS:=$(LDFLAGS) -lboost_filesystem -lboost_program_options \
     -lboost_system -lssl -lcrypto
+endif
+
+ifdef PYBIND
+  CPPFLAGS:=$(CPPFLAGS) -DPYBIND `$(PYBIND) -m pybind11 --includes`
 endif
 
 ifeq ($(shell pkg-config $(OPENCV) --modversion),2.0.0)
@@ -289,6 +293,11 @@ all : exec tests
 
 debug :
 	$(MAKE) all "DEBUG=1"
+
+pybind : flexlm $(OBJ) $(OBJ_CUDA)
+ifdef PYBIND
+	$(CXX) -shared -o python/N2D2`$(PYBIND)-config --extension-suffix` $(OBJ) $(OBJ_CUDA) $(LDFLAGS)
+endif
 
 flexlm:
 ifdef FLEXLM

@@ -43,7 +43,7 @@ namespace N2D2 {
 class Cell;
 class StimuliProvider;
 
-class Target : public Parameterizable {
+class Target : public Parameterizable, public std::enable_shared_from_this<Target> {
 public:
     typedef std::function
         <std::shared_ptr<Target>(const std::string&,
@@ -136,12 +136,6 @@ public:
                        bool createMissingLabels = false);
     void setLabelTarget(int label, int output);
     void setDefaultTarget(int output);
-    void process_Frame(BaseTensor& values,
-                       const int batchSize);
-#ifdef CUDA
-    void process_Frame_CUDA(Float_T* valuesDevPtr,
-                            const int batchSize);
-#endif
     int getLabelTarget(int label) const;
     int getDefaultTarget() const;
     std::vector<int> getTargetLabels(int output) const;
@@ -178,6 +172,13 @@ public:
     virtual ~Target() {};
 
 protected:
+    void process_Frame(BaseTensor& values,
+                       const int batchSize);
+#ifdef CUDA
+    void process_Frame_CUDA(Float_T* valuesDevPtr,
+                            const int batchSize);
+#endif
+
     Parameter<bool> mDataAsTarget;
     Parameter<int> mNoDisplayLabel;
     Parameter<int> mLabelsHueOffset;
