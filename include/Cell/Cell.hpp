@@ -37,7 +37,7 @@ typedef unsigned int CellId_T;
  * Cell is the base object for any kind of layer composing a deep network.
  * It provides the base interface required.
 */
-class Cell : public Parameterizable {
+class Cell : public Parameterizable, public std::enable_shared_from_this<Cell> {
 public:
     struct Stats {
         Stats()

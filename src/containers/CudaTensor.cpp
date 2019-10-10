@@ -38,8 +38,7 @@ void declare_CudaDeviceTensor(py::module &m, const std::string& typeStr) {
     .def("fill", &CudaDeviceTensor<T>::fill, py::arg("value"))
     .def("getDevicePtr", &CudaDeviceTensor<T>::getDevicePtr)
     .def("setDevicePtr", &CudaDeviceTensor<T>::setDevicePtr, py::arg("dataDevice"))
-    .def("isOwner", &CudaDeviceTensor<T>::isOwner)
-    .def("getType", &CudaDeviceTensor<T>::getType);
+    .def("isOwner", &CudaDeviceTensor<T>::isOwner);
 }
 
 template<typename T>
@@ -48,31 +47,6 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
     py::class_<CudaTensor<T>, Tensor<T>, CudaBaseTensor, BaseTensor>(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol())
     .def(py::init<>())
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
-    .def("empty", [](BaseTensor& b) { return b.empty(); })
-    .def("dimX", [](BaseTensor& b) { return b.dimX(); })
-    .def("dimY", [](BaseTensor& b) { return b.dimY(); })
-    .def("dimD", [](BaseTensor& b) { return b.dimD(); })
-    .def("dimZ", [](BaseTensor& b) { return b.dimZ(); })
-    .def("dimB", [](BaseTensor& b) { return b.dimB(); })
-    .def("size", [](BaseTensor& b) { return b.size(); })
-    .def("reserve", [](BaseTensor& b, const std::vector<size_t>& dims) { return b.reserve(dims); }, py::arg("dims"))
-    .def("resize", [](BaseTensor& b, const std::vector<size_t>& dims) { return b.resize(dims); }, py::arg("dims"))
-    .def("reshape", [](BaseTensor& b, const std::vector<size_t>& dims) { return b.reshape(dims); }, py::arg("dims"))
-    .def("clear", [](BaseTensor& b) { return b.clear(); })
-    .def("save", [](BaseTensor& b, std::ostream& data) { return b.save(data); }, py::arg("data"))
-    .def("load", [](BaseTensor& b, std::istream& data) { return b.load(data); }, py::arg("data"))
-    .def("synchronizeDToH", [](BaseTensor& b) { return b.synchronizeDToH(); })
-    .def("synchronizeHToD", [](BaseTensor& b) { return b.synchronizeHToD(); })
-    .def("synchronizeDToHBased", [](BaseTensor& b) { return b.synchronizeDToHBased(); })
-    .def("synchronizeHBasedToD", [](BaseTensor& b) { return b.synchronizeHBasedToD(); })
-    .def("synchronizeDBasedToH", [](BaseTensor& b) { return b.synchronizeDBasedToH(); })
-    .def("synchronizeHToDBased", [](BaseTensor& b) { return b.synchronizeHToDBased(); })
-    .def("nbDims", [](BaseTensor& b) { return b.nbDims(); })
-    .def("dims", [](BaseTensor& b) { return b.dims(); })
-    .def("isValid", [](BaseTensor& b) { return b.isValid(); })
-    .def("setValid", [](BaseTensor& b) { return b.setValid(); })
-    .def("clearValid", [](BaseTensor& b) { return b.clearValid(); })
-    .def("getType", [](BaseTensor& b) { return b.getType(); })
     /// Bare bones interface
     .def("__getitem__", [](const CudaTensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();
@@ -177,10 +151,17 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
 }
 
 void init_CudaTensor(py::module &m) {
-    py::class_<CudaBaseDeviceTensor>(m, "CudaBaseDeviceTensor");
+    py::class_<CudaBaseDeviceTensor>(m, "CudaBaseDeviceTensor")
+    .def("getType", &CudaBaseDeviceTensor::getType)
+    .def("getCudaTensor", &CudaBaseDeviceTensor::getCudaTensor);
+
     declare_CudaDeviceTensor<float>(m, "float");
     declare_CudaDeviceTensor<double>(m, "double");
-    py::class_<CudaBaseTensor>(m, "CudaBaseTensor");
+
+    py::class_<CudaBaseTensor>(m, "CudaBaseTensor")
+    .def("deviceTensor", &CudaBaseTensor::deviceTensor)
+    .def("hostBased", &CudaBaseTensor::hostBased);
+
     declare_CudaTensor<float>(m, "float");
     declare_CudaTensor<double>(m, "double");
     declare_CudaTensor<char>(m, "char");

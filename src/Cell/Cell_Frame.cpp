@@ -433,3 +433,24 @@ namespace N2D2 {
     template class Cell_Frame<float>;
     template class Cell_Frame<double>;
 }
+
+
+#ifdef PYBIND
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+
+namespace N2D2 {
+template<typename T>
+void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("Cell_Frame_" + typeStr);
+    py::class_<Cell_Frame<T>, std::shared_ptr<Cell_Frame<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance());
+}
+
+void init_Cell_Frame(py::module &m) {
+    declare_Cell_Frame<float>(m, "float");
+    declare_Cell_Frame<double>(m, "double");
+}
+}
+#endif

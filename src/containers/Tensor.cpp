@@ -890,37 +890,67 @@ template class N2D2::Tensor<std::shared_ptr<N2D2::CNNIP::Instance>>;
 namespace py = pybind11;
 
 namespace N2D2 {
+template<typename T, typename std::enable_if<!std::is_same<T, bool>::value>::type* = nullptr>
+void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
+    // Buffer protocol
+    tensor.def_buffer([](Tensor<T>& b) -> py::buffer_info {
+        //assert(mData.unique());
+
+        std::vector<ssize_t> dims;
+        std::vector<ssize_t> strides;
+        ssize_t stride = sizeof(T);
+
+        for (unsigned int dim = 0; dim < b.nbDims(); ++dim) {
+            dims.push_back(b.dims()[dim]);
+            strides.push_back(stride);
+            stride *= b.dims()[dim];
+        }
+
+        std::reverse(dims.begin(), dims.end());
+        std::reverse(strides.begin(), strides.end());
+
+        return py::buffer_info(
+            &b.data()[0],                               /* Pointer to buffer */
+            sizeof(T),                          /* Size of one scalar */
+            py::format_descriptor<T>::format(), /* Python struct-style format descriptor */
+            b.nbDims(),                                      /* Number of dimensions */
+            dims,                 /* Buffer dimensions */
+            strides             /* Strides (in bytes) for each index */
+        );
+    })
+    .def("__init__", [](Tensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
+        /* Request a buffer descriptor from Python */
+        py::buffer_info info = b.request();
+/*
+        // Some sanity checks... -> not needed with py::array_t<...>
+        if (info.format != py::format_descriptor<T>::format())
+            throw std::runtime_error("Incompatible format!");
+
+        ssize_t stride = sizeof(T);
+
+        for (unsigned int dim = 0; dim < b.ndim; ++dim) {
+            if (stride != info.strides[dim])
+                throw std::runtime_error("Incompatible buffer stride!");
+
+            stride *= info.shape[dim];
+        }
+*/
+        const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
+        new (&m) Tensor<T>(dims, static_cast<T*>(info.ptr));
+    });
+}
+
+template<typename T, typename std::enable_if<std::is_same<T, bool>::value>::type* = nullptr>
+void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& /*tensor*/) {
+    // No buffer protocol for bool!
+}
+
 template<typename T>
 void declare_Tensor(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("Tensor_" + typeStr);
-    py::class_<Tensor<T>, BaseTensor>(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol())
-    .def(py::init<>())
+    py::class_<Tensor<T>, BaseTensor> tensor(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol());
+    tensor.def(py::init<>())
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
-    .def("empty", [](BaseTensor& b) { return b.empty(); })
-    .def("dimX", [](BaseTensor& b) { return b.dimX(); })
-    .def("dimY", [](BaseTensor& b) { return b.dimY(); })
-    .def("dimD", [](BaseTensor& b) { return b.dimD(); })
-    .def("dimZ", [](BaseTensor& b) { return b.dimZ(); })
-    .def("dimB", [](BaseTensor& b) { return b.dimB(); })
-    .def("size", [](BaseTensor& b) { return b.size(); })
-    .def("reserve", [](BaseTensor& b, const std::vector<size_t>& dims) { return b.reserve(dims); }, py::arg("dims"))
-    .def("resize", [](BaseTensor& b, const std::vector<size_t>& dims) { return b.resize(dims); }, py::arg("dims"))
-    .def("reshape", [](BaseTensor& b, const std::vector<size_t>& dims) { return b.reshape(dims); }, py::arg("dims"))
-    .def("clear", [](BaseTensor& b) { return b.clear(); })
-    .def("save", [](BaseTensor& b, std::ostream& data) { return b.save(data); }, py::arg("data"))
-    .def("load", [](BaseTensor& b, std::istream& data) { return b.load(data); }, py::arg("data"))
-    .def("synchronizeDToH", [](BaseTensor& b) { return b.synchronizeDToH(); })
-    .def("synchronizeHToD", [](BaseTensor& b) { return b.synchronizeHToD(); })
-    .def("synchronizeDToHBased", [](BaseTensor& b) { return b.synchronizeDToHBased(); })
-    .def("synchronizeHBasedToD", [](BaseTensor& b) { return b.synchronizeHBasedToD(); })
-    .def("synchronizeDBasedToH", [](BaseTensor& b) { return b.synchronizeDBasedToH(); })
-    .def("synchronizeHToDBased", [](BaseTensor& b) { return b.synchronizeHToDBased(); })
-    .def("nbDims", [](BaseTensor& b) { return b.nbDims(); })
-    .def("dims", [](BaseTensor& b) { return b.dims(); })
-    .def("isValid", [](BaseTensor& b) { return b.isValid(); })
-    .def("setValid", [](BaseTensor& b) { return b.setValid(); })
-    .def("clearValid", [](BaseTensor& b) { return b.clearValid(); })
-    .def("getType", [](BaseTensor& b) { return b.getType(); })
     /// Bare bones interface
     .def("__getitem__", [](const Tensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();
@@ -975,57 +1005,39 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
         for (size_t i = 0; i < slicelength; ++i) {
             b(start) = value; start += step;
         }
-    })
-    // Buffer protocol
-    .def_buffer([](Tensor<T>& b) -> py::buffer_info {
-        //assert(mData.unique());
-
-        std::vector<ssize_t> dims;
-        std::vector<ssize_t> strides;
-        ssize_t stride = sizeof(T);
-
-        for (unsigned int dim = 0; dim < b.nbDims(); ++dim) {
-            dims.push_back(b.dims()[dim]);
-            strides.push_back(stride);
-            stride *= b.dims()[dim];
-        }
-
-        std::reverse(dims.begin(), dims.end());
-        std::reverse(strides.begin(), strides.end());
-
-        return py::buffer_info(
-            &b.data()[0],                               /* Pointer to buffer */
-            sizeof(T),                          /* Size of one scalar */
-            py::format_descriptor<T>::format(), /* Python struct-style format descriptor */
-            b.nbDims(),                                      /* Number of dimensions */
-            dims,                 /* Buffer dimensions */
-            strides             /* Strides (in bytes) for each index */
-        );
-    })
-    .def("__init__", [](Tensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
-        /* Request a buffer descriptor from Python */
-        py::buffer_info info = b.request();
-/*
-        // Some sanity checks... -> not needed with py::array_t<...>
-        if (info.format != py::format_descriptor<T>::format())
-            throw std::runtime_error("Incompatible format!");
-
-        ssize_t stride = sizeof(T);
-
-        for (unsigned int dim = 0; dim < b.ndim; ++dim) {
-            if (stride != info.strides[dim])
-                throw std::runtime_error("Incompatible buffer stride!");
-
-            stride *= info.shape[dim];
-        }
-*/
-        const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
-        new (&m) Tensor<T>(dims, static_cast<T*>(info.ptr));
     });
+
+    declare_Tensor_buffer_protocol(tensor);
 }
 
 void init_Tensor(py::module &m) {
-    py::class_<BaseTensor>(m, "BaseTensor");
+    py::class_<BaseTensor>(m, "BaseTensor")
+    .def("empty", &BaseTensor::empty)
+    .def("dimX", &BaseTensor::dimX)
+    .def("dimY", &BaseTensor::dimY)
+    .def("dimD", &BaseTensor::dimD)
+    .def("dimZ", &BaseTensor::dimZ)
+    .def("dimB", &BaseTensor::dimB)
+    .def("size", &BaseTensor::size)
+    .def("reserve", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::reserve, py::arg("dims"))
+    .def("resize", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::resize, py::arg("dims"))
+    .def("reshape", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::reshape, py::arg("dims"))
+    .def("clear", &BaseTensor::clear)
+    .def("save", &BaseTensor::save, py::arg("data"))
+    .def("load", &BaseTensor::load, py::arg("data"))
+    .def("synchronizeDToH", (void (BaseTensor::*)() const) &BaseTensor::synchronizeDToH)
+    .def("synchronizeHToD", (void (BaseTensor::*)() const) &BaseTensor::synchronizeHToD)
+    .def("synchronizeDToHBased", &BaseTensor::synchronizeDToHBased)
+    .def("synchronizeHBasedToD", &BaseTensor::synchronizeHBasedToD)
+    .def("synchronizeDBasedToH", &BaseTensor::synchronizeDBasedToH)
+    .def("synchronizeHToDBased", &BaseTensor::synchronizeHToDBased)
+    .def("nbDims", &BaseTensor::nbDims)
+    .def("dims", &BaseTensor::dims)
+    .def("isValid", &BaseTensor::isValid)
+    .def("setValid", &BaseTensor::setValid)
+    .def("clearValid", &BaseTensor::clearValid)
+    .def("getType", &BaseTensor::getType);
+
     declare_Tensor<float>(m, "float");
     declare_Tensor<double>(m, "double");
     declare_Tensor<char>(m, "char");
@@ -1034,6 +1046,7 @@ void init_Tensor(py::module &m) {
     declare_Tensor<int>(m, "int");
     declare_Tensor<unsigned int>(m, "unsigned int");
     declare_Tensor<unsigned long long>(m, "unsigned long long");
+    declare_Tensor<bool>(m, "bool");
 }
 }
 #endif
