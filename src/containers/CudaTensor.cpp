@@ -18,6 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #include "containers/CudaTensor.hpp"
 
 #ifdef PYBIND
@@ -189,4 +191,6 @@ void init_CudaTensor(py::module &m) {
     declare_CudaTensor<unsigned long long>(m, "unsigned long long");
 }
 }
+#endif
+
 #endif
