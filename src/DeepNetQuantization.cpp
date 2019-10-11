@@ -379,7 +379,9 @@ void N2D2::DeepNetQuantization::quantizeNormalizedNetwork(std::size_t nbBits,
 
         quantizeActivationScaling(*cell, *activation, nbBits, actScalingMode);
 
-        // Must come after quantizeActivationScaling as it may modify the weights
+        approximateRescalings(*cell, *activation, actScalingMode);
+
+        // Must come after approximateRescalings as the approximation may modify the weights
         // if the actScalingMode is SINGLE_SHIFT or DOUBLE_SHIFT
         quantizeFreeParemeters(*cell, nbBits);
     }
@@ -619,9 +621,6 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
     activation.setActivationScaling(
         ActivationScaling::floatingPointScaling(std::move(scalingPerOutput))
     );
-
-    approximateRescalings(cell, activation, actScalingMode);
-
 }
 
 void N2D2::DeepNetQuantization::quantizeFreeParemeters(Cell& cell, std::size_t nbBits) {
