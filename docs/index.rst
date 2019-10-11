@@ -8,6 +8,15 @@ N2D2
 
 .. toctree::
    :maxdepth: 2
+   :caption: INI API:
+
+   ini_syntax
+   ini_databases
+   ini_environment
+   ini_layers
+
+.. toctree::
+   :maxdepth: 2
    :caption: Python API:
 
    containers

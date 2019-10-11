@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Cells &mdash; N2D2  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Databases" href="databases.html" />
+    <link rel="prev" title="Containers" href="containers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">INI API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ini_syntax.html">Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Cells</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cells.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cells">
+<h1>Cells<a class="headerlink" href="#cells" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="N2D2.Cell">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Cell</code><a class="headerlink" href="#N2D2.Cell" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="class">
+<dt id="N2D2.Cell.FreeParametersType">
+<em class="property">class </em><code class="sig-name descname">FreeParametersType</code><a class="headerlink" href="#N2D2.Cell.FreeParametersType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>Additive</p>
+<p>Multiplicative</p>
+<p>All</p>
+<dl class="method">
+<dt id="N2D2.Cell.FreeParametersType.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Cell.FreeParametersType.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>(self: handle) -&gt; str</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.addInput">
+<code class="sig-name descname">addInput</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Cell.addInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, channel: int, x0: int, y0: int, width: int, height: int, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f327f0be928&gt;) -&gt; None</p></li>
+<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, x0: int = 0, y0: int = 0, width: int = 0, height: int = 0, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f327f0be998&gt;) -&gt; None</p></li>
+<li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f327f0bea08&gt;) -&gt; None</p></li>
+<li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, x0: int, y0: int, width: int = 0, height: int = 0) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.addMultiscaleInput">
+<code class="sig-name descname">addMultiscaleInput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">sp: N2D2::HeteroStimuliProvider</em>, <em class="sig-param">x0: int = 0</em>, <em class="sig-param">y0: int = 0</em>, <em class="sig-param">width: int = 0</em>, <em class="sig-param">height: int = 0</em>, <em class="sig-param">mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f327f0be9d0&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.addMultiscaleInput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.discretizeFreeParameters">
+<code class="sig-name descname">discretizeFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">nbLevels: int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.discretizeFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.exportFreeParameters">
+<code class="sig-name descname">exportFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.exportFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getAssociatedDeepNet">
+<code class="sig-name descname">getAssociatedDeepNet</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; N2D2::DeepNet<a class="headerlink" href="#N2D2.Cell.getAssociatedDeepNet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getChannelsHeight">
+<code class="sig-name descname">getChannelsHeight</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getChannelsHeight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getChannelsWidth">
+<code class="sig-name descname">getChannelsWidth</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getChannelsWidth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getFreeParametersRange">
+<code class="sig-name descname">getFreeParametersRange</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">withAdditiveParameters: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[float, float]<a class="headerlink" href="#N2D2.Cell.getFreeParametersRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getFreeParametersRangePerOutput">
+<code class="sig-name descname">getFreeParametersRangePerOutput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">output: int</em>, <em class="sig-param">withAdditiveParameters: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[float, float]<a class="headerlink" href="#N2D2.Cell.getFreeParametersRangePerOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getId">
+<code class="sig-name descname">getId</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getId" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getInputsDim">
+<code class="sig-name descname">getInputsDim</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">dim: int</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getInputsDim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getInputsDims">
+<code class="sig-name descname">getInputsDims</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.Cell.getInputsDims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getInputsSize">
+<code class="sig-name descname">getInputsSize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getInputsSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getName">
+<code class="sig-name descname">getName</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.Cell.getName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getNbChannels">
+<code class="sig-name descname">getNbChannels</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getNbChannels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getNbOutputs">
+<code class="sig-name descname">getNbOutputs</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getNbOutputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getOutputsDim">
+<code class="sig-name descname">getOutputsDim</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">dim: int</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getOutputsDim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getOutputsDims">
+<code class="sig-name descname">getOutputsDims</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.Cell.getOutputsDims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getOutputsHeight">
+<code class="sig-name descname">getOutputsHeight</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getOutputsHeight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getOutputsSize">
+<code class="sig-name descname">getOutputsSize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getOutputsSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getOutputsWidth">
+<code class="sig-name descname">getOutputsWidth</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.getOutputsWidth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getReceptiveField">
+<code class="sig-name descname">getReceptiveField</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">outputField: List[int] = []</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.Cell.getReceptiveField" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getStats">
+<code class="sig-name descname">getStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">arg0: N2D2::Cell::Stats</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.getStats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.getType">
+<code class="sig-name descname">getType</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.Cell.getType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.groupMap">
+<code class="sig-name descname">groupMap</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Cell.groupMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.importFreeParameters">
+<code class="sig-name descname">importFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">ignoreNotExists: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.importFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.isConnection">
+<code class="sig-name descname">isConnection</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">channel: int</em>, <em class="sig-param">output: int</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.Cell.isConnection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.isFullMap">
+<code class="sig-name descname">isFullMap</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.Cell.isFullMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.isUnitMap">
+<code class="sig-name descname">isUnitMap</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.Cell.isUnitMap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">dirName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.loadFreeParameters">
+<code class="sig-name descname">loadFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">ignoreNotExists: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.loadFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.logFreeParameters">
+<code class="sig-name descname">logFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.logFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.logFreeParametersDistrib">
+<code class="sig-name descname">logFreeParametersDistrib</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.logFreeParametersDistrib" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.processFreeParameters">
+<code class="sig-name descname">processFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">func: std::function&lt;double (double)&gt;</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.processFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.processFreeParametersPerOutput">
+<code class="sig-name descname">processFreeParametersPerOutput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">func: std::function&lt;double (double)&gt;</em>, <em class="sig-param">output: int</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.processFreeParametersPerOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">dirName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell.saveFreeParameters">
+<code class="sig-name descname">saveFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.saveFreeParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="databases.html" class="btn btn-neutral float-right" title="Databases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="containers.html" class="btn btn-neutral float-left" title="Containers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>StimuliProvider &mdash; N2D2  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DeepNet" href="deepnet.html" />
+    <link rel="prev" title="Databases" href="databases.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">INI API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ini_syntax.html">Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>StimuliProvider</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/stimuliprovider.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="stimuliprovider">
+<h1>StimuliProvider<a class="headerlink" href="#stimuliprovider" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="N2D2.StimuliProvider">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">StimuliProvider</code><a class="headerlink" href="#N2D2.StimuliProvider" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="N2D2.StimuliProvider.cloneParameters">
+<code class="sig-name descname">cloneParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; N2D2.StimuliProvider<a class="headerlink" href="#N2D2.StimuliProvider.cloneParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.future">
+<code class="sig-name descname">future</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.future" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getBatch">
+<code class="sig-name descname">getBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.StimuliProvider.getBatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getBatchSize">
+<code class="sig-name descname">getBatchSize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getBatchSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getCachePath">
+<code class="sig-name descname">getCachePath</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.StimuliProvider.getCachePath" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getChannelOnTheFlyTransformation">
+<code class="sig-name descname">getChannelOnTheFlyTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">channel: int</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; N2D2::CompositeTransformation<a class="headerlink" href="#N2D2.StimuliProvider.getChannelOnTheFlyTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getChannelTransformation">
+<code class="sig-name descname">getChannelTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">channel: int</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; N2D2::CompositeTransformation<a class="headerlink" href="#N2D2.StimuliProvider.getChannelTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getData">
+<code class="sig-name descname">getData</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getData(self: N2D2.StimuliProvider) -&gt; N2D2.CudaTensor_float</p></li>
+<li><p>getData(self: N2D2.StimuliProvider, channel: int, batchPos: int = 0) -&gt; N2D2.CudaTensor_float</p></li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getDatabase">
+<code class="sig-name descname">getDatabase</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; N2D2.Database<a class="headerlink" href="#N2D2.StimuliProvider.getDatabase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getLabelsData">
+<code class="sig-name descname">getLabelsData</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getLabelsData(self: N2D2.StimuliProvider) -&gt; N2D2.Tensor_int</p></li>
+<li><p>getLabelsData(self: N2D2.StimuliProvider, channel: int, batchPos: int = 0) -&gt; N2D2.Tensor_int</p></li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getLabelsROIs">
+<code class="sig-name descname">getLabelsROIs</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsROIs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getLabelsROIs(self: N2D2.StimuliProvider) -&gt; List[List[N2D2::ROI]]</p></li>
+<li><p>getLabelsROIs(self: N2D2.StimuliProvider, batchPos: int = 0) -&gt; List[N2D2::ROI]</p></li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getNbChannels">
+<code class="sig-name descname">getNbChannels</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getNbChannels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getNbTransformations">
+<code class="sig-name descname">getNbTransformations</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getNbTransformations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getOnTheFlyTransformation">
+<code class="sig-name descname">getOnTheFlyTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; N2D2::CompositeTransformation<a class="headerlink" href="#N2D2.StimuliProvider.getOnTheFlyTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getRandomID">
+<code class="sig-name descname">getRandomID</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getRandomID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getRandomIndex">
+<code class="sig-name descname">getRandomIndex</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getRandomIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getSize">
+<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.StimuliProvider.getSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getSizeD">
+<code class="sig-name descname">getSizeD</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getSizeD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getSizeX">
+<code class="sig-name descname">getSizeX</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getSizeX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getSizeY">
+<code class="sig-name descname">getSizeY</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getSizeY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getTransformation">
+<code class="sig-name descname">getTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; N2D2::CompositeTransformation<a class="headerlink" href="#N2D2.StimuliProvider.getTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.isCompositeStimuli">
+<code class="sig-name descname">isCompositeStimuli</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.StimuliProvider.isCompositeStimuli" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.logTransformations">
+<code class="sig-name descname">logTransformations</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.logTransformations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.readBatch">
+<code class="sig-name descname">readBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">startIndex: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.readRandomBatch">
+<code class="sig-name descname">readRandomBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readRandomBatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.readRandomStimulus">
+<code class="sig-name descname">readRandomStimulus</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">batchPos: int = 0</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.readRandomStimulus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.readRawData">
+<code class="sig-name descname">readRawData</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readRawData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>readRawData(self: N2D2.StimuliProvider, id: int) -&gt; N2D2.Tensor_float</p></li>
+<li><p>readRawData(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int) -&gt; N2D2.Tensor_float</p></li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.readStimulus">
+<code class="sig-name descname">readStimulus</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readStimulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>readStimulus(self: N2D2.StimuliProvider, id: int, set: N2D2.Database.StimuliSet, batchPos: int = 0) -&gt; None</p></li>
+<li><p>readStimulus(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int, batchPos: int = 0) -&gt; int</p></li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.readStimulusBatch">
+<code class="sig-name descname">readStimulusBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">id: int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readStimulusBatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.setBatchSize">
+<code class="sig-name descname">setBatchSize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">batchSize: int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.setBatchSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.setCachePath">
+<code class="sig-name descname">setCachePath</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">path: str = ''</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.setCachePath" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.streamBatch">
+<code class="sig-name descname">streamBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">startIndex: int = -1</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.streamBatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.synchronize">
+<code class="sig-name descname">synchronize</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.synchronize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="deepnet.html" class="btn btn-neutral float-right" title="DeepNet" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="databases.html" class="btn btn-neutral float-left" title="Databases" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
