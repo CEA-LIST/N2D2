@@ -239,10 +239,13 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
                 const bool isCellOutputUnsigned = (itLayer == layers.begin())?
                                             DeepNetExport::mEnvDataUnsigned:
                                             DeepNetExport::isCellOutputUnsigned(*cells.at(*itCell));
+                
+                double val = Utils::max_abs(range.minVal(), range.maxVal());
+                // Take 0.1 as minimum value as we don't want a range of [0;0]
+                val = std::max(val, 0.1);
 
-                const Float_T val = Utils::max_abs(range.minVal(), range.maxVal());
-                const Float_T min = isCellOutputUnsigned?0:-val;
-                const Float_T max = val;
+                const double min = isCellOutputUnsigned?0:-val;
+                const double max = val;
                 outputsHistogram.insert(std::make_pair(*itCell, Histogram(min, max, nbBins)));
             }
         }
@@ -265,6 +268,10 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
 
             Histogram& hist = outputsHistogram.at(*itCell);
             assert(outputs.size() == outputs.dimB()*outputs.dimZ()*outputs.dimY()*outputs.dimX());
+
+            const auto range = outputsRange.at(*itCell);
+            const bool enlargeSymetric = hist.getMinVal() < 0.0;
+            hist.enlarge(Utils::max_abs(range.minVal(), range.maxVal()), enlargeSymetric);
 
             for(std::size_t batch = 0; batch < outputs.dimB(); batch++) {
                 if(mDeepNet.getStimuliProvider()->getBatch().at(batch) == -1) {

@@ -675,7 +675,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             const unsigned int nbBatch = std::ceil(nbStimuli / (double)batchSize);
 
 
-            std::cout << "Calculating calibration data range..." << std::endl;
+            std::cout << "Calculating calibration data range and histogram..." << std::endl;
             unsigned int nextReport = opt.report;
             for (unsigned int b = 0; b < nbBatch; ++b) {
                 const unsigned int i = b * batchSize;
@@ -683,23 +683,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 sp->readBatch(Database::Validation, i);
                 deepNet->test(Database::Validation);
                 dnQuantization.reportOutputsRange(outputsRange);
-
-                if (i >= nextReport || b == nbBatch - 1) {
-                    nextReport += opt.report;
-                    std::cout << "Calibration data " << i << "/" << nbStimuli << std::endl;
-                }
-            }
-
-
-            std::cout << "Calculating calibration data histogram..." << std::endl;
-            nextReport = opt.report;
-            for (unsigned int b = 0; b < nbBatch; ++b) {
-                const unsigned int i = b * batchSize;
-
-                sp->readBatch(Database::Validation, i);
-                deepNet->test(Database::Validation);
                 dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 
-                                                           opt.nbBits, opt.actClippingMode);
+                                                      opt.nbBits, opt.actClippingMode);
 
                 if (i >= nextReport || b == nbBatch - 1) {
                     nextReport += opt.report;
