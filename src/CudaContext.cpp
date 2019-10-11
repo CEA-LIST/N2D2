@@ -18,6 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #include "CudaContext.hpp"
 
 #ifdef PYBIND
@@ -32,4 +34,6 @@ void init_CudaContext(py::module &m) {
     .def_static("getDeviceProp", &CudaContext::getDeviceProp);
 }
 }
+#endif
+
 #endif
