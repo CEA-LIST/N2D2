@@ -192,7 +192,7 @@ variations and compare the performances (in terms of recognition rate
 and computationnal cost) automatically. Export targets include CPU, DSP
 and GPU with OpenMP, OpenCL, Cuda, cuDNN and TensorRT programming models
 as well as custom hardware IP code generation with High-Level Synthesis
-for FPGA and dedicated configurable DNN accelerator IP <a href="#id5"><span class="problematic" id="id1">[1]_</span></a>.</p>
+for FPGA and dedicated configurable DNN accelerator IP <a class="footnote-reference brackets" href="#id3" id="id1">1</a>.</p>
 <p>In the following, the first section describes the database handling
 capabilities of the tool, which can automatically generate learning,
 validation and testing data sets from any hand made database (for
@@ -288,7 +288,7 @@ each layer type are modifiable, for example for the convolutional layer,
 one can specify the size of the convolution kernels, the stride, the
 number of kernels per input map and the learning parameters (learning
 rate, initial weights value…). For the learning, the data dynamic can
-be chosen between 16 bits (with NVIDIA cuDNN <a href="#id6"><span class="problematic" id="id2">[2]_</span></a>), 32 bit and 64 bit
+be chosen between 16 bits (with NVIDIA cuDNN <a class="footnote-reference brackets" href="#id4" id="id2">2</a>), 32 bit and 64 bit
 floating point numbers.</p>
 <p>The following example, which will serve as the use case for the rest of
 this presentation, shows how to build a DNN with 5 layers: one
@@ -345,10 +345,10 @@ fully connected layers and a softmax output layer.</p>
 </pre></div>
 </div>
 <p>The resulting DNN is shown in figure [fig:DNNExample].</p>
-<div class="figure align-default" id="id3">
+<div class="figure align-default" id="id5">
 <img alt="Automatically generated and ready to learn DNN from the INI configuration file example." src="_images/dnn_example.pdf" />
 <p class="caption"><span class="caption-text">Automatically generated and ready to learn DNN from the INI
-configuration file example.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+configuration file example.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </div>
 <p>The learning is accelerated in GPU using the NVIDIA cuDNN framework,
 integrated into the toolflow. Using GPU acceleration, learning times can
@@ -393,9 +393,9 @@ generated, the testbench is ready to be compiled and executed on the
 target platform. The applicative performance (recognition rate) as well
 as the computing time per input data can then be directly mesured by the
 testbench.</p>
-<div class="figure align-default" id="id4">
+<div class="figure align-default" id="id6">
 <img alt="Example of network benchmarking on different hardware targets." src="_images/targets_benchmarking.pdf" />
-<p class="caption"><span class="caption-text">Example of network benchmarking on different hardware targets.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example of network benchmarking on different hardware targets.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
 </div>
 <p>The figure [fig:TargetsBenchmarking] shows an example of benchmarking
 results of the previous DNN on different targets (in log scale).
@@ -413,6 +413,14 @@ database creation and management, data pre-processing, networks
 configuration and optimized code generation, which can save months of
 manual porting and verification effort to a single automated step in the
 tool.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Ongoing work</p>
+</dd>
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>On future GPUs</p>
+</dd>
+</dl>
 </div>
 </div>
 

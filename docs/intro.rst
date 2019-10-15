@@ -281,3 +281,9 @@ database creation and management, data pre-processing, networks
 configuration and optimized code generation, which can save months of
 manual porting and verification effort to a single automated step in the
 tool.
+
+.. [1]
+   Ongoing work
+
+.. [2]
+   On future GPUs
