@@ -304,10 +304,10 @@
 <p>To specify that the back-propagated error must be computed at the output
 of a given layer (generally the last layer, or output layer), one must
 add a target section named <em>LayerName</em><code class="docutils literal notranslate"><span class="pre">.Target</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
-<span class="p">[</span><span class="n">LayerName</span><span class="o">.</span><span class="n">Target</span><span class="p">]</span>
-<span class="n">TargetValue</span><span class="o">=</span><span class="mf">1.0</span> <span class="p">;</span> <span class="n">default</span><span class="p">:</span> <span class="mf">1.0</span>
-<span class="n">DefaultValue</span><span class="o">=</span><span class="mf">0.0</span> <span class="p">;</span> <span class="n">default</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+<span class="k">[LayerName.Target]</span>
+<span class="na">TargetValue</span><span class="o">=</span><span class="s">1.0 ; default: 1.0</span>
+<span class="na">DefaultValue</span><span class="o">=</span><span class="s">0.0 ; default: -1.0</span>
 </pre></div>
 </div>
 </div>
@@ -315,12 +315,12 @@ add a target section named <em>LayerName</em><code class="docutils literal notra
 <h2>Weight fillers<a class="headerlink" href="#weight-fillers" title="Permalink to this headline">¶</a></h2>
 <p>Fillers to initialize weights and biases in the different type of layer.</p>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">conv1</span><span class="p">]</span>
-<span class="o">...</span>
-<span class="n">WeightsFiller</span><span class="o">=</span><span class="n">NormalFiller</span>
-<span class="n">WeightsFiller</span><span class="o">.</span><span class="n">Mean</span><span class="o">=</span><span class="mf">0.0</span>
-<span class="n">WeightsFiller</span><span class="o">.</span><span class="n">StdDev</span><span class="o">=</span><span class="mf">0.05</span>
-<span class="o">...</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[conv1]</span>
+<span class="na">...</span>
+<span class="na">WeightsFiller</span><span class="o">=</span><span class="s">NormalFiller</span>
+<span class="na">WeightsFiller.Mean</span><span class="o">=</span><span class="s">0.0</span>
+<span class="na">WeightsFiller.StdDev</span><span class="o">=</span><span class="s">0.05</span>
+<span class="na">...</span>
 </pre></div>
 </div>
 <p>The initial weights distribution for each layer can be checked in the
@@ -664,12 +664,12 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 <h2>Activation functions<a class="headerlink" href="#activation-functions" title="Permalink to this headline">¶</a></h2>
 <p>Activation function to be used at the output of layers.</p>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">conv1</span><span class="p">]</span>
-<span class="o">...</span>
-<span class="n">ActivationFunction</span><span class="o">=</span><span class="n">Rectifier</span>
-<span class="n">ActivationFunction</span><span class="o">.</span><span class="n">LeakSlope</span><span class="o">=</span><span class="mf">0.01</span>
-<span class="n">ActivationFunction</span><span class="o">.</span><span class="n">Clipping</span><span class="o">=</span><span class="mi">20</span>
-<span class="o">...</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[conv1]</span>
+<span class="na">...</span>
+<span class="na">ActivationFunction</span><span class="o">=</span><span class="s">Rectifier</span>
+<span class="na">ActivationFunction.LeakSlope</span><span class="o">=</span><span class="s">0.01</span>
+<span class="na">ActivationFunction.Clipping</span><span class="o">=</span><span class="s">20</span>
+<span class="na">...</span>
 </pre></div>
 </div>
 <div class="section" id="logistic">
@@ -807,52 +807,52 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </tbody>
 </table>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">;</span> <span class="n">RPN</span> <span class="n">network</span><span class="p">:</span> <span class="bp">cls</span> <span class="n">layer</span>
-<span class="p">[</span><span class="n">scores</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=...</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">1</span>
-<span class="p">;</span> <span class="mi">18</span> <span class="n">channels</span> <span class="k">for</span> <span class="mi">9</span> <span class="n">anchors</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">18</span>
-<span class="o">...</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; RPN network: cls layer</span>
+<span class="k">[scores]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">...</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">1</span>
+<span class="c1">; 18 channels for 9 anchors</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">18</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="n">scores</span><span class="o">.</span><span class="n">softmax</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">scores</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Softmax</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">scores</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">WithLoss</span><span class="o">=</span><span class="mi">1</span>
+<span class="k">[scores.softmax]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">scores</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Softmax</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[scores]NbOutputs</span>
+<span class="na">WithLoss</span><span class="o">=</span><span class="s">1</span>
 
-<span class="p">;</span> <span class="n">RPN</span> <span class="n">network</span><span class="p">:</span> <span class="n">coordinates</span> <span class="n">layer</span>
-<span class="p">[</span><span class="n">coordinates</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=...</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">1</span>
-<span class="p">;</span> <span class="mi">36</span> <span class="n">channels</span> <span class="k">for</span> <span class="mi">4</span> <span class="n">coordinates</span> <span class="n">x</span> <span class="mi">9</span> <span class="n">anchors</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">36</span>
-<span class="o">...</span>
+<span class="c1">; RPN network: coordinates layer</span>
+<span class="k">[coordinates]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">...</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">1</span>
+<span class="c1">; 36 channels for 4 coordinates x 9 anchors</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">36</span>
+<span class="na">...</span>
 
-<span class="p">;</span> <span class="n">RPN</span> <span class="n">network</span><span class="p">:</span> <span class="n">anchors</span>
-<span class="p">[</span><span class="n">anchors</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">softmax</span><span class="p">,</span><span class="n">coordinates</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Anchor</span>
-<span class="n">ScoresCls</span><span class="o">=</span><span class="mi">2</span> <span class="p">;</span> <span class="n">using</span> <span class="n">a</span> <span class="n">two</span><span class="o">-</span><span class="k">class</span> <span class="nc">softmax</span> <span class="k">for</span> <span class="n">the</span> <span class="n">scores</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">32</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mi">48</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mi">64</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">=</span><span class="mi">80</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">=</span><span class="mi">96</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">=</span><span class="mi">112</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">=</span><span class="mi">128</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">=</span><span class="mi">144</span> <span class="mf">1.0</span>
-<span class="n">Anchor</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="o">=</span><span class="mi">160</span> <span class="mf">1.0</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">anchors</span><span class="o">.</span><span class="n">config</span>
+<span class="c1">; RPN network: anchors</span>
+<span class="k">[anchors]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">scores.softmax,coordinates</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Anchor</span>
+<span class="na">ScoresCls</span><span class="o">=</span><span class="s">2 ; using a two-class softmax for the scores</span>
+<span class="na">Anchor[0]</span><span class="o">=</span><span class="s">32 1.0</span>
+<span class="na">Anchor[1]</span><span class="o">=</span><span class="s">48 1.0</span>
+<span class="na">Anchor[2]</span><span class="o">=</span><span class="s">64 1.0</span>
+<span class="na">Anchor[3]</span><span class="o">=</span><span class="s">80 1.0</span>
+<span class="na">Anchor[4]</span><span class="o">=</span><span class="s">96 1.0</span>
+<span class="na">Anchor[5]</span><span class="o">=</span><span class="s">112 1.0</span>
+<span class="na">Anchor[6]</span><span class="o">=</span><span class="s">128 1.0</span>
+<span class="na">Anchor[7]</span><span class="o">=</span><span class="s">144 1.0</span>
+<span class="na">Anchor[8]</span><span class="o">=</span><span class="s">160 1.0</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">anchors.config</span>
 
-<span class="p">[</span><span class="n">anchors</span><span class="o">.</span><span class="n">config</span><span class="p">]</span>
-<span class="n">PositiveIoU</span><span class="o">=</span><span class="mf">0.7</span>
-<span class="n">NegativeIoU</span><span class="o">=</span><span class="mf">0.3</span>
-<span class="n">LossLambda</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="k">[anchors.config]</span>
+<span class="na">PositiveIoU</span><span class="o">=</span><span class="s">0.7</span>
+<span class="na">NegativeIoU</span><span class="o">=</span><span class="s">0.3</span>
+<span class="na">LossLambda</span><span class="o">=</span><span class="s">1.0</span>
 </pre></div>
 </div>
 </div>
@@ -893,20 +893,20 @@ following output feature maps ordering:</p>
 </pre></div>
 </div>
 <p>The feature maps ordering can be changed during weights import/export:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">;</span> <span class="n">RPN</span> <span class="n">network</span><span class="p">:</span> <span class="n">coordinates</span> <span class="n">layer</span>
-<span class="p">[</span><span class="n">coordinates</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=...</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">1</span>
-<span class="p">;</span> <span class="mi">36</span> <span class="n">channels</span> <span class="k">for</span> <span class="mi">4</span> <span class="n">coordinates</span> <span class="n">x</span> <span class="mi">9</span> <span class="n">anchors</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">36</span>
-<span class="o">...</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">coordinates</span><span class="o">.</span><span class="n">config</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; RPN network: coordinates layer</span>
+<span class="k">[coordinates]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">...</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">1</span>
+<span class="c1">; 36 channels for 4 coordinates x 9 anchors</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">36</span>
+<span class="na">...</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">coordinates.config</span>
 
-<span class="p">[</span><span class="n">coordinates</span><span class="o">.</span><span class="n">config</span><span class="p">]</span>
-<span class="n">WeightsExportFormat</span><span class="o">=</span><span class="n">HWCO</span> <span class="p">;</span> <span class="n">Weights</span> <span class="nb">format</span> <span class="n">used</span> <span class="n">by</span> <span class="n">TensorFlow</span>
-<span class="n">OutputsRemap</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span>
+<span class="k">[coordinates.config]</span>
+<span class="na">WeightsExportFormat</span><span class="o">=</span><span class="s">HWCO ; Weights format used by TensorFlow</span>
+<span class="na">OutputsRemap</span><span class="o">=</span><span class="s">1:4,0:4,3:4,2:4</span>
 </pre></div>
 </div>
 </div>
@@ -1311,16 +1311,16 @@ implement Maxout or both Maxout and Pooling simultaneously).</p>
 <h3>Maxout example<a class="headerlink" href="#maxout-example" title="Permalink to this headline">¶</a></h3>
 <p>In the following INI section, one implements a Maxout between each
 consecutive pair of 8 input maps:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">maxout_layer</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=...</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Pool</span>
-<span class="n">Model</span><span class="o">=</span><span class="n">Frame_EXT_CUDA</span>
-<span class="n">PoolWidth</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">PoolHeight</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">4</span>
-<span class="n">Pooling</span><span class="o">=</span><span class="n">Max</span>
-<span class="n">Mapping</span><span class="o">.</span><span class="n">SizeY</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">Mapping</span><span class="o">.</span><span class="n">StrideY</span><span class="o">=</span><span class="mi">2</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[maxout_layer]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">...</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Pool</span>
+<span class="na">Model</span><span class="o">=</span><span class="s">Frame_EXT_CUDA</span>
+<span class="na">PoolWidth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">PoolHeight</span><span class="o">=</span><span class="s">1</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">4</span>
+<span class="na">Pooling</span><span class="o">=</span><span class="s">Max</span>
+<span class="na">Mapping.SizeY</span><span class="o">=</span><span class="s">2</span>
+<span class="na">Mapping.StrideY</span><span class="o">=</span><span class="s">2</span>
 </pre></div>
 </div>
 <p>The layer connectivity is the following:</p>
@@ -1572,40 +1572,40 @@ operation:</p>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>Sum of two inputs (<span class="math notranslate nohighlight">\(T_{out} = T_{1} + T_{2}\)</span>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">elemwise_sum</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ElemWise</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">layer1</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">Sum</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[elemwise_sum]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">layer1,layer2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ElemWise</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[layer1]NbOutputs</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">Sum</span>
 </pre></div>
 </div>
 <p>Weighted sum of two inputs, by a factor 0.5 for <code class="docutils literal notranslate"><span class="pre">layer1</span></code> and 1.0 for
 <code class="docutils literal notranslate"><span class="pre">layer2</span></code> (<span class="math notranslate nohighlight">\(T_{out} = 0.5 \times T_{1} + 1.0 \times T_{2}\)</span>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">elemwise_weighted_sum</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ElemWise</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">layer1</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">Sum</span>
-<span class="n">Weights</span><span class="o">=</span><span class="mf">0.5</span> <span class="mf">1.0</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[elemwise_weighted_sum]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">layer1,layer2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ElemWise</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[layer1]NbOutputs</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">Sum</span>
+<span class="na">Weights</span><span class="o">=</span><span class="s">0.5 1.0</span>
 </pre></div>
 </div>
 <p>Single input scaling by a factor 0.5 and shifted by 0.1
 (<span class="math notranslate nohighlight">\(T_{out} = 0.5 \times T_{1}\)</span> + 0.1):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">elemwise_scale</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">layer1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ElemWise</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">layer1</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">Sum</span>
-<span class="n">Weights</span><span class="o">=</span><span class="mf">0.5</span>
-<span class="n">Shifts</span><span class="o">=</span><span class="mf">0.1</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[elemwise_scale]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">layer1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ElemWise</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[layer1]NbOutputs</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">Sum</span>
+<span class="na">Weights</span><span class="o">=</span><span class="s">0.5</span>
+<span class="na">Shifts</span><span class="o">=</span><span class="s">0.1</span>
 </pre></div>
 </div>
 <p>Absolute value of an input (<span class="math notranslate nohighlight">\(T_{out} = |T_{1}|\)</span>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">elemwise_abs</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">layer1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ElemWise</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">layer1</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">Abs</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[elemwise_abs]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">layer1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ElemWise</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[layer1]NbOutputs</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">Abs</span>
 </pre></div>
 </div>
 </div>
@@ -2458,21 +2458,21 @@ stimuli provider.</p>
 </table>
 <p>The <code class="docutils literal notranslate"><span class="pre">Transformation</span></code> options must be placed in the same section.</p>
 <p>Usage example for fully CNNs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">post</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="n">thres</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=...</span> <span class="p">;</span> <span class="k">for</span> <span class="n">example</span><span class="p">,</span> <span class="n">network</span><span class="s1">&#39;s logistic of softmax output layer</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Transformation</span>
-<span class="n">Transformation</span><span class="o">=</span><span class="n">ThresholdTransformation</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">ToZero</span>
-<span class="n">Threshold</span><span class="o">=</span><span class="mf">0.75</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[post.Transformation-thres]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">... ; for example, network&#39;s logistic of softmax output layer</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Transformation</span>
+<span class="na">Transformation</span><span class="o">=</span><span class="s">ThresholdTransformation</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">ToZero</span>
+<span class="na">Threshold</span><span class="o">=</span><span class="s">0.75</span>
 
-<span class="p">[</span><span class="n">post</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="n">morpho</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">post</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="n">thres</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Transformation</span>
-<span class="n">Transformation</span><span class="o">=</span><span class="n">MorphologyTransformation</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">Opening</span>
-<span class="n">Size</span><span class="o">=</span><span class="mi">3</span>
+<span class="k">[post.Transformation-morpho]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">post.Transformation-thres</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Transformation</span>
+<span class="na">Transformation</span><span class="o">=</span><span class="s">MorphologyTransformation</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">Opening</span>
+<span class="na">Size</span><span class="o">=</span><span class="s">3</span>
 </pre></div>
 </div>
 </div>

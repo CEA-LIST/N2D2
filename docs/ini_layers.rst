@@ -24,7 +24,7 @@ To specify that the back-propagated error must be computed at the output
 of a given layer (generally the last layer, or output layer), one must
 add a target section named *LayerName*\ ``.Target``:
 
-::
+.. code-block:: ini
 
     ...
     [LayerName.Target]
@@ -38,7 +38,7 @@ Fillers to initialize weights and biases in the different type of layer.
 
 Usage example:
 
-::
+.. code-block:: ini
 
     [conv1]
     ...
@@ -285,7 +285,7 @@ Activation function to be used at the output of layers.
 
 Usage example:
 
-::
+.. code-block:: ini
 
     [conv1]
     ...
@@ -384,7 +384,7 @@ Configuration parameters (*Frame* models)
 
 Usage example:
 
-::
+.. code-block:: ini
 
     ; RPN network: cls layer
     [scores]
@@ -477,7 +477,7 @@ The output feature maps ordering required by the ``Anchor`` layer is:
 
 The feature maps ordering can be changed during weights import/export:
 
-::
+.. code-block:: ini
 
     ; RPN network: coordinates layer
     [coordinates]
@@ -795,7 +795,7 @@ Maxout example
 In the following INI section, one implements a Maxout between each
 consecutive pair of 8 input maps:
 
-::
+.. code-block:: ini
 
     [maxout_layer]
     Input=...
@@ -1035,7 +1035,7 @@ Examples
 
 Sum of two inputs (:math:`T_{out} = T_{1} + T_{2}`):
 
-::
+.. code-block:: ini
 
     [elemwise_sum]
     Input=layer1,layer2
@@ -1046,7 +1046,7 @@ Sum of two inputs (:math:`T_{out} = T_{1} + T_{2}`):
 Weighted sum of two inputs, by a factor 0.5 for ``layer1`` and 1.0 for
 ``layer2`` (:math:`T_{out} = 0.5 \times T_{1} + 1.0 \times T_{2}`):
 
-::
+.. code-block:: ini
 
     [elemwise_weighted_sum]
     Input=layer1,layer2
@@ -1058,7 +1058,7 @@ Weighted sum of two inputs, by a factor 0.5 for ``layer1`` and 1.0 for
 Single input scaling by a factor 0.5 and shifted by 0.1
 (:math:`T_{out} = 0.5 \times T_{1}` + 0.1):
 
-::
+.. code-block:: ini
 
     [elemwise_scale]
     Input=layer1
@@ -1070,7 +1070,7 @@ Single input scaling by a factor 0.5 and shifted by 0.1
 
 Absolute value of an input (:math:`T_{out} = |T_{1}|`):
 
-::
+.. code-block:: ini
 
     [elemwise_abs]
     Input=layer1
@@ -1594,7 +1594,7 @@ The ``Transformation`` options must be placed in the same section.
 
 Usage example for fully CNNs:
 
-::
+.. code-block:: ini
 
     [post.Transformation-thres]
     Input=... ; for example, network's logistic of softmax output layer

@@ -256,62 +256,62 @@ this issue without normalization <a href="#id5"><span class="problematic" id="id
 dataset. A driver module already exists for this dataset, named
 <code class="docutils literal notranslate"><span class="pre">MNIST_IDX_Database</span></code>.</p>
 <p>To instantiate it, just add the following lines in a new INI file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">database</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">MNIST_IDX_Database</span>
-<span class="n">Validation</span><span class="o">=</span><span class="mf">0.2</span> <span class="p">;</span> <span class="n">Use</span> <span class="mi">20</span>\<span class="o">%</span> <span class="n">of</span> <span class="n">the</span> <span class="n">dataset</span> <span class="k">for</span> <span class="n">validation</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">MNIST_IDX_Database</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2 ; Use 20\% of the dataset for validation</span>
 </pre></div>
 </div>
 <p>In order to create a neural network, we first need to define its input,
 which is declared with a <code class="docutils literal notranslate"><span class="pre">[sp]</span></code> section (<em>sp</em> for <em>StimuliProvider</em>).
 In this section, we configure the size of the input and the batch size:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">sp</span><span class="p">]</span>
-<span class="n">SizeX</span><span class="o">=</span><span class="mi">32</span>
-<span class="n">SizeY</span><span class="o">=</span><span class="mi">32</span>
-<span class="n">BatchSize</span><span class="o">=</span><span class="mi">128</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">32</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">32</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">128</span>
 </pre></div>
 </div>
 <p>We can also add pre-processing transformations to the <em>StimuliProvider</em>,
 knowing that the final data size after transformations must match the
 size declared in the <code class="docutils literal notranslate"><span class="pre">[sp]</span></code> section. Here, we must rescale the MNIST
 28x28 images to match the 32x32 network input size.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">Transformation_1</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">RescaleTransformation</span>
-<span class="n">Width</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">SizeX</span>
-<span class="n">Height</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">SizeY</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.Transformation_1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">[sp]SizeX</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">[sp]SizeY</span>
 </pre></div>
 </div>
 <p>Next, we declare the neural network layers. In this example, we
 reproduced the well-known LeNet network. The first layer is a 5x5
 convolutional layer, with 6 channels. Since there is only one input
 channel, there will be only 6 convolution kernels in this layer.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">conv1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">sp</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">5</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">5</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">6</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[conv1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">sp</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">5</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">5</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">6</span>
 </pre></div>
 </div>
 <p>The next layer is a 2x2 MAX pooling layer, with a stride of 2
 (non-overlapping MAX pooling).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">pool1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">conv1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Pool</span>
-<span class="n">PoolWidth</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">PoolHeight</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">conv1</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">Stride</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">Pooling</span><span class="o">=</span><span class="n">Max</span>
-<span class="n">Mapping</span><span class="o">.</span><span class="n">Size</span><span class="o">=</span><span class="mi">1</span> <span class="p">;</span> <span class="n">One</span> <span class="n">to</span> <span class="n">one</span> <span class="n">connection</span> <span class="n">between</span> <span class="nb">input</span> <span class="ow">and</span> <span class="n">output</span> <span class="n">channels</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[pool1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">conv1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Pool</span>
+<span class="na">PoolWidth</span><span class="o">=</span><span class="s">2</span>
+<span class="na">PoolHeight</span><span class="o">=</span><span class="s">2</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[conv1]NbOutputs</span>
+<span class="na">Stride</span><span class="o">=</span><span class="s">2</span>
+<span class="na">Pooling</span><span class="o">=</span><span class="s">Max</span>
+<span class="na">Mapping.Size</span><span class="o">=</span><span class="s">1 ; One to one connection between input and output channels</span>
 </pre></div>
 </div>
 <p>The next layer is a 5x5 convolutional layer with 16 channels.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">conv2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">pool1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">5</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">5</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">16</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[conv2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">pool1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">5</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">5</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">16</span>
 </pre></div>
 </div>
 <p>Note that in LeNet, the <code class="docutils literal notranslate"><span class="pre">[conv2]</span></code> layer is not fully connected to the
@@ -319,69 +319,69 @@ pooling layer. In N2D2, a custom mapping can be defined for each input
 connection. The connection of <span class="math notranslate nohighlight">\(n\)</span>-th output map to the inputs is
 defined by the <span class="math notranslate nohighlight">\(n\)</span>-th column of the matrix below, where the rows
 correspond to the inputs.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Mapping</span><span class="p">(</span><span class="n">pool1</span><span class="p">)</span><span class="o">=</span>\
-<span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> \
-<span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> \
-<span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> \
-<span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> \
-<span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> \
-<span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">Mapping(pool1)</span><span class="o">=</span><span class="s">\</span>
+<span class="na">1 0 0 0 1 1 1 0 0 1 1 1 1 0 1 1 \</span>
+<span class="na">1 1 0 0 0 1 1 1 0 0 1 1 1 1 0 1 \</span>
+<span class="na">1 1 1 0 0 0 1 1 1 0 0 1 0 1 1 1 \</span>
+<span class="na">0 1 1 1 0 0 1 1 1 1 0 0 1 0 1 1 \</span>
+<span class="na">0 0 1 1 1 0 0 1 1 1 1 0 1 1 0 1 \</span>
+<span class="na">0 0 0 1 1 1 0 0 1 1 1 1 0 1 1 1</span>
 </pre></div>
 </div>
 <p>Another MAX pooling and convolution layer follow:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">pool2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">conv2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Pool</span>
-<span class="n">PoolWidth</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">PoolHeight</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">conv2</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">Stride</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">Pooling</span><span class="o">=</span><span class="n">Max</span>
-<span class="n">Mapping</span><span class="o">.</span><span class="n">Size</span><span class="o">=</span><span class="mi">1</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[pool2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">conv2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Pool</span>
+<span class="na">PoolWidth</span><span class="o">=</span><span class="s">2</span>
+<span class="na">PoolHeight</span><span class="o">=</span><span class="s">2</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[conv2]NbOutputs</span>
+<span class="na">Stride</span><span class="o">=</span><span class="s">2</span>
+<span class="na">Pooling</span><span class="o">=</span><span class="s">Max</span>
+<span class="na">Mapping.Size</span><span class="o">=</span><span class="s">1</span>
 
-<span class="p">[</span><span class="n">conv3</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">pool2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">5</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">5</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">120</span>
+<span class="k">[conv3]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">pool2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">5</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">5</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">120</span>
 </pre></div>
 </div>
 <p>The network is composed of two fully-connected layers of 84 and 10
 neurons respectively:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">fc1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">conv3</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Fc</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">84</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">conv3</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Fc</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">84</span>
 
-<span class="p">[</span><span class="n">fc2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Fc</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">10</span>
+<span class="k">[fc2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Fc</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">10</span>
 </pre></div>
 </div>
 <p>Finally, we use a softmax layer to obtain output classification
 probabilities and compute the loss function.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">softmax</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Softmax</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">fc2</span><span class="p">]</span><span class="n">NbOutputs</span>
-<span class="n">WithLoss</span><span class="o">=</span><span class="mi">1</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[softmax]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Softmax</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[fc2]NbOutputs</span>
+<span class="na">WithLoss</span><span class="o">=</span><span class="s">1</span>
 </pre></div>
 </div>
 <p>In order to tell N2D2 to compute the error and the classification score
 on this softmax layer, one must attach a N2D2 <em>Target</em> to this layer,
 with a section with the same name suffixed with <code class="docutils literal notranslate"><span class="pre">.Target</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">softmax</span><span class="o">.</span><span class="n">Target</span><span class="p">]</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[softmax.Target]</span>
 </pre></div>
 </div>
 <p>By default, the activation function for the convolution and the
 fully-connected layers is the hyperbolic tangent. Because the <code class="docutils literal notranslate"><span class="pre">[fc2]</span></code>
 layer is fed to a softmax, it should not have any activation function.
 We can specify it by adding the following line in the <code class="docutils literal notranslate"><span class="pre">[fc2]</span></code> section:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">fc2</span><span class="p">]</span>
-<span class="o">...</span>
-<span class="n">ActivationFunction</span><span class="o">=</span><span class="n">Linear</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc2]</span>
+<span class="na">...</span>
+<span class="na">ActivationFunction</span><span class="o">=</span><span class="s">Linear</span>
 </pre></div>
 </div>
 <p>In order to improve further the networks performances, several things
@@ -389,7 +389,7 @@ can be done:</p>
 <p><strong>Use ReLU activation functions.</strong> In order to do so, just add the
 following in the <code class="docutils literal notranslate"><span class="pre">[conv1]</span></code>, <code class="docutils literal notranslate"><span class="pre">[conv2]</span></code>, <code class="docutils literal notranslate"><span class="pre">[conv3]</span></code> and <code class="docutils literal notranslate"><span class="pre">[fc1]</span></code>
 layer sections:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ActivationFunction</span><span class="o">=</span><span class="n">Rectifier</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">ActivationFunction</span><span class="o">=</span><span class="s">Rectifier</span>
 </pre></div>
 </div>
 <p>For the ReLU activation function to be effective, the weights must be
@@ -399,23 +399,23 @@ N2D2, one can use a custom <code class="docutils literal notranslate"><span clas
 initialization. For the ReLU activation function, a popular and
 efficient filler is the so-called <code class="docutils literal notranslate"><span class="pre">XavierFiller</span></code> (see the
 [par:XavierFiller] section for more information):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WeightsFiller</span><span class="o">=</span><span class="n">XavierFiller</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">WeightsFiller</span><span class="o">=</span><span class="s">XavierFiller</span>
 </pre></div>
 </div>
 <p><strong>Use dropout layers.</strong> Dropout is highly effective to improve the
 network generalization capacity. Here is an example of a dropout layer
 inserted between the <code class="docutils literal notranslate"><span class="pre">[fc1]</span></code> and <code class="docutils literal notranslate"><span class="pre">[fc2]</span></code> layers:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">fc1</span><span class="p">]</span>
-<span class="o">...</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc1]</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="n">fc1</span><span class="o">.</span><span class="n">drop</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Dropout</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">fc1</span><span class="p">]</span><span class="n">NbOutputs</span>
+<span class="k">[fc1.drop]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Dropout</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[fc1]NbOutputs</span>
 
-<span class="p">[</span><span class="n">fc2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc1</span><span class="o">.</span><span class="n">drop</span> <span class="p">;</span> <span class="n">Replaces</span> <span class="s2">&quot;Input=fc1&quot;</span>
-<span class="o">...</span>
+<span class="k">[fc2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc1.drop ; Replaces &quot;Input=fc1&quot;</span>
+<span class="na">...</span>
 </pre></div>
 </div>
 <p><strong>Tune the learning parameters.</strong> You may want to tune the learning rate
@@ -423,21 +423,21 @@ and other learning parameters depending on the learning problem at hand.
 In order to do so, you can add a configuration section that can be
 common (or not) to all the layers. Here is an example of configuration
 section:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">conv1</span><span class="p">]</span>
-<span class="o">...</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">config</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[conv1]</span>
+<span class="na">...</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config</span>
 
-<span class="p">[</span><span class="o">...</span><span class="p">]</span>
-<span class="o">...</span>
+<span class="k">[...]</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">config</span><span class="p">]</span>
-<span class="n">NoBias</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">WeightsSolver</span><span class="o">.</span><span class="n">LearningRate</span><span class="o">=</span><span class="mf">0.05</span>
-<span class="n">WeightsSolver</span><span class="o">.</span><span class="n">Decay</span><span class="o">=</span><span class="mf">0.0005</span>
-<span class="n">Solvers</span><span class="o">.</span><span class="n">LearningRatePolicy</span><span class="o">=</span><span class="n">StepDecay</span>
-<span class="n">Solvers</span><span class="o">.</span><span class="n">LearningRateStepSize</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">_EpochSize</span>
-<span class="n">Solvers</span><span class="o">.</span><span class="n">LearningRateDecay</span><span class="o">=</span><span class="mf">0.993</span>
-<span class="n">Solvers</span><span class="o">.</span><span class="n">Clamping</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">:</span><span class="mf">1.0</span>
+<span class="k">[common.config]</span>
+<span class="na">NoBias</span><span class="o">=</span><span class="s">1</span>
+<span class="na">WeightsSolver.LearningRate</span><span class="o">=</span><span class="s">0.05</span>
+<span class="na">WeightsSolver.Decay</span><span class="o">=</span><span class="s">0.0005</span>
+<span class="na">Solvers.LearningRatePolicy</span><span class="o">=</span><span class="s">StepDecay</span>
+<span class="na">Solvers.LearningRateStepSize</span><span class="o">=</span><span class="s">[sp]_EpochSize</span>
+<span class="na">Solvers.LearningRateDecay</span><span class="o">=</span><span class="s">0.993</span>
+<span class="na">Solvers.Clamping</span><span class="o">=</span><span class="s">-1.0:1.0</span>
 </pre></div>
 </div>
 <p>For more details on the configuration parameters for the <code class="docutils literal notranslate"><span class="pre">Solver</span></code>, see
@@ -450,7 +450,7 @@ section [sec:WeightSolvers].</p>
 should be switched to <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code>. You can enable this model by
 adding the following line at the top of the INI file (before the first
 section):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DefaultModel</span><span class="o">=</span><span class="n">Frame_CUDA</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">DefaultModel</span><span class="o">=</span><span class="s">Frame_CUDA</span>
 </pre></div>
 </div>
 </div>
@@ -461,24 +461,24 @@ As an example, we will implement a face detection and gender recognition
 neural network, using the IMDB-WIKI dataset.</p>
 <p>First, we need to instanciate the IMDB-WIKI dataset built-in N2D2
 driver:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">database</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">IMDBWIKI_Database</span>
-<span class="n">WikiSet</span><span class="o">=</span><span class="mi">1</span> <span class="p">;</span> <span class="n">Use</span> <span class="n">the</span> <span class="n">WIKI</span> <span class="n">part</span> <span class="n">of</span> <span class="n">the</span> <span class="n">dataset</span>
-<span class="n">IMDBSet</span><span class="o">=</span><span class="mi">0</span> <span class="p">;</span> <span class="n">Don</span><span class="s1">&#39;t use the IMDB part (less accurate annotation)</span>
-<span class="n">Learn</span><span class="o">=</span><span class="mf">0.90</span>
-<span class="n">Validation</span><span class="o">=</span><span class="mf">0.05</span>
-<span class="n">DefaultLabel</span><span class="o">=</span><span class="n">background</span> <span class="p">;</span> <span class="n">Label</span> <span class="k">for</span> <span class="n">pixels</span> <span class="n">outside</span> <span class="nb">any</span> <span class="n">ROI</span> <span class="p">(</span><span class="n">default</span> <span class="ow">is</span> <span class="n">no</span> <span class="n">label</span><span class="p">,</span> <span class="n">pixels</span> <span class="n">are</span> <span class="n">ignored</span><span class="p">)</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">IMDBWIKI_Database</span>
+<span class="na">WikiSet</span><span class="o">=</span><span class="s">1 ; Use the WIKI part of the dataset</span>
+<span class="na">IMDBSet</span><span class="o">=</span><span class="s">0 ; Don&#39;t use the IMDB part (less accurate annotation)</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.90</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.05</span>
+<span class="na">DefaultLabel</span><span class="o">=</span><span class="s">background ; Label for pixels outside any ROI (default is no label, pixels are ignored)</span>
 </pre></div>
 </div>
 <p>We must specify a default label for the background, because we want to
 learn to differenciate faces from the background (and not simply ignore
 the background for the learning).</p>
 <p>The network input is then declared:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">sp</span><span class="p">]</span>
-<span class="n">SizeX</span><span class="o">=</span><span class="mi">480</span>
-<span class="n">SizeY</span><span class="o">=</span><span class="mi">360</span>
-<span class="n">BatchSize</span><span class="o">=</span><span class="mi">48</span>
-<span class="n">CompositeStimuli</span><span class="o">=</span><span class="mi">1</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">480</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">360</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">48</span>
+<span class="na">CompositeStimuli</span><span class="o">=</span><span class="s">1</span>
 </pre></div>
 </div>
 <p>In order to work with segmented data, i.e. data with bounding box
@@ -488,34 +488,34 @@ section.</p>
 <p>We can then perform various operations on the data before feeding it to
 the network, like for example converting the 3-channels RGB input images
 to single-channel gray images:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ChannelExtractionTransformation</span>
-<span class="n">CSChannel</span><span class="o">=</span><span class="n">Gray</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.Transformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ChannelExtractionTransformation</span>
+<span class="na">CSChannel</span><span class="o">=</span><span class="s">Gray</span>
 </pre></div>
 </div>
 <p>We must only rescale the images to match the networks input size. This
 can be done using a <code class="docutils literal notranslate"><span class="pre">RescaleTransformation</span></code>, followed by a
 <code class="docutils literal notranslate"><span class="pre">PadCropTransformation</span></code> if one want to keep the images aspect ratio.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">RescaleTransformation</span>
-<span class="n">Width</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">SizeX</span>
-<span class="n">Height</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">SizeY</span>
-<span class="n">KeepAspectRatio</span><span class="o">=</span><span class="mi">1</span> <span class="p">;</span> <span class="n">Keep</span> <span class="n">images</span> <span class="n">aspect</span> <span class="n">ratio</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.Transformation-2]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">[sp]SizeX</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">[sp]SizeY</span>
+<span class="na">KeepAspectRatio</span><span class="o">=</span><span class="s">1 ; Keep images aspect ratio</span>
 
-<span class="p">;</span> <span class="n">Required</span> <span class="n">to</span> <span class="n">ensure</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">images</span> <span class="n">are</span> <span class="n">the</span> <span class="n">same</span> <span class="n">size</span>
-<span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">PadCropTransformation</span>
-<span class="n">Width</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">SizeX</span>
-<span class="n">Height</span><span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span><span class="n">SizeY</span>
+<span class="c1">; Required to ensure all the images are the same size</span>
+<span class="k">[sp.Transformation-3]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">PadCropTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">[sp]SizeX</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">[sp]SizeY</span>
 </pre></div>
 </div>
 <p>A common additional operation to extend the learning set is to apply
 random horizontal mirror to images. This can be achieved with the
 following <code class="docutils literal notranslate"><span class="pre">FlipTransformation</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">OnTheFlyTransformation</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">FlipTransformation</span>
-<span class="n">RandomHorizontalFlip</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">ApplyTo</span><span class="o">=</span><span class="n">LearnOnly</span> <span class="p">;</span> <span class="n">Apply</span> <span class="n">this</span> <span class="n">transformation</span> <span class="n">only</span> <span class="n">on</span> <span class="n">the</span> <span class="n">learning</span> <span class="nb">set</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.OnTheFlyTransformation-4]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">FlipTransformation</span>
+<span class="na">RandomHorizontalFlip</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly ; Apply this transformation only on the learning set</span>
 </pre></div>
 </div>
 <p>Note that this is an <em>on-the-fly</em> transformation, meaning it cannot be
@@ -523,26 +523,26 @@ cached and is re-executed every time even for the same stimuli. We also
 apply this transformation only on the learning set, with the <code class="docutils literal notranslate"><span class="pre">ApplyTo</span></code>
 option.</p>
 <p>Next, the neural network can be described:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">conv1</span><span class="o">.</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">sp</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="o">...</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[conv1.1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">sp</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="n">pool1</span><span class="p">]</span>
-<span class="o">...</span>
+<span class="k">[pool1]</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="o">...</span><span class="p">]</span>
-<span class="o">...</span>
+<span class="k">[...]</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="n">fc2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">drop1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="o">...</span>
+<span class="k">[fc2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">drop1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">...</span>
 
-<span class="p">[</span><span class="n">drop2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Dropout</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="p">[</span><span class="n">fc2</span><span class="p">]</span><span class="n">NbOutputs</span>
+<span class="k">[drop2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Dropout</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[fc2]NbOutputs</span>
 </pre></div>
 </div>
 <p>A full network description can be found in the <em>IMDBWIKI.ini</em> file in
@@ -556,16 +556,16 @@ classify their gender. We start from the <code class="docutils literal notransla
 1x1 convolutional layer with a single 60x45 output map. For each output
 pixel, this layer outputs the probability that the pixel belongs to a
 face.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">fc3</span><span class="o">.</span><span class="n">face</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">drop2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">Stride</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">ActivationFunction</span><span class="o">=</span><span class="n">LogisticWithLoss</span>
-<span class="n">WeightsFiller</span><span class="o">=</span><span class="n">XavierFiller</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">config</span> <span class="p">;</span> <span class="n">Same</span> <span class="n">solver</span> <span class="n">options</span> <span class="n">that</span> <span class="n">the</span> <span class="n">other</span> <span class="n">layers</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc3.face]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">drop2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">1</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Stride</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ActivationFunction</span><span class="o">=</span><span class="s">LogisticWithLoss</span>
+<span class="na">WeightsFiller</span><span class="o">=</span><span class="s">XavierFiller</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config ; Same solver options that the other layers</span>
 </pre></div>
 </div>
 <p>In order to do so, the activation function of this layer must be of type
@@ -573,11 +573,11 @@ face.</p>
 <p>We must also tell N2D2 to compute the error and the classification score
 on this softmax layer, by attaching a N2D2 <em>Target</em> to this layer, with
 a section with the same name suffixed with <code class="docutils literal notranslate"><span class="pre">.Target</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[fc3.face.Target]
-LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_face.dat
-; Visualization parameters
-NoDisplayLabel=0
-LabelsHueOffset=90
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc3.face.Target]</span>
+<span class="na">LabelsMapping</span><span class="o">=</span><span class="s">\${N2D2_MODELS}/IMDBWIKI_target_face.dat</span>
+<span class="c1">; Visualization parameters</span>
+<span class="na">NoDisplayLabel</span><span class="o">=</span><span class="s">0</span>
+<span class="na">LabelsHueOffset</span><span class="o">=</span><span class="s">90</span>
 </pre></div>
 </div>
 <p>In this <em>Target</em>, we must specify how the dataset annotations are mapped
@@ -604,27 +604,27 @@ described in the <em>IMDBWIKI_target_face.dat</em> file is easy:</p>
 before, it would be a 1x1 convolutional layer with a single 60x45 output
 map. But here, for each output pixel, this layer would output the
 probability that the pixel represents a female face.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">fc3</span><span class="o">.</span><span class="n">gender</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">drop2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">Stride</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">ActivationFunction</span><span class="o">=</span><span class="n">LogisticWithLoss</span>
-<span class="n">WeightsFiller</span><span class="o">=</span><span class="n">XavierFiller</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">config</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc3.gender]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">drop2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">1</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Stride</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ActivationFunction</span><span class="o">=</span><span class="s">LogisticWithLoss</span>
+<span class="na">WeightsFiller</span><span class="o">=</span><span class="s">XavierFiller</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config</span>
 </pre></div>
 </div>
 <p>The output layer is therefore identical to the face’s output layer, but
 the target mapping is different. For the target mapping, the idea is
 simply to ignore all pixels not belonging to a face and affect the
 target 0 to male pixels and the target 1 to female pixels.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[fc3.gender.Target]
-LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_gender.dat
-; Only display gender probability for pixels detected as face pixels
-MaskLabelTarget=fc3.face.Target
-MaskedLabel=1
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[fc3.gender.Target]</span>
+<span class="na">LabelsMapping</span><span class="o">=</span><span class="s">\${N2D2_MODELS}/IMDBWIKI_target_gender.dat</span>
+<span class="c1">; Only display gender probability for pixels detected as face pixels</span>
+<span class="na">MaskLabelTarget</span><span class="o">=</span><span class="s">fc3.face.Target</span>
+<span class="na">MaskedLabel</span><span class="o">=</span><span class="s">1</span>
 </pre></div>
 </div>
 <p>The content of the <em>IMDBWIKI_target_gender.dat</em> file would therefore
@@ -660,39 +660,39 @@ F-99 1
 ROI the most probable gender. To this end, we can first set a detection
 threshold, in terms of probability, to select face pixels. In the
 following, the threshold is fixed to 75% face probability:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">post</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="n">thres</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc3</span><span class="o">.</span><span class="n">face</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Transformation</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">1</span>
-<span class="n">Transformation</span><span class="o">=</span><span class="n">ThresholdTransformation</span>
-<span class="n">Operation</span><span class="o">=</span><span class="n">ToZero</span>
-<span class="n">Threshold</span><span class="o">=</span><span class="mf">0.75</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[post.Transformation-thres]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc3.face</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Transformation</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Transformation</span><span class="o">=</span><span class="s">ThresholdTransformation</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">ToZero</span>
+<span class="na">Threshold</span><span class="o">=</span><span class="s">0.75</span>
 </pre></div>
 </div>
 <p>We can then assign a target of type <code class="docutils literal notranslate"><span class="pre">TargetROIs</span></code> to this layer that
 will automatically create the bounding box using a segmentation
 algorithm.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[post.Transformation-thres.Target-face]
-Type=TargetROIs
-MinOverlap=0.33 ; Min. overlap fraction to match the ROI to an annotation
-FilterMinWidth=5 ; Min. ROI width
-FilterMinHeight=5 ; Min. ROI height
-FilterMinAspectRatio=0.5 ; Min. ROI aspect ratio
-FilterMaxAspectRatio=1.5 ; Max. ROI aspect ratio
-LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_face.dat
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[post.Transformation-thres.Target-face]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">TargetROIs</span>
+<span class="na">MinOverlap</span><span class="o">=</span><span class="s">0.33 ; Min. overlap fraction to match the ROI to an annotation</span>
+<span class="na">FilterMinWidth</span><span class="o">=</span><span class="s">5 ; Min. ROI width</span>
+<span class="na">FilterMinHeight</span><span class="o">=</span><span class="s">5 ; Min. ROI height</span>
+<span class="na">FilterMinAspectRatio</span><span class="o">=</span><span class="s">0.5 ; Min. ROI aspect ratio</span>
+<span class="na">FilterMaxAspectRatio</span><span class="o">=</span><span class="s">1.5 ; Max. ROI aspect ratio</span>
+<span class="na">LabelsMapping</span><span class="o">=</span><span class="s">\${N2D2_MODELS}/IMDBWIKI_target_face.dat</span>
 </pre></div>
 </div>
 <p>In order to assign a gender to the extracted ROIs, the above target must
 be modified to:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[post.Transformation-thres.Target-gender]
-Type=TargetROIs
-ROIsLabelTarget=fc3.gender.Target
-MinOverlap=0.33
-FilterMinWidth=5
-FilterMinHeight=5
-FilterMinAspectRatio=0.5
-FilterMaxAspectRatio=1.5
-LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_gender.dat
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[post.Transformation-thres.Target-gender]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">TargetROIs</span>
+<span class="na">ROIsLabelTarget</span><span class="o">=</span><span class="s">fc3.gender.Target</span>
+<span class="na">MinOverlap</span><span class="o">=</span><span class="s">0.33</span>
+<span class="na">FilterMinWidth</span><span class="o">=</span><span class="s">5</span>
+<span class="na">FilterMinHeight</span><span class="o">=</span><span class="s">5</span>
+<span class="na">FilterMinAspectRatio</span><span class="o">=</span><span class="s">0.5</span>
+<span class="na">FilterMaxAspectRatio</span><span class="o">=</span><span class="s">1.5</span>
+<span class="na">LabelsMapping</span><span class="o">=</span><span class="s">\${N2D2_MODELS}/IMDBWIKI_target_gender.dat</span>
 </pre></div>
 </div>
 <p>Here, we use the <code class="docutils literal notranslate"><span class="pre">fc3.gender.Target</span></code> target to determine the most
@@ -724,7 +724,7 @@ will transcode the LeNet network described in section
 <p>The first step is to specify that we want to use a transcode model
 (allowing both formal and spike simulation of the same network), by
 changing the <code class="docutils literal notranslate"><span class="pre">DefaultModel</span></code> to:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DefaultModel</span><span class="o">=</span><span class="n">Transcode_CUDA</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">DefaultModel</span><span class="o">=</span><span class="s">Transcode_CUDA</span>
 </pre></div>
 </div>
 <p>In order to perform spike simulations, the input of the network must be
@@ -734,56 +734,56 @@ necessary to replace the <code class="docutils literal notranslate"><span class=
 replace all references of <code class="docutils literal notranslate"><span class="pre">sp</span></code> to <code class="docutils literal notranslate"><span class="pre">env</span></code>.</p>
 <p>Note that these changes have at this point no impact at all on the
 formal coding simulations. The beginning of the INI file should be:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>DefaultModel=!\color{red}{Transcode\_CUDA}!
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">DefaultModel</span><span class="o">=</span><span class="s">!\color{red}{Transcode\_CUDA}!</span>
 
-; Database
-[database]
-Type=MNIST_IDX_Database
-Validation=0.2 ; Use 20% of the dataset for validation
+<span class="c1">; Database</span>
+<span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">MNIST_IDX_Database</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2 ; Use 20% of the dataset for validation</span>
 
-; Environment
-[!\color{red}{env}!]
-SizeX=32
-SizeY=32
-BatchSize=128
+<span class="c1">; Environment</span>
+<span class="k">[!\color{red}{env}!]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">32</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">32</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">128</span>
 
-[env.Transformation_1]
-Type=RescaleTransformation
-Width=[!\color{red}{env}!]SizeX
-Height=[!\color{red}{env}!]SizeY
+<span class="k">[env.Transformation_1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">[!\color{red}{env}!]SizeX</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">[!\color{red}{env}!]SizeY</span>
 
-[conv1]
-Input=!\color{red}{env}!
-...
+<span class="k">[conv1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">!\color{red}{env}!</span>
+<span class="na">...</span>
 </pre></div>
 </div>
 <p>The dropout layer has no equivalence in spike-coding inference and must
 be removed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>...
-!\color{red}{\st{[fc1.drop]}}!
-!\color{red}{\st{Input=fc1}}!
-!\color{red}{\st{Type=Dropout}}!
-!\color{red}{\st{NbOutputs=[fc1]NbOutputs}}!
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+<span class="na">!\color{red}{\st{[fc1.drop]}}!</span>
+<span class="na">!\color{red}{\st{Input</span><span class="o">=</span><span class="s">fc1}}!</span>
+<span class="na">!\color{red}{\st{Type</span><span class="o">=</span><span class="s">Dropout}}!</span>
+<span class="na">!\color{red}{\st{NbOutputs</span><span class="o">=</span><span class="s">[fc1]NbOutputs}}!</span>
 
-[fc2]
-Input=fc1!\color{red}{\st{.drop}}!
-...
+<span class="k">[fc2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc1!\color{red}{\st{.drop}}!</span>
+<span class="na">...</span>
 </pre></div>
 </div>
 <p>The softmax layer has no equivalence in spike-coding inference and must
 be removed as well. The <em>Target</em> must therefore be attached to
 <code class="docutils literal notranslate"><span class="pre">[fc2]</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>...
-!\color{red}{\st{[softmax]}}!
-!\color{red}{\st{Input=fc2}}!
-!\color{red}{\st{Type=Softmax}}!
-!\color{red}{\st{NbOutputs=[fc2]NbOutputs}}!
-!\color{red}{\st{WithLoss=1}}!
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+<span class="na">!\color{red}{\st{[softmax]}}!</span>
+<span class="na">!\color{red}{\st{Input</span><span class="o">=</span><span class="s">fc2}}!</span>
+<span class="na">!\color{red}{\st{Type</span><span class="o">=</span><span class="s">Softmax}}!</span>
+<span class="na">!\color{red}{\st{NbOutputs</span><span class="o">=</span><span class="s">[fc2]NbOutputs}}!</span>
+<span class="na">!\color{red}{\st{WithLoss</span><span class="o">=</span><span class="s">1}}!</span>
 
-!\color{red}{\st{[softmax.Target]}}!
+<span class="na">!\color{red}{\st{[softmax.Target]}}!</span>
 
-[fc2.Target]
-...
+<span class="k">[fc2.Target]</span>
+<span class="na">...</span>
 </pre></div>
 </div>
 <p>The network is now compatible with spike-coding simulations. However, we
@@ -797,16 +797,16 @@ time constant…).</p>
 into spikes. To this end, we must attach a configuration section to the
 <em>Environment</em>. Here, we specify a periodic coding with random initial
 jitter with a minimum period of 10 ns and a maximum period of 100 us:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">config</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">env.config</span>
 
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">config</span><span class="p">]</span>
-<span class="p">;</span> <span class="n">Spike</span><span class="o">-</span><span class="n">based</span> <span class="n">computing</span>
-<span class="n">StimulusType</span><span class="o">=</span><span class="n">JitteredPeriodic</span>
-<span class="n">PeriodMin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="mi">000</span><span class="p">,</span><span class="mi">000</span> <span class="p">;</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">fs</span>
-<span class="n">PeriodMeanMin</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="mi">000</span><span class="p">,</span><span class="mi">000</span> <span class="p">;</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">fs</span>
-<span class="n">PeriodMeanMax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="mi">000</span><span class="p">,</span><span class="mi">000</span><span class="p">,</span><span class="mi">000</span> <span class="p">;</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">fs</span>
-<span class="n">PeriodRelStdDev</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="k">[env.config]</span>
+<span class="c1">; Spike-based computing</span>
+<span class="na">StimulusType</span><span class="o">=</span><span class="s">JitteredPeriodic</span>
+<span class="na">PeriodMin</span><span class="o">=</span><span class="s">1,000,000 ; unit = fs</span>
+<span class="na">PeriodMeanMin</span><span class="o">=</span><span class="s">10,000,000 ; unit = fs</span>
+<span class="na">PeriodMeanMax</span><span class="o">=</span><span class="s">100,000,000,000 ; unit = fs</span>
+<span class="na">PeriodRelStdDev</span><span class="o">=</span><span class="s">0.0</span>
 </pre></div>
 </div>
 <p>The next step is to specify the neurons parameters, that will be common
@@ -817,25 +817,25 @@ constant is zero, resulting to simple Integrate-and-Fire (IF) neurons.</p>
 <p>Here we simply specify that the neurons threshold must be the unity,
 that the threshold is only positive and that there is no incoming
 synaptic delay:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
-<span class="p">;</span> <span class="n">Spike</span><span class="o">-</span><span class="n">based</span> <span class="n">computing</span>
-<span class="n">Threshold</span><span class="o">=</span><span class="mf">1.0</span>
-<span class="n">BipolarThreshold</span><span class="o">=</span><span class="mi">0</span>
-<span class="n">IncomingDelay</span><span class="o">=</span><span class="mi">0</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+<span class="c1">; Spike-based computing</span>
+<span class="na">Threshold</span><span class="o">=</span><span class="s">1.0</span>
+<span class="na">BipolarThreshold</span><span class="o">=</span><span class="s">0</span>
+<span class="na">IncomingDelay</span><span class="o">=</span><span class="s">0</span>
 </pre></div>
 </div>
 <p>Finally, we can limit the number of spikes required for the computation
 of each stimulus by adding a decision delta threshold at the output
 layer:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
-<span class="n">ConfigSection</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">config</span><span class="p">,</span><span class="n">fc2</span><span class="o">.</span><span class="n">config</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config,fc2.config</span>
 
-<span class="p">[</span><span class="n">fc2</span><span class="o">.</span><span class="n">Target</span><span class="p">]</span>
+<span class="k">[fc2.Target]</span>
 
-<span class="p">[</span><span class="n">fc2</span><span class="o">.</span><span class="n">config</span><span class="p">]</span>
-<span class="p">;</span> <span class="n">Spike</span><span class="o">-</span><span class="n">based</span> <span class="n">computing</span>
-<span class="n">TerminateDelta</span><span class="o">=</span><span class="mi">4</span>
-<span class="n">BipolarThreshold</span><span class="o">=</span><span class="mi">1</span>
+<span class="k">[fc2.config]</span>
+<span class="c1">; Spike-based computing</span>
+<span class="na">TerminateDelta</span><span class="o">=</span><span class="s">4</span>
+<span class="na">BipolarThreshold</span><span class="o">=</span><span class="s">1</span>
 </pre></div>
 </div>
 <p>The complete INI model corresponding to this tutorial can be found in

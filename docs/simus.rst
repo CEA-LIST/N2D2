@@ -378,19 +378,19 @@ Export a learned network
 
 Export types:
 
-``C`` C export using OpenMP;
+- ``C`` C export using OpenMP;
 
-``C_HLS`` C export tailored for HLS with Vivado HLS;
+- ``C_HLS`` C export tailored for HLS with Vivado HLS;
 
-``CPP_OpenCL`` C++ export using OpenCL;
+- ``CPP_OpenCL`` C++ export using OpenCL;
 
-``CPP_Cuda`` C++ export using Cuda;
+- ``CPP_Cuda`` C++ export using Cuda;
 
-``CPP_cuDNN`` C++ export using cuDNN;
+- ``CPP_cuDNN`` C++ export using cuDNN;
 
-``CPP_TensorRT`` C++ export using tensorRT 2.1 API;
+- ``CPP_TensorRT`` C++ export using tensorRT 2.1 API;
 
-``SC_Spike`` SystemC spike export.
+- ``SC_Spike`` SystemC spike export.
 
 Other program options related to the exports:
 

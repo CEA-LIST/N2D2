@@ -81,7 +81,7 @@ dataset. A driver module already exists for this dataset, named
 
 To instantiate it, just add the following lines in a new INI file:
 
-::
+.. code-block:: ini
 
     [database]
     Type=MNIST_IDX_Database
@@ -91,7 +91,7 @@ In order to create a neural network, we first need to define its input,
 which is declared with a ``[sp]`` section (*sp* for *StimuliProvider*).
 In this section, we configure the size of the input and the batch size:
 
-::
+.. code-block:: ini
 
     [sp]
     SizeX=32
@@ -103,7 +103,7 @@ knowing that the final data size after transformations must match the
 size declared in the ``[sp]`` section. Here, we must rescale the MNIST
 28x28 images to match the 32x32 network input size.
 
-::
+.. code-block:: ini
 
     [sp.Transformation_1]
     Type=RescaleTransformation
@@ -115,7 +115,7 @@ reproduced the well-known LeNet network. The first layer is a 5x5
 convolutional layer, with 6 channels. Since there is only one input
 channel, there will be only 6 convolution kernels in this layer.
 
-::
+.. code-block:: ini
 
     [conv1]
     Input=sp
@@ -127,7 +127,7 @@ channel, there will be only 6 convolution kernels in this layer.
 The next layer is a 2x2 MAX pooling layer, with a stride of 2
 (non-overlapping MAX pooling).
 
-::
+.. code-block:: ini
 
     [pool1]
     Input=conv1
@@ -141,7 +141,7 @@ The next layer is a 2x2 MAX pooling layer, with a stride of 2
 
 The next layer is a 5x5 convolutional layer with 16 channels.
 
-::
+.. code-block:: ini
 
     [conv2]
     Input=pool1
@@ -156,7 +156,7 @@ connection. The connection of :math:`n`-th output map to the inputs is
 defined by the :math:`n`-th column of the matrix below, where the rows
 correspond to the inputs.
 
-::
+.. code-block:: ini
 
     Mapping(pool1)=\
     1 0 0 0 1 1 1 0 0 1 1 1 1 0 1 1 \
@@ -168,7 +168,7 @@ correspond to the inputs.
 
 Another MAX pooling and convolution layer follow:
 
-::
+.. code-block:: ini
 
     [pool2]
     Input=conv2
@@ -190,7 +190,7 @@ Another MAX pooling and convolution layer follow:
 The network is composed of two fully-connected layers of 84 and 10
 neurons respectively:
 
-::
+.. code-block:: ini
 
     [fc1]
     Input=conv3
@@ -205,7 +205,7 @@ neurons respectively:
 Finally, we use a softmax layer to obtain output classification
 probabilities and compute the loss function.
 
-::
+.. code-block:: ini
 
     [softmax]
     Input=fc2
@@ -217,7 +217,7 @@ In order to tell N2D2 to compute the error and the classification score
 on this softmax layer, one must attach a N2D2 *Target* to this layer,
 with a section with the same name suffixed with ``.Target``:
 
-::
+.. code-block:: ini
 
     [softmax.Target]
 
@@ -226,7 +226,7 @@ fully-connected layers is the hyperbolic tangent. Because the ``[fc2]``
 layer is fed to a softmax, it should not have any activation function.
 We can specify it by adding the following line in the ``[fc2]`` section:
 
-::
+.. code-block:: ini
 
     [fc2]
     ...
@@ -239,7 +239,7 @@ can be done:
 following in the ``[conv1]``, ``[conv2]``, ``[conv3]`` and ``[fc1]``
 layer sections:
 
-::
+.. code-block:: ini
 
     ActivationFunction=Rectifier
 
@@ -251,7 +251,7 @@ initialization. For the ReLU activation function, a popular and
 efficient filler is the so-called ``XavierFiller`` (see the
 [par:XavierFiller] section for more information):
 
-::
+.. code-block:: ini
 
     WeightsFiller=XavierFiller
 
@@ -259,7 +259,7 @@ efficient filler is the so-called ``XavierFiller`` (see the
 network generalization capacity. Here is an example of a dropout layer
 inserted between the ``[fc1]`` and ``[fc2]`` layers:
 
-::
+.. code-block:: ini
 
     [fc1]
     ...
@@ -279,7 +279,7 @@ In order to do so, you can add a configuration section that can be
 common (or not) to all the layers. Here is an example of configuration
 section:
 
-::
+.. code-block:: ini
 
     [conv1]
     ...
@@ -311,7 +311,7 @@ should be switched to ``Frame_CUDA``. You can enable this model by
 adding the following line at the top of the INI file (before the first
 section):
 
-::
+.. code-block:: ini
 
     DefaultModel=Frame_CUDA
 
@@ -325,7 +325,7 @@ neural network, using the IMDB-WIKI dataset.
 First, we need to instanciate the IMDB-WIKI dataset built-in N2D2
 driver:
 
-::
+.. code-block:: ini
 
     [database]
     Type=IMDBWIKI_Database
@@ -341,7 +341,7 @@ the background for the learning).
 
 The network input is then declared:
 
-::
+.. code-block:: ini
 
     [sp]
     SizeX=480
@@ -358,7 +358,7 @@ We can then perform various operations on the data before feeding it to
 the network, like for example converting the 3-channels RGB input images
 to single-channel gray images:
 
-::
+.. code-block:: ini
 
     [sp.Transformation-1]
     Type=ChannelExtractionTransformation
@@ -368,7 +368,7 @@ We must only rescale the images to match the networks input size. This
 can be done using a ``RescaleTransformation``, followed by a
 ``PadCropTransformation`` if one want to keep the images aspect ratio.
 
-::
+.. code-block:: ini
 
     [sp.Transformation-2]
     Type=RescaleTransformation
@@ -386,7 +386,7 @@ A common additional operation to extend the learning set is to apply
 random horizontal mirror to images. This can be achieved with the
 following ``FlipTransformation``:
 
-::
+.. code-block:: ini
 
     [sp.OnTheFlyTransformation-4]
     Type=FlipTransformation
@@ -400,7 +400,7 @@ option.
 
 Next, the neural network can be described:
 
-::
+.. code-block:: ini
 
     [conv1.1]
     Input=sp
@@ -438,7 +438,7 @@ We want to first add an output stage for the faces detection. It is a
 pixel, this layer outputs the probability that the pixel belongs to a
 face.
 
-::
+.. code-block:: ini
 
     [fc3.face]
     Input=drop2
@@ -458,7 +458,7 @@ We must also tell N2D2 to compute the error and the classification score
 on this softmax layer, by attaching a N2D2 *Target* to this layer, with
 a section with the same name suffixed with ``.Target``:
 
-::
+.. code-block:: ini
 
     [fc3.face.Target]
     LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_face.dat
@@ -493,7 +493,7 @@ before, it would be a 1x1 convolutional layer with a single 60x45 output
 map. But here, for each output pixel, this layer would output the
 probability that the pixel represents a female face.
 
-::
+.. code-block:: ini
 
     [fc3.gender]
     Input=drop2
@@ -511,7 +511,7 @@ the target mapping is different. For the target mapping, the idea is
 simply to ignore all pixels not belonging to a face and affect the
 target 0 to male pixels and the target 1 to female pixels.
 
-::
+.. code-block:: ini
 
     [fc3.gender.Target]
     LabelsMapping=\${N2D2_MODELS}/IMDBWIKI_target_gender.dat
@@ -555,7 +555,7 @@ ROI the most probable gender. To this end, we can first set a detection
 threshold, in terms of probability, to select face pixels. In the
 following, the threshold is fixed to 75% face probability:
 
-::
+.. code-block:: ini
 
     [post.Transformation-thres]
     Input=fc3.face
@@ -569,7 +569,7 @@ We can then assign a target of type ``TargetROIs`` to this layer that
 will automatically create the bounding box using a segmentation
 algorithm.
 
-::
+.. code-block:: ini
 
     [post.Transformation-thres.Target-face]
     Type=TargetROIs
@@ -583,7 +583,7 @@ algorithm.
 In order to assign a gender to the extracted ROIs, the above target must
 be modified to:
 
-::
+.. code-block:: ini
 
     [post.Transformation-thres.Target-gender]
     Type=TargetROIs
@@ -629,7 +629,7 @@ The first step is to specify that we want to use a transcode model
 (allowing both formal and spike simulation of the same network), by
 changing the ``DefaultModel`` to:
 
-::
+.. code-block:: ini
 
     DefaultModel=Transcode_CUDA
 
@@ -642,7 +642,7 @@ replace all references of ``sp`` to ``env``.
 Note that these changes have at this point no impact at all on the
 formal coding simulations. The beginning of the INI file should be:
 
-::
+.. code-block:: ini
 
     DefaultModel=!\color{red}{Transcode\_CUDA}!
 
@@ -669,7 +669,7 @@ formal coding simulations. The beginning of the INI file should be:
 The dropout layer has no equivalence in spike-coding inference and must
 be removed:
 
-::
+.. code-block:: ini
 
     ...
     !\color{red}{\st{[fc1.drop]}}!
@@ -685,7 +685,7 @@ The softmax layer has no equivalence in spike-coding inference and must
 be removed as well. The *Target* must therefore be attached to
 ``[fc2]``:
 
-::
+.. code-block:: ini
 
     ...
     !\color{red}{\st{[softmax]}}!
@@ -712,7 +712,7 @@ into spikes. To this end, we must attach a configuration section to the
 *Environment*. Here, we specify a periodic coding with random initial
 jitter with a minimum period of 10 ns and a maximum period of 100 us:
 
-::
+.. code-block:: ini
 
     ...
     ConfigSection=env.config
@@ -735,7 +735,7 @@ Here we simply specify that the neurons threshold must be the unity,
 that the threshold is only positive and that there is no incoming
 synaptic delay:
 
-::
+.. code-block:: ini
 
     ...
     ; Spike-based computing
@@ -747,7 +747,7 @@ Finally, we can limit the number of spikes required for the computation
 of each stimulus by adding a decision delta threshold at the output
 layer:
 
-::
+.. code-block:: ini
 
     ...
     ConfigSection=common.config,fc2.config

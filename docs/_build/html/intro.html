@@ -212,22 +212,28 @@ we conclude by summarising the main features of the tool.</p>
 <h2>Database handling<a class="headerlink" href="#database-handling" title="Permalink to this headline">¶</a></h2>
 <p>The tool integrates everything needed to handle custom or hand made
 databases:</p>
-<p>Genericity: load image and sound, 1D, 2D or 3D data;</p>
-<p>Associate a label for each data point (useful for scene labeling for
+<ul class="simple">
+<li><p>Genericity: load image and sound, 1D, 2D or 3D data;</p></li>
+<li><p>Associate a label for each data point (useful for scene labeling for
 example) or a single label to each data file (one object/class per image
-for example), 1D or 2D labels;</p>
-<p>Advanced Region of Interest (ROI) handling: Support arbitrary ROI shapes
-(circular, rectangular, polygonal or pixelwise defined); Convert ROIs to
-data point (pixelwise) labels; Extract one or multiple ROIs from an
-initial dataset to create as many corresponding additional data to feed
-the DNN;</p>
-<p>Native support of file directory-based databases, where each
+for example), 1D or 2D labels;</p></li>
+<li><p>Advanced Region of Interest (ROI) handling:</p>
+<ul>
+<li><p>Support arbitrary ROI shapes (circular, rectangular, polygonal or pixelwise
+defined);</p></li>
+<li><p>Convert ROIs to data point (pixelwise) labels;</p></li>
+<li><p>Extract one or multiple ROIs from an initial dataset to create as many
+corresponding additional data to feed the DNN;</p></li>
+</ul>
+</li>
+<li><p>Native support of file directory-based databases, where each
 sub-directory represents a different label. Most used image file formats
-are supported (JPEG, PNG, PGM…);</p>
-<p>Possibility to add custom datafile format in the tool without any change
-in the code base;</p>
-<p>Automatic random partitionning of the database into learning, validation
-and testing sets.</p>
+are supported (JPEG, PNG, PGM…);</p></li>
+<li><p>Possibility to add custom datafile format in the tool without any change
+in the code base;</p></li>
+<li><p>Automatic random partitionning of the database into learning, validation
+and testing sets.</p></li>
+</ul>
 </div>
 <div class="section" id="data-pre-processing">
 <h2>Data pre-processing<a class="headerlink" href="#data-pre-processing" title="Permalink to this headline">¶</a></h2>
@@ -237,45 +243,47 @@ external tool or pre-processing. Each pre-processing step is called a
 <em>transformation</em>.</p>
 <p>The full sequence of transformations can be specified easily in a INI
 text configuration file. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">;</span> <span class="n">First</span> <span class="n">step</span><span class="p">:</span> <span class="n">convert</span> <span class="n">the</span> <span class="n">image</span> <span class="n">to</span> <span class="n">grayscale</span>
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ChannelExtractionTransformation</span>
-<span class="n">CSChannel</span><span class="o">=</span><span class="n">Gray</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; First step: convert the image to grayscale</span>
+<span class="k">[env.Transformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ChannelExtractionTransformation</span>
+<span class="na">CSChannel</span><span class="o">=</span><span class="s">Gray</span>
 
-<span class="p">;</span> <span class="n">Second</span> <span class="n">step</span><span class="p">:</span> <span class="n">rescale</span> <span class="n">the</span> <span class="n">image</span> <span class="n">to</span> <span class="n">a</span> <span class="mi">29</span><span class="n">x29</span> <span class="n">size</span>
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">RescaleTransformation</span>
-<span class="n">Width</span><span class="o">=</span><span class="mi">29</span>
-<span class="n">Height</span><span class="o">=</span><span class="mi">29</span>
+<span class="c1">; Second step: rescale the image to a 29x29 size</span>
+<span class="k">[env.Transformation-2]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">29</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">29</span>
 
-<span class="p">;</span> <span class="n">Third</span> <span class="n">step</span><span class="p">:</span> <span class="n">apply</span> <span class="n">histogram</span> <span class="n">equalization</span> <span class="n">to</span> <span class="n">the</span> <span class="n">image</span>
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">EqualizeTransformation</span>
+<span class="c1">; Third step: apply histogram equalization to the image</span>
+<span class="k">[env.Transformation-3]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">EqualizeTransformation</span>
 
-<span class="p">;</span> <span class="n">Fourth</span> <span class="n">step</span> <span class="p">(</span><span class="n">only</span> <span class="n">during</span> <span class="n">learning</span><span class="p">):</span> <span class="n">apply</span> <span class="n">random</span> <span class="n">elastic</span> <span class="n">distortions</span> <span class="n">to</span> <span class="n">the</span> <span class="n">images</span> <span class="n">to</span> <span class="n">extent</span> <span class="n">the</span> <span class="n">learning</span> <span class="nb">set</span>
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">OnTheFlyTransformation</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">DistortionTransformation</span>
-<span class="n">ApplyTo</span><span class="o">=</span><span class="n">LearnOnly</span>
-<span class="n">ElasticGaussianSize</span><span class="o">=</span><span class="mi">21</span>
-<span class="n">ElasticSigma</span><span class="o">=</span><span class="mf">6.0</span>
-<span class="n">ElasticScaling</span><span class="o">=</span><span class="mf">20.0</span>
-<span class="n">Scaling</span><span class="o">=</span><span class="mf">15.0</span>
-<span class="n">Rotation</span><span class="o">=</span><span class="mf">15.0</span>
+<span class="c1">; Fourth step (only during learning): apply random elastic distortions to the images to extent the learning set</span>
+<span class="k">[env.OnTheFlyTransformation]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DistortionTransformation</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly</span>
+<span class="na">ElasticGaussianSize</span><span class="o">=</span><span class="s">21</span>
+<span class="na">ElasticSigma</span><span class="o">=</span><span class="s">6.0</span>
+<span class="na">ElasticScaling</span><span class="o">=</span><span class="s">20.0</span>
+<span class="na">Scaling</span><span class="o">=</span><span class="s">15.0</span>
+<span class="na">Rotation</span><span class="o">=</span><span class="s">15.0</span>
 </pre></div>
 </div>
 <p>Example of pre-processing transformations built-in in the tool are:</p>
-<p>Image color space change and color channel extraction;</p>
-<p>Elastic distortion;</p>
-<p>Histogram equalization (including CLAHE);</p>
-<p>Convolutional filtering of the image with custom or pre-defined kernels
-(Gaussian, Gabor…);</p>
-<p>(Random) image flipping;</p>
-<p>(Random) extraction of fixed-size slices in a given label (for
-multi-label images)</p>
-<p>Normalization;</p>
-<p>Rescaling, padding/cropping, triming;</p>
-<p>Image data range clipping;</p>
-<p>(Random) extraction of fixed-size slices.</p>
+<ul class="simple">
+<li><p>Image color space change and color channel extraction;</p></li>
+<li><p>Elastic distortion;</p></li>
+<li><p>Histogram equalization (including CLAHE);</p></li>
+<li><p>Convolutional filtering of the image with custom or pre-defined kernels
+(Gaussian, Gabor…);</p></li>
+<li><p>(Random) image flipping;</p></li>
+<li><p>(Random) extraction of fixed-size slices in a given label (for
+multi-label images)</p></li>
+<li><p>Normalization;</p></li>
+<li><p>Rescaling, padding/cropping, triming;</p></li>
+<li><p>Image data range clipping;</p></li>
+<li><p>(Random) extraction of fixed-size slices.</p></li>
+</ul>
 </div>
 <div class="section" id="deep-network-building">
 <h2>Deep network building<a class="headerlink" href="#deep-network-building" title="Permalink to this headline">¶</a></h2>
@@ -294,54 +302,54 @@ floating point numbers.</p>
 this presentation, shows how to build a DNN with 5 layers: one
 convolution layer, followed by one MAX pooling layer, followed by two
 fully connected layers and a softmax output layer.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">;</span> <span class="n">Specify</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">data</span> <span class="nb">format</span>
-<span class="p">[</span><span class="n">env</span><span class="p">]</span>
-<span class="n">SizeX</span><span class="o">=</span><span class="mi">24</span>
-<span class="n">SizeY</span><span class="o">=</span><span class="mi">24</span>
-<span class="n">BatchSize</span><span class="o">=</span><span class="mi">12</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; Specify the input data format</span>
+<span class="k">[env]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">24</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">24</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">12</span>
 
-<span class="p">;</span> <span class="n">First</span> <span class="n">layer</span><span class="p">:</span> <span class="n">convolutional</span> <span class="k">with</span> <span class="mi">3</span><span class="n">x3</span> <span class="n">kernels</span>
-<span class="p">[</span><span class="n">conv1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">env</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Conv</span>
-<span class="n">KernelWidth</span><span class="o">=</span><span class="mi">3</span>
-<span class="n">KernelHeight</span><span class="o">=</span><span class="mi">3</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">32</span>
-<span class="n">Stride</span><span class="o">=</span><span class="mi">1</span>
+<span class="c1">; First layer: convolutional with 3x3 kernels</span>
+<span class="k">[conv1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">env</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Conv</span>
+<span class="na">KernelWidth</span><span class="o">=</span><span class="s">3</span>
+<span class="na">KernelHeight</span><span class="o">=</span><span class="s">3</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">32</span>
+<span class="na">Stride</span><span class="o">=</span><span class="s">1</span>
 
-<span class="p">;</span> <span class="n">Second</span> <span class="n">layer</span><span class="p">:</span> <span class="n">MAX</span> <span class="n">pooling</span> <span class="k">with</span> <span class="n">pooling</span> <span class="n">area</span> <span class="mi">2</span><span class="n">x2</span>
-<span class="p">[</span><span class="n">pool1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">conv1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Pool</span>
-<span class="n">Pooling</span><span class="o">=</span><span class="n">Max</span>
-<span class="n">PoolWidth</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">PoolHeight</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">32</span>
-<span class="n">Stride</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">Mapping</span><span class="o">.</span><span class="n">Size</span><span class="o">=</span><span class="mi">1</span> <span class="p">;</span> <span class="n">one</span> <span class="n">to</span> <span class="n">one</span> <span class="n">connection</span> <span class="n">between</span> <span class="n">convolution</span> <span class="n">output</span> <span class="n">maps</span> <span class="ow">and</span> <span class="n">pooling</span> <span class="nb">input</span> <span class="n">maps</span>
+<span class="c1">; Second layer: MAX pooling with pooling area 2x2</span>
+<span class="k">[pool1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">conv1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Pool</span>
+<span class="na">Pooling</span><span class="o">=</span><span class="s">Max</span>
+<span class="na">PoolWidth</span><span class="o">=</span><span class="s">2</span>
+<span class="na">PoolHeight</span><span class="o">=</span><span class="s">2</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">32</span>
+<span class="na">Stride</span><span class="o">=</span><span class="s">2</span>
+<span class="na">Mapping.Size</span><span class="o">=</span><span class="s">1 ; one to one connection between convolution output maps and pooling input maps</span>
 
-<span class="p">;</span> <span class="n">Third</span> <span class="n">layer</span><span class="p">:</span> <span class="n">fully</span> <span class="n">connected</span> <span class="n">layer</span> <span class="k">with</span> <span class="mi">60</span> <span class="n">neurons</span>
-<span class="p">[</span><span class="n">fc1</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">pool1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Fc</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">60</span>
+<span class="c1">; Third layer: fully connected layer with 60 neurons</span>
+<span class="k">[fc1]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">pool1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Fc</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">60</span>
 
-<span class="p">;</span> <span class="n">Fourth</span> <span class="n">layer</span><span class="p">:</span> <span class="n">fully</span> <span class="n">connected</span> <span class="k">with</span> <span class="mi">10</span> <span class="n">neurons</span>
-<span class="p">[</span><span class="n">fc2</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc1</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Fc</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">10</span>
+<span class="c1">; Fourth layer: fully connected with 10 neurons</span>
+<span class="k">[fc2]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc1</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Fc</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">10</span>
 
-<span class="p">;</span> <span class="n">Final</span> <span class="n">layer</span><span class="p">:</span> <span class="n">softmax</span>
-<span class="p">[</span><span class="n">softmax</span><span class="p">]</span>
-<span class="n">Input</span><span class="o">=</span><span class="n">fc2</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">Softmax</span>
-<span class="n">NbOutputs</span><span class="o">=</span><span class="mi">10</span>
-<span class="n">WithLoss</span><span class="o">=</span><span class="mi">1</span>
+<span class="c1">; Final layer: softmax</span>
+<span class="k">[softmax]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc2</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Softmax</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">10</span>
+<span class="na">WithLoss</span><span class="o">=</span><span class="s">1</span>
 
-<span class="p">[</span><span class="n">softmax</span><span class="o">.</span><span class="n">Target</span><span class="p">]</span>
-<span class="n">TargetValue</span><span class="o">=</span><span class="mf">1.0</span>
-<span class="n">DefaultValue</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="k">[softmax.Target]</span>
+<span class="na">TargetValue</span><span class="o">=</span><span class="s">1.0</span>
+<span class="na">DefaultValue</span><span class="o">=</span><span class="s">0.0</span>
 </pre></div>
 </div>
 <p>The resulting DNN is shown in figure [fig:DNNExample].</p>
@@ -372,21 +380,29 @@ optimized version of the network can be automatically exported for
 various embedded targets. An automated network computation performances
 benchmarking can also be performed among different targets.</p>
 <p>The following targets are currently supported by the toolflow:</p>
-<p>Plain C code (no dynamic memory allocation, no floating point
-processing);</p>
-<p>C code accelerated with OpenMP;</p>
-<p>C code tailored for High-Level Synthesis (HLS) with Xilinx Vivado HLS;
-Direct synthesis to FPGA, with timing and utilization after routing;
-Possibility to constrain the maximum number of clock cycles desired to
-compute the whole network; FPGA utilization vs number of clock cycle
-trade-off analysis;</p>
-<p>OpenCL code optimized for either CPU/DSP or GPU;</p>
-<p>Cuda kernels, cuDNN and TensorRT code optimized for NVIDIA GPUs.</p>
+<ul class="simple">
+<li><p>Plain C code (no dynamic memory allocation, no floating point
+processing);</p></li>
+<li><p>C code accelerated with OpenMP;</p></li>
+<li><p>C code tailored for High-Level Synthesis (HLS) with Xilinx Vivado HLS;</p>
+<ul>
+<li><p>Direct synthesis to FPGA, with timing and utilization after routing;</p></li>
+<li><p>Possibility to constrain the maximum number of clock cycles desired to
+compute the whole network;</p></li>
+<li><p>FPGA utilization vs number of clock cycle
+trade-off analysis;</p></li>
+</ul>
+</li>
+<li><p>OpenCL code optimized for either CPU/DSP or GPU;</p></li>
+<li><p>Cuda kernels, cuDNN and TensorRT code optimized for NVIDIA GPUs.</p></li>
+</ul>
 <p>Different automated optimizations are embedded in the exports:</p>
-<p>DNN weights and signal data precision reduction (down to 8 bit integers
-or less for custom FPGA IPs);</p>
-<p>Non-linear network activation functions approximations;</p>
-<p>Different weights discretization methods.</p>
+<ul class="simple">
+<li><p>DNN weights and signal data precision reduction (down to 8 bit integers
+or less for custom FPGA IPs);</p></li>
+<li><p>Non-linear network activation functions approximations;</p></li>
+<li><p>Different weights discretization methods.</p></li>
+</ul>
 <p>The exports are generated automatically and come with a Makefile and a
 working testbench, including the pre-processed testing dataset. Once
 generated, the testbench is ready to be compiled and executed on the

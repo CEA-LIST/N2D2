@@ -37,27 +37,25 @@ Database handling
 The tool integrates everything needed to handle custom or hand made
 databases:
 
-Genericity: load image and sound, 1D, 2D or 3D data;
+- Genericity: load image and sound, 1D, 2D or 3D data;
+- Associate a label for each data point (useful for scene labeling for
+  example) or a single label to each data file (one object/class per image
+  for example), 1D or 2D labels;
+- Advanced Region of Interest (ROI) handling:
 
-Associate a label for each data point (useful for scene labeling for
-example) or a single label to each data file (one object/class per image
-for example), 1D or 2D labels;
+  - Support arbitrary ROI shapes (circular, rectangular, polygonal or pixelwise
+    defined);
+  - Convert ROIs to data point (pixelwise) labels;
+  - Extract one or multiple ROIs from an initial dataset to create as many 
+    corresponding additional data to feed the DNN;
 
-Advanced Region of Interest (ROI) handling: Support arbitrary ROI shapes
-(circular, rectangular, polygonal or pixelwise defined); Convert ROIs to
-data point (pixelwise) labels; Extract one or multiple ROIs from an
-initial dataset to create as many corresponding additional data to feed
-the DNN;
-
-Native support of file directory-based databases, where each
-sub-directory represents a different label. Most used image file formats
-are supported (JPEG, PNG, PGM...);
-
-Possibility to add custom datafile format in the tool without any change
-in the code base;
-
-Automatic random partitionning of the database into learning, validation
-and testing sets.
+- Native support of file directory-based databases, where each
+  sub-directory represents a different label. Most used image file formats
+  are supported (JPEG, PNG, PGM...);
+- Possibility to add custom datafile format in the tool without any change
+  in the code base;
+- Automatic random partitionning of the database into learning, validation
+  and testing sets.
 
 Data pre-processing
 -------------------
@@ -70,7 +68,7 @@ external tool or pre-processing. Each pre-processing step is called a
 The full sequence of transformations can be specified easily in a INI
 text configuration file. For example:
 
-::
+.. code-block:: ini
 
     ; First step: convert the image to grayscale
     [env.Transformation-1]
@@ -99,27 +97,18 @@ text configuration file. For example:
 
 Example of pre-processing transformations built-in in the tool are:
 
-Image color space change and color channel extraction;
-
-Elastic distortion;
-
-Histogram equalization (including CLAHE);
-
-Convolutional filtering of the image with custom or pre-defined kernels
-(Gaussian, Gabor...);
-
-(Random) image flipping;
-
-(Random) extraction of fixed-size slices in a given label (for
-multi-label images)
-
-Normalization;
-
-Rescaling, padding/cropping, triming;
-
-Image data range clipping;
-
-(Random) extraction of fixed-size slices.
+- Image color space change and color channel extraction;
+- Elastic distortion;
+- Histogram equalization (including CLAHE);
+- Convolutional filtering of the image with custom or pre-defined kernels
+  (Gaussian, Gabor...);
+- (Random) image flipping;
+- (Random) extraction of fixed-size slices in a given label (for
+  multi-label images)
+- Normalization;
+- Rescaling, padding/cropping, triming;
+- Image data range clipping;
+- (Random) extraction of fixed-size slices.
 
 Deep network building
 ---------------------
@@ -141,7 +130,7 @@ this presentation, shows how to build a DNN with 5 layers: one
 convolution layer, followed by one MAX pooling layer, followed by two
 fully connected layers and a softmax output layer.
 
-::
+.. code-block:: ini
 
     ; Specify the input data format
     [env]
@@ -228,29 +217,26 @@ benchmarking can also be performed among different targets.
 
 The following targets are currently supported by the toolflow:
 
-Plain C code (no dynamic memory allocation, no floating point
-processing);
+- Plain C code (no dynamic memory allocation, no floating point
+  processing);
+- C code accelerated with OpenMP;
+- C code tailored for High-Level Synthesis (HLS) with Xilinx Vivado HLS;
 
-C code accelerated with OpenMP;
+  - Direct synthesis to FPGA, with timing and utilization after routing;
+  - Possibility to constrain the maximum number of clock cycles desired to
+    compute the whole network;
+  - FPGA utilization vs number of clock cycle
+    trade-off analysis;
 
-C code tailored for High-Level Synthesis (HLS) with Xilinx Vivado HLS;
-Direct synthesis to FPGA, with timing and utilization after routing;
-Possibility to constrain the maximum number of clock cycles desired to
-compute the whole network; FPGA utilization vs number of clock cycle
-trade-off analysis;
-
-OpenCL code optimized for either CPU/DSP or GPU;
-
-Cuda kernels, cuDNN and TensorRT code optimized for NVIDIA GPUs.
+- OpenCL code optimized for either CPU/DSP or GPU;
+- Cuda kernels, cuDNN and TensorRT code optimized for NVIDIA GPUs.
 
 Different automated optimizations are embedded in the exports:
 
-DNN weights and signal data precision reduction (down to 8 bit integers
-or less for custom FPGA IPs);
-
-Non-linear network activation functions approximations;
-
-Different weights discretization methods.
+- DNN weights and signal data precision reduction (down to 8 bit integers
+  or less for custom FPGA IPs);
+- Non-linear network activation functions approximations;
+- Different weights discretization methods.
 
 The exports are generated automatically and come with a Makefile and a
 working testbench, including the pre-processed testing dataset. Once

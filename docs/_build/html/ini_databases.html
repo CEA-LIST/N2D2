@@ -213,9 +213,9 @@ learning set and a testing set, with:</p>
 <p>60,000 digits in the learning set;</p>
 <p>10,000 digits in the testing set.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">database</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">MNIST_IDX_Database</span>
-<span class="n">Validation</span><span class="o">=</span><span class="mf">0.2</span>  <span class="p">;</span> <span class="n">Fraction</span> <span class="n">of</span> <span class="n">learning</span> <span class="n">stimuli</span> <span class="n">used</span> <span class="k">for</span> <span class="n">the</span> <span class="n">validation</span> <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">]</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">MNIST_IDX_Database</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2  ; Fraction of learning stimuli used for the validation [default: 0.0]</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -248,9 +248,9 @@ learning set and a testing set, with:</p>
 <p>39,209 digits in the learning set;</p>
 <p>12,630 digits in the testing set.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">database</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">GTSRB_DIR_Database</span>
-<span class="n">Validation</span><span class="o">=</span><span class="mf">0.2</span>  <span class="p">;</span> <span class="n">Fraction</span> <span class="n">of</span> <span class="n">learning</span> <span class="n">stimuli</span> <span class="n">used</span> <span class="k">for</span> <span class="n">the</span> <span class="n">validation</span> <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">]</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">GTSRB_DIR_Database</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2  ; Fraction of learning stimuli used for the validation [default: 0.0]</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -288,12 +288,12 @@ environment variable):</p>
 <p><code class="docutils literal notranslate"><span class="pre">GST/Motorbikes</span></code>: 798 images</p>
 <p>You can then instanciate this database as input of your neural network
 using the following parameters:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[database]
-Type=DIR_Database
-DataPath=\${N2D2_DATA}/GST
-Learn=0.4 ; 40\% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning
-Validation=0.2 ; 20\% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation
-; the remaining images will be used for testing
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/GST</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.4 ; 40\% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2 ; 20\% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation</span>
+<span class="c1">; the remaining images will be used for testing</span>
 </pre></div>
 </div>
 <p>Each subdirectory will be treated as a different label, so there will be
@@ -425,36 +425,36 @@ the example above, the partitioning will be the following:</p>
 </table>
 <p>To load and partition more than one <code class="docutils literal notranslate"><span class="pre">DataPath</span></code>, one can use the
 <code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> option:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[database]
-Type=DIR_Database
-DataPath=\${N2D2_DATA}/GST
-Learn=0.6
-Validation=0.4
-LoadMore=database.test
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/GST</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.6</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.4</span>
+<span class="na">LoadMore</span><span class="o">=</span><span class="s">database.test</span>
 
-; Load stimuli from the &quot;GST_Test&quot; path in the test dataset
-[database.test]
-DataPath=\${N2D2_DATA}/GST_Test
-Learn=0.0
-Test=1.0
-; The LoadMore option is recursive:
-; LoadMore=database.more
+<span class="c1">; Load stimuli from the &quot;GST_Test&quot; path in the test dataset</span>
+<span class="k">[database.test]</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/GST_Test</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.0</span>
+<span class="na">Test</span><span class="o">=</span><span class="s">1.0</span>
+<span class="c1">; The LoadMore option is recursive:</span>
+<span class="c1">; LoadMore=database.more</span>
 
-; [database.more]
-; Load even more data here
+<span class="c1">; [database.more]</span>
+<span class="c1">; Load even more data here</span>
 </pre></div>
 </div>
 <div class="section" id="speech-commands-dataset">
 <h3><em>Speech Commands Dataset</em><a class="headerlink" href="#speech-commands-dataset" title="Permalink to this headline">¶</a></h3>
 <p>Use with Speech Commands Data Set, released by the Google
 <a href="#id5"><span class="problematic" id="id6">:raw-latex:`\citep{speechcommandsv2}`</span></a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[database]
-Type=DIR_Database
-DataPath=\${N2D2_DATA}/speech_commands_v0.02
-ValidExtensions=wav
-IgnoreMasks=*/_background_noise_
-Learn=0.6
-Validation=0.2
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/speech_commands_v0.02</span>
+<span class="na">ValidExtensions</span><span class="o">=</span><span class="s">wav</span>
+<span class="na">IgnoreMasks</span><span class="o">=</span><span class="s">*/_background_noise_</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.6</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2</span>
 </pre></div>
 </div>
 </div>
@@ -667,9 +667,9 @@ Matlab Toolbox archive)</p>
 evaluation/labeling code)</p>
 <p>Use the following command in Matlab to generate the images and
 annotations:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span><span class="p">([</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;N2D2_DATA&#39;</span><span class="p">)</span> <span class="s1">&#39;/CaltechPedestrians&#39;</span><span class="p">])</span>
-<span class="n">addpath</span><span class="p">(</span><span class="n">genpath</span><span class="p">(</span><span class="s1">&#39;tools/piotr_toolbox/toolbox&#39;</span><span class="p">))</span> <span class="o">%</span> <span class="n">add</span> <span class="n">the</span> <span class="n">Piotr</span><span class="s1">&#39;s Matlab Toolbox in the Matlab path</span>
-<span class="n">dbInfo</span><span class="p">(</span><span class="s1">&#39;USA&#39;</span><span class="p">)</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span><span class="p">([</span><span class="n">getenv</span><span class="p">(</span><span class="s">&#39;N2D2_DATA&#39;</span><span class="p">)</span> <span class="s">&#39;/CaltechPedestrians&#39;</span><span class="p">])</span>
+<span class="n">addpath</span><span class="p">(</span><span class="n">genpath</span><span class="p">(</span><span class="s">&#39;tools/piotr_toolbox/toolbox&#39;</span><span class="p">))</span> <span class="c">% add the Piotr&#39;s Matlab Toolbox in the Matlab path</span>
+<span class="n">dbInfo</span><span class="p">(</span><span class="s">&#39;USA&#39;</span><span class="p">)</span>
 <span class="n">dbExtract</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1040,13 +1040,13 @@ object data set (5 MB). Extract the downloaded archives in your
 <p>It is possible to automatically slice images from a dataset, with a
 given slice size and stride, using the <code class="docutils literal notranslate"><span class="pre">.slicing</span></code> attribute. This
 effectively increases the number of stimuli in the set.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">database</span><span class="o">.</span><span class="n">slicing</span><span class="p">]</span>
-<span class="n">ApplyTo</span><span class="o">=</span><span class="n">NoLearn</span>
-<span class="n">Width</span><span class="o">=</span><span class="mi">2048</span>
-<span class="n">Height</span><span class="o">=</span><span class="mi">1024</span>
-<span class="n">StrideX</span><span class="o">=</span><span class="mi">2048</span>
-<span class="n">StrideY</span><span class="o">=</span><span class="mi">1024</span>
-<span class="n">RandomShuffle</span><span class="o">=</span><span class="mi">1</span>  <span class="p">;</span> <span class="mi">1</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">default</span> <span class="n">value</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database.slicing]</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">NoLearn</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">2048</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">1024</span>
+<span class="na">StrideX</span><span class="o">=</span><span class="s">2048</span>
+<span class="na">StrideY</span><span class="o">=</span><span class="s">1024</span>
+<span class="na">RandomShuffle</span><span class="o">=</span><span class="s">1  ; 1 is the default value</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">RandomShuffle</span></code> option, enabled by default, randomly shuffle the

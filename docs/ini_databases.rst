@@ -18,7 +18,7 @@ learning set and a testing set, with:
 
 Example:
 
-::
+.. code-block:: ini
 
     [database]
     Type=MNIST_IDX_Database
@@ -46,7 +46,7 @@ learning set and a testing set, with:
 
 Example:
 
-::
+.. code-block:: ini
 
     [database]
     Type=GTSRB_DIR_Database
@@ -81,7 +81,7 @@ environment variable):
 You can then instanciate this database as input of your neural network
 using the following parameters:
 
-::
+.. code-block:: ini
 
     [database]
     Type=DIR_Database
@@ -161,7 +161,7 @@ the example above, the partitioning will be the following:
 To load and partition more than one ``DataPath``, one can use the
 ``LoadMore`` option:
 
-::
+.. code-block:: ini
 
     [database]
     Type=DIR_Database
@@ -187,7 +187,7 @@ To load and partition more than one ``DataPath``, one can use the
 Use with Speech Commands Data Set, released by the Google
 :raw-latex:`\citep{speechcommandsv2}`.
 
-::
+.. code-block:: ini
 
     [database]
     Type=DIR_Database
@@ -339,7 +339,7 @@ evaluation/labeling code)
 Use the following command in Matlab to generate the images and
 annotations:
 
-::
+.. code-block:: matlab
 
     cd([getenv('N2D2_DATA') '/CaltechPedestrians'])
     addpath(genpath('tools/piotr_toolbox/toolbox')) % add the Piotr's Matlab Toolbox in the Matlab path
@@ -574,7 +574,7 @@ It is possible to automatically slice images from a dataset, with a
 given slice size and stride, using the ``.slicing`` attribute. This
 effectively increases the number of stimuli in the set.
 
-::
+.. code-block:: ini
 
     [database.slicing]
     ApplyTo=NoLearn

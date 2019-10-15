@@ -20,7 +20,7 @@ The basic element contained in an INI file is the property. Every
 property has a name and a value, delimited by an equals sign (=). The
 name appears to the left of the equals sign.
 
-::
+.. code-block:: ini
 
     name=value
 
@@ -34,7 +34,7 @@ section. There is no explicit “end of section” delimiter; sections end
 at the next section declaration, or the end of the file. Sections may
 not be nested.
 
-::
+.. code-block:: ini
 
     [section]
     a=a
@@ -51,7 +51,7 @@ Comments
 Semicolons (``;``) or number sign (``#``) at the beginning or in the
 middle of the line indicate a comment. Comments are ignored.
 
-::
+.. code-block:: ini
 
     ; comment text
     a=a # comment text
@@ -81,7 +81,7 @@ Template inclusion syntax
 Is is possible to recursively include templated INI files. For example,
 the main INI file can include a templated file like the following:
 
-::
+.. code-block:: ini
 
     [inception@inception_model.ini.tpl]
     INPUT=layer_x
@@ -94,7 +94,7 @@ the main INI file can include a templated file like the following:
 
 If the ``inception_model.ini.tpl`` template file content is:
 
-::
+.. code-block:: ini
 
     [{{SECTION_NAME}}_layer1]
     Input={{INPUT}}
@@ -114,7 +114,7 @@ If the ``inception_model.ini.tpl`` template file content is:
 
 The resulting equivalent content for the main INI file will be:
 
-::
+.. code-block:: ini
 
     [inception_layer1]
     Input=layer_x

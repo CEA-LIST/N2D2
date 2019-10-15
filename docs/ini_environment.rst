@@ -4,7 +4,7 @@ Environment
 The environment simply specify the input data format of the network
 (width, height and batch size). Example:
 
-::
+.. code-block:: ini
 
     [env]
     SizeX=24
@@ -64,7 +64,7 @@ applied to all the channels of the input images.
 
 Example:
 
-::
+.. code-block:: ini
 
     [env.Transformation]
     Type=PadCropTransformation
@@ -102,7 +102,7 @@ Common set of parameters for any kind of transformation:
 
 Example:
 
-::
+.. code-block:: ini
 
     [env.Transformation-1]
     Type=ChannelExtractionTransformation

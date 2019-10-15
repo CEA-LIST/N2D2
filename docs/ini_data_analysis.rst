@@ -5,7 +5,7 @@ Stimuli data analysis
 You can enable stimuli data reporting with the following section (the
 name of the section must start with ``env.StimuliData``):
 
-::
+.. code-block:: ini
 
     [env.StimuliData-raw]
     ApplyTo=LearnOnly
@@ -33,7 +33,7 @@ It it possible to normalize the whole database to have zero mean and
 unity standard deviation on the learning set using a
 ``RangeAffineTransformation`` transformation:
 
-::
+.. code-block:: ini
 
     ; Stimuli normalization based on learning set global mean and std.dev.
     [env.Transformation-normalize]
@@ -79,7 +79,7 @@ Using the ``StimuliData`` object followed with an
 ``AffineTransformation``, it is also possible to use the mean image of
 the dataset to normalize the data:
 
-::
+.. code-block:: ini
 
     [env.StimuliData-meanData]
     ApplyTo=LearnOnly

@@ -218,10 +218,10 @@
 <h1>Environment<a class="headerlink" href="#environment" title="Permalink to this headline">¶</a></h1>
 <p>The environment simply specify the input data format of the network
 (width, height and batch size). Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">env</span><span class="p">]</span>
-<span class="n">SizeX</span><span class="o">=</span><span class="mi">24</span>
-<span class="n">SizeY</span><span class="o">=</span><span class="mi">24</span>
-<span class="n">BatchSize</span><span class="o">=</span><span class="mi">12</span> <span class="p">;</span> <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="mi">1</span><span class="p">]</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">24</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">24</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">12 ; [default: 1]</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -289,10 +289,10 @@ channels of the input images;</p>
 <p><code class="docutils literal notranslate"><span class="pre">env.ChannelsOnTheFlyTransformation[...]</span></code> On-the-fly transformations
 applied to all the channels of the input images.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">PadCropTransformation</span>
-<span class="n">Width</span><span class="o">=</span><span class="mi">24</span>
-<span class="n">Height</span><span class="o">=</span><span class="mi">24</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env.Transformation]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">PadCropTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">24</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">24</span>
 </pre></div>
 </div>
 <p>Several transformations can applied successively. In this case, to be
@@ -339,26 +339,26 @@ the INI file regardless of their suffix.</strong></p>
 </tbody>
 </table>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">ChannelExtractionTransformation</span>
-<span class="n">CSChannel</span><span class="o">=</span><span class="n">Gray</span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env.Transformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ChannelExtractionTransformation</span>
+<span class="na">CSChannel</span><span class="o">=</span><span class="s">Gray</span>
 
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">RescaleTransformation</span>
-<span class="n">Width</span><span class="o">=</span><span class="mi">29</span>
-<span class="n">Height</span><span class="o">=</span><span class="mi">29</span>
+<span class="k">[env.Transformation-2]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">29</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">29</span>
 
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">Transformation</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">EqualizeTransformation</span>
+<span class="k">[env.Transformation-3]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">EqualizeTransformation</span>
 
-<span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">OnTheFlyTransformation</span><span class="p">]</span>
-<span class="n">Type</span><span class="o">=</span><span class="n">DistortionTransformation</span>
-<span class="n">ApplyTo</span><span class="o">=</span><span class="n">LearnOnly</span> <span class="p">;</span> <span class="n">Apply</span> <span class="n">this</span> <span class="n">transformation</span> <span class="k">for</span> <span class="n">the</span> <span class="n">Learning</span> <span class="nb">set</span> <span class="n">only</span>
-<span class="n">ElasticGaussianSize</span><span class="o">=</span><span class="mi">21</span>
-<span class="n">ElasticSigma</span><span class="o">=</span><span class="mf">6.0</span>
-<span class="n">ElasticScaling</span><span class="o">=</span><span class="mf">20.0</span>
-<span class="n">Scaling</span><span class="o">=</span><span class="mf">15.0</span>
-<span class="n">Rotation</span><span class="o">=</span><span class="mf">15.0</span>
+<span class="k">[env.OnTheFlyTransformation]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DistortionTransformation</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly ; Apply this transformation for the Learning set only</span>
+<span class="na">ElasticGaussianSize</span><span class="o">=</span><span class="s">21</span>
+<span class="na">ElasticSigma</span><span class="o">=</span><span class="s">6.0</span>
+<span class="na">ElasticScaling</span><span class="o">=</span><span class="s">20.0</span>
+<span class="na">Scaling</span><span class="o">=</span><span class="s">15.0</span>
+<span class="na">Rotation</span><span class="o">=</span><span class="s">15.0</span>
 </pre></div>
 </div>
 <p>List of available transformations:</p>
