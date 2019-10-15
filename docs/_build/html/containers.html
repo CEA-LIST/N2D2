@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -33,10 +34,11 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Cells" href="cells.html" />
-    <link rel="prev" title="Layers" href="ini_layers.html" /> 
+    <link rel="prev" title="Network Layers" href="ini_layers.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -80,12 +82,19 @@
               
             
             
-              <p class="caption"><span class="caption-text">INI API:</span></p>
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ini_syntax.html">Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul class="current">
@@ -94,6 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -201,8 +214,7 @@
 <dl class="method">
 <dt id="N2D2.BaseTensor.dims">
 <code class="sig-name descname">dims</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.BaseTensor</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.BaseTensor.dims" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of dimensions of the tensor</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.BaseTensor.empty">
@@ -227,8 +239,7 @@
 <dl class="method">
 <dt id="N2D2.BaseTensor.nbDims">
 <code class="sig-name descname">nbDims</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.BaseTensor</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.nbDims" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the number of dimensions of the tensor</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.BaseTensor.reserve">
@@ -268,8 +279,7 @@
 <dl class="method">
 <dt id="N2D2.BaseTensor.synchronizeDToH">
 <code class="sig-name descname">synchronizeDToH</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.BaseTensor</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeDToH" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy data from device to host</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.BaseTensor.synchronizeDToHBased">
@@ -284,8 +294,7 @@
 <dl class="method">
 <dt id="N2D2.BaseTensor.synchronizeHToD">
 <code class="sig-name descname">synchronizeHToD</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.BaseTensor</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeHToD" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy data from host to device</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.BaseTensor.synchronizeHToDBased">
@@ -307,7 +316,7 @@
         <a href="cells.html" class="btn btn-neutral float-right" title="Cells" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="ini_layers.html" class="btn btn-neutral float-left" title="Layers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="ini_layers.html" class="btn btn-neutral float-left" title="Network Layers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -3628,10 +3628,9 @@ LossLambda=1.0
 
 
 \paragraph{Outputs remapping}
-
 Outputs remapping allows to convert \emph{scores} and \emph{coordinates} output
 feature maps layout from another ordering that the one used in the N2D2
-\lstinline{Anchor} layer, during weights import/export.
+\lstinline!Anchor! layer, during weights import/export.
 
 For example, lets consider that the imported weights corresponds to the
 following output feature maps ordering:
@@ -3650,7 +3649,7 @@ following output feature maps ordering:
 11 anchor[2].w
 \end{lstlisting}
 
-The output feature maps ordering required by the \lstinline{Anchor} layer is:
+The output feature maps ordering required by the \lstinline!Anchor! layer is:
 \begin{lstlisting}
 0 anchor[0].x
 1 anchor[1].x

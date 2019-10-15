@@ -1,0 +1,867 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Performing simulations &mdash; N2D2  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction" href="ini_intro.html" />
+    <link rel="prev" title="About N2D2-IP" href="about.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Performing simulations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#obtaining-the-latest-version-of-this-manual">Obtaining the latest version of this manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minimum-system-requirements">Minimum system requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#obtaining-n2d2">Obtaining N2D2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#red-hat-enterprise-linux-rhel-6">Red Hat Enterprise Linux (RHEL) 6</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-the-sources">Getting the sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compilation">Compilation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#downloading-training-datasets">Downloading training datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-learning">Run the learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#test-a-learned-network">Test a learned network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#interpreting-the-results">Interpreting the results</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#recognition-rate">Recognition rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#confusion-matrix">Confusion matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#memory-and-computation-requirements">Memory and computation requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kernels-and-weights-distribution">Kernels and weights distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-maps-activity">Output maps activity</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#export-a-learned-network">Export a learned network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#c-export">C export</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cpp-opencl-export">CPP_OpenCL export</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cpp-tensorrt-export">CPP_TensorRT export</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cpp-cudnn-export">CPP_cuDNN export</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-hls-export">C_HLS export</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#layer-compatibility-table">Layer compatibility table</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Performing simulations</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/simus.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="performing-simulations">
+<h1>Performing simulations<a class="headerlink" href="#performing-simulations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="obtaining-the-latest-version-of-this-manual">
+<h2>Obtaining the latest version of this manual<a class="headerlink" href="#obtaining-the-latest-version-of-this-manual" title="Permalink to this headline">¶</a></h2>
+<p>Before going further, please make sure you are reading the latest
+version of this manual. It is located in the manual sub-directory. To
+compile the manual in PDF, just run the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">manual</span> <span class="o">&amp;&amp;</span> <span class="n">make</span>
+</pre></div>
+</div>
+<p>In order to compile the manual, you must have <code class="docutils literal notranslate"><span class="pre">pdflatex</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bibtex</span></code> installed, as well as some common LaTeX packages.</p>
+<p>On Ubuntu, this can be done by installing the <code class="docutils literal notranslate"><span class="pre">texlive</span></code> and
+<code class="docutils literal notranslate"><span class="pre">texlive-latex-extra</span></code> software packages.</p>
+<p>On Windows, you can install the <code class="docutils literal notranslate"><span class="pre">MiKTeX</span></code> software, which includes
+everything needed and will install the required LaTeX packages on the
+fly.</p>
+</div>
+<div class="section" id="minimum-system-requirements">
+<h2>Minimum system requirements<a class="headerlink" href="#minimum-system-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Supported processors: ARM Cortex A15 (tested on Tegra K1) ARM Cortex
+A53/A57 (tested on Tegra X1) Pentium-compatible PC (Pentium III, Athlon
+or more-recent system recommended)</p>
+<p>Supported operating systems: Windows <span class="math notranslate nohighlight">\(\geq\)</span> 7 or Windows Server
+<span class="math notranslate nohighlight">\(\geq\)</span> 2012, 64 bits with Visual Studio <span class="math notranslate nohighlight">\(\geq\)</span> 2015.2 (2015
+Update 2) GNU/Linux with GCC <span class="math notranslate nohighlight">\(\geq\)</span> 4.4 (tested on RHEL
+<span class="math notranslate nohighlight">\(\geq\)</span> 6, Debian <span class="math notranslate nohighlight">\(\geq\)</span> 6, Ubuntu <span class="math notranslate nohighlight">\(\geq\)</span> 14.04)</p>
+<p>At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing</p>
+<p>At least 150 MB available hard disk space + 350 MB for MNIST dataset
+processing</p>
+<p>For CUDA acceleration:</p>
+<p>CUDA <span class="math notranslate nohighlight">\(\geq\)</span> 6.5 and CuDNN <span class="math notranslate nohighlight">\(\geq\)</span> 1.0</p>
+<p>NVIDIA GPU with CUDA compute capability <span class="math notranslate nohighlight">\(\geq\)</span> 3 (starting from
+<em>Kepler</em> micro-architecture)</p>
+<p>At least 512 MB GPU RAM for MNIST dataset processing</p>
+</div>
+<div class="section" id="obtaining-n2d2">
+<h2>Obtaining N2D2<a class="headerlink" href="#obtaining-n2d2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="red-hat-enterprise-linux-rhel-6">
+<h4>Red Hat Enterprise Linux (RHEL) 6<a class="headerlink" href="#red-hat-enterprise-linux-rhel-6" title="Permalink to this headline">¶</a></h4>
+<p>Make sure you have the following packages installed:</p>
+<p><code class="docutils literal notranslate"><span class="pre">cmake</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">gnuplot</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">opencv</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">opencv-devel</span></code> (may require the <code class="docutils literal notranslate"><span class="pre">rhel-x86_64-workstation-optional-6</span></code>
+repository channel)</p>
+<p>Plus, to be able to use GPU acceleration:</p>
+<p>Install the CUDA repository package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rpm</span> <span class="o">-</span><span class="n">Uhv</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">developer</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">nvidia</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">compute</span><span class="o">/</span><span class="n">cuda</span><span class="o">/</span><span class="n">repos</span><span class="o">/</span><span class="n">rhel6</span><span class="o">/</span><span class="n">x86_64</span><span class="o">/</span><span class="n">cuda</span><span class="o">-</span><span class="n">repo</span><span class="o">-</span><span class="n">rhel6</span><span class="o">-</span><span class="mf">7.5</span><span class="o">-</span><span class="mf">18.</span><span class="n">x86_64</span><span class="o">.</span><span class="n">rpm</span>
+<span class="n">yum</span> <span class="n">clean</span> <span class="n">expire</span><span class="o">-</span><span class="n">cache</span>
+<span class="n">yum</span> <span class="n">install</span> <span class="n">cuda</span>
+</pre></div>
+</div>
+<p>Install cuDNN from the NVIDIA website: register to <a class="reference external" href="https://developer.nvidia.com/cudnn">NVIDIA
+Developer</a> and download the
+latest version of cuDNN. Simply copy the header and library files from
+the cuDNN archive to the corresponding directories in the CUDA
+installation path (by default: /usr/local/cuda/include and
+/usr/local/cuda/lib64, respectively).</p>
+<p>Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
+the LD_LIBRARY_PATH environment variable.</p>
+</div>
+<div class="section" id="ubuntu">
+<h4>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h4>
+<p>Make sure you have the following packages installed, if they are
+available on your Ubuntu version:</p>
+<p><code class="docutils literal notranslate"><span class="pre">cmake</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">gnuplot</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">libopencv-dev</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">libcv-dev</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">libhighgui-dev</span></code></p>
+<p>Plus, to be able to use GPU acceleration:</p>
+<p>Install the CUDA repository package matching your distribution. For
+example, for Ubuntu 14.04 64 bits:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
+dpkg -i cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
+</pre></div>
+</div>
+<p>Install the cuDNN repository package matching your distribution. For
+example, for Ubuntu 14.04 64 bits:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+dpkg -i nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+</pre></div>
+</div>
+<p>Note that the cuDNN repository package is provided by NVIDIA for Ubuntu
+starting from version 14.04.</p>
+<p>Update the package lists: <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">update</span></code></p>
+<p>Install the CUDA and cuDNN required packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">cuda</span><span class="o">-</span><span class="n">core</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">cuda</span><span class="o">-</span><span class="n">cudart</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">cuda</span><span class="o">-</span><span class="n">cublas</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">cuda</span><span class="o">-</span><span class="n">curand</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">libcudnn5</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+<p>Make sure there is a symlink to <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span><span class="o">-</span><span class="mf">7.5</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span>
+</pre></div>
+</div>
+<p>Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
+the LD_LIBRARY_PATH environment variable.</p>
+</div>
+<div class="section" id="windows">
+<h4>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h4>
+<p>On Windows 64 bits, Visual Studio <span class="math notranslate nohighlight">\(\geq\)</span> 2015.2 (2015 Update 2) is
+required.</p>
+<p>Make sure you have the following software installed:</p>
+<p>CMake (<a class="reference external" href="http://www.cmake.org/">http://www.cmake.org/</a>): download and run the Windows installer.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dirent.h</span></code> C++ header (<a class="reference external" href="https://github.com/tronkko/dirent">https://github.com/tronkko/dirent</a>): to be put
+in the Visual Studio include path.</p>
+<p>Gnuplot (<a class="reference external" href="http://www.gnuplot.info/">http://www.gnuplot.info/</a>): the bin sub-directory in the install
+path needs to be added to the Windows <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable.</p>
+<p>OpenCV (<a class="reference external" href="http://opencv.org/">http://opencv.org/</a>): download the latest 2.x version for Windows
+and extract it to, for example, <code class="docutils literal notranslate"><span class="pre">C:\OpenCV\</span></code>. Make sure to define the
+environment variable <code class="docutils literal notranslate"><span class="pre">OpenCV_DIR</span></code> to point to
+<code class="docutils literal notranslate"><span class="pre">C:\OpenCV\opencv\build</span></code>. Make sure to add the bin sub-directory
+(<code class="docutils literal notranslate"><span class="pre">C:\OpenCV\opencv\build\x64\vc12\bin</span></code>) to the Windows <code class="docutils literal notranslate"><span class="pre">PATH</span></code>
+environment variable.</p>
+<p>Plus, to be able to use GPU acceleration:</p>
+<p>Download and install CUDA toolkit 8.0 located at
+<a class="reference external" href="https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe">https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rename</span> <span class="n">cuda_8</span><span class="o">.</span><span class="mf">0.44</span><span class="n">_windows</span><span class="o">-</span><span class="n">exe</span> <span class="n">cuda_8</span><span class="o">.</span><span class="mf">0.44</span><span class="n">_windows</span><span class="o">.</span><span class="n">exe</span>
+<span class="n">cuda_8</span><span class="o">.</span><span class="mf">0.44</span><span class="n">_windows</span><span class="o">.</span><span class="n">exe</span> <span class="o">-</span><span class="n">s</span> <span class="n">compiler_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">cublas_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">cublas_dev_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">cudart_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">curand_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">curand_dev_8</span><span class="o">.</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>Update the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span> <span class="n">PATH</span><span class="o">=%</span><span class="n">ProgramFiles</span><span class="o">%</span>\<span class="n">NVIDIA</span> <span class="n">GPU</span> <span class="n">Computing</span> <span class="n">Toolkit</span>\<span class="n">CUDA</span>\<span class="n">v8</span><span class="o">.</span><span class="mi">0</span>\<span class="nb">bin</span><span class="p">;</span><span class="o">%</span><span class="n">ProgramFiles</span><span class="o">%</span>\<span class="n">NVIDIA</span> <span class="n">GPU</span> <span class="n">Computing</span> <span class="n">Toolkit</span>\<span class="n">CUDA</span>\<span class="n">v8</span><span class="o">.</span><span class="mi">0</span>\<span class="n">libnvvp</span><span class="p">;</span><span class="o">%</span><span class="n">PATH</span><span class="o">%</span>
+</pre></div>
+</div>
+<p>Download and install cuDNN 8.0 located at
+<a class="reference external" href="http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip">http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip</a>
+(the following command assumes that you have 7-Zip installed):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">7</span><span class="n">z</span> <span class="n">x</span> <span class="n">cudnn</span><span class="o">-</span><span class="mf">8.0</span><span class="o">-</span><span class="n">windows7</span><span class="o">-</span><span class="n">x64</span><span class="o">-</span><span class="n">v5</span><span class="o">.</span><span class="mf">1.</span><span class="n">zip</span>
+<span class="n">copy</span> <span class="n">cuda</span>\<span class="n">include</span>\<span class="o">*.*</span> <span class="o">^</span>
+  <span class="s2">&quot;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA</span><span class="se">\v</span><span class="s2">8.0\include</span><span class="se">\&quot;</span>
+<span class="n">copy</span> <span class="n">cuda</span>\<span class="n">lib</span>\<span class="n">x64</span>\<span class="o">*.*</span> <span class="o">^</span>
+  <span class="s2">&quot;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA</span><span class="se">\v</span><span class="s2">8.0\lib</span><span class="se">\x64\&quot;</span>
+<span class="n">copy</span> <span class="n">cuda</span>\<span class="nb">bin</span>\<span class="o">*.*</span> <span class="o">^</span>
+  <span class="s2">&quot;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA</span><span class="se">\v</span><span class="s2">8.0</span><span class="se">\b</span><span class="s2">in</span><span class="se">\&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="getting-the-sources">
+<h3>Getting the sources<a class="headerlink" href="#getting-the-sources" title="Permalink to this headline">¶</a></h3>
+<p>Use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">CEA</span><span class="o">-</span><span class="n">LIST</span><span class="o">/</span><span class="n">N2D2</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compilation">
+<h3>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline">¶</a></h3>
+<p>To compile the program:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="n">build</span>
+<span class="n">cd</span> <span class="n">build</span>
+<span class="n">cmake</span> <span class="o">..</span> <span class="o">&amp;&amp;</span> <span class="n">make</span>
+</pre></div>
+</div>
+<p>On Windows, you may have to specify the generator, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">..</span> <span class="o">-</span><span class="n">G</span><span class="s2">&quot;Visual Studio 14&quot;</span>
+</pre></div>
+</div>
+<p>Then open the newly created N2D2 project in Visual Studio 2015. Select
+“Release” for the build target. Right click on <code class="docutils literal notranslate"><span class="pre">ALL_BUILD</span></code> item and
+select “Build”.</p>
+</div>
+</div>
+<div class="section" id="downloading-training-datasets">
+<h2>Downloading training datasets<a class="headerlink" href="#downloading-training-datasets" title="Permalink to this headline">¶</a></h2>
+<p>A python script located in the repository root directory allows you to
+select and automatically download some well-known datasets, like MNIST
+and GTSRB (the script requires Python 2.x with bindings for GTK 2
+package):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">tools</span><span class="o">/</span><span class="n">install_stimuli_gui</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>By default, the datasets are downloaded in the path specified in the
+<code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code> environment variable, which is the root path used by the
+N2D2 tool to locate the databases. If the <code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code> variable is not
+set, the default value used is /local/$USER/n2d2_data/ (or
+/local/n2d2_data/ if the <code class="docutils literal notranslate"><span class="pre">USER</span></code> environment variable is not set) on
+Linux and C:\n2d2_data\ on Windows.</p>
+<p>Please make sure you have write access to the <code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code> path, or if
+not set, in the default /local/$USER/n2d2_data/ path.</p>
+</div>
+<div class="section" id="run-the-learning">
+<h2>Run the learning<a class="headerlink" href="#run-the-learning" title="Permalink to this headline">¶</a></h2>
+<p>The following command will run the learning for 600,000 image
+presentations/steps and log the performances of the network every 10,000
+steps:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">n2d2</span> <span class="s2">&quot;mnist24_16c4s2_24c5s2_150_10.ini&quot;</span> <span class="o">-</span><span class="n">learn</span> <span class="mi">600000</span> <span class="o">-</span><span class="n">log</span> <span class="mi">10000</span>
+</pre></div>
+</div>
+<p>Note: you may want to check the gradient computation using the
+<code class="docutils literal notranslate"><span class="pre">-check</span></code> option. Note that it can be extremely long and can
+occasionally fail if the required precision is too high.</p>
+</div>
+<div class="section" id="test-a-learned-network">
+<h2>Test a learned network<a class="headerlink" href="#test-a-learned-network" title="Permalink to this headline">¶</a></h2>
+<p>After the learning is completed, this command evaluate the network
+performances on the test data set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">n2d2</span> <span class="s2">&quot;mnist24_16c4s2_24c5s2_150_10.ini&quot;</span> <span class="o">-</span><span class="n">test</span>
+</pre></div>
+</div>
+<div class="section" id="interpreting-the-results">
+<h3>Interpreting the results<a class="headerlink" href="#interpreting-the-results" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="recognition-rate">
+<h4>Recognition rate<a class="headerlink" href="#recognition-rate" title="Permalink to this headline">¶</a></h4>
+<p>The recognition rate and the validation score are reported during the
+learning in the <em>TargetScore_/Success_validation.png</em> file, as shown
+in figure [fig:validationScore].</p>
+<div class="figure align-default" id="id1">
+<img alt="Recognition rate and validation score during learning." src="_images/validation_score.png" />
+<p class="caption"><span class="caption-text">Recognition rate and validation score during learning.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="confusion-matrix">
+<h4>Confusion matrix<a class="headerlink" href="#confusion-matrix" title="Permalink to this headline">¶</a></h4>
+<p>The software automatically outputs the confusion matrix during learning,
+validation and test, with an example shown in figure
+[fig:ConfusionMatrix]. Each row of the matrix contains the number of
+occurrences estimated by the network for each label, for all the data
+corresponding to a single actual, target label. Or equivalently, each
+column of the matrix contains the number of actual, target label
+occurrences, corresponding to the same estimated label. Idealy, the
+matrix should be diagonal, with no occurrence of an estimated label for
+a different actual label (network mistake).</p>
+<div class="figure align-default" id="id2">
+<img alt="Example of confusion matrix obtained after the learning." src="_images/confusion_matrix.png" />
+<p class="caption"><span class="caption-text">Example of confusion matrix obtained after the learning.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>The confusion matrix reports can be found in the simulation directory:</p>
+<p><em>TargetScore_/ConfusionMatrix_learning.png</em>;</p>
+<p><em>TargetScore_/ConfusionMatrix_validation.png</em>;</p>
+<p><em>TargetScore_/ConfusionMatrix_test.png</em>.</p>
+</div>
+<div class="section" id="memory-and-computation-requirements">
+<h4>Memory and computation requirements<a class="headerlink" href="#memory-and-computation-requirements" title="Permalink to this headline">¶</a></h4>
+<p>The software also report the memory and computation requirements of the
+network, as shown in figure [fig:stats]. The corresponding report can be
+found in the <em>stats</em> sub-directory of the simulation.</p>
+<div class="figure align-default" id="id3">
+<img alt="Example of memory and computation requirements of the network." src="_images/stats.png" />
+<p class="caption"><span class="caption-text">Example of memory and computation requirements of the network.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="kernels-and-weights-distribution">
+<h4>Kernels and weights distribution<a class="headerlink" href="#kernels-and-weights-distribution" title="Permalink to this headline">¶</a></h4>
+<p>The synaptic weights obtained during and after the learning can be
+analyzed, in terms of distribution (<em>weights</em> sub-directory of the
+simulation) or in terms of kernels (<em>kernels</em> sub-directory of the
+simulation), as shown in [fig:weights].</p>
+<p>cc</p>
+<div class="line-block">
+<div class="line">&#64;c&#64;</div>
+<div class="line">#2</div>
+</div>
+<p>&amp;</p>
+<div class="line-block">
+<div class="line">&#64;c&#64;</div>
+<div class="line">#2</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="line-block">
+<div class="line">&#64;c&#64;</div>
+<div class="line">#2</div>
+</div>
+<p>&amp;</p>
+<div class="line-block">
+<div class="line">&#64;c&#64;</div>
+<div class="line">#2</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="output-maps-activity">
+<h4>Output maps activity<a class="headerlink" href="#output-maps-activity" title="Permalink to this headline">¶</a></h4>
+<p>The initial output maps activity for each layer can be visualized in the
+<em>outputs_init</em> sub-directory of the simulation, as shown in figure
+[fig:outputs].</p>
+<div class="figure align-default" id="id4">
+<img alt="Output maps activity example of the first convolutional layer of the network." src="_images/conv1-dat.png" />
+<p class="caption"><span class="caption-text">Output maps activity example of the first convolutional layer of the
+network.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="export-a-learned-network">
+<h2>Export a learned network<a class="headerlink" href="#export-a-learned-network" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">n2d2</span> <span class="s2">&quot;mnist24_16c4s2_24c5s2_150_10.ini&quot;</span> <span class="o">-</span><span class="n">export</span> <span class="n">CPP_OpenCL</span>
+</pre></div>
+</div>
+<p>Export types:</p>
+<p><code class="docutils literal notranslate"><span class="pre">C</span></code> C export using OpenMP;</p>
+<p><code class="docutils literal notranslate"><span class="pre">C_HLS</span></code> C export tailored for HLS with Vivado HLS;</p>
+<p><code class="docutils literal notranslate"><span class="pre">CPP_OpenCL</span></code> C++ export using OpenCL;</p>
+<p><code class="docutils literal notranslate"><span class="pre">CPP_Cuda</span></code> C++ export using Cuda;</p>
+<p><code class="docutils literal notranslate"><span class="pre">CPP_cuDNN</span></code> C++ export using cuDNN;</p>
+<p><code class="docutils literal notranslate"><span class="pre">CPP_TensorRT</span></code> C++ export using tensorRT 2.1 API;</p>
+<p><code class="docutils literal notranslate"><span class="pre">SC_Spike</span></code> SystemC spike export.</p>
+<p>Other program options related to the exports:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 92%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-nbbits</span></code> [8]</p></td>
+<td><p>Number of bits for the weights and signals. Must be 8, 16, 32 or 64 for integer export, or -32, -64 for floating point export. The number of bits can be arbitrary for the <code class="docutils literal notranslate"><span class="pre">C_HLS</span></code> export (for example, 6 bits). It must be -32 for the <code class="docutils literal notranslate"><span class="pre">CPP_TensorRT</span></code> export, the precision is directly set at runtime</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-calib</span></code> [0]</p></td>
+<td><p>Number of stimuli used for the calibration. 0 = no calibration (default), -1 = use the full test dataset for calibration</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-calib-passes</span></code> [2]</p></td>
+<td><p>Number of KL passes for determining the layer output values distribution truncation threshold (0 = use the max. value, no truncation)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-no-unsigned</span></code></p></td>
+<td><p>If present, disable the use of unsigned data type in integer exports</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-db-export</span></code> [-1]</p></td>
+<td><p>Max. number of stimuli to export (0 = no dataset export, -1 = unlimited)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="c-export">
+<h3>C export<a class="headerlink" href="#c-export" title="Permalink to this headline">¶</a></h3>
+<p>Test the exported network:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">export_C_int8</span>
+<span class="n">make</span>
+<span class="o">./</span><span class="nb">bin</span><span class="o">/</span><span class="n">n2d2_test</span>
+</pre></div>
+</div>
+<p>The result should look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="mf">1652.00</span><span class="o">/</span><span class="mi">1762</span>    <span class="p">(</span><span class="n">avg</span> <span class="o">=</span> <span class="mf">93.757094</span><span class="o">%</span><span class="p">)</span>
+<span class="mf">1653.00</span><span class="o">/</span><span class="mi">1763</span>    <span class="p">(</span><span class="n">avg</span> <span class="o">=</span> <span class="mf">93.760635</span><span class="o">%</span><span class="p">)</span>
+<span class="mf">1654.00</span><span class="o">/</span><span class="mi">1764</span>    <span class="p">(</span><span class="n">avg</span> <span class="o">=</span> <span class="mf">93.764172</span><span class="o">%</span><span class="p">)</span>
+<span class="n">Tested</span> <span class="mi">1764</span> <span class="n">stimuli</span>
+<span class="n">Success</span> <span class="n">rate</span> <span class="o">=</span> <span class="mf">93.764172</span><span class="o">%</span>
+<span class="n">Process</span> <span class="n">time</span> <span class="n">per</span> <span class="n">stimulus</span> <span class="o">=</span> <span class="mf">187.548186</span> <span class="n">us</span> <span class="p">(</span><span class="mi">12</span> <span class="n">threads</span><span class="p">)</span>
+
+<span class="n">Confusion</span> <span class="n">matrix</span><span class="p">:</span>
+<span class="o">-------------------------------------------------</span>
+<span class="o">|</span> <span class="n">T</span> \ <span class="n">E</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>
+<span class="o">-------------------------------------------------</span>
+<span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>     <span class="mi">329</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">5</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>
+<span class="o">|</span>       <span class="o">|</span>  <span class="mf">97.63</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">0.30</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">1.48</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">0.59</span><span class="o">%</span> <span class="o">|</span>
+<span class="o">|</span>     <span class="mi">1</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>     <span class="mi">692</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>       <span class="mi">6</span> <span class="o">|</span>
+<span class="o">|</span>       <span class="o">|</span>   <span class="mf">0.00</span><span class="o">%</span> <span class="o">|</span>  <span class="mf">98.86</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">0.29</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">0.86</span><span class="o">%</span> <span class="o">|</span>
+<span class="o">|</span>     <span class="mi">2</span> <span class="o">|</span>      <span class="mi">11</span> <span class="o">|</span>      <span class="mi">27</span> <span class="o">|</span>     <span class="mi">609</span> <span class="o">|</span>      <span class="mi">55</span> <span class="o">|</span>
+<span class="o">|</span>       <span class="o">|</span>   <span class="mf">1.57</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">3.85</span><span class="o">%</span> <span class="o">|</span>  <span class="mf">86.75</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">7.83</span><span class="o">%</span> <span class="o">|</span>
+<span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>      <span class="mi">24</span> <span class="o">|</span>
+<span class="o">|</span>       <span class="o">|</span>   <span class="mf">0.00</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">0.00</span><span class="o">%</span> <span class="o">|</span>   <span class="mf">4.00</span><span class="o">%</span> <span class="o">|</span>  <span class="mf">96.00</span><span class="o">%</span> <span class="o">|</span>
+<span class="o">-------------------------------------------------</span>
+<span class="n">T</span><span class="p">:</span> <span class="n">Target</span>    <span class="n">E</span><span class="p">:</span> <span class="n">Estimated</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cpp-opencl-export">
+<h3>CPP_OpenCL export<a class="headerlink" href="#cpp-opencl-export" title="Permalink to this headline">¶</a></h3>
+<p>The OpenCL export can run the generated program in GPU or CPU
+architectures. Compilation features:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Preprocessor command [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PROFILING</span></code> [0]</p></td>
+<td><p>Compile the binary with a synchronization between each layers and return the mean execution time of each layer. This preprocessor option can decrease performances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GENERATE_KBIN</span></code> [0]</p></td>
+<td><p>Generate the binary output of the OpenCL kernel .cl file use. The binary is store in the /bin folder.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LOAD_KBIN</span></code> [0]</p></td>
+<td><p>Indicate to the program to load an OpenCL kernel as a binary from the /bin folder instead of a .cl file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CUDA</span></code> [0]</p></td>
+<td><p>Use the CUDA OpenCL SDK locate at <span class="math notranslate nohighlight">\({/usr/local/cuda}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MALI</span></code> [0]</p></td>
+<td><p>Use the MALI OpenCL SDK locate at <span class="math notranslate nohighlight">\({/usr/Mali_OpenCL_SDK_vXXX}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INTEL</span></code> [0]</p></td>
+<td><p>Use the INTEL OpenCL SDK locate at <span class="math notranslate nohighlight">\({/opt/intel/opencl}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AMD</span></code> [1]</p></td>
+<td><p>Use the AMD OpenCL SDK locate at <span class="math notranslate nohighlight">\({/opt/AMDAPPSDK-XXX}\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>Program options related to the OpenCL export:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-cpu</span></code></p></td>
+<td><p>If present, force to use a CPU architecture to run the program</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gpu</span></code></p></td>
+<td><p>If present, force to use a GPU architecture to run the program</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-batch</span></code> [1]</p></td>
+<td><p>Size of the batch to use</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-stimulus</span></code> [NULL]</p></td>
+<td><p>Path to a specific input stimulus to test. For example: -stimulus <span class="math notranslate nohighlight">\({/stimulus/env0000.pgm}\)</span> command will test the file env0000.pgm of the stimulus folder.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Test the exported network:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">export_CPP_OpenCL_float32</span>
+<span class="n">make</span>
+<span class="o">./</span><span class="nb">bin</span><span class="o">/</span><span class="n">n2d2_opencl_test</span> <span class="o">-</span><span class="n">gpu</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cpp-tensorrt-export">
+<h3>CPP_TensorRT export<a class="headerlink" href="#cpp-tensorrt-export" title="Permalink to this headline">¶</a></h3>
+<p>The TensorRT API export can run the generated program in NVIDIA GPU
+architecture. It use CUDA, cuDNN and TensorRT API library. All the
+native TensorRT layers are supported. The export support from TensorRT
+2.1 to TensorRT 5.0 versions.</p>
+<p>Program options related to the TensorRT API export:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 95%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-batch</span></code> [1]</p></td>
+<td><p>Size of the batch to use</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-dev</span></code> [0]</p></td>
+<td><p>CUDA Device ID selection</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-stimulus</span></code> [NULL]</p></td>
+<td><p>Path to a specific input stimulus to test. For example: -stimulus <span class="math notranslate nohighlight">\({/stimulus/env0000.pgm}\)</span> command will test the file env0000.pgm of the stimulus folder.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-prof</span></code></p></td>
+<td><p>Activates the layer wise profiling mechanism. This option can decrease execution time performance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-iter-build</span></code> [1]</p></td>
+<td><p>Sets the number of minimization build iterations done by the tensorRT builder to find the best layer tactics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-nbbits</span></code> [-32]</p></td>
+<td><p>Number of bits used for computation. Value -32 for Full FP32 bits configuration, -16 for Half FP16 bits configuration and 8 for INT8 bits configuration. When running INT8 mode for the first time, the TensorRT calibration process can be very long. Once generated the generated calibration table will be automatically reused. Supported compute mode in function of the compute capability are provided here: <a class="reference external" href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities">https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities</a> .</p></td>
+</tr>
+</tbody>
+</table>
+<p>Test the exported network with layer wise profiling:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">export_CPP_TensorRT_float32</span>
+<span class="n">make</span>
+<span class="o">./</span><span class="nb">bin</span><span class="o">/</span><span class="n">n2d2_tensorRT_test</span> <span class="o">-</span><span class="n">prof</span>
+</pre></div>
+</div>
+<p>The results of the layer wise profiling should look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">19</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************************</span> <span class="n">CONV1</span> <span class="o">+</span> <span class="n">CONV1_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0219467</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">05</span><span class="o">%</span><span class="p">)</span>  <span class="o">************</span> <span class="n">POOL1</span><span class="p">:</span> <span class="mf">0.00675573</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">13</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************</span> <span class="n">CONV2</span> <span class="o">+</span> <span class="n">CONV2_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0159089</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">05</span><span class="o">%</span><span class="p">)</span>  <span class="o">************</span> <span class="n">POOL2</span><span class="p">:</span> <span class="mf">0.00616047</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">14</span><span class="o">%</span><span class="p">)</span>  <span class="o">******************************</span> <span class="n">CONV3</span> <span class="o">+</span> <span class="n">CONV3_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0159713</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">19</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************************</span> <span class="n">FC1</span> <span class="o">+</span> <span class="n">FC1_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0222242</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">13</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************</span> <span class="n">FC2</span><span class="p">:</span> <span class="mf">0.0149013</span> <span class="n">ms</span>
+<span class="p">(</span><span class="mi">08</span><span class="o">%</span><span class="p">)</span>  <span class="o">******************</span> <span class="n">SOFTMAX</span><span class="p">:</span> <span class="mf">0.0100633</span> <span class="n">ms</span>
+<span class="n">Average</span> <span class="n">profiled</span> <span class="n">tensorRT</span> <span class="n">process</span> <span class="n">time</span> <span class="n">per</span> <span class="n">stimulus</span> <span class="o">=</span> <span class="mf">0.113932</span> <span class="n">ms</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cpp-cudnn-export">
+<h3>CPP_cuDNN export<a class="headerlink" href="#cpp-cudnn-export" title="Permalink to this headline">¶</a></h3>
+<p>The cuDNN export can run the generated program in NVIDIA GPU
+architecture. It use CUDA and cuDNN library. Compilation features:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Preprocessor command [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PROFILING</span></code> [0]</p></td>
+<td><p>Compile the binary with a synchronization between each layers and return the mean execution time of each layer. This preprocessor option can decrease performances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ARCH32</span></code> [0]</p></td>
+<td><p>Compile the binary with the 32-bits architecture compatibility.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Program options related to the cuDNN export:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-batch</span></code> [1]</p></td>
+<td><p>Size of the batch to use</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-dev</span></code> [0]</p></td>
+<td><p>CUDA Device ID selection</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-stimulus</span></code> [NULL]</p></td>
+<td><p>Path to a specific input stimulus to test. For example: -stimulus <span class="math notranslate nohighlight">\({/stimulus/env0000.pgm}\)</span> command will test the file env0000.pgm of the stimulus folder.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Test the exported network:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">export_CPP_cuDNN_float32</span>
+<span class="n">make</span>
+<span class="o">./</span><span class="nb">bin</span><span class="o">/</span><span class="n">n2d2_cudnn_test</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="c-hls-export">
+<h3>C_HLS export<a class="headerlink" href="#c-hls-export" title="Permalink to this headline">¶</a></h3>
+<p>Test the exported network:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">export_C_HLS_int8</span>
+<span class="n">make</span>
+<span class="o">./</span><span class="nb">bin</span><span class="o">/</span><span class="n">n2d2_test</span>
+</pre></div>
+</div>
+<p>Run the High-Level Synthesis (HLS) with Xilinx Vivado HLS:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vivado_hls</span> <span class="o">-</span><span class="n">f</span> <span class="n">run_hls</span><span class="o">.</span><span class="n">tcl</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="layer-compatibility-table">
+<h3>Layer compatibility table<a class="headerlink" href="#layer-compatibility-table" title="Permalink to this headline">¶</a></h3>
+<p>Layer compatibility table in function of the export type:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 76%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><strong>C &amp; **C_HLS &amp; **CPP_OpenCL &amp; **CPP_TensorRT
+Conv &amp; &amp; &amp; &amp;
+Pool &amp; &amp; &amp; &amp;
+Fc &amp; &amp; &amp; &amp;
+Softmax &amp; &amp; &amp; &amp;
+FMP &amp; &amp; &amp; &amp;
+Deconv &amp; &amp; &amp; &amp;
+ElemWise &amp; &amp; &amp; &amp;
+Resize &amp; &amp; &amp; &amp;
+Padding &amp; &amp; &amp; &amp;
+LRN &amp; &amp; &amp; &amp;
+Anchor &amp; &amp; &amp; &amp;
+ObjectDet &amp; &amp; &amp; &amp;
+ROIPooling &amp; &amp; &amp; &amp;
+RP &amp; &amp; &amp; &amp;
+******</strong></p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>BatchNorm is not mentionned because batch normalization parameters are
+automatically fused with convolutions parameters with the command
+“-fuse”.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ini_intro.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="about.html" class="btn btn-neutral float-left" title="About N2D2-IP" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

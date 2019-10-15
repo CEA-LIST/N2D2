@@ -7,16 +7,25 @@ N2D2
 ====
 
 .. toctree::
-   :maxdepth: 2
-   :caption: INI API:
+   :maxdepth: 1
+   :caption: Introduction:
 
-   ini_syntax
+   intro
+   about
+   simus
+
+.. toctree::
+   :maxdepth: 1
+   :caption: INI File Interface:
+
+   ini_intro
    ini_databases
+   ini_data_analysis
    ini_environment
    ini_layers
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Python API:
 
    containers
@@ -24,6 +33,12 @@ N2D2
    databases
    stimuliprovider
    deepnet
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials:
+
+   tuto
 
 Indices and tables
 ==================
