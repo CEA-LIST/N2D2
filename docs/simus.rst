@@ -15,38 +15,44 @@ compile the manual in PDF, just run the following command:
 In order to compile the manual, you must have ``pdflatex`` and
 ``bibtex`` installed, as well as some common LaTeX packages.
 
-On Ubuntu, this can be done by installing the ``texlive`` and
-``texlive-latex-extra`` software packages.
+- On Ubuntu, this can be done by installing the ``texlive`` and
+  ``texlive-latex-extra`` software packages.
 
-On Windows, you can install the ``MiKTeX`` software, which includes
-everything needed and will install the required LaTeX packages on the
-fly.
+- On Windows, you can install the ``MiKTeX`` software, which includes
+  everything needed and will install the required LaTeX packages on the
+  fly.
 
 Minimum system requirements
 ---------------------------
 
-Supported processors: ARM Cortex A15 (tested on Tegra K1) ARM Cortex
-A53/A57 (tested on Tegra X1) Pentium-compatible PC (Pentium III, Athlon
-or more-recent system recommended)
+- Supported processors:
 
-Supported operating systems: Windows :math:`\geq` 7 or Windows Server
-:math:`\geq` 2012, 64 bits with Visual Studio :math:`\geq` 2015.2 (2015
-Update 2) GNU/Linux with GCC :math:`\geq` 4.4 (tested on RHEL
-:math:`\geq` 6, Debian :math:`\geq` 6, Ubuntu :math:`\geq` 14.04)
+  - ARM Cortex A15 (tested on Tegra K1)
+  - ARM Cortex A53/A57 (tested on Tegra X1)
+  - Pentium-compatible PC (Pentium III, Athlon or more-recent system 
+    recommended)
 
-At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing
+- Supported operating systems:
 
-At least 150 MB available hard disk space + 350 MB for MNIST dataset
-processing
+  - Windows :math:`\geq` 7 or Windows Server
+    :math:`\geq` 2012, 64 bits with Visual Studio :math:`\geq` 2015.2 (2015
+    Update 2)
+  - GNU/Linux with GCC :math:`\geq` 4.4 (tested on RHEL
+    :math:`\geq` 6, Debian :math:`\geq` 6, Ubuntu :math:`\geq` 14.04)
+
+- At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing
+
+- At least 150 MB available hard disk space + 350 MB for MNIST dataset
+  processing
 
 For CUDA acceleration:
 
-CUDA :math:`\geq` 6.5 and CuDNN :math:`\geq` 1.0
+- CUDA :math:`\geq` 6.5 and CuDNN :math:`\geq` 1.0
 
-NVIDIA GPU with CUDA compute capability :math:`\geq` 3 (starting from
-*Kepler* micro-architecture)
+- NVIDIA GPU with CUDA compute capability :math:`\geq` 3 (starting from
+  *Kepler* micro-architecture)
 
-At least 512 MB GPU RAM for MNIST dataset processing
+- At least 512 MB GPU RAM for MNIST dataset processing
 
 Obtaining N2D2
 --------------
@@ -59,18 +65,18 @@ Red Hat Enterprise Linux (RHEL) 6
 
 Make sure you have the following packages installed:
 
-``cmake``
+- ``cmake``
 
-``gnuplot``
+- ``gnuplot``
 
-``opencv``
+- ``opencv``
 
-``opencv-devel`` (may require the ``rhel-x86_64-workstation-optional-6``
-repository channel)
+- ``opencv-devel`` (may require the ``rhel-x86_64-workstation-optional-6``
+  repository channel)
 
 Plus, to be able to use GPU acceleration:
 
-Install the CUDA repository package:
+- Install the CUDA repository package:
 
 ::
 
@@ -78,15 +84,15 @@ Install the CUDA repository package:
     yum clean expire-cache
     yum install cuda
 
-Install cuDNN from the NVIDIA website: register to `NVIDIA
-Developer <https://developer.nvidia.com/cudnn>`__ and download the
-latest version of cuDNN. Simply copy the header and library files from
-the cuDNN archive to the corresponding directories in the CUDA
-installation path (by default: /usr/local/cuda/include and
-/usr/local/cuda/lib64, respectively).
+- Install cuDNN from the NVIDIA website: register to `NVIDIA
+  Developer <https://developer.nvidia.com/cudnn>`__ and download the
+  latest version of cuDNN. Simply copy the header and library files from
+  the cuDNN archive to the corresponding directories in the CUDA
+  installation path (by default: /usr/local/cuda/include and
+  /usr/local/cuda/lib64, respectively).
 
-Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
-the LD\_LIBRARY\_PATH environment variable.
+- Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
+  the LD\_LIBRARY\_PATH environment variable.
 
 Ubuntu
 ^^^^^^
@@ -94,53 +100,53 @@ Ubuntu
 Make sure you have the following packages installed, if they are
 available on your Ubuntu version:
 
-``cmake``
+- ``cmake``
 
-``gnuplot``
+- ``gnuplot``
 
-``libopencv-dev``
+- ``libopencv-dev``
 
-``libcv-dev``
+- ``libcv-dev``
 
-``libhighgui-dev``
+- ``libhighgui-dev``
 
 Plus, to be able to use GPU acceleration:
 
-Install the CUDA repository package matching your distribution. For
-example, for Ubuntu 14.04 64 bits:
+- Install the CUDA repository package matching your distribution. For
+  example, for Ubuntu 14.04 64 bits:
 
 ::
 
     wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
     dpkg -i cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
 
-Install the cuDNN repository package matching your distribution. For
-example, for Ubuntu 14.04 64 bits:
+- Install the cuDNN repository package matching your distribution. For
+  example, for Ubuntu 14.04 64 bits:
 
 ::
 
     wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
     dpkg -i nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
 
-Note that the cuDNN repository package is provided by NVIDIA for Ubuntu
-starting from version 14.04.
+  Note that the cuDNN repository package is provided by NVIDIA for Ubuntu
+  starting from version 14.04.
 
-Update the package lists: ``apt-get update``
+- Update the package lists: ``apt-get update``
 
-Install the CUDA and cuDNN required packages:
+- Install the CUDA and cuDNN required packages:
 
 ::
 
     apt-get install cuda-core-7-5 cuda-cudart-dev-7-5 cuda-cublas-dev-7-5 cuda-curand-dev-7-5 libcudnn5-dev
 
-Make sure there is a symlink to ``/usr/local/cuda``:
+- Make sure there is a symlink to ``/usr/local/cuda``:
 
 ::
 
     ln -s /usr/local/cuda-7.5 /usr/local/cuda
 
-Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
-the LD\_LIBRARY\_PATH environment variable.
+- Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
+  the LD\_LIBRARY\_PATH environment variable.
 
 Windows
 ^^^^^^^
@@ -150,40 +156,40 @@ required.
 
 Make sure you have the following software installed:
 
-CMake (http://www.cmake.org/): download and run the Windows installer.
+- CMake (http://www.cmake.org/): download and run the Windows installer.
 
-``dirent.h`` C++ header (https://github.com/tronkko/dirent): to be put
-in the Visual Studio include path.
+- ``dirent.h`` C++ header (https://github.com/tronkko/dirent): to be put
+  in the Visual Studio include path.
 
-Gnuplot (http://www.gnuplot.info/): the bin sub-directory in the install
-path needs to be added to the Windows ``PATH`` environment variable.
+- Gnuplot (http://www.gnuplot.info/): the bin sub-directory in the install
+  path needs to be added to the Windows ``PATH`` environment variable.
 
-OpenCV (http://opencv.org/): download the latest 2.x version for Windows
-and extract it to, for example, ``C:\OpenCV\``. Make sure to define the
-environment variable ``OpenCV_DIR`` to point to
-``C:\OpenCV\opencv\build``. Make sure to add the bin sub-directory
-(``C:\OpenCV\opencv\build\x64\vc12\bin``) to the Windows ``PATH``
-environment variable.
+- OpenCV (http://opencv.org/): download the latest 2.x version for Windows
+  and extract it to, for example, ``C:\OpenCV\``. Make sure to define the
+  environment variable ``OpenCV_DIR`` to point to
+  ``C:\OpenCV\opencv\build``. Make sure to add the bin sub-directory
+  (``C:\OpenCV\opencv\build\x64\vc12\bin``) to the Windows ``PATH``
+  environment variable.
 
 Plus, to be able to use GPU acceleration:
 
-Download and install CUDA toolkit 8.0 located at
-https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe:
+- Download and install CUDA toolkit 8.0 located at
+  https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe:
 
 ::
 
     rename cuda_8.0.44_windows-exe cuda_8.0.44_windows.exe
     cuda_8.0.44_windows.exe -s compiler_8.0 cublas_8.0 cublas_dev_8.0 cudart_8.0 curand_8.0 curand_dev_8.0
 
-Update the ``PATH`` environment variable:
+- Update the ``PATH`` environment variable:
 
 ::
 
     set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
 
-Download and install cuDNN 8.0 located at
-http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip
-(the following command assumes that you have 7-Zip installed):
+- Download and install cuDNN 8.0 located at
+  http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip
+  (the following command assumes that you have 7-Zip installed):
 
 ::
 
@@ -307,11 +313,11 @@ a different actual label (network mistake).
 
 The confusion matrix reports can be found in the simulation directory:
 
-*TargetScore\_/ConfusionMatrix\_learning.png*;
+- *TargetScore\_/ConfusionMatrix\_learning.png*;
 
-*TargetScore\_/ConfusionMatrix\_validation.png*;
+- *TargetScore\_/ConfusionMatrix\_validation.png*;
 
-*TargetScore\_/ConfusionMatrix\_test.png*.
+- *TargetScore\_/ConfusionMatrix\_test.png*.
 
 Memory and computation requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -333,27 +339,6 @@ analyzed, in terms of distribution (*weights* sub-directory of the
 simulation) or in terms of kernels (*kernels* sub-directory of the
 simulation), as shown in [fig:weights].
 
-cc
-
-| @c@
-| #2
-
-&
-
-| @c@
-| #2
-
-| 
-
-| @c@
-| #2
-
-&
-
-| @c@
-| #2
-
-| 
 
 Output maps activity
 ^^^^^^^^^^^^^^^^^^^^

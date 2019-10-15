@@ -44,23 +44,23 @@ Built-in transformations
 
 There are 6 possible categories of transformations:
 
-``env.Transformation[...]`` Transformations applied to the input images
-before channels creation;
+- ``env.Transformation[...]`` Transformations applied to the input images
+  before channels creation;
 
-``env.OnTheFlyTransformation[...]`` On-the-fly transformations applied
-to the input images before channels creation;
+- ``env.OnTheFlyTransformation[...]`` On-the-fly transformations applied
+  to the input images before channels creation;
 
-``env.ChannelTransformation[...]`` Create or add transformation for a
-specific channel;
+- ``env.ChannelTransformation[...]`` Create or add transformation for a
+  specific channel;
 
-``env.ChannelOnTheFlyTransformation[...]`` Create or add on-the-fly
-transformation for a specific channel;
+- ``env.ChannelOnTheFlyTransformation[...]`` Create or add on-the-fly
+  transformation for a specific channel;
 
-``env.ChannelsTransformation[...]`` Transformations applied to all the
-channels of the input images;
+- ``env.ChannelsTransformation[...]`` Transformations applied to all the
+  channels of the input images;
 
-``env.ChannelsOnTheFlyTransformation[...]`` On-the-fly transformations
-applied to all the channels of the input images.
+- ``env.ChannelsOnTheFlyTransformation[...]`` On-the-fly transformations
+  applied to all the channels of the input images.
 
 Example:
 
@@ -187,24 +187,33 @@ Gaussian window
 
 Gaussian window.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| *WindowName*\ ``.Sigma`` [0.4] & Sigma
++---------------------------------+------------------------+
+| Option [default value]          | Description            |
++=================================+========================+
+| *WindowName*\ ``.Sigma`` [0.4]  | Sigma                  |
++---------------------------------+------------------------+
 
 Blackman window
 ^^^^^^^^^^^^^^^
 
 Blackman window.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| *WindowName*\ ``.Alpha`` [0.16] & Alpha
++---------------------------------+------------------------+
+| Option [default value]          | Description            |
++=================================+========================+
+| *WindowName*\ ``.Alpha`` [0.16] | Alpha                  |
++---------------------------------+------------------------+
 
 Kaiser window
 ^^^^^^^^^^^^^
 
 Kaiser window.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| *WindowName*\ ``.Beta`` [5.0] & Beta
++---------------------------------+------------------------+
+| Option [default value]          | Description            |
++=================================+========================+
+| *WindowName*\ ``.Beta`` [5.0]   | Beta                   |
++---------------------------------+------------------------+
 
 ChannelExtractionTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -377,10 +386,15 @@ Apply a convolution filter to the image.
 
 Custom kernel.
 
-| \| m4cm \| m7cm \| Option & Description
-| ``Kernel.SizeX`` [0] & Width of the kernel (numer of columns)
-| ``Kernel.SizeY`` [0] & Height of the kernel (number of rows)
-| ``Kernel.Mat`` & List of row-major ordered coefficients of the kernel
++----------------------+-------------------------------------------------------+
+| Option               | Description                                           |
++======================+=======================================================+
+| ``Kernel.SizeX`` [0] | Width of the kernel (numer of columns)                |
++----------------------+-------------------------------------------------------+
+| ``Kernel.SizeY`` [0] | Height of the kernel (number of rows)                 |
++----------------------+-------------------------------------------------------+
+| ``Kernel.Mat``       | List of row-major ordered coefficients of the kernel  |
++----------------------+-------------------------------------------------------+
 
 If both ``Kernel.SizeX`` and ``Kernel.SizeY`` are 0, the kernel is
 assumed to be square.
@@ -390,51 +404,76 @@ Gaussian kernel
 
 Gaussian kernel.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| ``Kernel.SizeX`` & Width of the kernel (numer of columns)
-| ``Kernel.SizeY`` & Height of the kernel (number of rows)
-| ``Kernel.Positive`` [1] & If true, the center of the kernel is
-  positive
-| ``Kernel.Sigma`` [:math:`\sqrt{2.0}`] & Sigma of the kernel
++---------------------------------------+-------------------------------------------------------+
+| Option [default value]                | Description                                           |
++=======================================+=======================================================+
+| ``Kernel.SizeX``                      | Width of the kernel (numer of columns)                |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.SizeY``                      | Height of the kernel (number of rows)                 |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Positive`` [1]               | If true, the center of the kernel is positive         |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Sigma`` [:math:`\sqrt{2.0}`] | Sigma of the kernel                                   |
++---------------------------------------+-------------------------------------------------------+
 
 LoG kernel
 ^^^^^^^^^^
 
 Laplacian Of Gaussian kernel.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| ``Kernel.SizeX`` & Width of the kernel (numer of columns)
-| ``Kernel.SizeY`` & Height of the kernel (number of rows)
-| ``Kernel.Positive`` [1] & If true, the center of the kernel is
-  positive
-| ``Kernel.Sigma`` [:math:`\sqrt{2.0}`] & Sigma of the kernel
++---------------------------------------+-------------------------------------------------------+
+| Option [default value]                | Description                                           |
++=======================================+=======================================================+
+| ``Kernel.SizeX``                      | Width of the kernel (numer of columns)                |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.SizeY``                      | Height of the kernel (number of rows)                 |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Positive`` [1]               | If true, the center of the kernel is positive         |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Sigma`` [:math:`\sqrt{2.0}`] | Sigma of the kernel                                   |
++---------------------------------------+-------------------------------------------------------+
 
 DoG kernel
 ^^^^^^^^^^
 
 Difference Of Gaussian kernel kernel.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| ``Kernel.SizeX`` & Width of the kernel (numer of columns)
-| ``Kernel.SizeY`` & Height of the kernel (number of rows)
-| ``Kernel.Positive`` [1] & If true, the center of the kernel is
-  positive
-| ``Kernel.Sigma1`` [2.0] & Sigma1 of the kernel
-| ``Kernel.Sigma2`` [1.0] & Sigma2 of the kernel
++---------------------------------------+-------------------------------------------------------+
+| Option [default value]                | Description                                           |
++=======================================+=======================================================+
+| ``Kernel.SizeX``                      | Width of the kernel (numer of columns)                |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.SizeY``                      | Height of the kernel (number of rows)                 |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Positive`` [1]               | If true, the center of the kernel is positive         |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Sigma1`` [2.0]               | Sigma1 of the kernel                                  |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Sigma2`` [1.0]               | Sigma2 of the kernel                                  |
++---------------------------------------+-------------------------------------------------------+
 
 Gabor kernel
 ^^^^^^^^^^^^
 
 Gabor kernel.
 
-| \| m4cm \| m7cm \| Option [default value] & Description
-| ``Kernel.SizeX`` & Width of the kernel (numer of columns)
-| ``Kernel.SizeY`` & Height of the kernel (number of rows)
-| ``Kernel.Theta`` & Theta of the kernel
-| ``Kernel.Sigma`` [:math:`\sqrt{2.0}`] & Sigma of the kernel
-| ``Kernel.Lambda`` [10.0] & Lambda of the kernel
-| ``Kernel.Psi`` [:math:`\pi/2.0`] & Psi of the kernel
-| ``Kernel.Gamma`` [0.5] & Gamma of the kernel
++---------------------------------------+-------------------------------------------------------+
+| Option [default value]                | Description                                           |
++=======================================+=======================================================+
+| ``Kernel.SizeX``                      | Width of the kernel (numer of columns)                |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.SizeY``                      | Height of the kernel (number of rows)                 |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Theta``                      | Theta of the kernel                                   |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Sigma`` [:math:`\sqrt{2.0}`] | Sigma of the kernel                                   |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Lambda`` [10.0]              | Lambda of the kernel                                  |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Psi`` [:math:`\pi/2.0`]      | Psi of the kernel                                     |
++---------------------------------------+-------------------------------------------------------+
+| ``Kernel.Gamma`` [0.5]                | Gamma of the kernel                                   |
++---------------------------------------+-------------------------------------------------------+
 
 FlipTransformation
 ~~~~~~~~~~~~~~~~~~

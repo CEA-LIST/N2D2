@@ -88,15 +88,15 @@ filler is sometimes referred as MSRA filler.
 Use a normal distribution with standard deviation
 :math:`\sqrt{\frac{2.0}{n}}`.
 
-| :math:`n` = :math:`fan\mhyphen{}in` with ``FanIn``, resulting in
-  :math:`Var(W)=\frac{2}{fan\mhyphen{}in}`
+- :math:`n` = :math:`fan\text{-}in` with ``FanIn``, resulting in
+  :math:`Var(W)=\frac{2}{fan\text{-}in}`
 
-| :math:`n` = :math:`\frac{(fan\mhyphen{}in + fan\mhyphen{}out)}{2}`
+- :math:`n` = :math:`\frac{(fan\text{-}in + fan\text{-}out)}{2}`
   with ``Average``, resulting in
-  :math:`Var(W)=\frac{4}{fan\mhyphen{}in + fan\mhyphen{}out}`
+  :math:`Var(W)=\frac{4}{fan\text{-}in + fan\text{-}out}`
 
-:math:`n` = :math:`fan\mhyphen{}out` with ``FanOut``, resulting in
-:math:`Var(W)=\frac{2}{fan\mhyphen{}out}`
+- :math:`n` = :math:`fan\text{-}out` with ``FanOut``, resulting in
+  :math:`Var(W)=\frac{2}{fan\text{-}out}`
 
 NormalFiller
 ~~~~~~~~~~~~
@@ -143,15 +143,15 @@ Fill with an uniform distribution with normalized variance
 Use an uniform distribution with interval :math:`[-scale,scale]`, with
 :math:`scale = \sqrt{\frac{3.0}{n}}`.
 
-| :math:`n` = :math:`fan\mhyphen{}in` with ``FanIn``, resulting in
-  :math:`Var(W)=\frac{1}{fan\mhyphen{}in}`
+- :math:`n` = :math:`fan\text{-}in` with ``FanIn``, resulting in
+  :math:`Var(W)=\frac{1}{fan\text{-}in}`
 
-| :math:`n` = :math:`\frac{(fan\mhyphen{}in + fan\mhyphen{}out)}{2}`
+- :math:`n` = :math:`\frac{(fan\text{-}in + fan\text{-}out)}{2}`
   with ``Average``, resulting in
-  :math:`Var(W)=\frac{2}{fan\mhyphen{}in + fan\mhyphen{}out}`
+  :math:`Var(W)=\frac{2}{fan\text{-}in + fan\text{-}out}`
 
-:math:`n` = :math:`fan\mhyphen{}out` with ``FanOut``, resulting in
-:math:`Var(W)=\frac{1}{fan\mhyphen{}out}`
+- :math:`n` = :math:`fan\text{-}out` with ``FanOut``, resulting in
+  :math:`Var(W)=\frac{1}{fan\text{-}out}`
 
 Weight solvers
 --------------
@@ -185,32 +185,32 @@ SGD Solver for ``Frame`` models.
 
 The learning rate decay policies are the following:
 
-| ``StepDecay``: every *SolverName*\ ``.LearningRateStepSize`` stimuli,
+- ``StepDecay``: every *SolverName*\ ``.LearningRateStepSize`` stimuli,
   the learning rate is reduced by a factor
   *SolverName*\ ``.LearningRateDecay``;
 
-| ``ExponentialDecay``: the learning rate is
+- ``ExponentialDecay``: the learning rate is
   :math:`\alpha = \alpha_{0}\exp(-k t)`, with :math:`\alpha_{0}` the
   initial learning rate *SolverName*\ ``.LearningRate``, :math:`k` the
   rate decay *SolverName* ``.LearningRateDecay`` and :math:`t` the step
   number (one step every *SolverName*\ ``.LearningRateStepSize``
   stimuli);
 
-| ``InvTDecay``: the learning rate is
+- ``InvTDecay``: the learning rate is
   :math:`\alpha = \alpha_{0} / (1 + k t)`, with :math:`\alpha_{0}` the
   initial learning rate *SolverName*\ ``.LearningRate``, :math:`k` the
   rate decay *SolverName*\ ``.LearningRateDecay`` and :math:`t` the step
   number (one step every *SolverName*\ ``.LearningRateStepSize``
   stimuli).
 
-| ``InvDecay``: the learning rate is
+- ``InvDecay``: the learning rate is
   :math:`\alpha = \alpha_{0} * (1 + k t)^{-n}`, with :math:`\alpha_{0}`
   the initial learning rate *SolverName*\ ``.LearningRate``, :math:`k`
   the rate decay *SolverName*\ ``.LearningRateDecay``, :math:`t` the
   current iteration and :math:`n` the power parameter
   *SolverName*\ ``.Power``
 
-| ``PolyDecay``: the learning rate is
+- ``PolyDecay``: the learning rate is
   :math:`\alpha = \alpha_{0} * (1 - \frac{k}{t})^n`, with
   :math:`\alpha_{0}` the initial learning rate
   *SolverName*\ ``.LearningRate``, :math:`k` the current iteration,

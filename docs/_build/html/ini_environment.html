@@ -276,18 +276,20 @@
 <div class="section" id="built-in-transformations">
 <h2>Built-in transformations<a class="headerlink" href="#built-in-transformations" title="Permalink to this headline">¶</a></h2>
 <p>There are 6 possible categories of transformations:</p>
-<p><code class="docutils literal notranslate"><span class="pre">env.Transformation[...]</span></code> Transformations applied to the input images
-before channels creation;</p>
-<p><code class="docutils literal notranslate"><span class="pre">env.OnTheFlyTransformation[...]</span></code> On-the-fly transformations applied
-to the input images before channels creation;</p>
-<p><code class="docutils literal notranslate"><span class="pre">env.ChannelTransformation[...]</span></code> Create or add transformation for a
-specific channel;</p>
-<p><code class="docutils literal notranslate"><span class="pre">env.ChannelOnTheFlyTransformation[...]</span></code> Create or add on-the-fly
-transformation for a specific channel;</p>
-<p><code class="docutils literal notranslate"><span class="pre">env.ChannelsTransformation[...]</span></code> Transformations applied to all the
-channels of the input images;</p>
-<p><code class="docutils literal notranslate"><span class="pre">env.ChannelsOnTheFlyTransformation[...]</span></code> On-the-fly transformations
-applied to all the channels of the input images.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">env.Transformation[...]</span></code> Transformations applied to the input images
+before channels creation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.OnTheFlyTransformation[...]</span></code> On-the-fly transformations applied
+to the input images before channels creation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelTransformation[...]</span></code> Create or add transformation for a
+specific channel;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelOnTheFlyTransformation[...]</span></code> Create or add on-the-fly
+transformation for a specific channel;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelsTransformation[...]</span></code> Transformations applied to all the
+channels of the input images;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelsOnTheFlyTransformation[...]</span></code> On-the-fly transformations
+applied to all the channels of the input images.</p></li>
+</ul>
 <p>Example:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env.Transformation]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">PadCropTransformation</span>
@@ -445,26 +447,62 @@ operator :</p>
 <div class="section" id="gaussian-window">
 <h4>Gaussian window<a class="headerlink" href="#gaussian-window" title="Permalink to this headline">¶</a></h4>
 <p>Gaussian window.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Sigma</span></code> [0.4] &amp; Sigma</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Sigma</span></code> [0.4]</p></td>
+<td><p>Sigma</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="blackman-window">
 <h4>Blackman window<a class="headerlink" href="#blackman-window" title="Permalink to this headline">¶</a></h4>
 <p>Blackman window.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Alpha</span></code> [0.16] &amp; Alpha</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Alpha</span></code> [0.16]</p></td>
+<td><p>Alpha</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="kaiser-window">
 <h4>Kaiser window<a class="headerlink" href="#kaiser-window" title="Permalink to this headline">¶</a></h4>
 <p>Kaiser window.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Beta</span></code> [5.0] &amp; Beta</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Beta</span></code> [5.0]</p></td>
+<td><p>Beta</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section" id="channelextractiontransformation">
@@ -729,65 +767,158 @@ image), and for the learning only.</p>
 <div class="section" id="kernel">
 <h4>* kernel<a class="headerlink" href="#kernel" title="Permalink to this headline">¶</a></h4>
 <p>Custom kernel.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> [0] &amp; Width of the kernel (numer of columns)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> [0] &amp; Height of the kernel (number of rows)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Mat</span></code> &amp; List of row-major ordered coefficients of the kernel</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> [0]</p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> [0]</p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Mat</span></code></p></td>
+<td><p>List of row-major ordered coefficients of the kernel</p></td>
+</tr>
+</tbody>
+</table>
 <p>If both <code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> are 0, the kernel is
 assumed to be square.</p>
 </div>
 <div class="section" id="gaussian-kernel">
 <h4>Gaussian kernel<a class="headerlink" href="#gaussian-kernel" title="Permalink to this headline">¶</a></h4>
 <p>Gaussian kernel.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> &amp; Width of the kernel (numer of columns)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> &amp; Height of the kernel (number of rows)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1] &amp; If true, the center of the kernel is
-positive</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>] &amp; Sigma of the kernel</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1]</p></td>
+<td><p>If true, the center of the kernel is positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>]</p></td>
+<td><p>Sigma of the kernel</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="log-kernel">
 <h4>LoG kernel<a class="headerlink" href="#log-kernel" title="Permalink to this headline">¶</a></h4>
 <p>Laplacian Of Gaussian kernel.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> &amp; Width of the kernel (numer of columns)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> &amp; Height of the kernel (number of rows)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1] &amp; If true, the center of the kernel is
-positive</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>] &amp; Sigma of the kernel</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1]</p></td>
+<td><p>If true, the center of the kernel is positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>]</p></td>
+<td><p>Sigma of the kernel</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="dog-kernel">
 <h4>DoG kernel<a class="headerlink" href="#dog-kernel" title="Permalink to this headline">¶</a></h4>
 <p>Difference Of Gaussian kernel kernel.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> &amp; Width of the kernel (numer of columns)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> &amp; Height of the kernel (number of rows)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1] &amp; If true, the center of the kernel is
-positive</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma1</span></code> [2.0] &amp; Sigma1 of the kernel</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma2</span></code> [1.0] &amp; Sigma2 of the kernel</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1]</p></td>
+<td><p>If true, the center of the kernel is positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma1</span></code> [2.0]</p></td>
+<td><p>Sigma1 of the kernel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma2</span></code> [1.0]</p></td>
+<td><p>Sigma2 of the kernel</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="gabor-kernel">
 <h4>Gabor kernel<a class="headerlink" href="#gabor-kernel" title="Permalink to this headline">¶</a></h4>
 <p>Gabor kernel.</p>
-<div class="line-block">
-<div class="line">| m4cm | m7cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> &amp; Width of the kernel (numer of columns)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> &amp; Height of the kernel (number of rows)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Theta</span></code> &amp; Theta of the kernel</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>] &amp; Sigma of the kernel</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Lambda</span></code> [10.0] &amp; Lambda of the kernel</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Psi</span></code> [<span class="math notranslate nohighlight">\(\pi/2.0\)</span>] &amp; Psi of the kernel</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Kernel.Gamma</span></code> [0.5] &amp; Gamma of the kernel</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Theta</span></code></p></td>
+<td><p>Theta of the kernel</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>]</p></td>
+<td><p>Sigma of the kernel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Lambda</span></code> [10.0]</p></td>
+<td><p>Lambda of the kernel</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Psi</span></code> [<span class="math notranslate nohighlight">\(\pi/2.0\)</span>]</p></td>
+<td><p>Psi of the kernel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Gamma</span></code> [0.5]</p></td>
+<td><p>Gamma of the kernel</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section" id="fliptransformation">

@@ -220,29 +220,45 @@ compile the manual in PDF, just run the following command:</p>
 </div>
 <p>In order to compile the manual, you must have <code class="docutils literal notranslate"><span class="pre">pdflatex</span></code> and
 <code class="docutils literal notranslate"><span class="pre">bibtex</span></code> installed, as well as some common LaTeX packages.</p>
-<p>On Ubuntu, this can be done by installing the <code class="docutils literal notranslate"><span class="pre">texlive</span></code> and
-<code class="docutils literal notranslate"><span class="pre">texlive-latex-extra</span></code> software packages.</p>
-<p>On Windows, you can install the <code class="docutils literal notranslate"><span class="pre">MiKTeX</span></code> software, which includes
+<ul class="simple">
+<li><p>On Ubuntu, this can be done by installing the <code class="docutils literal notranslate"><span class="pre">texlive</span></code> and
+<code class="docutils literal notranslate"><span class="pre">texlive-latex-extra</span></code> software packages.</p></li>
+<li><p>On Windows, you can install the <code class="docutils literal notranslate"><span class="pre">MiKTeX</span></code> software, which includes
 everything needed and will install the required LaTeX packages on the
-fly.</p>
+fly.</p></li>
+</ul>
 </div>
 <div class="section" id="minimum-system-requirements">
 <h2>Minimum system requirements<a class="headerlink" href="#minimum-system-requirements" title="Permalink to this headline">¶</a></h2>
-<p>Supported processors: ARM Cortex A15 (tested on Tegra K1) ARM Cortex
-A53/A57 (tested on Tegra X1) Pentium-compatible PC (Pentium III, Athlon
-or more-recent system recommended)</p>
-<p>Supported operating systems: Windows <span class="math notranslate nohighlight">\(\geq\)</span> 7 or Windows Server
+<ul class="simple">
+<li><p>Supported processors:</p>
+<ul>
+<li><p>ARM Cortex A15 (tested on Tegra K1)</p></li>
+<li><p>ARM Cortex A53/A57 (tested on Tegra X1)</p></li>
+<li><p>Pentium-compatible PC (Pentium III, Athlon or more-recent system
+recommended)</p></li>
+</ul>
+</li>
+<li><p>Supported operating systems:</p>
+<ul>
+<li><p>Windows <span class="math notranslate nohighlight">\(\geq\)</span> 7 or Windows Server
 <span class="math notranslate nohighlight">\(\geq\)</span> 2012, 64 bits with Visual Studio <span class="math notranslate nohighlight">\(\geq\)</span> 2015.2 (2015
-Update 2) GNU/Linux with GCC <span class="math notranslate nohighlight">\(\geq\)</span> 4.4 (tested on RHEL
-<span class="math notranslate nohighlight">\(\geq\)</span> 6, Debian <span class="math notranslate nohighlight">\(\geq\)</span> 6, Ubuntu <span class="math notranslate nohighlight">\(\geq\)</span> 14.04)</p>
-<p>At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing</p>
-<p>At least 150 MB available hard disk space + 350 MB for MNIST dataset
-processing</p>
+Update 2)</p></li>
+<li><p>GNU/Linux with GCC <span class="math notranslate nohighlight">\(\geq\)</span> 4.4 (tested on RHEL
+<span class="math notranslate nohighlight">\(\geq\)</span> 6, Debian <span class="math notranslate nohighlight">\(\geq\)</span> 6, Ubuntu <span class="math notranslate nohighlight">\(\geq\)</span> 14.04)</p></li>
+</ul>
+</li>
+<li><p>At least 256 MB of RAM (1 GB with GPU/CUDA) for MNIST dataset processing</p></li>
+<li><p>At least 150 MB available hard disk space + 350 MB for MNIST dataset
+processing</p></li>
+</ul>
 <p>For CUDA acceleration:</p>
-<p>CUDA <span class="math notranslate nohighlight">\(\geq\)</span> 6.5 and CuDNN <span class="math notranslate nohighlight">\(\geq\)</span> 1.0</p>
-<p>NVIDIA GPU with CUDA compute capability <span class="math notranslate nohighlight">\(\geq\)</span> 3 (starting from
-<em>Kepler</em> micro-architecture)</p>
-<p>At least 512 MB GPU RAM for MNIST dataset processing</p>
+<ul class="simple">
+<li><p>CUDA <span class="math notranslate nohighlight">\(\geq\)</span> 6.5 and CuDNN <span class="math notranslate nohighlight">\(\geq\)</span> 1.0</p></li>
+<li><p>NVIDIA GPU with CUDA compute capability <span class="math notranslate nohighlight">\(\geq\)</span> 3 (starting from
+<em>Kepler</em> micro-architecture)</p></li>
+<li><p>At least 512 MB GPU RAM for MNIST dataset processing</p></li>
+</ul>
 </div>
 <div class="section" id="obtaining-n2d2">
 <h2>Obtaining N2D2<a class="headerlink" href="#obtaining-n2d2" title="Permalink to this headline">¶</a></h2>
@@ -251,93 +267,120 @@ processing</p>
 <div class="section" id="red-hat-enterprise-linux-rhel-6">
 <h4>Red Hat Enterprise Linux (RHEL) 6<a class="headerlink" href="#red-hat-enterprise-linux-rhel-6" title="Permalink to this headline">¶</a></h4>
 <p>Make sure you have the following packages installed:</p>
-<p><code class="docutils literal notranslate"><span class="pre">cmake</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">gnuplot</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">opencv</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">opencv-devel</span></code> (may require the <code class="docutils literal notranslate"><span class="pre">rhel-x86_64-workstation-optional-6</span></code>
-repository channel)</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gnuplot</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opencv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opencv-devel</span></code> (may require the <code class="docutils literal notranslate"><span class="pre">rhel-x86_64-workstation-optional-6</span></code>
+repository channel)</p></li>
+</ul>
 <p>Plus, to be able to use GPU acceleration:</p>
-<p>Install the CUDA repository package:</p>
+<ul class="simple">
+<li><p>Install the CUDA repository package:</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rpm</span> <span class="o">-</span><span class="n">Uhv</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">developer</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">nvidia</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">compute</span><span class="o">/</span><span class="n">cuda</span><span class="o">/</span><span class="n">repos</span><span class="o">/</span><span class="n">rhel6</span><span class="o">/</span><span class="n">x86_64</span><span class="o">/</span><span class="n">cuda</span><span class="o">-</span><span class="n">repo</span><span class="o">-</span><span class="n">rhel6</span><span class="o">-</span><span class="mf">7.5</span><span class="o">-</span><span class="mf">18.</span><span class="n">x86_64</span><span class="o">.</span><span class="n">rpm</span>
 <span class="n">yum</span> <span class="n">clean</span> <span class="n">expire</span><span class="o">-</span><span class="n">cache</span>
 <span class="n">yum</span> <span class="n">install</span> <span class="n">cuda</span>
 </pre></div>
 </div>
-<p>Install cuDNN from the NVIDIA website: register to <a class="reference external" href="https://developer.nvidia.com/cudnn">NVIDIA
+<ul class="simple">
+<li><p>Install cuDNN from the NVIDIA website: register to <a class="reference external" href="https://developer.nvidia.com/cudnn">NVIDIA
 Developer</a> and download the
 latest version of cuDNN. Simply copy the header and library files from
 the cuDNN archive to the corresponding directories in the CUDA
 installation path (by default: /usr/local/cuda/include and
-/usr/local/cuda/lib64, respectively).</p>
-<p>Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
-the LD_LIBRARY_PATH environment variable.</p>
+/usr/local/cuda/lib64, respectively).</p></li>
+<li><p>Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
+the LD_LIBRARY_PATH environment variable.</p></li>
+</ul>
 </div>
 <div class="section" id="ubuntu">
 <h4>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h4>
 <p>Make sure you have the following packages installed, if they are
 available on your Ubuntu version:</p>
-<p><code class="docutils literal notranslate"><span class="pre">cmake</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">gnuplot</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">libopencv-dev</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">libcv-dev</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">libhighgui-dev</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gnuplot</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">libopencv-dev</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">libcv-dev</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">libhighgui-dev</span></code></p></li>
+</ul>
 <p>Plus, to be able to use GPU acceleration:</p>
-<p>Install the CUDA repository package matching your distribution. For
-example, for Ubuntu 14.04 64 bits:</p>
+<ul class="simple">
+<li><p>Install the CUDA repository package matching your distribution. For
+example, for Ubuntu 14.04 64 bits:</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
 dpkg -i cuda-repo-ubuntu!\color{gray}{1404}!_7.5-18_!\color{gray}{amd64}!.deb
 </pre></div>
 </div>
-<p>Install the cuDNN repository package matching your distribution. For
-example, for Ubuntu 14.04 64 bits:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
-dpkg -i nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+<ul class="simple">
+<li><p>Install the cuDNN repository package matching your distribution. For
+example, for Ubuntu 14.04 64 bits:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu!\color{gray}{1404}!/!\color{gray}{x86\_64}!/nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+  dpkg -i nvidia-machine-learning-repo-ubuntu!\color{gray}{1404}!_4.0-2_!\color{gray}{amd64}!.deb
+
+Note that the cuDNN repository package is provided by NVIDIA for Ubuntu
+starting from version 14.04.
 </pre></div>
 </div>
-<p>Note that the cuDNN repository package is provided by NVIDIA for Ubuntu
-starting from version 14.04.</p>
-<p>Update the package lists: <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">update</span></code></p>
-<p>Install the CUDA and cuDNN required packages:</p>
+<ul class="simple">
+<li><p>Update the package lists: <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">update</span></code></p></li>
+<li><p>Install the CUDA and cuDNN required packages:</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">cuda</span><span class="o">-</span><span class="n">core</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">cuda</span><span class="o">-</span><span class="n">cudart</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">cuda</span><span class="o">-</span><span class="n">cublas</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">cuda</span><span class="o">-</span><span class="n">curand</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span> <span class="n">libcudnn5</span><span class="o">-</span><span class="n">dev</span>
 </pre></div>
 </div>
-<p>Make sure there is a symlink to <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>:</p>
+<ul class="simple">
+<li><p>Make sure there is a symlink to <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>:</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span><span class="o">-</span><span class="mf">7.5</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span>
 </pre></div>
 </div>
-<p>Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
-the LD_LIBRARY_PATH environment variable.</p>
+<ul class="simple">
+<li><p>Make sure the CUDA library path (e.g. /usr/local/cuda/lib64) is added to
+the LD_LIBRARY_PATH environment variable.</p></li>
+</ul>
 </div>
 <div class="section" id="windows">
 <h4>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h4>
 <p>On Windows 64 bits, Visual Studio <span class="math notranslate nohighlight">\(\geq\)</span> 2015.2 (2015 Update 2) is
 required.</p>
 <p>Make sure you have the following software installed:</p>
-<p>CMake (<a class="reference external" href="http://www.cmake.org/">http://www.cmake.org/</a>): download and run the Windows installer.</p>
-<p><code class="docutils literal notranslate"><span class="pre">dirent.h</span></code> C++ header (<a class="reference external" href="https://github.com/tronkko/dirent">https://github.com/tronkko/dirent</a>): to be put
-in the Visual Studio include path.</p>
-<p>Gnuplot (<a class="reference external" href="http://www.gnuplot.info/">http://www.gnuplot.info/</a>): the bin sub-directory in the install
-path needs to be added to the Windows <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable.</p>
-<p>OpenCV (<a class="reference external" href="http://opencv.org/">http://opencv.org/</a>): download the latest 2.x version for Windows
+<ul class="simple">
+<li><p>CMake (<a class="reference external" href="http://www.cmake.org/">http://www.cmake.org/</a>): download and run the Windows installer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dirent.h</span></code> C++ header (<a class="reference external" href="https://github.com/tronkko/dirent">https://github.com/tronkko/dirent</a>): to be put
+in the Visual Studio include path.</p></li>
+<li><p>Gnuplot (<a class="reference external" href="http://www.gnuplot.info/">http://www.gnuplot.info/</a>): the bin sub-directory in the install
+path needs to be added to the Windows <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable.</p></li>
+<li><p>OpenCV (<a class="reference external" href="http://opencv.org/">http://opencv.org/</a>): download the latest 2.x version for Windows
 and extract it to, for example, <code class="docutils literal notranslate"><span class="pre">C:\OpenCV\</span></code>. Make sure to define the
 environment variable <code class="docutils literal notranslate"><span class="pre">OpenCV_DIR</span></code> to point to
 <code class="docutils literal notranslate"><span class="pre">C:\OpenCV\opencv\build</span></code>. Make sure to add the bin sub-directory
 (<code class="docutils literal notranslate"><span class="pre">C:\OpenCV\opencv\build\x64\vc12\bin</span></code>) to the Windows <code class="docutils literal notranslate"><span class="pre">PATH</span></code>
-environment variable.</p>
+environment variable.</p></li>
+</ul>
 <p>Plus, to be able to use GPU acceleration:</p>
-<p>Download and install CUDA toolkit 8.0 located at
-<a class="reference external" href="https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe">https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe</a>:</p>
+<ul class="simple">
+<li><p>Download and install CUDA toolkit 8.0 located at
+<a class="reference external" href="https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe">https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe</a>:</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rename</span> <span class="n">cuda_8</span><span class="o">.</span><span class="mf">0.44</span><span class="n">_windows</span><span class="o">-</span><span class="n">exe</span> <span class="n">cuda_8</span><span class="o">.</span><span class="mf">0.44</span><span class="n">_windows</span><span class="o">.</span><span class="n">exe</span>
 <span class="n">cuda_8</span><span class="o">.</span><span class="mf">0.44</span><span class="n">_windows</span><span class="o">.</span><span class="n">exe</span> <span class="o">-</span><span class="n">s</span> <span class="n">compiler_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">cublas_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">cublas_dev_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">cudart_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">curand_8</span><span class="o">.</span><span class="mi">0</span> <span class="n">curand_dev_8</span><span class="o">.</span><span class="mi">0</span>
 </pre></div>
 </div>
-<p>Update the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable:</p>
+<ul class="simple">
+<li><p>Update the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable:</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span> <span class="n">PATH</span><span class="o">=%</span><span class="n">ProgramFiles</span><span class="o">%</span>\<span class="n">NVIDIA</span> <span class="n">GPU</span> <span class="n">Computing</span> <span class="n">Toolkit</span>\<span class="n">CUDA</span>\<span class="n">v8</span><span class="o">.</span><span class="mi">0</span>\<span class="nb">bin</span><span class="p">;</span><span class="o">%</span><span class="n">ProgramFiles</span><span class="o">%</span>\<span class="n">NVIDIA</span> <span class="n">GPU</span> <span class="n">Computing</span> <span class="n">Toolkit</span>\<span class="n">CUDA</span>\<span class="n">v8</span><span class="o">.</span><span class="mi">0</span>\<span class="n">libnvvp</span><span class="p">;</span><span class="o">%</span><span class="n">PATH</span><span class="o">%</span>
 </pre></div>
 </div>
-<p>Download and install cuDNN 8.0 located at
+<ul class="simple">
+<li><p>Download and install cuDNN 8.0 located at
 <a class="reference external" href="http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip">http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-windows7-x64-v5.1.zip</a>
-(the following command assumes that you have 7-Zip installed):</p>
+(the following command assumes that you have 7-Zip installed):</p></li>
+</ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">7</span><span class="n">z</span> <span class="n">x</span> <span class="n">cudnn</span><span class="o">-</span><span class="mf">8.0</span><span class="o">-</span><span class="n">windows7</span><span class="o">-</span><span class="n">x64</span><span class="o">-</span><span class="n">v5</span><span class="o">.</span><span class="mf">1.</span><span class="n">zip</span>
 <span class="n">copy</span> <span class="n">cuda</span>\<span class="n">include</span>\<span class="o">*.*</span> <span class="o">^</span>
   <span class="s2">&quot;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA</span><span class="se">\v</span><span class="s2">8.0\include</span><span class="se">\&quot;</span>
@@ -438,9 +481,11 @@ a different actual label (network mistake).</p>
 <p class="caption"><span class="caption-text">Example of confusion matrix obtained after the learning.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 <p>The confusion matrix reports can be found in the simulation directory:</p>
-<p><em>TargetScore_/ConfusionMatrix_learning.png</em>;</p>
-<p><em>TargetScore_/ConfusionMatrix_validation.png</em>;</p>
-<p><em>TargetScore_/ConfusionMatrix_test.png</em>.</p>
+<ul class="simple">
+<li><p><em>TargetScore_/ConfusionMatrix_learning.png</em>;</p></li>
+<li><p><em>TargetScore_/ConfusionMatrix_validation.png</em>;</p></li>
+<li><p><em>TargetScore_/ConfusionMatrix_test.png</em>.</p></li>
+</ul>
 </div>
 <div class="section" id="memory-and-computation-requirements">
 <h4>Memory and computation requirements<a class="headerlink" href="#memory-and-computation-requirements" title="Permalink to this headline">¶</a></h4>
@@ -458,31 +503,6 @@ found in the <em>stats</em> sub-directory of the simulation.</p>
 analyzed, in terms of distribution (<em>weights</em> sub-directory of the
 simulation) or in terms of kernels (<em>kernels</em> sub-directory of the
 simulation), as shown in [fig:weights].</p>
-<p>cc</p>
-<div class="line-block">
-<div class="line">&#64;c&#64;</div>
-<div class="line">#2</div>
-</div>
-<p>&amp;</p>
-<div class="line-block">
-<div class="line">&#64;c&#64;</div>
-<div class="line">#2</div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<div class="line-block">
-<div class="line">&#64;c&#64;</div>
-<div class="line">#2</div>
-</div>
-<p>&amp;</p>
-<div class="line-block">
-<div class="line">&#64;c&#64;</div>
-<div class="line">#2</div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
 </div>
 <div class="section" id="output-maps-activity">
 <h4>Output maps activity<a class="headerlink" href="#output-maps-activity" title="Permalink to this headline">¶</a></h4>

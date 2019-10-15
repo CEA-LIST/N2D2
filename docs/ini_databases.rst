@@ -12,9 +12,9 @@ MNIST
 MNIST :raw-latex:`\citep{LeCun1998}` is already fractionned into a
 learning set and a testing set, with:
 
-60,000 digits in the learning set;
+- 60,000 digits in the learning set;
 
-10,000 digits in the testing set.
+- 10,000 digits in the testing set.
 
 Example:
 
@@ -40,9 +40,9 @@ GTSRB
 GTSRB :raw-latex:`\citep{Stallkamp2012}` is already fractionned into a
 learning set and a testing set, with:
 
-39,209 digits in the learning set;
+- 39,209 digits in the learning set;
 
-12,630 digits in the testing set.
+- 12,630 digits in the testing set.
 
 Example:
 
@@ -70,13 +70,13 @@ with the ``DIR_Database`` module. For example, suppose your database is
 organized as following (in the path specified in the ``N2D2_DATA``
 environment variable):
 
-``GST/airplanes``: 800 images
+- ``GST/airplanes``: 800 images
 
-``GST/car_side``: 123 images
+- ``GST/car_side``: 123 images
 
-``GST/Faces``: 435 images
+- ``GST/Faces``: 435 images
 
-``GST/Motorbikes``: 798 images
+- ``GST/Motorbikes``: 798 images
 
 You can then instanciate this database as input of your neural network
 using the following parameters:
@@ -325,16 +325,16 @@ code” downloadable on the dataset website.
 Assuming the following directory structure (in the path specified in the
 ``N2D2_DATA`` environment variable):
 
-``CaltechPedestrians/data-USA/videos/...`` (from the *setxx.tar* files)
+- ``CaltechPedestrians/data-USA/videos/...`` (from the *setxx.tar* files)
 
-``CaltechPedestrians/data-USA/annotations/...`` (from the *setxx.tar*
-files)
+- ``CaltechPedestrians/data-USA/annotations/...`` (from the *setxx.tar*
+  files)
 
-``CaltechPedestrians/tools/piotr_toolbox/toolbox`` (from the Piotr’s
-Matlab Toolbox archive)
+- ``CaltechPedestrians/tools/piotr_toolbox/toolbox`` (from the Piotr’s
+  Matlab Toolbox archive)
 
-``CaltechPedestrians/*.m`` including ``dbExtract.m`` (from the Matlab
-evaluation/labeling code)
+- ``CaltechPedestrians/*.m`` including ``dbExtract.m`` (from the Matlab
+  evaluation/labeling code)
 
 Use the following command in Matlab to generate the images and
 annotations:

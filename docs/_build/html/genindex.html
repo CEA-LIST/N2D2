@@ -179,6 +179,7 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -197,7 +198,11 @@
       <li><a href="deepnet.html#N2D2.DeepNet.addCMonitor">addCMonitor() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="cells.html#N2D2.Cell.addInput">addInput() (N2D2.Cell method)</a>
+
+      <ul>
+        <li><a href="cells.html#N2D2.Cell_Frame_Top.addInput">(N2D2.Cell_Frame_Top method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="deepnet.html#N2D2.DeepNet.addMonitor">addMonitor() (N2D2.DeepNet method)</a>
@@ -212,6 +217,10 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.backPropagate">backPropagate() (N2D2.Cell_Frame_Top method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers.html#N2D2.BaseTensor">BaseTensor (class in N2D2)</a>
 </li>
   </ul></td>
@@ -224,8 +233,20 @@
 </li>
       <li><a href="cells.html#N2D2.Cell.FreeParametersType">Cell.FreeParametersType (class in N2D2)</a>
 </li>
-      <li><a href="deepnet.html#N2D2.DeepNet.checkGradient">checkGradient() (N2D2.DeepNet method)</a>
+      <li><a href="cells.html#N2D2.Cell_Frame_CUDA_float">Cell_Frame_CUDA_float (class in N2D2)</a>
 </li>
+      <li><a href="cells.html#N2D2.Cell_Frame_float">Cell_Frame_float (class in N2D2)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top">Cell_Frame_Top (class in N2D2)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.Signals">Cell_Frame_Top.Signals (class in N2D2)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.checkGradient">checkGradient() (N2D2.Cell_Frame_Top method)</a>
+
+      <ul>
+        <li><a href="deepnet.html#N2D2.DeepNet.checkGradient">(N2D2.DeepNet method)</a>
+</li>
+      </ul></li>
       <li><a href="containers.html#N2D2.BaseTensor.clear">clear() (N2D2.BaseTensor method)</a>
 
       <ul>
@@ -234,10 +255,10 @@
       </ul></li>
       <li><a href="deepnet.html#N2D2.DeepNet.clearActivity">clearActivity() (N2D2.DeepNet method)</a>
 </li>
-      <li><a href="deepnet.html#N2D2.DeepNet.clearAll">clearAll() (N2D2.DeepNet method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="deepnet.html#N2D2.DeepNet.clearAll">clearAll() (N2D2.DeepNet method)</a>
+</li>
       <li><a href="deepnet.html#N2D2.DeepNet.clearFiringRate">clearFiringRate() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.clearSuccess">clearSuccess() (N2D2.DeepNet method)</a>
@@ -252,6 +273,14 @@
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.cTicks">cTicks() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="containers.html#N2D2.CudaBaseDeviceTensor">CudaBaseDeviceTensor (class in N2D2)</a>
+</li>
+      <li><a href="containers.html#N2D2.CudaBaseTensor">CudaBaseTensor (class in N2D2)</a>
+</li>
+      <li><a href="containers.html#N2D2.CudaTensor_double">CudaTensor_double (class in N2D2)</a>
+</li>
+      <li><a href="containers.html#N2D2.CudaTensor_float">CudaTensor_float (class in N2D2)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -265,6 +294,8 @@
       <li><a href="databases.html#N2D2.Database.StimuliSetMask">Database.StimuliSetMask (class in N2D2)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet">DeepNet (class in N2D2)</a>
+</li>
+      <li><a href="containers.html#N2D2.CudaBaseTensor.deviceTensor">deviceTensor() (N2D2.CudaBaseTensor method)</a>
 </li>
       <li><a href="containers.html#N2D2.BaseTensor.dimB">dimB() (N2D2.BaseTensor method)</a>
 </li>
@@ -281,6 +312,8 @@
       <li><a href="containers.html#N2D2.BaseTensor.dimZ">dimZ() (N2D2.BaseTensor method)</a>
 </li>
       <li><a href="cells.html#N2D2.Cell.discretizeFreeParameters">discretizeFreeParameters() (N2D2.Cell method)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.discretizeSignals">discretizeSignals() (N2D2.Cell_Frame_Top method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -316,6 +349,8 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.getActivation">getActivation() (N2D2.Cell_Frame_Top method)</a>
+</li>
       <li><a href="cells.html#N2D2.Cell.getAssociatedDeepNet">getAssociatedDeepNet() (N2D2.Cell method)</a>
 </li>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.getBatch">getBatch() (N2D2.StimuliProvider method)</a>
@@ -338,6 +373,8 @@
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.getCMonitor">getCMonitor() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="containers.html#N2D2.CudaBaseDeviceTensor.getCudaTensor">getCudaTensor() (N2D2.CudaBaseDeviceTensor method)</a>
+</li>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.getData">getData() (N2D2.StimuliProvider method)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.getDatabase">getDatabase() (N2D2.DeepNet method)</a>
@@ -346,6 +383,8 @@
         <li><a href="stimuliprovider.html#N2D2.StimuliProvider.getDatabase">(N2D2.StimuliProvider method)</a>
 </li>
       </ul></li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.getDiffInputs">getDiffInputs() (N2D2.Cell_Frame_Top method)</a>
+</li>
       <li><a href="cells.html#N2D2.Cell.getFreeParametersRange">getFreeParametersRange() (N2D2.Cell method)</a>
 </li>
       <li><a href="cells.html#N2D2.Cell.getFreeParametersRangePerOutput">getFreeParametersRangePerOutput() (N2D2.Cell method)</a>
@@ -366,12 +405,14 @@
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.getLayers">getLayers() (N2D2.DeepNet method)</a>
 </li>
-      <li><a href="deepnet.html#N2D2.DeepNet.getMonitor">getMonitor() (N2D2.DeepNet method)</a>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.getMaxOutput">getMaxOutput() (N2D2.Cell_Frame_Top method)</a>
 </li>
-      <li><a href="cells.html#N2D2.Cell.getName">getName() (N2D2.Cell method)</a>
+      <li><a href="deepnet.html#N2D2.DeepNet.getMonitor">getMonitor() (N2D2.DeepNet method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cells.html#N2D2.Cell.getName">getName() (N2D2.Cell method)</a>
+</li>
       <li><a href="cells.html#N2D2.Cell.getNbChannels">getNbChannels() (N2D2.Cell method)</a>
 
       <ul>
@@ -383,6 +424,8 @@
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.getNbTransformations">getNbTransformations() (N2D2.StimuliProvider method)</a>
 </li>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.getOnTheFlyTransformation">getOnTheFlyTransformation() (N2D2.StimuliProvider method)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.getOutputs">getOutputs() (N2D2.Cell_Frame_Top method)</a>
 </li>
       <li><a href="cells.html#N2D2.Cell.getOutputsDim">getOutputsDim() (N2D2.Cell method)</a>
 </li>
@@ -427,8 +470,18 @@
       <ul>
         <li><a href="cells.html#N2D2.Cell.getType">(N2D2.Cell method)</a>
 </li>
+        <li><a href="containers.html#N2D2.CudaBaseDeviceTensor.getType">(N2D2.CudaBaseDeviceTensor method)</a>
+</li>
       </ul></li>
       <li><a href="cells.html#N2D2.Cell.groupMap">groupMap() (N2D2.Cell method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers.html#N2D2.CudaBaseTensor.hostBased">hostBased() (N2D2.CudaBaseTensor method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -454,6 +507,8 @@
 </li>
       <li><a href="cells.html#N2D2.Cell.isConnection">isConnection() (N2D2.Cell method)</a>
 </li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.isCuda">isCuda() (N2D2.Cell_Frame_Top method)</a>
+</li>
       <li><a href="cells.html#N2D2.Cell.isFullMap">isFullMap() (N2D2.Cell method)</a>
 </li>
       <li><a href="cells.html#N2D2.Cell.isUnitMap">isUnitMap() (N2D2.Cell method)</a>
@@ -472,6 +527,8 @@
 
       <ul>
         <li><a href="cells.html#N2D2.Cell.load">(N2D2.Cell method)</a>
+</li>
+        <li><a href="cells.html#N2D2.Cell_Frame_Top.load">(N2D2.Cell_Frame_Top method)</a>
 </li>
         <li><a href="deepnet.html#N2D2.DeepNet.load">(N2D2.DeepNet method)</a>
 </li>
@@ -492,14 +549,14 @@
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.logEstimatedLabelsJSON">logEstimatedLabelsJSON() (N2D2.DeepNet method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cells.html#N2D2.Cell.logFreeParameters">logFreeParameters() (N2D2.Cell method)</a>
 
       <ul>
         <li><a href="deepnet.html#N2D2.DeepNet.logFreeParameters">(N2D2.DeepNet method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cells.html#N2D2.Cell.logFreeParametersDistrib">logFreeParametersDistrib() (N2D2.Cell method)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.logLabelsLegend">logLabelsLegend() (N2D2.DeepNet method)</a>
@@ -535,6 +592,8 @@
       <li><a href="cells.html#N2D2.Cell.FreeParametersType.name">name() (N2D2.Cell.FreeParametersType property)</a>
 
       <ul>
+        <li><a href="cells.html#N2D2.Cell_Frame_Top.Signals.name">(N2D2.Cell_Frame_Top.Signals property)</a>
+</li>
         <li><a href="databases.html#N2D2.Database.StimuliSet.name">(N2D2.Database.StimuliSet property)</a>
 </li>
         <li><a href="databases.html#N2D2.Database.StimuliSetMask.name">(N2D2.Database.StimuliSetMask property)</a>
@@ -556,6 +615,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cells.html#N2D2.Cell.processFreeParametersPerOutput">processFreeParametersPerOutput() (N2D2.Cell method)</a>
 </li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.propagate">propagate() (N2D2.Cell_Frame_Top method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -572,13 +633,15 @@
 </li>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.readStimulus">readStimulus() (N2D2.StimuliProvider method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.readStimulusBatch">readStimulusBatch() (N2D2.StimuliProvider method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="deepnet.html#N2D2.DeepNet.removeCell">removeCell() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.removeDropout">removeDropout() (N2D2.DeepNet method)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.replaceInput">replaceInput() (N2D2.Cell_Frame_Top method)</a>
 </li>
       <li><a href="containers.html#N2D2.BaseTensor.reserve">reserve() (N2D2.BaseTensor method)</a>
 </li>
@@ -597,6 +660,8 @@
       <ul>
         <li><a href="cells.html#N2D2.Cell.save">(N2D2.Cell method)</a>
 </li>
+        <li><a href="cells.html#N2D2.Cell_Frame_Top.save">(N2D2.Cell_Frame_Top method)</a>
+</li>
         <li><a href="deepnet.html#N2D2.DeepNet.save">(N2D2.DeepNet method)</a>
 </li>
       </ul></li>
@@ -606,18 +671,26 @@
 </li>
       <li><a href="databases.html#N2D2.Database.saveROIs">saveROIs() (N2D2.Database method)</a>
 </li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.setActivation">setActivation() (N2D2.Cell_Frame_Top method)</a>
+</li>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.setBatchSize">setBatchSize() (N2D2.StimuliProvider method)</a>
 </li>
       <li><a href="stimuliprovider.html#N2D2.StimuliProvider.setCachePath">setCachePath() (N2D2.StimuliProvider method)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.setDatabase">setDatabase() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.setOutputErrors">setOutputErrors() (N2D2.Cell_Frame_Top method)</a>
+</li>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.setOutputTarget">setOutputTarget() (N2D2.Cell_Frame_Top method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.setOutputTargets">setOutputTargets() (N2D2.Cell_Frame_Top method)</a>
+</li>
       <li><a href="deepnet.html#N2D2.DeepNet.setStimuliProvider">setStimuliProvider() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="containers.html#N2D2.BaseTensor.setValid">setValid() (N2D2.BaseTensor method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers.html#N2D2.BaseTensor.size">size() (N2D2.BaseTensor method)</a>
 </li>
       <li><a href="deepnet.html#N2D2.DeepNet.spikeCodingCompare">spikeCodingCompare() (N2D2.DeepNet method)</a>
@@ -646,6 +719,12 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers.html#N2D2.Tensor_double">Tensor_double (class in N2D2)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers.html#N2D2.Tensor_float">Tensor_float (class in N2D2)</a>
+</li>
       <li><a href="deepnet.html#N2D2.DeepNet.test">test() (N2D2.DeepNet method)</a>
 </li>
   </ul></td>
@@ -654,8 +733,12 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="deepnet.html#N2D2.DeepNet.update">update() (N2D2.DeepNet method)</a>
+      <li><a href="cells.html#N2D2.Cell_Frame_Top.update">update() (N2D2.Cell_Frame_Top method)</a>
+
+      <ul>
+        <li><a href="deepnet.html#N2D2.DeepNet.update">(N2D2.DeepNet method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

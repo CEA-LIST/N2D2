@@ -98,7 +98,11 @@
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Containers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Containers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tensor">Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cudatensor">CudaTensor</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
@@ -173,6 +177,8 @@
             
   <div class="section" id="containers">
 <h1>Containers<a class="headerlink" href="#containers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tensor">
+<h2>Tensor<a class="headerlink" href="#tensor" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="N2D2.BaseTensor">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">BaseTensor</code><a class="headerlink" href="#N2D2.BaseTensor" title="Permalink to this definition">¶</a></dt>
@@ -303,6 +309,60 @@
 
 </dd></dl>
 
+<dl class="class">
+<dt id="N2D2.Tensor_float">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Tensor_float</code><a class="headerlink" href="#N2D2.Tensor_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="N2D2.Tensor_double">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Tensor_double</code><a class="headerlink" href="#N2D2.Tensor_double" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="cudatensor">
+<h2>CudaTensor<a class="headerlink" href="#cudatensor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="N2D2.CudaBaseDeviceTensor">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaBaseDeviceTensor</code><a class="headerlink" href="#N2D2.CudaBaseDeviceTensor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="N2D2.CudaBaseDeviceTensor.getCudaTensor">
+<code class="sig-name descname">getCudaTensor</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.CudaBaseDeviceTensor</em><span class="sig-paren">)</span> &#x2192; N2D2::CudaBaseTensor<a class="headerlink" href="#N2D2.CudaBaseDeviceTensor.getCudaTensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.CudaBaseDeviceTensor.getType">
+<code class="sig-name descname">getType</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.CudaBaseDeviceTensor</em><span class="sig-paren">)</span> &#x2192; std::type_info<a class="headerlink" href="#N2D2.CudaBaseDeviceTensor.getType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="N2D2.CudaBaseTensor">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaBaseTensor</code><a class="headerlink" href="#N2D2.CudaBaseTensor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="N2D2.CudaBaseTensor.deviceTensor">
+<code class="sig-name descname">deviceTensor</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.CudaBaseTensor</em><span class="sig-paren">)</span> &#x2192; N2D2.CudaBaseDeviceTensor<a class="headerlink" href="#N2D2.CudaBaseTensor.deviceTensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.CudaBaseTensor.hostBased">
+<code class="sig-name descname">hostBased</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.CudaBaseTensor</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.CudaBaseTensor.hostBased" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="N2D2.CudaTensor_float">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaTensor_float</code><a class="headerlink" href="#N2D2.CudaTensor_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="N2D2.CudaTensor_double">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaTensor_double</code><a class="headerlink" href="#N2D2.CudaTensor_double" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
 </div>
 
 

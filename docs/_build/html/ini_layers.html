@@ -377,17 +377,15 @@ filler is sometimes referred as MSRA filler.</p>
 </table>
 <p>Use a normal distribution with standard deviation
 <span class="math notranslate nohighlight">\(\sqrt{\frac{2.0}{n}}\)</span>.</p>
-<div class="line-block">
-<div class="line"><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\mhyphen{}in\)</span> with <code class="docutils literal notranslate"><span class="pre">FanIn</span></code>, resulting in
-<span class="math notranslate nohighlight">\(Var(W)=\frac{2}{fan\mhyphen{}in}\)</span></div>
-</div>
-<div class="line-block">
-<div class="line"><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(\frac{(fan\mhyphen{}in + fan\mhyphen{}out)}{2}\)</span>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\text{-}in\)</span> with <code class="docutils literal notranslate"><span class="pre">FanIn</span></code>, resulting in
+<span class="math notranslate nohighlight">\(Var(W)=\frac{2}{fan\text{-}in}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(\frac{(fan\text{-}in + fan\text{-}out)}{2}\)</span>
 with <code class="docutils literal notranslate"><span class="pre">Average</span></code>, resulting in
-<span class="math notranslate nohighlight">\(Var(W)=\frac{4}{fan\mhyphen{}in + fan\mhyphen{}out}\)</span></div>
-</div>
-<p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\mhyphen{}out\)</span> with <code class="docutils literal notranslate"><span class="pre">FanOut</span></code>, resulting in
-<span class="math notranslate nohighlight">\(Var(W)=\frac{2}{fan\mhyphen{}out}\)</span></p>
+<span class="math notranslate nohighlight">\(Var(W)=\frac{4}{fan\text{-}in + fan\text{-}out}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\text{-}out\)</span> with <code class="docutils literal notranslate"><span class="pre">FanOut</span></code>, resulting in
+<span class="math notranslate nohighlight">\(Var(W)=\frac{2}{fan\text{-}out}\)</span></p></li>
+</ul>
 </div>
 <div class="section" id="normalfiller">
 <h3>NormalFiller<a class="headerlink" href="#normalfiller" title="Permalink to this headline">¶</a></h3>
@@ -463,17 +461,15 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 </table>
 <p>Use an uniform distribution with interval <span class="math notranslate nohighlight">\([-scale,scale]\)</span>, with
 <span class="math notranslate nohighlight">\(scale = \sqrt{\frac{3.0}{n}}\)</span>.</p>
-<div class="line-block">
-<div class="line"><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\mhyphen{}in\)</span> with <code class="docutils literal notranslate"><span class="pre">FanIn</span></code>, resulting in
-<span class="math notranslate nohighlight">\(Var(W)=\frac{1}{fan\mhyphen{}in}\)</span></div>
-</div>
-<div class="line-block">
-<div class="line"><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(\frac{(fan\mhyphen{}in + fan\mhyphen{}out)}{2}\)</span>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\text{-}in\)</span> with <code class="docutils literal notranslate"><span class="pre">FanIn</span></code>, resulting in
+<span class="math notranslate nohighlight">\(Var(W)=\frac{1}{fan\text{-}in}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(\frac{(fan\text{-}in + fan\text{-}out)}{2}\)</span>
 with <code class="docutils literal notranslate"><span class="pre">Average</span></code>, resulting in
-<span class="math notranslate nohighlight">\(Var(W)=\frac{2}{fan\mhyphen{}in + fan\mhyphen{}out}\)</span></div>
-</div>
-<p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\mhyphen{}out\)</span> with <code class="docutils literal notranslate"><span class="pre">FanOut</span></code>, resulting in
-<span class="math notranslate nohighlight">\(Var(W)=\frac{1}{fan\mhyphen{}out}\)</span></p>
+<span class="math notranslate nohighlight">\(Var(W)=\frac{2}{fan\text{-}in + fan\text{-}out}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> = <span class="math notranslate nohighlight">\(fan\text{-}out\)</span> with <code class="docutils literal notranslate"><span class="pre">FanOut</span></code>, resulting in
+<span class="math notranslate nohighlight">\(Var(W)=\frac{1}{fan\text{-}out}\)</span></p></li>
+</ul>
 </div>
 </div>
 <div class="section" id="weight-solvers">
@@ -522,44 +518,36 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 </tbody>
 </table>
 <p>The learning rate decay policies are the following:</p>
-<div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StepDecay</span></code>: every <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateStepSize</span></code> stimuli,
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">StepDecay</span></code>: every <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateStepSize</span></code> stimuli,
 the learning rate is reduced by a factor
-<em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateDecay</span></code>;</div>
-</div>
-<div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">ExponentialDecay</span></code>: the learning rate is
+<em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateDecay</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ExponentialDecay</span></code>: the learning rate is
 <span class="math notranslate nohighlight">\(\alpha = \alpha_{0}\exp(-k t)\)</span>, with <span class="math notranslate nohighlight">\(\alpha_{0}\)</span> the
 initial learning rate <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRate</span></code>, <span class="math notranslate nohighlight">\(k\)</span> the
 rate decay <em>SolverName</em> <code class="docutils literal notranslate"><span class="pre">.LearningRateDecay</span></code> and <span class="math notranslate nohighlight">\(t\)</span> the step
 number (one step every <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateStepSize</span></code>
-stimuli);</div>
-</div>
-<div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">InvTDecay</span></code>: the learning rate is
+stimuli);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InvTDecay</span></code>: the learning rate is
 <span class="math notranslate nohighlight">\(\alpha = \alpha_{0} / (1 + k t)\)</span>, with <span class="math notranslate nohighlight">\(\alpha_{0}\)</span> the
 initial learning rate <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRate</span></code>, <span class="math notranslate nohighlight">\(k\)</span> the
 rate decay <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateDecay</span></code> and <span class="math notranslate nohighlight">\(t\)</span> the step
 number (one step every <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateStepSize</span></code>
-stimuli).</div>
-</div>
-<div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">InvDecay</span></code>: the learning rate is
+stimuli).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InvDecay</span></code>: the learning rate is
 <span class="math notranslate nohighlight">\(\alpha = \alpha_{0} * (1 + k t)^{-n}\)</span>, with <span class="math notranslate nohighlight">\(\alpha_{0}\)</span>
 the initial learning rate <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRate</span></code>, <span class="math notranslate nohighlight">\(k\)</span>
 the rate decay <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRateDecay</span></code>, <span class="math notranslate nohighlight">\(t\)</span> the
 current iteration and <span class="math notranslate nohighlight">\(n\)</span> the power parameter
-<em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.Power</span></code></div>
-</div>
-<div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PolyDecay</span></code>: the learning rate is
+<em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.Power</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PolyDecay</span></code>: the learning rate is
 <span class="math notranslate nohighlight">\(\alpha = \alpha_{0} * (1 - \frac{k}{t})^n\)</span>, with
 <span class="math notranslate nohighlight">\(\alpha_{0}\)</span> the initial learning rate
 <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.LearningRate</span></code>, <span class="math notranslate nohighlight">\(k\)</span> the current iteration,
 <span class="math notranslate nohighlight">\(t\)</span> the maximum number of iteration
 <em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.MaxIterations</span></code> and <span class="math notranslate nohighlight">\(n\)</span> the power parameter
-<em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.Power</span></code></div>
-</div>
+<em>SolverName</em><code class="docutils literal notranslate"><span class="pre">.Power</span></code></p></li>
+</ul>
 </div>
 <div class="section" id="sgdsolver-frame-cuda">
 <h3>SGDSolver_Frame_CUDA<a class="headerlink" href="#sgdsolver-frame-cuda" title="Permalink to this headline">¶</a></h3>

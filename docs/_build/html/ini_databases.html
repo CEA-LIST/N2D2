@@ -210,8 +210,10 @@ a network and learn it on these database.</p>
 <h2>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h2>
 <p>MNIST <a href="#id1"><span class="problematic" id="id2">:raw-latex:`\citep{LeCun1998}`</span></a> is already fractionned into a
 learning set and a testing set, with:</p>
-<p>60,000 digits in the learning set;</p>
-<p>10,000 digits in the testing set.</p>
+<ul class="simple">
+<li><p>60,000 digits in the learning set;</p></li>
+<li><p>10,000 digits in the testing set.</p></li>
+</ul>
 <p>Example:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">MNIST_IDX_Database</span>
@@ -245,8 +247,10 @@ learning set and a testing set, with:</p>
 <h2>GTSRB<a class="headerlink" href="#gtsrb" title="Permalink to this headline">¶</a></h2>
 <p>GTSRB <a href="#id3"><span class="problematic" id="id4">:raw-latex:`\citep{Stallkamp2012}`</span></a> is already fractionned into a
 learning set and a testing set, with:</p>
-<p>39,209 digits in the learning set;</p>
-<p>12,630 digits in the testing set.</p>
+<ul class="simple">
+<li><p>39,209 digits in the learning set;</p></li>
+<li><p>12,630 digits in the testing set.</p></li>
+</ul>
 <p>Example:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">GTSRB_DIR_Database</span>
@@ -282,10 +286,12 @@ learning set and a testing set, with:</p>
 with the <code class="docutils literal notranslate"><span class="pre">DIR_Database</span></code> module. For example, suppose your database is
 organized as following (in the path specified in the <code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code>
 environment variable):</p>
-<p><code class="docutils literal notranslate"><span class="pre">GST/airplanes</span></code>: 800 images</p>
-<p><code class="docutils literal notranslate"><span class="pre">GST/car_side</span></code>: 123 images</p>
-<p><code class="docutils literal notranslate"><span class="pre">GST/Faces</span></code>: 435 images</p>
-<p><code class="docutils literal notranslate"><span class="pre">GST/Motorbikes</span></code>: 798 images</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/airplanes</span></code>: 800 images</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/car_side</span></code>: 123 images</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/Faces</span></code>: 435 images</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/Motorbikes</span></code>: 798 images</p></li>
+</ul>
 <p>You can then instanciate this database as input of your neural network
 using the following parameters:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
@@ -658,13 +664,15 @@ seq video data located in the <em>videos</em> directory using the
 code” downloadable on the dataset website.</p>
 <p>Assuming the following directory structure (in the path specified in the
 <code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code> environment variable):</p>
-<p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/data-USA/videos/...</span></code> (from the <em>setxx.tar</em> files)</p>
-<p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/data-USA/annotations/...</span></code> (from the <em>setxx.tar</em>
-files)</p>
-<p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/tools/piotr_toolbox/toolbox</span></code> (from the Piotr’s
-Matlab Toolbox archive)</p>
-<p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/*.m</span></code> including <code class="docutils literal notranslate"><span class="pre">dbExtract.m</span></code> (from the Matlab
-evaluation/labeling code)</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/data-USA/videos/...</span></code> (from the <em>setxx.tar</em> files)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/data-USA/annotations/...</span></code> (from the <em>setxx.tar</em>
+files)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/tools/piotr_toolbox/toolbox</span></code> (from the Piotr’s
+Matlab Toolbox archive)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/*.m</span></code> including <code class="docutils literal notranslate"><span class="pre">dbExtract.m</span></code> (from the Matlab
+evaluation/labeling code)</p></li>
+</ul>
 <p>Use the following command in Matlab to generate the images and
 annotations:</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span><span class="p">([</span><span class="n">getenv</span><span class="p">(</span><span class="s">&#39;N2D2_DATA&#39;</span><span class="p">)</span> <span class="s">&#39;/CaltechPedestrians&#39;</span><span class="p">])</span>
