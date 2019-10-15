@@ -478,7 +478,7 @@ double N2D2::DeepNetQuantization::getCellThreshold(const std::string& cellName,
 }
 
 void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& activation,
-                                          ActivationScalingMode actScalingMode) 
+                                                      ActivationScalingMode actScalingMode) 
 {
     assert(activation.getActivationScaling().getMode() == ActivationScalingMode::FLOAT_MULT);
 
@@ -489,9 +489,6 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
         // Nothing to do.
     }
     else if(actScalingMode == ActivationScalingMode::FIXED_MULT) {
-        const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
-        assert(maxScaling <= 1.0);
-        
         /**
          * Find the highest nbFractionalBits so that the scaling 
          * 'std::round(sc * (1ull << nbFractionalBits)' of each output
@@ -500,11 +497,12 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
          * TODO With unsigned activation like ReLU we could use the maximum
          * of an uint32_t to gain a bit more precision.
          */
-        const std::size_t limit = std::numeric_limits<std::int32_t>::max();
-         // We need to keep enough bits for the non-fractional part (64-maxNbFractionalBits).
-        const std::size_t maxNbFractionalBits = 36;
+        const std::uint64_t limit = std::numeric_limits<std::int32_t>::max();
+        const std::size_t maxNbFractionalBits = 50;
 
-        std::size_t nbFractionalBits = 30;
+        const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
+        std::size_t nbFractionalBits = 32 - 1 - std::ceil(maxScaling);
+
         assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
         while(std::round(maxScaling * (1ull << (nbFractionalBits + 1))) < limit && 
               nbFractionalBits + 1 <= maxNbFractionalBits) 
@@ -612,7 +610,9 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
     // be really rare
     // TODO Find a network where it happens and test how well it works
     const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
-    if(actScalingMode != ActivationScalingMode::FLOAT_MULT && maxScaling > 1.0) {
+    if(maxScaling > 1.0 && (actScalingMode == ActivationScalingMode::SINGLE_SHIFT || 
+                            actScalingMode == ActivationScalingMode::DOUBLE_SHIFT))
+    {
         for(double& scaling: scalingPerOutput) {
             scaling /= maxScaling;
         }
