@@ -318,7 +318,8 @@ void N2D2::DeepNetQuantization::normalizeOutputsRange(const std::unordered_map<s
 
         const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
         if(!activation) {
-            throw std::runtime_error("Missing activation function for cell " + cell->getName() + ".");
+            std::cout << "Skipping normalization of cell " + cell->getName() << "." << std::endl;
+            continue;
         }
         
 
