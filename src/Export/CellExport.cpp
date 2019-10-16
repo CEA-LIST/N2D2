@@ -65,7 +65,9 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
 
 long long int N2D2::CellExport::getIntFreeParameter(double value) {
     if(!Utils::isIntegral(value)) {
-        throw std::runtime_error("Can't export a non-integral double as integral parameter.");
+        throw std::runtime_error("Can't export a non-integral floating-point as an integral parameter. "
+                                 "The network must be quantized beforehand with the -calib option "
+                                 "if an integer export is necessary.");
     }
 
     return static_cast<long long int>(value);
