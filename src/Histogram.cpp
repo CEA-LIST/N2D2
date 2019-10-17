@@ -179,6 +179,7 @@ double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
     double bestThreshold = threshold;
     double bestMSE = std::numeric_limits<double>::max();
 
+    const double threshold_decr_step = threshold/1000.0;
     while(threshold > 0.0) {
         const double mse = MSE(threshold, nbBits);
         if(mse < bestMSE) {
@@ -186,7 +187,7 @@ double N2D2::Histogram::calibrateMSE(std::size_t nbBits) const {
             bestThreshold = threshold;
         }
         
-        threshold -= 0.01;
+        threshold -= threshold_decr_step;
     }
 
     return bestThreshold;
@@ -226,6 +227,7 @@ double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
     double bestThreshold = threshold;
     double bestDivergence = std::numeric_limits<double>::max();;
 
+    const double threshold_decr_step = threshold/1000.0;
     while(threshold > 0.0) {
         const double divergence = KLDivergence(*this, quantize(isUnsigned?0:-threshold, 
                                                                threshold, nbQuantizedBins));
@@ -234,7 +236,7 @@ double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
             bestThreshold = threshold;
         }
 
-        threshold -= 0.01;
+        threshold -= threshold_decr_step;
     }
 
     return bestThreshold;
