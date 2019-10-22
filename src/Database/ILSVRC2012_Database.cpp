@@ -22,8 +22,12 @@
 #include "Database/ILSVRC2012_Database.hpp"
 
 N2D2::ILSVRC2012_Database::ILSVRC2012_Database(double learn,
-                                               bool useValidationForTest)
-    : DIR_Database(), mLearn(learn), mUseValidationForTest(useValidationForTest)
+                                               bool useValidationForTest,
+                                               bool backgroundClass)
+    : DIR_Database(),
+      mLearn(learn),
+      mUseValidationForTest(useValidationForTest),
+      mBackgroundClass(backgroundClass)
 {
     // ctor
 }
@@ -32,6 +36,9 @@ void N2D2::ILSVRC2012_Database::load(const std::string& dataPath,
                                      const std::string& labelPath,
                                      bool /*extractROIs*/)
 {
+    if (mBackgroundClass)
+        labelID("background");
+
     // Learn & Tests Stimuli
     loadImageNetStimuliPerDir(dataPath + "/train", labelPath);
     partitionStimuli(mLearn, 0, 1.0 - mLearn);
@@ -76,6 +83,8 @@ void N2D2::ILSVRC2012_Database::loadImageNetValidationStimuli(const std::string
     std::string stimuliName;
     unsigned int labelID;
 
-    while (validationFile >> stimuliName >> labelID)
-        loadFile(dirPath + "/" + stimuliName, getLabelName(labelID));
+    while (validationFile >> stimuliName >> labelID) {
+        loadFile(dirPath + "/" + stimuliName,
+                 getLabelName(labelID + (int)mBackgroundClass));
+    }
 }

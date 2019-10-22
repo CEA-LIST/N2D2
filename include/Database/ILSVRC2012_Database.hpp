@@ -27,7 +27,9 @@
 namespace N2D2 {
 class ILSVRC2012_Database : public DIR_Database {
 public:
-    ILSVRC2012_Database(double learn, bool useValidationForTest = true);
+    ILSVRC2012_Database(double learn,
+                        bool useValidationForTest = true,
+                        bool backgroundClass = false);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
@@ -41,6 +43,7 @@ protected:
 
     double mLearn;
     bool mUseValidationForTest;
+    bool mBackgroundClass;
 
 };
 }
