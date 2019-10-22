@@ -69,6 +69,11 @@ unsigned long long int N2D2::FMPCell::getNbConnections() const
 
 void N2D2::FMPCell::writeMap(const std::string& fileName) const
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream data(fileName.c_str());
 
     if (!data.good())

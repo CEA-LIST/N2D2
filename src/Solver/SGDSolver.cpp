@@ -150,9 +150,17 @@ void N2D2::SGDSolver::logSchedule(const std::string& fileName,
     const unsigned int iterationPass = mIterationPass;
     const unsigned int nbIterations = mNbIterations;
 
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty()) {
+#pragma omp critical
+        Utils::createDirectories(dirName);
+    }
+
     std::ofstream log(fileName.c_str());
 
     if (!log.good()) {
+#pragma omp critical
         throw std::runtime_error("Could not create scheduling log file: "
                                  + fileName);
     }

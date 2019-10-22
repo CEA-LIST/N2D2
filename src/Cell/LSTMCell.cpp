@@ -59,6 +59,11 @@ N2D2::LSTMCell::LSTMCell(const DeepNet& deepNet, const std::string& name,
 void N2D2::LSTMCell::exportFreeParameters(const std::string
                                                & fileName) const
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     const std::string fileBase = Utils::fileBaseName(fileName);
     std::string fileExt = Utils::fileExtension(fileName);
 
@@ -1138,6 +1143,11 @@ void N2D2::LSTMCell::logFreeParametersDistrib(const std::string
             }
         }
     }
+
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
 
     for (unsigned int layer=0; layer<mNumberLayers; ++layer){
         std::sort(weights[layer].begin(), weights[layer].end());

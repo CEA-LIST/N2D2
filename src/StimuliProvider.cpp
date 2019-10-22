@@ -952,6 +952,11 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
         throw std::runtime_error("Could not log Tensor of dimension > 3");
     }
 
+    std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream dataFile(fileName.c_str());
 
     if (!dataFile.good())
@@ -1014,7 +1019,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
     gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
 
-    const std::string dirName = Utils::fileBaseName(fileName);
+    dirName = Utils::fileBaseName(fileName);
     const std::string baseName = Utils::baseName(dirName);
 
     if (data.dimZ() > 1)
@@ -1110,6 +1115,11 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
         throw std::runtime_error("Could not log Tensor of dimension > 3");
     }
 
+    std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream dataFile(fileName.c_str());
 
     if (!dataFile.good())
@@ -1172,7 +1182,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
     gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
 
-    const std::string dirName = Utils::fileBaseName(fileName);
+    dirName = Utils::fileBaseName(fileName);
     const std::string baseName = Utils::baseName(dirName);
 
     if (data.dimZ() > 1)
@@ -1251,6 +1261,11 @@ void N2D2::StimuliProvider::logDataMatrix(const std::string& fileName,
                                     const double minValue,
                                     const double maxValue)
 {
+    std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream dataFile(fileName.c_str());
 
     if (!dataFile.good())
@@ -1298,7 +1313,7 @@ void N2D2::StimuliProvider::logDataMatrix(const std::string& fileName,
     gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
     gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
 
-    const std::string dirName = Utils::fileBaseName(fileName);
+    dirName = Utils::fileBaseName(fileName);
     const std::string baseName = Utils::baseName(dirName);
 
     if (data.dimZ() > 1)

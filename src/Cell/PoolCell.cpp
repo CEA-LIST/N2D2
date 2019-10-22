@@ -85,6 +85,11 @@ unsigned long long int N2D2::PoolCell::getNbConnections() const
 
 void N2D2::PoolCell::writeMap(const std::string& fileName) const
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream data(fileName.c_str());
 
     if (!data.good())

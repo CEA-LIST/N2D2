@@ -333,7 +333,6 @@ N2D2::ConvCellGenerator::generate(Network& network, const DeepNet& deepNet,
     std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
     std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
-    Utils::createDirectories("map");
     cell->writeMap("map/" + section + "_map.dat");
 
     return cell;

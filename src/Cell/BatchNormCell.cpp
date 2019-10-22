@@ -36,6 +36,11 @@ N2D2::BatchNormCell::BatchNormCell(const DeepNet& deepNet, const std::string& na
 void N2D2::BatchNormCell::exportFreeParameters(const std::string
                                                & fileName) const
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     const std::string fileBase = Utils::fileBaseName(fileName);
     std::string fileExt = Utils::fileExtension(fileName);
 

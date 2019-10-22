@@ -76,6 +76,11 @@ unsigned long long int N2D2::FcCell::getNbSynapses() const
 
 void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     const std::string fileBase = Utils::fileBaseName(fileName);
     std::string fileExt = Utils::fileExtension(fileName);
 
@@ -261,6 +266,11 @@ void N2D2::FcCell::logFreeParametersDistrib(const std::string& fileName) const
     std::sort(weights.begin(), weights.end());
 
     // Write data file
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream data(fileName.c_str());
 
     if (!data.good())
@@ -307,6 +317,11 @@ void N2D2::FcCell::logFreeParametersDistrib(const std::string& fileName) const
 // TODO
 void N2D2::FcCell::writeMap(const std::string& fileName) const
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream data(fileName.c_str());
 
     if (!data.good())
