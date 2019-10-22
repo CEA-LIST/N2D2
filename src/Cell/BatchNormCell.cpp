@@ -27,7 +27,7 @@ const char* N2D2::BatchNormCell::Type = "BatchNorm";
 N2D2::BatchNormCell::BatchNormCell(const DeepNet& deepNet, const std::string& name,
                                    unsigned int nbOutputs)
     : Cell(deepNet, name, nbOutputs), 
-      mEpsilon(this, "Epsilon", 0.0),
+      mEpsilon(this, "Epsilon", 1.0e-5),
       mMovingAverageMomentum(this, "MovingAverageMomentum", 0.1)
 {
     // ctor

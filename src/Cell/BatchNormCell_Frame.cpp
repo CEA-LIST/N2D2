@@ -72,9 +72,6 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
 
     mNbPropagate = 0;
 
-    if (mEpsilon == 0.0)
-        mEpsilon = 1.0e-5; // Same as CUDNN_BN_MIN_EPSILON
-
     std::vector<size_t> requiredDims(mInputs[0].nbDims(), 1);
     requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
 
