@@ -21,7 +21,12 @@
 #ifndef N2D2_DEEPNETGENERATOR_H
 #define N2D2_DEEPNETGENERATOR_H
 
+#include <memory>
 #include <string>
+
+#ifdef ONNX
+#include "third_party/onnx/onnx.proto3.pb.hpp"
+#endif
 
 namespace N2D2 {
 
@@ -32,7 +37,118 @@ class DeepNetGenerator {
 public:
     static std::shared_ptr<DeepNet> generate(Network& network,
                                              const std::string& fileName);
+    static std::shared_ptr<DeepNet> generateFromINI(Network& network,
+                                                   const std::string& fileName);
+#ifdef ONNX
+    static std::shared_ptr<DeepNet> generateFromONNX(Network& network,
+                                                   const std::string& fileName);
+
+private:
+    static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
+                                 const onnx::GraphProto& graph);
+    template <class T>
+    static Tensor<T> ONNX_unpackTensor(const onnx::TensorProto* tensor,
+                                       const std::vector<unsigned int>& expectedDims
+                                         = std::vector<unsigned int>());
+#endif
 };
 }
+
+#ifdef ONNX
+template <class T>
+N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
+    const onnx::TensorProto* onnxTensor,
+    const std::vector<unsigned int>& expectedDims)
+{
+    Tensor<T> tensor(expectedDims);
+
+    // Find out dimensions from TensorProto
+    std::vector<unsigned int> size;
+    for (int i = 0; i < onnxTensor->dims_size(); ++i)
+        size.push_back(onnxTensor->dims(i));
+    std::reverse(size.begin(), size.end());
+
+    if (expectedDims.empty())
+        tensor.resize(std::vector<size_t>(size.begin(), size.end()));
+    else if (expectedDims != size) {
+        std::ostringstream errorStr;
+        errorStr << "Unexpected size for ONNX tensor \""
+            << onnxTensor->name() << "\": expected " << expectedDims
+            << " , got " << size << std::endl;
+
+        throw std::runtime_error(errorStr.str());
+    }
+
+    const std::string dataTypeName = onnx::TensorProto_DataType_Name(
+        (onnx::TensorProto_DataType) onnxTensor->data_type());
+
+    if ((onnxTensor->data_type() == onnx::TensorProto_DataType_FLOAT
+            && !std::is_same<T, float>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_DOUBLE
+            && !std::is_same<T, double>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_INT32
+            && !std::is_same<T, int32_t>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_INT64
+            && !std::is_same<T, int64_t>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_UINT64
+            && !std::is_same<T, uint64_t>::value))
+        //|| (onnxTensor->data_type() == onnx::TensorProto_DataType_STRING
+        //    && !std::is_same<T, std::string>::value))
+    {
+        std::ostringstream errorStr;
+        errorStr << "Unexpected type for ONNX tensor \""
+            << onnxTensor->name() << "\": expected " << typeid(T).name()
+            << " , got " << dataTypeName << std::endl;
+
+        throw std::runtime_error(errorStr.str());
+    }
+
+    const int dataSize
+        = (std::is_same<T, float>::value) ? onnxTensor->float_data_size()
+        : (std::is_same<T, double>::value) ? onnxTensor->double_data_size()
+        : (std::is_same<T, int32_t>::value) ? onnxTensor->int32_data_size()
+        : (std::is_same<T, int64_t>::value) ? onnxTensor->int64_data_size()
+        : (std::is_same<T, uint64_t>::value) ? onnxTensor->uint64_data_size()
+        //: (std::is_same<T, std::string>::value) ? onnxTensor->string_data_size()
+        : 0;
+
+    if (dataSize > 0) {
+        assert((int)tensor.size() == dataSize);
+
+        for (size_t i = 0; i < (size_t)dataSize; ++i) {
+            if (std::is_same<T, float>::value)
+                tensor(i) = onnxTensor->float_data(i);
+            else if (std::is_same<T, double>::value)
+                tensor(i) = onnxTensor->double_data(i);
+            else if (std::is_same<T, int32_t>::value)
+                tensor(i) = onnxTensor->int32_data(i);
+            else if (std::is_same<T, int64_t>::value)
+                tensor(i) = onnxTensor->int64_data(i);
+            else if (std::is_same<T, uint64_t>::value)
+                tensor(i) = onnxTensor->uint64_data(i);
+            // This cause conversion issue, should be properly fixed with
+            // conditional template or constexpr...
+            //else if (std::is_same<T, std::string>::value)
+            //    tensor(i) = onnxTensor->string_data(i);
+        }
+    }
+    else if (onnxTensor->raw_data().size() > 0) {
+        assert(onnxTensor->raw_data().size() == (int)tensor.size() * sizeof(T));
+
+        memcpy(&(tensor.data())[0],
+                onnxTensor->raw_data().c_str(),
+                tensor.size() * sizeof(T));
+    }
+    else {
+        std::ostringstream errorStr;
+        errorStr << "Missing data for ONNX tensor \""
+            << onnxTensor->name() << "\"" << std::endl;
+
+        throw std::runtime_error(errorStr.str());
+    }
+
+    return tensor;
+}
+#endif
 
 #endif // N2D2_DEEPNETGENERATOR_H

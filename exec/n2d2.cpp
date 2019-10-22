@@ -1737,7 +1737,15 @@ int main(int argc, char* argv[]) try
     Network net(opt.seed);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, opt.iniConfig);
-    deepNet->initialize();
+
+    std::string fileExtension = Utils::fileExtension(opt.iniConfig);
+    std::transform(fileExtension.begin(),
+                    fileExtension.end(),
+                    fileExtension.begin(),
+                    ::tolower);
+
+    if (fileExtension != "onnx")
+        deepNet->initialize();
 
     if (opt.genConfig) {
         deepNet->saveNetworkParameters();
@@ -1826,7 +1834,8 @@ int main(int argc, char* argv[]) try
             else
                 deepNet->load("net_state");
         }
-        else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty())
+        else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty()
+            && fileExtension != "onnx")
         {
             if (database.getNbStimuli(Database::Validation) > 0)
                 deepNet->importNetworkFreeParameters("weights_validation");

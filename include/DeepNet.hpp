@@ -106,6 +106,10 @@ public:
                            bool ignoreUnknown = false);
 
     // Getters
+    Network& getNetwork()
+    {
+        return mNet;
+    };
     std::shared_ptr<Database> getDatabase() const
     {
         return mDatabase;

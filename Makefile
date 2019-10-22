@@ -104,6 +104,12 @@ ifdef PYBIND
   CPPFLAGS:=$(CPPFLAGS) -DPYBIND `$(PYBIND) -m pybind11 --includes`
 endif
 
+ifdef ONNX
+  ONNX_MAKE:= $(shell $(MAKE) -C $(word 1,$(PARENT))/include/third_party/onnx)
+  CPPFLAGS:=$(CPPFLAGS) -DONNX
+  LDFLAGS:=$(LDFLAGS) `pkg-config --libs protobuf`
+endif
+
 ifeq ($(shell pkg-config $(OPENCV) --modversion),2.0.0)
   # _GLIBCXX_PARALLEL needs to be defined for OpenCV 2.0.0 compiled with OpenMP
   $(info Compiling with _GLIBCXX_PARALLEL flag)
