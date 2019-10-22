@@ -140,7 +140,7 @@ void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
     else {
         cudaSRectifier_propagate(
             data.getDevicePtr(), data.getDevicePtr(), data.size(),
-            (double)mLeakSlope, (double)mClipping);
+            (float)mLeakSlope, (float)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
