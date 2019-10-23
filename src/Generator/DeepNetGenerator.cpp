@@ -53,6 +53,7 @@
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
+#include "Target/TargetCompare.hpp"
 
 #include "third_party/onnx/onnx.proto3.pb.hpp"
 #endif
@@ -428,7 +429,7 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
     //            << Utils::cdef << std::endl;
     //deepNet->setDatabase(std::make_shared<Database>());
     std::shared_ptr<ILSVRC2012_Database> database = std::make_shared
-        <ILSVRC2012_Database>(1.0, true, false);
+        <ILSVRC2012_Database>(1.0, true, true);
     database->load(N2D2_DATA("ILSVRC2012"),
                    N2D2_DATA("ILSVRC2012/synsets.txt"));
     deepNet->setDatabase(database);
@@ -519,14 +520,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
         << std::endl;
 
     // Pre-processing for ImageNet used by the MobileNet families
-    RescaleTransformation rescale(256, 256);
-    rescale.setParameter<bool>("KeepAspectRatio", true);
-    rescale.setParameter<bool>("ResizeToFit", false);
-
-    sp->addTransformation(rescale);
+    sp->addTransformation(RescaleTransformation(256, 256));
     sp->addTransformation(PadCropTransformation(size[0], size[1]));
     sp->addTransformation(ColorSpaceTransformation(
-        ColorSpaceTransformation::BGR));
+        ColorSpaceTransformation::RGB));
     sp->addTransformation(RangeAffineTransformation(
         RangeAffineTransformation::Minus, {127.5},
         RangeAffineTransformation::Divides, {127.5}));
@@ -796,6 +793,35 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
             cell = poolCell;
 
             poolCell->writeMap("map/" + node.output(0) + "_map.dat");
+/*
+            // DEBUG
+            std::string targetName = Utils::dirName(node.name());
+            targetName.pop_back();
+            targetName = Utils::baseName(targetName);
+
+            if (!targetName.empty()) {
+                std::shared_ptr<Target> target = Registrar
+                    <Target>::create("TargetCompare")(node.output(0)
+                                                                    + ".Target",
+                                                poolCell,
+                                                deepNet->getStimuliProvider(),
+                                                1.0,
+                                                0.0,
+                                                1,
+                                                "",
+                                                false);
+                target->setParameter<std::string>("DataPath",
+                                                  "n07745940_14257");
+                target->setParameter<std::string>("Matching",
+                                                  targetName + ".txt");
+                target->setParameter<TargetCompare::TargetFormat>(
+                    "TargetFormat", TargetCompare::NHWC);
+                target->setParameter<bool>("LogError", true);
+                target->setParameter<unsigned int>("BatchPacked", 1);
+
+                deepNet->addTarget(target);
+            }
+*/
         }
         else if (node.op_type() == "BatchNormalization") {
             const std::string inputScale = node.input(1);
@@ -851,7 +877,37 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
             deepNet->addCell(batchNormCell, parentCells);
             batchNormCell->initialize();
             cell = batchNormCell;
+/*
+            // DEBUG
+            std::string targetName = Utils::dirName(node.name());
+            targetName.pop_back();
+            targetName = Utils::dirName(targetName);
+            targetName.pop_back();
+            targetName = Utils::baseName(targetName);
 
+            if (!targetName.empty()) {
+                std::shared_ptr<Target> target = Registrar
+                    <Target>::create("TargetCompare")(node.output(0)
+                                                                    + ".Target",
+                                                batchNormCell,
+                                                deepNet->getStimuliProvider(),
+                                                1.0,
+                                                0.0,
+                                                1,
+                                                "",
+                                                false);
+                target->setParameter<std::string>("DataPath",
+                                                  "n07745940_14257");
+                target->setParameter<std::string>("Matching",
+                                                  targetName + ".txt");
+                target->setParameter<TargetCompare::TargetFormat>(
+                    "TargetFormat", TargetCompare::NHWC);
+                target->setParameter<bool>("LogError", true);
+                target->setParameter<unsigned int>("BatchPacked", 1);
+
+                deepNet->addTarget(target);
+            }
+*/
             // Free parameters
             if ((itInit = initializer.find(node.input(1))) != initializer.end())
             {
@@ -1641,6 +1697,35 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
                                             false);
 
             deepNet->addTarget(target);
+/*
+            // DEBUG
+            std::string targetName = Utils::dirName(node.name());
+            targetName.pop_back();
+            targetName = Utils::baseName(targetName);
+
+            if (!targetName.empty()) {
+                std::shared_ptr<Target> target = Registrar
+                    <Target>::create("TargetCompare")(node.output(0)
+                                                                    + ".Target",
+                                                softmaxCell,
+                                                deepNet->getStimuliProvider(),
+                                                1.0,
+                                                0.0,
+                                                1,
+                                                "",
+                                                false);
+                target->setParameter<std::string>("DataPath",
+                                                  "n07745940_14257");
+                target->setParameter<std::string>("Matching",
+                                                  targetName + ".txt");
+                target->setParameter<TargetCompare::TargetFormat>(
+                    "TargetFormat", TargetCompare::NHWC);
+                target->setParameter<bool>("LogError", true);
+                target->setParameter<unsigned int>("BatchPacked", 1);
+
+                deepNet->addTarget(target);
+            }
+*/
         }
         else if (node.op_type() == "Softplus") {
             std::shared_ptr<Cell_Frame_Top> cellFrame

@@ -367,13 +367,24 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
         const int label
             = mStimuliProvider->getDatabase().getStimulusLabel((*it).first);
 
-        data << (*it).first << " " << Utils::quoted(name) << " "
-             << ((label >= 0)
-                     ? mStimuliProvider->getDatabase().getLabelName(label)
-                     : "*") << " ";
+        data << (*it).first << " " << Utils::quoted(name) << " ";
+
+        if (label >= 0) {
+            if (label < (int)mStimuliProvider->getDatabase().getNbLabels())
+                data << mStimuliProvider->getDatabase().getLabelName(label);
+            else
+                data << label;
+        }
+        else
+            data << "*";
+
+        data << " ";
 
         if (!cls.empty()) {
-            data << mStimuliProvider->getDatabase().getLabelName(cls[0]);
+            if (cls[0] < (int)mStimuliProvider->getDatabase().getNbLabels())
+                data << mStimuliProvider->getDatabase().getLabelName(cls[0]);
+            else
+                data << cls[0];
 
             if (cls.size() > 1)
                 data << "...";
