@@ -70,6 +70,9 @@ void N2D2::LRNCell_Frame_CUDA<T>::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for LRNCell " + mName);
 
+        if (k < mOutputDesc.size())
+            continue;  // already initialized, skip!
+
         mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
         CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));

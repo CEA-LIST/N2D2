@@ -67,15 +67,14 @@ void N2D2::DropoutCell_Frame_CUDA<T>::initialize()
                                 "to the sum of inputs channels.");
     }
 
-    CHECK_CUDNN_STATUS(
-        cudnnDropoutGetStatesSize(CudaContext::cudnnHandle(), &mStatesSize));
-    CHECK_CUDA_STATUS(cudaMalloc(&mStates, mStatesSize));
-
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0) {
             throw std::runtime_error("Zero-sized input for DropoutCell "
                                      + mName);
         }
+
+        if (k < mOutputDesc.size())
+            continue;  // already initialized, skip!
 
         mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
@@ -104,12 +103,18 @@ void N2D2::DropoutCell_Frame_CUDA<T>::initialize()
             cudaMalloc(&mReserveSpace.back(), mReserveSpaceSize.back()));
     }
 
-    CHECK_CUDNN_STATUS(cudnnSetDropoutDescriptor(mDropoutDesc,
-                                                 CudaContext::cudnnHandle(),
-                                                 mDropout,
-                                                 mStates,
-                                                 mStatesSize,
-                                                 Random::mtRand()));
+    if (mStates == NULL) {
+        CHECK_CUDNN_STATUS(
+            cudnnDropoutGetStatesSize(CudaContext::cudnnHandle(), &mStatesSize));
+        CHECK_CUDA_STATUS(cudaMalloc(&mStates, mStatesSize));
+
+        CHECK_CUDNN_STATUS(cudnnSetDropoutDescriptor(mDropoutDesc,
+                                                    CudaContext::cudnnHandle(),
+                                                    mDropout,
+                                                    mStates,
+                                                    mStatesSize,
+                                                    Random::mtRand()));
+    }
 }
 
 template <class T>

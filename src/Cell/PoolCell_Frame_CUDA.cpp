@@ -94,6 +94,9 @@ void N2D2::PoolCell_Frame_CUDA<T>::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for PoolCell " + mName);
 
+        if (k < mOutputDesc.size())
+            continue;  // already initialized, skip!
+
         mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
         std::vector<int> dims(mOutputs.dims().begin(), mOutputs.dims().end());

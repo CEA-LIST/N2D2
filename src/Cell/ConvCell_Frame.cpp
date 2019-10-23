@@ -133,6 +133,9 @@ void N2D2::ConvCell_Frame<T>::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);
 
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
         typename std::map<unsigned int,

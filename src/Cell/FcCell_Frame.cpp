@@ -78,6 +78,9 @@ void N2D2::FcCell_Frame<T>::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for FcCell " + mName);
 
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSynapses.push_back(new Tensor<T>(
             {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));

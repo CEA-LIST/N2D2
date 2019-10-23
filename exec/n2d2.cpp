@@ -1740,15 +1740,7 @@ int main(int argc, char* argv[]) try
     Network net(opt.seed);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, opt.iniConfig);
-
-    std::string fileExtension = Utils::fileExtension(opt.iniConfig);
-    std::transform(fileExtension.begin(),
-                    fileExtension.end(),
-                    fileExtension.begin(),
-                    ::tolower);
-
-    if (fileExtension != "onnx")
-        deepNet->initialize();
+    deepNet->initialize();
 
     if (opt.genConfig) {
         deepNet->saveNetworkParameters();

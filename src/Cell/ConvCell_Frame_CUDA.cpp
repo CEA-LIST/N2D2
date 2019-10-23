@@ -152,6 +152,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);
 
+        if (k < mNbGroups.size())
+            continue;  // already initialized, skip!
+
         mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
                                                    mInputs[k].dimZ())));
 
@@ -518,8 +521,12 @@ the API cudnnGetConvolutionForwardMaxCount().
         nbChannels += mInputs[k].dimZ();
     }
 
-    if (mWorkspaceSize > 0)
+    if (mWorkspaceSize > 0) {
+        if (mWorkspace != NULL)
+            cudaFree(mWorkspace);
+
         CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
+    }
 }
 
 template <class T>

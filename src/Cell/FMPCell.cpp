@@ -31,14 +31,15 @@ N2D2::FMPCell::FMPCell(const DeepNet& deepNet, const std::string& name,
     : Cell(deepNet, name, nbOutputs),
       mOverlapping(this, "Overlapping", true),
       mPseudoRandom(this, "PseudoRandom", true),
-      mScalingRatio(scalingRatio),
-      mPoolNbChannels(nbOutputs, 0)
+      mScalingRatio(scalingRatio)
 {
     // ctor
 }
 
 void N2D2::FMPCell::initialize()
 {
+    mPoolNbChannels.assign(getNbOutputs(), 0);
+
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             mPoolNbChannels[output] += isConnection(channel, output);

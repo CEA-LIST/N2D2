@@ -71,25 +71,31 @@ N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const DeepNet& deepNet, const std:
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initialize()
 {
-    if (!mNoBias) {
+    if (!mNoBias && mBias.empty()) {
         mBias.resize({mOutputs.dimZ(), 1, 1, 1});
         mDiffBias.resize({mOutputs.dimZ(), 1, 1, 1});
         mBiasFiller->apply(mBias);
         mBias.synchronizeHToD();
+
+        if (mOnesVector != NULL)
+            cudaFree(mOnesVector);
 
         //  1   <-->    batch   <-->    mInputs.b()
         CHECK_CUDA_STATUS(
             cudaMalloc(&mOnesVector, mInputs.dimB() * sizeof(T)));
         std::vector<T> onesVec(mInputs.dimB(), T(1.0));
         CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector,
-                                     &onesVec[0],
-                                     mInputs.dimB() * sizeof(T),
-                                     cudaMemcpyHostToDevice));
+                                    &onesVec[0],
+                                    mInputs.dimB() * sizeof(T),
+                                    cudaMemcpyHostToDevice));
     }
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for FcCell " + mName);
+
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSynapses.push_back(new CudaTensor<T>(

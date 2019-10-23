@@ -59,6 +59,9 @@ void N2D2::CEnvironment_CUDA::initialize()
     CEnvironment::initialize();
 
     for (unsigned int k=0; k<mRelationalData.size(); k++){
+        if (k < mNextEventTime.size())
+            continue;  // already initialized, skip!
+
         mNextEventTime.push_back(new CudaTensor<Time_T>(
                                                 mRelationalData[k].dims()));
         mNextEventType.push_back(new CudaTensor<int>(

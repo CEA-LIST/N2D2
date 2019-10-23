@@ -121,6 +121,9 @@ void N2D2::DeconvCell_Frame<T>::initialize()
                                      + mName);
         }
 
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
         typename std::map<unsigned int,

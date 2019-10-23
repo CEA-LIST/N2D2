@@ -139,6 +139,9 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
                                      + mName);
         }
 
+        if (k < mNbGroups.size())
+            continue;  // already initialized, skip!
+
         mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
                                                    mInputs[k].dimZ())));
 
@@ -320,8 +323,12 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
         nbChannels += mInputs[k].dimZ();
     }
 
-    if (mWorkspaceSize > 0)
+    if (mWorkspaceSize > 0) {
+        if (mWorkspace != NULL)
+            cudaFree(mWorkspace);
+
         CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
+    }
 }
 
 template <class T>

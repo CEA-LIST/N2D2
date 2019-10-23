@@ -54,6 +54,8 @@ N2D2::SoftmaxCell_Frame_CUDA<T>::SoftmaxCell_Frame_CUDA(const DeepNet& deepNet,
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs)
 {
     // ctor
+    if (mGroupSize > 0)
+        CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mGroupTensor));
 }
 
 template <class T>
@@ -69,7 +71,6 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::initialize()
             throw std::domain_error("SoftmaxCell_Frame::initialize():"
                                     " the group size must be divisible by "
                                     "the number of outputs.");
-        CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mGroupTensor));
 
         CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
             mGroupTensor,

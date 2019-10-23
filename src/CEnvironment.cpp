@@ -66,17 +66,20 @@ void N2D2::CEnvironment::initialize()
      // ctor
     std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});
     mRelationalTargets.resize({mNbSubStimuli});
-    if (mNbSubStimuli > 1) {
-        for (unsigned int k=0; k<mNbSubStimuli; k++){
-    #ifdef CUDA
-            mRelationalData.push_back(new CudaTensor<Float_T>(dims));
-    #else
-            mRelationalData.push_back(new Tensor<Float_T>(dims));
-    #endif
+
+    if (mRelationalData.empty()) {
+        if (mNbSubStimuli > 1) {
+            for (unsigned int k=0; k<mNbSubStimuli; k++){
+#ifdef CUDA
+                mRelationalData.push_back(new CudaTensor<Float_T>(dims));
+#else
+                mRelationalData.push_back(new Tensor<Float_T>(dims));
+#endif
+            }
         }
-    }
-    else {
-        mRelationalData.push_back(&mData);
+        else {
+            mRelationalData.push_back(&mData);
+        }
     }
 
     mStopStimulus = false;

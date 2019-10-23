@@ -88,6 +88,9 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
         dim3 block_size = {(unsigned int)mInputs[i].dimZ(), 1, (unsigned int)mOutputs.dimB()};
         dim3 thread_size = {groupWidth, groupSize / groupWidth, 1};
 
+        if (i < GPU_THREAD_GRID.size())
+            continue;  // already initialized, skip!
+
         GPU_THREAD_GRID.push_back(thread_size);
         GPU_BLOCK_GRID.push_back(block_size);
     }

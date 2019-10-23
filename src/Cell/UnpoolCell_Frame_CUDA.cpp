@@ -94,22 +94,24 @@ void N2D2::UnpoolCell_Frame_CUDA::initialize()
             throw std::runtime_error("Zero-sized input for UnpoolCell "
                                      + mName);
 
-        mInputMap.push_back(NULL);
+        if (k >= mInputMap.size()) {
+            mInputMap.push_back(NULL);
 
-        if (!mMapping.empty()) {
-            const Tensor<bool> inputMap = mMapping.rows(offset,
-                                                       mInputs[k].dimZ());
+            if (!mMapping.empty()) {
+                const Tensor<bool> inputMap = mMapping.rows(offset,
+                                                        mInputs[k].dimZ());
 
-            std::vector<char> inputMapData;
-            std::copy(inputMap.begin(), inputMap.end(),
-                      std::back_inserter(inputMapData));
+                std::vector<char> inputMapData;
+                std::copy(inputMap.begin(), inputMap.end(),
+                        std::back_inserter(inputMapData));
 
-            CHECK_CUDA_STATUS(cudaMalloc(&mInputMap[k],
-                                         inputMapData.size() * sizeof(char)));
-            CHECK_CUDA_STATUS(cudaMemcpy(mInputMap[k],
-                                         &inputMapData[0],
-                                         inputMapData.size() * sizeof(char),
-                                         cudaMemcpyHostToDevice));
+                CHECK_CUDA_STATUS(cudaMalloc(&mInputMap[k],
+                                            inputMapData.size() * sizeof(char)));
+                CHECK_CUDA_STATUS(cudaMemcpy(mInputMap[k],
+                                            &inputMapData[0],
+                                            inputMapData.size() * sizeof(char),
+                                            cudaMemcpyHostToDevice));
+            }
         }
 
         offset += mInputs[k].dimZ();
