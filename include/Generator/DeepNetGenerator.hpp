@@ -41,7 +41,9 @@ public:
                                                    const std::string& fileName);
 #ifdef ONNX
     static std::shared_ptr<DeepNet> generateFromONNX(Network& network,
-                                                   const std::string& fileName);
+                                                   const std::string& fileName,
+                                                std::shared_ptr<DeepNet> deepNet
+                                                = std::shared_ptr<DeepNet>());
 
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,

@@ -558,7 +558,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     bool afterCalibration = false;
     try {
         if (!opt.weights.empty()) {
-            deepNet->importNetworkFreeParameters(opt.weights);
+            if (opt.weights != "/dev/null")
+                deepNet->importNetworkFreeParameters(opt.weights);
         }
         else if (opt.load.empty()) {
             if (database->getNbStimuli(Database::Validation) > 0) {
@@ -1614,8 +1615,10 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         << std::endl;
     deepNet->logLabelsLegend("labels_legend.png");
 
-    if (!opt.weights.empty())
-        deepNet->importNetworkFreeParameters(opt.weights, true);
+    if (!opt.weights.empty()) {
+        if (opt.weights != "/dev/null")
+            deepNet->importNetworkFreeParameters(opt.weights, true);
+    }
 
     if (opt.check) {
         std::cout << "Checking gradient computation..." << std::endl;
@@ -1834,8 +1837,8 @@ int main(int argc, char* argv[]) try
             else
                 deepNet->load("net_state");
         }
-        else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty()
-            && fileExtension != "onnx")
+        else if (opt.learnStdp == 0 && opt.load.empty() && (opt.weights.empty()
+            || opt.weights != "/dev/null"))
         {
             if (database.getNbStimuli(Database::Validation) > 0)
                 deepNet->importNetworkFreeParameters("weights_validation");

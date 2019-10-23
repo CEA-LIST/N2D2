@@ -160,7 +160,7 @@ void N2D2::BatchNormCellGenerator::postGenerate(const std::shared_ptr<Cell>& cel
                                              const std::string& section)
 {
     if (!iniConfig.currentSection(section))
-        throw std::runtime_error("Missing [" + section + "] section.");
+        return;
 
     std::shared_ptr<BatchNormCell> batchNormCell
         = std::dynamic_pointer_cast<BatchNormCell>(cell);

@@ -70,8 +70,15 @@ N2D2::DeepNetGenerator::generate(Network& network, const std::string& fileName)
     if (fileExtension == "ini")
         return generateFromINI(network, fileName);
 #ifdef ONNX
-    else if (fileExtension == "onnx")
+    else if (fileExtension == "onnx") {
+  #ifdef CUDA
+        CellGenerator::mDefaultModel = "Frame_CUDA";
+  #else
+        CellGenerator::mDefaultModel = "Frame";
+  #endif
+
         return generateFromONNX(network, fileName);
+    }
 #endif
     else {
         throw std::runtime_error(
@@ -284,61 +291,95 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
             }
 
             // Set up the layer
-            std::shared_ptr<Cell> cell
-                = CellGenerator::generate(network, *deepNet,
-                                          *deepNet->getStimuliProvider(),
-                                          parentCells,
-                                          iniConfig,
-                                          *it);
-            deepNet->addCell(cell, parentCells);
+#ifdef ONNX
+            iniConfig.currentSection((*it), false);
+            const std::string type = iniConfig.getProperty<std::string>("Type");
 
-            const std::vector<std::string> targets
-                = iniConfig.getSections((*it) + ".Target*");
+            if (type == "ONNX") {
+                const std::string fileName
+                    = iniConfig.getProperty<std::string>("File");
 
-            for (std::vector<std::string>::const_iterator itTarget
-                 = targets.begin(),
-                 itTargetEnd = targets.end();
-                 itTarget != itTargetEnd;
-                 ++itTarget) {
-                std::shared_ptr<Target> target = TargetGenerator::generate(
-                    cell, deepNet, iniConfig, (*itTarget));
-                deepNet->addTarget(target);
-            }
+                generateFromONNX(network, fileName, deepNet);
 
-            std::shared_ptr<Cell_CSpike> cellCSpike = std::dynamic_pointer_cast
-                <Cell_CSpike>(cell);
-             // Monitor for the cell
-            // Try different casts to find out Cell type
-            std::shared_ptr<Cell_Spike> cellSpike = std::dynamic_pointer_cast
-                <Cell_Spike>(cell);
+                const std::vector<std::string> targets
+                    = iniConfig.getSections("*.Target*");
 
-            if (cellCSpike) {
-                std::shared_ptr<CMonitor> monitor;
-#ifdef CUDA
-                if (cellCSpike->isCuda()) {
-                    monitor = std::make_shared<CMonitor_CUDA>();
+                for (std::vector<std::string>::const_iterator itTarget
+                    = targets.begin(),
+                    itTargetEnd = targets.end();
+                    itTarget != itTargetEnd;
+                    ++itTarget)
+                {
+                    std::size_t targetPos = (*itTarget).find(".Target");
+                    const std::string cellName
+                        = (*itTarget).substr(0, targetPos);
+
+                    std::shared_ptr<Cell> cell = deepNet->getCell(cellName);
+                    std::shared_ptr<Target> target = TargetGenerator::generate(
+                        cell, deepNet, iniConfig, (*itTarget));
+                    deepNet->addTarget(target);
                 }
-                else {
+            }
+            else {
 #endif
-                    monitor = std::make_shared<CMonitor>();
-#ifdef CUDA
+                std::shared_ptr<Cell> cell
+                    = CellGenerator::generate(network, *deepNet,
+                                            *deepNet->getStimuliProvider(),
+                                            parentCells,
+                                            iniConfig,
+                                            *it);
+                deepNet->addCell(cell, parentCells);
+
+                const std::vector<std::string> targets
+                    = iniConfig.getSections((*it) + ".Target*");
+
+                for (std::vector<std::string>::const_iterator itTarget
+                    = targets.begin(),
+                    itTargetEnd = targets.end();
+                    itTarget != itTargetEnd;
+                    ++itTarget) {
+                    std::shared_ptr<Target> target = TargetGenerator::generate(
+                        cell, deepNet, iniConfig, (*itTarget));
+                    deepNet->addTarget(target);
                 }
+
+                std::shared_ptr<Cell_CSpike> cellCSpike
+                    = std::dynamic_pointer_cast<Cell_CSpike>(cell);
+                // Monitor for the cell
+                // Try different casts to find out Cell type
+                std::shared_ptr<Cell_Spike> cellSpike
+                    = std::dynamic_pointer_cast <Cell_Spike>(cell);
+
+                if (cellCSpike) {
+                    std::shared_ptr<CMonitor> monitor;
+    #ifdef CUDA
+                    if (cellCSpike->isCuda()) {
+                        monitor = std::make_shared<CMonitor_CUDA>();
+                    }
+                    else {
+    #endif
+                        monitor = std::make_shared<CMonitor>();
+    #ifdef CUDA
+                    }
+    #endif
+                    monitor->add(cellCSpike->getOutputs());
+                    deepNet->addCMonitor((*it), monitor);
+                }
+                else if (cellSpike) {
+                    std::shared_ptr<Monitor> monitor(new Monitor(network));
+                    monitor->add(cellSpike->getOutputs());
+
+                    deepNet->addMonitor((*it), monitor);
+
+                }
+                else if (isEnv) {
+                    // Don't warn if we are using a StimuliProvider
+                    std::cout << "Warning: No monitor could be added to Cell: "
+                        << cell->getName() << std::endl;
+                }
+#ifdef ONNX
+            }
 #endif
-                monitor->add(cellCSpike->getOutputs());
-                deepNet->addCMonitor((*it), monitor);
-            }
-            else if (cellSpike) {
-                std::shared_ptr<Monitor> monitor(new Monitor(network));
-                monitor->add(cellSpike->getOutputs());
-
-                deepNet->addMonitor((*it), monitor);
-
-            }
-            else if (isEnv) {
-                // Don't warn if we are using a StimuliProvider
-                std::cout << "Warning: No monitor could be added to Cell: " +
-                    cell->getName() << std::endl;
-            }
         }
     }
 
@@ -420,19 +461,24 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
 #ifdef ONNX
 std::shared_ptr<N2D2::DeepNet>
 N2D2::DeepNetGenerator::generateFromONNX(Network& network,
-                                         const std::string& fileName)
+                                         const std::string& fileName,
+                                         std::shared_ptr<DeepNet> deepNet)
 {
-    std::shared_ptr<DeepNet> deepNet(new DeepNet(network));
-    deepNet->setParameter("Name", Utils::baseName(fileName));
+    if (!deepNet) {
+        deepNet = std::shared_ptr<DeepNet>(new DeepNet(network));
+        deepNet->setParameter("Name", Utils::baseName(fileName));
+    }
 
-    //std::cout << Utils::cwarning << "Warning: no database specified."
-    //            << Utils::cdef << std::endl;
-    //deepNet->setDatabase(std::make_shared<Database>());
-    std::shared_ptr<ILSVRC2012_Database> database = std::make_shared
-        <ILSVRC2012_Database>(1.0, true, true);
-    database->load(N2D2_DATA("ILSVRC2012"),
-                   N2D2_DATA("ILSVRC2012/synsets.txt"));
-    deepNet->setDatabase(database);
+    if (!deepNet->getDatabase()) {
+        //std::cout << Utils::cwarning << "Warning: no database specified."
+        //            << Utils::cdef << std::endl;
+        //deepNet->setDatabase(std::make_shared<Database>());
+        std::shared_ptr<ILSVRC2012_Database> database = std::make_shared
+            <ILSVRC2012_Database>(1.0, true, true);
+        database->load(N2D2_DATA("ILSVRC2012"),
+                    N2D2_DATA("ILSVRC2012/synsets.txt"));
+        deepNet->setDatabase(database);
+    }
 
     // Verify that the version of the library that we linked against is
     // compatible with the version of the headers we compiled against.
@@ -465,11 +511,7 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
 void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
                                               const onnx::GraphProto& graph)
 {
-#ifdef CUDA
-    const std::string model = "Frame_CUDA";
-#else
-    const std::string model = "Frame";
-#endif
+    const std::string model = CellGenerator::mDefaultModel;
 
     std::map<std::string, const onnx::TensorProto*> initializer;
     for (int i = 0; i < graph.initializer_size(); ++i) {
@@ -493,7 +535,6 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
         output[valueInfo->name()] = valueInfo;
     }
 
-    // Input: StimuliProvider construction
     if (dataInput.size() != 1)
         throw std::runtime_error("Number of data input should be 1");
 
@@ -506,27 +547,45 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
         size.push_back(shape.dim(i).dim_value());
     std::reverse(size.begin(), size.end());
 
-    unsigned int batchSize = shape.dim(0).dim_value();
-    if (batchSize < 1)
-        batchSize = 1;
+    std::shared_ptr<StimuliProvider> sp;
 
-    const bool compositeStimuli = false;
+    if (!deepNet->getStimuliProvider()) {
+        // Input: StimuliProvider construction
+        unsigned int batchSize = shape.dim(0).dim_value();
+        if (batchSize < 1)
+            batchSize = 1;
 
-    std::shared_ptr<StimuliProvider> sp(new StimuliProvider(
-        *deepNet->getDatabase(), size, batchSize, compositeStimuli));
-    deepNet->setStimuliProvider(sp);
+        const bool compositeStimuli = false;
 
-    std::cout << "StimuliProvider: " << size << " (" << batchSize << ")"
-        << std::endl;
+        sp = std::shared_ptr<StimuliProvider>(new StimuliProvider(
+            *deepNet->getDatabase(), size, batchSize, compositeStimuli));
+        deepNet->setStimuliProvider(sp);
 
-    // Pre-processing for ImageNet used by the MobileNet families
-    sp->addTransformation(RescaleTransformation(256, 256));
-    sp->addTransformation(PadCropTransformation(size[0], size[1]));
-    sp->addTransformation(ColorSpaceTransformation(
-        ColorSpaceTransformation::RGB));
-    sp->addTransformation(RangeAffineTransformation(
-        RangeAffineTransformation::Minus, {127.5},
-        RangeAffineTransformation::Divides, {127.5}));
+        std::cout << "StimuliProvider: " << size << " (" << batchSize << ")"
+            << std::endl;
+
+        // Pre-processing for ImageNet used by the MobileNet families
+        sp->addTransformation(RescaleTransformation(256, 256));
+        sp->addTransformation(PadCropTransformation(size[0], size[1]));
+        sp->addTransformation(ColorSpaceTransformation(
+            ColorSpaceTransformation::RGB));
+        sp->addTransformation(RangeAffineTransformation(
+            RangeAffineTransformation::Minus, {127.5},
+            RangeAffineTransformation::Divides, {127.5}));
+    }
+    else {
+        sp = deepNet->getStimuliProvider();
+
+        if (sp->getSize() != size) {
+            std::ostringstream errorStr;
+            errorStr << "Unexpected size for ONNX input \""
+                << (*dataInput.begin()).first << "\": got " << size
+                << " , but StimuliProvider provides " << sp->getSize()
+                << std::endl;
+
+            throw std::runtime_error(errorStr.str());
+        }
+    }
 
     // Cells
     std::shared_ptr<Cell> cell;

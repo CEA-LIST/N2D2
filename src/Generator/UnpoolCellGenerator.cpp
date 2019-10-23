@@ -199,7 +199,7 @@ void N2D2::UnpoolCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
                                              const std::string& section)
 {
     if (!iniConfig.currentSection(section))
-        throw std::runtime_error("Missing [" + section + "] section.");
+        return;
 
     const std::string argMax = iniConfig.getProperty<std::string>("ArgMax");
     bool found = false;

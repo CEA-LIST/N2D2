@@ -345,7 +345,7 @@ void N2D2::ConvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
                                              const std::string& section)
 {
     if (!iniConfig.currentSection(section))
-        throw std::runtime_error("Missing [" + section + "] section.");
+        return;
 
     std::shared_ptr<ConvCell> convCell
         = std::dynamic_pointer_cast<ConvCell>(cell);

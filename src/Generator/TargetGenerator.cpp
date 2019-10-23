@@ -129,7 +129,7 @@ void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
                                          const std::string& section)
 {
     if (!iniConfig.currentSection(section))
-        throw std::runtime_error("Missing [" + section + "] section.");
+        return;
 
     if (target->getType() == std::string("TargetROIs")
         && iniConfig.isProperty("ROIsLabelTarget")) {

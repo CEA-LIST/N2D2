@@ -306,7 +306,7 @@ void N2D2::DeconvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,
                                              const std::string& section)
 {
     if (!iniConfig.currentSection(section))
-        throw std::runtime_error("Missing [" + section + "] section.");
+        return;
 
     std::shared_ptr<DeconvCell> deconvCell
         = std::dynamic_pointer_cast<DeconvCell>(cell);
