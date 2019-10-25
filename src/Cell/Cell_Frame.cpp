@@ -276,8 +276,14 @@ double N2D2::Cell_Frame<T>::setOutputTargets(const Tensor<int>& targets,
                                 "output batch sizes don't match.");
 
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
-        throw std::domain_error(
-            "Cell_Frame<T>::setOutputTargets(): wrong target matrix size.");
+    {
+        std::ostringstream errorStr;
+        errorStr << "Cell_Frame<T>::setOutputTargets(): wrong target "
+            "matrix size. Expected " << mOutputsDims << ", got "
+            << targets.dims() << std::endl;
+
+        throw std::domain_error(errorStr.str());
+    }
 
     double loss = 0.0;
 
@@ -349,8 +355,12 @@ double N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
         || baseTargets.dimY() != mOutputsDims[1]
         || baseTargets.dimZ() != getNbOutputs())
     {
-        throw std::domain_error(
-            "Cell_Frame<T>::setOutputTargets(): wrong target matrix size.");
+        std::ostringstream errorStr;
+        errorStr << "Cell_Frame<T>::setOutputTargets(): wrong target "
+            "matrix size. Expected " << mOutputsDims << ", got "
+            << baseTargets.dims() << std::endl;
+
+        throw std::domain_error(errorStr.str());
     }
 
     const Tensor<T>& targets = tensor_cast<T>(baseTargets);
@@ -377,8 +387,12 @@ void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
         || baseErrors.dimY() != mOutputsDims[1]
         || baseErrors.dimZ() != getNbOutputs())
     {
-        throw std::domain_error(
-            "Cell_Frame::setOutputErrors(): wrong target matrix size.");
+        std::ostringstream errorStr;
+        errorStr << "Cell_Frame<T>::setOutputErrors(): wrong target "
+            "matrix size. Expected " << mOutputsDims << ", got "
+            << baseErrors.dims() << std::endl;
+
+        throw std::domain_error(errorStr.str());
     }
 
     const Tensor<T>& errors = tensor_cast<T>(baseErrors);

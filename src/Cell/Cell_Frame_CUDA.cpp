@@ -285,8 +285,14 @@ double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
                                 "and output batch sizes don't match.");
 
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
-        throw std::domain_error(
-            "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target matrix size.");
+    {
+        std::ostringstream errorStr;
+        errorStr << "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target "
+            "matrix size. Expected " << mOutputsDims << ", got "
+            << targets.dims() << std::endl;
+
+        throw std::domain_error(errorStr.str());
+    }
 
     mTargets.resize(targets.dims());
     mTargets = targets;  // TODO: could be optimized by avoiding the copy
@@ -380,8 +386,12 @@ double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
         || baseTargets.dimY() != mOutputsDims[1]
         || baseTargets.dimZ() != getNbOutputs())
     {
-        throw std::domain_error(
-            "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target matrix size.");
+        std::ostringstream errorStr;
+        errorStr << "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target "
+            "matrix size. Expected " << mOutputsDims << ", got "
+            << baseTargets.dims() << std::endl;
+
+        throw std::domain_error(errorStr.str());
     }
 
     mOutputs.synchronizeDToH();
@@ -412,8 +422,12 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
         || baseErrors.dimY() != mOutputsDims[1]
         || baseErrors.dimZ() != getNbOutputs())
     {
-        throw std::domain_error(
-            "Cell_Frame_CUDA<T>::setOutputErrors(): wrong target matrix size.");
+        std::ostringstream errorStr;
+        errorStr << "Cell_Frame_CUDA<T>::setOutputErrors(): wrong target "
+            "matrix size. Expected " << mOutputsDims << ", got "
+            << baseErrors.dims() << std::endl;
+
+        throw std::domain_error(errorStr.str());
     }
 
     const Tensor<T>& errors = tensor_cast<T>(baseErrors);
