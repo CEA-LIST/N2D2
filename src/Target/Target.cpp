@@ -782,13 +782,6 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         return;
     }
 
-#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
-    const int ret = symlink(N2D2_PATH("tools/target_viewer.py"),
-                            (dirPath + ".py").c_str());
-    if (ret < 0) {
-    } // avoid ignoring return value warning
-#endif
-
     if (mDataAsTarget) {
         std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
             <Cell_Frame_Top>(mCell);
@@ -824,30 +817,41 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                     = mStimuliProvider->getDatabase().getStimulusName(id);
                 const std::string baseName = Utils::baseName(imgFile);
                 const std::string fileBaseName = Utils::fileBaseName(baseName);
-                std::string fileExtension = Utils::fileExtension(baseName);
-
-                if (!((std::string)mImageLogFormat).empty()) {
-                    // Keep "[x,y]" after file extension, appended by
-                    // getStimulusName() in case of slicing
-                    fileExtension.replace(0, fileExtension.find_first_of('['),
-                                        mImageLogFormat);
-                }
 
                 // Input image
-                cv::Mat inputImg = (cv::Mat)mStimuliProvider->getTargetData(0, batchPos);
-                cv::Mat inputImg8U;
-                inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+                if (values.dimX() == 1 && values.dimY() == 1) {
+                    fileName = dirPath + "/" + fileBaseName + "_target.dat";
 
-                fileName = dirPath + "/" + fileBaseName + "_target."
-                                + fileExtension;
+                    StimuliProvider::logData(fileName,
+                        mStimuliProvider->getTargetData(0, batchPos));
 
-                if (!cv::imwrite(fileName, inputImg8U)) {
-    #pragma omp critical(Target__logEstimatedLabels)
-                    throw std::runtime_error("Unable to write image: " + fileName);
+                    fileName = dirPath + "/" + fileBaseName + "_estimated.dat";
                 }
+                else {
+                    std::string fileExtension = Utils::fileExtension(baseName);
 
-                fileName = dirPath + "/" + fileBaseName + "_estimated."
-                        + fileExtension;
+                    if (!((std::string)mImageLogFormat).empty()) {
+                        // Keep "[x,y]" after file extension, appended by
+                        // getStimulusName() in case of slicing
+                        fileExtension.replace(0, fileExtension.find_first_of('['),
+                                            mImageLogFormat);
+                    }
+
+                    cv::Mat inputImg = (cv::Mat)mStimuliProvider->getTargetData(0, batchPos);
+                    cv::Mat inputImg8U;
+                    inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+
+                    fileName = dirPath + "/" + fileBaseName + "_target."
+                                    + fileExtension;
+
+                    if (!cv::imwrite(fileName, inputImg8U)) {
+#pragma omp critical(Target__logEstimatedLabels)
+                        throw std::runtime_error("Unable to write image: " + fileName);
+                    }
+
+                    fileName = dirPath + "/" + fileBaseName + "_estimated."
+                            + fileExtension;
+                }
             }
             else {
                 std::ostringstream imgFile;
@@ -863,18 +867,30 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             }
 
             // Output image
-            const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
-            cv::Mat outputImg8U;
-            outputImg.convertTo(outputImg8U, CV_8U, 255.0);
+            if (values.dimX() == 1 && values.dimY() == 1) {
+                StimuliProvider::logData(fileName, values[batchPos][0]);
+            }
+            else {
+                const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
+                cv::Mat outputImg8U;
+                outputImg.convertTo(outputImg8U, CV_8U, 255.0);
 
-            if (!cv::imwrite(fileName, outputImg8U)) {
+                if (!cv::imwrite(fileName, outputImg8U)) {
 #pragma omp critical(Target__logEstimatedLabels)
-                throw std::runtime_error("Unable to write image: " + fileName);
+                    throw std::runtime_error("Unable to write image: " + fileName);
+                }
             }
         }
 
         return;
     }
+
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
+    const int ret = symlink(N2D2_PATH("tools/target_viewer.py"),
+                            (dirPath + ".py").c_str());
+    if (ret < 0) {
+    } // avoid ignoring return value warning
+#endif
 
     const unsigned int nbTargets = getNbTargets();
 

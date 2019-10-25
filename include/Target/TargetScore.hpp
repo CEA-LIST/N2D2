@@ -140,6 +140,10 @@ public:
     virtual void clear(Database::StimuliSet set);
 
 protected:
+    Parameter<double> mConfusionRangeMin;
+    Parameter<double> mConfusionRangeMax;
+    Parameter<unsigned int> mConfusionQuantSteps;
+
     std::vector<double> mBatchSuccess;
     std::vector<double> mBatchTopNSuccess; // top-N accuracy
     std::vector<std::pair<unsigned int, double> > mValidationScore;

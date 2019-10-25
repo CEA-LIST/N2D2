@@ -39,6 +39,9 @@ N2D2::TargetScore::TargetScore(const std::string& name,
                                bool createMissingLabels)
     : Target(
           name, cell, sp, targetValue, defaultValue, targetTopN, labelsMapping, createMissingLabels),
+      mConfusionRangeMin(this, "ConfusionRangeMin", 0.0),
+      mConfusionRangeMax(this, "ConfusionRangeMax", 1.0),
+      mConfusionQuantSteps(this, "ConfusionQuantSteps", 10U),
       mMaxValidationScore(0.0),
       mMaxValidationTopNScore(0.0)
 {
@@ -418,15 +421,13 @@ void N2D2::TargetScore::clearScore(Database::StimuliSet set)
 void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 {
     if (mDataAsTarget) {
-        const Float_T confusionRangeMin = 0.0;
-        const Float_T confusionRangeMax = 1.0;
-        const unsigned int confusionQuantSteps = 10;
-
         ConfusionMatrix<unsigned long long int>& confusionMatrix
             = mScoreSet[set].confusionMatrix;
 
-        if (confusionMatrix.empty())
-            confusionMatrix.resize(confusionQuantSteps, confusionQuantSteps, 0);
+        if (confusionMatrix.empty()) {
+            confusionMatrix.resize(mConfusionQuantSteps,
+                                   mConfusionQuantSteps, 0);
+        }
 
         std::shared_ptr<Cell_Frame_Top> targetCell 
             = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
@@ -459,7 +460,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
             const Tensor<Float_T> estimated = values[batchPos];
 
             ConfusionMatrix<unsigned long long int> confusion(
-                confusionQuantSteps, confusionQuantSteps, 0);
+                mConfusionQuantSteps, mConfusionQuantSteps, 0);
 
             double mse = 0.0;
 
@@ -468,15 +469,15 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                 mse += err * err;
 
                 const unsigned int t = Utils::clamp<unsigned int>(
-                    Utils::round((confusionQuantSteps - 1)
-                        * (target(index) - confusionRangeMin)
-                            / (double)(confusionRangeMax - confusionRangeMin)),
-                    0U, confusionQuantSteps - 1);
+                    Utils::round((mConfusionQuantSteps - 1)
+                        * (target(index) - mConfusionRangeMin)
+                            / (double)(mConfusionRangeMax - mConfusionRangeMin)),
+                    0U, mConfusionQuantSteps - 1);
                 const unsigned int e = Utils::clamp<unsigned int>(
-                    Utils::round((confusionQuantSteps - 1)
-                        * (estimated(index) - confusionRangeMin)
-                            / (double)(confusionRangeMax - confusionRangeMin)),
-                    0U, confusionQuantSteps - 1);
+                    Utils::round((mConfusionQuantSteps - 1)
+                        * (estimated(index) - mConfusionRangeMin)
+                            / (double)(mConfusionRangeMax - mConfusionRangeMin)),
+                    0U, mConfusionQuantSteps - 1);
 
                 confusion(t, e) += 1ULL;
             }
