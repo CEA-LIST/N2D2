@@ -179,7 +179,7 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
                                          (float)facesParam[face].x1,
                                          (float)facesParam[face].y0,
                                          (float)facesParam[face].y1 };
-                const cv::Mat faceBox(4, 1, CV_32FC1, faceBoxData);
+                const cv::Mat faceBox(1, 1, CV_32FC(4), faceBoxData);
 
                 mTargetData.push_back(faceBox);
             } else

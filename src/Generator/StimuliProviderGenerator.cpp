@@ -52,6 +52,9 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
 
             if (iniConfig.isProperty("TargetSizeD"))
                 targetSize.push_back(iniConfig.getProperty<size_t>("TargetSizeD"));
+
+            targetSize.push_back(iniConfig.getProperty<size_t>
+                ("TargetNbChannels", 1U));
         }
     }
 

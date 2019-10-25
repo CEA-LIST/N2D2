@@ -699,6 +699,12 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
         labels.reshape(labelsSize);
     }
 
+    if (targetData.nbDims() < mTargetSize.size()) {
+        std::vector<size_t> targetDataSize(targetData.dims());
+        targetDataSize.resize(mTargetSize.size(), 1);
+        targetData.reshape(targetDataSize);
+    }
+
     // 2.1 Process channels
     if (!mChannelsTransformations.empty()) {
         for (std::vector<TransformationsSets>::iterator it
