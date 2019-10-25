@@ -823,7 +823,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                     fileName = dirPath + "/" + fileBaseName + "_target.dat";
 
                     StimuliProvider::logData(fileName,
-                        mStimuliProvider->getTargetData(0, batchPos));
+                        mStimuliProvider->getTargetData()[batchPos]);
 
                     fileName = dirPath + "/" + fileBaseName + "_estimated.dat";
                 }
@@ -868,7 +868,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
             // Output image
             if (values.dimX() == 1 && values.dimY() == 1) {
-                StimuliProvider::logData(fileName, values[batchPos][0]);
+                StimuliProvider::logData(fileName, values[batchPos]);
             }
             else {
                 const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
