@@ -682,7 +682,10 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                         ? Tensor<int>(rawChannelsLabels[0])
                         : Tensor<int>(std::vector<size_t>(mSize.size(), 0));
     Tensor<Float_T> targetData = (!mTargetSize.empty())
-        ? Tensor<Float_T>(mDatabase.getStimulusTargetData(id)
+        ? Tensor<Float_T>(mDatabase.getStimulusTargetData(id,
+                                                          rawChannelsData[0],
+                                                          rawChannelsLabels[0],
+                                                          labelsROI)
             .clone())  // make sure the database image will not be altered
         : Tensor<Float_T>();
 

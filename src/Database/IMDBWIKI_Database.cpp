@@ -173,15 +173,6 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
                     <int>::Point_T(facesParam[face].x0, facesParam[face].y0),
                     facesParam[face].x1 - facesParam[face].x0,
                     facesParam[face].y1 - facesParam[face].y0));
-
-                // Populate target data
-                float faceBoxData[4] = { (float)facesParam[face].x0,
-                                         (float)facesParam[face].x1,
-                                         (float)facesParam[face].y0,
-                                         (float)facesParam[face].y1 };
-                const cv::Mat faceBox(1, 1, CV_32FC(4), faceBoxData);
-
-                mTargetData.push_back(faceBox);
             } else
                 loadFile(dirPath + "/" + facesParam[face].full_path,
                          labelID(labelStr.str()));
@@ -264,6 +255,23 @@ N2D2::IMDBWIKI_Database::loadFaceParameters(const std::string& path) const
     return data;
 }
 
-cv::Mat N2D2::IMDBWIKI_Database::loadStimulusTargetData(StimulusID id) {
-    return mTargetData.at(id);
+cv::Mat N2D2::IMDBWIKI_Database::getStimulusTargetData(StimulusID /*id*/,
+    const cv::Mat& frame,
+    const cv::Mat& /*labels*/,
+    const std::vector<std::shared_ptr<ROI> >& labelsROI)
+{
+    assert(labelsROI.size() == 1);
+
+    // Get the bounding box of the ROI after transformations
+    const cv::Rect rect = labelsROI[0]->getBoundingRect();
+    const cv::Mat channels[4] = {
+        cv::Mat(1, 1, CV_32F, rect.x / (float)frame.cols),
+        cv::Mat(1, 1, CV_32F, (rect.x + rect.width) / (float)frame.cols),
+        cv::Mat(1, 1, CV_32F, rect.y / (float)frame.rows),
+        cv::Mat(1, 1, CV_32F, (rect.y + rect.height) / (float)frame.rows)
+    };
+
+    cv::Mat faceBox;
+    cv::merge(channels, 4, faceBox);
+    return faceBox;
 }

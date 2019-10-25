@@ -61,7 +61,11 @@ public:
 protected:
     static const std::locale csvIMDBLocale;
 
-    cv::Mat loadStimulusTargetData(StimulusID id);
+    cv::Mat getStimulusTargetData(StimulusID id,
+                        const cv::Mat& frame = cv::Mat(),
+                        const cv::Mat& labels = cv::Mat(),
+                        const std::vector<std::shared_ptr<ROI> >& labelsROI
+                            = std::vector<std::shared_ptr<ROI> >());
     void loadStimuli(const std::string& dirPath, const std::string& labelPath);
     std::vector<FaceParameters> loadFaceParameters(const std::string
                                                    & path) const;
@@ -73,7 +77,6 @@ protected:
     double mLearn;
     double mValidation;
     unsigned int mNbCorruptedFrames;
-    std::vector<cv::Mat> mTargetData;
 };
 }
 

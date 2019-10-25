@@ -295,8 +295,17 @@ public:
     inline cv::Mat getStimulusData(StimuliSet set, unsigned int index);
     cv::Mat getStimulusLabelsData(StimulusID id);
     inline cv::Mat getStimulusLabelsData(StimuliSet set, unsigned int index);
-    cv::Mat getStimulusTargetData(StimulusID id);
-    inline cv::Mat getStimulusTargetData(StimuliSet set, unsigned int index);
+    virtual cv::Mat getStimulusTargetData(StimulusID id,
+                        const cv::Mat& frame = cv::Mat(),
+                        const cv::Mat& labels = cv::Mat(),
+                        const std::vector<std::shared_ptr<ROI> >& labelsROI
+                            = std::vector<std::shared_ptr<ROI> >());
+    inline cv::Mat getStimulusTargetData(StimuliSet set,
+                        unsigned int index,
+                        const cv::Mat& frame = cv::Mat(),
+                        const cv::Mat& labels = cv::Mat(),
+                        const std::vector<std::shared_ptr<ROI> >& labelsROI
+                            = std::vector<std::shared_ptr<ROI> >());
     std::vector<StimuliSet> getStimuliSets(StimuliSetMask setMask) const;
     StimuliSetMask getStimuliSetMask(StimuliSet set) const;
 
@@ -559,9 +568,13 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimuliSet set,
 }
 
 cv::Mat N2D2::Database::getStimulusTargetData(StimuliSet set,
-                                              unsigned int index)
+    unsigned int index,
+    const cv::Mat& frame,
+    const cv::Mat& labels,
+    const std::vector<std::shared_ptr<ROI> >& labelsROI)
 {
-    return getStimulusTargetData(getStimulusID(set, index));
+    return getStimulusTargetData(getStimulusID(set, index),
+                                 frame, labels, labelsROI);
 }
 
 #endif // N2D2_DATABASE_H

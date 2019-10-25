@@ -1618,7 +1618,10 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
         return loadStimulusLabelsData(id);
 }
 
-cv::Mat N2D2::Database::getStimulusTargetData(StimulusID id)
+cv::Mat N2D2::Database::getStimulusTargetData(StimulusID id,
+    const cv::Mat& /*frame*/,
+    const cv::Mat& /*labels*/,
+    const std::vector<std::shared_ptr<ROI> >& /*labelsROI*/)
 {
     assert(id < mStimuli.size());
 
