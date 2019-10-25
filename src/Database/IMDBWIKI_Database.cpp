@@ -64,7 +64,15 @@ void N2D2::IMDBWIKI_Database::load(const std::string& dataPath,
             loadStimuli(dataPath + "/wiki_crop", labelPath + "/wiki.csv");
     }
 
-    partitionStimuliPerLabel(mLearn, mValidation, 1.0 - mLearn - mValidation);
+    if (mUseNameAsLabel) {
+        partitionStimuliPerLabel(mLearn, mValidation,
+                                 1.0 - mLearn - mValidation);
+    }
+    else {
+        // In this case, stimuli label ID is always -1,
+        // partitionStimuliPerLabel() can't be used
+        partitionStimuli(mLearn, mValidation, 1.0 - mLearn - mValidation);
+    }
 }
 
 void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
