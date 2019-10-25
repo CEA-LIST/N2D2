@@ -217,6 +217,7 @@ public:
                                          unsigned int index) const;
 
     virtual void setBatchSize(unsigned int batchSize);
+    void setTargetSize(const std::vector<size_t>& size);
     void setCachePath(const std::string& path = "");
 
     // Getters
@@ -273,6 +274,10 @@ public:
     {
         return mData;
     };
+    TensorData_T& getTargetData()
+    {
+        return (!mTargetData.empty()) ? mTargetData : mData;
+    };
     Tensor<int>& getLabelsData()
     {
         return mLabelsData;
@@ -285,6 +290,10 @@ public:
     {
         return mLabelsData;
     };
+    const TensorData_T& getTargetData() const
+    {
+        return (!mTargetData.empty()) ? mTargetData : mData;
+    };
     const std::vector<std::vector<std::shared_ptr<ROI> > >&
     getLabelsROIs() const
     {
@@ -294,6 +303,8 @@ public:
                                     unsigned int batchPos = 0) const;
     const Tensor<int> getLabelsData(unsigned int channel,
                                       unsigned int batchPos = 0) const;
+    const TensorData_T getTargetData(unsigned int channel,
+                                     unsigned int batchPos = 0) const;
     const std::vector<std::shared_ptr<ROI> >&
     getLabelsROIs(unsigned int batchPos = 0) const
     {
@@ -338,6 +349,7 @@ protected:
     // Internal variables
     Database& mDatabase;
     std::vector<size_t> mSize;
+    std::vector<size_t> mTargetSize;
     unsigned int mBatchSize;
     bool mCompositeStimuli;
     /// Disk cache path for pre-processed stimuli (no disk cache if empty)
@@ -355,6 +367,9 @@ protected:
     /// Tensor (x, y, channel, batch)
     Tensor<int> mLabelsData;
     Tensor<int> mFutureLabelsData;
+    /// Tensor (x, y, channel, batch)
+    TensorData_T mTargetData;
+    TensorData_T mFutureTargetData;
     /// ROIs of current batch
     std::vector<std::vector<std::shared_ptr<ROI> > > mLabelsROI;
     std::vector<std::vector<std::shared_ptr<ROI> > > mFutureLabelsROI;

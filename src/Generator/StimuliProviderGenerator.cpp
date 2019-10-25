@@ -40,6 +40,21 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
         size.push_back(iniConfig.getProperty<size_t>("NbChannels", 1U));
     }
 
+    std::vector<size_t> targetSize;
+
+    if (iniConfig.isProperty("TargetSize"))
+        targetSize = iniConfig.getProperty<std::vector<size_t> >("TargetSize");
+    else if (iniConfig.isProperty("TargetSizeX")) {
+        targetSize.push_back(iniConfig.getProperty<size_t>("TargetSizeX"));
+
+        if (iniConfig.isProperty("TargetSizeY")) {
+            targetSize.push_back(iniConfig.getProperty<size_t>("TargetSizeY"));
+
+            if (iniConfig.isProperty("TargetSizeD"))
+                targetSize.push_back(iniConfig.getProperty<size_t>("TargetSizeD"));
+        }
+    }
+
     const unsigned int batchSize = iniConfig.getProperty
                                    <unsigned int>("BatchSize", 1U);
     const bool compositeStimuli = iniConfig.getProperty
@@ -50,6 +65,9 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(
         database, size, batchSize, compositeStimuli));
     sp->setCachePath(cachePath);
+
+    if (!targetSize.empty())
+        sp->setTargetSize(targetSize);
 
     iniConfig.setProperty("_EpochSize", database.getNbStimuli(Database::Learn));
 

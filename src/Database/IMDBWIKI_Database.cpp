@@ -173,6 +173,15 @@ void N2D2::IMDBWIKI_Database::loadStimuli(const std::string& dirPath,
                     <int>::Point_T(facesParam[face].x0, facesParam[face].y0),
                     facesParam[face].x1 - facesParam[face].x0,
                     facesParam[face].y1 - facesParam[face].y0));
+
+                // Populate target data
+                float faceBoxData[4] = { (float)facesParam[face].x0,
+                                         (float)facesParam[face].x1,
+                                         (float)facesParam[face].y0,
+                                         (float)facesParam[face].y1 };
+                const cv::Mat faceBox(4, 1, CV_32FC1, faceBoxData);
+
+                mTargetData.push_back(faceBox);
             } else
                 loadFile(dirPath + "/" + facesParam[face].full_path,
                          labelID(labelStr.str()));
@@ -253,4 +262,8 @@ N2D2::IMDBWIKI_Database::loadFaceParameters(const std::string& path) const
     std::cout << "IMDBWIKI_DATABASE: Found: " << data.size()
               << " data labelled." << std::endl;
     return data;
+}
+
+cv::Mat N2D2::IMDBWIKI_Database::loadStimulusTargetData(StimulusID id) {
+    return mTargetData.at(id);
 }

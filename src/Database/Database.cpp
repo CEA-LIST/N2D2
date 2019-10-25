@@ -1618,6 +1618,25 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
         return loadStimulusLabelsData(id);
 }
 
+cv::Mat N2D2::Database::getStimulusTargetData(StimulusID id)
+{
+    assert(id < mStimuli.size());
+
+    if (mLoadDataInMemory) {
+        if (mStimuliTargetData.empty()) {
+#pragma omp critical(Database__getStimulusTargetData)
+            if (mStimuliTargetData.empty())
+                mStimuliTargetData.resize(mStimuli.size());
+        }
+
+        if (mStimuliTargetData[id].empty())
+            mStimuliTargetData[id] = loadStimulusTargetData(id);
+
+        return mStimuliTargetData[id];
+    } else
+        return loadStimulusTargetData(id);
+}
+
 std::vector<N2D2::Database::StimuliSet>
 N2D2::Database::getStimuliSets(StimuliSetMask setMask) const
 {

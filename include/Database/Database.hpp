@@ -295,6 +295,8 @@ public:
     inline cv::Mat getStimulusData(StimuliSet set, unsigned int index);
     cv::Mat getStimulusLabelsData(StimulusID id);
     inline cv::Mat getStimulusLabelsData(StimuliSet set, unsigned int index);
+    cv::Mat getStimulusTargetData(StimulusID id);
+    inline cv::Mat getStimulusTargetData(StimuliSet set, unsigned int index);
     std::vector<StimuliSet> getStimuliSets(StimuliSetMask setMask) const;
     StimuliSetMask getStimuliSetMask(StimuliSet set) const;
 
@@ -308,6 +310,8 @@ protected:
     int labelID(const std::string& labelName);
     cv::Mat loadStimulusData(StimulusID id);
     cv::Mat loadStimulusLabelsData(StimulusID id) const;
+    virtual cv::Mat loadStimulusTargetData(StimulusID /*id*/)
+        { return cv::Mat(); };
     std::vector<unsigned int> getLabelStimuliSetIndexes(int label,
                                                         StimuliSet set) const;
     std::vector<std::vector<unsigned int> >
@@ -352,6 +356,8 @@ protected:
     std::vector<cv::Mat> mStimuliData;
     /// Labels matrix associated to each stimulus
     std::vector<cv::Mat> mStimuliLabelsData;
+    /// Stimuli target data
+    std::vector<cv::Mat> mStimuliTargetData;
     /// Stimuli sets
     StimuliSets mStimuliSets;
 
@@ -550,6 +556,12 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimuliSet set,
                                               unsigned int index)
 {
     return getStimulusLabelsData(getStimulusID(set, index));
+}
+
+cv::Mat N2D2::Database::getStimulusTargetData(StimuliSet set,
+                                              unsigned int index)
+{
+    return getStimulusTargetData(getStimulusID(set, index));
 }
 
 #endif // N2D2_DATABASE_H

@@ -46,6 +46,8 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       // supplied to mData's device pointer.
       mData(true),
       mFutureData(true),
+      mTargetData(true),
+      mFutureTargetData(true),
 #endif
       mLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
       mFutureLabelsROI(std::max(batchSize, 1u), std::vector<std::shared_ptr<ROI> >()),
@@ -91,6 +93,8 @@ N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
       mFutureData(other.mFutureData),
       mLabelsData(other.mLabelsData),
       mFutureLabelsData(other.mFutureLabelsData),
+      mTargetData(other.mTargetData),
+      mFutureTargetData(other.mFutureTargetData),
       mLabelsROI(std::move(other.mLabelsROI)),
       mFutureLabelsROI(std::move(other.mFutureLabelsROI)),
       mFuture(other.mFuture)
@@ -496,6 +500,7 @@ void N2D2::StimuliProvider::synchronize()
     if (mFuture) {
         mBatch.swap(mFutureBatch);
         mData.swap(mFutureData);
+        mTargetData.swap(mFutureTargetData);
         mLabelsData.swap(mFutureLabelsData);
         mLabelsROI.swap(mFutureLabelsROI);
         mFuture = false;
@@ -676,6 +681,10 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
     Tensor<int> labels = (mChannelsTransformations.empty())
                         ? Tensor<int>(rawChannelsLabels[0])
                         : Tensor<int>(std::vector<size_t>(mSize.size(), 0));
+    Tensor<Float_T> targetData = (!mTargetSize.empty())
+        ? Tensor<Float_T>(mDatabase.getStimulusTargetData(id)
+            .clone())  // make sure the database image will not be altered
+        : Tensor<Float_T>();
 
     if (data.nbDims() < mSize.size()) {
         // rawChannelsData[0] can be 2D or 3D
@@ -733,6 +742,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
 
     TensorData_T& dataRef = (mFuture) ? mFutureData : mData;
     Tensor<int>& labelsRef = (mFuture) ? mFutureLabelsData : mLabelsData;
+    TensorData_T& targetDataRef = (mFuture) ? mFutureTargetData : mTargetData;
 
     if (mBatchSize > 0) {
         TensorData_T dataRefPos = dataRef[batchPos];
@@ -772,6 +782,23 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
         }
 
         labelsRefPos = labels;
+
+        if (!targetDataRef.empty()) {
+            TensorData_T targetDataRefPos = targetDataRef[batchPos];
+
+            if (targetData.dims() != targetDataRefPos.dims()) {
+                std::stringstream msg;
+                msg << "StimuliProvider::readStimulus(): expected target data "
+                    "size is " << targetDataRefPos.dims() << ", but size is "
+                    << targetData.dims() << " for stimulus: "
+                    << mDatabase.getStimulusName(id);
+
+#pragma omp critical
+                throw std::runtime_error(msg.str());
+            }
+
+            targetDataRefPos = targetData;
+        }
     } else {
         dataRef.clear();
         dataRef.push_back(data);
@@ -884,6 +911,16 @@ void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
     }
 }
 
+void N2D2::StimuliProvider::setTargetSize(const std::vector<size_t>& size) {
+    mTargetSize = size;
+
+    std::vector<size_t> targetSize(size);
+    targetSize.push_back(mBatchSize);
+
+    mTargetData.resize(targetSize);
+    mFutureTargetData.resize(targetSize);
+}
+
 N2D2::Tensor<N2D2::Float_T>
 N2D2::StimuliProvider::readRawData(Database::StimulusID id) const
 {
@@ -936,6 +973,15 @@ N2D2::StimuliProvider::getLabelsData(unsigned int channel,
                                      unsigned int batchPos) const
 {
     return Tensor<int>(mLabelsData[batchPos][channel]);
+}
+
+const N2D2::StimuliProvider::TensorData_T
+N2D2::StimuliProvider::getTargetData(unsigned int channel,
+                                     unsigned int batchPos) const
+{
+    return TensorData_T((!mTargetData.empty())
+        ? mTargetData[batchPos][channel]
+        : mData[batchPos][channel]);
 }
 
 void N2D2::StimuliProvider::logData(const std::string& fileName,

@@ -343,7 +343,7 @@ void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
         if (set == Database::Learn && targetCell) {
             // Update target values from input data
             mLoss.push_back(
-                targetCell->setOutputTargets(mStimuliProvider->getData()));
+                targetCell->setOutputTargets(mStimuliProvider->getTargetData()));
         }
 
         return;
@@ -834,7 +834,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 }
 
                 // Input image
-                cv::Mat inputImg = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+                cv::Mat inputImg = (cv::Mat)mStimuliProvider->getTargetData(0, batchPos);
                 cv::Mat inputImg8U;
                 inputImg.convertTo(inputImg8U, CV_8U, 255.0);
 

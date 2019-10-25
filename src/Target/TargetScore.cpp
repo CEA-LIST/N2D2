@@ -455,7 +455,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                 continue;
             }
 
-            const Tensor<Float_T> target = mStimuliProvider->getData()[batchPos];
+            const Tensor<Float_T> target = mStimuliProvider->getTargetData()[batchPos];
             const Tensor<Float_T> estimated = values[batchPos];
 
             ConfusionMatrix<unsigned long long int> confusion(

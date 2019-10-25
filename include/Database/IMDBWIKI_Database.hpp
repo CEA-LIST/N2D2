@@ -60,9 +60,12 @@ public:
 
 protected:
     static const std::locale csvIMDBLocale;
+
+    cv::Mat loadStimulusTargetData(StimulusID id);
     void loadStimuli(const std::string& dirPath, const std::string& labelPath);
     std::vector<FaceParameters> loadFaceParameters(const std::string
                                                    & path) const;
+
     bool mWiki;
     bool mIMDB;
     bool mCrop;
@@ -70,6 +73,7 @@ protected:
     double mLearn;
     double mValidation;
     unsigned int mNbCorruptedFrames;
+    std::vector<cv::Mat> mTargetData;
 };
 }
 
