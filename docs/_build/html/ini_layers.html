@@ -902,98 +902,215 @@ following output feature maps ordering:</p>
 <div class="section" id="conv">
 <h2>Conv<a class="headerlink" href="#conv" title="Permalink to this headline">¶</a></h2>
 <p>Convolutional layer.</p>
-<div class="line-block">
-<div class="line">| p5cm | p10cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelWidth</span></code> &amp; Width of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelHeight</span></code> &amp; Height of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelDepth</span></code> [] &amp; Depth of the kernels (implies 3D kernels)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelSize</span></code> [] &amp; Kernels size (implies 2D square kernels)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelDims</span></code> [] &amp; List of space-separated dimensions for N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code> &amp; Number of output channels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">SubSampleX</span></code> [1] &amp; X-axis subsampling factor of the output feature
-maps</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">SubSampleY</span></code> [1] &amp; Y-axis subsampling factor of the output feature
-maps</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">SubSampleZ</span></code> [] &amp; Z-axis subsampling factor of the output feature
-maps</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">SubSample</span></code> [1] &amp; Subsampling factor of the output feature maps</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">SubSampleDims</span></code> [] &amp; List of space-separated subsampling dimensions
-for N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1] &amp; X-axis stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1] &amp; Y-axis stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> [] &amp; Z-axis stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1] &amp; Stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> [] &amp; List of space-separated stride dimensions for N-D
-kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0] &amp; X-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0] &amp; Y-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> [] &amp; Z-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0] &amp; Input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> [] &amp; List of space-separated padding dimensions for
-N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationX</span></code> [1] &amp; X-axis dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationY</span></code> [1] &amp; Y-axis dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationZ</span></code> [] &amp; Z-axis dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Dilation</span></code> [1] &amp; Dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationDims</span></code> [] &amp; List of space-separated dilation dimensions for
-N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code> [<code class="docutils literal notranslate"><span class="pre">Tanh</span></code>] &amp; Activation function. Can be any of
-<code class="docutils literal notranslate"><span class="pre">Logistic</span></code>, <code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or <code class="docutils literal notranslate"><span class="pre">Tanh</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">WeightsFiller</span></code> &amp; Weights initial values filler</div>
-<div class="line">[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>] &amp;</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">BiasFiller</span></code> &amp; Biases initial values filler</div>
-<div class="line">[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>] &amp;</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> [] &amp; Mapping: number of groups</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code> [] &amp; Mapping: number of channels per
-group</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1] &amp; Mapping canvas pattern default width</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1] &amp; Mapping canvas pattern default height</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1] &amp; Mapping canvas pattern default size</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1] &amp; Mapping canvas default X-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1] &amp; Mapping canvas default step</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0] &amp; Mapping canvas default offset</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0] &amp; Mapping canvas pattern default number
-of iterations (0 means no limit)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1] &amp; Mapping canvas pattern default width for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1] &amp; Mapping canvas pattern default height for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1] &amp; Mapping canvas pattern default size for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1] &amp; Mapping canvas default X-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1] &amp; Mapping canvas default step for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0] &amp; Mapping canvas default offset for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code> [0] &amp; Mapping canvas pattern default
-number of iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no limit)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">WeightsSharing</span></code> [] &amp; Share the weights with an other layer</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">BiasesSharing</span></code> [] &amp; Share the biases with an other layer</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KernelWidth</span></code></p></td>
+<td><p>Width of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KernelHeight</span></code></p></td>
+<td><p>Height of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KernelDepth</span></code> []</p></td>
+<td><p>Depth of the kernels (implies 3D kernels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KernelSize</span></code> []</p></td>
+<td><p>Kernels size (implies 2D square kernels)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KernelDims</span></code> []</p></td>
+<td><p>List of space-separated dimensions for N-D kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code></p></td>
+<td><p>Number of output channels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleX</span></code> [1]</p></td>
+<td><p>X-axis subsampling factor of the output feature
+maps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleY</span></code> [1]</p></td>
+<td><p>Y-axis subsampling factor of the output feature
+maps</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleZ</span></code> []</p></td>
+<td><p>Z-axis subsampling factor of the output feature
+maps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SubSample</span></code> [1]</p></td>
+<td><p>Subsampling factor of the output feature maps</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleDims</span></code> []</p></td>
+<td><p>List of space-separated subsampling dimensions
+for N-D kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1]</p></td>
+<td><p>X-axis stride of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1]</p></td>
+<td><p>Y-axis stride of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> []</p></td>
+<td><p>Z-axis stride of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1]</p></td>
+<td><p>Stride of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> []</p></td>
+<td><p>List of space-separated stride dimensions for N-D
+kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0]</p></td>
+<td><p>X-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0]</p></td>
+<td><p>Y-axis input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> []</p></td>
+<td><p>Z-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0]</p></td>
+<td><p>Input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> []</p></td>
+<td><p>List of space-separated padding dimensions for
+N-D kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DilationX</span></code> [1]</p></td>
+<td><p>X-axis dilation of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DilationY</span></code> [1]</p></td>
+<td><p>Y-axis dilation of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DilationZ</span></code> []</p></td>
+<td><p>Z-axis dilation of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Dilation</span></code> [1]</p></td>
+<td><p>Dilation of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DilationDims</span></code> []</p></td>
+<td><p>List of space-separated dilation dimensions for
+N-D kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Tanh</span></code>]</p></td>
+<td><p>Activation function. Can be any of <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Tanh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WeightsFiller</span></code>
+[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>]</p></td>
+<td><p>Weights initial values filler</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BiasFiller</span></code>
+[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>]</p></td>
+<td><p>Biases initial values filler</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> []</p></td>
+<td><p>Mapping: number of groups (mutually exclusive
+with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code>
+[]</p></td>
+<td><p>Mapping: number of channels per group (mutually
+exclusive with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size (mutually
+exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step (mutually exclusive
+with``Mapping.StrideX`` and <code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset (mutually exclusive
+with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations (0 means no limit)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code>
+(mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset for input
+layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code>
+[0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no
+limit)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WeightsSharing</span></code> []</p></td>
+<td><p>Share the weights with an other layer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BiasesSharing</span></code> []</p></td>
+<td><p>Share the biases with an other layer</p></td>
+</tr>
+</tbody>
+</table>
 <div class="section" id="id9">
 <h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -1155,90 +1272,216 @@ change)</em></p>
 </div>
 <div class="section" id="deconv">
 <h2>Deconv<a class="headerlink" href="#deconv" title="Permalink to this headline">¶</a></h2>
-<p>Deconvolutionlayer.</p>
-<div class="line-block">
-<div class="line">| p5cm | p10cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelWidth</span></code> &amp; Width of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelHeight</span></code> &amp; Height of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelDepth</span></code> [] &amp; Depth of the kernels (implies 3D kernels)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelSize</span></code> [] &amp; Kernels size (implies 2D square kernels)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">KernelDims</span></code> [] &amp; List of space-separated dimensions for N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code> &amp; Number of output channels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1] &amp; X-axis stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1] &amp; Y-axis stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> [] &amp; Z-axis stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1] &amp; Stride of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> [] &amp; List of space-separated stride dimensions for N-D
-kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0] &amp; X-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0] &amp; Y-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> [] &amp; Z-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0] &amp; Input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> [] &amp; List of space-separated padding dimensions for
-N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationX</span></code> [1] &amp; X-axis dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationY</span></code> [1] &amp; Y-axis dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationZ</span></code> [] &amp; Z-axis dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Dilation</span></code> [1] &amp; Dilation of the kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">DilationDims</span></code> [] &amp; List of space-separated dilation dimensions for
-N-D kernels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code> [<code class="docutils literal notranslate"><span class="pre">Tanh</span></code>] &amp; Activation function. Can be any of
-<code class="docutils literal notranslate"><span class="pre">Logistic</span></code>, <code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or <code class="docutils literal notranslate"><span class="pre">Tanh</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">WeightsFiller</span></code> &amp; Weights initial values filler</div>
-<div class="line">[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>] &amp;</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">BiasFiller</span></code> &amp; Biases initial values filler</div>
-<div class="line">[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>] &amp;</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> [] &amp; Mapping: number of groups</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code> [] &amp; Mapping: number of channels per
-group</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1] &amp; Mapping canvas pattern default width</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1] &amp; Mapping canvas pattern default height</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1] &amp; Mapping canvas pattern default size</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1] &amp; Mapping canvas default X-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1] &amp; Mapping canvas default step</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0] &amp; Mapping canvas default offset</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0] &amp; Mapping canvas pattern default number
-of iterations (0 means no limit)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1] &amp; Mapping canvas pattern default width for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1] &amp; Mapping canvas pattern default height for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1] &amp; Mapping canvas pattern default size for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1] &amp; Mapping canvas default X-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1] &amp; Mapping canvas default step for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0] &amp; Mapping canvas default offset for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code> [0] &amp; Mapping canvas pattern default
-number of iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no limit)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">WeightsSharing</span></code> [] &amp; Share the weights with an other layer</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">BiasesSharing</span></code> [] &amp; Share the biases with an other layer</div>
-</div>
+<p>Deconvolution layer.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KernelWidth</span></code></p></td>
+<td><p>Width of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KernelHeight</span></code></p></td>
+<td><p>Height of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KernelDepth</span></code> []</p></td>
+<td><p>Depth of the kernels (implies 3D kernels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KernelSize</span></code> []</p></td>
+<td><p>Kernels size (implies 2D square kernels)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KernelDims</span></code> []</p></td>
+<td><p>List of space-separated dimensions for N-D kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code></p></td>
+<td><p>Number of output channels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleX</span></code> [1]</p></td>
+<td><p>X-axis subsampling factor of the output feature
+maps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleY</span></code> [1]</p></td>
+<td><p>Y-axis subsampling factor of the output feature
+maps</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleZ</span></code> []</p></td>
+<td><p>Z-axis subsampling factor of the output feature
+maps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SubSample</span></code> [1]</p></td>
+<td><p>Subsampling factor of the output feature maps</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SubSampleDims</span></code> []</p></td>
+<td><p>List of space-separated subsampling dimensions
+for N-D kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1]</p></td>
+<td><p>X-axis stride of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1]</p></td>
+<td><p>Y-axis stride of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> []</p></td>
+<td><p>Z-axis stride of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1]</p></td>
+<td><p>Stride of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> []</p></td>
+<td><p>List of space-separated stride dimensions for N-D
+kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0]</p></td>
+<td><p>X-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0]</p></td>
+<td><p>Y-axis input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> []</p></td>
+<td><p>Z-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0]</p></td>
+<td><p>Input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> []</p></td>
+<td><p>List of space-separated padding dimensions for
+N-D kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DilationX</span></code> [1]</p></td>
+<td><p>X-axis dilation of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DilationY</span></code> [1]</p></td>
+<td><p>Y-axis dilation of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DilationZ</span></code> []</p></td>
+<td><p>Z-axis dilation of the kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Dilation</span></code> [1]</p></td>
+<td><p>Dilation of the kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DilationDims</span></code> []</p></td>
+<td><p>List of space-separated dilation dimensions for
+N-D kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Tanh</span></code>]</p></td>
+<td><p>Activation function. Can be any of <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Tanh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WeightsFiller</span></code>
+[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>]</p></td>
+<td><p>Weights initial values filler</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BiasFiller</span></code>
+[<code class="docutils literal notranslate"><span class="pre">NormalFiller(0.0,</span> <span class="pre">0.05)</span></code>]</p></td>
+<td><p>Biases initial values filler</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> []</p></td>
+<td><p>Mapping: number of groups (mutually exclusive
+with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code>
+[]</p></td>
+<td><p>Mapping: number of channels per group (mutually
+exclusive with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size (mutually
+exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step (mutually exclusive
+with``Mapping.StrideX`` and <code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset (mutually exclusive
+with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations (0 means no limit)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code>
+(mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset for input
+layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code>
+[0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no
+limit)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WeightsSharing</span></code> []</p></td>
+<td><p>Share the weights with an other layer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BiasesSharing</span></code> []</p></td>
+<td><p>Share the biases with an other layer</p></td>
+</tr>
+</tbody>
+</table>
 <div class="section" id="id10">
 <h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -1312,91 +1555,249 @@ consecutive pair of 8 input maps:</p>
 </pre></div>
 </div>
 <p>The layer connectivity is the following:</p>
-<div class="line-block">
-<div class="line">| c c | C0.33cm C0.33cm C0.33cm C0.33cm | &amp; 1 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 2 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 3 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 4 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 5 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 6 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 7 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; 8 &amp; &amp; &amp; &amp;</div>
-<div class="line">&amp; &amp; 1 &amp; 2 &amp; 3 &amp; 4</div>
-<div class="line">&amp; &amp;</div>
-</div>
-<div class="line-block">
-<div class="line">| p5cm | p10cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Pooling</span></code> &amp; Type of pooling (<code class="docutils literal notranslate"><span class="pre">Max</span></code> or <code class="docutils literal notranslate"><span class="pre">Average</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolWidth</span></code> &amp; Width of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolHeight</span></code> &amp; Height of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolDepth</span></code> [] &amp; Depth of the pooling area (implies 3D pooling area)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolSize</span></code> [] &amp; Pooling area size (implies 2D square pooling area)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolDims</span></code> [] &amp; List of space-separated dimensions for N-D pooling
-area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code> &amp; Number of output channels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1] &amp; X-axis stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1] &amp; Y-axis stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> [] &amp; Z-axis stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1] &amp; Stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> [] &amp; List of space-separated stride dimensions for N-D
-pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0] &amp; X-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0] &amp; Y-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> [] &amp; Z-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0] &amp; Input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> [] &amp; List of space-separated padding dimensions for
-N-D pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code> [<code class="docutils literal notranslate"><span class="pre">Linear</span></code>] &amp; Activation function. Can be any
-of <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>, <code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or <code class="docutils literal notranslate"><span class="pre">Tanh</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> [] &amp; Mapping: number of groups</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code> [] &amp; Mapping: number of channels per
-group</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1] &amp; Mapping canvas pattern default width</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1] &amp; Mapping canvas pattern default height</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1] &amp; Mapping canvas pattern default size</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1] &amp; Mapping canvas default X-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1] &amp; Mapping canvas default step</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0] &amp; Mapping canvas default offset</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0] &amp; Mapping canvas pattern default number
-of iterations (0 means no limit)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1] &amp; Mapping canvas pattern default width for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1] &amp; Mapping canvas pattern default height for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1] &amp; Mapping canvas pattern default size for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1] &amp; Mapping canvas default X-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1] &amp; Mapping canvas default step for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0] &amp; Mapping canvas default offset for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code> [0] &amp; Mapping canvas pattern default
-number of iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no limit)</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td rowspan="8"><p>#</p>
+<p>i
+n
+p
+u
+t</p>
+<p>m
+a
+p</p>
+</td>
+<td><p>1</p></td>
+<td><p>X</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>X</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td></td>
+<td><p>X</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td></td>
+<td><p>X</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td></td>
+<td></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>6</p></td>
+<td></td>
+<td></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>7</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>X</p></td>
+</tr>
+<tr class="row-even"><td><p>8</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>X</p></td>
+</tr>
+<tr class="row-odd"><td colspan="2" rowspan="2"></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td colspan="4"><p># output map</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Pooling</span></code></p></td>
+<td><p>Type of pooling (<code class="docutils literal notranslate"><span class="pre">Max</span></code> or <code class="docutils literal notranslate"><span class="pre">Average</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PoolWidth</span></code></p></td>
+<td><p>Width of the pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PoolHeight</span></code></p></td>
+<td><p>Height of the pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PoolDepth</span></code> []</p></td>
+<td><p>Depth of the pooling area (implies 3D pooling
+area)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PoolSize</span></code> []</p></td>
+<td><p>Pooling area size (implies 2D square pooling area)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PoolDims</span></code> []</p></td>
+<td><p>List of space-separated dimensions for N-D pooling
+area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code></p></td>
+<td><p>Number of output channels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1]</p></td>
+<td><p>X-axis stride of the pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1]</p></td>
+<td><p>Y-axis stride of the pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> []</p></td>
+<td><p>Z-axis stride of the pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1]</p></td>
+<td><p>Stride of the pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> []</p></td>
+<td><p>List of space-separated stride dimensions for N-D
+pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0]</p></td>
+<td><p>X-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0]</p></td>
+<td><p>Y-axis input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> []</p></td>
+<td><p>Z-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0]</p></td>
+<td><p>Input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> []</p></td>
+<td><p>List of space-separated padding dimensions for
+N-D pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Linear</span></code>]</p></td>
+<td><p>Activation function. Can be any of <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Tanh</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> []</p></td>
+<td><p>Mapping: number of groups (mutually exclusive
+with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code>
+[]</p></td>
+<td><p>Mapping: number of channels per group (mutually
+exclusive with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size (mutually
+exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step (mutually exclusive
+with``Mapping.StrideX`` and <code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset (mutually exclusive
+with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations (0 means no limit)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code>
+(mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset for input
+layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code>
+[0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no
+limit)</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="id11">
 <h3>Configuration parameters (<em>Spike</em> models)<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
@@ -1428,81 +1829,176 @@ number of iterations for input layer <code class="docutils literal notranslate">
 <div class="section" id="unpool">
 <h2>Unpool<a class="headerlink" href="#unpool" title="Permalink to this headline">¶</a></h2>
 <p>Unpooling layer.</p>
-<div class="line-block">
-<div class="line">| p5cm | p10cm | Option [default value] &amp; Description</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Pooling</span></code> &amp; Type of pooling (<code class="docutils literal notranslate"><span class="pre">Max</span></code> or <code class="docutils literal notranslate"><span class="pre">Average</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolWidth</span></code> &amp; Width of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolHeight</span></code> &amp; Height of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolDepth</span></code> [] &amp; Depth of the pooling area (implies 3D pooling area)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolSize</span></code> [] &amp; Pooling area size (implies 2D square pooling area)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PoolDims</span></code> [] &amp; List of space-separated dimensions for N-D pooling
-area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code> &amp; Number of output channels</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">ArgMax</span></code> &amp; Name of the associated pool layer for the argmax (the
-pool layer input and the unpool layer output dimension must match)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1] &amp; X-axis stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1] &amp; Y-axis stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> [] &amp; Z-axis stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1] &amp; Stride of the pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> [] &amp; List of space-separated stride dimensions for N-D
-pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0] &amp; X-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0] &amp; Y-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> [] &amp; Z-axis input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0] &amp; Input padding</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> [] &amp; List of space-separated padding dimensions for
-N-D pooling area</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code> [<code class="docutils literal notranslate"><span class="pre">Linear</span></code>] &amp; Activation function. Can be any
-of <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>, <code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or <code class="docutils literal notranslate"><span class="pre">Tanh</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> [] &amp; Mapping: number of groups</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code> [] &amp; Mapping: number of channels per
-group</div>
-<div class="line">&amp; (mutually exclusive with all other Mapping.* options)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1] &amp; Mapping canvas pattern default width</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1] &amp; Mapping canvas pattern default height</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1] &amp; Mapping canvas pattern default size</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1] &amp; Mapping canvas default X-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1] &amp; Mapping canvas default step</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0] &amp; Mapping canvas default offset</div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0] &amp; Mapping canvas pattern default number
-of iterations (0 means no limit)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1] &amp; Mapping canvas pattern default width for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1] &amp; Mapping canvas pattern default height for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1] &amp; Mapping canvas pattern default size for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1] &amp; Mapping canvas default X-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1] &amp; Mapping canvas default Y-axis step for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1] &amp; Mapping canvas default step for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0] &amp; Mapping canvas default X-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0] &amp; Mapping canvas default Y-axis offset for
-input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0] &amp; Mapping canvas default offset for input
-layer <code class="docutils literal notranslate"><span class="pre">in</span></code></div>
-<div class="line">&amp; (mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and</div>
-<div class="line">&amp; <code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</div>
-<div class="line"><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code> [0] &amp; Mapping canvas pattern default
-number of iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no limit)</div>
-</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Pooling</span></code></p></td>
+<td><p>Type of pooling (<code class="docutils literal notranslate"><span class="pre">Max</span></code> or <code class="docutils literal notranslate"><span class="pre">Average</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PoolWidth</span></code></p></td>
+<td><p>Width of the pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PoolHeight</span></code></p></td>
+<td><p>Height of the pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PoolDepth</span></code> []</p></td>
+<td><p>Depth of the pooling area (implies 3D pooling
+area)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PoolSize</span></code> []</p></td>
+<td><p>Pooling area size (implies 2D square pooling area)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PoolDims</span></code> []</p></td>
+<td><p>List of space-separated dimensions for N-D pooling
+area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbOutputs</span></code></p></td>
+<td><p>Number of output channels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ArgMax</span></code></p></td>
+<td><p>Name of the associated pool layer for the argmax
+(the pool layer input and the unpool layer output
+dimension must match)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StrideX</span></code> [1]</p></td>
+<td><p>X-axis stride of the pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StrideY</span></code> [1]</p></td>
+<td><p>Y-axis stride of the pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StrideZ</span></code> []</p></td>
+<td><p>Z-axis stride of the pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Stride</span></code> [1]</p></td>
+<td><p>Stride of the pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StrideDims</span></code> []</p></td>
+<td><p>List of space-separated stride dimensions for N-D
+pooling area</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingX</span></code> [0]</p></td>
+<td><p>X-axis input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingY</span></code> [0]</p></td>
+<td><p>Y-axis input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingZ</span></code> []</p></td>
+<td><p>Z-axis input padding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Padding</span></code> [0]</p></td>
+<td><p>Input padding</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PaddingDims</span></code> []</p></td>
+<td><p>List of space-separated padding dimensions for
+N-D pooling area</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ActivationFunction</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Linear</span></code>]</p></td>
+<td><p>Activation function. Can be any of <code class="docutils literal notranslate"><span class="pre">Logistic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LogisticWithLoss</span></code>, <code class="docutils literal notranslate"><span class="pre">Rectifier</span></code>, <code class="docutils literal notranslate"><span class="pre">Softplus</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TanhLeCun</span></code>, <code class="docutils literal notranslate"><span class="pre">Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">Saturation</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Tanh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbGroups</span></code> []</p></td>
+<td><p>Mapping: number of groups (mutually exclusive
+with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.ChannelsPerGroup</span></code>
+[]</p></td>
+<td><p>Mapping: number of channels per group (mutually
+exclusive with all other Mapping.* options)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size (mutually
+exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping.SizeX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping.SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step (mutually exclusive
+with``Mapping.StrideX`` and <code class="docutils literal notranslate"><span class="pre">Mapping.StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset (mutually exclusive
+with <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping.OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping.NbIterations</span></code> [0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations (0 means no limit)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default width for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default height for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Size</span></code> [1]</p></td>
+<td><p>Mapping canvas pattern default size for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Mapping(in).SizeY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code> [1]</p></td>
+<td><p>Mapping canvas default X-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code> [1]</p></td>
+<td><p>Mapping canvas default Y-axis step for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Stride</span></code> [1]</p></td>
+<td><p>Mapping canvas default step for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code>
+(mutually exclusive with <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideX</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Mapping(in).StrideY</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> [0]</p></td>
+<td><p>Mapping canvas default X-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code> [0]</p></td>
+<td><p>Mapping canvas default Y-axis offset for
+input layer <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).Offset</span></code> [0]</p></td>
+<td><p>Mapping canvas default offset for input
+layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mapping(in).OffsetY</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mapping(in).NbIterations</span></code>
+[0]</p></td>
+<td><p>Mapping canvas pattern default number of
+iterations for input layer <code class="docutils literal notranslate"><span class="pre">in</span></code> (0 means no
+limit)</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="elemwise">
 <h2>ElemWise<a class="headerlink" href="#elemwise" title="Permalink to this headline">¶</a></h2>
@@ -2127,7 +2623,6 @@ expression:</p>
 </div>
 <div class="section" id="current-restrictions">
 <h3>Current restrictions<a class="headerlink" href="#current-restrictions" title="Permalink to this headline">¶</a></h3>
-<p>:</p>
 <ul class="simple">
 <li><p>Only Frame_Cuda version is supported yet.</p></li>
 <li><p>The implementation only support input sequences with a fixed length
@@ -2142,11 +2637,8 @@ to one for first experiments.</p></li>
 </div>
 <div class="section" id="further-development-requirements">
 <h3>Further development requirements<a class="headerlink" href="#further-development-requirements" title="Permalink to this headline">¶</a></h3>
-<div class="line-block">
-<div class="line">:</div>
-<div class="line">When it comes to RNN, two main factors needs to be considered to build
-proper interfaces :</div>
-</div>
+<p>When it comes to RNN, two main factors needs to be considered to build
+proper interfaces :</p>
 <ol class="arabic simple">
 <li><p>Whether the input data has a variable or a fixed length over the data
 base, that is to say whether the input data will have a variable or
@@ -2156,26 +2648,24 @@ process variable length data.</p></li>
 every elements of a sequence is labelled or the sequence itself has
 only one label.</p></li>
 </ol>
-<div class="line-block">
-<div class="line">For instance, let’s consider sentences as sequences of words in which
+<p>For instance, let’s consider sentences as sequences of words in which
 every word would be part of a vocabulary. Sentences could have a
 variable length and every element/word would have a label. In that
 case, every relevant element of the output sequence from the recurrent
 structure is turned into a prediction throught a fully connected layer
-with a linear activation fonction and a softmax.</div>
-<div class="line">On the opposite, using sequential-MNIST database, the sequence length
+with a linear activation fonction and a softmax.</p>
+<p>On the opposite, using sequential-MNIST database, the sequence length
 would be the same regarding every image and there is only one label
 for an image. In that case, the last element of the output sequence is
 the most relevant one to be turned into a prediction as it carries the
-information of the entire input sequence.</div>
-<div class="line">To provide flexibility according to these factors, the first
+information of the entire input sequence.</p>
+<p>To provide flexibility according to these factors, the first
 implementation choice is to set a maximum sequence length
 emphSeqLength as an hyperparameter that the User provide. Variable
 length senquences can be processed by padding the remaining steps of
-the input sequence.</div>
-<div class="line">Then two cases occur as the labeling granularity is scaled at each
-element of the sequence or scaled at the sequence itself:</div>
-</div>
+the input sequence.</p>
+<p>Then two cases occur as the labeling granularity is scaled at each
+element of the sequence or scaled at the sequence itself:</p>
 <ol class="arabic">
 <li><p>The sequence itself has only one label :</p>
 <div class="figure align-default" id="id28">
@@ -2206,7 +2696,6 @@ masked so it doesn’t influence longer sequences.</div>
 </div>
 <div class="section" id="development-guidance">
 <h3>Development guidance<a class="headerlink" href="#development-guidance" title="Permalink to this headline">¶</a></h3>
-<p>:</p>
 <ul class="simple">
 <li><p>Replace the inner local variables of LSTMCell_Frame_Cuda with a
 generic layer of shuffling (on device) to enable the the process of

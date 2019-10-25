@@ -499,96 +499,149 @@ Conv
 
 Convolutional layer.
 
-| \| p5cm \| p10cm \| Option [default value] & Description
-| ``KernelWidth`` & Width of the kernels
-| ``KernelHeight`` & Height of the kernels
-| ``KernelDepth`` [] & Depth of the kernels (implies 3D kernels)
-| ``KernelSize`` [] & Kernels size (implies 2D square kernels)
-| ``KernelDims`` [] & List of space-separated dimensions for N-D kernels
-| ``NbOutputs`` & Number of output channels
-| ``SubSampleX`` [1] & X-axis subsampling factor of the output feature
-  maps
-| ``SubSampleY`` [1] & Y-axis subsampling factor of the output feature
-  maps
-| ``SubSampleZ`` [] & Z-axis subsampling factor of the output feature
-  maps
-| ``SubSample`` [1] & Subsampling factor of the output feature maps
-| ``SubSampleDims`` [] & List of space-separated subsampling dimensions
-  for N-D kernels
-| ``StrideX`` [1] & X-axis stride of the kernels
-| ``StrideY`` [1] & Y-axis stride of the kernels
-| ``StrideZ`` [] & Z-axis stride of the kernels
-| ``Stride`` [1] & Stride of the kernels
-| ``StrideDims`` [] & List of space-separated stride dimensions for N-D
-  kernels
-| ``PaddingX`` [0] & X-axis input padding
-| ``PaddingY`` [0] & Y-axis input padding
-| ``PaddingZ`` [] & Z-axis input padding
-| ``Padding`` [0] & Input padding
-| ``PaddingDims`` [] & List of space-separated padding dimensions for
-  N-D kernels
-| ``DilationX`` [1] & X-axis dilation of the kernels
-| ``DilationY`` [1] & Y-axis dilation of the kernels
-| ``DilationZ`` [] & Z-axis dilation of the kernels
-| ``Dilation`` [1] & Dilation of the kernels
-| ``DilationDims`` [] & List of space-separated dilation dimensions for
-  N-D kernels
-| ``ActivationFunction`` [``Tanh``] & Activation function. Can be any of
-  ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``,
-  ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``
-| ``WeightsFiller`` & Weights initial values filler
-| [``NormalFiller(0.0, 0.05)``] &
-| ``BiasFiller`` & Biases initial values filler
-| [``NormalFiller(0.0, 0.05)``] &
-| ``Mapping.NbGroups`` [] & Mapping: number of groups
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.ChannelsPerGroup`` [] & Mapping: number of channels per
-  group
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.SizeX`` [1] & Mapping canvas pattern default width
-| ``Mapping.SizeY`` [1] & Mapping canvas pattern default height
-| ``Mapping.Size`` [1] & Mapping canvas pattern default size
-| & (mutually exclusive with ``Mapping.SizeX`` and ``Mapping.SizeY``)
-| ``Mapping.StrideX`` [1] & Mapping canvas default X-axis step
-| ``Mapping.StrideY`` [1] & Mapping canvas default Y-axis step
-| ``Mapping.Stride`` [1] & Mapping canvas default step
-| & (mutually exclusive with ``Mapping.StrideX`` and
-  ``Mapping.StrideY``)
-| ``Mapping.OffsetX`` [0] & Mapping canvas default X-axis offset
-| ``Mapping.OffsetY`` [0] & Mapping canvas default Y-axis offset
-| ``Mapping.Offset`` [0] & Mapping canvas default offset
-| & (mutually exclusive with ``Mapping.OffsetX`` and
-  ``Mapping.OffsetY``)
-| ``Mapping.NbIterations`` [0] & Mapping canvas pattern default number
-  of iterations (0 means no limit)
-| ``Mapping(in).SizeX`` [1] & Mapping canvas pattern default width for
-  input layer ``in``
-| ``Mapping(in).SizeY`` [1] & Mapping canvas pattern default height for
-  input layer ``in``
-| ``Mapping(in).Size`` [1] & Mapping canvas pattern default size for
-  input layer ``in``
-| & (mutually exclusive with ``Mapping(in).SizeX`` and
-| & ``Mapping(in).SizeY``)
-| ``Mapping(in).StrideX`` [1] & Mapping canvas default X-axis step for
-  input layer ``in``
-| ``Mapping(in).StrideY`` [1] & Mapping canvas default Y-axis step for
-  input layer ``in``
-| ``Mapping(in).Stride`` [1] & Mapping canvas default step for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).StrideX`` and
-| & ``Mapping(in).StrideY``)
-| ``Mapping(in).OffsetX`` [0] & Mapping canvas default X-axis offset for
-  input layer ``in``
-| ``Mapping(in).OffsetY`` [0] & Mapping canvas default Y-axis offset for
-  input layer ``in``
-| ``Mapping(in).Offset`` [0] & Mapping canvas default offset for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).OffsetX`` and
-| & ``Mapping(in).OffsetY``)
-| ``Mapping(in).NbIterations`` [0] & Mapping canvas pattern default
-  number of iterations for input layer ``in`` (0 means no limit)
-| ``WeightsSharing`` [] & Share the weights with an other layer
-| ``BiasesSharing`` [] & Share the biases with an other layer
++-------------------------------+----------------------------------------------------+
+| Option [default value]        | Description                                        |
++===============================+====================================================+
+| ``KernelWidth``               | Width of the kernels                               |
++-------------------------------+----------------------------------------------------+
+| ``KernelHeight``              | Height of the kernels                              |
++-------------------------------+----------------------------------------------------+
+| ``KernelDepth`` []            | Depth of the kernels (implies 3D kernels)          |
++-------------------------------+----------------------------------------------------+
+| ``KernelSize`` []             | Kernels size (implies 2D square kernels)           |
++-------------------------------+----------------------------------------------------+
+| ``KernelDims`` []             | List of space-separated dimensions for N-D kernels |
++-------------------------------+----------------------------------------------------+
+| ``NbOutputs``                 | Number of output channels                          |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleX`` [1]            | X-axis subsampling factor of the output feature    |
+|                               | maps                                               |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleY`` [1]            | Y-axis subsampling factor of the output feature    |
+|                               | maps                                               |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleZ`` []             | Z-axis subsampling factor of the output feature    |
+|                               | maps                                               |
++-------------------------------+----------------------------------------------------+
+| ``SubSample`` [1]             | Subsampling factor of the output feature maps      |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleDims`` []          | List of space-separated subsampling dimensions     |
+|                               | for N-D kernels                                    |
++-------------------------------+----------------------------------------------------+
+| ``StrideX`` [1]               | X-axis stride of the kernels                       |
++-------------------------------+----------------------------------------------------+
+| ``StrideY`` [1]               | Y-axis stride of the kernels                       |
++-------------------------------+----------------------------------------------------+
+| ``StrideZ`` []                | Z-axis stride of the kernels                       |
++-------------------------------+----------------------------------------------------+
+| ``Stride`` [1]                | Stride of the kernels                              |
++-------------------------------+----------------------------------------------------+
+| ``StrideDims`` []             | List of space-separated stride dimensions for N-D  |
+|                               | kernels                                            |
++-------------------------------+----------------------------------------------------+
+| ``PaddingX`` [0]              | X-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingY`` [0]              | Y-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingZ`` []               | Z-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``Padding`` [0]               | Input padding                                      |
++-------------------------------+----------------------------------------------------+
+| ``PaddingDims`` []            | List of space-separated padding dimensions for     |
+|                               | N-D kernels                                        |
++-------------------------------+----------------------------------------------------+
+| ``DilationX`` [1]             | X-axis dilation of the kernels                     |
++-------------------------------+----------------------------------------------------+
+| ``DilationY`` [1]             | Y-axis dilation of the kernels                     |
++-------------------------------+----------------------------------------------------+
+| ``DilationZ`` []              | Z-axis dilation of the kernels                     |
++-------------------------------+----------------------------------------------------+
+| ``Dilation`` [1]              | Dilation of the kernels                            |
++-------------------------------+----------------------------------------------------+
+| ``DilationDims`` []           | List of space-separated dilation dimensions for    |
+|                               | N-D kernels                                        |
++-------------------------------+----------------------------------------------------+
+| ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
+| [``Tanh``]                    | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+|                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
+|                               | ``Tanh``                                           |
++-------------------------------+----------------------------------------------------+
+| ``WeightsFiller``             | Weights initial values filler                      |
+| [``NormalFiller(0.0, 0.05)``] |                                                    |
++-------------------------------+----------------------------------------------------+
+| ``BiasFiller``                | Biases initial values filler                       |
+| [``NormalFiller(0.0, 0.05)``] |                                                    |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbGroups`` []       | Mapping: number of groups (mutually exclusive      |
+|                               | with all other Mapping.\* options)                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.ChannelsPerGroup``  | Mapping: number of channels per group (mutually    |
+| []                            | exclusive with all other Mapping.\* options)       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeX`` [1]         | Mapping canvas pattern default width               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeY`` [1]         | Mapping canvas pattern default height              |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Size`` [1]          | Mapping canvas pattern default size (mutually      |
+|                               | exclusive with ``Mapping.SizeX`` and               |
+|                               | ``Mapping.SizeY``)                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideX`` [1]       | Mapping canvas default X-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideY`` [1]       | Mapping canvas default Y-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Stride`` [1]        | Mapping canvas default step (mutually exclusive    |
+|                               | with``Mapping.StrideX`` and ``Mapping.StrideY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetX`` [0]       | Mapping canvas default X-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetY`` [0]       | Mapping canvas default Y-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Offset`` [0]        | Mapping canvas default offset (mutually exclusive  |
+|                               | with ``Mapping.OffsetX`` and ``Mapping.OffsetY``)  |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbIterations`` [0]  | Mapping canvas pattern default number of           |
+|                               | iterations (0 means no limit)                      |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeX`` [1]     | Mapping canvas pattern default width for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeY`` [1]     | Mapping canvas pattern default height for          |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Size`` [1]      | Mapping canvas pattern default size for            |
+|                               | input layer ``in`` (mutually exclusive with        |
+|                               | ``Mapping(in).SizeX`` and ``Mapping(in).SizeY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideX`` [1]   | Mapping canvas default X-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideY`` [1]   | Mapping canvas default Y-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Stride`` [1]    | Mapping canvas default step for input layer ``in`` |
+|                               | (mutually exclusive with ``Mapping(in).StrideX``   |
+|                               | and ``Mapping(in).StrideY``)                       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetX`` [0]   | Mapping canvas default X-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetY`` [0]   | Mapping canvas default Y-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Offset`` [0]    | Mapping canvas default offset for input            |
+|                               | layer ``in`` (mutually exclusive with              |
+|                               | ``Mapping(in).OffsetX`` and                        |
+|                               | ``Mapping(in).OffsetY``)                           |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).NbIterations``  | Mapping canvas pattern default number of           |
+| [0]                           | iterations for input layer ``in`` (0 means no      |
+|                               | limit)                                             |
++-------------------------------+----------------------------------------------------+
+| ``WeightsSharing`` []         | Share the weights with an other layer              |
++-------------------------------+----------------------------------------------------+
+| ``BiasesSharing`` []          | Share the biases with an other layer               |
++-------------------------------+----------------------------------------------------+
 
 Configuration parameters (*Frame* models)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -670,89 +723,152 @@ change)*
 Deconv
 ------
 
-Deconvolutionlayer.
+Deconvolution layer.
 
-| \| p5cm \| p10cm \| Option [default value] & Description
-| ``KernelWidth`` & Width of the kernels
-| ``KernelHeight`` & Height of the kernels
-| ``KernelDepth`` [] & Depth of the kernels (implies 3D kernels)
-| ``KernelSize`` [] & Kernels size (implies 2D square kernels)
-| ``KernelDims`` [] & List of space-separated dimensions for N-D kernels
-| ``NbOutputs`` & Number of output channels
-| ``StrideX`` [1] & X-axis stride of the kernels
-| ``StrideY`` [1] & Y-axis stride of the kernels
-| ``StrideZ`` [] & Z-axis stride of the kernels
-| ``Stride`` [1] & Stride of the kernels
-| ``StrideDims`` [] & List of space-separated stride dimensions for N-D
-  kernels
-| ``PaddingX`` [0] & X-axis input padding
-| ``PaddingY`` [0] & Y-axis input padding
-| ``PaddingZ`` [] & Z-axis input padding
-| ``Padding`` [0] & Input padding
-| ``PaddingDims`` [] & List of space-separated padding dimensions for
-  N-D kernels
-| ``DilationX`` [1] & X-axis dilation of the kernels
-| ``DilationY`` [1] & Y-axis dilation of the kernels
-| ``DilationZ`` [] & Z-axis dilation of the kernels
-| ``Dilation`` [1] & Dilation of the kernels
-| ``DilationDims`` [] & List of space-separated dilation dimensions for
-  N-D kernels
-| ``ActivationFunction`` [``Tanh``] & Activation function. Can be any of
-  ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``,
-  ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``
-| ``WeightsFiller`` & Weights initial values filler
-| [``NormalFiller(0.0, 0.05)``] &
-| ``BiasFiller`` & Biases initial values filler
-| [``NormalFiller(0.0, 0.05)``] &
-| ``Mapping.NbGroups`` [] & Mapping: number of groups
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.ChannelsPerGroup`` [] & Mapping: number of channels per
-  group
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.SizeX`` [1] & Mapping canvas pattern default width
-| ``Mapping.SizeY`` [1] & Mapping canvas pattern default height
-| ``Mapping.Size`` [1] & Mapping canvas pattern default size
-| & (mutually exclusive with ``Mapping.SizeX`` and ``Mapping.SizeY``)
-| ``Mapping.StrideX`` [1] & Mapping canvas default X-axis step
-| ``Mapping.StrideY`` [1] & Mapping canvas default Y-axis step
-| ``Mapping.Stride`` [1] & Mapping canvas default step
-| & (mutually exclusive with ``Mapping.StrideX`` and
-  ``Mapping.StrideY``)
-| ``Mapping.OffsetX`` [0] & Mapping canvas default X-axis offset
-| ``Mapping.OffsetY`` [0] & Mapping canvas default Y-axis offset
-| ``Mapping.Offset`` [0] & Mapping canvas default offset
-| & (mutually exclusive with ``Mapping.OffsetX`` and
-  ``Mapping.OffsetY``)
-| ``Mapping.NbIterations`` [0] & Mapping canvas pattern default number
-  of iterations (0 means no limit)
-| ``Mapping(in).SizeX`` [1] & Mapping canvas pattern default width for
-  input layer ``in``
-| ``Mapping(in).SizeY`` [1] & Mapping canvas pattern default height for
-  input layer ``in``
-| ``Mapping(in).Size`` [1] & Mapping canvas pattern default size for
-  input layer ``in``
-| & (mutually exclusive with ``Mapping(in).SizeX`` and
-| & ``Mapping(in).SizeY``)
-| ``Mapping(in).StrideX`` [1] & Mapping canvas default X-axis step for
-  input layer ``in``
-| ``Mapping(in).StrideY`` [1] & Mapping canvas default Y-axis step for
-  input layer ``in``
-| ``Mapping(in).Stride`` [1] & Mapping canvas default step for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).StrideX`` and
-| & ``Mapping(in).StrideY``)
-| ``Mapping(in).OffsetX`` [0] & Mapping canvas default X-axis offset for
-  input layer ``in``
-| ``Mapping(in).OffsetY`` [0] & Mapping canvas default Y-axis offset for
-  input layer ``in``
-| ``Mapping(in).Offset`` [0] & Mapping canvas default offset for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).OffsetX`` and
-| & ``Mapping(in).OffsetY``)
-| ``Mapping(in).NbIterations`` [0] & Mapping canvas pattern default
-  number of iterations for input layer ``in`` (0 means no limit)
-| ``WeightsSharing`` [] & Share the weights with an other layer
-| ``BiasesSharing`` [] & Share the biases with an other layer
++-------------------------------+----------------------------------------------------+
+| Option [default value]        | Description                                        |
++===============================+====================================================+
+| ``KernelWidth``               | Width of the kernels                               |
++-------------------------------+----------------------------------------------------+
+| ``KernelHeight``              | Height of the kernels                              |
++-------------------------------+----------------------------------------------------+
+| ``KernelDepth`` []            | Depth of the kernels (implies 3D kernels)          |
++-------------------------------+----------------------------------------------------+
+| ``KernelSize`` []             | Kernels size (implies 2D square kernels)           |
++-------------------------------+----------------------------------------------------+
+| ``KernelDims`` []             | List of space-separated dimensions for N-D kernels |
++-------------------------------+----------------------------------------------------+
+| ``NbOutputs``                 | Number of output channels                          |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleX`` [1]            | X-axis subsampling factor of the output feature    |
+|                               | maps                                               |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleY`` [1]            | Y-axis subsampling factor of the output feature    |
+|                               | maps                                               |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleZ`` []             | Z-axis subsampling factor of the output feature    |
+|                               | maps                                               |
++-------------------------------+----------------------------------------------------+
+| ``SubSample`` [1]             | Subsampling factor of the output feature maps      |
++-------------------------------+----------------------------------------------------+
+| ``SubSampleDims`` []          | List of space-separated subsampling dimensions     |
+|                               | for N-D kernels                                    |
++-------------------------------+----------------------------------------------------+
+| ``StrideX`` [1]               | X-axis stride of the kernels                       |
++-------------------------------+----------------------------------------------------+
+| ``StrideY`` [1]               | Y-axis stride of the kernels                       |
++-------------------------------+----------------------------------------------------+
+| ``StrideZ`` []                | Z-axis stride of the kernels                       |
++-------------------------------+----------------------------------------------------+
+| ``Stride`` [1]                | Stride of the kernels                              |
++-------------------------------+----------------------------------------------------+
+| ``StrideDims`` []             | List of space-separated stride dimensions for N-D  |
+|                               | kernels                                            |
++-------------------------------+----------------------------------------------------+
+| ``PaddingX`` [0]              | X-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingY`` [0]              | Y-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingZ`` []               | Z-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``Padding`` [0]               | Input padding                                      |
++-------------------------------+----------------------------------------------------+
+| ``PaddingDims`` []            | List of space-separated padding dimensions for     |
+|                               | N-D kernels                                        |
++-------------------------------+----------------------------------------------------+
+| ``DilationX`` [1]             | X-axis dilation of the kernels                     |
++-------------------------------+----------------------------------------------------+
+| ``DilationY`` [1]             | Y-axis dilation of the kernels                     |
++-------------------------------+----------------------------------------------------+
+| ``DilationZ`` []              | Z-axis dilation of the kernels                     |
++-------------------------------+----------------------------------------------------+
+| ``Dilation`` [1]              | Dilation of the kernels                            |
++-------------------------------+----------------------------------------------------+
+| ``DilationDims`` []           | List of space-separated dilation dimensions for    |
+|                               | N-D kernels                                        |
++-------------------------------+----------------------------------------------------+
+| ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
+| [``Tanh``]                    | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+|                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
+|                               | ``Tanh``                                           |
++-------------------------------+----------------------------------------------------+
+| ``WeightsFiller``             | Weights initial values filler                      |
+| [``NormalFiller(0.0, 0.05)``] |                                                    |
++-------------------------------+----------------------------------------------------+
+| ``BiasFiller``                | Biases initial values filler                       |
+| [``NormalFiller(0.0, 0.05)``] |                                                    |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbGroups`` []       | Mapping: number of groups (mutually exclusive      |
+|                               | with all other Mapping.\* options)                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.ChannelsPerGroup``  | Mapping: number of channels per group (mutually    |
+| []                            | exclusive with all other Mapping.\* options)       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeX`` [1]         | Mapping canvas pattern default width               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeY`` [1]         | Mapping canvas pattern default height              |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Size`` [1]          | Mapping canvas pattern default size (mutually      |
+|                               | exclusive with ``Mapping.SizeX`` and               |
+|                               | ``Mapping.SizeY``)                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideX`` [1]       | Mapping canvas default X-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideY`` [1]       | Mapping canvas default Y-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Stride`` [1]        | Mapping canvas default step (mutually exclusive    |
+|                               | with``Mapping.StrideX`` and ``Mapping.StrideY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetX`` [0]       | Mapping canvas default X-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetY`` [0]       | Mapping canvas default Y-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Offset`` [0]        | Mapping canvas default offset (mutually exclusive  |
+|                               | with ``Mapping.OffsetX`` and ``Mapping.OffsetY``)  |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbIterations`` [0]  | Mapping canvas pattern default number of           |
+|                               | iterations (0 means no limit)                      |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeX`` [1]     | Mapping canvas pattern default width for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeY`` [1]     | Mapping canvas pattern default height for          |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Size`` [1]      | Mapping canvas pattern default size for            |
+|                               | input layer ``in`` (mutually exclusive with        |
+|                               | ``Mapping(in).SizeX`` and ``Mapping(in).SizeY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideX`` [1]   | Mapping canvas default X-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideY`` [1]   | Mapping canvas default Y-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Stride`` [1]    | Mapping canvas default step for input layer ``in`` |
+|                               | (mutually exclusive with ``Mapping(in).StrideX``   |
+|                               | and ``Mapping(in).StrideY``)                       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetX`` [0]   | Mapping canvas default X-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetY`` [0]   | Mapping canvas default Y-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Offset`` [0]    | Mapping canvas default offset for input            |
+|                               | layer ``in`` (mutually exclusive with              |
+|                               | ``Mapping(in).OffsetX`` and                        |
+|                               | ``Mapping(in).OffsetY``)                           |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).NbIterations``  | Mapping canvas pattern default number of           |
+| [0]                           | iterations for input layer ``in`` (0 means no      |
+|                               | limit)                                             |
++-------------------------------+----------------------------------------------------+
+| ``WeightsSharing`` []         | Share the weights with an other layer              |
++-------------------------------+----------------------------------------------------+
+| ``BiasesSharing`` []          | Share the biases with an other layer               |
++-------------------------------+----------------------------------------------------+
+
 
 Configuration parameters (*Frame* models)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -810,88 +926,143 @@ consecutive pair of 8 input maps:
 
 The layer connectivity is the following:
 
-| \| c c \| C0.33cm C0.33cm C0.33cm C0.33cm \| & 1 & & & &
-| & 2 & & & &
-| & 3 & & & &
-| & 4 & & & &
-| & 5 & & & &
-| & 6 & & & &
-| & 7 & & & &
-| & 8 & & & &
-| & & 1 & 2 & 3 & 4
-| & &
++---+---+---+---+---+---+
+| # | 1 | X |   |   |   |
+|   +---+---+---+---+---+
+| i | 2 | X |   |   |   |
+| n +---+---+---+---+---+
+| p | 3 |   | X |   |   |
+| u +---+---+---+---+---+
+| t | 4 |   | X |   |   |
+|   +---+---+---+---+---+
+| m | 5 |   |   | X |   |
+| a +---+---+---+---+---+
+| p | 6 |   |   | X |   |
+|   +---+---+---+---+---+
+|   | 7 |   |   |   | X |
+|   +---+---+---+---+---+
+|   | 8 |   |   |   | X |
++---+---+---+---+---+---+
+|       | 1 | 2 | 3 | 4 |
++       +---+---+---+---+
+|       | # output map  |
++-------+---------------+
 
-| \| p5cm \| p10cm \| Option [default value] & Description
-| ``Pooling`` & Type of pooling (``Max`` or ``Average``)
-| ``PoolWidth`` & Width of the pooling area
-| ``PoolHeight`` & Height of the pooling area
-| ``PoolDepth`` [] & Depth of the pooling area (implies 3D pooling area)
-| ``PoolSize`` [] & Pooling area size (implies 2D square pooling area)
-| ``PoolDims`` [] & List of space-separated dimensions for N-D pooling
-  area
-| ``NbOutputs`` & Number of output channels
-| ``StrideX`` [1] & X-axis stride of the pooling area
-| ``StrideY`` [1] & Y-axis stride of the pooling area
-| ``StrideZ`` [] & Z-axis stride of the pooling area
-| ``Stride`` [1] & Stride of the pooling area
-| ``StrideDims`` [] & List of space-separated stride dimensions for N-D
-  pooling area
-| ``PaddingX`` [0] & X-axis input padding
-| ``PaddingY`` [0] & Y-axis input padding
-| ``PaddingZ`` [] & Z-axis input padding
-| ``Padding`` [0] & Input padding
-| ``PaddingDims`` [] & List of space-separated padding dimensions for
-  N-D pooling area
-| ``ActivationFunction`` [``Linear``] & Activation function. Can be any
-  of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``,
-  ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``
-| ``Mapping.NbGroups`` [] & Mapping: number of groups
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.ChannelsPerGroup`` [] & Mapping: number of channels per
-  group
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.SizeX`` [1] & Mapping canvas pattern default width
-| ``Mapping.SizeY`` [1] & Mapping canvas pattern default height
-| ``Mapping.Size`` [1] & Mapping canvas pattern default size
-| & (mutually exclusive with ``Mapping.SizeX`` and ``Mapping.SizeY``)
-| ``Mapping.StrideX`` [1] & Mapping canvas default X-axis step
-| ``Mapping.StrideY`` [1] & Mapping canvas default Y-axis step
-| ``Mapping.Stride`` [1] & Mapping canvas default step
-| & (mutually exclusive with ``Mapping.StrideX`` and
-  ``Mapping.StrideY``)
-| ``Mapping.OffsetX`` [0] & Mapping canvas default X-axis offset
-| ``Mapping.OffsetY`` [0] & Mapping canvas default Y-axis offset
-| ``Mapping.Offset`` [0] & Mapping canvas default offset
-| & (mutually exclusive with ``Mapping.OffsetX`` and
-  ``Mapping.OffsetY``)
-| ``Mapping.NbIterations`` [0] & Mapping canvas pattern default number
-  of iterations (0 means no limit)
-| ``Mapping(in).SizeX`` [1] & Mapping canvas pattern default width for
-  input layer ``in``
-| ``Mapping(in).SizeY`` [1] & Mapping canvas pattern default height for
-  input layer ``in``
-| ``Mapping(in).Size`` [1] & Mapping canvas pattern default size for
-  input layer ``in``
-| & (mutually exclusive with ``Mapping(in).SizeX`` and
-| & ``Mapping(in).SizeY``)
-| ``Mapping(in).StrideX`` [1] & Mapping canvas default X-axis step for
-  input layer ``in``
-| ``Mapping(in).StrideY`` [1] & Mapping canvas default Y-axis step for
-  input layer ``in``
-| ``Mapping(in).Stride`` [1] & Mapping canvas default step for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).StrideX`` and
-| & ``Mapping(in).StrideY``)
-| ``Mapping(in).OffsetX`` [0] & Mapping canvas default X-axis offset for
-  input layer ``in``
-| ``Mapping(in).OffsetY`` [0] & Mapping canvas default Y-axis offset for
-  input layer ``in``
-| ``Mapping(in).Offset`` [0] & Mapping canvas default offset for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).OffsetX`` and
-| & ``Mapping(in).OffsetY``)
-| ``Mapping(in).NbIterations`` [0] & Mapping canvas pattern default
-  number of iterations for input layer ``in`` (0 means no limit)
+
++-------------------------------+----------------------------------------------------+
+| Option [default value]        | Description                                        |
++===============================+====================================================+
+| ``Pooling``                   | Type of pooling (``Max`` or ``Average``)           |
++-------------------------------+----------------------------------------------------+
+| ``PoolWidth``                 | Width of the pooling area                          |
++-------------------------------+----------------------------------------------------+
+| ``PoolHeight``                | Height of the pooling area                         |
++-------------------------------+----------------------------------------------------+
+| ``PoolDepth`` []              | Depth of the pooling area (implies 3D pooling      |
+|                               | area)                                              |
++-------------------------------+----------------------------------------------------+
+| ``PoolSize`` []               | Pooling area size (implies 2D square pooling area) |
++-------------------------------+----------------------------------------------------+
+| ``PoolDims`` []               | List of space-separated dimensions for N-D pooling |
+|                               | area                                               |
++-------------------------------+----------------------------------------------------+
+| ``NbOutputs``                 | Number of output channels                          |
++-------------------------------+----------------------------------------------------+
+| ``StrideX`` [1]               | X-axis stride of the pooling area                  |
++-------------------------------+----------------------------------------------------+
+| ``StrideY`` [1]               | Y-axis stride of the pooling area                  |
++-------------------------------+----------------------------------------------------+
+| ``StrideZ`` []                | Z-axis stride of the pooling area                  |
++-------------------------------+----------------------------------------------------+
+| ``Stride`` [1]                | Stride of the pooling area                         |
++-------------------------------+----------------------------------------------------+
+| ``StrideDims`` []             | List of space-separated stride dimensions for N-D  |
+|                               | pooling area                                       |
++-------------------------------+----------------------------------------------------+
+| ``PaddingX`` [0]              | X-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingY`` [0]              | Y-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingZ`` []               | Z-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``Padding`` [0]               | Input padding                                      |
++-------------------------------+----------------------------------------------------+
+| ``PaddingDims`` []            | List of space-separated padding dimensions for     |
+|                               | N-D pooling area                                   |
++-------------------------------+----------------------------------------------------+
+| ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
+| [``Linear``]                  | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+|                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
+|                               | ``Tanh``                                           |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbGroups`` []       | Mapping: number of groups (mutually exclusive      |
+|                               | with all other Mapping.\* options)                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.ChannelsPerGroup``  | Mapping: number of channels per group (mutually    |
+| []                            | exclusive with all other Mapping.\* options)       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeX`` [1]         | Mapping canvas pattern default width               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeY`` [1]         | Mapping canvas pattern default height              |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Size`` [1]          | Mapping canvas pattern default size (mutually      |
+|                               | exclusive with ``Mapping.SizeX`` and               |
+|                               | ``Mapping.SizeY``)                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideX`` [1]       | Mapping canvas default X-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideY`` [1]       | Mapping canvas default Y-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Stride`` [1]        | Mapping canvas default step (mutually exclusive    |
+|                               | with``Mapping.StrideX`` and ``Mapping.StrideY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetX`` [0]       | Mapping canvas default X-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetY`` [0]       | Mapping canvas default Y-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Offset`` [0]        | Mapping canvas default offset (mutually exclusive  |
+|                               | with ``Mapping.OffsetX`` and ``Mapping.OffsetY``)  |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbIterations`` [0]  | Mapping canvas pattern default number of           |
+|                               | iterations (0 means no limit)                      |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeX`` [1]     | Mapping canvas pattern default width for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeY`` [1]     | Mapping canvas pattern default height for          |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Size`` [1]      | Mapping canvas pattern default size for            |
+|                               | input layer ``in`` (mutually exclusive with        |
+|                               | ``Mapping(in).SizeX`` and ``Mapping(in).SizeY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideX`` [1]   | Mapping canvas default X-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideY`` [1]   | Mapping canvas default Y-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Stride`` [1]    | Mapping canvas default step for input layer ``in`` |
+|                               | (mutually exclusive with ``Mapping(in).StrideX``   |
+|                               | and ``Mapping(in).StrideY``)                       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetX`` [0]   | Mapping canvas default X-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetY`` [0]   | Mapping canvas default Y-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Offset`` [0]    | Mapping canvas default offset for input            |
+|                               | layer ``in`` (mutually exclusive with              |
+|                               | ``Mapping(in).OffsetX`` and                        |
+|                               | ``Mapping(in).OffsetY``)                           |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).NbIterations``  | Mapping canvas pattern default number of           |
+| [0]                           | iterations for input layer ``in`` (0 means no      |
+|                               | limit)                                             |
++-------------------------------+----------------------------------------------------+
+
+
 
 Configuration parameters (*Spike* models)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -909,79 +1080,124 @@ Unpool
 
 Unpooling layer.
 
-| \| p5cm \| p10cm \| Option [default value] & Description
-| ``Pooling`` & Type of pooling (``Max`` or ``Average``)
-| ``PoolWidth`` & Width of the pooling area
-| ``PoolHeight`` & Height of the pooling area
-| ``PoolDepth`` [] & Depth of the pooling area (implies 3D pooling area)
-| ``PoolSize`` [] & Pooling area size (implies 2D square pooling area)
-| ``PoolDims`` [] & List of space-separated dimensions for N-D pooling
-  area
-| ``NbOutputs`` & Number of output channels
-| ``ArgMax`` & Name of the associated pool layer for the argmax (the
-  pool layer input and the unpool layer output dimension must match)
-| ``StrideX`` [1] & X-axis stride of the pooling area
-| ``StrideY`` [1] & Y-axis stride of the pooling area
-| ``StrideZ`` [] & Z-axis stride of the pooling area
-| ``Stride`` [1] & Stride of the pooling area
-| ``StrideDims`` [] & List of space-separated stride dimensions for N-D
-  pooling area
-| ``PaddingX`` [0] & X-axis input padding
-| ``PaddingY`` [0] & Y-axis input padding
-| ``PaddingZ`` [] & Z-axis input padding
-| ``Padding`` [0] & Input padding
-| ``PaddingDims`` [] & List of space-separated padding dimensions for
-  N-D pooling area
-| ``ActivationFunction`` [``Linear``] & Activation function. Can be any
-  of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``,
-  ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``
-| ``Mapping.NbGroups`` [] & Mapping: number of groups
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.ChannelsPerGroup`` [] & Mapping: number of channels per
-  group
-| & (mutually exclusive with all other Mapping.\* options)
-| ``Mapping.SizeX`` [1] & Mapping canvas pattern default width
-| ``Mapping.SizeY`` [1] & Mapping canvas pattern default height
-| ``Mapping.Size`` [1] & Mapping canvas pattern default size
-| & (mutually exclusive with ``Mapping.SizeX`` and ``Mapping.SizeY``)
-| ``Mapping.StrideX`` [1] & Mapping canvas default X-axis step
-| ``Mapping.StrideY`` [1] & Mapping canvas default Y-axis step
-| ``Mapping.Stride`` [1] & Mapping canvas default step
-| & (mutually exclusive with ``Mapping.StrideX`` and
-  ``Mapping.StrideY``)
-| ``Mapping.OffsetX`` [0] & Mapping canvas default X-axis offset
-| ``Mapping.OffsetY`` [0] & Mapping canvas default Y-axis offset
-| ``Mapping.Offset`` [0] & Mapping canvas default offset
-| & (mutually exclusive with ``Mapping.OffsetX`` and
-  ``Mapping.OffsetY``)
-| ``Mapping.NbIterations`` [0] & Mapping canvas pattern default number
-  of iterations (0 means no limit)
-| ``Mapping(in).SizeX`` [1] & Mapping canvas pattern default width for
-  input layer ``in``
-| ``Mapping(in).SizeY`` [1] & Mapping canvas pattern default height for
-  input layer ``in``
-| ``Mapping(in).Size`` [1] & Mapping canvas pattern default size for
-  input layer ``in``
-| & (mutually exclusive with ``Mapping(in).SizeX`` and
-| & ``Mapping(in).SizeY``)
-| ``Mapping(in).StrideX`` [1] & Mapping canvas default X-axis step for
-  input layer ``in``
-| ``Mapping(in).StrideY`` [1] & Mapping canvas default Y-axis step for
-  input layer ``in``
-| ``Mapping(in).Stride`` [1] & Mapping canvas default step for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).StrideX`` and
-| & ``Mapping(in).StrideY``)
-| ``Mapping(in).OffsetX`` [0] & Mapping canvas default X-axis offset for
-  input layer ``in``
-| ``Mapping(in).OffsetY`` [0] & Mapping canvas default Y-axis offset for
-  input layer ``in``
-| ``Mapping(in).Offset`` [0] & Mapping canvas default offset for input
-  layer ``in``
-| & (mutually exclusive with ``Mapping(in).OffsetX`` and
-| & ``Mapping(in).OffsetY``)
-| ``Mapping(in).NbIterations`` [0] & Mapping canvas pattern default
-  number of iterations for input layer ``in`` (0 means no limit)
+
++-------------------------------+----------------------------------------------------+
+| Option [default value]        | Description                                        |
++===============================+====================================================+
+| ``Pooling``                   | Type of pooling (``Max`` or ``Average``)           |
++-------------------------------+----------------------------------------------------+
+| ``PoolWidth``                 | Width of the pooling area                          |
++-------------------------------+----------------------------------------------------+
+| ``PoolHeight``                | Height of the pooling area                         |
++-------------------------------+----------------------------------------------------+
+| ``PoolDepth`` []              | Depth of the pooling area (implies 3D pooling      |
+|                               | area)                                              |
++-------------------------------+----------------------------------------------------+
+| ``PoolSize`` []               | Pooling area size (implies 2D square pooling area) |
++-------------------------------+----------------------------------------------------+
+| ``PoolDims`` []               | List of space-separated dimensions for N-D pooling |
+|                               | area                                               |
++-------------------------------+----------------------------------------------------+
+| ``NbOutputs``                 | Number of output channels                          |
++-------------------------------+----------------------------------------------------+
+| ``ArgMax``                    | Name of the associated pool layer for the argmax   |
+|                               | (the pool layer input and the unpool layer output  |
+|                               | dimension must match)                              |
++-------------------------------+----------------------------------------------------+
+| ``StrideX`` [1]               | X-axis stride of the pooling area                  |
++-------------------------------+----------------------------------------------------+
+| ``StrideY`` [1]               | Y-axis stride of the pooling area                  |
++-------------------------------+----------------------------------------------------+
+| ``StrideZ`` []                | Z-axis stride of the pooling area                  |
++-------------------------------+----------------------------------------------------+
+| ``Stride`` [1]                | Stride of the pooling area                         |
++-------------------------------+----------------------------------------------------+
+| ``StrideDims`` []             | List of space-separated stride dimensions for N-D  |
+|                               | pooling area                                       |
++-------------------------------+----------------------------------------------------+
+| ``PaddingX`` [0]              | X-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingY`` [0]              | Y-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``PaddingZ`` []               | Z-axis input padding                               |
++-------------------------------+----------------------------------------------------+
+| ``Padding`` [0]               | Input padding                                      |
++-------------------------------+----------------------------------------------------+
+| ``PaddingDims`` []            | List of space-separated padding dimensions for     |
+|                               | N-D pooling area                                   |
++-------------------------------+----------------------------------------------------+
+| ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
+| [``Linear``]                  | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+|                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
+|                               | ``Tanh``                                           |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbGroups`` []       | Mapping: number of groups (mutually exclusive      |
+|                               | with all other Mapping.\* options)                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.ChannelsPerGroup``  | Mapping: number of channels per group (mutually    |
+| []                            | exclusive with all other Mapping.\* options)       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeX`` [1]         | Mapping canvas pattern default width               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.SizeY`` [1]         | Mapping canvas pattern default height              |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Size`` [1]          | Mapping canvas pattern default size (mutually      |
+|                               | exclusive with ``Mapping.SizeX`` and               |
+|                               | ``Mapping.SizeY``)                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideX`` [1]       | Mapping canvas default X-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.StrideY`` [1]       | Mapping canvas default Y-axis step                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Stride`` [1]        | Mapping canvas default step (mutually exclusive    |
+|                               | with``Mapping.StrideX`` and ``Mapping.StrideY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetX`` [0]       | Mapping canvas default X-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.OffsetY`` [0]       | Mapping canvas default Y-axis offset               |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.Offset`` [0]        | Mapping canvas default offset (mutually exclusive  |
+|                               | with ``Mapping.OffsetX`` and ``Mapping.OffsetY``)  |
++-------------------------------+----------------------------------------------------+
+| ``Mapping.NbIterations`` [0]  | Mapping canvas pattern default number of           |
+|                               | iterations (0 means no limit)                      |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeX`` [1]     | Mapping canvas pattern default width for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).SizeY`` [1]     | Mapping canvas pattern default height for          |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Size`` [1]      | Mapping canvas pattern default size for            |
+|                               | input layer ``in`` (mutually exclusive with        |
+|                               | ``Mapping(in).SizeX`` and ``Mapping(in).SizeY``)   |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideX`` [1]   | Mapping canvas default X-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).StrideY`` [1]   | Mapping canvas default Y-axis step for             |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Stride`` [1]    | Mapping canvas default step for input layer ``in`` |
+|                               | (mutually exclusive with ``Mapping(in).StrideX``   |
+|                               | and ``Mapping(in).StrideY``)                       |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetX`` [0]   | Mapping canvas default X-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).OffsetY`` [0]   | Mapping canvas default Y-axis offset for           |
+|                               | input layer ``in``                                 |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).Offset`` [0]    | Mapping canvas default offset for input            |
+|                               | layer ``in`` (mutually exclusive with              |
+|                               | ``Mapping(in).OffsetX`` and                        |
+|                               | ``Mapping(in).OffsetY``)                           |
++-------------------------------+----------------------------------------------------+
+| ``Mapping(in).NbIterations``  | Mapping canvas pattern default number of           |
+| [0]                           | iterations for input layer ``in`` (0 means no      |
+|                               | limit)                                             |
++-------------------------------+----------------------------------------------------+
+
 
 ElemWise
 --------
@@ -1378,8 +1594,6 @@ Configuration parameters (*Frame\_CUDA* models)
 Current restrictions
 ~~~~~~~~~~~~~~~~~~~~
 
-:
-
 -  Only Frame\_Cuda version is supported yet.
 
 -  The implementation only support input sequences with a fixed length
@@ -1395,9 +1609,8 @@ Current restrictions
 Further development requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-| :
-| When it comes to RNN, two main factors needs to be considered to build
-  proper interfaces :
+When it comes to RNN, two main factors needs to be considered to build
+proper interfaces :
 
 #. Whether the input data has a variable or a fixed length over the data
    base, that is to say whether the input data will have a variable or
@@ -1408,24 +1621,27 @@ Further development requirements
    every elements of a sequence is labelled or the sequence itself has
    only one label.
 
-| For instance, let’s consider sentences as sequences of words in which
-  every word would be part of a vocabulary. Sentences could have a
-  variable length and every element/word would have a label. In that
-  case, every relevant element of the output sequence from the recurrent
-  structure is turned into a prediction throught a fully connected layer
-  with a linear activation fonction and a softmax.
-| On the opposite, using sequential-MNIST database, the sequence length
-  would be the same regarding every image and there is only one label
-  for an image. In that case, the last element of the output sequence is
-  the most relevant one to be turned into a prediction as it carries the
-  information of the entire input sequence.
-| To provide flexibility according to these factors, the first
-  implementation choice is to set a maximum sequence length
-  emphSeqLength as an hyperparameter that the User provide. Variable
-  length senquences can be processed by padding the remaining steps of
-  the input sequence.
-| Then two cases occur as the labeling granularity is scaled at each
-  element of the sequence or scaled at the sequence itself:
+For instance, let’s consider sentences as sequences of words in which
+every word would be part of a vocabulary. Sentences could have a
+variable length and every element/word would have a label. In that
+case, every relevant element of the output sequence from the recurrent
+structure is turned into a prediction throught a fully connected layer
+with a linear activation fonction and a softmax.
+
+On the opposite, using sequential-MNIST database, the sequence length
+would be the same regarding every image and there is only one label
+for an image. In that case, the last element of the output sequence is
+the most relevant one to be turned into a prediction as it carries the
+information of the entire input sequence.
+
+To provide flexibility according to these factors, the first
+implementation choice is to set a maximum sequence length
+emphSeqLength as an hyperparameter that the User provide. Variable
+length senquences can be processed by padding the remaining steps of
+the input sequence.
+
+Then two cases occur as the labeling granularity is scaled at each
+element of the sequence or scaled at the sequence itself:
 
 #. The sequence itself has only one label :
 
@@ -1456,8 +1672,6 @@ Further development requirements
 
 Development guidance
 ~~~~~~~~~~~~~~~~~~~~
-
-:
 
 -  Replace the inner local variables of LSTMCell\_Frame\_Cuda with a
    generic layer of shuffling (on device) to enable the the process of
