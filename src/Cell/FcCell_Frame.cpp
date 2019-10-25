@@ -68,7 +68,7 @@ N2D2::FcCell_Frame<T>::FcCell_Frame(const DeepNet& deepNet, const std::string& n
 template <class T>
 void N2D2::FcCell_Frame<T>::initialize()
 {
-    if (!mNoBias) {
+    if (!mNoBias && mBias.empty()) {
         mBias.resize({mOutputs.dimZ(), 1, 1, 1});
         mDiffBias.resize({mOutputs.dimZ(), 1, 1, 1});
         mBiasFiller->apply(mBias);
