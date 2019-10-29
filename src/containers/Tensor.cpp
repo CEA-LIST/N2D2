@@ -860,6 +860,9 @@ template class N2D2::Tensor<short>;
 template class N2D2::Tensor<unsigned short>;
 template class N2D2::Tensor<int>;
 template class N2D2::Tensor<unsigned int>;
+template class N2D2::Tensor<long>;
+template class N2D2::Tensor<unsigned long>;
+template class N2D2::Tensor<long long>;
 template class N2D2::Tensor<unsigned long long>;
 template class N2D2::Tensor<std::vector<unsigned int>>;
 template class N2D2::Tensor<std::pair<unsigned long long, char>>;
@@ -1045,6 +1048,9 @@ void init_Tensor(py::module &m) {
     declare_Tensor<short>(m, "short");
     declare_Tensor<int>(m, "int");
     declare_Tensor<unsigned int>(m, "unsigned int");
+    declare_Tensor<long>(m, "long");
+    declare_Tensor<unsigned long>(m, "unsigned long");
+    declare_Tensor<long long>(m, "long long");
     declare_Tensor<unsigned long long>(m, "unsigned long long");
     declare_Tensor<bool>(m, "bool");
 }

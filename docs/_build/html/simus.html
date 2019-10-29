@@ -497,13 +497,21 @@ attributes</p></td>
 <td><p>✓</p></td>
 <td><p>Only for layers that support it</p></td>
 </tr>
-<tr class="row-even"><td><p>Conv</p></td>
+<tr class="row-even"><td><p>Constant</p></td>
+<td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
+<td><p>In some contexts only</p></td>
+</tr>
+<tr class="row-odd"><td><p>Conv</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Dropout</p></td>
+<tr class="row-even"><td><p>Dropout</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td><p>Exc. <cite>mask</cite> output</p></td>
+</tr>
+<tr class="row-odd"><td><p>Div</p></td>
+<td><p>✓</p></td>
+<td><p>With constant second operand only</p></td>
 </tr>
 <tr class="row-even"><td><p>Flatten</p></td>
 <td><p>✓</p></td>
@@ -529,67 +537,71 @@ attributes</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>Max</p></td>
+<tr class="row-even"><td><p>MatMul</p></td>
+<td><p>✓</p></td>
+<td><p>Only for fully-connected layers</p></td>
+</tr>
+<tr class="row-odd"><td><p>Max</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>MaxPool</p></td>
+<tr class="row-even"><td><p>MaxPool</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td><p>Exc. <cite>Indices</cite> output</p></td>
 </tr>
-<tr class="row-even"><td><p>Mul</p></td>
+<tr class="row-odd"><td><p>Mul</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Pad</p></td>
+<tr class="row-even"><td><p>Pad</p></td>
 <td><p><span class="raw-html"><font color="red"></span> ✗ <span class="raw-html"></font></span></p></td>
 <td><p>Planned</p></td>
 </tr>
-<tr class="row-even"><td><p>Relu</p></td>
+<tr class="row-odd"><td><p>Relu</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Reshape</p></td>
+<tr class="row-even"><td><p>Reshape</p></td>
 <td><p>✗</p></td>
 <td><p>Ignored</p></td>
 </tr>
-<tr class="row-even"><td><p>Resize</p></td>
+<tr class="row-odd"><td><p>Resize</p></td>
 <td><p><span class="raw-html"><font color="red"></span> ✗ <span class="raw-html"></font></span></p></td>
 <td><p>Planned (partially)</p></td>
 </tr>
-<tr class="row-odd"><td><p>Shape</p></td>
+<tr class="row-even"><td><p>Shape</p></td>
 <td><p>✗</p></td>
 <td><p>Ignored</p></td>
 </tr>
-<tr class="row-even"><td><p>Sigmoid</p></td>
+<tr class="row-odd"><td><p>Sigmoid</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Softmax</p></td>
+<tr class="row-even"><td><p>Softmax</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>Softplus</p></td>
+<tr class="row-odd"><td><p>Softplus</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Squeeze</p></td>
+<tr class="row-even"><td><p>Squeeze</p></td>
 <td><p>✗</p></td>
 <td><p>Ignored</p></td>
 </tr>
-<tr class="row-even"><td><p>Sub</p></td>
+<tr class="row-odd"><td><p>Sub</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Sum</p></td>
+<tr class="row-even"><td><p>Sum</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>Tanh</p></td>
+<tr class="row-odd"><td><p>Tanh</p></td>
 <td><p><span class="raw-html"><font color="green"></span> ✓ <span class="raw-html"></font></span></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Upsample</p></td>
+<tr class="row-even"><td><p>Upsample</p></td>
 <td><p><span class="raw-html"><font color="red"></span> ✗ <span class="raw-html"></font></span></p></td>
 <td><p>Planned</p></td>
 </tr>

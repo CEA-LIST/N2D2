@@ -115,6 +115,9 @@ N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
         : 0;
 
     if (dataSize > 0) {
+        if (tensor.empty())
+            tensor.resize({(size_t)dataSize});
+
         assert((int)tensor.size() == dataSize);
 
         for (size_t i = 0; i < (size_t)dataSize; ++i) {
