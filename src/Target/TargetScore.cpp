@@ -619,16 +619,36 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
     }
 
     // Remove invalid/ignored batch positions before computing the score
-    mBatchSuccess.erase(std::remove(mBatchSuccess.begin(),
-                                    mBatchSuccess.end(), -1.0),
-                        mBatchSuccess.end());
+    correctLastBatch(mBatchSuccess, mScoreSet[set].success);
     mScoreSet[set].success.push_back(getBatchAverageSuccess());
 
     if (!mDataAsTarget && mTargetTopN > 1) {
-        mBatchTopNSuccess.erase(std::remove(mBatchTopNSuccess.begin(),
-                                            mBatchTopNSuccess.end(), -1.0),
-                                mBatchTopNSuccess.end());
+        correctLastBatch(mBatchTopNSuccess, mScoreTopNSet[set].success);
         mScoreTopNSet[set].success.push_back(getBatchAverageTopNSuccess());
+    }
+}
+
+void N2D2::TargetScore::correctLastBatch(
+    std::vector<double>& batchSuccess,
+    const std::deque<double>& success)
+{
+    const size_t batchSize = batchSuccess.size();
+    batchSuccess.erase(std::remove(batchSuccess.begin(),
+                                    batchSuccess.end(), -1.0),
+                        batchSuccess.end());
+
+    if (batchSuccess.size() < batchSize) {
+        // Compute the correct cumulative score sum
+        const double scoreSum = batchSize
+                * std::accumulate(success.begin(), success.end(), 0.0)
+            + std::accumulate(batchSuccess.begin(), batchSuccess.end(), 0.0);
+
+        // Compute the true average
+        const double x = scoreSum
+            / (success.size() * batchSize + batchSuccess.size());
+
+        // Fill batchSuccess with true average
+        batchSuccess.resize(batchSize, x);
     }
 }
 

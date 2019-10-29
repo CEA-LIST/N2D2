@@ -140,6 +140,9 @@ public:
     virtual void clear(Database::StimuliSet set);
 
 protected:
+    void correctLastBatch(std::vector<double>& batchSuccess,
+                          const std::deque<double>& success);
+
     Parameter<double> mConfusionRangeMin;
     Parameter<double> mConfusionRangeMax;
     Parameter<unsigned int> mConfusionQuantSteps;
