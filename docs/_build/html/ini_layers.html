@@ -127,17 +127,17 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#conv">Conv</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id9">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Configuration parameters (<em>Frame</em> models)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration-parameters-spike-models">Configuration parameters (<em>Spike</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#deconv">Deconv</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id10">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#pool">Pool</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#maxout-example">Maxout example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id11">Configuration parameters (<em>Spike</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Configuration parameters (<em>Spike</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#unpool">Unpool</a></li>
@@ -151,21 +151,21 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#fmp">FMP</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id14">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#fc">Fc</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id15">Configuration parameters (<em>Frame</em> models)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id16">Configuration parameters (<em>Spike</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Configuration parameters (<em>Spike</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rbf">Rbf</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id17">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#softmax">Softmax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#lrn">LRN</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id18">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#lstm">LSTM</a><ul>
@@ -177,7 +177,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#dropout">Dropout</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id23">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id16">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#padding">Padding</a></li>
@@ -186,7 +186,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#batchnorm">BatchNorm</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id26">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id18">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#transformation">Transformation</a></li>
@@ -326,10 +326,10 @@ add a target section named <em>LayerName</em><code class="docutils literal notra
 <p>The initial weights distribution for each layer can be checked in the
 <em>weights_init</em> folder, with an example shown in figure
 [fig:weightsInitDistrib].</p>
-<div class="figure align-default" id="id27">
+<div class="figure align-default" id="id19">
 <img alt="Initial weights distribution of a layer using a normal distribution (``NormalFiller``) with a 0 mean and a 0.05 standard deviation." src="_images/weightsInitDistrib.png" />
 <p class="caption"><span class="caption-text">Initial weights distribution of a layer using a normal distribution
-(<code class="docutils literal notranslate"><span class="pre">NormalFiller</span></code>) with a 0 mean and a 0.05 standard deviation.</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
+(<code class="docutils literal notranslate"><span class="pre">NormalFiller</span></code>) with a 0 mean and a 0.05 standard deviation.</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="constantfiller">
 <h3>ConstantFiller<a class="headerlink" href="#constantfiller" title="Permalink to this headline">¶</a></h3>
@@ -354,7 +354,7 @@ add a target section named <em>LayerName</em><code class="docutils literal notra
 <div class="section" id="hefiller">
 <h3>HeFiller<a class="headerlink" href="#hefiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an normal distribution with normalized variance taking into
-account the rectifier nonlinearity <a href="#id1"><span class="problematic" id="id2">:raw-latex:`\citep{He2015}`</span></a>. This
+account the rectifier nonlinearity <a class="bibtex reference internal" href="tuto.html#he2015" id="id1">[HZRS15]</a>. This
 filler is sometimes referred as MSRA filler.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -436,7 +436,7 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 <div class="section" id="xavierfiller">
 <h3>XavierFiller<a class="headerlink" href="#xavierfiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an uniform distribution with normalized variance
-<a href="#id3"><span class="problematic" id="id4">:raw-latex:`\citep{Glorot2010}`</span></a>.</p>
+<a class="bibtex reference internal" href="tuto.html#glorot2010" id="id2">[GB10]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -591,7 +591,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame">
 <h3>AdamSolver_Frame<a class="headerlink" href="#adamsolver-frame" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a href="#id5"><span class="problematic" id="id6">:raw-latex:`\citep{KingmaB14}`</span></a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id3">[KB14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -620,7 +620,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame-cuda">
 <h3>AdamSolver_Frame_CUDA<a class="headerlink" href="#adamsolver-frame-cuda" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a href="#id7"><span class="problematic" id="id8">:raw-latex:`\citep{KingmaB14}`</span></a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id4">[KB14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -1111,8 +1111,8 @@ limit)</p></td>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id9">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 11%" />
@@ -1482,8 +1482,8 @@ limit)</p></td>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id10">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 11%" />
@@ -1799,8 +1799,8 @@ limit)</p></td>
 </tbody>
 </table>
 </div>
-<div class="section" id="id11">
-<h3>Configuration parameters (<em>Spike</em> models)<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Configuration parameters (<em>Spike</em> models)<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 46%" />
@@ -2096,7 +2096,7 @@ operation:</p>
 </div>
 <div class="section" id="fmp">
 <h2>FMP<a class="headerlink" href="#fmp" title="Permalink to this headline">¶</a></h2>
-<p>Fractional max pooling layer <a href="#id12"><span class="problematic" id="id13">:raw-latex:`\citep{Graham2014}`</span></a>.</p>
+<p>Fractional max pooling layer <a class="bibtex reference internal" href="tuto.html#graham2014" id="id8">[Gra14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -2119,8 +2119,8 @@ operation:</p>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id14">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 24%" />
@@ -2180,8 +2180,8 @@ operation:</p>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id15">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 21%" />
@@ -2222,8 +2222,8 @@ operation:</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id16">
-<h3>Configuration parameters (<em>Spike</em> models)<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>Configuration parameters (<em>Spike</em> models)<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -2372,8 +2372,8 @@ operation:</p>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id17">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -2476,8 +2476,8 @@ in respect of the cross-entropy loss:</p>
 expression:</p>
 <div class="math notranslate nohighlight">
 \[b_{x,y}^{i} = \frac{a_{x,y}^{i}}{\left(k + \alpha \sum\limits_{j=max(0,i-n/2)}^{min(N-1,i+n/2)}{\left(a_{x,y}^{j}\right)^2}\right)^{\beta}}\]</div>
-<div class="section" id="id18">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id13">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 21%" />
@@ -2513,7 +2513,7 @@ expression:</p>
 </div>
 <div class="section" id="lstm">
 <h2>LSTM<a class="headerlink" href="#lstm" title="Permalink to this headline">¶</a></h2>
-<p>Long Short Term Memory Layer <a href="#id19"><span class="problematic" id="id20">:raw-latex:`\citep{LSTM1997}`</span></a>.</p>
+<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="tuto.html#lstm1997" id="id14">[HS97]</a>.</p>
 <div class="section" id="global-layer-parameters-frame-cuda-models">
 <h3>Global layer parameters (<em>Frame_CUDA</em> models)<a class="headerlink" href="#global-layer-parameters-frame-cuda-models" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -2668,10 +2668,10 @@ the input sequence.</p>
 element of the sequence or scaled at the sequence itself:</p>
 <ol class="arabic">
 <li><p>The sequence itself has only one label :</p>
-<div class="figure align-default" id="id28">
+<div class="figure align-default" id="id20">
 <img alt="RNN model : variable sequence length and labeling scaled at the sequence" src="_images/Tvar_P1.png" />
 <p class="caption"><span class="caption-text">RNN model : variable sequence length and labeling scaled at the
-sequence</span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
+sequence</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
 </div>
 <div class="line-block">
 <div class="line">The model has a fixed size with one fully connected mapped to the
@@ -2680,10 +2680,10 @@ sequence.</div>
 </div>
 </li>
 <li><p>Every elements of a sequence is labelled :</p>
-<div class="figure align-default" id="id29">
+<div class="figure align-default" id="id21">
 <img alt="RNN model : variable sequence length and labeling scaled at each element of the sequence" src="_images/Tvar_Pi.png" />
 <p class="caption"><span class="caption-text">RNN model : variable sequence length and labeling scaled at each
-element of the sequence</span><a class="headerlink" href="#id29" title="Permalink to this image">¶</a></p>
+element of the sequence</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
 </div>
 </li>
 </ol>
@@ -2709,7 +2709,7 @@ functions.</p></li>
 </div>
 <div class="section" id="dropout">
 <h2>Dropout<a class="headerlink" href="#dropout" title="Permalink to this headline">¶</a></h2>
-<p>Dropout layer <a href="#id21"><span class="problematic" id="id22">:raw-latex:`\citep{Srivastava2014}`</span></a>.</p>
+<p>Dropout layer <a class="bibtex reference internal" href="tuto.html#srivastava2014" id="id15">[SHK+12]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 48%" />
@@ -2726,8 +2726,8 @@ functions.</p></li>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id23">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id16">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 23%" />
@@ -2839,7 +2839,7 @@ stimuli provider.</p>
 </div>
 <div class="section" id="batchnorm">
 <h2>BatchNorm<a class="headerlink" href="#batchnorm" title="Permalink to this headline">¶</a></h2>
-<p>Batch Normalization layer <a href="#id24"><span class="problematic" id="id25">:raw-latex:`\citep{Ioffe2015}`</span></a>.</p>
+<p>Batch Normalization layer <a class="bibtex reference internal" href="tuto.html#ioffe2015" id="id17">[IS15]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -2871,8 +2871,8 @@ stimuli provider.</p>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id26">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id18">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 15%" />
@@ -2952,6 +2952,75 @@ stimuli provider.</p>
 <span class="na">Size</span><span class="o">=</span><span class="s">3</span>
 </pre></div>
 </div>
+<p id="bibtex-bibliography-ini_layers-0"><dl class="citation">
+<dt class="bibtex label" id="cordts2016cityscapes"><span class="brackets">COR+16</span></dt>
+<dd><p>Marius Cordts, Mohamed Omran, Sebastian Ramos, Timo Rehfeld, Markus Enzweiler, Rodrigo Benenson, Uwe Franke, Stefan Roth, and Bernt Schiele. The cityscapes dataset for semantic urban scene understanding. In <em>Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 2016.</p>
+</dd>
+<dt class="bibtex label" id="dollar2009"><span class="brackets">DollarWSP09</span></dt>
+<dd><p>P. Dollár, C. Wojek, B. Schiele, and P. Perona. Pedestrian detection: a benchmark. In <em>CVPR</em>. 2009.</p>
+</dd>
+<dt class="bibtex label" id="feifei2004"><span class="brackets">FFFP04</span></dt>
+<dd><p>L. Fei-Fei, R. Fergus, and P. Perona. Learning generative visual models from few training examples: an incremental bayesian approach tested on 101 object categories. In <em>IEEE. CVPR 2004, Workshop on Generative-Model Based Vision</em>. 2004.</p>
+</dd>
+<dt class="bibtex label" id="glorot2010"><span class="brackets"><a class="fn-backref" href="#id2">GB10</a></span></dt>
+<dd><p>X. Glorot and Y. Bengio. Understanding the difficulty of training deep feedforward neural networks. In <em>International conference on artificial intelligence and statistics</em>, 249–256. 2010.</p>
+</dd>
+<dt class="bibtex label" id="graham2014"><span class="brackets"><a class="fn-backref" href="#id8">Gra14</a></span></dt>
+<dd><p>Benjamin Graham. Fractional max-pooling. <em>CoRR</em>, 2014.</p>
+</dd>
+<dt class="bibtex label" id="griffin2007"><span class="brackets">GHP07</span></dt>
+<dd><p>Gregory Griffin, Alex Holub, and Pietro Perona. Caltech-256 object category dataset. Technical Report, 2007.</p>
+</dd>
+<dt class="bibtex label" id="he2015"><span class="brackets"><a class="fn-backref" href="#id1">HZRS15</a></span></dt>
+<dd><p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Delving deep into rectifiers: surpassing human-level performance on imagenet classification. In <em>Proceedings of the 2015 IEEE International Conference on Computer Vision (ICCV)</em>, ICCV ‘15, 1026–1034. 2015. <a class="reference external" href="https://doi.org/10.1109/ICCV.2015.123">doi:10.1109/ICCV.2015.123</a>.</p>
+</dd>
+<dt class="bibtex label" id="lstm1997"><span class="brackets"><a class="fn-backref" href="#id14">HS97</a></span></dt>
+<dd><p>Sepp Hochreiter and Jürgen Schmidhuber. Long short-term memory. <em>Neural Computation</em>, 9(8):1735–1780, 1997. <a class="reference external" href="https://doi.org/10.1162/neco.1997.9.8.1735">doi:10.1162/neco.1997.9.8.1735</a>.</p>
+</dd>
+<dt class="bibtex label" id="houben2013"><span class="brackets">HSS+13</span></dt>
+<dd><p>Sebastian Houben, Johannes Stallkamp, Jan Salmen, Marc Schlipsing, and Christian Igel. Detection of traffic signs in real-world images: the German Traffic Sign Detection Benchmark. In <em>International Joint Conference on Neural Networks</em>, number 1288. 2013.</p>
+</dd>
+<dt class="bibtex label" id="ioffe2015"><span class="brackets"><a class="fn-backref" href="#id17">IS15</a></span></dt>
+<dd><p>Sergey Ioffe and Christian Szegedy. Batch normalization: accelerating deep network training by reducing internal covariate shift. <em>CoRR</em>, 2015.</p>
+</dd>
+<dt class="bibtex label" id="jain2010"><span class="brackets">JLM10</span></dt>
+<dd><p>Vidit Jain and Erik Learned-Miller. FDDB: a benchmark for face detection in unconstrained settings. Technical Report UM-CS-2010-009, University of Massachusetts, Amherst, 2010.</p>
+</dd>
+<dt class="bibtex label" id="kingmab14"><span class="brackets">KB14</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id4">2</a>)</span></dt>
+<dd><p>Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. <em>CoRR</em>, 2014. URL: <a class="reference external" href="http://arxiv.org/abs/1412.6980">http://arxiv.org/abs/1412.6980</a>, <a class="reference external" href="https://arxiv.org/abs/1412.6980">arXiv:1412.6980</a>.</p>
+</dd>
+<dt class="bibtex label" id="krizhevsky2009"><span class="brackets">Kri09</span></dt>
+<dd><p>Alex Krizhevsky. Learning multiple layers of features from tiny images. Technical Report, 2009.</p>
+</dd>
+<dt class="bibtex label" id="lecun1998"><span class="brackets">LBBH98</span></dt>
+<dd><p>Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner. Gradient-based learning applied to document recognition. In <em>Proceedings of the IEEE</em>, volume 86, 2278–2324. 1998.</p>
+</dd>
+<dt class="bibtex label" id="lockhart2011"><span class="brackets">LWX+11</span></dt>
+<dd><p>Jeffrey W. Lockhart, Gary M. Weiss, Jack C. Xue, Shaun T. Gallagher, Andrew B. Grosner, and Tony T. Pulickal. Design considerations for the wisdm smart phone-based sensor mining architecture. In <em>Proceedings of the Fifth International Workshop on Knowledge Discovery from Sensor Data</em>, SensorKDD ‘11, 25–33. New York, NY, USA, 2011. ACM. URL: <a class="reference external" href="http://doi.acm.org/10.1145/2003653.2003656">http://doi.acm.org/10.1145/2003653.2003656</a>, <a class="reference external" href="https://doi.org/10.1145/2003653.2003656">doi:10.1145/2003653.2003656</a>.</p>
+</dd>
+<dt class="bibtex label" id="rakotomamonjy2014"><span class="brackets">RG14</span></dt>
+<dd><p>A. Rakotomamonjy and G. Gasso. Histogram of gradients of time-frequency representations for audio scene detection. Technical Report, 2014.</p>
+</dd>
+<dt class="bibtex label" id="ilsvrc15"><span class="brackets">RDS+15</span></dt>
+<dd><p>Olga Russakovsky, Jia Deng, Hao Su, Jonathan Krause, Sanjeev Satheesh, Sean Ma, Zhiheng Huang, Andrej Karpathy, Aditya Khosla, Michael Bernstein, Alexander C. Berg, and Li Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. <em>International Journal of Computer Vision (IJCV)</em>, 115(3):211–252, 2015. <a class="reference external" href="https://doi.org/10.1007/s11263-015-0816-y">doi:10.1007/s11263-015-0816-y</a>.</p>
+</dd>
+<dt class="bibtex label" id="srivastava2014"><span class="brackets"><a class="fn-backref" href="#id15">SHK+12</a></span></dt>
+<dd><p>Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Ruslan Salakhutdinov. Dropout: a simple way to prevent neural networks from voverfitting. <em>Journal of Machine Learning Research</em>, 15:1929–1958, 2012.</p>
+</dd>
+<dt class="bibtex label" id="stallkamp2012"><span class="brackets">SSSI12</span></dt>
+<dd><p>J. Stallkamp, M. Schlipsing, J. Salmen, and C. Igel. Man vs. computer: benchmarking machine learning algorithms for traffic sign recognition. <em>Neural Networks</em>, 2012. <a class="reference external" href="https://doi.org/10.1016/j.neunet.2012.02.016">doi:10.1016/j.neunet.2012.02.016</a>.</p>
+</dd>
+<dt class="bibtex label" id="dota"><span class="brackets">XBD+17</span></dt>
+<dd><p>Gui-Song Xia, Xiang Bai, Jian Ding, Zhen Zhu, Serge J. Belongie, Jiebo Luo, Mihai Datcu, Marcello Pelillo, and Liangpei Zhang. DOTA: A large-scale dataset for object detection in aerial images. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1711.10398">http://arxiv.org/abs/1711.10398</a>, <a class="reference external" href="https://arxiv.org/abs/1711.10398">arXiv:1711.10398</a>.</p>
+</dd>
+<dt class="bibtex label" id="lucey2010"><span class="brackets">LuceyCohnKanade+10</span></dt>
+<dd><p>P. Lucey, J. F. Cohn, T. Kanade, J. Saragih, Z. Ambadar, and I. Matthews. The extended cohn-kanade dataset (ck+): a complete dataset for action unit and emotion-specified expression. In <em>2010 IEEE Computer Society Conference on Computer Vision and Pattern Recognition - Workshops</em>, volume, 94–101. June 2010. <a class="reference external" href="https://doi.org/10.1109/CVPRW.2010.5543262">doi:10.1109/CVPRW.2010.5543262</a>.</p>
+</dd>
+<dt class="bibtex label" id="speechcommandsv2"><span class="brackets">Warden18</span></dt>
+<dd><p>P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. <em>ArXiv e-prints</em>, April 2018. URL: <a class="reference external" href="https://arxiv.org/abs/1804.03209">https://arxiv.org/abs/1804.03209</a>, <a class="reference external" href="https://arxiv.org/abs/1804.03209">arXiv:1804.03209</a>.</p>
+</dd>
+</dl>
+</p>
 </div>
 </div>
 

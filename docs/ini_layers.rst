@@ -74,7 +74,7 @@ HeFiller
 ~~~~~~~~
 
 Fill with an normal distribution with normalized variance taking into
-account the rectifier nonlinearity :raw-latex:`\citep{He2015}`. This
+account the rectifier nonlinearity :cite:`He2015`. This
 filler is sometimes referred as MSRA filler.
 
 +-----------------------------------------------+--------------------------------------------------------------+
@@ -128,7 +128,7 @@ XavierFiller
 ~~~~~~~~~~~~
 
 Fill with an uniform distribution with normalized variance
-:raw-latex:`\citep{Glorot2010}`.
+:cite:`Glorot2010`.
 
 +-------------------------------------------------+--------------------------------------------------------------+
 | Option [default value]                          | Description                                                  |
@@ -247,7 +247,7 @@ The learning rate decay policies are identical to the ones in the
 AdamSolver\_Frame
 ~~~~~~~~~~~~~~~~~
 
-Adam Solver for ``Frame`` models :raw-latex:`\citep{KingmaB14}`.
+Adam Solver for ``Frame`` models :cite:`KingmaB14`.
 
 +-------------------------------------------+-----------------------------------------------------------------------+
 | Option [default value]                    | Description                                                           |
@@ -264,7 +264,7 @@ Adam Solver for ``Frame`` models :raw-latex:`\citep{KingmaB14}`.
 AdamSolver\_Frame\_CUDA
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Adam Solver for ``Frame_CUDA`` models :raw-latex:`\citep{KingmaB14}`.
+Adam Solver for ``Frame_CUDA`` models :cite:`KingmaB14`.
 
 +-------------------------------------------+-----------------------------------------------------------------------+
 | Option [default value]                    | Description                                                           |
@@ -1297,7 +1297,7 @@ Absolute value of an input (:math:`T_{out} = |T_{1}|`):
 FMP
 ---
 
-Fractional max pooling layer :raw-latex:`\citep{Graham2014}`.
+Fractional max pooling layer :cite:`Graham2014`.
 
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Option [default value]                | Description                                                                                                                                                 |
@@ -1529,7 +1529,7 @@ Configuration parameters (*Frame* models)
 LSTM 
 ----
 
-Long Short Term Memory Layer :raw-latex:`\citep{LSTM1997}`.
+Long Short Term Memory Layer :cite:`LSTM1997`.
 
 Global layer parameters (*Frame\_CUDA* models)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1686,7 +1686,7 @@ Development guidance
 Dropout
 -------
 
-Dropout layer :raw-latex:`\citep{Srivastava2014}`.
+Dropout layer :cite:`Srivastava2014`.
 
 +--------------------------+----------------------------+
 | Option [default value]   | Description                |
@@ -1755,7 +1755,7 @@ Configuration parameters
 BatchNorm
 ---------
 
-Batch Normalization layer :raw-latex:`\citep{Ioffe2015}`.
+Batch Normalization layer :cite:`Ioffe2015`.
 
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Option [default value]              | Description                                                                                                                                                 |
@@ -1825,3 +1825,6 @@ Usage example for fully CNNs:
     Transformation=MorphologyTransformation
     Operation=Opening
     Size=3
+
+
+.. bibliography:: refs.bib

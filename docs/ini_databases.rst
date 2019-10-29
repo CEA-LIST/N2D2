@@ -9,7 +9,7 @@ a network and learn it on these database.
 MNIST
 -----
 
-MNIST :raw-latex:`\citep{LeCun1998}` is already fractionned into a
+MNIST :cite:`LeCun1998` is already fractionned into a
 learning set and a testing set, with:
 
 - 60,000 digits in the learning set;
@@ -37,7 +37,7 @@ Example:
 GTSRB
 -----
 
-GTSRB :raw-latex:`\citep{Stallkamp2012}` is already fractionned into a
+GTSRB :cite:`Stallkamp2012` is already fractionned into a
 learning set and a testing set, with:
 
 - 39,209 digits in the learning set;
@@ -185,7 +185,7 @@ To load and partition more than one ``DataPath``, one can use the
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use with Speech Commands Data Set, released by the Google
-:raw-latex:`\citep{speechcommandsv2}`.
+:cite:`speechcommandsv2`.
 
 .. code-block:: ini
 
@@ -204,7 +204,7 @@ Actitracker\_Database
 ~~~~~~~~~~~~~~~~~~~~~
 
 Actitracker database, released by the WISDM Lab
-:raw-latex:`\citep{Lockhart2011}`.
+:cite:`Lockhart2011`.
 
 +------------------------------------+---------------------------------------------------+
 | Option [default value]             | Description                                       |
@@ -223,7 +223,7 @@ Actitracker database, released by the WISDM Lab
 CIFAR10\_Database
 ~~~~~~~~~~~~~~~~~
 
-CIFAR10 database :raw-latex:`\citep{Krizhevsky2009}`.
+CIFAR10 database :cite:`Krizhevsky2009`.
 
 +-----------------------------------------+----------------------------------------------------+
 | Option [default value]                  | Description                                        |
@@ -238,7 +238,7 @@ CIFAR10 database :raw-latex:`\citep{Krizhevsky2009}`.
 CIFAR100\_Database
 ~~~~~~~~~~~~~~~~~~
 
-CIFAR100 database :raw-latex:`\citep{Krizhevsky2009}`.
+CIFAR100 database :cite:`Krizhevsky2009`.
 
 +-------------------------------------+---------------------------------------------------------------+
 | Option [default value]              | Description                                                   |
@@ -256,7 +256,7 @@ CKP\_Database
 ~~~~~~~~~~~~~
 
 The Extended Cohn-Kanade (CK+) database for expression recognition
-:raw-latex:`\citep{Lucey2010}`.
+:cite:`Lucey2010`.
 
 +---------------------------------------+----------------------------------------------+
 | Option [default value]                | Description                                  |
@@ -273,7 +273,7 @@ The Extended Cohn-Kanade (CK+) database for expression recognition
 Caltech101\_DIR\_Database
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Caltech 101 database :raw-latex:`\citep{FeiFei2004}`.
+Caltech 101 database :cite:`FeiFei2004`.
 
 +--------------------------+----------------------------------------------------------------------+
 | Option [default value]   | Description                                                          |
@@ -294,7 +294,7 @@ Caltech 101 database :raw-latex:`\citep{FeiFei2004}`.
 Caltech256\_DIR\_Database
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Caltech 256 database :raw-latex:`\citep{Griffin2007}`.
+Caltech 256 database :cite:`Griffin2007`.
 
 +--------------------------+----------------------------------------------------------------------+
 | Option [default value]   | Description                                                          |
@@ -315,7 +315,7 @@ Caltech 256 database :raw-latex:`\citep{Griffin2007}`.
 CaltechPedestrian\_Database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Caltech Pedestrian database :raw-latex:`\citep{Dollar2009}`.
+Caltech Pedestrian database :cite:`Dollar2009`.
 
 Note that the images and annotations must first be extracted from the
 seq video data located in the *videos* directory using the
@@ -371,7 +371,7 @@ annotations:
 Cityscapes\_Database
 ~~~~~~~~~~~~~~~~~~~~
 
-Cityscapes database :raw-latex:`\citep{Cordts2016Cityscapes}`.
+Cityscapes database :cite:`Cordts2016Cityscapes`.
 
 +----------------------------------------+----------------------------------------------------------------------------------------------------------+
 | Option [default value]                 | Description                                                                                              |
@@ -413,7 +413,7 @@ Daimler Monocular Pedestrian Detection Benchmark (Daimler Pedestrian).
 DOTA\_Database
 ~~~~~~~~~~~~~~
 
-DOTA database :raw-latex:`\citep{DOTA}`.
+DOTA database :cite:`DOTA`.
 
 +--------------------------+--------------------------------------------+
 | Option [default value]   | Description                                |
@@ -433,7 +433,7 @@ FDDB\_Database
 ~~~~~~~~~~~~~~
 
 Face Detection Data Set and Benchmark (FDDB)
-:raw-latex:`\citep{Jain2010}`.
+:cite:`Jain2010`.
 
 +--------------------------+---------------------------------------------------------+
 | Option [default value]   | Description                                             |
@@ -454,7 +454,7 @@ Face Detection Data Set and Benchmark (FDDB)
 GTSDB\_DIR\_Database
 ~~~~~~~~~~~~~~~~~~~~
 
-GTSDB database :raw-latex:`\citep{Houben2013}`.
+GTSDB database :cite:`Houben2013`.
 
 +----------------------------------+----------------------------------------------+
 | Option [default value]           | Description                                  |
@@ -471,7 +471,7 @@ GTSDB database :raw-latex:`\citep{Houben2013}`.
 ILSVRC2012\_Database
 ~~~~~~~~~~~~~~~~~~~~
 
-ILSVRC2012 database :raw-latex:`\citep{ILSVRC15}`.
+ILSVRC2012 database :cite:`ILSVRC15`.
 
 +-------------------------------------------+--------------------------------------------+
 | Option [default value]                    | Description                                |
@@ -553,7 +553,7 @@ object data set (5 MB). Extract the downloaded archives in your
 LITISRouen\_Database
 ~~~~~~~~~~~~~~~~~~~~
 
-LITIS Rouen audio scene dataset :raw-latex:`\citep{Rakotomamonjy2014}`.
+LITIS Rouen audio scene dataset :cite:`Rakotomamonjy2014`.
 
 +--------------------------------+----------------------------------------------+
 | Option [default value]         | Description                                  |
@@ -587,3 +587,5 @@ effectively increases the number of stimuli in the set.
 The ``RandomShuffle`` option, enabled by default, randomly shuffle the
 dataset after slicing. If disabled, the slices are added in order at the
 end of the dataset.
+
+.. bibliography:: refs.bib

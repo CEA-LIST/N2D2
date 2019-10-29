@@ -10,7 +10,7 @@ Choose the learning solver
 Generally, you should use the SGD solver with a momemtum (typical value
 for the momentum: 0.9). It generalizes better, often significantly
 better, than adaptive methods like Adam
-:raw-latex:`\citep{2017arXiv170508292W}`.
+:cite:`2017arXiv170508292W`.
 
 Adaptive solvers, like Adam, may be used for fast exploration and
 prototyping, thanks to their fast convergence.
@@ -50,7 +50,7 @@ then plotted in function of the learning rate, as shown in figure
 Note that in N2D2, the learning rate is automatically normalized by the
 global batch size (:math:`N \times \text{\lstinline!IterationSize!}`)
 for the ``SGDSolver``. A simple linear scaling rule is used, as
-recommanded in :raw-latex:`\citep{DBLP:journals/corr/GoyalDGNWKTJH17}`.
+recommanded in :cite:`DBLP:journals/corr/GoyalDGNWKTJH17`.
 The effective learning rate :math:`\alpha_{\text{eff}}` applied for
 parameters update is therefore:
 
@@ -70,7 +70,7 @@ Convergence and normalization
 Deep networks (> 30 layers) and especially residual networks usually
 don’t converge without normalization. Indeed, batch normalization is
 almost always used. *ZeroInit* is a method that can be used to overcome
-this issue without normalization :raw-latex:`\citep{zhang2018residual}`.
+this issue without normalization :cite:`zhang2018residual`.
 
 Building a classifier neural network
 ------------------------------------
@@ -787,3 +787,6 @@ This line reports the average number of accumulation operations per
 synapse per input stimulus in the network. If this number if below 1.0,
 it means that the spiking version of the network is more efficient than
 its formal counterpart in terms of total number of operations!
+
+
+.. bibliography:: refs.bib
