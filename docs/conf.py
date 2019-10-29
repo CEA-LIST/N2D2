@@ -130,7 +130,12 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    # 'preamble': '',
+    'preamble': r'''\usepackage{listings}
+        \usepackage{pifont}
+        \usepackage{newunicodechar}
+        \newunicodechar{✓}{\ding{51}}
+        \newunicodechar{✗}{\ding{55}}
+        \setcounter{tocdepth}{3}''',
 
     # Latex figure (float) alignment
     #

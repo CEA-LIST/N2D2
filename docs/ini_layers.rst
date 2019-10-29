@@ -1517,13 +1517,13 @@ Configuration parameters (*Frame* models)
 +--------------------------+-------------------+------------------------------------------------------------------------------+
 | Option [default value]   | Model(s)          | Description                                                                  |
 +==========================+===================+==============================================================================+
-| ``N`` [5]                | `` all Frame ``   | Normalization window width in elements                                       |
+| ``N`` [5]                | *all Frame*       | Normalization window width in elements                                       |
 +--------------------------+-------------------+------------------------------------------------------------------------------+
-| ``Alpha`` [1.0e-4]       | `` all Frame ``   | Value of the alpha variance scaling parameter in the normalization formula   |
+| ``Alpha`` [1.0e-4]       | *all Frame*       | Value of the alpha variance scaling parameter in the normalization formula   |
 +--------------------------+-------------------+------------------------------------------------------------------------------+
-| ``Beta`` [0.75]          | `` all Frame ``   | Value of the beta power parameter in the normalization formula               |
+| ``Beta`` [0.75]          | *all Frame*       | Value of the beta power parameter in the normalization formula               |
 +--------------------------+-------------------+------------------------------------------------------------------------------+
-| ``K`` [2.0]              | `` all Frame ``   | Value of the k parameter in normalization formula                            |
+| ``K`` [2.0]              | *all Frame*       | Value of the k parameter in normalization formula                            |
 +--------------------------+-------------------+------------------------------------------------------------------------------+
 
 LSTM 
@@ -1700,7 +1700,7 @@ Configuration parameters (*Frame* models)
 +--------------------------+-------------------+--------------------------------------------------------------------+
 | Option [default value]   | Model(s)          | Description                                                        |
 +==========================+===================+====================================================================+
-| ``Dropout`` [0.5]        | `` all Frame ``   | The probability with which the value from input would be dropped   |
+| ``Dropout`` [0.5]        | *all Frame*       | The probability with which the value from input would be dropped   |
 +--------------------------+-------------------+--------------------------------------------------------------------+
 
 Padding
