@@ -1829,8 +1829,7 @@ int main(int argc, char* argv[]) try
             else
                 deepNet->load("net_state");
         }
-        else if (opt.learnStdp == 0 && opt.load.empty() && (opt.weights.empty()
-            || opt.weights != "/dev/null"))
+        else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty())
         {
             if (database.getNbStimuli(Database::Validation) > 0)
                 deepNet->importNetworkFreeParameters("weights_validation");
