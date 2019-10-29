@@ -458,6 +458,60 @@ performances on the test data set:</p>
 <h3>Import an ONNX model<a class="headerlink" href="#import-an-onnx-model" title="Permalink to this headline">¶</a></h3>
 <p>Instead of loading a N2D2 INI file, you can directly import an ONNX model with
 the same command.</p>
+<p>Additionally, it is possible to include an ONNX model inside a N2D2 INI file.
+This is particularly useful to add pre-processing and post-processing to an
+existing ONNX model. Below is an example with the MobileNet ONNX model provided
+by Google:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">$BATCH_SIZE</span><span class="o">=</span><span class="s">256</span>
+
+<span class="na">DefaultModel</span><span class="o">=</span><span class="s">Frame_CUDA</span>
+
+<span class="c1">; Database</span>
+<span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ILSVRC2012_Database</span>
+<span class="na">RandomPartitioning</span><span class="o">=</span><span class="s">0</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">1.0</span>
+<span class="na">BackgroundClass</span><span class="o">=</span><span class="s">1  ; Necessary for Google MobileNet pre-trained models</span>
+
+<span class="c1">; Environment</span>
+<span class="k">[sp]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">224</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">224</span>
+<span class="na">NbChannels</span><span class="o">=</span><span class="s">3</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">${BATCH_SIZE}</span>
+
+<span class="k">[sp.Transformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">256</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">256</span>
+
+<span class="k">[sp.Transformation-2]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">PadCropTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">224</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">224</span>
+
+<span class="k">[sp.Transformation-3]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ColorSpaceTransformation</span>
+<span class="na">ColorSpace</span><span class="o">=</span><span class="s">RGB</span>
+
+<span class="k">[sp.Transformation-4]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RangeAffineTransformation</span>
+<span class="na">FirstOperator</span><span class="o">=</span><span class="s">Minus</span>
+<span class="na">FirstValue</span><span class="o">=</span><span class="s">127.5</span>
+<span class="na">SecondOperator</span><span class="o">=</span><span class="s">Divides</span>
+<span class="na">SecondValue</span><span class="o">=</span><span class="s">127.5</span>
+
+<span class="c1">; Here, we insert an ONNX graph in the N2D2 flow the same way as a regular Cell</span>
+<span class="k">[onnx]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">sp</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ONNX</span>
+<span class="na">File</span><span class="o">=</span><span class="s">mobilenet_v1_1.0_224.onnx</span>
+
+<span class="c1">; We can add targets to ONNX cells</span>
+<span class="k">[MobilenetV1/Predictions/Softmax:0.Target-Top5]</span>
+<span class="na">TopN</span><span class="o">=</span><span class="s">5</span>
+</pre></div>
+</div>
 <p>The table below summarizes the currently implemented ONNX operators:</p>
 <table class="docutils align-default">
 <colgroup>

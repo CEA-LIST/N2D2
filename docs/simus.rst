@@ -296,6 +296,63 @@ Import an ONNX model
 Instead of loading a N2D2 INI file, you can directly import an ONNX model with
 the same command.
 
+Additionally, it is possible to include an ONNX model inside a N2D2 INI file.
+This is particularly useful to add pre-processing and post-processing to an
+existing ONNX model. Below is an example with the MobileNet ONNX model provided
+by Google:
+
+.. code-block:: ini
+
+    $BATCH_SIZE=256
+
+    DefaultModel=Frame_CUDA
+
+    ; Database
+    [database]
+    Type=ILSVRC2012_Database
+    RandomPartitioning=0
+    Learn=1.0
+    BackgroundClass=1  ; Necessary for Google MobileNet pre-trained models
+
+    ; Environment
+    [sp]
+    SizeX=224
+    SizeY=224
+    NbChannels=3
+    BatchSize=${BATCH_SIZE}
+
+    [sp.Transformation-1]
+    Type=RescaleTransformation
+    Width=256
+    Height=256
+
+    [sp.Transformation-2]
+    Type=PadCropTransformation
+    Width=224
+    Height=224
+
+    [sp.Transformation-3]
+    Type=ColorSpaceTransformation
+    ColorSpace=RGB
+
+    [sp.Transformation-4]
+    Type=RangeAffineTransformation
+    FirstOperator=Minus
+    FirstValue=127.5
+    SecondOperator=Divides
+    SecondValue=127.5
+
+    ; Here, we insert an ONNX graph in the N2D2 flow the same way as a regular Cell
+    [onnx]
+    Input=sp
+    Type=ONNX
+    File=mobilenet_v1_1.0_224.onnx
+
+    ; We can add targets to ONNX cells
+    [MobilenetV1/Predictions/Softmax:0.Target-Top5]
+    TopN=5
+
+
 The table below summarizes the currently implemented ONNX operators:
 
 +-----------------------+-----------+---------------------------------------------+
