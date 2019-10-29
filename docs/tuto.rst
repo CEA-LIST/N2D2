@@ -608,7 +608,7 @@ stimulus is also generated automatically for the test dataset and can be
 visualized with the *./test.py* helper tool. An example is shown in
 figure [fig:targetvisu].
 
-.. figure:: _static/target_visu.pdf
+.. figure:: _static/target_visu.png
    :alt: Example of the target visualization helper tool.
 
    Example of the target visualization helper tool.

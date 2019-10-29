@@ -183,7 +183,7 @@ fully connected layers and a softmax output layer.
 
 The resulting DNN is shown in figure [fig:DNNExample].
 
-.. figure:: _static/dnn_example.pdf
+.. figure:: _static/dnn_example.png
    :alt: Automatically generated and ready to learn DNN from the INI
          configuration file example.
 
@@ -245,7 +245,7 @@ target platform. The applicative performance (recognition rate) as well
 as the computing time per input data can then be directly mesured by the
 testbench.
 
-.. figure:: _static/targets_benchmarking.pdf
+.. figure:: _static/targets_benchmarking.png
    :alt: Example of network benchmarking on different hardware targets.
 
    Example of network benchmarking on different hardware targets.
