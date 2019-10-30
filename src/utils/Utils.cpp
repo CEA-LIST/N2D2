@@ -19,6 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <cstring>
+#include <cerrno>
 #include <cmath>
 #include "utils/Utils.hpp"
 
@@ -491,13 +493,13 @@ bool N2D2::Utils::createDirectories(const std::string& dirName)
 
 std::string N2D2::Utils::exec(const std::string& cmd) {
 #ifdef WIN32
-    std::shared_ptr<FILE> pipe(_popen(cmd.c_str(), "r"), _pclose);
+    std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd.c_str(), "r"), _pclose);
 #else
-    std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
 #endif
 
     if (!pipe)
-        throw std::runtime_error("Utils::exec(): popen() failed!");
+        throw std::runtime_error("Utils::exec('" + cmd + "'): popen() failed: " + std::strerror(errno));
 
     std::string result;
     std::array<char, 128> buffer;

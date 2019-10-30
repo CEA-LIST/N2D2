@@ -26,6 +26,9 @@ std::tuple<std::string, std::string, std::string> N2D2::Gnuplot::mDefaultOutput
     = std::make_tuple<std::string, std::string, std::string>(
         "png", "size 800,600 enhanced large", "png");
 
+#include <cstring>
+#include <cerrno>
+
 N2D2::Gnuplot::Gnuplot(const std::string& fileName) : mSubPipe(false)
 {
     if (mMasterCmdPipe == NULL) {
@@ -36,8 +39,10 @@ N2D2::Gnuplot::Gnuplot(const std::string& fileName) : mSubPipe(false)
 #endif
 
         if (mCmdPipe == NULL)
-            throw std::runtime_error(
-                "Couldn't open connection to gnuplot (is it in the PATH?)");
+        {
+            std::string msg = "Couldn't open connection to gnuplot (is it in the PATH?): " + std::string(std::strerror(errno));
+            throw std::runtime_error(msg);
+        }
     } else {
         mSubPipe = true;
         mCmdPipe = mMasterCmdPipe;

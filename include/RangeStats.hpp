@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 
 namespace N2D2 {
 
