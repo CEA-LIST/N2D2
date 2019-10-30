@@ -40,12 +40,14 @@
 
 #ifdef ONNX
 #include "N2D2.hpp"
+#include "Activation/RectifierActivation.hpp"
 #include "Database/ILSVRC2012_Database.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "Transformation/PadCropTransformation.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"
 #include "Transformation/AffineTransformation.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/BatchNormCell.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DropoutCell.hpp"

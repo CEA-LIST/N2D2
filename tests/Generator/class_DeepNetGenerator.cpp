@@ -80,11 +80,11 @@ TEST(DeepNetGenerator, DeepNetGenerator)
                              "DefaultValue=-0.9\n"
                              "TopN=4\n";
 
-    UnitTest::FileWriteContent("DeepNetGenerator.in", data);
+    UnitTest::FileWriteContent("DeepNetGenerator.ini", data);
 
     Network net;
     std::shared_ptr<DeepNet> deepNet
-        = DeepNetGenerator::generate(net, "DeepNetGenerator.in");
+        = DeepNetGenerator::generate(net, "DeepNetGenerator.ini");
 
     std::shared_ptr<MNIST_IDX_Database> database = std::dynamic_pointer_cast
         <MNIST_IDX_Database>(deepNet->getDatabase());
