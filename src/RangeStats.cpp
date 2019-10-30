@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <cassert>
 #include "RangeStats.hpp"
 #include "utils/Gnuplot.hpp"
 
