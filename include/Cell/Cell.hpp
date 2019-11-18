@@ -161,6 +161,9 @@ public:
         return mDeepNet;
     }
 
+    std::vector<std::shared_ptr<Cell>> getChildrenCells() const;
+    std::vector<std::shared_ptr<Cell>> getParentsCells() const;
+
     /**
      * Check if an output map is connected to an input channel
      *

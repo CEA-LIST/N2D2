@@ -87,6 +87,14 @@ void N2D2::Cell::addMultiscaleInput(HeteroStimuliProvider& sp,
     }
 }
 
+std::vector<std::shared_ptr<N2D2::Cell>> N2D2::Cell::getChildrenCells() const {
+    return mDeepNet.getChildCells(mName);
+}
+
+std::vector<std::shared_ptr<N2D2::Cell>> N2D2::Cell::getParentsCells() const {
+    return mDeepNet.getParentCells(mName);
+}
+
 void N2D2::Cell::save(const std::string& dirName) const
 {
     Utils::createDirectories(dirName);
