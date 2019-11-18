@@ -29,6 +29,7 @@
 #include "third_party/half.hpp"
 #endif
 
+#include "FloatT.hpp"
 #include "ScalingMode.hpp"
 #include "containers/Tensor.hpp"
 #include "utils/Utils.hpp"
@@ -46,10 +47,10 @@ class AbstractScaling {
  */
 class FloatingPointScaling: public AbstractScaling {
 public:
-    FloatingPointScaling(std::vector<double> scalignPerOutput): 
+    FloatingPointScaling(std::vector<Float_T> scalignPerOutput): 
                             mScalingPerOutput(std::move(scalignPerOutput)) {}
 
-    const std::vector<double>& getScalingPerOutput() const {
+    const std::vector<Float_T>& getScalingPerOutput() const {
         return mScalingPerOutput;
     }
 
@@ -87,7 +88,7 @@ public:
     void propagate(CudaTensor<float>& data) const { 
         for(std::size_t batch = 0; batch < data.dimB(); batch++) {
             for(std::size_t output = 0; output < data.dimZ(); output++) {
-                const float alpha = static_cast<float>(mScalingPerOutput[output]);
+                const float alpha = mScalingPerOutput[output];
                 CHECK_CUBLAS_STATUS(
                     cublasSscal(CudaContext::cublasHandle(), data.dimY()*data.dimX(),
                                 &alpha, data.getDevicePtr() + 
@@ -115,7 +116,7 @@ private:
     }
 
 private:
-    std::vector<double> mScalingPerOutput;
+    std::vector<Float_T> mScalingPerOutput;
 };
 
 /**
@@ -192,7 +193,7 @@ class Scaling {
 public:
     Scaling();
 
-    static Scaling floatingPointScaling(std::vector<double> scalingPerOutput) {
+    static Scaling floatingPointScaling(std::vector<Float_T> scalingPerOutput) {
         return Scaling(ScalingMode::FLOAT_MULT, 
                        Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput)));
     }

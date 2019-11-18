@@ -79,7 +79,7 @@ private:
                                       ScalingMode actScalingMode);
     
     static std::vector<std::vector<unsigned char>> approximateRescalingsWithPowerOf2Divs(Cell& cell, 
-                                                const std::vector<double>& scalingPerOutput, 
+                                                const std::vector<Float_T>& scalingPerOutput, 
                                                 std::size_t nbDivisions);
 
     /**
