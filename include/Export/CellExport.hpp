@@ -89,7 +89,7 @@ public:
     static long long int getIntFreeParameter(double value);
 
     /**
-     * If the ActivationScalingMode of the cell activation is a SINGLE_SHIFT, 
+     * If the ScalingMode of the cell activation is a SINGLE_SHIFT, 
      * then add a ' + HALF' to the stream so that the rounding of the scaling can be
      * merged into the bias of the cell.
      */

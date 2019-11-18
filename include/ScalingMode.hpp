@@ -18,13 +18,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_ACTIVATION_SCALING_MODE_H
-#define N2D2_ACTIVATION_SCALING_MODE_H
+#ifndef N2D2_SCALING_MODE_H
+#define N2D2_SCALING_MODE_H
 
 #include <stdexcept>
 #include <string>
 
-enum class ActivationScalingMode {
+enum class ScalingMode {
     NONE,
     FLOAT_MULT,
     FIXED_MULT,
@@ -32,24 +32,24 @@ enum class ActivationScalingMode {
     DOUBLE_SHIFT,
 };
 
-inline ActivationScalingMode parseActivationScalingMode(const std::string& str) {
+inline ScalingMode parseScalingMode(const std::string& str) {
     if(str == "Floating-point") {
-        return ActivationScalingMode::FLOAT_MULT;
+        return ScalingMode::FLOAT_MULT;
     }
 
     if(str == "Fixed-point") {
-        return ActivationScalingMode::FIXED_MULT;
+        return ScalingMode::FIXED_MULT;
     }
 
     if(str == "Single-shift") {
-        return ActivationScalingMode::SINGLE_SHIFT;
+        return ScalingMode::SINGLE_SHIFT;
     }
 
     if(str == "Double-shift") {
-        return ActivationScalingMode::DOUBLE_SHIFT;
+        return ScalingMode::DOUBLE_SHIFT;
     }
 
-    throw std::runtime_error("Unknown activation recaling mode '" + str + "'.");
+    throw std::runtime_error("Unknown scaling mode '" + str + "'.");
 }
 
 #endif

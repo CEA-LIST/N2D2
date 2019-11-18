@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "Scaling.hpp"
 #include "Activation/Activation.hpp"
-#include "Activation/ActivationScaling.hpp"
 
 N2D2::Activation::Activation()
     : mQuantizationLevels(this, "QuantizationLevels", 0U),
@@ -37,11 +37,11 @@ N2D2::Activation::Activation()
 }
 
 
-const N2D2::ActivationScaling& N2D2::Activation::getActivationScaling() const {
+const N2D2::Scaling& N2D2::Activation::getActivationScaling() const {
     return mScaling;
 }
 
-void N2D2::Activation::setActivationScaling(ActivationScaling scaling) {
+void N2D2::Activation::setActivationScaling(Scaling scaling) {
     mScaling = std::move(scaling);
 }
 

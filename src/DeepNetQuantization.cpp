@@ -26,8 +26,8 @@
 #include "DeepNetQuantization.hpp"
 #include "Histogram.hpp"
 #include "RangeStats.hpp"
+#include "ScalingMode.hpp"
 #include "StimuliProvider.hpp"
-#include "Activation/ActivationScalingMode.hpp"
 #include "Activation/LinearActivation.hpp"
 #include "Activation/LogisticActivation.hpp"
 #include "Activation/RectifierActivation.hpp"
@@ -156,7 +156,7 @@ void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(double n
         }
 
 
-        activation->setActivationScaling(ActivationScaling::floatingPointScaling(
+        activation->setActivationScaling(Scaling::floatingPointScaling(
                                             std::move(actScalingPerOutput
                                         )));
         bNorm *= maxNorm;
@@ -358,7 +358,7 @@ void N2D2::DeepNetQuantization::normalizeOutputsRange(const std::unordered_map<s
 }
 
 void N2D2::DeepNetQuantization::quantizeNormalizedNetwork(std::size_t nbBits, 
-                                                          ActivationScalingMode actScalingMode) 
+                                                          ScalingMode actScalingMode) 
 {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
@@ -479,17 +479,17 @@ double N2D2::DeepNetQuantization::getCellThreshold(const std::string& cellName,
 }
 
 void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& activation,
-                                                      ActivationScalingMode actScalingMode) 
+                                                      ScalingMode actScalingMode) 
 {
-    assert(activation.getActivationScaling().getMode() == ActivationScalingMode::FLOAT_MULT);
+    assert(activation.getActivationScaling().getMode() == ScalingMode::FLOAT_MULT);
 
     const std::vector<double>& scalingPerOutput = activation.getActivationScaling()
                                                             .getFloatingPointScaling()
                                                             .getScalingPerOutput();
-    if(actScalingMode == ActivationScalingMode::FLOAT_MULT) {
+    if(actScalingMode == ScalingMode::FLOAT_MULT) {
         // Nothing to do.
     }
-    else if(actScalingMode == ActivationScalingMode::FIXED_MULT) {
+    else if(actScalingMode == ScalingMode::FIXED_MULT) {
         /**
          * Find the highest nbFractionalBits so that the scaling 
          * 'std::round(sc * (1ull << nbFractionalBits)' of each output
@@ -518,19 +518,18 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
             scalingFixedPoint.push_back(std::round(sc * (1ull << nbFractionalBits)));
         }
 
-        activation.setActivationScaling(ActivationScaling::fixedPointScaling(nbFractionalBits, 
-                                                                             scalingFixedPoint));
+        activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint));
     }
-    else if(actScalingMode == ActivationScalingMode::SINGLE_SHIFT) {
+    else if(actScalingMode == ScalingMode::SINGLE_SHIFT) {
         std::vector<unsigned char> shifts;
         for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 1)) {
             assert(powOf2Exponents.size() == 1);
             shifts.push_back(powOf2Exponents[0]);
         }
 
-        activation.setActivationScaling(ActivationScaling::singleShiftScaling(shifts));
+        activation.setActivationScaling(Scaling::singleShiftScaling(shifts));
     }
-    else if(actScalingMode == ActivationScalingMode::DOUBLE_SHIFT) {
+    else if(actScalingMode == ScalingMode::DOUBLE_SHIFT) {
         std::vector<std::pair<unsigned char, unsigned char>> shifts;
         for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 2)) {
             assert(powOf2Exponents.size() == 2);
@@ -538,7 +537,7 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
             shifts.push_back({powOf2Exponents[1] - powOf2Exponents[0], powOf2Exponents[1]});
         }
 
-        activation.setActivationScaling(ActivationScaling::doubleShiftScaling(shifts));
+        activation.setActivationScaling(Scaling::doubleShiftScaling(shifts));
     }
     else {
         throw std::runtime_error("Unsupported scaling mode.");
@@ -548,14 +547,14 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
 void N2D2::DeepNetQuantization::rescaleActivationOutputs(const Cell& cell, Activation& activation,
                                                          double scalingFactor, double prevScalingFactor)
 {
-    const ActivationScalingMode scalingMode = activation.getActivationScaling().getMode();
+    const ScalingMode scalingMode = activation.getActivationScaling().getMode();
     
     std::vector<double> scalingPerOutput(cell.getNbOutputs());
     for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
-        if(scalingMode == ActivationScalingMode::NONE) {
+        if(scalingMode == ScalingMode::NONE) {
             scalingPerOutput[output] = 1 / (scalingFactor / prevScalingFactor);
         }
-        else if(scalingMode == ActivationScalingMode::FLOAT_MULT) {
+        else if(scalingMode == ScalingMode::FLOAT_MULT) {
             const double actScaling = activation.getActivationScaling()
                                                 .getFloatingPointScaling()
                                                 .getScalingPerOutput()[output];
@@ -566,16 +565,16 @@ void N2D2::DeepNetQuantization::rescaleActivationOutputs(const Cell& cell, Activ
         }
     }
 
-    activation.setActivationScaling(ActivationScaling::floatingPointScaling(std::move(scalingPerOutput)));
+    activation.setActivationScaling(Scaling::floatingPointScaling(std::move(scalingPerOutput)));
 }
 
 void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activation& activation, 
                                                            std::size_t nbBits, 
-                                                           ActivationScalingMode actScalingMode) 
+                                                           ScalingMode actScalingMode) 
 {
-    const ActivationScalingMode scalingMode = activation.getActivationScaling().getMode();
-    if(scalingMode != ActivationScalingMode::FLOAT_MULT) {
-        assert(scalingMode == ActivationScalingMode::NONE);
+    const ScalingMode scalingMode = activation.getActivationScaling().getMode();
+    if(scalingMode != ScalingMode::FLOAT_MULT) {
+        assert(scalingMode == ScalingMode::NONE);
         return;
     }
 
@@ -611,8 +610,8 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
     // be really rare
     // TODO Find a network where it happens and test how well it works
     const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
-    if(maxScaling > 1.0 && (actScalingMode == ActivationScalingMode::SINGLE_SHIFT || 
-                            actScalingMode == ActivationScalingMode::DOUBLE_SHIFT))
+    if(maxScaling > 1.0 && (actScalingMode == ScalingMode::SINGLE_SHIFT || 
+                            actScalingMode == ScalingMode::DOUBLE_SHIFT))
     {
         for(double& scaling: scalingPerOutput) {
             scaling /= maxScaling;
@@ -620,7 +619,7 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
     }
 
     activation.setActivationScaling(
-        ActivationScaling::floatingPointScaling(std::move(scalingPerOutput))
+        Scaling::floatingPointScaling(std::move(scalingPerOutput))
     );
 }
 

@@ -24,7 +24,7 @@
 #include <iosfwd>
 #include <vector>
 
-#include "Activation/ActivationScaling.hpp"
+#include "Scaling.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
@@ -49,8 +49,8 @@ public:
 
     void setPreQuantizeScaling(double scaling);
 
-    const ActivationScaling& getActivationScaling() const;
-    void setActivationScaling(ActivationScaling scaling);
+    const Scaling& getActivationScaling() const;
+    void setActivationScaling(Scaling scaling);
 
 protected:
     virtual void saveInternal(std::ostream& /*state*/,
@@ -79,7 +79,7 @@ protected:
     unsigned long long int mNbSteps;
     double mPreQuantizeScaling;
 
-    ActivationScaling mScaling;
+    Scaling mScaling;
 };
 }
 

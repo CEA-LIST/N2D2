@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_ACTIVATION_SCALING_H
-#define N2D2_ACTIVATION_SCALING_H
+#ifndef N2D2_SCALING_H
+#define N2D2_SCALING_H
 
 #include <iosfwd>
 #include <vector>
@@ -29,7 +29,7 @@
 #include "third_party/half.hpp"
 #endif
 
-#include "Activation/ActivationScalingMode.hpp"
+#include "ScalingMode.hpp"
 #include "containers/Tensor.hpp"
 #include "utils/Utils.hpp"
 
@@ -188,56 +188,56 @@ private:
 };
 
 
-class ActivationScaling {
+class Scaling {
 public:
-    ActivationScaling();
+    Scaling();
 
-    static ActivationScaling floatingPointScaling(std::vector<double> scalingPerOutput) {
-        return ActivationScaling(ActivationScalingMode::FLOAT_MULT, 
-                                 Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput)));
+    static Scaling floatingPointScaling(std::vector<double> scalingPerOutput) {
+        return Scaling(ScalingMode::FLOAT_MULT, 
+                       Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput)));
     }
 
-    static ActivationScaling fixedPointScaling(std::size_t nbFractionalBits, 
-                                               std::vector<std::int32_t> scalingPerOutput) 
+    static Scaling fixedPointScaling(std::size_t nbFractionalBits, 
+                                     std::vector<std::int32_t> scalingPerOutput) 
     {
-        return ActivationScaling(ActivationScalingMode::FIXED_MULT, 
-                                 Utils::make_unique<FixedPointScaling>(nbFractionalBits, 
-                                                                       std::move(scalingPerOutput)));
+        return Scaling(ScalingMode::FIXED_MULT, 
+                       Utils::make_unique<FixedPointScaling>(nbFractionalBits, 
+                                                             std::move(scalingPerOutput)));
     }
 
-    static ActivationScaling singleShiftScaling(std::vector<unsigned char> scalingPerOutput) {
-        return ActivationScaling(ActivationScalingMode::SINGLE_SHIFT, 
-                                 Utils::make_unique<SingleShiftScaling>(std::move(scalingPerOutput)));
+    static Scaling singleShiftScaling(std::vector<unsigned char> scalingPerOutput) {
+        return Scaling(ScalingMode::SINGLE_SHIFT, 
+                       Utils::make_unique<SingleShiftScaling>(std::move(scalingPerOutput)));
     }
 
-    static ActivationScaling doubleShiftScaling(std::vector<std::pair<unsigned char, 
-                                                                      unsigned char>> scalingPerOutput) 
+    static Scaling doubleShiftScaling(std::vector<std::pair<unsigned char, 
+                                                            unsigned char>> scalingPerOutput) 
     {
-        return ActivationScaling(ActivationScalingMode::DOUBLE_SHIFT, 
-                                 Utils::make_unique<DoubleShiftScaling>(std::move(scalingPerOutput)));
+        return Scaling(ScalingMode::DOUBLE_SHIFT, 
+                       Utils::make_unique<DoubleShiftScaling>(std::move(scalingPerOutput)));
     }
 
-    ActivationScalingMode getMode() const {
+    ScalingMode getMode() const {
         return mMode;
     }
 
     const FloatingPointScaling& getFloatingPointScaling() const {
-        assert(mMode == ActivationScalingMode::FLOAT_MULT);
+        assert(mMode == ScalingMode::FLOAT_MULT);
         return static_cast<const FloatingPointScaling&>(*mScaling);
     }
 
     const FixedPointScaling& getFixedPointScaling() const {
-        assert(mMode == ActivationScalingMode::FIXED_MULT);
+        assert(mMode == ScalingMode::FIXED_MULT);
         return static_cast<const FixedPointScaling&>(*mScaling);
     }
 
     const SingleShiftScaling& getSingleShiftScaling() const {
-        assert(mMode == ActivationScalingMode::SINGLE_SHIFT);
+        assert(mMode == ScalingMode::SINGLE_SHIFT);
         return static_cast<const SingleShiftScaling&>(*mScaling);
     }
 
     const DoubleShiftScaling& getDoubleShiftScaling() const {
-        assert(mMode == ActivationScalingMode::DOUBLE_SHIFT);
+        assert(mMode == ScalingMode::DOUBLE_SHIFT);
         return static_cast<const DoubleShiftScaling&>(*mScaling);
     }
 
@@ -256,19 +256,19 @@ public:
 #endif
 
 private:
-    ActivationScaling(ActivationScalingMode mode, std::unique_ptr<AbstractScaling> scaling);
+    Scaling(ScalingMode mode, std::unique_ptr<AbstractScaling> scaling);
 
 private:
-    ActivationScalingMode mMode;
+    ScalingMode mMode;
     std::unique_ptr<AbstractScaling> mScaling;
 };
 
 template<class T>
-inline void ActivationScaling::propagate(Tensor<T>& data) const {
+inline void Scaling::propagate(Tensor<T>& data) const {
     switch(mMode) {
-        case ActivationScalingMode::NONE:
+        case ScalingMode::NONE:
             break;
-        case ActivationScalingMode::FLOAT_MULT:
+        case ScalingMode::FLOAT_MULT:
             static_cast<FloatingPointScaling&>(*mScaling).propagate(data);
             break;
         default:
@@ -277,8 +277,8 @@ inline void ActivationScaling::propagate(Tensor<T>& data) const {
 }
 
 template<class T>
-inline void ActivationScaling::backPropagate(Tensor<T>& /*data*/, Tensor<T>& /*diffData*/) const {
-    if(mMode == ActivationScalingMode::NONE) {
+inline void Scaling::backPropagate(Tensor<T>& /*data*/, Tensor<T>& /*diffData*/) const {
+    if(mMode == ScalingMode::NONE) {
         return;
     }
 
@@ -288,11 +288,11 @@ inline void ActivationScaling::backPropagate(Tensor<T>& /*data*/, Tensor<T>& /*d
 
 #ifdef CUDA
 template<class T>
-inline void ActivationScaling::propagate(CudaTensor<T>& data) const {
+inline void Scaling::propagate(CudaTensor<T>& data) const {
     switch(mMode) {
-        case ActivationScalingMode::NONE:
+        case ScalingMode::NONE:
             break;
-        case ActivationScalingMode::FLOAT_MULT:
+        case ScalingMode::FLOAT_MULT:
             static_cast<FloatingPointScaling&>(*mScaling).propagate(data);
             break;
         default:
@@ -301,8 +301,8 @@ inline void ActivationScaling::propagate(CudaTensor<T>& data) const {
 }
 
 template<class T>
-inline void ActivationScaling::backPropagate(CudaTensor<T>& /*data*/, CudaTensor<T>& /*diffData*/) const {
-    if(mMode == ActivationScalingMode::NONE) {
+inline void Scaling::backPropagate(CudaTensor<T>& /*data*/, CudaTensor<T>& /*diffData*/) const {
+    if(mMode == ScalingMode::NONE) {
         return;
     }
 

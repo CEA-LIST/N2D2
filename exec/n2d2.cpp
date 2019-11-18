@@ -55,8 +55,8 @@
 #include "Histogram.hpp"
 #include "NodeEnv.hpp"
 #include "RangeStats.hpp"
+#include "ScalingMode.hpp"
 #include "StimuliProvider.hpp"
-#include "Activation/ActivationScalingMode.hpp"
 #include "Activation/LogisticActivation.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/SoftmaxCell.hpp"
@@ -253,7 +253,7 @@ public:
                            opts.parse("-act-clipping-mode", std::string("MSE"), 
                                           "activation clipping mode on export, "
                                           "can be 'None', 'MSE' or 'KL-Divergence'"));
-        actScalingMode = parseActivationScalingMode(
+        actScalingMode = parseScalingMode(
                            opts.parse("-act-rescaling-mode", std::string("Single-shift"), 
                                           "activation scaling mode on export, "
                                           "can be 'Floating-point', 'Fixed-point', 'Single-shift' "
@@ -324,7 +324,7 @@ public:
     int calibration;
     ClippingMode wtClippingMode;
     ClippingMode actClippingMode;
-    ActivationScalingMode actScalingMode;
+    ScalingMode actScalingMode;
     bool actRescalePerOutput;
     bool exportNoUnsigned;
     double timeStep;

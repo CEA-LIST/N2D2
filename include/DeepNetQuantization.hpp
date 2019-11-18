@@ -25,8 +25,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Activation/ActivationScalingMode.hpp"
 #include "Histogram.hpp"
+#include "ScalingMode.hpp"
 
 namespace N2D2 {
 
@@ -59,12 +59,12 @@ public:
                                ClippingMode actClippingMode);
 
 
-    void quantizeNormalizedNetwork(std::size_t nbBits, ActivationScalingMode actScalingMode);
+    void quantizeNormalizedNetwork(std::size_t nbBits, ScalingMode actScalingMode);
     
 private:
     static void quantizeActivationScaling(Cell& cell, Activation& activation, 
                                           std::size_t nbBits, 
-                                          ActivationScalingMode actScalingMode);
+                                          ScalingMode actScalingMode);
     static void quantizeFreeParemeters(Cell& cell, std::size_t nbBits);
 
     static double getCellThreshold(const std::string& cellName,
@@ -76,7 +76,7 @@ private:
                                          double scalingFactor, double prevScalingFactor);
 
     static void approximateRescalings(Cell& cell, Activation& activation,
-                                      ActivationScalingMode actScalingMode);
+                                      ScalingMode actScalingMode);
     
     static std::vector<std::vector<unsigned char>> approximateRescalingsWithPowerOf2Divs(Cell& cell, 
                                                 const std::vector<double>& scalingPerOutput, 

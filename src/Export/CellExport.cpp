@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Activation/ActivationScalingMode.hpp"
+#include "ScalingMode.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/CellExport.hpp"
@@ -98,7 +98,7 @@ void N2D2::CellExport::generateFreeParameter(double value, std::ostream& stream,
 void N2D2::CellExport::generateSingleShiftHalfAddition(const Cell_Frame_Top& cellFrame, std::size_t output, 
                                                        std::ostream& stream)
 {
-    if(cellFrame.getActivation()->getActivationScaling().getMode() == ActivationScalingMode::SINGLE_SHIFT) {
+    if(cellFrame.getActivation()->getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
         const std::size_t shift = cellFrame.getActivation()->getActivationScaling()
                                                             .getSingleShiftScaling()
                                                             .getScalingPerOutput()[output];

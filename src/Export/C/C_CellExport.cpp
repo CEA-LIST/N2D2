@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "ScalingMode.hpp"
 #include "Activation/Activation.hpp"
-#include "Activation/ActivationScalingMode.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/C/C_CellExport.hpp"
 
@@ -71,10 +71,10 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
     }
     
     const Activation& activation = *cellFrame.getActivation();
-    if(activation.getActivationScaling().getMode() == ActivationScalingMode::NONE) {
+    if(activation.getActivationScaling().getMode() == ScalingMode::NONE) {
         header << "#define " << prefix << "_SHIFT 0\n";
     }
-    else if(activation.getActivationScaling().getMode() == ActivationScalingMode::SINGLE_SHIFT) {
+    else if(activation.getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
         const std::vector<unsigned char>& scaling = activation.getActivationScaling()
                                                               .getSingleShiftScaling()
                                                               .getScalingPerOutput();
