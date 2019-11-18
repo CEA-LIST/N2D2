@@ -846,7 +846,7 @@ void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
     }
 }
 
-void N2D2::ConvCell::processFreeParametersPerOutput(std::function<double(double)> func, 
+void N2D2::ConvCell::processFreeParametersPerOutput(std::function<Float_T(Float_T)> func, 
                                                     std::size_t output,
                                                     FreeParametersType type) 
 {
@@ -876,7 +876,7 @@ void N2D2::ConvCell::processFreeParametersPerOutput(std::function<double(double)
     }    
 }
 
-void N2D2::ConvCell::processFreeParameters(std::function<double(double)> func,
+void N2D2::ConvCell::processFreeParameters(std::function<Float_T(Float_T)> func,
                                            FreeParametersType type)
 {
     for (std::size_t output = 0; output < getNbOutputs(); ++output) {

@@ -61,12 +61,12 @@ void N2D2::DeepNetQuantization::clipWeights(std::size_t nbBits, ClippingMode wtC
             }
 
             Histogram hist(-maxWeight, maxWeight, nbBins);
-            cell->processFreeParameters([&](double wt) { 
+            cell->processFreeParameters([&](Float_T wt) { 
                 hist(wt);
                 return wt; 
             }, Cell::Multiplicative);
 
-            double threshold;
+            Float_T threshold;
             switch(wtClippingMode) {
                 case ClippingMode::KL_DIVERGENCE:
                     threshold = hist.calibrateKLDivergence(nbBits);
@@ -78,15 +78,15 @@ void N2D2::DeepNetQuantization::clipWeights(std::size_t nbBits, ClippingMode wtC
                     throw std::runtime_error("Unsupported clipping mode.");
             }
 
-            cell->processFreeParameters([&](double wt) { 
+            cell->processFreeParameters([&](Float_T wt) { 
                 return Utils::clamp(wt, -threshold, threshold); 
             }, Cell::Multiplicative);
         }
     }
 }
 
-void N2D2::DeepNetQuantization::normalizeFreeParameters(double normFactor) {
-    double bNorm = 1.0;
+void N2D2::DeepNetQuantization::normalizeFreeParameters(Float_T normFactor) {
+    Float_T bNorm = 1.0;
 
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
@@ -103,18 +103,18 @@ void N2D2::DeepNetQuantization::normalizeFreeParameters(double normFactor) {
 
         if (bNorm != 1.0) {
             assert(bNorm > 0.0);
-            cell->processFreeParameters([&](double d) { return d/bNorm; }, Cell::Additive);
+            cell->processFreeParameters([&](Float_T d) { return d/bNorm; }, Cell::Additive);
         }
 
         if(norm != 0.0) {
-            cell->processFreeParameters([&](double d) { return d/norm; });
+            cell->processFreeParameters([&](Float_T d) { return d/norm; });
             bNorm *= norm;
         }
     }
 }
 
-void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(double normFactor) {
-    double bNorm = 1.0;
+void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(Float_T normFactor) {
+    Float_T bNorm = 1.0;
 
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
@@ -135,7 +135,7 @@ void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(double n
 
         if (bNorm != 1.0) {
             assert(bNorm > 0.0);
-            cell->processFreeParameters([&](double d) { return d/bNorm; }, Cell::Additive);
+            cell->processFreeParameters([&](Float_T d) { return d/bNorm; }, Cell::Additive);
         }
 
         const auto wMinMax = cell->getFreeParametersRange(false);
@@ -151,7 +151,7 @@ void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(double n
             const Float_T norm = std::max(std::min(maxNorm, 0.1f), 
                                           Utils::max_abs(woMinMax.first, woMinMax.second))/normFactor;
 
-            cell->processFreeParametersPerOutput([&](double d) { return d/norm; }, output);
+            cell->processFreeParametersPerOutput([&](Float_T d) { return d/norm; }, output);
             actScalingPerOutput[output] = norm/maxNorm;
         }
 
@@ -163,13 +163,13 @@ void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(double n
     }
 }
 
-void N2D2::DeepNetQuantization::rescaleAdditiveParameters(double rescaleFactor) {
+void N2D2::DeepNetQuantization::rescaleAdditiveParameters(Float_T rescaleFactor) {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
 
     for (auto it = layers.begin() + 1; it != layers.end(); ++it) {
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
             std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
-            cell->processFreeParameters([&](double v) { return v/rescaleFactor; }, 
+            cell->processFreeParameters([&](Float_T v) { return v/rescaleFactor; }, 
                                         Cell::Additive);
         }
     }
@@ -345,7 +345,7 @@ void N2D2::DeepNetQuantization::normalizeOutputsRange(const std::unordered_map<s
         rescaleActivationOutputs(*cell, *activation, 
                                  scalingFactor, prevScalingFactor);
 
-        cell->processFreeParameters([&](double d) { return d/prevScalingFactor; },
+        cell->processFreeParameters([&](Float_T d) { return d/prevScalingFactor; },
                                     Cell::Additive);
         
 
@@ -453,7 +453,7 @@ std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateRe
 
         // Rescale the weights and biasses of the cell to compensate the lost precision
         // of the approximation.
-        cell.processFreeParametersPerOutput([&](double d){ 
+        cell.processFreeParametersPerOutput([&](Float_T d){ 
                                                 return rescaleOutputsBy*d; 
                                             }, output);
     }
@@ -624,12 +624,12 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
 }
 
 void N2D2::DeepNetQuantization::quantizeFreeParemeters(Cell& cell, std::size_t nbBits) {
-    cell.processFreeParameters([&](double wt) { 
+    cell.processFreeParameters([&](Float_T wt) { 
         const double scaling = (double) std::pow(2, nbBits - 1) - 1;
         return std::round(wt*scaling);
     }, Cell::Multiplicative);
 
-    cell.processFreeParameters([&](double bias) { 
+    cell.processFreeParameters([&](Float_T bias) { 
         // For the bias we also need to scale it by the maximum value of the input type.
         // A bias is just like an extra connection where the input is equal to 1.0.
         

@@ -192,9 +192,9 @@ public:
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
                                                                    bool withAdditiveParameters) const;
     
-    virtual void processFreeParameters(std::function<double(double)> func,
+    virtual void processFreeParameters(std::function<Float_T(Float_T)> func,
                                        FreeParametersType type = All);
-    virtual void processFreeParametersPerOutput(std::function<double(double)> /*func*/,
+    virtual void processFreeParametersPerOutput(std::function<Float_T(Float_T)> /*func*/,
                                                 std::size_t /*output*/,
                                                 FreeParametersType /*type*/ = All);
     

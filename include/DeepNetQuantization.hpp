@@ -42,9 +42,9 @@ public:
     void clipWeights(std::size_t nbBits, ClippingMode wtClippingMode);
 
 
-    void normalizeFreeParameters(double normFactor = 1.0);
-    void normalizeFreeParametersPerOutputChannel(double normFactor = 1.0);
-    void rescaleAdditiveParameters(double rescaleFactor);
+    void normalizeFreeParameters(Float_T normFactor = 1.0);
+    void normalizeFreeParametersPerOutputChannel(Float_T normFactor = 1.0);
+    void rescaleAdditiveParameters(Float_T rescaleFactor);
 
 
     void reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const;

@@ -1059,7 +1059,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output
 }
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<double(double)> func,
+void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<Float_T(Float_T)> func,
                                                          FreeParametersType type)
 {
     for (unsigned int i = 0; i < mInputs.size(); ++i)
@@ -1078,7 +1078,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<double(do
 }
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<double(double)> func,
+void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<Float_T(Float_T)> func,
                                                                   std::size_t output,
                                                                   FreeParametersType type)
 {
