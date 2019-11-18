@@ -220,3 +220,7 @@ void N2D2::PoolCell::setOutputsDims()
                                            / (double)mStrideDims[dim]);
     }
 }
+
+std::pair<double, double> N2D2::PoolCell::getOutputsRange() const {
+    return Cell::getOutputsRangeParents();
+}

@@ -394,6 +394,10 @@ void N2D2::ElemWiseCell_Frame_CUDA::checkGradient(double epsilon, double maxErro
     }
 }
 
+std::pair<double, double> N2D2::ElemWiseCell_Frame_CUDA::getOutputsRange() const {
+    const auto& activation = Cell_Frame_CUDA<Float_T>::getActivation();
+    return activation?activation->getOutputRange():ElemWiseCell::getOutputsRange();
+}
 
 N2D2::ElemWiseCell_Frame_CUDA::~ElemWiseCell_Frame_CUDA()
 {

@@ -42,6 +42,9 @@ public:
     {
         return Type;
     };
+
+    std::pair<double, double> getOutputRange() const;
+
     virtual ~RectifierActivation() {};
 
 protected:

@@ -76,6 +76,9 @@ public:
         mArgMax.push_back(argMax);
     };
     void addArgMax(Interface<PoolCell_Frame_Kernels::ArgMax>* argMax);
+    
+    std::pair<double, double> getOutputsRange() const;
+
     virtual ~UnpoolCell_Frame_CUDA();
 
 protected:

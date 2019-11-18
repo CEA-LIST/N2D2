@@ -53,3 +53,34 @@ void N2D2::ElemWiseCell::setOutputsDims()
     mOutputsDims[0] = mInputsDims[0];
 
 }
+
+std::pair<double, double> N2D2::ElemWiseCell::getOutputsRange() const {
+    const std::pair<double, double> parentOutputsRange = Cell::getOutputsRangeParents();
+
+    const double inf = std::numeric_limits<double>::infinity();
+    if(mOperation == EuclideanSum) {
+        return std::make_pair(0, inf);
+    }
+
+    if(parentOutputsRange.first >= 0.0) {
+        if(mOperation == Sum && 
+           std::all_of(mShifts.begin(), mShifts.end(), [](Float_T v) { return v >= 0.0; }) && 
+           std::all_of(mWeights.begin(), mWeights.end(), [](Float_T v) { return v >= 0.0; }))
+        {
+            return std::make_pair(0, inf);
+        }
+        else if(mOperation == AbsSum && 
+                std::all_of(mWeights.begin(), mWeights.end(), [](Float_T v) { return v >= 0.0; }))
+        {
+            return std::make_pair(0, inf);
+        }
+        else if(mOperation == Prod) {
+            return std::make_pair(0, inf);
+        }
+        else if(mOperation == Max) {
+            return std::make_pair(0, inf);
+        }
+    }
+
+    return std::make_pair(-inf, inf);
+}

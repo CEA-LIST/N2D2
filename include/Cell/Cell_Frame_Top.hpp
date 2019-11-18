@@ -86,6 +86,18 @@ public:
     {
         mActivation = activation;
     };
+
+    /**
+     * Return the possible range of the cell outputs as a pair of min-max. 
+     * 
+     * By default return the activation range if an activation is present, 
+     * otherwise the [-infinity;+infity] range is returned.
+     */
+    virtual std::pair<double, double> getOutputsRange() const {
+        const double inf = std::numeric_limits<double>::infinity();
+        return mActivation?mActivation->getOutputRange():std::make_pair(-inf, inf);
+    }
+
     virtual bool isCuda() const = 0;
     virtual ~Cell_Frame_Top() {};
 

@@ -42,8 +42,15 @@ public:
     virtual ~Activation() {};
 
     virtual const char* getType() const = 0;
+
     virtual void propagate(BaseTensor& data, bool inference = false) = 0;
     virtual void backPropagate(BaseTensor& data, BaseTensor& diffData) = 0;
+
+    /**
+     * Return the possible range of the activation's output as a pair of min-max. 
+     */
+    virtual std::pair<double, double> getOutputRange() const = 0;
+
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
 

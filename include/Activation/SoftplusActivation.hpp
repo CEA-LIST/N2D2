@@ -41,6 +41,9 @@ public:
     {
         return Type;
     };
+
+    std::pair<double, double> getOutputRange() const;
+
     virtual ~SoftplusActivation() {};
 };
 }

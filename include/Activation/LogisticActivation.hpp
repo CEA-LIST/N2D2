@@ -45,6 +45,9 @@ public:
     {
         return (mWithLoss) ? TypeWithLoss : Type;
     };
+
+    std::pair<double, double> getOutputRange() const;
+    
     virtual ~LogisticActivation() {};
 
 protected:

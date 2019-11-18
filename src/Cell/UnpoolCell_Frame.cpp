@@ -208,3 +208,8 @@ void N2D2::UnpoolCell_Frame::addArgMax(
     for (unsigned int k = 0; k < argMax->size(); ++k)
         mArgMax.push_back(&(*argMax)[k]);
 }
+
+std::pair<double, double> N2D2::UnpoolCell_Frame::getOutputsRange() const {
+    const auto& activation = Cell_Frame<Float_T>::getActivation();
+    return activation?activation->getOutputRange():UnpoolCell::getOutputsRange();
+}

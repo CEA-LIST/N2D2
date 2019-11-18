@@ -28,3 +28,7 @@ N2D2::LogisticActivation::LogisticActivation(bool withLoss)
 {
     // ctor
 }
+
+std::pair<double, double> N2D2::LogisticActivation::getOutputRange() const {
+    return std::make_pair(0.0, 1.0);
+}

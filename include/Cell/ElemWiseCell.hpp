@@ -93,7 +93,9 @@ public:
 
 protected:
     virtual void setOutputsDims();
+    std::pair<double, double> getOutputsRange() const;
 
+protected:
     // Operation type
     const Operation mOperation;
     // Block coefficients

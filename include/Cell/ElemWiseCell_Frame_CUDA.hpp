@@ -69,6 +69,9 @@ public:
     virtual void backPropagate();
     virtual void update();
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
+    
+    std::pair<double, double> getOutputsRange() const;
+
     virtual ~ElemWiseCell_Frame_CUDA();
 
 protected:

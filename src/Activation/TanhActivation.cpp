@@ -28,3 +28,7 @@ N2D2::TanhActivation::TanhActivation()
 {
     // ctor
 }
+
+std::pair<double, double> N2D2::TanhActivation::getOutputRange() const {
+    return std::make_pair(-1.0, 1.0);
+}

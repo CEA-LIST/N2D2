@@ -213,3 +213,7 @@ void N2D2::UnpoolCell::setOutputsDims()
             + mPoolDims[dim] - 2 * mPaddingDims[dim] - mStrideDims[dim];
     }
 }
+
+std::pair<double, double> N2D2::UnpoolCell::getOutputsRange() const {
+    return Cell::getOutputsRangeParents();
+}

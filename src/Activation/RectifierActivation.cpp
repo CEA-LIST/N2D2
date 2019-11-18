@@ -31,6 +31,16 @@ N2D2::RectifierActivation::RectifierActivation()
     // ctor
 }
 
+std::pair<double, double> N2D2::RectifierActivation::getOutputRange() const {
+    const double max = mClipping > 0.0?mClipping:std::numeric_limits<double>::infinity();
+    if(mLeakSlope > 0.0) {
+        return std::make_pair(-max, max);
+    }
+    else {
+        return std::make_pair(0.0, max);
+    }
+}
+
 void N2D2::RectifierActivation::saveInternal(std::ostream& state,
                                              std::ostream& log) const
 {

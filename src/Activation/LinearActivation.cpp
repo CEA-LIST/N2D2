@@ -34,6 +34,11 @@ N2D2::LinearActivation::LinearActivation()
     // ctor
 }
 
+std::pair<double, double> N2D2::LinearActivation::getOutputRange() const {
+    const double max = mClipping > 0.0?mClipping:std::numeric_limits<double>::infinity();
+    return std::make_pair(-max, max);
+}
+
 void N2D2::LinearActivation::saveInternal(std::ostream& state,
                                           std::ostream& log) const
 {

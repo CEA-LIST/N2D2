@@ -34,6 +34,10 @@ N2D2::SaturationActivation::SaturationActivation()
     // ctor
 }
 
+std::pair<double, double> N2D2::SaturationActivation::getOutputRange() const {
+    return std::make_pair(-mThreshold, +mThreshold);
+}
+
 void N2D2::SaturationActivation::saveInternal(std::ostream& state,
                                               std::ostream& log) const
 {

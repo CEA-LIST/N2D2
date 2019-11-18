@@ -263,6 +263,12 @@ void N2D2::PoolCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError
 }
 
 template <class T>
+std::pair<double, double> N2D2::PoolCell_Frame_CUDA<T>::getOutputsRange() const {
+    const auto& activation = Cell_Frame_CUDA<T>::getActivation();
+    return activation?activation->getOutputRange():PoolCell::getOutputsRange();
+}
+
+template <class T>
 N2D2::PoolCell_Frame_CUDA<T>::~PoolCell_Frame_CUDA()
 {
     for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)

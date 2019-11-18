@@ -365,6 +365,8 @@ protected:
     virtual void setOutputsDims() = 0;
     size_t getNbGroups(const Tensor<bool>& map) const;
 
+    std::pair<double, double> getOutputsRangeParents() const;
+
 protected:
     const CellId_T mId;
     

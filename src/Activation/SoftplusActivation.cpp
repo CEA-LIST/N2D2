@@ -21,3 +21,8 @@
 #include "Activation/SoftplusActivation.hpp"
 
 const char* N2D2::SoftplusActivation::Type = "Softplus";
+
+std::pair<double, double> N2D2::SoftplusActivation::getOutputRange() const {
+    const double inf = std::numeric_limits<double>::infinity();
+    return std::make_pair(0.0, inf);
+}

@@ -267,6 +267,11 @@ void N2D2::UnpoolCell_Frame_CUDA::addArgMax(
         mArgMax.push_back(&(*argMax)[k]);
 }
 
+std::pair<double, double> N2D2::UnpoolCell_Frame_CUDA::getOutputsRange() const {
+    const auto& activation = Cell_Frame_CUDA<Float_T>::getActivation();
+    return activation?activation->getOutputRange():UnpoolCell::getOutputsRange();
+}
+
 N2D2::UnpoolCell_Frame_CUDA::~UnpoolCell_Frame_CUDA()
 {
     if (mPoolDesc != NULL)

@@ -19,6 +19,7 @@
 */
 
 #include "Cell/Cell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "DeepNet.hpp"
 #include "HeteroStimuliProvider.hpp"
 
@@ -219,6 +220,35 @@ size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
     }
 
     return nbGroups;
+}
+
+std::pair<double, double> N2D2::Cell::getOutputsRangeParents() const {
+    const auto& parentsCells = getParentsCells();
+    if(parentsCells.empty()) {
+        throw std::runtime_error("Cell " + getName() + " must have a parent.");
+    }
+
+
+    std::pair<double, double> range;
+    for(auto it = parentsCells.begin(); it != parentsCells.end(); ++it) {
+        const std::shared_ptr<Cell>& parent = *it;
+        if(!parent) {
+            throw std::runtime_error("Environment shouldn't be connected to cell " + getName() + ".");
+        }
+
+        const auto& parentFrame = dynamic_cast<const Cell_Frame_Top&>(*parent);
+        const std::pair<double, double> parentOutputsRange = parentFrame.getOutputsRange();
+
+        if(it == parentsCells.begin()) {
+            range = parentOutputsRange;
+        }
+        else {
+            range.first = std::min(range.first, parentOutputsRange.first);
+            range.second = std::max(range.second, parentOutputsRange.second);
+        }
+    }
+
+    return range;
 }
 
 

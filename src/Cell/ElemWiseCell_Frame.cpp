@@ -254,6 +254,11 @@ void N2D2::ElemWiseCell_Frame::checkGradient(double epsilon, double maxError)
     }
 }
 
+std::pair<double, double> N2D2::ElemWiseCell_Frame::getOutputsRange() const {
+    const auto& activation = Cell_Frame<Float_T>::getActivation();
+    return activation?activation->getOutputRange():ElemWiseCell::getOutputsRange();
+}
+
 N2D2::ElemWiseCell_Frame::~ElemWiseCell_Frame()
 {
 

@@ -77,6 +77,9 @@ public:
         initialize();   // Make sure mArgMax is populated
         return &mArgMax;
     };
+
+    std::pair<double, double> getOutputsRange() const;
+
     virtual ~PoolCell_Frame();
 
 protected:

@@ -223,6 +223,12 @@ void N2D2::PoolCell_Frame<T>::checkGradient(double epsilon, double maxError)
 }
 
 template <class T>
+std::pair<double, double> N2D2::PoolCell_Frame<T>::getOutputsRange() const {
+    const auto& activation = Cell_Frame<T>::getActivation();
+    return activation?activation->getOutputRange():PoolCell::getOutputsRange();
+}
+
+template <class T>
 N2D2::PoolCell_Frame<T>::~PoolCell_Frame()
 {
     for (unsigned int k = 0, size = mArgMax.size(); k < size; ++k)

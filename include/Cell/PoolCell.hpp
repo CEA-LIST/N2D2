@@ -115,7 +115,9 @@ public:
 
 protected:
     virtual void setOutputsDims();
+    std::pair<double, double> getOutputsRange() const;
 
+protected:
     // Pool dims
     const std::vector<unsigned int> mPoolDims;
     // Stride for the pooling
