@@ -51,46 +51,34 @@ N2D2::DeepNet::DeepNet(Network& net)
 }
 
 void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
-                            const std::vector<std::shared_ptr<Cell> >& parents)
+                            const std::vector<std::shared_ptr<Cell>>& parents)
 {
     unsigned int cellOrder = 0;
-    for (std::vector<std::vector<std::string> >::const_iterator it
-         = mLayers.begin(),
-         itBegin = mLayers.begin(),
-         itEnd = mLayers.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<std::shared_ptr<Cell> >::const_iterator itParent
-             = parents.begin(),
-             itParentEnd = parents.end();
-             itParent != itParentEnd;
-             ++itParent) {
+    for (auto it = mLayers.begin(); it != mLayers.end(); ++it) {
+        for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
             if (*itParent) {
-                std::vector<std::string>::const_iterator itCell = std::find(
-                    (*it).begin(), (*it).end(), (*itParent)->getName());
+                auto itCell = std::find(it->begin(), it->end(), (*itParent)->getName());
 
-                if (itCell != (*it).end())
-                    cellOrder
-                        = std::max(cellOrder, (unsigned int)(it - itBegin));
+                if (itCell != it->end()) {
+                    cellOrder = std::max(cellOrder, (unsigned int)(it - mLayers.begin()));
+                }
             }
         }
     }
 
-    if (cellOrder + 1 >= mLayers.size())
+    if (cellOrder + 1 >= mLayers.size()) {
         mLayers.resize(cellOrder + 2);
+    }
 
     mLayers[cellOrder + 1].push_back(cell->getName());
 
-    for (std::vector<std::shared_ptr<Cell> >::const_iterator itParent
-         = parents.begin(),
-         itParentEnd = parents.end();
-         itParent != itParentEnd;
-         ++itParent) {
-        if (*itParent)
-            mParentLayers.insert(
-                std::make_pair(cell->getName(), (*itParent)->getName()));
-        else
+    for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
+        if (*itParent) {
+            mParentLayers.insert(std::make_pair(cell->getName(), (*itParent)->getName()));
+        }
+        else {
             mParentLayers.insert(std::make_pair(cell->getName(), "env"));
+        }
     }
 
     mCells.insert(std::make_pair(cell->getName(), cell));
