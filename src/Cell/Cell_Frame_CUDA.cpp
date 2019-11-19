@@ -513,6 +513,31 @@ void N2D2::Cell_Frame_CUDA<T>::discretizeSignals(unsigned int nbLevels,
     }
 }
 
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::saveOutputs(const std::string& fileName) const {
+    mOutputs.synchronizeDToHBased();
+    
+    std::ofstream ostream(fileName);
+
+    ostream << "(";
+    for(std::size_t batch = 0; batch < mOutputs.dimB(); batch++) {
+        ostream << "(";
+        for(std::size_t ch = 0; ch < mOutputs.dimZ(); ch++) {
+            ostream << "(";
+            for(std::size_t oy = 0; oy < mOutputs.dimY(); oy++) {
+                ostream << "(";
+                for(std::size_t ox = 0; ox < mOutputs.dimX(); ox++) {
+                    ostream << mOutputs(ox, oy, ch, batch) << ", ";
+                }
+                ostream << "), \n";
+            }
+            ostream << "), \n";
+        }
+        ostream << "), \n\n";
+    }
+    ostream << ")\n";
+}
+
 namespace N2D2 {
     template class Cell_Frame_CUDA<half_float::half>;
     template class Cell_Frame_CUDA<float>;

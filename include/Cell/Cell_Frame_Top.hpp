@@ -54,6 +54,9 @@ public:
         if (mActivation)
             mActivation->load(dirName + "/Activation");
     }
+    
+    virtual void saveOutputs(const std::string& fileName) const = 0;
+
     virtual void addInput(BaseTensor& inputs,
                           BaseTensor& diffOutputs) = 0;
     virtual void replaceInput(BaseTensor& oldInputs,
