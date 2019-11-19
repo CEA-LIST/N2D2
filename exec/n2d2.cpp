@@ -245,6 +245,8 @@ public:
         calibration = opts.parse("-calib", 0, "number of stimuli used for the calibration "
                                               "(0 = no calibration, -1 = use the full "
                                               "test dataset)");
+        calibrationReload = opts.parse("-calib-reload", false, "reload and reuse the data of a "
+                                                               " previous calibration.");
         wtClippingMode = parseClippingMode(
                            opts.parse("-wt-clipping-mode", std::string("None"), 
                                           "weights clipping mode on export, "
@@ -322,6 +324,7 @@ public:
     std::string genExport;
     int nbBits;
     int calibration;
+    bool calibrationReload;
     ClippingMode wtClippingMode;
     ClippingMode actClippingMode;
     ScalingMode actScalingMode;
@@ -647,23 +650,10 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         bool loadPrevState = false;
 
-        if (std::ifstream(outputsRangeFile.c_str()).good() && 
+        if (opt.calibrationReload &&
+            std::ifstream(outputsRangeFile.c_str()).good() && 
             std::ifstream(outputsHistogramFile.c_str()).good())
         {
-            std::cout << "Load previously saved RangeStats and Histogram"
-                " for the calibration? (y/n) ";
-
-            std::string cmd;
-
-            do {
-                std::cin >> cmd;
-            }
-            while (cmd != "y" && cmd != "n");
-
-            loadPrevState = (cmd == "y");
-        }
-
-        if (loadPrevState) {
             RangeStats::loadOutputsRange(outputsRangeFile, outputsRange);
             Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
