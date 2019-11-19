@@ -27,12 +27,14 @@
 #ifdef CUDA
 #include "containers/CudaTensor.hpp"
 #include "third_party/half.hpp"
+#include "Cell/ElemWiseCell_Frame_CUDA_Kernels.hpp" // For cudaSScale
 #endif
 
 #include "FloatT.hpp"
 #include "ScalingMode.hpp"
 #include "containers/Tensor.hpp"
 #include "utils/Utils.hpp"
+
 
 namespace N2D2 {
 
@@ -55,13 +57,13 @@ public:
     }
 
     template<typename T>
-    void propagate(Tensor<T>& data) const {
+    void propagate(const Tensor<T>& input, Tensor<T>& output) const {
         std::size_t index = 0;
-        for (std::size_t batch = 0; batch < data.dimB(); batch++) {
-            for(std::size_t ch = 0; ch < data.dimZ(); ch++) {
-                for(std::size_t y = 0; y < data.dimY(); y++) {
-                    for(std::size_t x = 0; x < data.dimX(); x++) {
-                        data(index) = scale(data(index), ch);
+        for (std::size_t batch = 0; batch < input.dimB(); batch++) {
+            for(std::size_t ch = 0; ch < input.dimZ(); ch++) {
+                for(std::size_t y = 0; y < input.dimY(); y++) {
+                    for(std::size_t x = 0; x < input.dimX(); x++) {
+                        output(index) = scale(input(index), ch);
                         index++;
                     }
                 }
@@ -71,42 +73,35 @@ public:
 
 #ifdef CUDA
     // TODO Optimize
-    void propagate(CudaTensor<double>& data) const { 
-        for(std::size_t batch = 0; batch < data.dimB(); batch++) {
-            for(std::size_t output = 0; output < data.dimZ(); output++) {
-                const double alpha = mScalingPerOutput[output];
-                CHECK_CUBLAS_STATUS(
-                    cublasDscal(CudaContext::cublasHandle(), data.dimY()*data.dimX(),
-                                &alpha, data.getDevicePtr() + 
-                                        (output*data.dimY()*data.dimX() + 
-                                        batch*data.dimZ()*data.dimY()*data.dimX()), 1)
-                );
+    void propagate(const CudaTensor<double>& /*input*/, CudaTensor<double>& /*output*/) const { 
+        throw std::runtime_error("Scaling with double not supported yet.");
+    }
+
+    void propagate(const CudaTensor<float>& input, CudaTensor<float>& output) const { 
+        for(std::size_t batch = 0; batch < input.dimB(); batch++) {
+            for(std::size_t ch = 0; ch < input.dimZ(); ch++) {
+                const std::size_t offset = batch*input.dimZ()*input.dimY()*input.dimX() + 
+                                           ch*input.dimY()*input.dimX();
+
+                cudaSScale(input.dimY()*input.dimX(),
+                           input.getDevicePtr() + offset,
+                           mScalingPerOutput[ch], 0.0f, 0.0f,
+                           output.getDevicePtr() + offset);
             }
         }
     }
 
-    void propagate(CudaTensor<float>& data) const { 
-        for(std::size_t batch = 0; batch < data.dimB(); batch++) {
-            for(std::size_t output = 0; output < data.dimZ(); output++) {
-                const float alpha = mScalingPerOutput[output];
-                CHECK_CUBLAS_STATUS(
-                    cublasSscal(CudaContext::cublasHandle(), data.dimY()*data.dimX(),
-                                &alpha, data.getDevicePtr() + 
-                                        (output*data.dimY()*data.dimX() + 
-                                        batch*data.dimZ()*data.dimY()*data.dimX()), 1)
-                );
-            }
-        }
-    }
-
-    void propagate(CudaTensor<half_float::half>& /*data*/) const {
-        throw std::runtime_error("Rescaling not supported with half floats.");
+    void propagate(const CudaTensor<half_float::half>& /*input*/, 
+                   CudaTensor<half_float::half>& /*output*/) const 
+    {
+        throw std::runtime_error("Scaling with half floats not supported yet.");
     }
 #endif
 
 private:
     template<typename T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
     T scale(T value, std::size_t channel) const {
+        // return (T) std::round(value*mScalingPerOutput[channel]);
         return (T) (value*mScalingPerOutput[channel]);
     }
 
@@ -246,11 +241,17 @@ public:
     void propagate(Tensor<T>& data) const;
 
     template<class T>
+    void propagate(const Tensor<T>& input, Tensor<T>& output) const;
+
+    template<class T>
     void backPropagate(Tensor<T>& data, Tensor<T>& diffData) const;
 
 #ifdef CUDA
     template<class T>
     void propagate(CudaTensor<T>& data) const;
+
+    template<class T>
+    void propagate(const CudaTensor<T>& input, CudaTensor<T>& output) const;
 
     template<class T>
     void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData) const;
@@ -266,11 +267,18 @@ private:
 
 template<class T>
 inline void Scaling::propagate(Tensor<T>& data) const {
+    propagate(data, data);
+}
+
+template<class T>
+inline void Scaling::propagate(const Tensor<T>& input, Tensor<T>& output) const {
+    assert(input.size() == output.size());
+    
     switch(mMode) {
         case ScalingMode::NONE:
             break;
         case ScalingMode::FLOAT_MULT:
-            static_cast<FloatingPointScaling&>(*mScaling).propagate(data);
+            static_cast<FloatingPointScaling&>(*mScaling).propagate(input, output);
             break;
         default:
             throw std::runtime_error("Unsupported scaling propagation.");
@@ -283,21 +291,26 @@ inline void Scaling::backPropagate(Tensor<T>& /*data*/, Tensor<T>& /*diffData*/)
         return;
     }
 
-    throw std::runtime_error("Backpropagation of activation scaling not supported yet.");
+    throw std::runtime_error("Unsupported scaling backpropagation.");
 }
 
 
 #ifdef CUDA
 template<class T>
 inline void Scaling::propagate(CudaTensor<T>& data) const {
+    propagate(data, data);
+}
+
+template<class T>
+inline void Scaling::propagate(const CudaTensor<T>& input, CudaTensor<T>& output) const {
     switch(mMode) {
         case ScalingMode::NONE:
             break;
         case ScalingMode::FLOAT_MULT:
-            static_cast<FloatingPointScaling&>(*mScaling).propagate(data);
+            static_cast<FloatingPointScaling&>(*mScaling).propagate(input, output);
             break;
         default:
-            throw std::runtime_error("Unsupported scaling.");
+            throw std::runtime_error("Unsupported scaling propagation.");
     }
 }
 
@@ -307,7 +320,7 @@ inline void Scaling::backPropagate(CudaTensor<T>& /*data*/, CudaTensor<T>& /*dif
         return;
     }
 
-    throw std::runtime_error("Backpropagation of activation scaling not supported yet.");
+    throw std::runtime_error("Unsupported scaling backpropagation.");
 }
 #endif
 
