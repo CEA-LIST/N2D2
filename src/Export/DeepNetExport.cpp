@@ -287,83 +287,37 @@ N2D2::DeepNetExport::getMapLayer(DeepNet& deepNet,
     return mapping;
 }
 
-bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell)
-{
+bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell) {
     if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
         // Unsigned cells are not allowed
         return false;
     }
 
-    const std::vector<std::shared_ptr<Cell> > parentCells
-        = cell.getAssociatedDeepNet().getParentCells(cell.getName());
+    const std::vector<std::shared_ptr<Cell>>& parentsCells = cell.getParentsCells();
+    
     bool unsignedInputs = false;
+    for (auto it = parentsCells.begin(); it != parentsCells.end(); ++it) {
+        const bool unsignedInput = (*it)?isCellOutputUnsigned(**it):DeepNetExport::mEnvDataUnsigned;
 
-    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
-            = parentCells.begin(), itBegin = parentCells.begin(),
-        itEnd = parentCells.end(); it != itEnd; ++it)
-    {
-        bool unsignedInput = false;
-
-        if (!(*it)) {
-            // Parent is the environment
-            unsignedInput = DeepNetExport::mEnvDataUnsigned;
-        }
-        else {
-            const std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(*it);
-
-            if (cellFrame) {
-                if (cellFrame->getActivation()
-                    && cellFrame->getActivation()->getType()
-                        == std::string("Rectifier"))
-                {
-                    // Rectifier is unsigned
-                    unsignedInput = true;
-                }
-
-                if ((*it)->getType() == PoolCell::Type
-                    && !cellFrame->getActivation())
-                {
-                    // PoolCell without activation (linear):
-                    // Its output is unsigned if the cell is unsigned
-                    // (i.e. has unsigned inputs)
-                    unsignedInput = isCellInputsUnsigned(*(*it));
-                }
-            }
-        }
-
-        if (it == itBegin)
+        if (it == parentsCells.begin()) {
             unsignedInputs = unsignedInput;
+        }
         else if (unsignedInput != unsignedInputs) {
-            throw std::runtime_error("Unsupported: cell " + cell.getName()
-                                     + " mixes signed and unsigned inputs."
-                                     " Try setting DeepNetExport::mUnsignedData"
-                                     " to false");
+            throw std::runtime_error("Unsupported: cell " + cell.getName() + 
+                                     " mixes signed and unsigned inputs. "
+                                     "Try setting DeepNetExport::mUnsignedData to false");
         }
     }
 
     return unsignedInputs;
 }
 
-bool N2D2::DeepNetExport::isCellOutputUnsigned(const Cell& cell) 
-{
+bool N2D2::DeepNetExport::isCellOutputUnsigned(const Cell& cell)  {
     if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
         // Unsigned cells are not allowed
         return false;
     }
 
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    if (cellFrame.getActivation() && 
-        cellFrame.getActivation()->getType() == RectifierActivation::Type)
-    {
-        return true;
-    }
-
-    if (cell.getType() == PoolCell::Type && !cellFrame.getActivation()) {
-        // PoolCell without activation (linear), its input type is the same
-        // as its output type.
-        return isCellInputsUnsigned(cell);
-    }
-
-    return false;
+    return cellFrame.getOutputsRange().first >= 0.0;
 }
