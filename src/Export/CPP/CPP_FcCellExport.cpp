@@ -31,7 +31,7 @@ void N2D2::CPP_FcCellExport::generate(const FcCell& cell, const std::string& dir
 
     std::ofstream header(fileName.c_str());
     if (!header.good()) {
-        throw std::runtime_error("Could not create C header file: " + fileName);
+        throw std::runtime_error("Could not create CPP header file: " + fileName);
     }
 
     CPP_CellExport::generateHeaderBegin(cell, header);

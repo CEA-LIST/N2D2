@@ -35,7 +35,7 @@ void N2D2::CPP_LRNCellExport::generate(const LRNCell& cell, const std::string& d
     std::ofstream header(fileName.c_str());
 
     if (!header.good())
-        throw std::runtime_error("Could not create C header file: " + fileName);
+        throw std::runtime_error("Could not create CPP header file: " + fileName);
 
     CPP_CellExport::generateHeaderBegin(cell, header);
     CPP_CellExport::generateHeaderIncludes(cell, header);
