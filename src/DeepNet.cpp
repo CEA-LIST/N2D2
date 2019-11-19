@@ -486,38 +486,31 @@ std::shared_ptr<N2D2::CMonitor> N2D2::DeepNet::getCMonitor(const std::string
     return (*it).second;
 }
 
-std::vector<std::shared_ptr<N2D2::Cell> >
-N2D2::DeepNet::getChildCells(const std::string& name) const
+std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getChildCells(const std::string& name) const
 {
-    std::vector<std::shared_ptr<Cell> > childCells;
+    std::vector<std::shared_ptr<Cell>> childCells;
 
-    for (std::multimap<std::string, std::string>::const_iterator it
-         = mParentLayers.begin(), itEnd = mParentLayers.end(); it != itEnd;
-         ++it)
-    {
-        if ((*it).second == name)
-            childCells.push_back((*mCells.find((*it).first)).second);
+    for(auto it = mParentLayers.begin(); it != mParentLayers.end(); ++it) {
+        if (it->second == name) {
+            childCells.push_back(mCells.at(it->first));
+        }
     }
 
     return childCells;
 }
 
-std::vector<std::shared_ptr<N2D2::Cell> >
-N2D2::DeepNet::getParentCells(const std::string& name) const
+std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getParentCells(const std::string& name) const
 {
-    std::vector<std::shared_ptr<Cell> > parentCells;
-    std::pair<std::multimap<std::string, std::string>::const_iterator,
-              std::multimap<std::string, std::string>::const_iterator> parents
-        = mParentLayers.equal_range(name);
+    std::vector<std::shared_ptr<Cell>> parentCells;
 
-    for (std::multimap<std::string, std::string>::const_iterator itParent
-         = parents.first;
-         itParent != parents.second;
-         ++itParent) {
-        if ((*itParent).second == "env")
+    auto parents = mParentLayers.equal_range(name);
+    for(auto itParent = parents.first; itParent != parents.second; ++itParent) {
+        if (itParent->second == "env") {
             parentCells.push_back(std::shared_ptr<Cell>());
-        else
-            parentCells.push_back((*mCells.find((*itParent).second)).second);
+        }
+        else {
+            parentCells.push_back(mCells.at(itParent->second));
+        }
     }
 
     return parentCells;
