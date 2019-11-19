@@ -22,10 +22,12 @@
 #define N2D2_CONFUSIONMATRIX_H
 
 #include <type_traits>
+#include <unistd.h>
 
 #include "containers/Matrix.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/Utils.hpp"
+#include "N2D2.hpp"
 
 namespace N2D2 {
 enum ConfusionTableMetric {
@@ -373,6 +375,13 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
         Gnuplot::setDefaultOutput();
     }
+
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
+    const int ret = symlink(N2D2_PATH("tools/confusion.py"),
+                    (Utils::fileBaseName(fileName) + ".py").c_str());
+    if (ret < 0) {
+    } // avoid ignoring return value warning
+#endif
 
     const std::string confFile = Utils::fileBaseName(fileName) + "_score."
                                  + Utils::fileExtension(fileName);
