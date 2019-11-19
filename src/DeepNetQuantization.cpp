@@ -18,6 +18,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include <cmath>
+#include <cstdint>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,13 +32,18 @@
 #include "RangeStats.hpp"
 #include "ScalingMode.hpp"
 #include "StimuliProvider.hpp"
+#include "ScalingMode.hpp"
 #include "Activation/LinearActivation.hpp"
+#include "Activation/LinearActivation_Frame.hpp"
 #include "Activation/LogisticActivation.hpp"
 #include "Activation/RectifierActivation.hpp"
+#include "Activation/RectifierActivation_Frame.hpp"
 #include "Activation/SaturationActivation.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/ElemWiseCell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/ScalingCell.hpp"
 #include "Export/DeepNetExport.hpp"
 
 
@@ -86,80 +95,136 @@ void N2D2::DeepNetQuantization::clipWeights(std::size_t nbBits, ClippingMode wtC
 }
 
 void N2D2::DeepNetQuantization::normalizeFreeParameters(Float_T normFactor) {
-    Float_T bNorm = 1.0;
+    std::unordered_map<std::string, Float_T> bScalingForCell;
 
-    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
-    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
-        if(itLayer->size() != 1) {
-            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
-        }
-
-        std::shared_ptr<Cell> cell = mDeepNet.getCell(itLayer->front());
-        assert(cell != nullptr);
-
-        const auto wMinMax = cell->getFreeParametersRange(false);
-        const Float_T norm = Utils::max_abs(wMinMax.first, wMinMax.second)/normFactor;
+    // Get a copy, the loop may modify the graph
+    const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
+    for(auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            if(!cell) {
+                throw std::runtime_error("Invalid cell.");
+            }
 
 
-        if (bNorm != 1.0) {
-            assert(bNorm > 0.0);
-            cell->processFreeParameters([&](Float_T d) { return d/bNorm; }, Cell::Additive);
-        }
+            Float_T bScalingCell = getMaxParentsScaling(cell, bScalingForCell);
+            rescaleParentsToScaling(cell, bScalingForCell, bScalingCell);
 
-        if(norm != 0.0) {
-            cell->processFreeParameters([&](Float_T d) { return d/norm; });
-            bNorm *= norm;
+
+            const auto wMinMax = cell->getFreeParametersRange(false);
+            const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second)/normFactor;
+            if(wScalingCell != 0.0) {
+                cell->processFreeParameters([&](Float_T w) { return w/wScalingCell; }, Cell::Multiplicative);
+                bScalingCell *= wScalingCell;
+            }
+
+            cell->processFreeParameters([&](Float_T b) { return b/bScalingCell; }, Cell::Additive);
+            bScalingForCell[cell->getName()] = bScalingCell;
         }
     }
+
+
+    fuseScalingCells();
 }
 
 void N2D2::DeepNetQuantization::normalizeFreeParametersPerOutputChannel(Float_T normFactor) {
-    Float_T bNorm = 1.0;
+    std::unordered_map<std::string, Float_T> bScalingForCell;
 
-    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
+    // Get a copy, the loop may modify the graph
+    const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
-        if(itLayer->size() != 1) {
-            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
-        }
+        for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            if(!cell) {
+                throw std::runtime_error("Invalid cell.");
+            }
 
-        std::shared_ptr<Cell> cell = mDeepNet.getCell(itLayer->front());
-        assert(cell != nullptr);
+
+            Float_T bScalingCell = getMaxParentsScaling(cell, bScalingForCell);
+            rescaleParentsToScaling(cell, bScalingForCell, bScalingCell);
+
+
+            if(bScalingCell != 1.0) {
+                cell->processFreeParameters([&](Float_T b) { return b/bScalingCell; }, Cell::Additive);
+            }
+
+            const auto wMinMax = cell->getFreeParametersRange(false);
+            const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
+            if(wScalingCell == 0) {
+                bScalingForCell[cell->getName()] = bScalingCell;
+            }
+            else {
+                std::vector<Float_T> scalingPerOutput(cell->getNbOutputs());
+                for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
+                    const auto woMinMax = cell->getFreeParametersRangePerOutput(output, false);
+                    const Float_T wScalingCellOutput = std::max(
+                                                         std::min(wScalingCell, 0.1f), 
+                                                         Utils::max_abs(woMinMax.first, woMinMax.second)
+                                                       )/normFactor;
+
+                    cell->processFreeParametersPerOutput([&](Float_T d) { return d/wScalingCellOutput; }, 
+                                                         output);
+                    scalingPerOutput[output] = wScalingCellOutput/wScalingCell;
+                }
+
+
+                auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*cell))
+                                        (mDeepNet, cell->getName() + "_rescale_params", 
+                                         cell->getNbOutputs(), 
+                                         Scaling::floatingPointScaling(
+                                             std::move(scalingPerOutput))
+                                        );
+                errorIfCellExist(scalingCell->getName());
+                mDeepNet.addCellAfter(scalingCell, cell);
+
+
+                bScalingForCell[scalingCell->getName()] = bScalingCell*wScalingCell;
+            }
+        }
+    }
+    
+
+    fuseScalingCells();
+}
+
+N2D2::Float_T N2D2::DeepNetQuantization::getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
+                                const std::unordered_map<std::string, Float_T>& scalingForCell) const 
+{
+    Float_T maxParentsScaling = 0.0;
+    for(const auto& parentCell: cell->getParentsCells()) {
+        const Float_T parentScaling = parentCell?scalingForCell.at(parentCell->getName()):1.0;
+        maxParentsScaling = std::max(maxParentsScaling, parentScaling);
+
+        assert(parentScaling > 0.0);
+    }
+
+    return maxParentsScaling;
+}
+
+void N2D2::DeepNetQuantization::rescaleParentsToScaling(const std::shared_ptr<Cell>& cell, 
+                                        const std::unordered_map<std::string, Float_T>& scalingForCell,
+                                        Float_T scaling)
+{
+    // Get a copy, the loop modify the graph
+    auto parentsCells = cell->getParentsCells();
+
+    for(const auto& parentCell: parentsCells) {
+        const Float_T parentScaling = parentCell?scalingForCell.at(parentCell->getName()):1.0;
+        if(parentScaling == scaling) {
+            continue;
+        }
         
-        std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
-        std::shared_ptr<Activation> activation = cellFrame->getActivation();
+        assert(parentScaling < scaling);
+        auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*parentCell))
+                                (mDeepNet, parentCell->getName() + "_rescale_branch", 
+                                 parentCell->getNbOutputs(), 
+                                 Scaling::floatingPointScaling(
+                                     std::vector<Float_T>(parentCell->getNbOutputs(), 
+                                                          parentScaling/scaling))
+                                );
 
-        if(!activation) {
-            continue;
-        }
-
-
-        if (bNorm != 1.0) {
-            assert(bNorm > 0.0);
-            cell->processFreeParameters([&](Float_T d) { return d/bNorm; }, Cell::Additive);
-        }
-
-        const auto wMinMax = cell->getFreeParametersRange(false);
-        const Float_T maxNorm = Utils::max_abs(wMinMax.first, wMinMax.second);
-
-        if(maxNorm == 0) {
-            continue;
-        }
-
-        std::vector<Float_T> actScalingPerOutput(cell->getNbOutputs());
-        for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
-            const auto woMinMax = cell->getFreeParametersRangePerOutput(output, false);
-            const Float_T norm = std::max(std::min(maxNorm, 0.1f), 
-                                          Utils::max_abs(woMinMax.first, woMinMax.second))/normFactor;
-
-            cell->processFreeParametersPerOutput([&](Float_T d) { return d/norm; }, output);
-            actScalingPerOutput[output] = norm/maxNorm;
-        }
-
-
-        activation->setActivationScaling(Scaling::floatingPointScaling(
-                                            std::move(actScalingPerOutput
-                                        )));
-        bNorm *= maxNorm;
+        errorIfCellExist(scalingCell->getName());
+        mDeepNet.addCellBetween(scalingCell, parentCell, cell);
     }
 }
 
@@ -286,74 +351,233 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
     }
 }
 
-void N2D2::DeepNetQuantization::normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                                          const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                          std::size_t nbBits,
-                                          ClippingMode actClippingMode)
+void N2D2::DeepNetQuantization::normalizeOutputsRange(
+                            const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                            const std::unordered_map<std::string, RangeStats>& outputsRange,
+                            std::size_t nbBits,
+                            ClippingMode actClippingMode)
 {
-    double prevScalingFactor = 1.0;
-    bool nextIsMaxPool = false;
+    std::unordered_map<std::string, Float_T> scalingFactorForCell;
 
-    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
+    const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
-        if(itLayer->size() != 1) {
-            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+
+            const Float_T prevScalingFactor = getMaxParentsScaling(cell, scalingFactorForCell);
+            rescaleParentsToScaling(cell, scalingFactorForCell, prevScalingFactor);
+
+
+
+            Float_T scalingFactor;
+            const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
+            if(activation) {
+                const bool clip =  cell->getNbOutputs() > 2 && 
+                                   (activation->getType() == RectifierActivation::Type || 
+                                    activation->getType() == LinearActivation::Type || 
+                                    activation->getType() == SaturationActivation::Type);
+                
+
+                /**
+                 * When clipping with MSE or KL-Divergence and the next cell is a max pooling cell,
+                 * use the histogram of the max pooling to calculate the clipping threshold.
+                 */
+                auto childrenCells = cell->getChildrenCells();
+                const bool isNextCellMaxPool = childrenCells.size() == 1 && 
+                                               childrenCells[0]->getType() == PoolCell::Type && 
+                                               dynamic_cast<const PoolCell&>(*childrenCells[0]).getPooling() == PoolCell::Max;
+
+
+                const std::string cellStatsName = clip && isNextCellMaxPool?childrenCells[0]->getName():
+                                                                            *itCell;
+                scalingFactor = getCellThreshold(cellStatsName, 
+                                                 outputsHistogram, outputsRange, 
+                                                 nbBits, clip?actClippingMode:ClippingMode::NONE);
+            }
+            else if(cell->getType() == ElemWiseCell::Type) {
+                scalingFactor = getCellThreshold(*itCell,
+                                                 outputsHistogram, outputsRange, 
+                                                 nbBits, ClippingMode::NONE);
+            }
+            else if(cell->getType() == PoolCell::Type || cell->getType() == ScalingCell::Type) {
+                std::cout << "No scaling for cell " << cell->getName() << "." << std::endl;
+                scalingFactorForCell[cell->getName()] = prevScalingFactor;
+                continue;
+            }
+            else {
+                throw std::runtime_error("Quantization of cell '" + cell->getName() + "' of type '" + 
+                                         cell->getType() + "' is not supported yet.");
+            }
+
+
+            scalingFactorForCell[cell->getName()] = scalingFactor;
+
+
+            
+
+
+            cell->processFreeParameters([&](Float_T d) { return d/prevScalingFactor; },
+                                        Cell::Additive);
+
+            auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*cell))
+                                    (mDeepNet, 
+                                     cell->getName() + "_rescale_act", 
+                                     cell->getNbOutputs(), 
+                                     Scaling::floatingPointScaling(
+                                         std::vector<Float_T>(cell->getNbOutputs(), 
+                                                              1/(scalingFactor/prevScalingFactor)))
+                                    );
+            errorIfCellExist(scalingCell->getName());
+
+            mDeepNet.addCellAfter(scalingCell, cell);
+            scalingFactorForCell[scalingCell->getName()] = scalingFactorForCell[cell->getName()];
+
+            std::cout << std::setprecision(4) 
+                      << cell->getName() << ": " << "scalingFactor = " << scalingFactor << "   " 
+                      << std::endl;
+        }
+    }
+
+
+    fuseScalingCells();
+}
+
+void N2D2::DeepNetQuantization::fuseScalingCells() {
+    // Get a copy, the loop may modify the graph
+    const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
+
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            if(!cell) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            if(cell->getType() != ScalingCell::Type) {
+                continue;
+            }
+
+            auto parentsCells = cell->getParentsCells();
+            if(parentsCells.size() != 1 || !parentsCells.front() || 
+               parentsCells.front()->getChildrenCells().size() != 1) 
+            {
+                continue;
+            }
+
+
+            auto scalingCell = std::dynamic_pointer_cast<ScalingCell>(cell);
+
+            auto parentCell = parentsCells.front();
+            auto parentCellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(parentCell);
+            if(!parentCellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+
+            std::shared_ptr<Activation> parentCellActivation = parentCellFrame->getActivation();
+            if(parentCellActivation)  {
+                fuseScalingCellWithParentActivation(scalingCell, *parentCellActivation);
+            }
+            else if(parentCell->getType() == ScalingCell::Type) {
+                auto parentScalingCell = std::dynamic_pointer_cast<ScalingCell>(parentCell);
+                fuseScalingCellWithParentScalingCell(scalingCell, parentScalingCell);
+            }
+            else if(parentCell->getType() == ElemWiseCell::Type) {
+                auto parentElemWiseCell = std::dynamic_pointer_cast<ElemWiseCell>(parentCell);
+                moveScalingCellAboveParentElemWiseCell(scalingCell, parentElemWiseCell);
+
+                // The ScalingCell has been potentially moved as parent of the ElemeWiseCell.
+                // Recurse to try to merge this ScalingCell with its new parents.
+                fuseScalingCells();
+                return;
+            }
+        }
+    }
+}
+
+void N2D2::DeepNetQuantization::fuseScalingCellWithParentActivation(
+                                                    const std::shared_ptr<ScalingCell>& scalingCell, 
+                                                    Activation& parentCellActivation)
+{
+    const ScalingMode parentScalingMode = parentCellActivation.getActivationScaling().getMode();
+    if(parentScalingMode == ScalingMode::NONE) {
+        parentCellActivation.setActivationScaling(
+            std::move(scalingCell->getScaling())
+        );
+
+        mDeepNet.removeCell(scalingCell);
+    }
+    else if(parentScalingMode == ScalingMode::FLOAT_MULT) {
+        const std::vector<Float_T>& scalingPerOutput = scalingCell->getScaling()
+                                                                   .getFloatingPointScaling()
+                                                                   .getScalingPerOutput();
+        std::vector<Float_T> parentScalingPerOutput = parentCellActivation.getActivationScaling()
+                                                                          .getFloatingPointScaling()
+                                                                          .getScalingPerOutput();
+        for(std::size_t o = 0; o < parentScalingPerOutput.size(); o++) {
+            parentScalingPerOutput[o] *= scalingPerOutput[o];
         }
 
-        std::shared_ptr<Cell> cell = mDeepNet.getCell(itLayer->front());
-        std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+        parentCellActivation.setActivationScaling(
+            Scaling::floatingPointScaling(std::move(parentScalingPerOutput))
+        );
 
-        if(!cellFrame || (cell->getType() == PoolCell::Type)) {
-            nextIsMaxPool = false;
-            continue;
+        mDeepNet.removeCell(scalingCell);
+    }
+}
+
+void N2D2::DeepNetQuantization::fuseScalingCellWithParentScalingCell(
+                                        const std::shared_ptr<ScalingCell>& scalingCell, 
+                                        const std::shared_ptr<ScalingCell>& parentScalingCell)
+{
+    assert(scalingCell->getNbOutputs() == parentScalingCell->getNbOutputs());
+
+    const std::vector<Float_T>& scalingPerOutput = scalingCell->getScaling()
+                                                               .getFloatingPointScaling()
+                                                               .getScalingPerOutput();
+    std::vector<Float_T> parentScalingPerOutput = parentScalingCell->getScaling()
+                                                                    .getFloatingPointScaling()
+                                                                    .getScalingPerOutput();
+    for(std::size_t o = 0; o < parentScalingPerOutput.size(); o++) {
+        parentScalingPerOutput[o] *= scalingPerOutput[o];
+    }
+
+    parentScalingCell->setScaling(Scaling::floatingPointScaling(std::move(parentScalingPerOutput)));
+
+    mDeepNet.removeCell(scalingCell);
+}
+
+void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
+                                        const std::shared_ptr<ScalingCell>& scalingCell, 
+                                        const std::shared_ptr<ElemWiseCell>& parentElemWiseCell)
+{
+    const auto& weights = parentElemWiseCell->getWeights();
+    const auto& shifts = parentElemWiseCell->getShifts();
+
+    if(parentElemWiseCell->getOperation() == ElemWiseCell::Sum && 
+        std::all_of(weights.begin(), weights.end(), [](Float_T v) { return v == 1.0; }) && 
+        std::all_of(shifts.begin(), shifts.end(), [](Float_T v) { return v == 0.0; })) 
+    {
+        const std::vector<Float_T>& scalingPerOutput = scalingCell->getScaling()
+                                                                   .getFloatingPointScaling()
+                                                                   .getScalingPerOutput();
+
+        auto grandParentsCells = parentElemWiseCell->getParentsCells();
+        for(auto grandParentCell: grandParentsCells) {
+            auto grandParentScalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*grandParentCell))
+                                            (mDeepNet, grandParentCell->getName() + "_rescale_elemwise", 
+                                             grandParentCell->getNbOutputs(), 
+                                             Scaling::floatingPointScaling(scalingPerOutput));
+
+            mDeepNet.addCellBetween(grandParentScalingCell, grandParentCell, parentElemWiseCell);
         }
 
-        if (itLayer + 1 != layers.end() && (itLayer + 1)->size() == 1) {
-            const auto& nextCell = mDeepNet.getCell((itLayer + 1)->front());
-            nextIsMaxPool = nextCell->getType() == PoolCell::Type && 
-                            dynamic_cast<const PoolCell&>(*nextCell).getPooling() == PoolCell::Max;
-        }
-
-
-
-        const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
-        if(!activation) {
-            std::cout << "Skipping normalization of cell " + cell->getName() << "." << std::endl;
-            continue;
-        }
-        
-
-        double scalingFactor;
-        if(activation->getType() == RectifierActivation::Type || 
-           (activation->getType() == LinearActivation::Type && cell->getNbOutputs() > 2) || 
-           (activation->getType() == SaturationActivation::Type && cell->getNbOutputs() > 2))
-        {
-            const std::string cellStats = nextIsMaxPool?(itLayer + 1)->front():itLayer->front();
-            scalingFactor = getCellThreshold(cellStats, 
-                                             outputsHistogram, outputsRange, 
-                                             nbBits, actClippingMode);
-        }
-        else {
-            scalingFactor = getCellThreshold(itLayer->front(),
-                                             outputsHistogram, outputsRange, 
-                                             nbBits, ClippingMode::NONE);
-        }
-
-
-
-        
-        rescaleActivationOutputs(*cell, *activation, 
-                                 scalingFactor, prevScalingFactor);
-
-        cell->processFreeParameters([&](Float_T d) { return d/prevScalingFactor; },
-                                    Cell::Additive);
-        
-
-        std::cout << std::setprecision(4) 
-                  << cell->getName() << ": " << "scalingFactor = " << scalingFactor << "   " 
-                  << std::endl;
-
-        prevScalingFactor = scalingFactor;
+        mDeepNet.removeCell(scalingCell);
     }
 }
 
@@ -362,34 +586,63 @@ void N2D2::DeepNetQuantization::quantizeNormalizedNetwork(std::size_t nbBits,
 {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
-        if(itLayer->size() != 1) {
-            throw std::runtime_error("Normalization of multi-branch networks are not supported yet.");
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            if(cell->getType() == ScalingCell::Type) {
+                const ScalingMode scalingCellMode = (actScalingMode == ScalingMode::FLOAT_MULT)?
+                                                        ScalingMode::FLOAT_MULT:ScalingMode::FIXED_MULT;
+                approximateScalingCell(dynamic_cast<ScalingCell&>(*cell), scalingCellMode, nbBits);
+            }
+
+            const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
+            if(!activation) {
+                continue;
+            }
+
+            quantizeActivationScaling(*cell, *activation, nbBits, actScalingMode);
+
+            approximateActivationScaling(*cell, *activation, actScalingMode);
+
+            // Must come after approximateActivationScaling as the approximation may modify the weights
+            // if the actScalingMode is SINGLE_SHIFT or DOUBLE_SHIFT
+            quantizeFreeParemeters(*cell, nbBits);
         }
-
-        std::shared_ptr<Cell> cell = mDeepNet.getCell(itLayer->front());
-        std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
-
-        if(!cellFrame) {
-            continue;
-        }
-
-        const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
-        if(!activation) {
-            continue;
-        }
-
-        quantizeActivationScaling(*cell, *activation, nbBits, actScalingMode);
-
-        approximateRescalings(*cell, *activation, actScalingMode);
-
-        // Must come after approximateRescalings as the approximation may modify the weights
-        // if the actScalingMode is SINGLE_SHIFT or DOUBLE_SHIFT
-        quantizeFreeParemeters(*cell, nbBits);
     }
 }
 
-std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approximateRescalingWithPowerOf2Divs(
-                                                        double scaling, std::size_t nbDivisions) 
+void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
+                                                       std::size_t nbBits) 
+{
+    assert(cell.getScaling().getMode() == ScalingMode::FLOAT_MULT);
+    if(scalingCellMode == ScalingMode::FLOAT_MULT) {
+        return;
+    }
+
+    if(scalingCellMode != ScalingMode::FIXED_MULT) {
+        throw std::runtime_error("THe scaling cell can only be approximated by a fixed-point approximation.");
+    }
+
+    const std::vector<Float_T>& floatScalingPerOutput = cell.getScaling()
+                                                            .getFloatingPointScaling()
+                                                            .getScalingPerOutput();
+
+    const std::size_t nbFractionalBits = std::min(nbBits*2, (std::size_t) 24);
+
+    std::vector<std::int32_t> fixedScalingPerOutput(floatScalingPerOutput.size());
+    for(std::size_t o = 0; o < floatScalingPerOutput.size(); o++) {
+        fixedScalingPerOutput[o] = std::round(floatScalingPerOutput[o]*std::pow(2, nbFractionalBits));
+    }
+    
+    cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput));
+}
+
+std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approximateScalingWithPowerOf2Divs(
+                                                        Float_T scaling, std::size_t nbDivisions) 
 {
     static const double ROUNDING_THRESHOLD = 0.98;
 
@@ -428,21 +681,21 @@ std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approxi
     return std::make_pair(powerOf2Divs, precision);
 }
 
-std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateRescalingsWithPowerOf2Divs(Cell& cell, 
+std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
                                                         const std::vector<Float_T>& scalingPerOutput, 
                                                         std::size_t nbDivisions)
 {
     std::vector<std::vector<unsigned char>> exponentsPerOutput(cell.getNbOutputs());
     for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
-        double rescaleOutputsBy;
+        Float_T rescaleOutputsBy;
         if(nbDivisions == 1) {
-            const auto singleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 1);
+            const auto singleDivApprox = approximateScalingWithPowerOf2Divs(scalingPerOutput[output], 1);
 
             exponentsPerOutput[output] = std::move(singleDivApprox.first);
             rescaleOutputsBy = 1/singleDivApprox.second;
         }
         else if(nbDivisions == 2) {
-            const auto doubleDivApprox = approximateRescalingWithPowerOf2Divs(scalingPerOutput[output], 2);
+            const auto doubleDivApprox = approximateScalingWithPowerOf2Divs(scalingPerOutput[output], 2);
 
             exponentsPerOutput[output] = std::move(doubleDivApprox.first);
             rescaleOutputsBy = 1/doubleDivApprox.second;
@@ -478,8 +731,8 @@ double N2D2::DeepNetQuantization::getCellThreshold(const std::string& cellName,
     }
 }
 
-void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& activation,
-                                                      ScalingMode actScalingMode) 
+void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activation& activation,
+                                                             ScalingMode actScalingMode) 
 {
     assert(activation.getActivationScaling().getMode() == ScalingMode::FLOAT_MULT);
 
@@ -522,7 +775,7 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
     }
     else if(actScalingMode == ScalingMode::SINGLE_SHIFT) {
         std::vector<unsigned char> shifts;
-        for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 1)) {
+        for(const auto& powOf2Exponents: approximateActivationScalingWithPowerOf2Divs(cell, scalingPerOutput, 1)) {
             assert(powOf2Exponents.size() == 1);
             shifts.push_back(powOf2Exponents[0]);
         }
@@ -531,7 +784,7 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
     }
     else if(actScalingMode == ScalingMode::DOUBLE_SHIFT) {
         std::vector<std::pair<unsigned char, unsigned char>> shifts;
-        for(const auto& powOf2Exponents: approximateRescalingsWithPowerOf2Divs(cell, scalingPerOutput, 2)) {
+        for(const auto& powOf2Exponents: approximateActivationScalingWithPowerOf2Divs(cell, scalingPerOutput, 2)) {
             assert(powOf2Exponents.size() == 2);
             assert(powOf2Exponents[0] <= powOf2Exponents[1]);
             shifts.push_back({powOf2Exponents[1] - powOf2Exponents[0], powOf2Exponents[1]});
@@ -544,30 +797,6 @@ void N2D2::DeepNetQuantization::approximateRescalings(Cell& cell, Activation& ac
     }
 }
 
-void N2D2::DeepNetQuantization::rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                                         double scalingFactor, double prevScalingFactor)
-{
-    const ScalingMode scalingMode = activation.getActivationScaling().getMode();
-    
-    std::vector<Float_T> scalingPerOutput(cell.getNbOutputs());
-    for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
-        if(scalingMode == ScalingMode::NONE) {
-            scalingPerOutput[output] = 1 / (scalingFactor / prevScalingFactor);
-        }
-        else if(scalingMode == ScalingMode::FLOAT_MULT) {
-            const Float_T actScaling = activation.getActivationScaling()
-                                                 .getFloatingPointScaling()
-                                                 .getScalingPerOutput()[output];
-            scalingPerOutput[output] = actScaling / (scalingFactor / prevScalingFactor);
-        }
-        else {
-            throw std::runtime_error("Unsupported scaling mode.");
-        }
-    }
-
-    activation.setActivationScaling(Scaling::floatingPointScaling(std::move(scalingPerOutput)));
-}
-
 void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activation& activation, 
                                                            std::size_t nbBits, 
                                                            ScalingMode actScalingMode) 
@@ -578,8 +807,8 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
         return;
     }
 
-    const double unsignedMax = std::pow(2, nbBits) - 1;
-    const double signedMax = std::pow(2, nbBits - 1) - 1;
+    const Float_T unsignedMax = std::pow(2, nbBits) - 1;
+    const Float_T signedMax = std::pow(2, nbBits - 1) - 1;
     
     std::vector<Float_T> scalingPerOutput = activation.getActivationScaling()
                                                       .getFloatingPointScaling()
@@ -609,7 +838,7 @@ void  N2D2::DeepNetQuantization::quantizeActivationScaling(Cell& cell, Activatio
     // downscalling when approximating the rescaling. A scalingPerOutput[o] > 1.0 should
     // be really rare
     // TODO Find a network where it happens and test how well it works
-    const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
+    const Float_T maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
     if(maxScaling > 1.0 && (actScalingMode == ScalingMode::SINGLE_SHIFT || 
                             actScalingMode == ScalingMode::DOUBLE_SHIFT))
     {
@@ -643,4 +872,21 @@ void N2D2::DeepNetQuantization::quantizeFreeParemeters(Cell& cell, std::size_t n
         
         return std::round(bias*scaling);
     }, Cell::Additive);
+}
+
+std::string N2D2::DeepNetQuantization::getCellModelType(const Cell& cell) {
+    const Cell_Frame_Top& cellFrameTop = dynamic_cast<const Cell_Frame_Top&>(cell);
+    if(cellFrameTop.isCuda()) {
+        return Cell_Frame_Top::FRAME_CUDA;
+    }
+    else {
+        return Cell_Frame_Top::FRAME;
+    }
+}
+
+void N2D2::DeepNetQuantization::errorIfCellExist(const std::string& cellName) const {
+    if(mDeepNet.hasCell(cellName)) {
+        throw std::runtime_error("Can't add the cell " + cellName + ". "
+                                 "A cell with the same name already exist.");
+    }
 }

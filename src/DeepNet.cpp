@@ -636,6 +636,10 @@ std::shared_ptr<N2D2::CMonitor> N2D2::DeepNet::getCMonitor(const std::string
     return (*it).second;
 }
 
+bool N2D2::DeepNet::hasCell(const std::string& name) const {
+    return mCells.find(name) != mCells.end();
+}
+
 std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getChildCells(const std::string& name) const
 {
     std::vector<std::shared_ptr<Cell>> childCells;

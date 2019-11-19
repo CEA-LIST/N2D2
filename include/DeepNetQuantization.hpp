@@ -33,7 +33,9 @@ namespace N2D2 {
 class Activation;
 class Cell;
 class DeepNet;
+class ElemWiseCell;
 class RangeStats;
+class ScalingCell;
 
 class DeepNetQuantization {
 public:
@@ -62,6 +64,30 @@ public:
     void quantizeNormalizedNetwork(std::size_t nbBits, ScalingMode actScalingMode);
     
 private:
+    void fuseScalingCells();
+    void fuseScalingCellWithParentActivation(const std::shared_ptr<ScalingCell>& scalingCell, 
+                                             Activation& parentCellActivation);
+    void fuseScalingCellWithParentScalingCell(const std::shared_ptr<ScalingCell>& scalingCell, 
+                                              const std::shared_ptr<ScalingCell>& parentScalingCell);
+    
+    /**
+     * If possible, move the ScalingCell with an ElemWiseCell parent above the ElemWiseCell.
+     * It then become the parent of the ElemeWiseCell and the child of all the original
+     * parents of the ElemWiseCell.
+     * 
+     * This can be done if the ElemWiseCell is a simple addition multiple inputs.
+     */
+    void moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
+                                                const std::shared_ptr<ElemWiseCell>& parentElemWiseCell);
+
+    std::string getCellModelType(const Cell& cell);
+
+    Float_T getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
+                                 const std::unordered_map<std::string, Float_T>& scalingForCell) const;
+    void rescaleParentsToScaling(const std::shared_ptr<Cell>& cell, 
+                                 const std::unordered_map<std::string, Float_T>& scalingForCell,
+                                 Float_T scaling);
+
     static void quantizeActivationScaling(Cell& cell, Activation& activation, 
                                           std::size_t nbBits, 
                                           ScalingMode actScalingMode);
@@ -71,14 +97,11 @@ private:
                                    const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                    const std::unordered_map<std::string, RangeStats>& outputsRange,
                                    std::size_t nbBits, ClippingMode actClippingMode);
-    
-    static void rescaleActivationOutputs(const Cell& cell, Activation& activation,
-                                         double scalingFactor, double prevScalingFactor);
 
-    static void approximateRescalings(Cell& cell, Activation& activation,
-                                      ScalingMode actScalingMode);
+    static void approximateActivationScaling(Cell& cell, Activation& activation,
+                                             ScalingMode actScalingMode);
     
-    static std::vector<std::vector<unsigned char>> approximateRescalingsWithPowerOf2Divs(Cell& cell, 
+    static std::vector<std::vector<unsigned char>> approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
                                                 const std::vector<Float_T>& scalingPerOutput, 
                                                 std::size_t nbDivisions);
 
@@ -101,8 +124,17 @@ private:
      * 
      * Return a pair with a vector of exponents and the precision of the approximation.
      */
-    static std::pair<std::vector<unsigned char>, double> approximateRescalingWithPowerOf2Divs(
-                                                double scaling, std::size_t nbDivisions);
+    static std::pair<std::vector<unsigned char>, double> approximateScalingWithPowerOf2Divs(
+                                                Float_T scaling, std::size_t nbDivisions);
+
+    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
+                                       std::size_t nbBits);
+
+    /**
+     * Throw and exception if a cell with 'cellName' already exists.
+     */
+    void errorIfCellExist(const std::string& cellName) const;
+
 private:
     DeepNet& mDeepNet;
 };

@@ -35,6 +35,10 @@ class Tensor;
 
 class Cell_Frame_Top {
 public:
+    static const char* FRAME;
+    static const char* FRAME_CUDA;
+
+
     enum Signals {
         In = 1,
         Out = 2,

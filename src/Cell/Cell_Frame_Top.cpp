@@ -20,6 +20,10 @@
 
 #include "Cell/Cell_Frame_Top.hpp"
 
+const char* N2D2::Cell_Frame_Top::FRAME = "Frame";
+const char* N2D2::Cell_Frame_Top::FRAME_CUDA = "Frame_CUDA";
+
+
 #ifdef PYBIND
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
