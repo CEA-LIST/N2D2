@@ -84,6 +84,181 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
     mCells.insert(std::make_pair(cell->getName(), cell));
 }
 
+void N2D2::DeepNet::addCellBetween(const std::shared_ptr<Cell>& newCell,
+                                   const std::shared_ptr<Cell>& parent,
+                                   const std::shared_ptr<Cell>& child)
+{
+    auto parentChildren = parent->getChildrenCells();
+    if(std::find(parentChildren.begin(), parentChildren.end(), child) == parentChildren.end()) {
+        throw std::runtime_error("The cell '" + parent->getName() + "' isn't a parent of the cell '" + 
+                                  child->getName() + "'.");
+    }
+
+    auto childParents = child->getParentsCells();
+    if(std::find(childParents.begin(), childParents.end(), parent) == childParents.end()) {
+        throw std::runtime_error("The cell '" + child->getName() + "' isn't a child of the cell '" + 
+                                  parent->getName() + "'.");
+    }
+
+    /**
+     * mCells 
+     */
+    mCells.insert(std::make_pair(newCell->getName(), newCell));
+
+    /**
+     * mParentLayers
+     */
+    std::multimap<std::string, std::string>::iterator itChildPos;
+
+    // Remove child -> parent link
+    auto itChildParents = mParentLayers.equal_range(child->getName());
+    while(itChildParents.first != itChildParents.second) {
+        if(itChildParents.first->second == parent->getName()) {
+            itChildPos = mParentLayers.erase(itChildParents.first);
+            break;
+        }
+
+        ++itChildParents.first;
+    }
+
+    // Add newCell -> parent link
+    mParentLayers.insert(std::make_pair(newCell->getName(), parent->getName()));
+
+    // Add child -> newCell link
+    mParentLayers.insert(itChildPos, std::make_pair(child->getName(), newCell->getName()));
+
+    /**
+     * mLayers
+     */
+    auto itParentLayer = mLayers.end();
+    for(auto itLayer = mLayers.begin(); itLayer != mLayers.end(); ++itLayer) {
+        auto itCell = std::find(itLayer->begin(), itLayer->end(), parent->getName());
+        if(itCell != itLayer->end()) {
+            itParentLayer = itLayer;
+            break;
+        }
+    }
+
+    if(itParentLayer == mLayers.end()) {
+        throw std::runtime_error("The cell '" + parent->getName() + "' was not found in the graph.");
+    }
+
+    mLayers.insert(itParentLayer + 1, std::vector<std::string>(1, newCell->getName()));
+
+    /**
+     * Cells inputs
+     */
+    auto newCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(newCell);
+    auto parentCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(parent);
+    auto childCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(child);
+
+    newCell->addInput(parent.get());
+    childCellTop->replaceInput(parentCellTop->getOutputs(), newCellTop->getOutputs(), 
+                               newCellTop->getDiffInputs());
+}
+
+void N2D2::DeepNet::addCellAfter(const std::shared_ptr<Cell>& newCell,
+                                 const std::shared_ptr<Cell>& parent)
+{
+    /**
+     * mCells 
+     */
+    mCells.insert(std::make_pair(newCell->getName(), newCell));
+    
+    /**
+     * mParentLayers and cells inputs connections
+     */
+    auto parentCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(parent);
+    auto newCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(newCell);
+
+    // Change the parent of the childrenn of the cell 'parent' to 'newCell'
+    for(const auto& child: getChildCells(parent->getName())) {
+        std::multimap<std::string, std::string>::iterator itChildPos;
+
+        // Remove child->parent link which is the pair {child->getName(), parent->getName()}
+        auto parents = mParentLayers.equal_range(child->getName());
+        while(parents.first != parents.second) {
+            if(parents.first->second == parent->getName()) {
+                itChildPos = mParentLayers.erase(parents.first);
+                break;
+            }
+
+            ++parents.first;
+        }
+        
+
+        // Add new child->newCell link
+        mParentLayers.insert(itChildPos, std::make_pair(child->getName(), newCell->getName()));
+
+        auto childCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(child);
+        childCellTop->replaceInput(parentCellTop->getOutputs(), newCellTop->getOutputs(), 
+                                   newCellTop->getDiffInputs());
+    }
+
+    newCell->addInput(parent.get());
+
+    mParentLayers.insert(std::make_pair(newCell->getName(), parent->getName()));
+
+    
+    /**
+     * mLayers
+     */
+    auto itParentLayer = mLayers.end();
+    for(auto itLayer = mLayers.begin(); itLayer != mLayers.end(); ++itLayer) {
+        auto itCell = std::find(itLayer->begin(), itLayer->end(), parent->getName());
+        if(itCell != itLayer->end()) {
+            itParentLayer = itLayer;
+            break;
+        }
+    }
+
+    if(itParentLayer == mLayers.end()) {
+        throw std::runtime_error("The cell '" + parent->getName() + "' was not found in the graph.");
+    }
+
+    mLayers.insert(itParentLayer + 1, std::vector<std::string>(1, newCell->getName()));
+}
+
+void N2D2::DeepNet::addCellBefore(const std::shared_ptr<Cell>& newCell,
+                                  const std::shared_ptr<Cell>& child)
+{
+    /**
+     * mCells 
+     */
+    mCells.insert(std::make_pair(newCell->getName(), newCell));
+    
+    /**
+     * mParentLayers and cells inputs connections
+     */
+    // Add parent links between 'newCell' and the parent of 'child'.
+    for(auto& parent: getParentCells(child->getName())) {
+        mParentLayers.insert(std::make_pair(newCell->getName(), parent->getName()));
+        newCell->addInput(parent.get());
+    }
+
+    // Set the parent link of 'child' to 'newCell'.
+    auto it = mParentLayers.erase(mParentLayers.find(child->getName()));
+    mParentLayers.insert(it, std::make_pair(child->getName(), newCell->getName()));
+
+    /**
+     * mLayers
+     */
+    auto itChildLayer = mLayers.end();
+    for(auto itLayer = mLayers.begin(); itLayer != mLayers.end(); ++itLayer) {
+        auto itCell = std::find(itLayer->begin(), itLayer->end(), child->getName());
+        if(itCell != itLayer->end()) {
+            itChildLayer = itLayer;
+            break;
+        }
+    }
+
+    if(itChildLayer == mLayers.end()) {
+        throw std::runtime_error("The cell '" + child->getName() + "' was not found in the graph.");
+    }
+
+    mLayers.insert(itChildLayer, std::vector<std::string>(1, newCell->getName()));
+}
+
 void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                                bool reconnect)
 {

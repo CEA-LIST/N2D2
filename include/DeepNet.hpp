@@ -47,9 +47,24 @@ class Monitor;
 class DeepNet : public Parameterizable, public std::enable_shared_from_this<DeepNet> {
 public:
     DeepNet(Network& net);
+
+    /**
+     * TODO Simplify the management of the network graph.
+     * TODO Add a way to adapt the target when a cell is added after a cell with a target.
+     *      Currently the target isn't moved.
+     */
     void addCell(const std::shared_ptr<Cell>& cell,
-                 const std::vector<std::shared_ptr<Cell> >& parents);
+                 const std::vector<std::shared_ptr<Cell>>& parents);
+    void addCellAfter(const std::shared_ptr<Cell>& newCell,
+                      const std::shared_ptr<Cell>& parent);
+    void addCellBefore(const std::shared_ptr<Cell>& newCell,
+                       const std::shared_ptr<Cell>& child);
+    void addCellBetween(const std::shared_ptr<Cell>& newCell,
+                        const std::shared_ptr<Cell>& parent,
+                        const std::shared_ptr<Cell>& child);
     void removeCell(const std::shared_ptr<Cell>& cell, bool reconnect = true);
+
+
     void addTarget(const std::shared_ptr<Target>& cell);
     void addMonitor(const std::string& name,
                     const std::shared_ptr<Monitor>& monitor);
@@ -202,6 +217,8 @@ private:
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
     std::map<std::string, std::shared_ptr<CMonitor> > mCMonitors;
     std::vector<std::vector<std::string> > mLayers;
+
+    // cellName -> parentsNames
     std::multimap<std::string, std::string> mParentLayers;
     bool mFreeParametersDiscretized;
     unsigned int mStreamIdx;
