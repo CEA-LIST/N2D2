@@ -136,7 +136,7 @@ void N2D2::ConvCell::logFreeParameters(const std::string& dirName) const
     }
 }
 
-unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
+unsigned long long int N2D2::ConvCell::getNbSharedSynapses(bool includeBias) const
 {
     const unsigned int kernelSize = (!mKernelDims.empty())
         ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
@@ -152,13 +152,13 @@ unsigned long long int N2D2::ConvCell::getNbSharedSynapses() const
         }
     }
 
-    if (!mNoBias)
+    if (includeBias && !mNoBias)
         nbSharedSynapses += getNbOutputs();
 
     return nbSharedSynapses;
 }
 
-unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
+unsigned long long int N2D2::ConvCell::getNbVirtualSynapses(bool includeBias) const
 {
     std::vector<size_t> oSizes;
 
@@ -217,7 +217,7 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses() const
                 nbVirtualSynapses += nbSynapsesPerConnection;
         }
 
-        if (!mNoBias)
+        if (includeBias && !mNoBias)
             ++nbVirtualSynapses;
     }
 

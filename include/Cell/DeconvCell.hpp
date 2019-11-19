@@ -109,8 +109,8 @@ public:
     virtual void logFreeParameters(const std::string& fileName,
                                    unsigned int output) const;
     virtual void logFreeParameters(const std::string& dirName) const;
-    unsigned long long int getNbSharedSynapses() const;
-    unsigned long long int getNbVirtualSynapses() const;
+    unsigned long long int getNbSharedSynapses(bool includeBias = true) const;
+    unsigned long long int getNbVirtualSynapses(bool includeBias = true) const;
     unsigned int getKernelWidth() const
     {
         return mKernelDims[0];

@@ -134,7 +134,7 @@ void N2D2::DeconvCell::logFreeParameters(const std::string& dirName) const
     }
 }
 
-unsigned long long int N2D2::DeconvCell::getNbSharedSynapses() const
+unsigned long long int N2D2::DeconvCell::getNbSharedSynapses(bool includeBias) const
 {
     const unsigned int kernelSize = (!mKernelDims.empty())
         ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
@@ -150,13 +150,13 @@ unsigned long long int N2D2::DeconvCell::getNbSharedSynapses() const
         }
     }
 
-    if (!mNoBias)
+    if (includeBias && !mNoBias)
         nbSharedSynapses += getNbOutputs();
 
     return nbSharedSynapses;
 }
 
-unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
+unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses(bool includeBias) const
 {
     const size_t iSize = (!mInputsDims.empty())
         ? std::accumulate(mInputsDims.begin(),
@@ -205,7 +205,7 @@ unsigned long long int N2D2::DeconvCell::getNbVirtualSynapses() const
                 nbVirtualSynapses += nbSynapsesPerConnection;
         }
 
-        if (!mNoBias)
+        if (includeBias && !mNoBias)
             ++nbVirtualSynapses;
     }
 
