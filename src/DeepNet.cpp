@@ -99,33 +99,29 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
 void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                                bool reconnect)
 {
-    const std::string name = cell->getName();
+    const std::string cellName = cell->getName();
 
+    std::multimap<std::string, std::string>::iterator itChildPos;
     std::vector<std::string> parents;
-    std::vector<std::string> childs;
+    std::vector<std::string> children;
 
-    for (std::multimap<std::string, std::string>::iterator
-         itParentLayers = mParentLayers.begin();
-         itParentLayers != mParentLayers.end(); )
-    {
-        if ((*itParentLayers).first == name
-            || (*itParentLayers).second == name)
-        {
-            if ((*itParentLayers).first == name)
-                parents.push_back((*itParentLayers).second);
-            else
-                childs.push_back((*itParentLayers).first);
-
-            // Remove the cell from mParentLayers
-            itParentLayers
-                = mParentLayers.erase(itParentLayers);
+    for (auto itParentLayers = mParentLayers.begin(); itParentLayers != mParentLayers.end(); ) {
+        if (itParentLayers->first == cellName) {
+            parents.push_back(itParentLayers->second);
+            itParentLayers = mParentLayers.erase(itParentLayers);
         }
-        else
+        else if(itParentLayers->second == cellName) {
+            children.push_back(itParentLayers->first);
+            itParentLayers = mParentLayers.erase(itParentLayers);
+            itChildPos = itParentLayers;
+        }
+        else {
             ++itParentLayers;
+        }
     }
 
     if (reconnect) {
-        // Connect directly childs to parents
+        // Connect directly children to parents
 
         /* Example with single branch:
            A -> X -> B                =>    A -> B
@@ -146,22 +142,13 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
            ("X", "A"), ("X", "B")                 =>    ("C", "A"), ("C", "B")
            ("C", "X"), ("D", "X")                       ("D", "A"), ("D", "B")
         */
+        auto cellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-        std::shared_ptr<Cell_Frame_Top> cellTop =
-            std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+        for(auto itChild = children.begin(); itChild != children.end(); ++itChild) {
+            auto childCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itChild]);
 
-        for (std::vector<std::string>::const_iterator itChild = childs.begin(),
-             itChildEnd = childs.end(); itChild != itChildEnd; ++itChild)
-        {
-            std::shared_ptr<Cell_Frame_Top> childCellTop =
-                std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itChild]);
-
-            for (std::vector<std::string>::const_iterator itParent
-                 = parents.begin(), itParentEnd = parents.end();
-                 itParent != itParentEnd; ++itParent)
-            {
-                std::shared_ptr<Cell_Frame_Top> parentCellTop =
-                   std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itParent]);
+            for(auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
+                auto parentCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itParent]);
 
                 if (cellTop && childCellTop && parentCellTop) {
                     childCellTop->replaceInput(
@@ -170,23 +157,23 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                         parentCellTop->getDiffInputs());
                 }
 
-                mParentLayers.insert(std::make_pair(*itChild, *itParent));
+                mParentLayers.insert(itChildPos, std::make_pair(*itChild, *itParent));
             }
         }
     }
 
-    mCells.erase(name);
+    mCells.erase(cellName);
 
-    for (unsigned int l = 1; l < mLayers.size(); ) {
-        mLayers[l].erase(std::remove(mLayers[l].begin(),
-                                     mLayers[l].end(),
-                                     name),
+    for(std::size_t l = 1; l < mLayers.size(); ) {
+        mLayers[l].erase(std::remove(mLayers[l].begin(), mLayers[l].end(), cellName),
                          mLayers[l].end());
 
-        if (mLayers[l].empty())
+        if (mLayers[l].empty()) {
             mLayers.erase(mLayers.begin() + l);
-        else
+        }
+        else {
             ++l;
+        }
     }
 }
 
