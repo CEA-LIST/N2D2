@@ -283,16 +283,11 @@ N2D2::ConvCellGenerator::generate(Network& network, const DeepNet& deepNet,
             }
         }
 
-        if (!(*it))
+        if (!(*it)) {
             cell->addInput(sp, 0, 0, sp.getSizeX(), sp.getSizeY(), map);
-        else if ((*it)->getOutputsWidth() > 1 || (*it)->getOutputsHeight() > 1)
-            cell->addInput((*it).get(), map);
+        }
         else {
-            throw std::runtime_error("2D input expected for a ConvCell (\""
-                                     + section + "\"), \"" + (*it)->getName()
-                                     + "\" is not,"
-                                       " in configuration file: "
-                                     + iniConfig.getFileName());
+            cell->addInput((*it).get(), map);
         }
 
         nbChannels += map.dimY();
