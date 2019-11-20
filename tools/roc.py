@@ -48,10 +48,13 @@ if outputNum < 0 or (len(outputs) > 1 and outputNum >= len(outputs)) \
         % (outputNum, len(outputs) - (len(outputs) > 1)))
 
 if os.path.isfile("labels_mapping.log.dat"):
-    legend = numpy.loadtxt("labels_mapping.log.dat", dtype='S')
-    legend = legend[1:].transpose()
+    with open("labels_mapping.log.dat", 'r') as f:
+        legend = csv.reader(f, delimiter=' ', doublequote=False, escapechar='\\',
+                                strict=True)
+        next(legend, None)  # skip the headers
+        legend = list(zip(*legend))
 
-    legendMask = legend[2].astype(int)
+    legendMask = numpy.array(legend[2]).astype(int)
     legendMask = (legendMask == outputNum)
     legendLabels = legend[1]
     legendLabels = [legendLabels[i] for i in xrange(len(legendLabels))

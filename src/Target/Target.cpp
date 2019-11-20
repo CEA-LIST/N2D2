@@ -329,9 +329,12 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
                       size = mStimuliProvider->getDatabase().getNbLabels();
          label < size;
          ++label)
-        labelsData << label << " "
-                   << mStimuliProvider->getDatabase().getLabelName(label) << " "
-                   << getLabelTarget(label) << "\n";
+    {
+        labelsData << label
+            << " " << Utils::quoted(mStimuliProvider->getDatabase()
+                                        .getLabelName(label))
+            << " " << getLabelTarget(label) << "\n";
+    }
 }
 
 void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
