@@ -94,29 +94,32 @@ class MyRowHoverDelegate(QStyledItemDelegate):
 class App(QWidget):
     def __init__(self, argv):
         super().__init__()
-        self.title = 'Confusion Matrix'
         self.left = 0
         self.top = 0
         self.width = 800
         self.height = 600
         self.transpose = False
         self.percent = False
+        self.legend = None
 
         if len(argv) > 1:
-            confusionFile = argv[1]
+            self.confusionFile = argv[1]
         elif os.path.basename(__file__) != "confusion.py":
-            confusionFile = os.getcwd()
-            confusionFile = os.path.join(confusionFile,
+            self.confusionFile = os.getcwd()
+            self.confusionFile = os.path.join(self.confusionFile,
                 os.path.splitext(os.path.basename(__file__))[0] + ".dat")
 
-        if len(argv) > 2:
-            legendFile = argv[2]
-        elif os.path.basename(__file__) != "confusion.py":
-            legendFile = "labels_mapping.log.dat"
-        else:
-            legendFile = None
+        self.title = "Confusion Matrix [%s]" % (self.confusionFile)
 
-        self.initUI(confusionFile, legendFile)
+        if len(argv) > 2:
+            self.legendFile = argv[2]
+        elif os.path.basename(__file__) != "confusion.py" and \
+          os.path.isfile("labels_mapping.log.dat"):
+            self.legendFile = "labels_mapping.log.dat"
+        else:
+            self.legendFile = None
+
+        self.initUI(self.confusionFile, self.legendFile)
 
     def initUI(self, confusionFile, legendFile=None):
         self.setWindowTitle(self.title)
@@ -279,7 +282,12 @@ class App(QWidget):
 
     def fillTableLabels(self, legend):
         n = self.tableModel.rowCount() - 1
-        labels = ["%d: %s" % (k, legend[k]) for k in range(0, n)]
+
+        if legend is not None:
+            labels = ["%d: %s" % (k, legend[k]) for k in range(0, n)]
+        else:
+            labels = ["%d" % (k) for k in range(0, n)]
+
         labels.append("Count")
         self.tableModel.setVerticalHeaderLabels(labels)
         labels.append("Recall")
@@ -480,8 +488,11 @@ class App(QWidget):
         self.fillTable(self.confArray, transpose=self.transpose, percent=self.percent)
 
     def onRestore(self):
-        self.loadLegend()
-        self.loadConfusion()
+        self.loadConfusion(self.confusionFile)
+
+        self.legend = None
+        if self.legendFile is not None:
+            self.loadLegend(self.legendFile)
 
         self.fillTableLabels(self.legend)
         self.fillTable(self.confArray, transpose=self.transpose, percent=self.percent)
@@ -498,7 +509,11 @@ class App(QWidget):
             modelIndex = self.tableView.model().mapToSource(index)
             destRows[modelIndex.row()] = row
 
-        legend = [[destRows[k], v] for k, v in self.legend.items()]
+        if self.legend is not None:
+            legend = [[destRows[k], v] for k, v in self.legend.items()]
+        else:
+            legend = [[destRows[k], k] for k in range(0, self.tableModel.rowCount() - 1)]
+
         self.legend = dict(legend)
 
         self.confArray[destRows,:] = self.confArray[srcRows,:]
