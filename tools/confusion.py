@@ -308,7 +308,7 @@ class App(QWidget):
             count = numpy.sum(row)
             tp = row[target]
             fn = count - tp
-            recall = tp / float(tp + fn)
+            recall = tp / float(tp + fn) if count > 0 else 0.0
 
             for estimated in range(0, len(row)):
                 if transpose:
@@ -365,7 +365,7 @@ class App(QWidget):
             count = colCount[target]
             tp = col[target]
             fp = count - tp
-            precision = tp / float(tp + fp)
+            precision = tp / float(tp + fp) if count > 0 else 0.0
 
             item = self.tableModel.item(target, len(col) + 2)
             item.setText("%.03f" % (precision))
