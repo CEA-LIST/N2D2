@@ -234,6 +234,8 @@ public:
                                                     " in the Test set");
         testId =      opts.parse("-test-id", -1, "test a single specific stimulus ID (takes"
                                                  " precedence over -test-index)");
+        testSaveOutputs = opts.parse("-test-save-outputs", false, "during the tests "
+                                     "save the output of each layer in the current directory");
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
                                                      "stimulus (0 = no log)");
@@ -316,6 +318,7 @@ public:
     unsigned int avgWindow;
     int testIndex;
     int testId;
+    bool testSaveOutputs;
     bool check;
     unsigned int logOutputs;
     bool logJSON;
@@ -369,7 +372,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
             sp->readBatch(Database::Test, idx);
         endTimeSp = std::chrono::high_resolution_clock::now();
 
-        deepNet->test(Database::Test, &timings);
+        deepNet->test(Database::Test, &timings, opt.testSaveOutputs);
 
         deepNet->logEstimatedLabels(testName);
 
