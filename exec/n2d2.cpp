@@ -244,9 +244,9 @@ public:
         nbBits =      opts.parse("-nbbits", 8, "number of bits per weight for exports");
         calibration = opts.parse("-calib", 0, "number of stimuli used for the calibration "
                                               "(0 = no calibration, -1 = use the full "
-                                              "validation dataset)");
-        calibrationReload = opts.parse("-calib-reload", false, "reload and reuse the data of a "
-                                                               " previous calibration.");
+                                              "test dataset)");
+        calibrationReload = opts.parse("-calib-reload", "reload and reuse the data of a "
+                                                        " previous calibration.");
         wtClippingMode = parseClippingMode(
                            opts.parse("-wt-clipping-mode", std::string("None"), 
                                           "weights clipping mode on export, "
