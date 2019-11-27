@@ -108,7 +108,7 @@ void N2D2::DeepNet::addCellBetween(const std::shared_ptr<Cell>& newCell,
     /**
      * mParentLayers
      */
-    std::multimap<std::string, std::string>::iterator itChildPos;
+    std::multimap<std::string, std::string>::iterator itChildPos = mParentLayers.end();
 
     // Remove child -> parent link
     auto itChildParents = mParentLayers.equal_range(child->getName());
@@ -173,7 +173,7 @@ void N2D2::DeepNet::addCellAfter(const std::shared_ptr<Cell>& newCell,
 
     // Change the parent of the childrenn of the cell 'parent' to 'newCell'
     for(const auto& child: getChildCells(parent->getName())) {
-        std::multimap<std::string, std::string>::iterator itChildPos;
+        std::multimap<std::string, std::string>::iterator itChildPos = mParentLayers.end();
 
         // Remove child->parent link which is the pair {child->getName(), parent->getName()}
         auto parents = mParentLayers.equal_range(child->getName());
@@ -264,7 +264,7 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
 {
     const std::string cellName = cell->getName();
 
-    std::multimap<std::string, std::string>::iterator itChildPos;
+    std::multimap<std::string, std::string>::iterator itChildPos = mParentLayers.end();
     std::vector<std::string> parents;
     std::vector<std::string> children;
 
