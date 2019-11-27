@@ -191,6 +191,15 @@ void N2D2::Cell_Frame<T>::addInput(BaseTensor& inputs,
 }
 
 template <class T>
+void N2D2::Cell_Frame<T>::clearInputs() {
+    mInputs.clear();
+    mDiffOutputs.clear();
+
+    mInputsDims.clear();
+    mMapping.clear();
+}
+
+template <class T>
 void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
                                        BaseTensor& newInputs,
                                        BaseTensor& newDiffOutputs)

@@ -240,6 +240,9 @@ void N2D2::DeepNet::addCellBefore(const std::shared_ptr<Cell>& newCell,
     auto it = mParentLayers.erase(mParentLayers.find(child->getName()));
     mParentLayers.insert(it, std::make_pair(child->getName(), newCell->getName()));
 
+    child->clearInputs();
+    child->addInput(newCell.get());
+
     /**
      * mLayers
      */

@@ -85,6 +85,9 @@ public:
                           unsigned int height = 0);
     virtual void addInput(BaseTensor& inputs,
                           BaseTensor& diffOutputs);
+    
+    virtual void clearInputs();
+    
     virtual void replaceInput(BaseTensor& oldInputs,
                               BaseTensor& newInputs,
                               BaseTensor& newDiffOutputs);

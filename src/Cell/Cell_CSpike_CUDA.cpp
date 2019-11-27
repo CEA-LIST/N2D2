@@ -164,6 +164,10 @@ void N2D2::Cell_CSpike_CUDA::addInput(Cell* cell,
     Cell_CSpike_CUDA::addInput(cellCSpike);
 }
 
+void N2D2::Cell_CSpike_CUDA::clearInputs() {
+    throw std::runtime_error("Cell_CSpike_CUDA::clearInputs(): not supported.");
+}
+
 bool N2D2::Cell_CSpike_CUDA::tick(Time_T /*timestamp*/)
 {
     accumulate<int>(&mOutputsActivity, &mOutputs);

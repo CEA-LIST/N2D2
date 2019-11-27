@@ -263,6 +263,8 @@ public:
                           unsigned int y0,
                           unsigned int width = 0,
                           unsigned int height = 0) = 0;
+    
+    virtual void clearInputs() = 0;
 
     /// Initialize the state of the cell (e.g. weights random initialization)
     virtual void initialize() {};

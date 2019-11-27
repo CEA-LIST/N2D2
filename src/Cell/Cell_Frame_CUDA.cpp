@@ -196,6 +196,15 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
 }
 
 template <class T>
+void N2D2::Cell_Frame_CUDA<T>::clearInputs() {
+    mInputs.clear();
+    mDiffOutputs.clear();
+
+    mInputsDims.clear();
+    mMapping.clear();
+}
+
+template <class T>
 void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
                                             BaseTensor& newInputs,
                                             BaseTensor& newDiffOutputs)

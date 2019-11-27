@@ -57,6 +57,9 @@ public:
                           unsigned int y0,
                           unsigned int width = 0,
                           unsigned int height = 0);
+    
+    virtual void clearInputs();
+
     inline virtual void
     propagateSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);
     virtual void

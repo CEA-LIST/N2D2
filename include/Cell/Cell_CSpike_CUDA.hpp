@@ -56,6 +56,9 @@ public:
                           unsigned int y0,
                           unsigned int width = 0,
                           unsigned int height = 0);
+    
+    virtual void clearInputs();
+    
     virtual bool tick(Time_T timestamp);
     virtual void reset(Time_T timestamp);
     virtual Tensor<int>& getOutputsActivity();

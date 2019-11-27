@@ -157,6 +157,10 @@ void N2D2::Cell_CSpike::addInput(Cell* cell,
     Cell_CSpike::addInput(cellCSpike);
 }
 
+void N2D2::Cell_CSpike::clearInputs() {
+    throw std::runtime_error("Cell_CSpike::clearInputs(): not supported.");
+}
+
 bool N2D2::Cell_CSpike::tick(Time_T /*timestamp*/)
 {
     for (unsigned int idx = 0, size = mOutputs.size(); idx < size; ++idx)

@@ -94,6 +94,9 @@ public:
                   unsigned int y0,
                   unsigned int width = 0,
                   unsigned int height = 0);
+    
+    void clearInputs();
+
     void initialize();
     void spikeCodingCompare(const std::string& fileName) const;
     virtual ~PoolCell_Transcode() {};
@@ -219,6 +222,11 @@ void N2D2::PoolCell_Transcode<FRAME, SPIKE>::addInput(Cell* cell,
 
     assert(inputsDims == SPIKE::mInputsDims);
     assert(frameMapping.data() == SPIKE::mMapping.data());
+}
+
+template <class FRAME, class SPIKE>
+void N2D2::PoolCell_Transcode<FRAME, SPIKE>::clearInputs() {
+    throw std::runtime_error("PoolCell_Transcode::clearInputs(): not supported.");
 }
 
 template <class FRAME, class SPIKE>

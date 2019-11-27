@@ -222,6 +222,10 @@ void N2D2::Cell_Spike::addInput(Cell* cell,
     populateOutputs();
 }
 
+void N2D2::Cell_Spike::clearInputs() {
+    throw std::runtime_error("Cell_Spike::clearInputs(): not supported.");
+}
+
 void N2D2::Cell_Spike::populateOutputs()
 {
     if (mOutputs.empty()) {
