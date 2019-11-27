@@ -204,8 +204,10 @@ void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
                                        BaseTensor& newInputs,
                                        BaseTensor& newDiffOutputs)
 {
+    bool foundOldInputs = false;
     for (unsigned int i = 0; i < mInputs.size(); ++i) {
         if (&mInputs[i] == &oldInputs) {
+            foundOldInputs = true;
             mInputs.replace(i, &newInputs);
 
             if (!newDiffOutputs.empty()) {
@@ -213,6 +215,10 @@ void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
                 mDiffOutputs.replace(i, &newDiffOutputs);
             }
         }
+    }
+
+    if(!foundOldInputs) {
+        throw std::runtime_error("Can't replace input, the input has not been found.");
     }
 }
 
