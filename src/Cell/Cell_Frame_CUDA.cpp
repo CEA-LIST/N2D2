@@ -530,7 +530,7 @@ void N2D2::Cell_Frame_CUDA<T>::discretizeSignals(unsigned int nbLevels,
 
 template <class T>
 void N2D2::Cell_Frame_CUDA<T>::saveOutputs(const std::string& fileName) const {
-    mOutputs.synchronizeDToHBased();
+    mOutputs.synchronizeDBasedToH();
     
     std::ofstream ostream(fileName);
 
