@@ -376,6 +376,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         Gnuplot::setDefaultOutput();
     }
 
+    // !!! confusion.py tool only available in N2D2-IP !!!
 #if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
     const int ret = symlink(N2D2_PATH("tools/confusion.py"),
                     (Utils::fileBaseName(fileName) + ".py").c_str());
