@@ -189,6 +189,9 @@ protected:
     Parameter<bool> mMaskedLabelValue;
     /// Threshold for single output (binary classification). Default is 0.5.
     Parameter<double> mBinaryThreshold;
+    /// Threshold for estimated value to be considered in the output logs.
+    // Default is 0.0 (no threshold).
+    Parameter<double> mValueThreshold;
     /// If left empty, use the database image origin format
     Parameter<std::string> mImageLogFormat;
     /// When attributing a target to an output macropixel, any target other than

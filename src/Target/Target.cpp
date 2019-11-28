@@ -51,6 +51,7 @@ N2D2::Target::Target(const std::string& name,
       mMaskedLabel(this, "MaskedLabel", -1),
       mMaskedLabelValue(this, "MaskedLabelValue", false),
       mBinaryThreshold(this, "BinaryThreshold", 0.5),
+      mValueThreshold(this, "ValueThreshold", 0.0),
       mImageLogFormat(this, "ImageLogFormat", "jpg"),
       mWeakTarget(this, "WeakTarget", -2),
       mName(name),
@@ -959,7 +960,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                           / nbTargets + mLabelsHueOffset) % 180;
 
                 estimatedImgHsv.at<cv::Vec3b>(oy, ox)
-                    = (mask.empty() || mask(ox, oy) == mMaskedLabel)
+                    = ((mask.empty() || mask(ox, oy) == mMaskedLabel)
+                        && (!(mValueThreshold > 0.0)
+                            || estimatedLabelsValue(ox, oy) >= mValueThreshold))
                         ? ((estimatedLabels(ox, oy) != mNoDisplayLabel)
                             ? cv::Vec3f(estimatedHue, 255,
                                        (mEstimatedLabelsValueDisplay)
@@ -1108,7 +1111,9 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     //    = mStimuliProvider->getParameter<bool>("DataSignedMapping");
 
     mEstimatedLabels.synchronizeDBasedToH();
-    //mEstimatedLabelsValue.synchronizeDBasedToH();
+
+    if (mValueThreshold > 0.0)
+        mEstimatedLabelsValue.synchronizeDBasedToH();
 
     const time_t now = std::time(0);
     tm* localNow = std::localtime(&now);
@@ -1132,8 +1137,8 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
 
         const Tensor<int> target = mTargets[batchPos][0];
         const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        //const Tensor<Float_T> estimatedLabelsValue
-        //    = mEstimatedLabelsValue[batchPos][0];
+        const Tensor<Float_T> estimatedLabelsValue
+            = mEstimatedLabelsValue[batchPos][0];
 
         const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
             ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
@@ -1156,7 +1161,10 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
                 if (estimatedLabels(ox, oy) != mNoDisplayLabel
-                    && (mask.empty() || mask(ox, oy) == mMaskedLabel)) {
+                    && (mask.empty() || mask(ox, oy) == mMaskedLabel)
+                    && (!(mValueThreshold > 0.0)
+                        || estimatedLabelsValue(ox, oy) >= mValueThreshold))
+                {
                     std::map<int, Tensor<bool> >::iterator itBitmap;
                     std::tie(itBitmap, std::ignore) = estimatedBitmaps.insert(
                         std::make_pair(estimatedLabels(ox, oy),
