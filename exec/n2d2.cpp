@@ -374,10 +374,10 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
         deepNet->test(Database::Test, &timings, opt.testSaveOutputs);
 
-        deepNet->logEstimatedLabels(testName);
-
         if (opt.logJSON)
             deepNet->logEstimatedLabelsJSON(testName);
+        else
+            deepNet->logEstimatedLabels(testName);
 
         if (opt.logOutputs > 0 && b == (opt.logOutputs - 1) / batchSize) {
             const unsigned int batchPos = (opt.logOutputs - 1) % batchSize;
