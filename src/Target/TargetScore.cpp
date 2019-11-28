@@ -354,45 +354,90 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
     if (!data.good())
         throw std::runtime_error("Could not log misclassified stimuli file.");
 
-    data << "# name target estimated\n";
+    //data << "# name target target-labels estimated estimated-labels count\n";
+    data << "# name target estimated count\n";
 
-    const std::vector<std::pair<unsigned int, unsigned int> >& misclassified
+    const std::map<unsigned int,
+                 std::map<unsigned int,
+                          std::vector<unsigned int> > >& misclassified
         = (*mScoreSet.find(set)).second.misclassified;
 
-    for (std::vector<std::pair<unsigned int, unsigned int> >::const_iterator it
-         = misclassified.begin(),
-         itEnd = misclassified.end();
-         it != itEnd;
-         ++it) {
-        const std::vector<int> cls = getTargetLabels((*it).second);
+    for (std::map<unsigned int, std::map<unsigned int,
+        std::vector<unsigned int> > >::const_iterator
+        it = misclassified.begin(), itEnd = misclassified.end(); it != itEnd;
+        ++it)
+    {
+        // For each stimulus
+        bool firstOccurrence = true;
         const std::string name
             = mStimuliProvider->getDatabase().getStimulusName((*it).first);
-        const int label
-            = mStimuliProvider->getDatabase().getStimulusLabel((*it).first);
+        //const int label
+        //    = mStimuliProvider->getDatabase().getStimulusLabel((*it).first);
 
-        data << (*it).first << " " << Utils::quoted(name) << " ";
+        for (std::map<unsigned int, std::vector<unsigned int> >::const_iterator
+            itMisclass = (*it).second.begin(),
+            itMisclassEnd = (*it).second.end(); itMisclass != itMisclassEnd;
+            ++itMisclass)
+        {
+            // For each stimulus' target
+            const unsigned int target = (*itMisclass).first;
+/*
+            const std::vector<int> targetLabels = getTargetLabels(target);
 
-        if (label >= 0) {
-            if (label < (int)mStimuliProvider->getDatabase().getNbLabels())
-                data << mStimuliProvider->getDatabase().getLabelName(label);
+            std::ostringstream targetLabelsName;
+
+            if (targetLabels[0]
+                < (int)mStimuliProvider->getDatabase().getNbLabels())
+            {
+                targetLabelsName << mStimuliProvider->getDatabase()
+                    .getLabelName(targetLabels[0]);
+            }
             else
-                data << label;
+                targetLabelsName << "";
+
+            if (targetLabels.size() > 1)
+                targetLabelsName << "...";
+*/
+            for (unsigned int estimated = 0;
+                estimated < (*itMisclass).second.size(); ++estimated)
+            {
+                if ((*itMisclass).second[estimated] > 0) {
+/*
+                    const std::vector<int> estimatedLabels
+                        = getTargetLabels(estimated);
+
+                    std::ostringstream estimatedLabelsName;
+
+                    if (estimatedLabels[0]
+                        < (int)mStimuliProvider->getDatabase().getNbLabels())
+                    {
+                        estimatedLabelsName << mStimuliProvider->getDatabase()
+                            .getLabelName(estimatedLabels[0]);
+                    }
+                    else
+                        estimatedLabelsName << estimatedLabels[0];
+
+                    if (estimatedLabels.size() > 1)
+                        estimatedLabelsName << "...";
+*/
+                    data << (*it).first;
+
+                    if (firstOccurrence)
+                        data << " " << Utils::quoted(name);
+                    else
+                        data << " ";
+
+                    data << " " << target
+                        //<< " " << targetLabelsName.str()
+                        << " " << estimated
+                        //<< " " << estimatedLabelsName.str()
+                        << " " << (*itMisclass).second[estimated]
+                        << "\n";
+
+                    firstOccurrence = false;
+                }
+            }
         }
-        else
-            data << "*";
-
-        data << " ";
-
-        if (!cls.empty()) {
-            if (cls[0] < (int)mStimuliProvider->getDatabase().getNbLabels())
-                data << mStimuliProvider->getDatabase().getLabelName(cls[0]);
-            else
-                data << cls[0];
-
-            if (cls.size() > 1)
-                data << "...";
-        }
-        data << "\n";
     }
 }
 
@@ -499,11 +544,13 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 
         ConfusionMatrix<unsigned long long int>& confusionMatrix
             = mScoreSet[set].confusionMatrix;
-        std::vector<std::pair<unsigned int, unsigned int> >& misclassified
-            = mScoreSet[set].misclassified;
 
         if (confusionMatrix.empty())
             confusionMatrix.resize(nbTargets, nbTargets, 0);
+
+        std::map<unsigned int,
+                 std::map<unsigned int, std::vector<unsigned int> > >&
+            misclassified = mScoreSet[set].misclassified;
 
         mBatchSuccess.assign(mTargets.dimB(), -1.0);
 
@@ -526,6 +573,8 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
             const Tensor<int> target = mTargets[batchPos];
             const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
 
+            std::map<unsigned int, std::vector<unsigned int> > misclass;
+
             if (target.size() == 1) {
                 if (target(0) >= 0) {
 #pragma omp atomic
@@ -534,9 +583,13 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                     mBatchSuccess[batchPos] = (estimatedLabels(0) == target(0));
 
                     if (!mBatchSuccess[batchPos]) {
-#pragma omp critical(TargetScore__process)
-                        misclassified.push_back(
-                            std::make_pair(id, estimatedLabels(0)));
+                        // Misclassified
+                        std::map<unsigned int, std::vector<unsigned int> >
+                            ::iterator itMisclass;
+                        std::tie(itMisclass, std::ignore)
+                            = misclass.insert(std::make_pair(target(0),
+                                std::vector<unsigned int>(nbTargets, 0U)));
+                        (*itMisclass).second[estimatedLabels(0)] = 1U;
                     }
 
                     // Top-N case :
@@ -598,6 +651,16 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                         success += nbHits[t] / (double)nbLabels[t];
                         successTopN += nbHitsTopN[t] / (double)nbLabels[t];
                         ++nbValidTargets;
+
+                        // Misclassified
+                        std::map<unsigned int, std::vector<unsigned int> >
+                            ::iterator itMisclass;
+                        std::tie(itMisclass, std::ignore)
+                            = misclass.insert(std::make_pair(t,
+                                std::vector<unsigned int>(nbTargets, 0U)));
+
+                        for (unsigned int e = 0; e < nbTargets; ++e)
+                            (*itMisclass).second[e] = confusion(t, e);
                     }
                 }
 
@@ -615,6 +678,9 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                             confusionMatrix.begin(),
                             std::plus<unsigned long long int>());
             }
+
+#pragma omp critical(TargetScore__process)
+            misclassified[id].swap(misclass);
         }
     }
 

@@ -35,7 +35,12 @@ public:
     struct Score {
         std::deque<double> success;
         ConfusionMatrix<unsigned long long int> confusionMatrix;
-        std::vector<std::pair<unsigned int, unsigned int> > misclassified;
+        // Stimulus ID
+        //       -> Target label ID
+        //                -> Estimated label ID (vector): count
+        std::map<unsigned int,
+                 std::map<unsigned int,
+                          std::vector<unsigned int> > > misclassified;
     };
 
     static std::shared_ptr<Target> create(const std::string& name,
