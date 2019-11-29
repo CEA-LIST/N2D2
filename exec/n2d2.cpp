@@ -246,7 +246,7 @@ public:
         nbBits =      opts.parse("-nbbits", 8, "number of bits per weight for exports");
         calibration = opts.parse("-calib", 0, "number of stimuli used for the calibration "
                                               "(0 = no calibration, -1 = use the full "
-                                              "test dataset)");
+                                              "validation dataset)");
         calibrationReload = opts.parse("-calib-reload", false, "reload and reuse the data of a "
                                                                " previous calibration.");
         wtClippingMode = parseClippingMode(
