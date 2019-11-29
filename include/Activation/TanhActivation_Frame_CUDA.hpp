@@ -21,16 +21,17 @@
 #ifndef N2D2_TANHACTIVATION_FRAME_CUDA_H
 #define N2D2_TANHACTIVATION_FRAME_CUDA_H
 
+#include "CudaContext.hpp"
+#include "CudaUtils.hpp"
 #include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/TanhActivation.hpp"
-
-#include "CudaContext.hpp"
-#include "CudaUtils.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
-template <class T> class TanhActivation_Frame_CUDA : public TanhActivation {
+template <class T> 
+class TanhActivation_Frame_CUDA : public TanhActivation {
 public:
     static std::shared_ptr<TanhActivation> create()
     {
@@ -38,9 +39,12 @@ public:
     }
 
     TanhActivation_Frame_CUDA();
-    inline virtual void propagate(BaseTensor& data, bool inference = false);
-    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
-    void propagate(CudaTensor<T>& data, bool inference = false);
+
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+
+    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
+
     virtual ~TanhActivation_Frame_CUDA();
 
 protected:
@@ -68,12 +72,12 @@ N2D2::TanhActivation_Frame_CUDA<T>::TanhActivation_Frame_CUDA()
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
-                                                   bool inference)
+void N2D2::TanhActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
+                                                   BaseTensor& data, bool inference)
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
-    mScaling.propagate(cudaData);
+    mScaling.propagate(cell, cudaData);
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
     const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
@@ -87,26 +91,27 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
                                               cudaData.getCudnnTensorDesc(),
                                               cudaData.getDevicePtr()));
 
-    propagate(cudaData, inference);
+    propagate(cell, cudaData, inference);
 }
 
 namespace N2D2 {
 template <>
-void TanhActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data, bool inference);
+void TanhActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
+                                                            CudaTensor<half_float::half>& data, 
+                                                            bool inference);
 
 template <>
-void TanhActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
-                                                 bool inference);
+void TanhActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
+                                                 CudaTensor<float>& data, bool inference);
 
 template <>
-void TanhActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
-                                                  bool inference);
+void TanhActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
+                                                  CudaTensor<double>& data, bool inference);
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame_CUDA
-    <T>::backPropagate(BaseTensor& data, BaseTensor& diffData)
+void N2D2::TanhActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
+                                                       BaseTensor& data, BaseTensor& diffData)
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
     CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
@@ -128,7 +133,7 @@ void N2D2::TanhActivation_Frame_CUDA
                                 cudaDiffData.getCudnnTensorDesc(),
                                 cudaDiffData.getDevicePtr()));
     
-    mScaling.backPropagate(cudaData, cudaDiffData);
+    mScaling.backPropagate(cell, cudaData, cudaDiffData);
 }
 
 template <class T>

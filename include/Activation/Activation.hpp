@@ -30,6 +30,7 @@
 namespace N2D2 {
 
 class BaseTensor;
+class Cell;
 
 class Activation : public Parameterizable {
 public:
@@ -43,8 +44,8 @@ public:
 
     virtual const char* getType() const = 0;
 
-    virtual void propagate(BaseTensor& data, bool inference = false) = 0;
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData) = 0;
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false) = 0;
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData) = 0;
 
     /**
      * Return the possible range of the activation's output as a pair of min-max. 

@@ -21,6 +21,7 @@
 #ifdef CUDA
 
 #include "Activation/SoftplusActivation_Frame_CUDA.hpp"
+#include "Cell/Cell.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -57,12 +58,13 @@ N2D2::SoftplusActivation_Frame_CUDA<double>::mRegistrar(
     N2D2::Registrar<N2D2::SoftplusActivation>::Type<double>());
 
 namespace N2D2 {
+
 template <>
-void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data,
-    bool /*inference*/)
+void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
+                                                                CudaTensor<half_float::half>& data,
+                                                                bool /*inference*/)
 {
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     cudaHSoftplus_propagate(data.getDevicePtr(),
                             data.getDevicePtr(),
@@ -75,10 +77,10 @@ void SoftplusActivation_Frame_CUDA<half_float::half>::propagate(
 }
 
 template <>
-void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
-                                                     bool /*inference*/)
+void SoftplusActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
+                                                     CudaTensor<float>& data, bool /*inference*/)
 {
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     cudaSSoftplus_propagate(data.getDevicePtr(),
                             data.getDevicePtr(),
@@ -91,10 +93,10 @@ void SoftplusActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
 }
 
 template <>
-void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
-                                                      bool /*inference*/)
+void SoftplusActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
+                                                      CudaTensor<double>& data, bool /*inference*/)
 {
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     cudaDSoftplus_propagate(data.getDevicePtr(),
                             data.getDevicePtr(),
@@ -107,8 +109,9 @@ void SoftplusActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
 }
 
 template <>
-void SoftplusActivation_Frame_CUDA
-    <half_float::half>::backPropagate(CudaTensor<half_float::half>& data, CudaTensor<half_float::half>& diffData)
+void SoftplusActivation_Frame_CUDA<half_float::half>::backPropagate(const Cell& cell, 
+                                                                    CudaTensor<half_float::half>& data, 
+                                                                    CudaTensor<half_float::half>& diffData)
 {
     if (mQuantizationLevels > 0) {
         cudaHclamp(diffData.getDevicePtr(),
@@ -121,12 +124,13 @@ void SoftplusActivation_Frame_CUDA
                                 diffData.getDevicePtr(),
                                 data.size());
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 template <>
-void SoftplusActivation_Frame_CUDA
-    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData)
+void SoftplusActivation_Frame_CUDA<float>::backPropagate(const Cell& cell,  
+                                                         CudaTensor<float>& data, 
+                                                         CudaTensor<float>& diffData)
 {
     if (mQuantizationLevels > 0)
         cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
@@ -135,12 +139,13 @@ void SoftplusActivation_Frame_CUDA
                                 diffData.getDevicePtr(),
                                 data.size());
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 template <>
-void SoftplusActivation_Frame_CUDA
-    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData)
+void SoftplusActivation_Frame_CUDA<double>::backPropagate(const Cell& cell, 
+                                                          CudaTensor<double>& data, 
+                                                          CudaTensor<double>& diffData)
 {
     if (mQuantizationLevels > 0)
         cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
@@ -149,7 +154,7 @@ void SoftplusActivation_Frame_CUDA
                                 diffData.getDevicePtr(),
                                 data.size());
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 }
 

@@ -23,6 +23,7 @@
 
 #include "Activation/Activation_Kernels.hpp"
 #include "Activation/LinearActivation.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
 #include "Solver/SGDSolver_Kernels.hpp"
 
@@ -36,8 +37,8 @@ public:
     }
 
     LinearActivation_Frame();
-    virtual void propagate(BaseTensor& data, bool inference = false);
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
     virtual ~LinearActivation_Frame() {};
 
 private:
@@ -46,21 +47,19 @@ private:
 }
 
 template <class T>
-N2D2::LinearActivation_Frame<T>::LinearActivation_Frame()
-    : LinearActivation()
-{
+N2D2::LinearActivation_Frame<T>::LinearActivation_Frame(): LinearActivation() {
     // ctor
 }
 
 template <class T>
-void N2D2::LinearActivation_Frame<T>::propagate(BaseTensor& baseData,
+void N2D2::LinearActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
                                                 bool inference)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
-    if (mClipping != 0.0) {
+    if (mClipping != 0.0 && !cell.isQuantized()) {
         const T clipping(mClipping);
 
 #pragma omp parallel for if (data.size() > 1024)
@@ -95,8 +94,8 @@ void N2D2::LinearActivation_Frame<T>::propagate(BaseTensor& baseData,
 }
 
 template <class T>
-void N2D2::LinearActivation_Frame
-    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::LinearActivation_Frame<T>::backPropagate(const Cell& cell, 
+                                                    BaseTensor& baseData, BaseTensor& baseDiffData)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
@@ -111,7 +110,7 @@ void N2D2::LinearActivation_Frame
 
 
 
-    if (mClipping != 0.0) {
+    if (mClipping != 0.0 && !cell.isQuantized()) {
         const T clipping(mClipping);
 
 #pragma omp parallel for if (data.size() > 1024)
@@ -121,7 +120,7 @@ void N2D2::LinearActivation_Frame
                         ? 1.0f : 0.0f;
     }
 
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 #endif // N2D2_LINEARACTIVATION_FRAME_H

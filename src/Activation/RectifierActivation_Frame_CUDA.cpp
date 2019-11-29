@@ -21,6 +21,7 @@
 #ifdef CUDA
 
 #include "Activation/RectifierActivation_Frame_CUDA.hpp"
+#include "Cell/Cell.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -56,13 +57,15 @@ N2D2::RectifierActivation_Frame_CUDA<double>::mRegistrar(
     N2D2::RectifierActivation_Frame_CUDA<double>::create,
     N2D2::Registrar<N2D2::RectifierActivation>::Type<double>());
 
+
 namespace N2D2 {
+
 template <>
-void RectifierActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data,
-    bool inference)
+void RectifierActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
+                                                                 CudaTensor<half_float::half>& data,
+                                                                 bool inference)
 {
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
@@ -84,7 +87,7 @@ void RectifierActivation_Frame_CUDA<half_float::half>::propagate(
             data.getDevicePtr(),
             data.size(),
             half_float::half(mLeakSlope),
-            half_float::half(mClipping));
+            cell.isQuantized()?half_float::half(0.0):half_float::half(mClipping));
     }
 
     if (mQuantizationLevels > 0) {
@@ -118,10 +121,10 @@ void RectifierActivation_Frame_CUDA<half_float::half>::propagate(
 }
 
 template <>
-void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
-                                                      bool inference)
+void RectifierActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
+                                                      CudaTensor<float>& data, bool inference)
 {
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
@@ -140,7 +143,7 @@ void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
     else {
         cudaSRectifier_propagate(
             data.getDevicePtr(), data.getDevicePtr(), data.size(),
-            (float)mLeakSlope, (float)mClipping);
+            (float)mLeakSlope, cell.isQuantized()?0.0f:(float)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
@@ -174,10 +177,10 @@ void RectifierActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
 }
 
 template <>
-void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
-                                                       bool inference)
+void RectifierActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
+                                                       CudaTensor<double>& data, bool inference)
 {
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const double alpha = 1.0f;
@@ -196,7 +199,7 @@ void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
     else {
         cudaDRectifier_propagate(
             data.getDevicePtr(), data.getDevicePtr(), data.size(),
-            (double)mLeakSlope, (double)mClipping);
+            (double)mLeakSlope, cell.isQuantized()?0.0:(double)mClipping);
     }
 
     if (mQuantizationLevels > 0) {
@@ -230,9 +233,9 @@ void RectifierActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
 }
 
 template <>
-void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(
-    CudaTensor<half_float::half>& data,
-    CudaTensor<half_float::half>& diffData)
+void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(const Cell& cell, 
+                                                                     CudaTensor<half_float::half>& data,
+                                                                     CudaTensor<half_float::half>& diffData)
 {
     if (mQuantizationLevels > 0) {
         cudaHclamp(diffData.getDevicePtr(),
@@ -264,16 +267,17 @@ void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(
                                      diffData.getDevicePtr(),
                                      data.size(),
                                      half_float::half(mLeakSlope),
-                                     half_float::half(mClipping));
+                                     cell.isQuantized()?half_float::half(0.0):
+                                                        half_float::half(mClipping));
     }
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 template <>
-void RectifierActivation_Frame_CUDA<float>::backPropagate(
-    CudaTensor<float>& data,
-    CudaTensor<float>& diffData)
+void RectifierActivation_Frame_CUDA<float>::backPropagate(const Cell& cell, 
+                                                          CudaTensor<float>& data,
+                                                          CudaTensor<float>& diffData)
 {
     if (mQuantizationLevels > 0)
         cudaSclamp(diffData.getDevicePtr(), diffData.size(), -1.0f, 1.0f);
@@ -301,16 +305,16 @@ void RectifierActivation_Frame_CUDA<float>::backPropagate(
                                      diffData.getDevicePtr(),
                                      data.size(),
                                      (double)mLeakSlope,
-                                     (double)mClipping);
+                                     cell.isQuantized()?0.0:(double)mClipping);
     }
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 template <>
-void RectifierActivation_Frame_CUDA<double>::backPropagate(
-    CudaTensor<double>& data,
-    CudaTensor<double>& diffData)
+void RectifierActivation_Frame_CUDA<double>::backPropagate(const Cell& cell, 
+                                                           CudaTensor<double>& data,
+                                                           CudaTensor<double>& diffData)
 {
     if (mQuantizationLevels > 0)
         cudaDclamp(diffData.getDevicePtr(), diffData.size(), -1.0, 1.0);
@@ -338,10 +342,10 @@ void RectifierActivation_Frame_CUDA<double>::backPropagate(
                                      diffData.getDevicePtr(),
                                      data.size(),
                                      (double)mLeakSlope,
-                                     (double)mClipping);
+                                     cell.isQuantized()?0.0:(double)mClipping);
     }
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 }
 

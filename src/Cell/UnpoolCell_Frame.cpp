@@ -160,6 +160,7 @@ void N2D2::UnpoolCell_Frame::backPropagate()
                                                    mPoolDesc,
                                                    &beta,
                                                    diffOutput,
+                                                   isQuantized(),
                                                    true,
                                                    mMapping.rows(offset,
                                                        mInputs[k].dimZ()));

@@ -102,6 +102,11 @@ namespace Cuda {
     struct cudnn_scaling_type<double> {
         typedef double type;
     };
+
+    template <class T>
+    __device__ const T& clamp(const T& x, const T& min, const T& max) {
+        return (x < min) ? min : (x > max) ? max : x;
+    }
 }
 }
 

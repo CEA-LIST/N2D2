@@ -603,6 +603,8 @@ void N2D2::DeepNetQuantization::quantizeNormalizedNetwork(std::size_t nbBits,
                 approximateScalingCell(dynamic_cast<ScalingCell&>(*cell), scalingCellMode, nbBits);
             }
 
+
+            cell->setQuantized(nbBits);
             const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
             if(!activation) {
                 continue;

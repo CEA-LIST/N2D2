@@ -132,6 +132,7 @@ void N2D2::PoolCell_Frame<T>::propagate(bool inference)
                                                    mPoolDesc,
                                                    &beta,
                                                    mOutputs,
+                                                   isQuantized(),
                                                    true,
                                                    mMapping.rows(offset,
                                                         mInputs[k].dimZ()));

@@ -21,12 +21,12 @@
 #ifndef N2D2_LOGISTICACTIVATION_FRAME_CUDA_H
 #define N2D2_LOGISTICACTIVATION_FRAME_CUDA_H
 
+#include "CudaContext.hpp"
+#include "CudaUtils.hpp"
 #include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/LogisticActivation.hpp"
-
-#include "CudaContext.hpp"
-#include "CudaUtils.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
@@ -39,9 +39,12 @@ public:
     }
 
     LogisticActivation_Frame_CUDA(bool withLoss = false);
-    inline virtual void propagate(BaseTensor& data, bool inference = false);
-    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
-    void propagate(CudaTensor<T>& data, bool inference = false);
+
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+
+    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
+
     virtual ~LogisticActivation_Frame_CUDA();
 
 protected:
@@ -57,8 +60,7 @@ private:
 }
 
 template <class T>
-N2D2::LogisticActivation_Frame_CUDA
-    <T>::LogisticActivation_Frame_CUDA(bool withLoss)
+N2D2::LogisticActivation_Frame_CUDA<T>::LogisticActivation_Frame_CUDA(bool withLoss)
     : LogisticActivation(withLoss)
 {
 #if CUDNN_VERSION >= 5000
@@ -73,14 +75,14 @@ N2D2::LogisticActivation_Frame_CUDA
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
-                                                       bool inference)
+void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
+                                                       BaseTensor& data, bool inference)
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
 
     if (!LogisticActivationDisabled) {
-        mScaling.propagate(cudaData);
+        mScaling.propagate(cell, cudaData);
 
         const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
         const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
@@ -95,26 +97,27 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
                                                   cudaData.getDevicePtr()));
     }
 
-    propagate(cudaData, inference);
+    propagate(cell, cudaData, inference);
 }
 
 namespace N2D2 {
 template <>
-void LogisticActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data, bool inference);
+void LogisticActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
+                                                                CudaTensor<half_float::half>& data, 
+                                                                bool inference);
 
 template <>
-void LogisticActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
-                                                     bool inference);
+void LogisticActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
+                                                     CudaTensor<float>& data, bool inference);
 
 template <>
-void LogisticActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
-                                                      bool inference);
+void LogisticActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
+                                                      CudaTensor<double>& data, bool inference);
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame_CUDA
-    <T>::backPropagate(BaseTensor& data, BaseTensor& diffData)
+void N2D2::LogisticActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
+                                                           BaseTensor& data, BaseTensor& diffData)
 {
     if (LogisticActivationDisabled)
         return;
@@ -141,7 +144,7 @@ void N2D2::LogisticActivation_Frame_CUDA
                                     cudaDiffData.getDevicePtr()));
     }
     
-    mScaling.backPropagate(cudaData, cudaDiffData);
+    mScaling.backPropagate(cell, cudaData, cudaDiffData);
 }
 
 template <class T>

@@ -23,6 +23,7 @@
 
 #include "Activation/TanhActivation.hpp"
 #include "Activation/Activation_Kernels.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
 #include "Solver/SGDSolver_Kernels.hpp"
 
@@ -34,8 +35,8 @@ public:
         return std::make_shared<TanhActivation_Frame<T> >();
     }
 
-    virtual void propagate(BaseTensor& data, bool inference = false);
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
     virtual ~TanhActivation_Frame() {};
 
 private:
@@ -44,12 +45,12 @@ private:
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame<T>::propagate(BaseTensor& baseData,
+void N2D2::TanhActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
                                               bool inference)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     if (mAlpha != 1.0) {
         const T alpha(mAlpha);
@@ -74,8 +75,8 @@ void N2D2::TanhActivation_Frame<T>::propagate(BaseTensor& baseData,
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame
-    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::TanhActivation_Frame<T>::backPropagate(const Cell& cell, 
+                                                  BaseTensor& baseData, BaseTensor& baseDiffData)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
@@ -101,7 +102,7 @@ void N2D2::TanhActivation_Frame
             diffData(index) *= (1.0f - data(index) * data(index));
     }
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 #endif // N2D2_TANHACTIVATION_FRAME_H

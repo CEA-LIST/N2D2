@@ -23,6 +23,7 @@
 
 #include "Activation/Activation_Kernels.hpp"
 #include "Activation/SaturationActivation.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
 #include "Solver/SGDSolver_Kernels.hpp"
 
@@ -36,8 +37,8 @@ public:
     }
 
     SaturationActivation_Frame();
-    virtual void propagate(BaseTensor& data, bool inference = false);
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
     virtual ~SaturationActivation_Frame() {};
 
 private:
@@ -53,12 +54,12 @@ N2D2::SaturationActivation_Frame<T>::SaturationActivation_Frame()
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame<T>::propagate(BaseTensor& baseData,
+void N2D2::SaturationActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
                                                     bool inference)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
     const T threshold(mThreshold);
 
@@ -93,8 +94,8 @@ void N2D2::SaturationActivation_Frame<T>::propagate(BaseTensor& baseData,
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame
-    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::SaturationActivation_Frame<T>::backPropagate(const Cell& cell, 
+                                                        BaseTensor& baseData, BaseTensor& baseDiffData)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
@@ -117,7 +118,7 @@ void N2D2::SaturationActivation_Frame
             *= (data(index) > -threshold && data(index) < threshold)
                     ? 1.0f : 0.0f;
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 #endif // N2D2_SATURATIONACTIVATION_FRAME_H

@@ -68,7 +68,7 @@ void N2D2::ScalingCell_Frame<T>::propagate(bool /*inference*/) {
     mInputs.synchronizeDBasedToH();
 
     const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
-    mScaling.propagate(input, mOutputs);
+    mScaling.propagate(*this, input, mOutputs);
 
     Cell_Frame<T>::propagate();
     mDiffInputs.clearValid();

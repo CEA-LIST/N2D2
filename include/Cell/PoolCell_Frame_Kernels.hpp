@@ -32,6 +32,7 @@ namespace PoolCell_Frame_Kernels {
                         const Descriptor& desc,
                         const T* beta,
                         Tensor<T>& outputs,
+                        bool isQuantized,
                         bool countIncludePadding = true,
                         const Tensor<bool>& maps = Tensor<bool>());
 

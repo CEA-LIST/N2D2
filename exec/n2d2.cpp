@@ -592,9 +592,11 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 << ((opt.nbBits > 0) ? "int" : "float") << std::abs(opt.nbBits);
 
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
-    DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::getScaling(*sp, 
-                                                                        exportDir.str() + "/stimuli",
-                                                                        Database::Validation).second;
+
+    double scaling;
+    std::tie(scaling, DeepNetExport::mEnvDataUnsigned) = StimuliProviderExport::getScaling(
+                                                            *sp, exportDir.str() + "/stimuli",
+                                                            Database::Validation);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     if (opt.calibration != 0 && opt.nbBits > 0) {
@@ -716,6 +718,15 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                     deepNet.get());
 
     DeepNetExport::generate(*deepNet, exportDir.str(), opt.genExport);
+
+    // TODO Move the rescaling of the inputs in quantizeNormalizedNetwork 
+    // and adapt the StimuliProviderExport
+    if(afterCalibration) {
+        sp->addTransformation(
+            RangeAffineTransformation(RangeAffineTransformation::Multiplies, scaling), 
+            Database::All
+        );
+    }
 
     return afterCalibration;
 }

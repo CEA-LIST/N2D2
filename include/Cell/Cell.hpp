@@ -71,6 +71,20 @@ public:
      *of outputs)
     */
     Cell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
+
+    bool isQuantized() const {
+        return mQuantizedNbBits > 0;
+    }
+
+    void setQuantized(std::size_t nbBits) {
+        mQuantizedNbBits = nbBits;
+    }
+
+    std::size_t getQuantizedNbBits() const {
+        return mQuantizedNbBits;
+    }
+
+
     /// Returns cell unique ID
     CellId_T getId() const
     {
@@ -382,6 +396,9 @@ protected:
     std::vector<size_t> mOutputsDims;
     // Input-output mapping
     Tensor<bool> mMapping;
+
+    // 0 if the cell is not quantized, otherwise the number of bits used by the quantization.
+    std::size_t mQuantizedNbBits;
 
 private:
     static unsigned int mIdCnt;

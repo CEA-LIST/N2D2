@@ -226,14 +226,14 @@ template <class T>
 void N2D2::Cell_Frame<T>::propagate(bool inference)
 {
     if (mActivation)
-        mActivation->propagate(mOutputs, inference);
+        mActivation->propagate(*this, mOutputs, inference);
 }
 
 template <class T>
 void N2D2::Cell_Frame<T>::backPropagate()
 {
     if (mActivation)
-        mActivation->backPropagate(mOutputs, mDiffInputs);
+        mActivation->backPropagate(*this, mOutputs, mDiffInputs);
 }
 
 template <class T>

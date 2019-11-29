@@ -21,6 +21,7 @@
 #ifdef CUDA
 
 #include "Activation/TanhActivation_Frame_CUDA.hpp"
+#include "Cell/Cell.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -57,10 +58,11 @@ N2D2::TanhActivation_Frame_CUDA<double>::mRegistrar(
     N2D2::Registrar<N2D2::TanhActivation>::Type<double>());
 
 namespace N2D2 {
+
 template <>
-void TanhActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data,
-    bool inference)
+void TanhActivation_Frame_CUDA<half_float::half>::propagate(const Cell& /*cell*/, 
+                                                            CudaTensor<half_float::half>& data,
+                                                            bool inference)
 {
     if (mQuantizationLevels > 0) {
         ++mNbSteps;
@@ -78,8 +80,8 @@ void TanhActivation_Frame_CUDA<half_float::half>::propagate(
 }
 
 template <>
-void TanhActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
-                                                 bool inference)
+void TanhActivation_Frame_CUDA<float>::propagate(const Cell& /*cell*/, 
+                                                 CudaTensor<float>& data, bool inference)
 {
     if (mQuantizationLevels > 0) {
         ++mNbSteps;
@@ -97,8 +99,8 @@ void TanhActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
 }
 
 template <>
-void TanhActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
-                                                  bool inference)
+void TanhActivation_Frame_CUDA<double>::propagate(const Cell& /*cell*/, 
+                                                  CudaTensor<double>& data, bool inference)
 {
     if (mQuantizationLevels > 0) {
         ++mNbSteps;

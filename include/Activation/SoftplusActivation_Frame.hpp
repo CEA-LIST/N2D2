@@ -26,6 +26,7 @@
 #endif
 
 #include "Activation/SoftplusActivation.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {
@@ -37,8 +38,8 @@ public:
         return std::make_shared<SoftplusActivation_Frame<T> >();
     }
 
-    virtual void propagate(BaseTensor& data, bool inference = false);
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
     virtual ~SoftplusActivation_Frame() {};
 
 private:
@@ -47,12 +48,12 @@ private:
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData,
+void N2D2::SoftplusActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
                                                   bool /*inference*/)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)data.size(); ++index) {
@@ -77,8 +78,8 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(BaseTensor& baseData,
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame
-    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::SoftplusActivation_Frame<T>::backPropagate(const Cell& cell, 
+                                                      BaseTensor& baseData, BaseTensor& baseDiffData)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
@@ -96,7 +97,7 @@ void N2D2::SoftplusActivation_Frame
     for (int index = 0; index < (int)diffData.size(); ++index)
         diffData(index) *= (1.0f - std::exp(-data(index)));
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_H

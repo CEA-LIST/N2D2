@@ -26,6 +26,7 @@
 #endif
 
 #include "Activation/LogisticActivation.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
 #include "Solver/SGDSolver_Kernels.hpp"
 
@@ -39,8 +40,8 @@ public:
     }
 
     LogisticActivation_Frame(bool withLoss = false);
-    virtual void propagate(BaseTensor& data, bool inference = false);
-    virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
     virtual ~LogisticActivation_Frame() {};
 
 private:
@@ -56,15 +57,15 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData,
-                                                  bool inference)
+void N2D2::LogisticActivation_Frame<T>::propagate(const Cell& cell, 
+                                                  BaseTensor& baseData, bool inference)
 {
     if (LogisticActivationDisabled)
         return;
 
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
-    mScaling.propagate(data);
+    mScaling.propagate(cell, data);
 
 #pragma omp parallel for if (data.size() > 1024)
     for (int index = 0; index < (int)data.size(); ++index){
@@ -91,8 +92,8 @@ void N2D2::LogisticActivation_Frame<T>::propagate(BaseTensor& baseData,
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame
-    <T>::backPropagate(BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::LogisticActivation_Frame<T>::backPropagate(const Cell& cell, 
+                                                      BaseTensor& baseData, BaseTensor& baseDiffData)
 {
     if (LogisticActivationDisabled)
         return;
@@ -115,7 +116,7 @@ void N2D2::LogisticActivation_Frame
             diffData(index) *= data(index) * (1.0f - data(index));
     }
     
-    mScaling.backPropagate(data, diffData);
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 #endif // N2D2_LOGISTICACTIVATION_FRAME_H

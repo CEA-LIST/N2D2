@@ -30,6 +30,7 @@ N2D2::Cell::Cell(const DeepNet& deepNet, const std::string& name, unsigned int n
       mDeepNet(deepNet),
       mName(name),
       mOutputsDims(std::vector<size_t>({1U, 1U, nbOutputs})),
+      mQuantizedNbBits(0),
       mGroupMap(0),
       mGroupMapInitialized(false)
 {

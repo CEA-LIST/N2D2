@@ -865,6 +865,7 @@ template class N2D2::Tensor<unsigned long>;
 template class N2D2::Tensor<long long>;
 template class N2D2::Tensor<unsigned long long>;
 template class N2D2::Tensor<std::vector<unsigned int>>;
+template class N2D2::Tensor<std::pair<unsigned char, unsigned char>>;
 template class N2D2::Tensor<std::pair<unsigned long long, char>>;
 template class N2D2::Tensor<std::pair<unsigned long long, int>>;
 template class N2D2::Tensor<std::complex<double>>;

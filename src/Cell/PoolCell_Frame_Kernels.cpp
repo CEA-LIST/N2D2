@@ -30,6 +30,7 @@ void N2D2::PoolCell_Frame_Kernels::forwardAverage(const T* alpha,
                                                   const Descriptor& desc,
                                                   const T* beta,
                                                   Tensor<T>& outputs,
+                                                  bool isQuantized,
                                                   bool countIncludePadding,
                                                   const Tensor<bool>& maps)
 {
@@ -88,6 +89,10 @@ void N2D2::PoolCell_Frame_Kernels::forwardAverage(const T* alpha,
                         = (*alpha) * ((poolCount > 0) ?
                                       (poolValue / poolCount) : 0.0)
                           + (*beta) * outputs(ox, oy, output, batchPos);
+
+                    if(isQuantized) {
+                        outputs(ox, oy, output, batchPos) = std::trunc(outputs(ox, oy, output, batchPos));
+                    }
                 }
             }
         }
@@ -380,6 +385,7 @@ namespace N2D2 {
         const Descriptor& desc,
         const half_float::half* beta,
         Tensor<half_float::half>& outputs,
+        bool isQuantized,
         bool countIncludePadding,
         const Tensor<bool>& maps);
     template void PoolCell_Frame_Kernels::forwardAverage<float>(
@@ -388,6 +394,7 @@ namespace N2D2 {
         const Descriptor& desc,
         const float* beta,
         Tensor<float>& outputs,
+        bool isQuantized,
         bool countIncludePadding,
         const Tensor<bool>& maps);
     template void PoolCell_Frame_Kernels::forwardAverage<double>(
@@ -396,6 +403,7 @@ namespace N2D2 {
         const Descriptor& desc,
         const double* beta,
         Tensor<double>& outputs,
+        bool isQuantized,
         bool countIncludePadding,
         const Tensor<bool>& maps);
 

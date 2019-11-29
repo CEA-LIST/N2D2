@@ -21,12 +21,12 @@
 #ifndef N2D2_SATURATIONACTIVATION_FRAME_CUDA_H
 #define N2D2_SATURATIONACTIVATION_FRAME_CUDA_H
 
+#include "CudaContext.hpp"
+#include "CudaUtils.hpp"
 #include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/SaturationActivation.hpp"
-
-#include "CudaContext.hpp"
-#include "CudaUtils.hpp"
+#include "Cell/Cell.hpp"
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
@@ -39,10 +39,13 @@ public:
     }
 
     SaturationActivation_Frame_CUDA();
-    inline virtual void propagate(BaseTensor& data, bool inference = false);
-    inline virtual void backPropagate(BaseTensor& data, BaseTensor& diffData);
-    void propagate(CudaTensor<T>& data, bool inference = false);
-    void backPropagate(CudaTensor<T>& data, CudaTensor<T>& diffData);
+
+    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
+    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+
+    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
+    void backPropagate(const Cell& cell, CudaTensor<T>& data, CudaTensor<T>& diffData);
+
     virtual ~SaturationActivation_Frame_CUDA() {};
 
 private:
@@ -58,40 +61,44 @@ N2D2::SaturationActivation_Frame_CUDA<T>::SaturationActivation_Frame_CUDA()
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame_CUDA<T>::propagate(BaseTensor& data,
-                                                         bool inference)
+void N2D2::SaturationActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
+                                                         BaseTensor& data, bool inference)
 {
-    propagate(dynamic_cast<CudaTensor<T>&>(data), inference);
+    propagate(cell, dynamic_cast<CudaTensor<T>&>(data), inference);
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame_CUDA<T>::backPropagate(BaseTensor& data,
-                                                        BaseTensor& diffData) {
-    backPropagate(dynamic_cast<CudaTensor<T>&>(data),
-                  dynamic_cast<CudaTensor<T>&>(diffData));
+void N2D2::SaturationActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
+                                                             BaseTensor& data, BaseTensor& diffData) 
+{
+    backPropagate(cell, dynamic_cast<CudaTensor<T>&>(data), dynamic_cast<CudaTensor<T>&>(diffData));
 }
 
 namespace N2D2 {
 template <>
-void SaturationActivation_Frame_CUDA<half_float::half>::propagate(
-    CudaTensor<half_float::half>& data, bool inference);
+void SaturationActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
+                                                                  CudaTensor<half_float::half>& data, 
+                                                                  bool inference);
 template <>
-void SaturationActivation_Frame_CUDA
-    <half_float::half>::backPropagate(CudaTensor<half_float::half>& data, CudaTensor<half_float::half>& diffData);
+void SaturationActivation_Frame_CUDA<half_float::half>::backPropagate(const Cell& cell, 
+                                                                      CudaTensor<half_float::half>& data, 
+                                                                      CudaTensor<half_float::half>& diffData);
 
 template <>
-void SaturationActivation_Frame_CUDA<float>::propagate(CudaTensor<float>& data,
-                                                       bool inference);
+void SaturationActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
+                                                       CudaTensor<float>& data, bool inference);
 template <>
-void SaturationActivation_Frame_CUDA
-    <float>::backPropagate(CudaTensor<float>& data, CudaTensor<float>& diffData);
+void SaturationActivation_Frame_CUDA<float>::backPropagate(const Cell& cell, 
+                                                           CudaTensor<float>& data, 
+                                                           CudaTensor<float>& diffData);
 
 template <>
-void SaturationActivation_Frame_CUDA<double>::propagate(CudaTensor<double>& data,
-                                                        bool inference);
+void SaturationActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
+                                                        CudaTensor<double>& data, bool inference);
 template <>
-void SaturationActivation_Frame_CUDA
-    <double>::backPropagate(CudaTensor<double>& data, CudaTensor<double>& diffData);
+void SaturationActivation_Frame_CUDA<double>::backPropagate(const Cell& cell, 
+                                                            CudaTensor<double>& data, 
+                                                            CudaTensor<double>& diffData);
 }
 
 #endif // N2D2_SATURATIONACTIVATION_FRAME_CUDA_H
