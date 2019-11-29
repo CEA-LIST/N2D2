@@ -630,7 +630,7 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
     }
 
     if(scalingCellMode != ScalingMode::FIXED_MULT) {
-        throw std::runtime_error("THe scaling cell can only be approximated by a fixed-point approximation.");
+        throw std::runtime_error("The scaling cell can only be approximated by a fixed-point approximation.");
     }
 
     const std::vector<Float_T>& floatScalingPerOutput = cell.getScaling()
