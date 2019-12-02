@@ -45,6 +45,7 @@
 #include "Cell/PoolCell.hpp"
 #include "Cell/ResizeCell.hpp"
 #include "Cell/ScalingCell.hpp"
+#include "Cell/SoftmaxCell.hpp"
 #include "Export/DeepNetExport.hpp"
 
 
@@ -407,7 +408,8 @@ void N2D2::DeepNetQuantization::normalizeOutputsRange(
             }
             else if(cell->getType() == PoolCell::Type || 
                     cell->getType() == ResizeCell::Type || 
-                    cell->getType() == ScalingCell::Type) 
+                    cell->getType() == ScalingCell::Type || 
+                    cell->getType() == SoftmaxCell::Type)
             {
                 std::cout << "No scaling for cell " << cell->getName() << "." << std::endl;
                 scalingFactorForCell[cell->getName()] = prevScalingFactor;
