@@ -79,8 +79,6 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
                                            DeepNet* deepNet,
                                            ExportFormat exportFormat)
 {
-    assert(sp.getBatchSize() == 1);
-
     Utils::createDirectories(dirName);
 
     // Truncate is the natural approx. method for the input, as it is generally
