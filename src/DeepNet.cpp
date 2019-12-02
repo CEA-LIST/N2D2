@@ -231,14 +231,14 @@ void N2D2::DeepNet::addCellBefore(const std::shared_ptr<Cell>& newCell,
      * mParentLayers and cells inputs connections
      */
     // Add parent links between 'newCell' and the parent of 'child'.
-    for(auto& parent: getParentCells(child->getName())) {
-        mParentLayers.insert(std::make_pair(newCell->getName(), parent->getName()));
+    for(auto& parent: child->getParentsCells()) {
+        mParentLayers.emplace(newCell->getName(), parent->getName());
         newCell->addInput(parent.get());
     }
 
     // Set the parent link of 'child' to 'newCell'.
-    auto it = mParentLayers.erase(mParentLayers.find(child->getName()));
-    mParentLayers.insert(it, std::make_pair(child->getName(), newCell->getName()));
+    mParentLayers.erase(child->getName());
+    mParentLayers.emplace(child->getName(), newCell->getName());
 
     child->clearInputs();
     child->addInput(newCell.get());
