@@ -23,6 +23,8 @@
 #include "Scaling_CUDA_Kernels.hpp"
 #include "third_party/half.hpp"
 
+using N2D2::Float_T;
+using N2D2::Cuda::clamp;
 
 template<typename T>
 __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigned) {
@@ -33,14 +35,14 @@ __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigne
     const T max = isOutputUnsigned?(1ll << quantizedNbBits) - 1ll:
                                    (1ll << (quantizedNbBits - 1ll)) - 1ll;
 
-    return N2D2::Cuda::clamp(value, min, max);
+    return clamp(value, min, max);
 }
 
 template<typename T>
 __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                                                 std::size_t batchSize, std::size_t nbChannels,
                                                 std::size_t heigth, std::size_t width,
-                                                N2D2::Float_T* scalingFactorPerChannel, 
+                                                Float_T* scalingFactorPerChannel, 
                                                 std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
     const std::size_t startBatch = blockIdx.x*blockDim.x + threadIdx.x;
@@ -172,10 +174,10 @@ __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
 
 
 
-
+namespace N2D2 {
 
 template<>
-void N2D2::cudaFloatingPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+void cudaFloatingPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                                 std::size_t batchSize, std::size_t nbChannels,
                                                                 std::size_t heigth, std::size_t width,
                                                                 Float_T* scalingFactorPerChannel,
@@ -187,7 +189,7 @@ void N2D2::cudaFloatingPointScaling_propagate<half_float::half>(const half_float
 
 
 template<typename T>
-void N2D2::cudaFloatingPointScaling_propagate(const T* input, T* output,
+void cudaFloatingPointScaling_propagate(const T* input, T* output,
                                               std::size_t batchSize, std::size_t nbChannels,
                                               std::size_t heigth, std::size_t width,
                                               Float_T* scalingFactorPerChannel,
@@ -208,7 +210,7 @@ void N2D2::cudaFloatingPointScaling_propagate(const T* input, T* output,
 
 
 template<>
-void N2D2::cudaFixedPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+void cudaFixedPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                              std::size_t batchSize, std::size_t nbChannels,
                                                              std::size_t heigth, std::size_t width,
                                                              std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
@@ -219,7 +221,7 @@ void N2D2::cudaFixedPointScaling_propagate<half_float::half>(const half_float::h
 }
 
 template<typename T>
-void N2D2::cudaFixedPointScaling_propagate(const T* input, T* output,
+void cudaFixedPointScaling_propagate(const T* input, T* output,
                                            std::size_t batchSize, std::size_t nbChannels,
                                            std::size_t heigth, std::size_t width,
                                            std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
@@ -241,7 +243,7 @@ void N2D2::cudaFixedPointScaling_propagate(const T* input, T* output,
 
 
 template<>
-void N2D2::cudaSingleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+void cudaSingleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                               std::size_t batchSize, std::size_t nbChannels,
                                                               std::size_t heigth, std::size_t width,
                                                               unsigned char* scalingFactorPerChannel,
@@ -252,7 +254,7 @@ void N2D2::cudaSingleShiftScaling_propagate<half_float::half>(const half_float::
 }
 
 template<typename T>
-void N2D2::cudaSingleShiftScaling_propagate(const T* input, T* output,
+void cudaSingleShiftScaling_propagate(const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
                                             std::size_t heigth, std::size_t width,
                                             unsigned char* scalingFactorPerChannel,
@@ -273,7 +275,7 @@ void N2D2::cudaSingleShiftScaling_propagate(const T* input, T* output,
 
 
 template<>
-void N2D2::cudaDoubleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+void cudaDoubleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                               std::size_t batchSize, std::size_t nbChannels,
                                                               std::size_t heigth, std::size_t width,
                                                               std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
@@ -284,7 +286,7 @@ void N2D2::cudaDoubleShiftScaling_propagate<half_float::half>(const half_float::
 }
 
 template<typename T>
-void N2D2::cudaDoubleShiftScaling_propagate(const T* input, T* output,
+void cudaDoubleShiftScaling_propagate(const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
                                             std::size_t heigth, std::size_t width,
                                             std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
@@ -304,21 +306,21 @@ void N2D2::cudaDoubleShiftScaling_propagate(const T* input, T* output,
 
 
 
-template void N2D2::cudaFloatingPointScaling_propagate<float>(const float* input, float* output,
+template void cudaFloatingPointScaling_propagate<float>(const float* input, float* output,
                                                               std::size_t batchSize, std::size_t nbChannels,
                                                               std::size_t heigth, std::size_t width,
                                                               Float_T* scalingFactorPerChannel,
                                                               std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                               dim3 blocksPerGrid, dim3 threadsPerBlock);
 
-template void N2D2::cudaFloatingPointScaling_propagate<double>(const double* input, double* output,
+template void cudaFloatingPointScaling_propagate<double>(const double* input, double* output,
                                                                std::size_t batchSize, std::size_t nbChannels,
                                                                std::size_t heigth, std::size_t width,
                                                                Float_T* scalingFactorPerChannel,
                                                                std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                                dim3 blocksPerGrid, dim3 threadsPerBlock);
 
-template void N2D2::cudaFloatingPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+template void cudaFloatingPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                                          std::size_t batchSize, std::size_t nbChannels,
                                                                          std::size_t heigth, std::size_t width,
                                                                          Float_T* scalingFactorPerChannel,
@@ -326,19 +328,19 @@ template void N2D2::cudaFloatingPointScaling_propagate<half_float::half>(const h
                                                                          dim3 blocksPerGrid, dim3 threadsPerBlock);
 
 
-template void N2D2::cudaFixedPointScaling_propagate<float>(const float* input, float* output,
+template void cudaFixedPointScaling_propagate<float>(const float* input, float* output,
                                                            std::size_t batchSize, std::size_t nbChannels,
                                                            std::size_t heigth, std::size_t width,
                                                            std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                            std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                            dim3 blocksPerGrid, dim3 threadsPerBlock);
-template void N2D2::cudaFixedPointScaling_propagate<double>(const double* input, double* output,
+template void cudaFixedPointScaling_propagate<double>(const double* input, double* output,
                                                             std::size_t batchSize, std::size_t nbChannels,
                                                             std::size_t heigth, std::size_t width,
                                                             std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                             dim3 blocksPerGrid, dim3 threadsPerBlock);
-template void N2D2::cudaFixedPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+template void cudaFixedPointScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                                       std::size_t batchSize, std::size_t nbChannels,
                                                                       std::size_t heigth, std::size_t width,
                                                                       std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
@@ -346,19 +348,19 @@ template void N2D2::cudaFixedPointScaling_propagate<half_float::half>(const half
                                                                       dim3 blocksPerGrid, dim3 threadsPerBlock);
 
 
-template void N2D2::cudaSingleShiftScaling_propagate<float>(const float* input, float* output,
+template void cudaSingleShiftScaling_propagate<float>(const float* input, float* output,
                                                             std::size_t batchSize, std::size_t nbChannels,
                                                             std::size_t heigth, std::size_t width,
                                                             unsigned char* scalingFactorPerChannel,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                             dim3 blocksPerGrid, dim3 threadsPerBlock);
-template void N2D2::cudaSingleShiftScaling_propagate<double>(const double* input, double* output,
+template void cudaSingleShiftScaling_propagate<double>(const double* input, double* output,
                                                              std::size_t batchSize, std::size_t nbChannels,
                                                              std::size_t heigth, std::size_t width,
                                                              unsigned char* scalingFactorPerChannel,
                                                              std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                              dim3 blocksPerGrid, dim3 threadsPerBlock);
-template void N2D2::cudaSingleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+template void cudaSingleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                                        std::size_t batchSize, std::size_t nbChannels,
                                                                        std::size_t heigth, std::size_t width,
                                                                        unsigned char* scalingFactorPerChannel,
@@ -366,21 +368,22 @@ template void N2D2::cudaSingleShiftScaling_propagate<half_float::half>(const hal
                                                                        dim3 blocksPerGrid, dim3 threadsPerBlock);
 
 
-template void N2D2::cudaDoubleShiftScaling_propagate<float>(const float* input, float* output,
+template void cudaDoubleShiftScaling_propagate<float>(const float* input, float* output,
                                                             std::size_t batchSize, std::size_t nbChannels,
                                                             std::size_t heigth, std::size_t width,
                                                             std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                             dim3 blocksPerGrid, dim3 threadsPerBlock);
-template void N2D2::cudaDoubleShiftScaling_propagate<double>(const double* input, double* output,
+template void cudaDoubleShiftScaling_propagate<double>(const double* input, double* output,
                                                              std::size_t batchSize, std::size_t nbChannels,
                                                              std::size_t heigth, std::size_t width,
                                                              std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                              std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                              dim3 blocksPerGrid, dim3 threadsPerBlock);
-template void N2D2::cudaDoubleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
+template void cudaDoubleShiftScaling_propagate<half_float::half>(const half_float::half* input, half_float::half* output,
                                                                        std::size_t batchSize, std::size_t nbChannels,
                                                                        std::size_t heigth, std::size_t width,
                                                                        std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                                        std::size_t quantizedNbBits, bool isOutputUnsigned,
                                                                        dim3 blocksPerGrid, dim3 threadsPerBlock);
+}
