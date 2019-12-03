@@ -1301,7 +1301,10 @@ void N2D2::DeepNet::logStats(const std::string& dirName) const
             << " kB   (" << 4.0 * hiddenData / 1024.0 << " KiB)\n\n";
 
     logData << "[Computing]\n"
-               "MACS / input data: " << globalStats.nbConnections / 1.0e6
+               "MACS / input batch: " << globalStats.nbConnections / 1.0e6
+            << "M\n"
+               "MACS / input data: " << globalStats.nbConnections
+                    / mStimuliProvider->getBatchSize() / 1.0e6
             << "M\n";
 
     // Cells stats
