@@ -265,6 +265,7 @@ void N2D2::DeepNet::addCellBefore(const std::shared_ptr<Cell>& newCell,
 void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                                bool reconnect)
 {
+    // TODO Refactorize and simplify the method.
     const std::string cellName = cell->getName();
 
     std::multimap<std::string, std::string>::iterator itChildPos = mParentLayers.end();
@@ -287,43 +288,47 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
     }
 
     if (reconnect) {
-        // Connect directly children to parents
+        /**
+         * Each child of 'cell' has only 'cell' as parent and is completely connected to its parent. 
+         * Clear the input of each child and connect all the parents of 'cell' to each child.
+         */
+        if(cell->isFullMap() &&
+           std::all_of(children.begin(), children.end(), 
+                       [&](const std::string& childName) { 
+                           return mParentLayers.count(childName) == 0 && 
+                                  mCells.at(childName)->isFullMap(); 
+                        }))
+        {
+            for(const std::string& childName: children) {
+                auto child = mCells.at(childName);
+                child->clearInputs();
 
-        /* Example with single branch:
-           A -> X -> B                =>    A -> B
-           mParentLayers:
-           ("X", "A"), ("B", "X")     =>     ("B", "A")
+                for(const std::string& parentName: parents) {
+                    auto parent = mCells.at(parentName);
 
-           Examples with multiples branches:
-           (1)  A \                                         A \
-                   -> X -> C                      =>           -> C
-                B /                                         B /
-           mParentLayers:
-           ("X", "A"), ("X", "B"), ("C", "X")     =>    ("C", "A"), ("C", "B")
-
-           (2)  A \       / C                               A \-/ C
-                   -> X ->                        =>           X
-                B /       \ D                               B /-\ D
-           mParentLayers:
-           ("X", "A"), ("X", "B")                 =>    ("C", "A"), ("C", "B")
-           ("C", "X"), ("D", "X")                       ("D", "A"), ("D", "B")
-        */
-        auto cellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
-
-        for(auto itChild = children.begin(); itChild != children.end(); ++itChild) {
-            auto childCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itChild]);
-
-            for(auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
-                auto parentCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[*itParent]);
-
-                if (cellTop && childCellTop && parentCellTop) {
-                    childCellTop->replaceInput(
-                        cellTop->getOutputs(),
-                        parentCellTop->getOutputs(),
-                        parentCellTop->getDiffInputs());
+                    child->addInput(parent.get());
+                    mParentLayers.emplace(child->getName(), parent->getName());
                 }
+            }
+        }
+        else {
+            auto cellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-                mParentLayers.insert(itChildPos, std::make_pair(*itChild, *itParent));
+            for(const std::string& childName: children) {
+                auto childCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells.at(childName));
+
+                for(const std::string& parentName: parents) {
+                    auto parentCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells.at(parentName));
+
+                    if (cellTop && childCellTop && parentCellTop) {
+                        childCellTop->replaceInput(
+                            cellTop->getOutputs(),
+                            parentCellTop->getOutputs(),
+                            parentCellTop->getDiffInputs());
+                    }
+
+                    mParentLayers.insert(itChildPos, std::make_pair(childName, parentName));
+                }
             }
         }
     }
