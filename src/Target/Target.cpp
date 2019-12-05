@@ -247,6 +247,7 @@ int N2D2::Target::getLabelTarget(int label) const
                     "Incomplete class mapping: no output specified for label #"
                     + labelStr.str() + " (" + labelName + ")");
             }
+            return 0;
         }
     }
 }
@@ -1418,7 +1419,11 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
 N2D2::Target::TensorLabelsValue_T
 N2D2::Target::getEstimatedLabels(const std::shared_ptr<ROI>& roi,
                                  unsigned int batchPos,
-                                 Float_T* values) const
+#ifdef CUDA
+                                Float_T* values) const
+#else
+                                Float_T* /*values*/) const
+#endif
 {
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     const double xRatio = labels.dimX() / (double)mCell->getOutputsWidth();

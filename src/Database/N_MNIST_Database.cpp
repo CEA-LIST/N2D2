@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -91,13 +91,13 @@ void N2D2::N_MNIST_Database::load(const std::string& dataPath,
 void N2D2::N_MNIST_Database::loadAerStimulusData(
                                             std::vector<AerReadEvent>& aerData,
                                             StimuliSet set,
-                                            StimulusID id)
+                                            StimulusID id,
+                                            unsigned int batch)
 {
 
 
     std::string filename = mStimuli[mStimuliSets(set)[id]].name;
-
-    std::vector<AerReadEvent> stimu;
+    std::cout << "ID: " << id << std::endl;
 
     std::ifstream data(filename, std::ios::in|std::ios::binary|std::ios::ate);
 
@@ -132,11 +132,13 @@ void N2D2::N_MNIST_Database::loadAerStimulusData(
 
                 // Bit 24 represents sign
                 unsigned int sign = static_cast<unsigned int>(bitstring >> 31);
-                // Bit 23-0 represent time
+                // Bits 23-0 represent time
                 unsigned int time = static_cast<unsigned int>((bitstring << 1)
                                                                 >> (32-23));
-
-                aerData.push_back(AerReadEvent(xCoor, yCoor, sign, time));
+                
+                // We use here the polarity/sign for the channel, and not for
+                // the event value
+                aerData.push_back(AerReadEvent(xCoor, yCoor, sign, batch, 1, time));
 
             }
 
@@ -154,6 +156,7 @@ void N2D2::N_MNIST_Database::loadAerStimulusData(
                                                 std::vector<AerReadEvent>& aerData,
                                                 StimuliSet set,
                                                 StimulusID id,
+                                                unsigned int batch,
                                                 Time_T start,
                                                 Time_T stop,
                                                 unsigned int repetitions,
@@ -161,60 +164,10 @@ void N2D2::N_MNIST_Database::loadAerStimulusData(
 {
 
 
-    std::string filename = mStimuli[mStimuliSets(set)[id]].name;
-    //std::cout << filename << std::endl;
+  
 
     std::vector<AerReadEvent> stimu;
-
-    std::ifstream data(filename, std::ios::in|std::ios::binary|std::ios::ate);
-
-    if (data.good()) {
-
-            std::streampos size;
-            char * memblock;
-            size = data.tellg(); // Get pointer to end of file
-            memblock = new char [size]; // Allocate memory for data
-            data.seekg(0, std::ios::beg); // Set pointer to beginning
-            data.read(memblock, size);
-            data.close();
-
-            unsigned int nbEvents = (unsigned int)((int)size/5);
-
-            for (unsigned int ev = 0; ev < nbEvents; ++ev) {
-
-                unsigned int offset = 5*ev;
-
-                unsigned int xCoor =
-                            (unsigned int)((unsigned char)memblock[offset]);
-                unsigned int yCoor =
-                            (unsigned int)((unsigned char)memblock[offset+1]);
-
-                 // Use unsigned int because only 24 bit
-                unsigned int bitstring = ((unsigned char)memblock[offset+2]);
-                bitstring =
-                    (bitstring << 8) | (unsigned char)memblock[offset+3];
-                bitstring =
-                    (bitstring << 8) | (unsigned char)memblock[offset+4];
-                bitstring = bitstring << 8;
-
-                // Bit 24 represents sign
-                unsigned int sign = static_cast<unsigned int>(bitstring >> 31);
-                // Bit 23-0 represent time
-                unsigned int time = static_cast<unsigned int>((bitstring << 1)
-                                                                >> (32-23));
-
-                stimu.push_back(AerReadEvent(xCoor, yCoor, sign, time));
-
-            }
-
-            delete[] memblock;
-    }
-    else {
-        throw std::runtime_error("N_MNIST_Database::loadAerStimulusData: "
-                                    "Could not open AER file: " + filename);
-    }
-
-
+    loadAerStimulusData(stimu, set, id, batch);
 
     Time_T intervalSize = (stop-start)/repetitions;
     if ((stop-start)%repetitions != 0) {
@@ -250,34 +203,28 @@ void N2D2::N_MNIST_Database::loadAerStimulusData(
         }
         for(std::vector<AerReadEvent>::iterator it=stimu.begin();
         it!=stimu.end(); ++it) {
-            if ((*it).time <= startTime) {
-                startCounter++;
-            }
-        }
-
-        stimu.erase(stimu.begin(),stimu.begin()+startCounter);
-
-        for(std::vector<AerReadEvent>::iterator it=stimu.begin();
-        it!=stimu.end(); ++it) {
             if ((*it).time <= lastTime) {
                 stopCounter++;
+                if ((*it).time <= startTime) {
+                    startCounter++;
+                }
+            }
+            else {
+                break;
             }
         }
-
-        stimu.erase(stimu.begin()+stopCounter,stimu.end());
     }
 
 
     double scalingFactor = ((double)intervalSize)/(lastTime-startTime);
 
-    for (unsigned int i=0; i < repetitions; ++i) {
-        for(std::vector<AerReadEvent>::iterator it=stimu.begin();
-        it!=stimu.end(); ++it) {
+    for (unsigned int i = 0; i < repetitions; ++i) {
+        for(std::vector<AerReadEvent>::iterator it=stimu.begin()+startCounter;
+        it<=stimu.begin()+stopCounter; ++it) {
             Time_T scaledTime = std::floor((((*it).time-startTime)
                                             *scalingFactor) + i*intervalSize);
-
             aerData.push_back(AerReadEvent((*it).x, (*it).y,
-                                               (*it).channel, scaledTime));
+                                    (*it).channel, (*it).batch, 1, scaledTime));
         }
     }
 }

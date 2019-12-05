@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -35,7 +35,6 @@ N2D2::CEnvironment::CEnvironment(Database& database,
       mNoConversion(this, "NoConversion", false),
       mScaling(this, "Scaling", 1.0),
       mStopStimulusTime(this, "StopStimulusTime", 0),
-      mReadAerData(this, "ReadAerData", false),
       mStreamPath(this, "StreamPath", ""),
       mNbSubStimuli(nbSubStimuli)
 {
@@ -197,7 +196,9 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
         }
         return;
     }
-    if (!mReadAerData) {
+
+    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
+    if (aerDatabase) {
 
         SpikeGenerator::checkParameters();
 
@@ -316,34 +317,30 @@ void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
 }
 
 
-void N2D2::CEnvironment::readAerStream(Time_T start,
-                                    Time_T stop,
-                                    unsigned int repetitions)
-{
-    readAerStream(mStreamPath, start, stop, repetitions);
-}
-
-void N2D2::CEnvironment::readAerStream(std::string dataPath,
-                                            Time_T start,
-                                            Time_T stop,
-                                            unsigned int /*repetitions*/)
+void N2D2::CEnvironment::loadAerStream(Time_T start,
+                                        Time_T stop)
 {
     mAerData.clear();
 
-    std::ifstream data(dataPath);
+    std::ifstream data(mStreamPath);
 
     unsigned int x, y, polarity;
-    unsigned int timestamp=0;
+    unsigned int timestamp;
 
     if (data.good()) {
+        // By default we use batch of size 1 and all spikes value 1
         while (data >> x >> y >> timestamp >> polarity){
-            std::cout << start << " " << stop << " " << timestamp*TimeUs << std::endl;
-            mAerData.push_back(AerReadEvent(x, y, 0, timestamp*TimeUs));
+            if ((start == 0 && stop == 0) || 
+            (timestamp >= start && timestamp <= stop)){
+                mAerData.push_back(AerReadEvent(x, y, polarity, 0, 1, 
+                                                timestamp));
+            }
         }
     }
     else {
         throw std::runtime_error("CEnvironment::loadAerStream: "
-                                    "Could not open AER file: " + dataPath);
+                                    "Could not open AER file: " + 
+                                    std::string(mStreamPath));
     }
 
 }
@@ -565,7 +562,8 @@ void N2D2::CEnvironment::initializeSpikeGenerator(Time_T start, Time_T stop)
         }
     }
 
-    if (mReadAerData) {
+    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
+    if (aerDatabase) {
         mEventIterator = mAerData.begin();
     }
 }

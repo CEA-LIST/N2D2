@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -63,15 +63,8 @@ public:
                       Database::StimuliSet set,
                       unsigned int batchPos = 0);
 
-    virtual void readAerStream(std::string dataPath,
-                        Time_T start,
-                        Time_T stop,
-                        unsigned int repetitions);
-
-    virtual void readAerStream(Time_T start,
-                            Time_T stop,
-                            unsigned int repetitions);
-
+    virtual void loadAerStream(Time_T start,
+                        Time_T stop);
 
     void readRelationalStimulus();
 
@@ -157,7 +150,7 @@ public:
     };
     bool isAerMode()
     {
-        return mReadAerData;
+        return dynamic_cast<AER_Database*>(&mDatabase);
     };
 
     unsigned int getNbSubStimuli()
@@ -213,7 +206,6 @@ protected:
     Parameter<bool> mNoConversion;
     Parameter<Float_T> mScaling;
     Parameter<Time_T> mStopStimulusTime;
-    Parameter<bool> mReadAerData;
     Parameter<std::string> mStreamPath;
     unsigned int mNbSubStimuli;
     long long unsigned int mLastTimestamp;

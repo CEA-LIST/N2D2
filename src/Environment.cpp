@@ -34,8 +34,7 @@ N2D2::Environment::Environment(Network& network,
                                bool compositeStimuli)
     : StimuliProvider(database, size, batchSize, compositeStimuli),
       mNetwork(network),
-      mNodes(mData.dims(), (NodeEnv*)NULL),
-      mReadAerData(this, "ReadAerData", false)
+      mNodes(mData.dims(), (NodeEnv*)NULL)
 
 {
     // ctor
@@ -112,13 +111,20 @@ void N2D2::Environment::addChannel(const CompositeTransformation
 
 void N2D2::Environment::propagate(Time_T start, Time_T end)
 {
-    if (mReadAerData) {
+    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
+    if (aerDatabase) {
+
         for (std::vector<AerReadEvent>::const_iterator it = mAerData.begin(),
                                                 itEnd = mAerData.end(); 
                                                 it != itEnd; ++it) {
             unsigned idx = (*it).x + (*it).y * mNodes.dimX() 
-                + (*it).channel * mNodes.dimX() * mNodes.dimY();
-            mNodes(idx)->incomingSpike(NULL, (*it).time+start, 1);
+                + (*it).channel * mNodes.dimX() * mNodes.dimY()
+                + (*it).batch * mNodes.dimX() * mNodes.dimY() * mNodes.dimZ();
+            if ((*it).time > end) {
+                std::cout << "Warning: event omitted at time: " << (*it).time
+                << " since end at: " << end << std::endl;
+            }
+            mNodes(idx)->incomingSpike(NULL, (*it).time + start, (*it).value);
         }
     }
     else {
@@ -171,52 +177,91 @@ N2D2::Environment::testFrame(unsigned int channel, Time_T start, Time_T end)
 
 
 N2D2::Database::StimulusID N2D2::Environment::readRandomAerStimulus(
-                                            Database::StimuliSet set)
-{
-    const Database::StimulusID id = getRandomID(set);
-    readAerStimulus(set, id);
-    return id;
-}
-
-N2D2::Database::StimulusID N2D2::Environment::readRandomAerStimulus(
                                             Database::StimuliSet set,
-                                            Time_T start,
-                                            Time_T stop,
-                                            unsigned int repetitions,
-                                            unsigned int partialStimulus)
+                                            unsigned int batch)
 {
     const Database::StimulusID id = getRandomID(set);
-    readAerStimulus(set, id, start, stop, repetitions, partialStimulus);
+    readAerStimulus(id, set, batch);
     return id;
 }
 
-void N2D2::Environment::readAerStimulus(Database::StimuliSet set,
-                                        Database::StimulusID id)
+void N2D2::Environment::readAerStimulus(Database::StimulusID id,
+                                        Database::StimuliSet set,
+                                        unsigned int batch)
 {
     AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
 
-
     if (aerDatabase) {
+        // TODO: reuse memory
         mAerData.clear();
-        aerDatabase->loadAerStimulusData(mAerData, set, id);
+        aerDatabase->loadAerStimulusData(mAerData, set, id, batch);
+    }
+    else {
+        throw std::runtime_error("Environment::readAerStimulus: No AER database!");
     }
 }
 
 
-void N2D2::Environment::readAerStimulus(Database::StimuliSet set,
-                                            Database::StimulusID id,
-                                            Time_T start,
-                                            Time_T stop,
-                                            unsigned int repetitions,
-                                            unsigned int partialStimulus)
-{
-    AER_Database * aerDatabase = dynamic_cast<AER_Database*>(&mDatabase);
 
-    if (aerDatabase) {
-        mAerData.clear();
-        aerDatabase->loadAerStimulusData(mAerData, set, id, start, 
-                                    stop, repetitions, partialStimulus);
+void N2D2::Environment::readRandomAerBatch(Database::StimuliSet set)
+{
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
+        batchRef[batchPos] = getRandomID(set);
+
+    unsigned int exceptCatch = 0;
+
+#pragma omp parallel for schedule(dynamic) if (mBatchSize > 1)
+    for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
+        try {
+            readAerStimulus(batchRef[batchPos], set, batchPos);
+        }
+        catch (const std::exception& e)
+        {
+            #pragma omp critical(StimuliProvider__readRandomBatch)
+            {
+                std::cout << Utils::cwarning << e.what() << Utils::cdef
+                    << std::endl;
+                ++exceptCatch;
+            }
+        }
     }
+
+    if (exceptCatch > 0) {
+        std::cout << "Retry without multi-threading..." << std::endl;
+
+        for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos)
+            readAerStimulus(batchRef[batchPos], set, batchPos);
+    }
+}
+
+
+void N2D2::Environment::readAerBatch(Database::StimuliSet set,
+                                      unsigned int startIndex)
+{
+    if (startIndex >= mDatabase.getNbStimuli(set)) {
+        std::stringstream msg;
+        msg << "StimuliProvider::readBatch(): startIndex (" << startIndex
+            << ") is higher than the number of stimuli in the " << set
+            << " set (" << mDatabase.getNbStimuli(set) << ")";
+
+        throw std::runtime_error(msg.str());
+    }
+
+    const unsigned int batchSize
+        = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+        batchRef[batchPos]
+            = mDatabase.getStimulusID(set, startIndex + batchPos);
+
+#pragma omp parallel for schedule(dynamic) if (batchSize > 1)
+    for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
+        readAerStimulus(batchRef[batchPos], set, batchPos);
+
+    std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
 }
 
 N2D2::Environment::~Environment()

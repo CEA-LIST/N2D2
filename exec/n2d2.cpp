@@ -653,7 +653,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         std::unordered_map<std::string, RangeStats> outputsRange;
         std::unordered_map<std::string, Histogram> outputsHistogram;
 
-        bool loadPrevState = false;
+        //bool loadPrevState = false;
 
         if (opt.calibrationReload &&
             std::ifstream(outputsRangeFile.c_str()).good() && 
@@ -1295,11 +1295,7 @@ void learnStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
 
         Database::StimulusID id;
         if (env->isAerMode()) {
-            id = env->readRandomAerStimulus(Database::Learn,
-                                            i * presentTime,
-                                            (i + 1) * presentTime,
-                                            1,
-                                            0);
+            id = env->readRandomAerStimulus(Database::Learn, 0);
         }
         else {
             id = env->readRandomStimulus(Database::Learn);

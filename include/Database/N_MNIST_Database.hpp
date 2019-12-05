@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -34,11 +34,13 @@ public:
     //virtual cv::Mat getStimulusData(StimulusID id);
     virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData,
                                                 StimuliSet set,
-                                                StimulusID id);
+                                                StimulusID id,
+                                                unsigned int batch);
 
     virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData,
                                                     StimuliSet set,
                                                     StimulusID id,
+                                                    unsigned int batch,
                                                     Time_T start,
                                                     Time_T stop,
                                                     unsigned int repetitions=1,

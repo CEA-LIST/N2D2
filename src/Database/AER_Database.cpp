@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -26,14 +26,19 @@
 N2D2::AerReadEvent::AerReadEvent(unsigned int x_,
                                  unsigned int y_,
                                  unsigned int channel_,
+                                 unsigned int batch_,
+                                 int value_,
                                  Time_T time_)
     : x(x_),
     y(y_),
     channel(channel_),
+    batch(batch_),
+    value(value_),
     time(time_)
 {
     // ctor
 }
+
 
 N2D2::AER_Database::AER_Database(bool loadDataInMemory)
     : Database(loadDataInMemory)

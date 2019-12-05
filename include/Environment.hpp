@@ -91,29 +91,21 @@ public:
     inline unsigned int getNbNodes(unsigned int channel,
                                    unsigned int batchPos = 0) const;
 
-    virtual void readAerStimulus(Database::StimuliSet set,
-                                        Database::StimulusID id);
-
-    Database::StimulusID readRandomAerStimulus(Database::StimuliSet set);
-
-    virtual void readAerStimulus(Database::StimuliSet set,
-                        Database::StimulusID id,
-                        Time_T start,
-                        Time_T stop,
-                        unsigned int repetitions,
-                        unsigned int partialStimulus);
+    virtual void readAerStimulus(Database::StimulusID id, 
+                               Database::StimuliSet set,
+                               unsigned int batch);
 
     Database::StimulusID readRandomAerStimulus(Database::StimuliSet set,
-                                Time_T start,
-                                Time_T stop,
-                                unsigned int repetitions,
-                                unsigned int partialStimulus);
+                                                unsigned int batch);
 
     
+    void readRandomAerBatch(Database::StimuliSet set);
+
+    void readAerBatch(Database::StimuliSet set, unsigned int startIndex);
 
     bool isAerMode()
     {
-        return mReadAerData;
+        return dynamic_cast<AER_Database*>(&mDatabase);
     };
 
     virtual ~Environment();
@@ -126,7 +118,6 @@ protected:
     Tensor<NodeEnv*> mNodes;
 
     std::vector<AerReadEvent> mAerData;
-    Parameter<bool> mReadAerData;
 };
 
 // DEPRECATED: legacy special empty database

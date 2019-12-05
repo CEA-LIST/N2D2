@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2017 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -31,11 +31,15 @@ struct AerReadEvent {
     unsigned int x;
     unsigned int y;
     unsigned int channel;
+    unsigned int batch;
+    int value;
     Time_T time;
 
     AerReadEvent(unsigned int x,
                 unsigned int y,
                 unsigned int channel,
+                unsigned int batch,
+                int value,
                 Time_T time);
 };
 
@@ -47,18 +51,10 @@ public:
     //virtual void load(const std::string& /*dataPath*/,
     //                  const std::string& labelPath,
     //                  bool /*extractROIs*/);
-    //virtual cv::Mat getStimulusData(StimulusID id);
     virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData,
                                             StimuliSet set,
-                                          StimulusID id)=0;
-
-    virtual void loadAerStimulusData(std::vector<AerReadEvent>& aerData, 
-                                          StimuliSet set,
                                           StimulusID id,
-                                          Time_T start,
-                                          Time_T stop,
-                                          unsigned int repetitions=1,
-                                          unsigned int partialStimulus=0)=0;
+                                          unsigned int batch)=0;
 
     virtual ~AER_Database(){};
 
