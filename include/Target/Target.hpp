@@ -159,9 +159,11 @@ public:
         return mEstimatedLabelsValue;
     };
     TensorLabelsValue_T getEstimatedLabels(const std::shared_ptr<ROI>& roi,
-                                            unsigned int batchPos = 0) const;
+                                            unsigned int batchPos = 0,
+                                            Float_T* values = NULL) const;
     std::pair<int, Float_T> getEstimatedLabel(const std::shared_ptr<ROI>& roi,
-                                              unsigned int batchPos = 0) const;
+                                              unsigned int batchPos = 0,
+                                              Float_T* values = NULL) const;
     const std::vector<Float_T>& getLoss() const
     {
         return mLoss;
@@ -170,8 +172,6 @@ public:
                      Database::StimuliSet /*set*/) {};
     virtual void clear(Database::StimuliSet set);
     virtual ~Target() {};
-
-protected:
     void process_Frame(BaseTensor& values,
                        const int batchSize);
 #ifdef CUDA
@@ -179,6 +179,7 @@ protected:
                             const int batchSize);
 #endif
 
+protected:
     Parameter<bool> mDataAsTarget;
     Parameter<int> mNoDisplayLabel;
     Parameter<int> mLabelsHueOffset;

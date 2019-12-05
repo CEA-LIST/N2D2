@@ -89,9 +89,8 @@ void N2D2::TargetROIs::clearConfusionMatrix(Database::StimuliSet set)
     mScoreSet[set].confusionMatrix.clear();
 }
 
-void N2D2::TargetROIs::process(Database::StimuliSet set)
+void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T* values)
 {
-    Target::process(set);
 
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
@@ -145,12 +144,32 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 
         ComputerVision::ROI::filterSeparability(
             estimatedROIs, mMergeMaxHDist, mMergeMaxVDist);
-
-        for (std::vector<ComputerVision::ROI::Roi_T>::const_iterator it
+        //const int size_rois = estimatedROIs.size();
+//
+        /*for (std::vector<ComputerVision::ROI::Roi_T>::const_iterator it
              = estimatedROIs.begin(),
              itEnd = estimatedROIs.end();
              it != itEnd;
-             ++it) {
+             ++it) {*/
+
+        for(unsigned int roiIdx = 0; roiIdx < estimatedROIs.size(); ++roiIdx)
+        { 
+            ComputerVision::ROI::Roi_T estimatedROI = estimatedROIs[roiIdx];
+             const int bbLabel = estimatedROI.cls;
+            DetectedBB dbb(std::make_shared<RectangularROI<int> >(
+                               bbLabel,
+                               // RectangularROI<>() bottom right is exclusive,
+                               // but LSL_Box b.r. is inclusive
+                               cv::Point(Utils::round(xRatio * estimatedROI.j0),
+                                         Utils::round(yRatio * estimatedROI.i0)),
+                               cv::Point(Utils::round(xRatio * (estimatedROI.j1 + 1)),
+                                         Utils::round(yRatio * (estimatedROI.i1 + 1)))),
+                           0.0,
+                           std::shared_ptr<ROI>(),
+                           0.0,
+                           false);  
+
+            /*
             const int bbLabel = (*it).cls;
             DetectedBB dbb(std::make_shared<RectangularROI<int> >(
                                bbLabel,
@@ -164,11 +183,11 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
                            std::shared_ptr<ROI>(),
                            0.0,
                            false);
-
+            */
             if (mScoreTopN > 1) {
                 TensorLabelsValue_T bbLabels = (mROIsLabelTarget)
-                    ? mROIsLabelTarget->getEstimatedLabels(dbb.bb, batchPos)
-                    : getEstimatedLabels(dbb.bb, batchPos);
+                    ? mROIsLabelTarget->getEstimatedLabels(dbb.bb, batchPos, values)
+                    : getEstimatedLabels(dbb.bb, batchPos, values);
 
                 std::vector<int> labelIdx(bbLabels.size());
                 std::iota(labelIdx.begin(), labelIdx.end(), 0);
@@ -192,9 +211,10 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
             else {
                 int label;
                 Float_T score;
+
                 std::tie(label, score) = (mROIsLabelTarget)
-                    ? mROIsLabelTarget->getEstimatedLabel(dbb.bb, batchPos)
-                    : getEstimatedLabel(dbb.bb, batchPos);
+                    ? mROIsLabelTarget->getEstimatedLabel(dbb.bb, batchPos, values)
+                    : getEstimatedLabel(dbb.bb, batchPos, values);
 
                 dbb.bb->setLabel(label);
                 dbb.score = score;
@@ -343,6 +363,11 @@ void N2D2::TargetROIs::process(Database::StimuliSet set)
 
         mDetectedBB[batchPos].swap(detectedBB);
     }
+}
+void N2D2::TargetROIs::process(Database::StimuliSet set)
+{
+    Target::process(set);
+    processEstimatedLabels(set);
 }
 
 cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const

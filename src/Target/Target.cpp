@@ -1417,7 +1417,8 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
 
 N2D2::Target::TensorLabelsValue_T
 N2D2::Target::getEstimatedLabels(const std::shared_ptr<ROI>& roi,
-                                 unsigned int batchPos) const
+                                 unsigned int batchPos,
+                                 Float_T* values) const
 {
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     const double xRatio = labels.dimX() / (double)mCell->getOutputsWidth();
@@ -1492,7 +1493,7 @@ N2D2::Target::getEstimatedLabels(const std::shared_ptr<ROI>& roi,
                 *outputsCudaBaseTensor);
 
         cudaGetEstimatedLabel( CudaContext::getDeviceProp(),
-                                value->getDevicePtr(),
+                                values == NULL ? value->getDevicePtr() : values,
                                 outputsBaseTensor.dimX(),
                                 outputsBaseTensor.dimY(),
                                 nbOutputs,
@@ -1542,9 +1543,10 @@ N2D2::Target::getEstimatedLabels(const std::shared_ptr<ROI>& roi,
 
 std::pair<int, N2D2::Float_T>
 N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
-                                unsigned int batchPos) const
+                                unsigned int batchPos,
+                                Float_T* values) const
 {
-    const TensorLabelsValue_T bbLabels = getEstimatedLabels(roi, batchPos);
+    const TensorLabelsValue_T bbLabels = getEstimatedLabels(roi, batchPos, values);
 
     const std::vector<Float_T>::const_iterator it
         = std::max_element(bbLabels.begin(), bbLabels.end());

@@ -97,6 +97,8 @@ public:
                             Database::StimuliSet set) const;
     void clearConfusionMatrix(Database::StimuliSet set);
     virtual void process(Database::StimuliSet set);
+    void processEstimatedLabels(Database::StimuliSet set,
+                                Float_T* values = NULL);
     cv::Mat drawEstimatedLabels(unsigned int batchPos = 0) const;
     const std::vector<DetectedBB>& getDetectedBB(unsigned int batchPos
                                                  = 0) const
