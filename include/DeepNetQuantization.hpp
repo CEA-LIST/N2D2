@@ -43,27 +43,32 @@ public:
 
     void clipWeights(std::size_t nbBits, ClippingMode wtClippingMode);
 
-
-    void normalizeFreeParameters(Float_T normFactor = 1.0);
-    void normalizeFreeParametersPerOutputChannel(Float_T normFactor = 1.0);
-    void rescaleAdditiveParameters(Float_T rescaleFactor);
-
-
     void reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const;
     void reportOutputsHistogram(std::unordered_map<std::string, Histogram>& outputsHistogram,
                                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                                 std::size_t nbBits, ClippingMode actClippingMode) const;
-
-
-    void normalizeOutputsRange(const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                               const std::unordered_map<std::string, RangeStats>& outputsRange,
-                               std::size_t nbBits,
-                               ClippingMode actClippingMode);
-
-
-    void quantizeNormalizedNetwork(std::size_t nbBits, ScalingMode actScalingMode);
     
+    void quantizeNetwork(const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                         const std::unordered_map<std::string, RangeStats>& outputsRange,
+                         std::size_t nbBits,
+                         ClippingMode actClippingMode,
+                         ScalingMode actScalingMode,
+                         bool rescalePerOutputChannel);
+
 private:
+    /**
+     * Return the scalings that have been applied to the biasses of each layer. 
+     */
+    std::unordered_map<std::string, long double> quantizeFreeParemeters(std::size_t nbBits);
+    std::unordered_map<std::string, long double> quantizeFreeParemetersPerOutputCh(std::size_t nbBits);
+    
+    void quantizeActivations(const std::unordered_map<std::string, Histogram>& outputsHistogram,
+                             const std::unordered_map<std::string, RangeStats>& outputsRange,
+                             std::unordered_map<std::string, long double>& biasScalings,
+                             std::size_t nbBits, ClippingMode actClippingMode);
+
+    double getActivationQuantizationScaling(const Cell& cell, std::size_t nbBits) const;
+
     void fuseScalingCells();
     void fuseScalingCellWithParentActivation(const std::shared_ptr<ScalingCell>& scalingCell, 
                                              Activation& parentCellActivation);
@@ -82,16 +87,11 @@ private:
 
     std::string getCellModelType(const Cell& cell);
 
-    Float_T getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
-                                 const std::unordered_map<std::string, Float_T>& scalingForCell) const;
+    long double getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
+                                 const std::unordered_map<std::string, long double>& scalingForCells) const;
     void rescaleParentsToScaling(const std::shared_ptr<Cell>& cell, 
-                                 const std::unordered_map<std::string, Float_T>& scalingForCell,
-                                 Float_T scaling);
-
-    static void quantizeActivationScaling(Cell& cell, Activation& activation, 
-                                          std::size_t nbBits, 
-                                          ScalingMode actScalingMode);
-    static void quantizeFreeParemeters(Cell& cell, std::size_t nbBits);
+                                 const std::unordered_map<std::string, long double>& scalingForCells,
+                                 long double scaling);
 
     static double getCellThreshold(const std::string& cellName,
                                    const std::unordered_map<std::string, Histogram>& outputsHistogram,
@@ -130,10 +130,7 @@ private:
     static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
                                        std::size_t nbBits);
 
-    /**
-     * Throw and exception if a cell with 'cellName' already exists.
-     */
-    void errorIfCellExist(const std::string& cellName) const;
+    std::string getNewCellName(const std::string& baseName) const;
 
 private:
     DeepNet& mDeepNet;

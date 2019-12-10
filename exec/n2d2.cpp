@@ -44,9 +44,9 @@
  * ---------
  * ./n2d2 $N2D2_MODELS/mnist-28x28-rbf.ini mnist -learn 6000000 -log 100000
 */
+#include <future>
 
 #include "N2D2.hpp"
-
 #include "DeepNet.hpp"
 #include "DeepNetQuantization.hpp"
 #include "DrawNet.hpp"
@@ -556,168 +556,137 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     
 }
 
-bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
-    std::shared_ptr<Database> database = deepNet->getDatabase();
-    std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
-
-
-    bool afterCalibration = false;
+void importFreeParemeters(const Options& opt, DeepNet& deepNet) {   
     try {
         if (!opt.weights.empty()) {
             if (opt.weights != "/dev/null")
-                deepNet->importNetworkFreeParameters(opt.weights);
+                deepNet.importNetworkFreeParameters(opt.weights);
         }
         else if (opt.load.empty()) {
-            if (database->getNbStimuli(Database::Validation) > 0) {
-                deepNet->importNetworkFreeParameters("weights_validation");
+            if (deepNet.getDatabase()->getNbStimuli(Database::Validation) > 0) {
+                deepNet.importNetworkFreeParameters("weights_validation");
             }
             else {
-                deepNet->importNetworkFreeParameters("weights");
+                deepNet.importNetworkFreeParameters("weights");
             }
         }
     }
     catch (const std::exception& e) {
         std::cout << Utils::cwarning << e.what() << Utils::cdef << std::endl;
     }
+}
+
+
+bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
+    const std::shared_ptr<Database>& database = deepNet->getDatabase();
+    const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
+
+    importFreeParemeters(opt, *deepNet);
 
     deepNet->removeDropout();
+    deepNet->fuseBatchNormWithConv();
 
-    if (opt.fuse) {
-        deepNet->fuseBatchNormWithConv();
-    }
+    const std::string exportDir = "export_" + opt.genExport + ((opt.nbBits > 0) ? "int" : "float") +
+                                  std::to_string(std::abs(opt.nbBits));
 
-
-    std::stringstream exportDir;
-    exportDir << "export_" << opt.genExport << "_"
-                << ((opt.nbBits > 0) ? "int" : "float") << std::abs(opt.nbBits);
-
+    // TODO Avoid these global variables.
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
+    CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     double scaling;
     std::tie(scaling, DeepNetExport::mEnvDataUnsigned) = StimuliProviderExport::getScaling(
-                                                            *sp, exportDir.str() + "/stimuli",
+                                                            *sp, exportDir + "/stimuli",
                                                             Database::Validation);
-    CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
-    if (opt.calibration != 0 && opt.nbBits > 0) {
+
+    bool afterCalibration;
+    if(opt.calibration != 0 && opt.nbBits > 0) {
         DeepNetQuantization dnQuantization(*deepNet);
-
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
 
-        if(opt.actRescalePerOutput) {
-            dnQuantization.normalizeFreeParametersPerOutputChannel();
-        }
-        else {
-            dnQuantization.normalizeFreeParameters();
-        }
 
-        const double stimuliRange = StimuliProviderExport::getStimuliRange(
-                                            *sp,
-                                            exportDir.str() + "/stimuli_before_calibration",
-                                            Database::Validation);
+        Utils::createDirectories(exportDir + "/calibration");
 
-        if (stimuliRange == 0.0) {
-            throw std::runtime_error("Stimuli range is 0."
-                " Is there any stimulus? (required for calibration!)");
-        }
-
-        if (stimuliRange != 1.0) {
-            // For calibration, normalizes the input in the full range of
-            // export data precision
-            // => stimuli range must therefore be in [-1,1] before export
-
-            // If test is following (after calibration):
-            // This step is necessary for mSignalsDiscretization parameter
-            // to work as expected, which is set in normalizeOutputsRange()
-            std::cout << "Stimuli range before transformation is "
-                << stimuliRange << std::endl;
-
-            sp->addOnTheFlyTransformation(RangeAffineTransformation(
-                RangeAffineTransformation::Divides, stimuliRange),
-                Database::NoLearn);
-
-            dnQuantization.rescaleAdditiveParameters(stimuliRange);
-        }
-
-        // Globally disable logistic activation, in order to evaluate the
-        // correct range and shifting required for layers with logistic
-        LogisticActivationDisabled = true;
-
-        Utils::createDirectories(exportDir.str() + "/calibration");
-
-        const std::string outputsRangeFile
-            = exportDir.str() + "/calibration/outputs_range.bin";
-        const std::string outputsHistogramFile
-            = exportDir.str() + "/calibration/outputs_histogram.bin";
+        const std::string outputsRangeFile = exportDir + "/calibration/outputs_range.bin";
+        const std::string outputsHistogramFile = exportDir + "/calibration/outputs_histogram.bin";
 
         std::unordered_map<std::string, RangeStats> outputsRange;
         std::unordered_map<std::string, Histogram> outputsHistogram;
 
-        //bool loadPrevState = false;
-
-        if (opt.calibrationReload &&
-            std::ifstream(outputsRangeFile.c_str()).good() && 
-            std::ifstream(outputsHistogramFile.c_str()).good())
+        if(opt.calibrationReload &&
+           std::ifstream(outputsRangeFile.c_str()).good() && 
+           std::ifstream(outputsHistogramFile.c_str()).good())
         {
             RangeStats::loadOutputsRange(outputsRangeFile, outputsRange);
             Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
         else {
-            const unsigned int nbStimuli = (opt.calibration > 0)
-                ? std::min((unsigned int)opt.calibration,
-                            database->getNbStimuli(Database::Validation))
-                : database->getNbStimuli(Database::Validation);
-            const unsigned int batchSize = sp->getBatchSize();
-            const unsigned int nbBatch = std::ceil(nbStimuli / (double)batchSize);
+            const std::size_t nbStimuli = (opt.calibration > 0)? 
+                                              std::min(static_cast<unsigned int>(opt.calibration),
+                                                       database->getNbStimuli(Database::Validation)):
+                                              database->getNbStimuli(Database::Validation);
+            const std::size_t batchSize = sp->getBatchSize();
+            const std::size_t nbBatches = std::ceil(1.0*nbStimuli/batchSize);
 
 
             std::cout << "Calculating calibration data range and histogram..." << std::endl;
-            unsigned int nextReport = opt.report;
-            for (unsigned int b = 0; b < nbBatch; ++b) {
-                const unsigned int i = b * batchSize;
+            std::size_t nextReport = opt.report;
 
-                sp->readBatch(Database::Validation, i);
-                deepNet->test(Database::Validation);
-                dnQuantization.reportOutputsRange(outputsRange);
-                dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 
-                                                      opt.nbBits, opt.actClippingMode);
+            // Globally disable logistic activation, in order to evaluate the
+            // correct range and shifting required for layers with logistic
+            LogisticActivationDisabled = true;
 
-                if (i >= nextReport || b == nbBatch - 1) {
+            sp->readBatch(Database::Validation, 0);
+            for(std::size_t b = 1; b <= nbBatches; ++b) {
+                const std::size_t istimulus = b * batchSize;
+
+                sp->synchronize();
+
+                // TODO Use a pool of threads
+                auto reportTask = std::async(std::launch::async, [&]() { 
+                    deepNet->test(Database::Validation);
+                    dnQuantization.reportOutputsRange(outputsRange);
+                    dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 
+                                                          opt.nbBits, opt.actClippingMode);
+                });
+
+                if(b < nbBatches) {
+                    sp->future();
+                    sp->readBatch(Database::Validation, istimulus);
+                }
+
+                reportTask.wait();
+
+                if(istimulus >= nextReport && b < nbBatches) {
                     nextReport += opt.report;
-                    std::cout << "Calibration data " << i << "/" << nbStimuli << std::endl;
+                    std::cout << "Calibration data " << istimulus << "/" << nbStimuli << std::endl;
                 }
             }
+
+            LogisticActivationDisabled = false;
+
 
             RangeStats::saveOutputsRange(outputsRangeFile, outputsRange);
             Histogram::saveOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
 
-        RangeStats::logOutputsRange(exportDir.str() + "/calibration"
-                                    "/outputs_range.dat", outputsRange);
-        Histogram::logOutputsHistogram(exportDir.str() + "/calibration"
-                                       "/outputs_histogram", outputsHistogram, 
+        RangeStats::logOutputsRange(exportDir + "/calibration/outputs_range.dat", outputsRange);
+        Histogram::logOutputsHistogram(exportDir + "/calibration/outputs_histogram", outputsHistogram, 
                                        opt.nbBits, opt.actClippingMode);
 
-        std::cout << "Calibration (" << opt.nbBits << " bits):" << std::endl;
 
-        dnQuantization.normalizeOutputsRange(outputsHistogram, outputsRange,
-                                       opt.nbBits, opt.actClippingMode);
-
-        dnQuantization.quantizeNormalizedNetwork(opt.nbBits, opt.actScalingMode);
+        std::cout << "Quantization (" << opt.nbBits << " bits):" << std::endl;
+        dnQuantization.quantizeNetwork(outputsHistogram, outputsRange,
+                                       opt.nbBits, opt.actClippingMode, 
+                                       opt.actScalingMode, opt.actRescalePerOutput);
         
-        LogisticActivationDisabled = false;
         afterCalibration = true;
     }
 
-    StimuliProviderExport::generate(*sp,
-                                    exportDir.str() + "/stimuli",
-                                    opt.genExport,
-                                    Database::Test,
-                                    opt.exportNbStimuliMax,
-                                    false,
-                                    deepNet.get());
+    StimuliProviderExport::generate(*sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
+                                    opt.exportNbStimuliMax, false, deepNet.get());
 
-    DeepNetExport::generate(*deepNet, exportDir.str(), opt.genExport);
+    DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
 
     // TODO Move the rescaling of the inputs in quantizeNormalizedNetwork 
     // and adapt the StimuliProviderExport
