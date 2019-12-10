@@ -586,7 +586,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     deepNet->removeDropout();
     deepNet->fuseBatchNormWithConv();
 
-    const std::string exportDir = "export_" + opt.genExport + ((opt.nbBits > 0) ? "int" : "float") +
+    const std::string exportDir = "export_" + opt.genExport + "_" + ((opt.nbBits > 0) ? "int" : "float") +
                                   std::to_string(std::abs(opt.nbBits));
 
     // TODO Avoid these global variables.
