@@ -589,20 +589,32 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     const std::string exportDir = "export_" + opt.genExport + "_" + ((opt.nbBits > 0) ? "int" : "float") +
                                   std::to_string(std::abs(opt.nbBits));
 
+
     // TODO Avoid these global variables.
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
+    DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::getScaling(
+                                          *sp, exportDir + "/stimuli",
+                                          Database::Validation).second;
 
-    double scaling;
-    std::tie(scaling, DeepNetExport::mEnvDataUnsigned) = StimuliProviderExport::getScaling(
-                                                            *sp, exportDir + "/stimuli",
-                                                            Database::Validation);
 
 
     bool afterCalibration;
     if(opt.calibration != 0 && opt.nbBits > 0) {
         DeepNetQuantization dnQuantization(*deepNet);
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
+
+
+        const double stimuliRange = StimuliProviderExport::getStimuliRange(
+                                        *sp, exportDir + "/stimuli",
+                                        Database::Validation);
+        if (stimuliRange != 1.0) {
+            sp->addChannelsOnTheFlyTransformation(RangeAffineTransformation(
+                RangeAffineTransformation::Divides, stimuliRange),
+                Database::All);
+
+            dnQuantization.rescaleAdditiveParameters(stimuliRange);
+        }
 
 
         Utils::createDirectories(exportDir + "/calibration");
@@ -675,7 +687,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                        opt.nbBits, opt.actClippingMode);
 
 
-        std::cout << "Quantization (" << opt.nbBits << " bits):" << std::endl;
+        std::cout << "Quantization (" << opt.nbBits << " bits)..." << std::endl;
         dnQuantization.quantizeNetwork(outputsHistogram, outputsRange,
                                        opt.nbBits, opt.actClippingMode, 
                                        opt.actScalingMode, opt.actRescalePerOutput);
@@ -688,11 +700,13 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
 
-    // TODO Move the rescaling of the inputs in quantizeNormalizedNetwork 
-    // and adapt the StimuliProviderExport
+    // TODO Move the rescaling of the inputs in quantizeNetwork 
+    // and adapt the StimuliProviderExport.
     if(afterCalibration) {
-        sp->addTransformation(
-            RangeAffineTransformation(RangeAffineTransformation::Multiplies, scaling), 
+        sp->addChannelsOnTheFlyTransformation(
+            RangeAffineTransformation(RangeAffineTransformation::Multiplies, 
+                                      DeepNetExport::mEnvDataUnsigned?std::pow(2, opt.nbBits) - 1:
+                                                                      std::pow(2, opt.nbBits - 1) - 1),
             Database::All
         );
     }

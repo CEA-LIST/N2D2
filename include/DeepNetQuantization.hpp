@@ -47,7 +47,9 @@ public:
     void reportOutputsHistogram(std::unordered_map<std::string, Histogram>& outputsHistogram,
                                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                                 std::size_t nbBits, ClippingMode actClippingMode) const;
-    
+
+    void rescaleAdditiveParameters(double rescaleFactor);
+
     void quantizeNetwork(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                          const std::unordered_map<std::string, RangeStats>& outputsRange,
                          std::size_t nbBits,

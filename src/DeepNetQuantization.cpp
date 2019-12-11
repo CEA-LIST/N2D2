@@ -247,6 +247,22 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
     }
 }
 
+void N2D2::DeepNetQuantization::rescaleAdditiveParameters(double rescaleFactor) {
+    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
+
+    for (auto it = layers.begin() + 1; it != layers.end(); ++it) {
+        for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            if(!cell) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cell->processFreeParameters([&](Float_T v) { return v/rescaleFactor; },
+                                        Cell::Additive);
+        }
+    }
+}
+
 void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                                                 std::size_t nbBits,
