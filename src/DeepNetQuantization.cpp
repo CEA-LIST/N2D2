@@ -489,6 +489,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
             }
 
             activationScaling /= biasScalings.at(cell->getName());
+            activationScaling = (activationScaling == 0.0)?1.0:activationScaling;
             activationScalings[cell->getName()] = activationScaling;
 
 
