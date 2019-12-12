@@ -102,7 +102,7 @@ void N2D2::CellExport::generateSingleShiftHalfAddition(const Cell_Frame_Top& cel
         const std::size_t shift = cellFrame.getActivation()->getActivationScaling()
                                                             .getSingleShiftScaling()
                                                             .getScalingPerOutput()[output];
-        const std::size_t half = 1u << (shift - 1);
+        const std::size_t half = static_cast<std::size_t>(1) << (shift - 1);
 
         stream << " + " << half;
     }
