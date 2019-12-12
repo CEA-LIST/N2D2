@@ -332,26 +332,7 @@ std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
     }
 
     if (normalize) {
-        if (dataRange != 1.0) {
-            scalingValue /= dataRange;
-
-            std::cout << Utils::cnotice << "Stimuli export with"
-                " range != 1 (" << dataRange << "). Data will be normalized."
-                << Utils::cdef << std::endl;
-        }
-    }
-    else if (CellExport::mPrecision > 0) {
-        if (dataRange > 1.0) {
-            std::cout << Utils::cwarning << "Integer stimuli export with"
-                " range > 1 (" << dataRange << "). Data will be truncated,"
-                " possible data loss." << Utils::cdef << std::endl;
-        }
-        else if (dataRange < 1.0) {
-            std::cout << Utils::cnotice << "Integer stimuli export with"
-                " range < 1 (" << dataRange << "). The full "
-                << (int)CellExport::mPrecision << " bits data range will not be"
-                " used." << Utils::cdef << std::endl;
-        }
+        scalingValue /= dataRange;
     }
 
     return std::make_pair(scalingValue, unsignedData);
