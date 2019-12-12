@@ -298,13 +298,11 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     T totalCorrect = 0;
 
     const unsigned int nbTargets = this->rows();
+    bool emptySet = (labels.size() == nbTargets - 1);
 
     for (unsigned int target = 0; target < nbTargets; ++target) {
         const std::vector<T>& row = this->row(target);
         const T targetCount = std::accumulate(row.begin(), row.end(), (T)0);
-
-        total += targetCount;
-        totalCorrect += (*this)(target, target);
 
         for (unsigned int estimated = 0; estimated < nbTargets; ++estimated) {
             confData << target << " " << estimated << " "
@@ -319,12 +317,23 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
         tics << "\"";
 
-        if (!labels.empty())
-            tics << labels[target];
+        if (!labels.empty()) {
+            if (target < labels.size())
+                tics << labels[target];
+            else if (emptySet)
+                tics << "∅";
+            else
+                tics << "?";
+        }
         else
             tics << target;
 
         tics << "\" " << target;
+
+        if (!emptySet || target < nbTargets - 1) {
+            total += targetCount;
+            totalCorrect += (*this)(target, target);
+        }
     }
 
     tics << ")";
@@ -407,7 +416,10 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     double avgInformedness = 0.0;
     unsigned int maxLabelSize = 3;
 
-    for (unsigned int target = 0; target < nbTargets; ++target) {
+    const unsigned int nbTargetsNoEmpty = (emptySet)
+        ? (nbTargets - 1) : nbTargets;
+
+    for (unsigned int target = 0; target < nbTargetsNoEmpty; ++target) {
         avgSensitivity += conf[target].sensitivity();
         avgSpecificity += conf[target].specificity();
         avgPrecision += conf[target].precision();
@@ -417,8 +429,12 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
         std::stringstream labelStr;
 
-        if (!labels.empty())
-            labelStr << labels[target];
+        if (!labels.empty()) {
+            if (target < labels.size())
+                labelStr << labels[target];
+            else
+                labelStr << "?";
+        }
         else
             labelStr << target;
 
@@ -434,12 +450,12 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
             << " " << conf[target].informedness() << "\n";
     }
 
-    avgSensitivity /= nbTargets;
-    avgSpecificity /= nbTargets;
-    avgPrecision /= nbTargets;
-    avgAccuracy /= nbTargets;
-    avgF1Score /= nbTargets;
-    avgInformedness /= nbTargets;
+    avgSensitivity /= nbTargetsNoEmpty;
+    avgSpecificity /= nbTargetsNoEmpty;
+    avgPrecision /= nbTargetsNoEmpty;
+    avgAccuracy /= nbTargetsNoEmpty;
+    avgF1Score /= nbTargetsNoEmpty;
+    avgInformedness /= nbTargetsNoEmpty;
 
     confData << "\n";
     confData << "- AVG"
@@ -454,7 +470,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
     {
         std::stringstream outputStr;
-        outputStr << "size " << ((nbTargets + 1) * 100 + 150)
+        outputStr << "size " << ((nbTargetsNoEmpty + 1) * 100 + 150)
                             << ",600 enhanced";
 
         Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
@@ -477,7 +493,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         plotCmd << "i 0 using 3:xticlabels(wrap(stringcolumn(2),"
                 << maxLabelSize << ")) ti col, ";
 
-        if (nbTargets > 2) {
+        if (nbTargetsNoEmpty > 2) {
             // If the confusion matrix is more than 2x2, don't display
             // Specificity and Accuracy, which are meaningless...
             plotCmd << "'' i 0 using 5 ti col, "

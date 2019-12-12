@@ -349,6 +349,10 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
     if (mDataAsTarget)
         return;
 
+    const unsigned int nbTargets = getNbTargets();
+    const unsigned int nbTargetsConfusion
+        = (mMaskLabelTarget && mMaskedLabel >= 0) ? (nbTargets + 1) : nbTargets;
+
     std::ofstream data((mName + "/Misclassified_" + fileName + ".dat").c_str());
 
     if (!data.good())
@@ -398,8 +402,8 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
             if (targetLabels.size() > 1)
                 targetLabelsName << "...";
 */
-            for (unsigned int estimated = 0;
-                estimated < (*itMisclass).second.size(); ++estimated)
+            for (unsigned int estimated = 0; estimated < nbTargetsConfusion;
+                ++estimated)
             {
                 if ((*itMisclass).second[estimated] > 0) {
 /*
@@ -541,12 +545,15 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
     }
     else {
         const unsigned int nbTargets = getNbTargets();
+        const unsigned int nbTargetsConfusion
+            = (mMaskLabelTarget && mMaskedLabel >= 0)
+                ? (nbTargets + 1) : nbTargets;
 
         ConfusionMatrix<unsigned long long int>& confusionMatrix
             = mScoreSet[set].confusionMatrix;
 
         if (confusionMatrix.empty())
-            confusionMatrix.resize(nbTargets, nbTargets, 0);
+            confusionMatrix.resize(nbTargetsConfusion, nbTargetsConfusion, 0);
 
         std::map<unsigned int,
                  std::map<unsigned int, std::vector<unsigned int> > >&
@@ -570,8 +577,21 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                 continue;
             }
 
-            const Tensor<int> target = mTargets[batchPos];
+            const Tensor<int> target = mTargets[batchPos][0];
             const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
+            const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
+                ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
+                : TensorLabels_T();
+
+            if (!mask.empty() && mask.dims() != target.dims()) {
+                std::ostringstream errorStr;
+                errorStr << "Mask dims (" << mask.dims() << ") from MaskLabelTarget"
+                    " does not match target dims (" << target.dims() << ") for"
+                    " target \"" << mName << "\"";
+
+#pragma omp critical(TargetScore__process)
+                throw std::runtime_error(errorStr.str());
+            }
 
             std::map<unsigned int, std::vector<unsigned int> > misclass;
 
@@ -605,8 +625,8 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                     }
                 }
             } else {
-                ConfusionMatrix<unsigned long long int> confusion(nbTargets,
-                                                                nbTargets,
+                ConfusionMatrix<unsigned long long int> confusion(nbTargetsConfusion,
+                                                                nbTargetsConfusion,
                                                                 0);
 
                 std::vector<unsigned int> nbHits(nbTargets, 0);
@@ -615,29 +635,42 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 
                 for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
                     for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
-                        if (target(ox, oy, 0) >= 0) {
-                            confusion(target(ox, oy, 0),
-                                            estimatedLabels(ox, oy, 0)) += 1;
+                        if (target(ox, oy) >= 0) {
+                            ++nbLabels[target(ox, oy)];
 
-                            ++nbLabels[target(ox, oy, 0)];
+                            if (mask.empty() || mask(ox, oy) == mMaskedLabel) {
+                                confusion(target(ox, oy),
+                                          estimatedLabels(ox, oy, 0)) += 1;
 
-                            if (target(ox, oy, 0)
-                                == (int)estimatedLabels(ox, oy, 0))
-                                ++nbHits[target(ox, oy, 0)];
+                                if (target(ox, oy)
+                                    == (int)estimatedLabels(ox, oy, 0))
+                                    ++nbHits[target(ox, oy)];
 
-                            // Top-N case :
-                            if (mTargetTopN > 1) {
-                                unsigned int topNscore = 0;
+                                // Top-N case :
+                                if (mTargetTopN > 1) {
+                                    unsigned int topNscore = 0;
 
-                                for (unsigned int n = 0; n < mTargetTopN; ++n) {
-                                    if (estimatedLabels(ox, oy, n)
-                                        == target(ox, oy, 0))
-                                        ++topNscore;
+                                    for (unsigned int n = 0; n < mTargetTopN; ++n) {
+                                        if (estimatedLabels(ox, oy, n)
+                                            == target(ox, oy))
+                                            ++topNscore;
+                                    }
+
+                                    if (topNscore > 0)
+                                        ++nbHitsTopN[target(ox, oy)];
                                 }
-
-                                if (topNscore > 0)
-                                    ++nbHitsTopN[target(ox, oy, 0)];
                             }
+                            else {
+                                // Masked target = masked false negative
+                                // Should affect the recall
+                                confusion(target(ox, oy), nbTargets) += 1;
+                            }
+                        }
+                        else if (!mask.empty() && mask(ox, oy) == mMaskedLabel)
+                        {
+                            // Masked no target = masked false positive
+                            // Should affect the precision
+                            confusion(nbTargets, estimatedLabels(ox, oy, 0)) += 1;
                         }
                     }
                 }
@@ -657,11 +690,22 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                             ::iterator itMisclass;
                         std::tie(itMisclass, std::ignore)
                             = misclass.insert(std::make_pair(t,
-                                std::vector<unsigned int>(nbTargets, 0U)));
+                                std::vector<unsigned int>(nbTargetsConfusion, 0U)));
 
-                        for (unsigned int e = 0; e < nbTargets; ++e)
+                        for (unsigned int e = 0; e < nbTargetsConfusion; ++e)
                             (*itMisclass).second[e] = confusion(t, e);
                     }
+                }
+
+                if (nbTargetsConfusion > nbTargets) {
+                    std::map<unsigned int, std::vector<unsigned int> >
+                        ::iterator itMisclass;
+                    std::tie(itMisclass, std::ignore)
+                        = misclass.insert(std::make_pair(nbTargets,
+                            std::vector<unsigned int>(nbTargetsConfusion, 0U)));
+
+                    for (unsigned int e = 0; e < nbTargetsConfusion; ++e)
+                        (*itMisclass).second[e] = confusion(nbTargets, e);
                 }
 
                 mBatchSuccess[batchPos] = (nbValidTargets > 0) ?
