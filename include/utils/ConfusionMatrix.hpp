@@ -22,7 +22,10 @@
 #define N2D2_CONFUSIONMATRIX_H
 
 #include <type_traits>
+
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
 #include <unistd.h>
+#endif
 
 #include "containers/Matrix.hpp"
 #include "utils/Gnuplot.hpp"

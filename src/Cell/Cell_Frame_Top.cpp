@@ -20,8 +20,8 @@
 
 #include "Cell/Cell_Frame_Top.hpp"
 
-const char* N2D2::Cell_Frame_Top::FRAME = "Frame";
-const char* N2D2::Cell_Frame_Top::FRAME_CUDA = "Frame_CUDA";
+const char* N2D2::Cell_Frame_Top::FRAME_TYPE = "Frame";
+const char* N2D2::Cell_Frame_Top::FRAME_CUDA_TYPE = "Frame_CUDA";
 
 
 #ifdef PYBIND

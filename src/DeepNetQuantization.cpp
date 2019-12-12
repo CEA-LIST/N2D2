@@ -874,10 +874,10 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
 std::string N2D2::DeepNetQuantization::getCellModelType(const Cell& cell) {
     const Cell_Frame_Top& cellFrameTop = dynamic_cast<const Cell_Frame_Top&>(cell);
     if(cellFrameTop.isCuda()) {
-        return Cell_Frame_Top::FRAME_CUDA;
+        return Cell_Frame_Top::FRAME_CUDA_TYPE;
     }
     else {
-        return Cell_Frame_Top::FRAME;
+        return Cell_Frame_Top::FRAME_TYPE;
     }
 }
 
