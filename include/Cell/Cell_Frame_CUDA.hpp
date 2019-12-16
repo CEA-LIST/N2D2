@@ -57,8 +57,6 @@ public:
                     = std::shared_ptr<Activation>());
     virtual void save(const std::string& fileName) const;
     virtual void load(const std::string& fileName);
-
-    virtual void saveOutputs(const std::string& fileName) const;
     
     /**
      * Manage inputs, in particular the transmission input(i) = output(i-1)

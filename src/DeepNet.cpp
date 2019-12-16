@@ -1853,8 +1853,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 }
 
 void N2D2::DeepNet::test(Database::StimuliSet set,
-                         std::vector<std::pair<std::string, double> >* timings,
-                         bool saveOutputs)
+                         std::vector<std::pair<std::string, double> >* timings)
 {
     const unsigned int nbLayers = mLayers.size();
 
@@ -1902,9 +1901,7 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
             time1 = std::chrono::high_resolution_clock::now();
             cellFrame->propagate(true);
-            if(saveOutputs) {
-                cellFrame->saveOutputs(Utils::CIdentifier(*itCell) + "_outputs.txt");
-            }
+
 
             if (timings != NULL) {
 #ifdef CUDA

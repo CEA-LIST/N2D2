@@ -86,8 +86,7 @@ public:
     void initialize();
     void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
     void test(Database::StimuliSet set = Database::Test,
-              std::vector<std::pair<std::string, double> >* timings = NULL,
-              bool saveOutputs = false);
+              std::vector<std::pair<std::string, double> >* timings = NULL);
     void cTicks(Time_T start, Time_T stop, Time_T timestep, bool record=false);
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
