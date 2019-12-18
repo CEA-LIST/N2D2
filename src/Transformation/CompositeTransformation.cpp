@@ -21,3 +21,33 @@
 #include "Transformation/CompositeTransformation.hpp"
 
 const char* N2D2::CompositeTransformation::Type = "Composite";
+
+std::pair<unsigned int, unsigned int>
+N2D2::CompositeTransformation::getOutputsSize(unsigned int width,
+                                              unsigned int height) const
+{
+    for (std::vector<std::shared_ptr<Transformation> >::const_iterator it
+         = mTransformationSet.begin(),
+         itEnd = mTransformationSet.end();
+         it != itEnd;
+         ++it)
+    {
+        std::tie(width, height) = (*it)->getOutputsSize(width, height);
+    }
+
+    return std::make_pair(width, height);
+}
+
+int N2D2::CompositeTransformation::getOutputsDepth(int depth) const
+{
+    for (std::vector<std::shared_ptr<Transformation> >::const_iterator it
+         = mTransformationSet.begin(),
+         itEnd = mTransformationSet.end();
+         it != itEnd;
+         ++it)
+    {
+        depth = (*it)->getOutputsDepth(depth);
+    }
+
+    return depth;
+}

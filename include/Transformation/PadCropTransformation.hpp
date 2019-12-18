@@ -62,6 +62,10 @@ public:
     {
         return std::make_pair(mWidth, mHeight);
     };
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
     virtual ~PadCropTransformation() {};
 
 private:

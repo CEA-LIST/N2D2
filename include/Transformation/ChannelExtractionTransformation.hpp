@@ -79,6 +79,10 @@ public:
     {
         return std::make_pair(width, height);
     };
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
     virtual ~ChannelExtractionTransformation() {};
 
 private:

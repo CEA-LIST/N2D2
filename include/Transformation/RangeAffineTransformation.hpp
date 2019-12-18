@@ -22,6 +22,7 @@
 #define N2D2_RANGEAFFINETRANSFORMATION_H
 
 #include "Transformation.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
 class RangeAffineTransformation : public Transformation {
@@ -62,6 +63,10 @@ public:
     getOutputsSize(unsigned int width, unsigned int height) const
     {
         return std::make_pair(width, height);
+    };
+    int getOutputsDepth(int /*depth*/) const
+    {
+        return opencv_data_type<Float_T>::value;
     };
     virtual ~RangeAffineTransformation() {};
 

@@ -59,6 +59,9 @@ public:
     {
         return std::shared_ptr<CompositeTransformation>(doClone());
     }
+    std::pair<unsigned int, unsigned int>
+    getOutputsSize(unsigned int width, unsigned int height) const;
+    int getOutputsDepth(int depth) const;
     virtual ~CompositeTransformation() {};
 
 private:

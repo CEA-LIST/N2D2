@@ -19,7 +19,6 @@
 */
 
 #include "Transformation/RangeAffineTransformation.hpp"
-#include "FloatT.hpp"
 
 const char* N2D2::RangeAffineTransformation::Type = "RangeAffine";
 

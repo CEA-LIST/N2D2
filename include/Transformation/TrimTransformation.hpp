@@ -53,6 +53,10 @@ public:
     {
         return std::shared_ptr<TrimTransformation>(doClone());
     }
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
     virtual ~TrimTransformation() {};
 
 private:

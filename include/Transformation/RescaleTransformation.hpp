@@ -54,6 +54,10 @@ public:
         return (!mKeepAspectRatio) ? std::make_pair(mWidth, mHeight)
                                    : std::make_pair(0U, 0U);
     };
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
     virtual ~RescaleTransformation() {};
 
 private:

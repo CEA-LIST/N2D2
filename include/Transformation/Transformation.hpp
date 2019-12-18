@@ -94,8 +94,10 @@ public:
     virtual std::pair<unsigned int, unsigned int>
     getOutputsSize(unsigned int /*width*/, unsigned int /*height*/) const
     {
+        // Default: size is unknown
         return std::make_pair(0U, 0U);
     };
+    virtual int getOutputsDepth(int depth) const = 0;
     virtual ~Transformation() {};
 
 protected:

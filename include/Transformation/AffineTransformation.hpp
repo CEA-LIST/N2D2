@@ -68,6 +68,20 @@ public:
     {
         return std::make_pair(width, height);
     };
+    int getOutputsDepth(int depth) const
+    {
+        if (depth != mFirstValue.depth()) {
+            if (depth == CV_32F || depth == CV_64F)
+                return depth;
+            else if (mFirstValue.depth() == CV_32F
+                || mFirstValue.depth() == CV_64F)
+            {
+                return mFirstValue.depth();
+            }
+        }
+
+        return depth;
+    };
     virtual ~AffineTransformation() {};
 
 private:

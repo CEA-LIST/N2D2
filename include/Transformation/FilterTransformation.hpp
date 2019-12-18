@@ -65,6 +65,10 @@ public:
     {
         return std::make_pair(width, height);
     };
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
 
     const Kernel<double>& getKernel() const
     {

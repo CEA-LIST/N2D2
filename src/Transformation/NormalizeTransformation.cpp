@@ -19,7 +19,6 @@
 */
 
 #include "Transformation/NormalizeTransformation.hpp"
-#include "FloatT.hpp"
 
 const char* N2D2::NormalizeTransformation::Type = "Normalize";
 

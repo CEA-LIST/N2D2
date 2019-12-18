@@ -45,6 +45,10 @@ public:
     {
         return std::shared_ptr<ReshapeTransformation>(doClone());
     }
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
     virtual ~ReshapeTransformation() {};
 
 private:

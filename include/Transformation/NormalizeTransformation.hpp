@@ -22,6 +22,7 @@
 #define N2D2_NORMALIZETRANSFORMATION_H
 
 #include "Transformation.hpp"
+#include "FloatT.hpp"
 
 namespace N2D2 {
 class NormalizeTransformation : public Transformation {
@@ -55,6 +56,13 @@ public:
     getOutputsSize(unsigned int width, unsigned int height) const
     {
         return std::make_pair(width, height);
+    };
+    int getOutputsDepth(int depth) const
+    {
+        if (mNorm == MinMax)
+            return depth;
+        else
+            return opencv_data_type<Float_T>::value;
     };
     virtual ~NormalizeTransformation() {};
 

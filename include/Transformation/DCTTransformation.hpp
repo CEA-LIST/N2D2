@@ -44,6 +44,10 @@ public:
     {
         return std::shared_ptr<DCTTransformation>(doClone());
     }
+    int getOutputsDepth(int depth) const
+    {
+        return depth;
+    };
     virtual ~DCTTransformation() {};
 
 private:
