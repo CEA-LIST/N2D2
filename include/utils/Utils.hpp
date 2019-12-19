@@ -509,6 +509,66 @@ namespace Utils {
     inline const T& clamp(const T& x, const T& min, const T& max);
 
     /**
+     * Cast the value to type Out. If the value overflows the range of the
+     * type Out, the value is clamped into the range of the type Out.
+     */
+    template<typename Out, typename In, 
+             typename std::enable_if<std::is_integral<In>::value && 
+                                     std::is_integral<Out>::value && 
+                                     std::is_unsigned<In>::value && 
+                                     std::is_unsigned<Out>::value>::type* = nullptr>
+    Out saturate_cast(In value) {
+        return value > std::numeric_limits<Out>::max()?std::numeric_limits<Out>::max():
+                                                        static_cast<Out>(value);
+    }
+
+    template<typename Out, typename In, 
+             typename std::enable_if<std::is_integral<In>::value && 
+                                     std::is_integral<Out>::value && 
+                                     std::is_signed<In>::value && 
+                                     std::is_signed<Out>::value>::type* = nullptr>
+    Out saturate_cast(In value) {
+        if(value < std::numeric_limits<Out>::min()) {
+            return std::numeric_limits<Out>::min();
+        }
+        else if(value > std::numeric_limits<Out>::max()) {
+            return std::numeric_limits<Out>::max();
+        }
+        else {
+            return value;
+        }
+    }
+
+    template<typename Out, typename In, 
+             typename std::enable_if<std::is_integral<In>::value && 
+                                     std::is_integral<Out>::value && 
+                                     std::is_signed<In>::value && 
+                                     std::is_unsigned<Out>::value>::type* = nullptr>
+    Out saturate_cast(In value) {
+        if(value < 0) {
+            return 0;
+        }
+
+        const auto uval = static_cast<typename std::make_unsigned<In>::type>(value);
+        return  uval > std::numeric_limits<Out>::max()?std::numeric_limits<Out>::max():
+                                                       static_cast<Out>(uval);
+    }
+
+    template<typename Out, typename In, 
+             typename std::enable_if<std::is_integral<In>::value && 
+                                     std::is_integral<Out>::value && 
+                                     std::is_unsigned<In>::value && 
+                                     std::is_signed<Out>::value>::type* = nullptr>
+    Out saturate_cast(In value) {
+        const auto umaxOut = static_cast<typename std::make_unsigned<Out>::type>(
+                                std::numeric_limits<Out>::max()
+                             );
+
+        return value > umaxOut?std::numeric_limits<Out>::max():
+                               static_cast<Out>(value);
+    }
+
+    /**
      * Return true if 'value' is a floating-point with a fractional part 
      * smaller or equal to 'delta'.
      */
