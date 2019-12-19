@@ -606,9 +606,10 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         *sp, exportDir + "/stimuli",
                                         Database::Validation);
         if (stimuliRange != 1.0) {
-            sp->addChannelsOnTheFlyTransformation(RangeAffineTransformation(
-                RangeAffineTransformation::Divides, stimuliRange),
-                Database::All);
+            sp->addTopTransformation(
+                RangeAffineTransformation(RangeAffineTransformation::Divides, stimuliRange),
+                Database::All
+            );
 
             dnQuantization.rescaleAdditiveParameters(stimuliRange);
         }

@@ -314,7 +314,7 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
 
     // Quantize inputs
     assert(mDeepNet.getStimuliProvider() != nullptr);
-    mDeepNet.getStimuliProvider()->addChannelsOnTheFlyTransformation(
+    mDeepNet.getStimuliProvider()->addTopTransformation(
         RangeAffineTransformation(RangeAffineTransformation::Multiplies, 
                                   DeepNetExport::mEnvDataUnsigned?std::pow(2, nbBits) - 1:
                                                                   std::pow(2, nbBits - 1) - 1),

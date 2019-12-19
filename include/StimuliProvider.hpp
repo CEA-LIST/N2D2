@@ -142,7 +142,15 @@ public:
                                            Database::StimuliSetMask setMask
                                            = Database::All);
 
+    /// Add the transformation so that it is executed last.
+    /// If any channel tranformation are present, the transformation will be
+    /// added as an ON-THE-FLY transformation to ALL the existing channel.
+    /// Otherwise it will be added as a global ON-THE-FLY.
+    void addTopTransformation(const CompositeTransformation& transformation,
+                              Database::StimuliSetMask setMask = Database::All);
+
     void logTransformations(const std::string& fileName) const;
+
 
     void future();
     void synchronize();

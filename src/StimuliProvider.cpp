@@ -293,6 +293,17 @@ void N2D2::StimuliProvider::addChannelsOnTheFlyTransformation(
     }
 }
 
+void N2D2::StimuliProvider::addTopTransformation(const CompositeTransformation& transformation,
+                                                 Database::StimuliSetMask setMask)
+{
+    if(!mChannelsTransformations.empty()) {
+        addChannelsOnTheFlyTransformation(transformation, setMask);
+    }
+    else {
+        addOnTheFlyTransformation(transformation, setMask);
+    }
+}
+
 void N2D2::StimuliProvider::logTransformations(const std::string& fileName)
     const
 {
