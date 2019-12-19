@@ -86,8 +86,8 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deep
 
     std::vector<AnchorCell_Frame_Kernels::Anchor> anchors;
 
-    if(templatesPerCls.size() > 0 || partsPerCls.size() > 0)
-    {
+    //if(templatesPerCls.size() > 0 || partsPerCls.size() > 0)
+    //{
 
         unsigned int nextAnchor = 0;
         std::stringstream nextProperty;
@@ -147,6 +147,38 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deep
             nextProperty << "AnchorBBOX[" << nextAnchor << "]";
         }
 
+        nextProperty.str(std::string());
+        nextProperty << "AnchorXY[" << nextAnchor << "]";
+
+        while (iniConfig.isProperty(nextProperty.str())) {
+            std::stringstream anchorValues(
+                iniConfig.getProperty<std::string>(nextProperty.str()));
+
+            float x0;
+            float y0;
+            float w;
+            float h;
+
+            if (!(anchorValues >> x0) || !(anchorValues >> y0)) {
+                throw std::runtime_error(
+                    "Unreadable anchor in section [" + section
+                    + "] in network configuration file: "
+                    + iniConfig.getFileName());
+            }
+            w = std::abs(x0*2);
+            h = std::abs(y0*2);
+
+            anchors.push_back(AnchorCell_Frame_Kernels::Anchor( x0,
+                                                                y0,
+                                                                w,
+                                                                h));
+
+            ++nextAnchor;
+            nextProperty.str(std::string());
+            nextProperty << "AnchorXY[" << nextAnchor << "]";
+        }
+
+
         // Second method: specify a base root area and a list of ratios and scales
         // Both methods can be used simultaneously
         const double rootArea = iniConfig.getProperty<double>("RootArea", 16);
@@ -169,7 +201,7 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deep
             }
         }
 
-    }
+    //}
 
     std::cout << "Layer: " << section << " [ObjectDet(" << model << ")]" 
               << std::endl;   

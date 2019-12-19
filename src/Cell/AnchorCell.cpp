@@ -39,7 +39,6 @@ N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet,
       mFeatureMapHeight(this, "FeatureMapHeight", 0U),
       mFlip(this, "Flip", false),
       mSingleShotMode(this, "SingleShot", false),
-      mTargetFilePath(this, "TargetPath", ""),
       mNegativeRatioSSD(this, "NegativeRatio", 3U),
       mMaxLabelGT(this, "MaxLabelPerFrame", 1000U),
       mNbClass(this, "NbClass", -1),
@@ -71,7 +70,7 @@ void N2D2::AnchorCell::labelsMapping(const std::string& fileName)
     //for(unsigned int i = 0; i < mStimuliProvider.getDatabase().getNbLabels(); ++i)
     //    mLabelsMapping.insert(std::make_pair(i, -1));
     mLabelsMapping.resize(mStimuliProvider.getDatabase().getNbLabels(), -1);
-
+    std::cout << "mLabelsMapping.size(): " << mLabelsMapping.size() << std::endl;
     //mLabelsMapping.clear();
     std::string fullFileName = Utils::expandEnvVars(fileName);
 
@@ -156,7 +155,7 @@ void N2D2::AnchorCell::labelsMapping(const std::string& fileName)
                     label = mStimuliProvider.getDatabase().getLabelID(className);
             }
 
-            if (!corruptedLabel) {
+            if (!corruptedLabel && label > -1) {
                 mLabelsMapping[label] = output;
             }
         }
@@ -166,4 +165,3 @@ void N2D2::AnchorCell::labelsMapping(const std::string& fileName)
         std::cout << "LabelID(" << i << "): " << mLabelsMapping[i] << std::endl;
 
 }
-

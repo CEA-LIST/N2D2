@@ -85,15 +85,15 @@ int copy_if_FP32(  const float* inputs,
 void thrust_sort_keys_INT32(float* inputs,
                             int* keys,
                             unsigned int nbElements,
-                            unsigned int offset);
+                            unsigned int offset,
+                            bool ascending = false);
 
-void thrust_gather_INT32(   const int* keys, 
-                            const float* inputs,
-                            float* outputs, 
-                            unsigned int nbElements,
-                            unsigned int inputOffset,
-                            unsigned int outputOffset);
+void thrust_gather_INT32(const int* keys,
+    const float* inputs,
+    float* outputs,
+    unsigned int nbElements,
+    unsigned int inputOffset,
+    unsigned int outputOffset);
 }
 
 #endif // N2D2_OBJECTDETCELL_FRAME_CUDA_KERNELS_H
-

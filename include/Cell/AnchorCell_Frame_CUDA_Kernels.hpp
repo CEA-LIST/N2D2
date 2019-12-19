@@ -117,7 +117,11 @@ void cudaSAnchorBackPropagate_SSD_NegSamples(const float* inputCls,
                                              const dim3 blocksPerGrid,
                                              const dim3 threadsPerBlock);
 
-void cudaSAnchorBackPropagateSSD_PosSamples(const float* inputCls,
+void cudaSAnchorBackPropagateSSD_PosSamples(const unsigned int stimuliSizeX,
+                                            const unsigned int stimuliSizeY,
+                                            const unsigned int featureMapX,
+                                            const unsigned int featureMapY,
+                                            const float* inputCls,
                                             float* diffOutputsCls,
                                             const float* inputCoord,
                                             float* diffOutputsCoord,

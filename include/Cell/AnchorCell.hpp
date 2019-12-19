@@ -106,7 +106,6 @@ protected:
     Parameter<unsigned int> mFeatureMapHeight;
     Parameter<bool> mFlip;
     Parameter<bool> mSingleShotMode;
-    Parameter<std::string> mTargetFilePath;
     Parameter<unsigned int> mNegativeRatioSSD;
     Parameter<unsigned int> mMaxLabelGT;
     Parameter<int> mNbClass;

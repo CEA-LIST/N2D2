@@ -129,10 +129,12 @@ public:
                             Database::StimuliSet set) const;
     void clearConfusionMatrix(Database::StimuliSet set);
     bool newValidationScore(double validationScore);
+    std::vector<std::string> getTargetLabelsName() const;
 
     virtual void initialize(bool genAnchors = false, 
                             unsigned int nbAnchors = 6U, 
-                            long unsigned int nbIterMax = 100000);
+                            long unsigned int nbIterMax = 100000,
+                            unsigned int nbClass = 1);
 
     virtual void process(Database::StimuliSet set);
     double getAverageSuccess(Database::StimuliSet set,
@@ -153,6 +155,7 @@ public:
     virtual ~TargetBBox();
 
 protected:
+    unsigned int mNbClass;
     std::vector<std::vector<DetectedBB> > mBatchDetectedBBox;
     std::vector<std::pair<unsigned int, double> > mValidationScore;
 
@@ -165,7 +168,6 @@ protected:
     unsigned int mNbAnchors;
     long unsigned int mIterMax;
     double mMaxValidationScore = 0.0;
-
 private:
     static bool scoreCompare(const DetectedBB& lhs, const DetectedBB& rhs)
     {

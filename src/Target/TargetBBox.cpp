@@ -47,17 +47,19 @@ N2D2::TargetBBox::TargetBBox(const std::string& name,
 void N2D2::TargetBBox::logConfusionMatrix(const std::string& fileName,
                                           Database::StimuliSet set) const
 {
-    if(set == Database::Learn || set == Database::Validation || set == Database::Test)
-    {
+    if (set == Database::Validation || set == Database::Test
+        || set == Database::Learn) {
+
         (*mScoreSet.find(set)).second.confusionMatrix.log(
-            mName + "/ConfusionMatrix_" + fileName + ".dat", mLabelsBBoxName);
+                             mName + "/ConfusionMatrix_" + fileName + ".dat",
+                             mLabelsBBoxName);
     }
 }
 
 void N2D2::TargetBBox::clearConfusionMatrix(Database::StimuliSet set)
 {
-    if(set == Database::Learn || set == Database::Validation || set == Database::Test)
-    {
+    if (set == Database::Validation || set == Database::Test
+        || set == Database::Learn) {
 
         mScoreSet[set].confusionMatrix.clear();
     }
@@ -65,8 +67,8 @@ void N2D2::TargetBBox::clearConfusionMatrix(Database::StimuliSet set)
 
 void N2D2::TargetBBox::clearSuccess(Database::StimuliSet set)
 {
-    if(set == Database::Learn || set == Database::Validation || set == Database::Test)
-    {
+    if (set == Database::Validation || set == Database::Test
+        || set == Database::Learn) {
         mScoreSet[set].success.clear();
         //mScoreTopNSet[set].success.clear();
     }
@@ -75,15 +77,20 @@ void N2D2::TargetBBox::clearSuccess(Database::StimuliSet set)
 double N2D2::TargetBBox::getAverageSuccess(Database::StimuliSet set,
                                             unsigned int /*avgWindow*/) const
 {
-    assert(mScoreSet.find(set) != mScoreSet.end());
-    const std::vector<std::deque<double>>& success = (*mScoreSet.find(set)).second.success;
+    if (set == Database::Validation || set == Database::Test
+        || set == Database::Learn) {
+        assert(mScoreSet.find(set) != mScoreSet.end());
+        const std::vector<std::deque<double>>& success = (*mScoreSet.find(set)).second.success;
 
-    if (success[0].empty())
-        return 0.0;
+        if (success[0].empty())
+            return 0.0;
 
-    //double success = (*mScoreSet.find(set)).second.recall[0].back();
+        //double success = (*mScoreSet.find(set)).second.recall[0].back();
 
-    return success[0].back();
+        return success[0].back();
+    }
+    else
+        return 0.0f;
 }
 
 double N2D2::TargetBBox::getBBoxSucess(Database::StimuliSet set)
@@ -91,9 +98,10 @@ double N2D2::TargetBBox::getBBoxSucess(Database::StimuliSet set)
     assert(mScoreSet.find(set) != mScoreSet.end());
     double avgScore = 0.0;
 
-    if(set == Database::Learn || set == Database::Validation || set == Database::Test)
-    {
-        const ConfusionMatrix<unsigned long long int>& matrix = (*mScoreSet.find(set)).second.confusionMatrix;
+    if (set == Database::Validation || set == Database::Test
+        || set == Database::Learn) {
+        const ConfusionMatrix<unsigned long long int>& matrix
+            = (*mScoreSet.find(set)).second.confusionMatrix;
         std::vector<std::deque<double>>& success = (*mScoreSet.find(set)).second.success;
 
         if (success.empty())
@@ -115,7 +123,7 @@ bool N2D2::TargetBBox::newValidationScore(double validationScore)
     //mValidationScore.push_back(validationScore);
     mValidationScore.push_back(std::make_pair((*mScoreSet.find(Database::Learn)).second.success[0].size(), validationScore));
 
-    if (validationScore > mMaxValidationScore) {
+    if (validationScore >= mMaxValidationScore) {
         mMaxValidationScore = validationScore;
         return true;
     } else
@@ -128,8 +136,7 @@ void N2D2::TargetBBox::logSuccess(const std::string& fileName,
 {
     assert(mScoreSet.find(set) != mScoreSet.end());
 
-
-    if (set == Database::Validation) {
+    if (set == Database::Validation ) {
         const std::string dataFileName = mName + "/AverageSuccess_" + fileName + ".dat";
         // Save validation scores file
         std::ofstream dataFile(dataFileName);
@@ -184,30 +191,35 @@ void N2D2::TargetBBox::logSuccess(const std::string& fileName,
                 + "\" using 1:2 with linespoints lt 7 title \"Validation\"");
 
 
-/*
+
+        /*
         Monitor::logDataRate(mValidationScore,
                              dataFile,
                              avgWindow,
-                             true);*/
+                             true);
+        */
     }
 
 }
 
-void N2D2::TargetBBox::initialize(bool genAnchors, unsigned int nbAnchors, long unsigned int nbIterMax)
+void N2D2::TargetBBox::initialize(  bool genAnchors, 
+                                    unsigned int nbAnchors, 
+                                    long unsigned int nbIterMax,
+                                    unsigned int nbClass)
 {
     mGenerateAnchors = genAnchors;
     mNbAnchors = nbAnchors;
     mIterMax = nbIterMax;
+    mNbClass = nbClass;
 
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
     const BaseTensor& outputsShape = targetCell->getOutputs();
     
     if (outputsShape.dimZ() != 4 && outputsShape.dimZ() != 5) {
-        //throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
+        //////throw std::runtime_error("TargetBBox::initialize(): cell must have 4 or 5"
         //                        " output channels for BBox TargetBBox " + mName);
 
-        std::cout << "Target BBOX" << std::endl;
     }
 
     mTargets.resize({mCell->getOutputsWidth(),
@@ -241,10 +253,11 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
     targetCell->getOutputs().synchronizeDToH();
     const Tensor<Float_T>& values
         = tensor_cast<Float_T>(targetCell->getOutputs());
-    const std::vector<int> labelsCls = getTargetLabels(0);
-    const unsigned int nbTargets = mLabelsBBoxName.size() ; //labelsCls.size();
 
-    ConfusionMatrix<unsigned long long int>& confusionMatrix = mScoreSet[set].confusionMatrix;
+    const unsigned int nbTargets = mLabelsBBoxName.size(); 
+
+    ConfusionMatrix<unsigned long long int>& confusionMatrix
+            = mScoreSet[set].confusionMatrix;
     
     if (confusionMatrix.empty())
         confusionMatrix.resize(nbTargets, nbTargets, 0);
@@ -289,13 +302,14 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
                                 0.0,
                                 false);  
 
-                bbox.push_back(dbb);        
+                bbox.push_back(dbb);
+                //std::cout << "{" << x << ", " << y << "," << w << "," << h << ", [" << cls << "]}" << std::endl;         
 
             }
         }
 
-        if(set == Database::Learn || set == Database::Validation || set == Database::Test)
-        {
+        if (set == Database::Validation || set == Database::Test
+            || set == Database::Learn) {
 
             std::sort(bbox.begin(), bbox.end(), scoreCompare);
 
@@ -349,37 +363,40 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
                  itBB != itBBEnd;
                  ++itBB) {
                 const int bbLabel = (*itBB).bb->getLabel();
+                if (bbLabel <= (int) nbTargets) {
+                    if ((*itBB).roi)
+                    {
+                        // Found a matching ROI
+                        const std::vector<std::shared_ptr<ROI> >::iterator
+                            itLabel = std::find(labelROIs.begin(),
+                                                labelROIs.end(),
+                                                (*itBB).roi);
 
-                if ((*itBB).roi) {
-                    // Found a matching ROI
-                    const std::vector<std::shared_ptr<ROI> >::iterator
-                        itLabel = std::find(labelROIs.begin(),
-                                            labelROIs.end(),
-                                            (*itBB).roi);
+                        (*itBB).duplicate = (itLabel == labelROIs.end());
 
-                    (*itBB).duplicate = (itLabel == labelROIs.end());
+                        if (!(*itBB).duplicate) {
+                            // If this is the first match, remove this label
+                            // from the list and count it for the confusion
+                            // matrix
+                            labelROIs.erase(itLabel);
 
-                    if (!(*itBB).duplicate) {
-                        // If this is the first match, remove this label
-                        // from the list and count it for the confusion
-                        // matrix
-                        labelROIs.erase(itLabel);
+                            const int targetLabel = getLabelTarget((*itBB).roi ->getLabel());
 
-                        const int targetLabel = getLabelTarget((*itBB).roi ->getLabel());
-
-                        if (targetLabel >= 0) {
-//#pragma omp atomic
-                            confusionMatrix(targetLabel + 1, bbLabel + 1) += 1ULL;
+                            if (targetLabel >= 0 && targetLabel <= (int) nbTargets) {
+                                //#pragma omp atomic
+                                confusionMatrix(targetLabel + 1, bbLabel + 1) += 1ULL;
+                            }
                         }
+                    } else {
+                        // False positive
+    //#pragma omp atomic
+                        confusionMatrix(0, bbLabel + 1) += 1ULL;
                     }
-                } else {
-                    // False positive
-//#pragma omp atomic
-                    confusionMatrix(0, bbLabel + 1) += 1ULL;
                 }
             }
 
-            // False negative (miss) for remaining unmatched label ROIs
+
+            // False negative (miss) fonvi  r remaining unmatched label ROIs
             for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
                  = labelROIs.begin(),
                  itLabelEnd = labelROIs.end();
@@ -397,17 +414,44 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
                 std::cout << "Warning, cannot compute success rate: " << success << std::endl;
         }
 
-        //std::cout << "TargetBBox: Number of BBox detected on batch " << batchPos << ": " << bbox.size() << std::endl;
-
         mBatchDetectedBBox[batchPos].swap(bbox);
 
         if(set == Database::Validation )
             logEstimatedLabels("Validation/");
-
     }
-
 }
 
+
+std::vector<std::string> N2D2::TargetBBox::getTargetLabelsName() const
+{
+    const unsigned int nbTargets = mNbClass;
+    std::vector<std::string> labelsName;
+    labelsName.reserve(nbTargets);
+
+    for (int target = 0; target < (int)nbTargets; ++target) {
+        std::stringstream labelName;
+
+        if (target == mDefaultTarget)
+            labelName << "default";
+        else {
+            const std::vector<int> cls = getTargetLabels(target);
+            const Database& db = mStimuliProvider->getDatabase();
+
+            if (!cls.empty()) {
+                labelName
+                    << ((cls[target] >= 0 && cls[target]< (int)db.getNbLabels())
+                            ? db.getLabelName(cls[target]): (cls[target] >= 0) ? "" : "*");
+
+                //if (cls.size() > 1)
+                //    labelName << "...";
+            }
+        }
+
+        labelsName.push_back(labelName.str());
+    }
+
+    return labelsName;
+}
 
 
 
@@ -451,33 +495,34 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
 
         if (target >= 0) {
             (*itLabel)->draw(imgBB, cv::Scalar(255, 0, 0));
+            if((unsigned int) target < labelsName.size())
+            {
+                // Draw legend
+                const cv::Rect rect = (*itLabel)->getBoundingRect();
+                std::stringstream legend;
+                legend << target << " " << labelsName[target];
 
-            // Draw legend
-            const cv::Rect rect = (*itLabel)->getBoundingRect();
-            std::stringstream legend;
-            legend << target << " " << labelsName[target];
-
-            int baseline = 0;
-            cv::Size textSize = cv::getTextSize(
-                legend.str(), cv::FONT_HERSHEY_SIMPLEX, 0.25, 1, &baseline);
-            cv::putText(imgBB,
-                        legend.str(),
-                        cv::Point(std::max(0, rect.x) + 2,
-                                  std::max(0, rect.y) + textSize.height + 2),
-                        cv::FONT_HERSHEY_SIMPLEX,
-                        0.25,
-                        cv::Scalar(255, 0, 0),
-                        1,
+                int baseline = 0;
+                cv::Size textSize = cv::getTextSize(
+                    legend.str(), cv::FONT_HERSHEY_SIMPLEX, 0.25, 1, &baseline);
+                cv::putText(imgBB,
+                            legend.str(),
+                            cv::Point(std::max(0, rect.x) + 2,
+                                    std::max(0, rect.y) + textSize.height + 2),
+                            cv::FONT_HERSHEY_SIMPLEX,
+                            0.25,
+                            cv::Scalar(255, 0, 0),
+                            1,
 #if CV_MAJOR_VERSION >= 3
-                        cv::LINE_AA);
+                            cv::LINE_AA);
 #else
-                        CV_AA);
+                            CV_AA);
 #endif
+            }
         }
     }
 
     // Draw detected BB
-
 
     for (std::vector<DetectedBB>::const_iterator it = detectedBB.begin(),
                                                  itEnd = detectedBB.end();
@@ -509,16 +554,25 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
                            : cv::Scalar(0, 127, 127); // dark yellow = duplicate
             }
         }
-
+        //std::cout << "(*it).bb->draw start" << std::endl;
         (*it).bb->draw(imgBB, color);
+        //std::cout << "(*it).bb->draw stop" << std::endl;
+        //std::cout << "Draw legend start" << std::endl;
 
         // Draw legend
         const cv::Rect rect = (*it).bb->getBoundingRect();
         std::stringstream legend;
-        legend << (*it).bb->getLabel() << " "
-               << labelsName[(*it).bb->getLabel()];
-
+        if((unsigned int) (*it).bb->getLabel() < labelsName.size())
+        {
+            legend << (*it).bb->getLabel() << " "
+                << labelsName[(*it).bb->getLabel()];
+        }
+        else
+        {
+            legend << "Unknown label";
+        }
         // Draw legend
+        //std::cout << "Draw legend stop" << std::endl;
 
         //const cv::Rect rect = bbox.getBoundingRect();
         //std::stringstream legend;
@@ -553,7 +607,6 @@ void N2D2::TargetBBox::logEstimatedLabels(const std::string& dirName) const
 {
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
-
     const std::vector<int>& batch = mStimuliProvider->getBatch();
 
 #pragma omp parallel for if (batch.size() > 4)
@@ -593,6 +646,7 @@ void N2D2::TargetBBox::logEstimatedLabels(const std::string& dirName) const
 void N2D2::TargetBBox::log(const std::string& fileName,
                            Database::StimuliSet set)
 {
+    
     //if(set == Database::Validation || set == Database::Test)
     logConfusionMatrix(fileName, set);
 }
@@ -607,4 +661,3 @@ N2D2::TargetBBox::~TargetBBox()
 {
 
 }
-

@@ -336,7 +336,22 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                             const Float_T cls = inputsCls(xa, ya, k, batchPos);
 
                             // Parameterized coordinates
-
+                            /*std::cout
+                                << inputsCoords(xa, ya,
+                                       k + coordsOffset * nbAnchors, batchPos)
+                                << ", "
+                                << inputsCoords(xa, ya,
+                                       k + (coordsOffset + 1) * nbAnchors,
+                                       batchPos)
+                                << ","
+                                << inputsCoords(xa, ya,
+                                       k + (coordsOffset + 2) * nbAnchors,
+                                       batchPos)
+                                << ","
+                                << inputsCoords(xa, ya,
+                                       k + (coordsOffset + 3) * nbAnchors,
+                                       batchPos)
+                                << std::endl;*/
                             const Float_T txbb = std::max(std::min(inputsCoords(xa, ya,
                                 k + coordsOffset * nbAnchors, batchPos), 70.0f), -70.0f);
 
@@ -964,6 +979,12 @@ void N2D2::AnchorCell_Frame::backPropagate()
     }
     else
     {
+        std::vector < std::vector < Float_T > > AvgIOU;
+        std::vector < std::vector < Float_T > > AvgConf;
+
+        //AvgIOU.resize(mNbClass, std::vector<Float_T>(mDiffInputs.dimB(), 0.0f) );
+        //AvgConf.resize(mNbClass, std::vector<Float_T>(mDiffInputs.dimB(), 0.0f) );
+
 
 #pragma omp parallel for if (mDiffInputs.dimB() > 4)
         for (int batchPos = 0; batchPos < (int)mDiffInputs.dimB(); ++batchPos) {
@@ -988,6 +1009,8 @@ void N2D2::AnchorCell_Frame::backPropagate()
                         if (IoU >= mPositiveIoU && (mArgMaxIoU(xa, ya, k, batchPos) > -1))
                         {
                             positive[classIdx].push_back(Tensor<int>::Index(xa, ya, k, batchPos));
+                            //AvgIOU[classIdx][batchPos] += IoU;
+                            //AvgConf[classIdx][batchPos] += conf;
                         }
                         else if((mArgMaxIoU(xa, ya, k, batchPos) == -1))
                         {
@@ -1013,7 +1036,6 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
             if(mAnchorsStats.empty())
                 mAnchorsStats.resize(mNbClass, 0);
-            
             for(int cls = 0; cls < mNbClass; ++cls)
             {
                 const int nbNegative = (negative[cls].size() > positive[cls].size()*mNegativeRatioSSD) ?
@@ -1021,12 +1043,20 @@ void N2D2::AnchorCell_Frame::backPropagate()
                                         : negative[cls].size();
 
                 const int nbPositive = positive[cls].size();
+                std::cout << "[" << cls << "] " << nbNegative << "/"
+                          << nbPositive << std::endl;
 
                 std::partial_sort(negative[cls].begin(),
                                 negative[cls].begin() + nbNegative,
                                 negative[cls].end(),
                                 Utils::PairSecondPred<Tensor<int>::Index,
-                                    Float_T, std::greater<Float_T> >());
+                                Float_T, std::greater<Float_T> >());
+
+                /*std::sort(negative[cls].begin(), negative[cls].end(),
+                    Utils::PairSecondPred<Tensor<int>::Index,
+                        Float_T, std::greater<Float_T> >());
+
+                std::reverse(negative[cls].begin(), negative[cls].end());*/
 
                 for(int neg = 0; neg < nbNegative; ++ neg)
                 {
@@ -1105,14 +1135,36 @@ void N2D2::AnchorCell_Frame::backPropagate()
                     diffOutputsCoords(xa, ya, k + (coordsOffset + 1) * nbAnchors, batchPos) = lossTy;
                     diffOutputsCoords(xa, ya, k + (coordsOffset + 2) * nbAnchors, batchPos) = lossTw;
                     diffOutputsCoords(xa, ya, k + (coordsOffset + 3) * nbAnchors, batchPos) = lossTh;
-                    diffOutputsCls(xa, ya, k, batchPos) = (1.0f - inputsCls(xa, ya, k, batchPos)) 
-                                                            / (nbPositive );
+                    diffOutputsCls(xa, ya, k, batchPos) = (1.0f - inputsCls(xa, ya, k, batchPos)) / (nbPositive ); 
+                                                          //-(std::max(std::log(1.0f - inputsCls(xa, ya, k, batchPos)), 0.0f))  
 
                 }
+/*
+                if(nbPositive > 0)
+                {
+                    AvgIOU[cls][batchPos] /= nbPositive;
+                    AvgConf[cls][batchPos] /= nbPositive;
+                }*/
 
                 mAnchorsStats[cls] += nbPositive;
             }
         }
+
+        /*for(unsigned int cls = 0; cls < mNbClass; ++cls)
+        {
+            Float_T avgIoUPerCls = 0.0f;
+            Float_T avgConfPerCls = 0.0f;
+            //avgIoUPerCls = AvgIOU[cls][0];
+            //avgConfPerCls = AvgConf[cls][0];
+
+            avgIoUPerCls = std::accumulate(AvgIOU[cls].begin(), AvgIOU[cls].end(), 0.0f);
+            avgConfPerCls = std::accumulate(AvgConf[cls].begin(), AvgConf[cls].end(), 0.0f);
+
+            avgIoUPerCls /= mDiffInputs.dimB();
+            avgConfPerCls /= mDiffInputs.dimB();
+            
+            std::cout << "AvgIoU[" << cls << "]: " << avgIoUPerCls << " AvgConf[" << cls << "]: " << avgConfPerCls << std::endl;
+        }*/
     }
 
     mDiffOutputs[0] = diffOutputsCls;

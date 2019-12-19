@@ -21,6 +21,7 @@
 #include "StimuliProvider.hpp"
 #include "DeepNet.hpp"
 #include "Generator/AnchorCellGenerator.hpp"
+#include "StimuliProvider.hpp"
 
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::AnchorCellGenerator::mRegistrar(AnchorCell::Type,
@@ -106,6 +107,37 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         ++nextAnchor;
         nextProperty.str(std::string());
         nextProperty << "AnchorBBOX[" << nextAnchor << "]";
+    }
+
+    nextProperty.str(std::string());
+    nextProperty << "AnchorXY[" << nextAnchor << "]";
+
+    while (iniConfig.isProperty(nextProperty.str())) {
+        std::stringstream anchorValues(
+            iniConfig.getProperty<std::string>(nextProperty.str()));
+
+        float x0;
+        float y0;
+        float w;
+        float h;
+
+        if (!(anchorValues >> x0) || !(anchorValues >> y0)) {
+            throw std::runtime_error(
+                "Unreadable anchor in section [" + section
+                + "] in network configuration file: "
+                + iniConfig.getFileName());
+        }
+        w = std::abs(x0*2);
+        h = std::abs(y0*2);
+
+        anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
+                                                           y0,
+                                                           w,
+                                                           h));
+
+        ++nextAnchor;
+        nextProperty.str(std::string());
+        nextProperty << "AnchorXY[" << nextAnchor << "]";
     }
 
     // Second method: specify a base root area and a list of ratios and scales
@@ -245,13 +277,16 @@ N2D2::AnchorCellGenerator::generateAnchors_kmeans(StimuliProvider& sp,
                 itLabelEnd = labelROIs.end(); itLabel != itLabelEnd; ++itLabel)
             {
                 const int target = labels[(*itLabel)->getLabel()];
-                cv::Rect labelRect = (*itLabel)->getBoundingRect();
-                AnchorBBOX_T bbox = AnchorBBOX_T(   labelRect.tl().x, 
-                                                    labelRect.tl().y, 
-                                                    labelRect.width,
-                                                    labelRect.height, (float) target);
-                if (labelRect.width > 0.0 && labelRect.height > 0.0) 
-                    total_bbox.push_back(bbox);
+                if(target != -1)
+                {
+                    cv::Rect labelRect = (*itLabel)->getBoundingRect();
+                    AnchorBBOX_T bbox = AnchorBBOX_T(   labelRect.tl().x, 
+                                                        labelRect.tl().y, 
+                                                        labelRect.width,
+                                                        labelRect.height, (float) target);
+                    if (labelRect.width > 0.0 && labelRect.height > 0.0) 
+                        total_bbox.push_back(bbox);
+                }
                 
             }
         }
@@ -418,4 +453,3 @@ N2D2::AnchorCellGenerator::generateAnchors_kmeans(StimuliProvider& sp,
 
     return clusters;
 }
-

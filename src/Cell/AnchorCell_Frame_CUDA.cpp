@@ -592,7 +592,8 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
                                             nbPosDet* (int) mNegativeRatioSSD : nbNegDet;
                 if (nbNegative < nbPosDet* (int) mNegativeRatioSSD) {
                     std::cout << Utils::cwarning << "Warning: not enough negative"
-                        " samples!" << Utils::cdef << std::endl;
+                        " samples: " << nbNegative << " expected " 
+                        << nbPosDet* (int) mNegativeRatioSSD << Utils::cdef << std::endl;
                 }
                 const int nbPositive = nbPosDet;
                 //Bakcpropagation is applied only if there is positive samples
@@ -601,37 +602,45 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
                     const int batchClsOffset = batchPos*mOutputsDims[0]*mOutputsDims[1]*nbAnchors;
                     const int batchCoordOffset = batchPos*mOutputsDims[0]*mOutputsDims[1]*nbAnchors*4;
 
-                    //Sort the negative samples
-                    thrust_sort_keys_INT32(     mConfNegSamplesFiltered.getDevicePtr() + pixelOffset,
-                                                mKeyNegSamplesSorted.getDevicePtr() + pixelOffset,
-                                                nbScoreNegDet,
-                                                0);
 
-                    const unsigned int negativeBlockSize = std::ceil( (float)(nbNegative) / (float)  32);
+                    if(nbNegative > 0)
+                    {
+                        //Sort the negative samples
+                        thrust_sort_keys_INT32(     mConfNegSamplesFiltered.getDevicePtr() + pixelOffset,
+                                                    mKeyNegSamplesSorted.getDevicePtr() + pixelOffset,
+                                                    nbScoreNegDet,
+                                                    0);
 
-                    const dim3 GPU_NegSamples_THREAD_GRID = {32, 1, 1};
-                    const dim3 GPU_NegSamples_BLOCK_GRID = {negativeBlockSize, 1, 1};
+                        const unsigned int negativeBlockSize = std::ceil( (float)(nbNegative) / (float)  32);
 
-                    //Backpropagation on the negatives samples
-                    cudaSAnchorBackPropagate_SSD_NegSamples(inputCls->getDevicePtr() + batchClsOffset,
-                                                            diffOutputsCls->getDevicePtr() + batchClsOffset,
-                                                            mConfNegSamplesFiltered.getDevicePtr() + pixelOffset,
-                                                            mKeyNegSamplesSorted.getDevicePtr() + pixelOffset,
-                                                            nbNegative,
-                                                            nbPositive,
-                                                            nbAnchors,
-                                                            mOutputsDims[1],
-                                                            mOutputsDims[0],
-                                                            mOutputs.dimB(),
-                                                            GPU_NegSamples_BLOCK_GRID,
-                                                            GPU_NegSamples_THREAD_GRID);
+                        const dim3 GPU_NegSamples_THREAD_GRID = {32, 1, 1};
+                        const dim3 GPU_NegSamples_BLOCK_GRID = {negativeBlockSize, 1, 1};
+
+                        //Backpropagation on the negatives samples
+                        cudaSAnchorBackPropagate_SSD_NegSamples(inputCls->getDevicePtr() + batchClsOffset,
+                                                                diffOutputsCls->getDevicePtr() + batchClsOffset,
+                                                                mConfNegSamplesFiltered.getDevicePtr() + pixelOffset,
+                                                                mKeyNegSamplesSorted.getDevicePtr() + pixelOffset,
+                                                                nbNegative,
+                                                                nbPositive,
+                                                                nbAnchors,
+                                                                mOutputsDims[1],
+                                                                mOutputsDims[0],
+                                                                mOutputs.dimB(),
+                                                                GPU_NegSamples_BLOCK_GRID,
+                                                                GPU_NegSamples_THREAD_GRID);
+                    }
                     const unsigned int positiveBlockSize = std::ceil( (float)(nbPositive) / (float)  32);
 
                     const dim3 GPU_PosSamples_THREAD_GRID = {32, 1, 1};
                     const dim3 GPU_PosSamples_BLOCK_GRID = {positiveBlockSize, 1, 1};
 
                     //Backpropagation on the positive Samples
-                    cudaSAnchorBackPropagateSSD_PosSamples( inputCls->getDevicePtr() + batchClsOffset,
+                    cudaSAnchorBackPropagateSSD_PosSamples( mStimuliProvider.getSizeX(),
+                                                            mStimuliProvider.getSizeY(),
+                                                            mFeatureMapWidth,
+                                                            mFeatureMapHeight,
+                                                            inputCls->getDevicePtr() + batchClsOffset,
                                                             diffOutputsCls->getDevicePtr() + batchClsOffset,
                                                             inputCoords->getDevicePtr() + batchCoordOffset,
                                                             diffOutputsCoords->getDevicePtr() + batchCoordOffset,

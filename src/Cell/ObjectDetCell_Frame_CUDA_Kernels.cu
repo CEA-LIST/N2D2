@@ -114,6 +114,7 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
     const int batchPos = blockIdx.z;
     const int proposal = (threadIdx.x & 0x1f) + blockIdx.x*blockDim.x;
     const int ptIdx = blockIdx.y;
+    const unsigned int nbAnchorPerCls = nbAnchors;
 
     const int nbDetectedObject  = (int) nbValidROIs[batchPos];
     const int nbIdx = 6;
@@ -143,20 +144,20 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const int yIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbParts*2 + cumulParts + ptIdx*2)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*2*totalParts;
+                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*2*totalParts;
                 const int xIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbParts*2 + cumulParts + ptIdx*2 + 1)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*2*totalParts;
+                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*2*totalParts;
 
 
                 const float partY = inputs_parts[yIdx];
                 const float partX = inputs_parts[xIdx];
 
-                const int xa0 = (int)(anchors[k*4] + xa * xRatio);
-                const int ya0 = (int)(anchors[k*4 + 1] + ya * yRatio);
-                const int xa1 = (int)(anchors[k*4 + 2] + xa * xRatio);
-                const int ya1 = (int)(anchors[k*4 + 3] + ya * yRatio);
+                const int xa0 = (int)(anchors[cls*4*nbAnchorPerCls + k*4] + xa * xRatio);
+                const int ya0 = (int)(anchors[cls*4*nbAnchorPerCls + k*4 + 1] + ya * yRatio);
+                const int xa1 = (int)(anchors[cls*4*nbAnchorPerCls + k*4 + 2] + xa * xRatio);
+                const int ya1 = (int)(anchors[cls*4*nbAnchorPerCls + k*4 + 3] + ya * yRatio);
 
                 // Anchors width and height
                 const int wa = xa1 - xa0;
@@ -188,15 +189,15 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const int yIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbTemplates*3 + cumulTemplates + ptIdx*3)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
+                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
                 const int xIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbTemplates*3 + cumulTemplates + ptIdx*3 + 1)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
+                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
                 const int zIdx = xa 
                                 + ya*channelWidth 
                                 + (k*nbTemplates*3 + cumulTemplates + ptIdx*3 + 2)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
+                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
 
 
                 const float templateY = expf(inputs_templates[yIdx]);
@@ -333,7 +334,7 @@ int N2D2::copy_if_FP32(  const float* inputs,
     thrust::device_ptr<float> return_ptr =  thrust::copy_if(   thrust_data_inputs,
                                                                 thrust_data_inputs + nbElements,
                                                                 thrust_data_outputs ,
-                                                                thrust::placeholders::_1 > -1);
+                                                                thrust::placeholders::_1 > -1.0f);
     int nbCpyElements = (int) (return_ptr - thrust_data_outputs);
 
     return nbCpyElements;
@@ -355,15 +356,26 @@ void N2D2::thrust_gather_INT32( const int* keys,
                    thrust_data_outputs + outputOffset);
 }
 
-void N2D2::thrust_sort_keys_INT32(float* inputs, int* keys, unsigned int nbElements,  unsigned int offset)
+void N2D2::thrust_sort_keys_INT32(  float* inputs, 
+                                    int* keys, 
+                                    unsigned int nbElements,  
+                                    unsigned int offset,
+                                    bool ascending)
 {
 
     const thrust::device_ptr<float> thrust_data(inputs);
     const thrust::device_ptr<int> thrust_keys(keys);
-
-    thrust::stable_sort_by_key( thrust_data + offset,
-                                thrust_data + offset + nbElements,
-                                thrust_keys + offset,
-                                thrust::greater<float>());
-
+    if(!ascending)
+    {
+        thrust::stable_sort_by_key( thrust_data + offset,
+                                    thrust_data + offset + nbElements,
+                                    thrust_keys + offset,
+                                    thrust::greater<float>());
+    }
+    else
+    {
+        thrust::stable_sort_by_key( thrust_data + offset,
+                                    thrust_data + offset + nbElements,
+                                    thrust_keys + offset);
+    }
 }

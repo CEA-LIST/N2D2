@@ -114,8 +114,12 @@ N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
         const bool generateAnchors = iniConfig.getProperty<bool>("GenerateAnchors", false);
         const unsigned int nbAnchors = iniConfig.getProperty <unsigned int>("NbAnchors", 6);
         const long unsigned int nbMaxIter = iniConfig.getProperty <long unsigned int>("NbIter", 1000000);
-        
-        std::static_pointer_cast<TargetBBox>(target)->initialize(generateAnchors, nbAnchors, nbMaxIter);
+        const unsigned int nbClass = iniConfig.getProperty <unsigned int>("NbClass", 1);
+
+        std::static_pointer_cast<TargetBBox>(target)->initialize(generateAnchors, 
+                                                                 nbAnchors, 
+                                                                 nbMaxIter,
+                                                                 nbClass);
     }
 
     target->setParameters(iniConfig.getSection(section, true));

@@ -220,7 +220,7 @@ public:
         validMetric = opts.parse("-valid-metric", ConfusionTableMetric::Sensitivity,
                                                   "validation metric to use (default is "
                                                   "Sensitivity)");
-        objectDetector = opts.parse("-object-detector-metric", false,"use object detector metrics");
+        objectDetector = opts.parse("-object-detector-metric", "use object detector metrics");
         stopValid =   opts.parse("-stop-valid", 0U, "max. number of successive lower score "
                                                    "validation");
         test =        opts.parse("-test", "perform testing");

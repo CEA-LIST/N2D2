@@ -170,8 +170,8 @@ void N2D2::ObjectDetCell_Frame_CUDA::initialize()
         mPartsPrediction.synchronizeHToD();
         mTemplatesPrediction.synchronizeHToD();
 
-        mGPUAnchors.resize({4,mNbAnchors});
-        for(unsigned int i = 0; i< mNbAnchors; ++i)
+        mGPUAnchors.resize({4,mNbAnchors*mNbClass});
+        for(unsigned int i = 0; i< mNbAnchors*mNbClass; ++i)
         {
             mGPUAnchors(0, i) = mAnchors[i].x0;
             mGPUAnchors(1, i) = mAnchors[i].y0;
@@ -340,6 +340,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool inference)
                                                                   0.0,
                                                                   0.0));
                 }
+                
                 if(inference)
                 {
                     std::vector<BBox_T> final_rois;
@@ -475,11 +476,10 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool inference)
     {
         const unsigned int yBlocks = (mNumParts.size() > 0) && (mNumTemplates.size() > 0) ? std::max(mNumParts[cls], mNumTemplates[cls]) : 1;
         dim3 outputs_blocks = {(unsigned int) std::ceil((float)mNbProposals/32.0), 
-                                yBlocks, 
+                                std::max(1U, yBlocks), 
                                 (unsigned int) mInputs[0].dimB() } ;
 
         dim3 outputs_threads = {32, 1, 1};
-
         cudaS_SSD_output_gathering( mInputs.dimB(),
                                     mNbClass,
                                     mNbAnchors,
