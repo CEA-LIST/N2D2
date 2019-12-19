@@ -20,6 +20,7 @@
 
 #include "StimuliProvider.hpp"
 #include "Solver/SGDSolver_Kernels.hpp"
+#include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/GraphViz.hpp"
@@ -302,6 +303,50 @@ void N2D2::StimuliProvider::addTopTransformation(const CompositeTransformation& 
     else {
         addOnTheFlyTransformation(transformation, setMask);
     }
+}
+
+bool N2D2::StimuliProvider::normalizeIntegersStimuli(int envCvDepth) {
+    bool normalizationOccured = false;
+
+    for(Database::StimuliSet stimuliSet: mDatabase.getStimuliSets(Database::All)) {
+        int depthSet = envCvDepth;
+        depthSet = getTransformation(stimuliSet).getOutputsDepth(depthSet);
+        depthSet = getOnTheFlyTransformation(stimuliSet).getOutputsDepth(depthSet);
+
+
+        if(mChannelsTransformations.empty()) {
+            const double depthUnityValue = Utils::cvMatDepthUnityValue(depthSet);
+            if(depthUnityValue != 1.0) {
+                normalizationOccured = true;
+
+                addOnTheFlyTransformation(
+                    RangeAffineTransformation(RangeAffineTransformation::Divides, depthUnityValue), 
+                    mDatabase.getStimuliSetMask(stimuliSet)
+                );
+            }
+        }
+        else {
+            for(std::size_t ch = 0; ch < mChannelsTransformations.size(); ch++) {
+                int chDepthSet = depthSet;
+                chDepthSet = mChannelsTransformations[ch](stimuliSet).cacheable.getOutputsDepth(chDepthSet);
+                chDepthSet = mChannelsTransformations[ch](stimuliSet).onTheFly.getOutputsDepth(chDepthSet);
+
+
+                const double depthUnityValue = Utils::cvMatDepthUnityValue(chDepthSet);
+                if(depthUnityValue != 1.0) {
+                    normalizationOccured = true;
+
+                    addChannelOnTheFlyTransformation(
+                        ch,
+                        RangeAffineTransformation(RangeAffineTransformation::Divides, depthUnityValue), 
+                        mDatabase.getStimuliSetMask(stimuliSet)
+                    );
+                }
+            }
+        }
+    }
+
+    return normalizationOccured;
 }
 
 void N2D2::StimuliProvider::logTransformations(const std::string& fileName)

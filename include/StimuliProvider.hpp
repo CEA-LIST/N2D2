@@ -149,6 +149,13 @@ public:
     void addTopTransformation(const CompositeTransformation& transformation,
                               Database::StimuliSetMask setMask = Database::All);
 
+    /// Normalize the stimuli in the [0.0;1.0] or [-1.0;1.0], depending on the signess,
+    /// if the results of all the transformations of the StimuliProvider are integers,
+    /// do nothing otherwise. The stimuli are normalized by adding extra transformations.
+    /// 
+    /// 'envCvDepth' is the OpenCV depth of the inputs coming from the environment.
+    bool normalizeIntegersStimuli(int envCvDepth);
+
     void logTransformations(const std::string& fileName) const;
 
 

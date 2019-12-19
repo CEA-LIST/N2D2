@@ -224,6 +224,7 @@ public:
      * @return Number of stimuli
     */
     inline unsigned int getNbStimuli() const;
+    bool empty() const;
 
     /**
      * Returns the number of stimuli in one stimuli set.
@@ -291,6 +292,7 @@ public:
                                          <std::string>& names) const;
     std::vector<int> getMatchingLabelsIDs(const std::string& labelMask) const;
     inline const std::string& getLabelName(int label) const;
+    int getStimuliDepth();
     cv::Mat getStimulusData(StimulusID id);
     inline cv::Mat getStimulusData(StimuliSet set, unsigned int index);
     cv::Mat getStimulusLabelsData(StimulusID id);

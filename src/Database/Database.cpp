@@ -42,6 +42,10 @@ N2D2::Database::Database(bool loadDataInMemory)
     // ctor
 }
 
+bool N2D2::Database::empty() const {
+    return mStimuli.empty();
+}
+
 void N2D2::Database::loadROIs(const std::string& fileName,
                               const std::string& relPath,
                               bool noImageSize)
@@ -1704,6 +1708,28 @@ int N2D2::Database::labelID(const std::string& labelName)
         mLabelsName.push_back(labelName);
         return (mLabelsName.size() - 1);
     }
+}
+
+int N2D2::Database::getStimuliDepth() {
+    if (mStimuliDepth == -1) {
+        if(mStimuli.empty()) {
+            throw std::runtime_error("Can't get the stimuli depth of an empty database.");
+        }
+
+        std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
+        std::transform(fileExtension.begin(), fileExtension.end(),
+                       fileExtension.begin(), ::tolower);
+
+        auto dataFile = Registrar<DataFile>::create(fileExtension)();
+        mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
+
+        std::cout << Utils::cnotice << "Notice: stimuli depth is "
+                    << Utils::cvMatDepthToString(mStimuliDepth)
+                    << " (according to database first stimulus)"
+                    << Utils::cdef << std::endl;
+    }
+
+    return mStimuliDepth;
 }
 
 cv::Mat N2D2::Database::loadStimulusData(StimulusID id)

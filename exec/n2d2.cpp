@@ -1759,6 +1759,22 @@ int main(int argc, char* argv[]) try
                               Database::TestOnly);
     }
 
+    /**
+     * Historically N2D2 normalized integers stimuli in the [0.0;1.0] or [-1.0;1.0] range, 
+     * depending on the signess, when loading integer stimuli inside a floating-point Tensor.
+     * 
+     * Keep this implicit conversion for backward compatibility. 
+     * TODO Make plans to eventually remove it.
+     */
+    if(deepNet->getDatabase() != nullptr && !deepNet->getDatabase()->empty()) {
+        const int stimuliCvDepth = deepNet->getDatabase()->getStimuliDepth();
+        if(deepNet->getStimuliProvider()->normalizeIntegersStimuli(stimuliCvDepth)) {
+            std::cout << Utils::cnotice << "Notice: normalizing the stimuli in the [0;1] range." 
+                      << Utils::cdef << std::endl;
+        }
+    }
+
+
     if (!opt.saveTestSet.empty()) {
         StimuliProvider& sp = *deepNet->getStimuliProvider();
 
