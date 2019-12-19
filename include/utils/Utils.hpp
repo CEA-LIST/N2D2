@@ -508,7 +508,12 @@ namespace Utils {
     template <class T>
     inline const T& clamp(const T& x, const T& min, const T& max);
 
-    bool isIntegral(double value);
+    /**
+     * Return true if 'value' is a floating-point with a fractional part 
+     * smaller or equal to 'delta'.
+     */
+    template <class T>
+    bool isIntegral(T value, T delta = 0.0);
     
     /**
      * Return an iterator to the largest absolute value in the range [first, last). 
@@ -969,6 +974,12 @@ template <class T>
 const T& N2D2::Utils::clamp(const T& x, const T& min, const T& max)
 {
     return (x < min) ? min : (x > max) ? max : x;
+}
+
+template <class T>
+inline bool N2D2::Utils::isIntegral(T value, T delta) {
+    T integralPart;
+    return std::abs(std::modf(value, &integralPart)) <= delta;
 }
 
 template<class ForwardIt>

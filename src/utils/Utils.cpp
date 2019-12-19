@@ -682,8 +682,3 @@ void cv::vconcat(const std::vector<cv::Mat>& src, cv::Mat& dst)
     }
 }
 #endif
-
-bool N2D2::Utils::isIntegral(double value) {
-    double integralPart;
-    return std::modf(value, &integralPart) == 0.0;
-}
