@@ -24,77 +24,41 @@
 #include "Export/CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
 
-void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
-                                           const std::string& dirName,
-                                           const std::string& type,
+void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvider& sp,
+                                           const std::string& dirName, const std::string& type,
                                            Database::StimuliSet set,
+                                           bool unsignedData, CellExport::Precision precision,
                                            int nbStimuliMax,
-                                           bool normalize,
-                                           DeepNet* deepNet,
                                            ExportFormat exportFormat)
 {
     if (Registrar<StimuliProviderExport>::exists(type)) {
-        Registrar<StimuliProviderExport>::create(type)(sp,
-                                                       dirName,
-                                                       set,
-                                                       nbStimuliMax,
-                                                       normalize,
-                                                       deepNet);
+        Registrar<StimuliProviderExport>::create(type)(deepNet, sp, dirName, set, unsignedData, 
+                                                       precision, nbStimuliMax);
     }
     else {
         // Default generator
-        StimuliProviderExport::generate(sp,
-                                        dirName,
-                                        set,
-                                        nbStimuliMax,
-                                        normalize,
-                                        deepNet,
-                                        exportFormat);
+        StimuliProviderExport::generate(deepNet, sp, dirName, set, unsignedData,
+                                        precision, nbStimuliMax, exportFormat);
     }
 }
 
-void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
+void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvider& sp,
                                            const std::string& dirName,
                                            Database::StimuliSet set,
+                                           bool unsignedData, CellExport::Precision precision,
                                            int nbStimuliMax,
-                                           bool normalize,
-                                           DeepNet* deepNet,
                                            ExportFormat exportFormat)
 {
     Utils::createDirectories(dirName);
 
-    double scaling;
-    bool unsignedData;
-    std::tie(scaling, unsignedData) = getScaling(sp, dirName, set, normalize);
 
-    generate(sp, dirName, set, scaling, unsignedData, nbStimuliMax, deepNet, exportFormat);
-}
-
-void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
-                                           const std::string& dirName,
-                                           Database::StimuliSet set,
-                                           double scaling,
-                                           bool unsignedData,
-                                           int nbStimuliMax,
-                                           DeepNet* deepNet,
-                                           ExportFormat exportFormat)
-{
-    Utils::createDirectories(dirName);
-
-    // Truncate is the natural approx. method for the input, as it is generally
-    // already originating from INT8 images.
-    // Truncate is the appropriate method when using the QuantizationLevels
-    // option in StimuliProvider
-    const CellExport::IntApprox approxMethod = CellExport::Truncate;
-
-    const unsigned int envSizeX = sp.getSizeX();
-    const unsigned int envSizeY = sp.getSizeY();
-    const unsigned int nbChannels = sp.getNbChannels();
-    const unsigned int size = (nbStimuliMax >= 0)
-        ? std::min(sp.getDatabase().getNbStimuli(set),
-                   (unsigned int)nbStimuliMax)
-        : sp.getDatabase().getNbStimuli(set);
-    const unsigned int zeroPad = (size > 0) ? std::ceil(std::log10(size)) : 0;
+    const std::size_t envSizeX = sp.getSizeX();
+    const std::size_t envSizeY = sp.getSizeY();
+    const std::size_t nbChannels = sp.getNbChannels();
+    const std::size_t size = nbStimuliMax >= 0?std::min(sp.getDatabase().getNbStimuli(set),
+                                                        static_cast<unsigned int>(nbStimuliMax)):
+                                               sp.getDatabase().getNbStimuli(set);
+    const std::size_t zeroPad = size > 0?std::ceil(std::log10(size)):0;
 
     const std::string stimuliListName = dirName + "/../stimuli.list";
     std::ofstream stimuliList(stimuliListName);
@@ -102,12 +66,11 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         throw std::runtime_error("Could not create stimuli list file: " + stimuliListName + ".");
     }
 
-    std::cout << "Exporting " << set << " dataset to \"" << dirName << "\""
-        << std::flush;
+    std::cout << "Exporting " << set << " dataset to \"" << dirName << "\"" << std::flush;
 
-    unsigned int progress = 0, progressPrev = 0;
 
-    for (unsigned int i = 0; i < size; ++i) {
+    std::size_t progress = 0, progressPrev = 0;
+    for (std::size_t i = 0; i < size; ++i) {
         std::stringstream stimuliName;
         stimuliName << dirName << "/env" << std::setfill('0')
                     << std::setw(zeroPad) << i;
@@ -123,76 +86,71 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
         std::ofstream envStimuli(stimuliName.str().c_str(),
                                  std::fstream::binary);
 
-        if (!envStimuli.good())
-            throw std::runtime_error("Could not create stimuli binary file: "
-                                     + stimuliName.str());
+        if (!envStimuli.good()) {
+            throw std::runtime_error("Could not create stimuli binary file: " + stimuliName.str());
+        }
 
-        const unsigned int maxValue
-            = (CellExport::mPrecision > 0 && CellExport::mPrecision <= 8)
-                  ? 255
-                  : 65535;
 
-        if (nbChannels > 1)
+        if (nbChannels > 1) {
             envStimuli << "P6\n";
-        else
+        }
+        else {
             envStimuli << "P5\n";
+        }
 
+        const std::size_t maxValue = (precision > 0 && precision <= 8)?255:65535;
         envStimuli << envSizeX << " " << envSizeY << "\n" << maxValue << "\n";
 
         sp.readStimulus(set, i);
 
+        // TODO Optimize loop to avoid checking 'precision' and 'unsignedData' constantly.
         if(exportFormat == CHW) {
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                const Tensor<Float_T> frame = sp.getData(channel);
-
-                for (unsigned int y = 0; y < envSizeY; ++y) {
-                    for (unsigned int x = 0; x < envSizeX; ++x) {
-                        writeStimulusValue(frame(x, y), unsignedData, 
-                                           scaling, approxMethod, envStimuli);
+            for (std::size_t channel = 0; channel < nbChannels; channel++) {
+                for (std::size_t y = 0; y < envSizeY; y++) {
+                    for (std::size_t x = 0; x < envSizeX; x++) {
+                        writeStimulusValue(sp.getData()(x, y, channel, 0), 
+                                           unsignedData, precision, envStimuli);
                     }
                 }
             }
         }
         else {
             assert(exportFormat == HWC);
-            for (unsigned int y = 0; y < envSizeY; ++y) {
-                for (unsigned int x = 0; x < envSizeX; ++x) {
-                    for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                        writeStimulusValue(sp.getData()(x, y, channel, 0), unsignedData, 
-                                           scaling, approxMethod, envStimuli);
+            for (std::size_t y = 0; y < envSizeY; y++) {
+                for (std::size_t x = 0; x < envSizeX; x++) {
+                    for (std::size_t channel = 0; channel < nbChannels; channel++) {
+                        writeStimulusValue(sp.getData()(x, y, channel, 0), 
+                                           unsignedData, precision, envStimuli);
                     }
                 }
             }
         }
 
         const Tensor<int> label = sp.getLabelsData(0);
-        const std::vector<std::shared_ptr<Target> > outputTargets
-                                                    =  deepNet->getTargets();
-        const unsigned int netNbTarget = outputTargets.size();
-        for(unsigned int t = 0; t < netNbTarget; ++t) {
-            for (unsigned int y = 0; y < label.dimY(); ++y) {
-                for (unsigned int x = 0; x < label.dimX(); ++x) {
-                    const uint32_t outputTarget
-                        = (deepNet != NULL)
-                              ? deepNet->getTarget(t)->getLabelTarget(label(x, y))
-                              : label(x, y);
+        const std::vector<std::shared_ptr<Target>> outputTargets = deepNet.getTargets();
+        const std::size_t netNbTarget = outputTargets.size();
+
+        for(std::size_t t = 0; t < netNbTarget; ++t) {
+            for (std::size_t y = 0; y < label.dimY(); ++y) {
+                for (std::size_t x = 0; x < label.dimX(); ++x) {
+                    const uint32_t outputTarget = deepNet.getTarget(t)->getLabelTarget(label(x, y));
+
                     envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
                                      sizeof(outputTarget));
                 }
             }
         }
-        if (!envStimuli.good())
-            throw std::runtime_error("Error writing stimuli binary file: "
-                                     + stimuliName.str());
+        if (!envStimuli.good()) {
+            throw std::runtime_error("Error writing stimuli binary file: " + stimuliName.str());
+        }
 
         envStimuli.close();
 
         // Progress bar
-        progress = (unsigned int)(20.0 * (i + 1) / (double)size);
+        progress = (std::size_t)(20.0 * (i + 1) / (double)size);
 
         if (progress > progressPrev) {
-            std::cout << std::string(progress - progressPrev, '.')
-                      << std::flush;
+            std::cout << std::string(progress - progressPrev, '.') << std::flush;
             progressPrev = progress;
         }
     }
@@ -200,75 +158,48 @@ void N2D2::StimuliProviderExport::generate(StimuliProvider& sp,
     std::cout << std::endl;
 }
 
-template<typename T>
-T N2D2::StimuliProviderExport::getScaledData(Float_T data, double scaling, 
-                                             CellExport::IntApprox approxMethod) 
-{
-    const long long int approxValue = CellExport::getIntApprox(scaling * data, approxMethod);
-    const T value = (T) Utils::clamp<long long int>(approxValue,
-                                                    std::numeric_limits<T>::min(),
-                                                    std::numeric_limits<T>::max());
-    return value;
-}
-
-namespace N2D2 {
-template<>
-float StimuliProviderExport::getScaledData(Float_T data, double, CellExport::IntApprox) {
-    return (float) data;
-}
-
-template<>
-double StimuliProviderExport::getScaledData(Float_T data, double, CellExport::IntApprox) {
-    return (double) data;
-}
-}
-
-void N2D2::StimuliProviderExport::writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
-                                                     CellExport::IntApprox approxMethod, 
+void N2D2::StimuliProviderExport::writeStimulusValue(Float_T value, bool unsignedData, 
+                                                     CellExport::Precision precision,
                                                      std::ofstream& envStimuli,
                                                      bool asBinary) 
 {
-    if (CellExport::mPrecision == CellExport::Float64) {
-        const double val = getScaledData<double>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    if (precision == CellExport::Float64) {
+        writeToStream(static_cast<double>(value), envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision == CellExport::Float32 || 
-             CellExport::mPrecision == CellExport::Float16) 
-    {
-        const float val = getScaledData<float>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision == CellExport::Float32 || precision == CellExport::Float16) {
+        writeToStream(static_cast<float>(value), envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 8 && unsignedData) {
-        const uint8_t val = getScaledData<uint8_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 8 && unsignedData) {
+        writeToStream(Utils::saturate_cast<std::uint8_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 8 && !unsignedData) {
-        const int8_t val = getScaledData<int8_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 8 && !unsignedData) {
+        writeToStream(Utils::saturate_cast<std::int8_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 16 && unsignedData) {
-        const uint16_t val = getScaledData<uint16_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 16 && unsignedData) {
+        writeToStream(Utils::saturate_cast<std::uint16_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 16 && !unsignedData) {
-        const int16_t val = getScaledData<int16_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 16 && !unsignedData) {
+        writeToStream(Utils::saturate_cast<std::int16_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 32 && unsignedData) {
-        const uint32_t val = getScaledData<uint32_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 32 && unsignedData) {
+        writeToStream(Utils::saturate_cast<std::uint32_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 32 && !unsignedData) {
-        const int32_t val = getScaledData<int32_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 32 && !unsignedData) {
+        writeToStream(Utils::saturate_cast<std::int32_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 64 && unsignedData) {
-        const uint64_t val = getScaledData<uint64_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 64 && unsignedData) {
+        writeToStream(Utils::saturate_cast<std::uint64_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
-    else if (CellExport::mPrecision <= 64 && !unsignedData) {
-        const int64_t val = getScaledData<int64_t>(value, scaling, approxMethod);
-        writeToStream(val, envStimuli, asBinary);
+    else if (precision <= 64 && !unsignedData) {
+        writeToStream(Utils::saturate_cast<std::int64_t>(CellExport::getIntFreeParameter(value)), 
+                      envStimuli, asBinary);
     }
     else {
         throw std::runtime_error("Unsupported precision.");
@@ -276,64 +207,33 @@ void N2D2::StimuliProviderExport::writeStimulusValue(Float_T value, bool unsigne
 
 }
 
-N2D2::StimuliData N2D2::StimuliProviderExport::getStimuliData(
-    StimuliProvider& sp,
-    const std::string& dirName,
-    Database::StimuliSet set)
+N2D2::StimuliData N2D2::StimuliProviderExport::getStimuliData(StimuliProvider& sp,
+                                                              const std::string& dirName,
+                                                              Database::StimuliSet set)
 {
     StimuliData stimuliData(dirName + "_stats", sp);
     stimuliData.generate(sp.getDatabase().getStimuliSetMask(set), true);
     stimuliData.logValueRange();
+
     return stimuliData;
 }
 
-double N2D2::StimuliProviderExport::getStimuliRange(
-    StimuliProvider& sp,
-    const std::string& dirName,
-    Database::StimuliSet set)
+double N2D2::StimuliProviderExport::stimuliRange(StimuliProvider& sp,
+                                                 const std::string& dirName,
+                                                 Database::StimuliSet set)
 {
-    StimuliData::Value globalValue
-        = getStimuliData(sp, dirName, set).getGlobalValue();
-    return std::max(std::abs(globalValue.minVal),
-                    std::abs(globalValue.maxVal));
+    StimuliData::Value globalValue = getStimuliData(sp, dirName, set).getGlobalValue();
+    return std::max(std::abs(globalValue.minVal), std::abs(globalValue.maxVal));
 }
 
-std::pair<double, bool> N2D2::StimuliProviderExport::getScaling(
-    StimuliProvider& sp,
-    const std::string& dirName,
-    Database::StimuliSet set,
-    bool normalize)
+bool N2D2::StimuliProviderExport::unsignedStimuli(StimuliProvider& sp,
+                                                  const std::string& dirName,
+                                                  Database::StimuliSet set)
 {
-    if (CellExport::mPrecision < 0 && !normalize)
-        return std::make_pair(1.0, false);
-
-    StimuliData::Value globalValue
-        = getStimuliData(sp, dirName, set).getGlobalValue();
-    double dataRange = std::max(std::abs(globalValue.minVal),
-                                std::abs(globalValue.maxVal));
-
-    if (dataRange == 0.0) {
-        std::cout << Utils::cwarning << "No data (range is 0.0), use a"
-            " default data range of 1.0." << Utils::cdef << std::endl;
-        dataRange = 1.0;
+    if (CellExport::mPrecision < 0) {
+        return false;
     }
 
-    const bool unsignedData = (globalValue.minVal >= 0
-                               && DeepNetExport::mUnsignedData);
-
-    double scalingValue = 1.0;
-
-    if (CellExport::mPrecision > 0) {
-        DeepNetExport::mEnvDataUnsigned = unsignedData;
-
-        const unsigned int nbBits = ((unsignedData) ? CellExport::mPrecision
-                                                : (CellExport::mPrecision - 1));
-        scalingValue = (double)(std::pow(2, nbBits) - 1);
-    }
-
-    if (normalize) {
-        scalingValue /= dataRange;
-    }
-
-    return std::make_pair(scalingValue, unsignedData);
+    StimuliData::Value globalValue = getStimuliData(sp, dirName, set).getGlobalValue();
+    return globalValue.minVal >= 0 && DeepNetExport::mUnsignedData;
 }

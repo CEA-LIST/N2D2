@@ -34,16 +34,12 @@ class StimuliProvider;
 
 class StimuliProviderExport {
 public:
-    typedef std::function
-        <void(StimuliProvider& sp,
-              const std::string& dirName,
-              Database::StimuliSet set,
-              int nbStimuliMax,
-              bool normalize,
-              DeepNet* deepNet)> RegistryCreate_T;
+    using RegistryCreate_T = std::function<void(const DeepNet& deepNet, StimuliProvider& sp,
+                                                const std::string& dirName, Database::StimuliSet set,
+                                                bool unsignedData, CellExport::Precision precision,
+                                                int nbStimuliMax)>;
 
-    static RegistryMap_T& registry()
-    {
+    static RegistryMap_T& registry() {
         static RegistryMap_T rMap;
         return rMap;
     }
@@ -53,46 +49,31 @@ public:
         CHW
     };
 
-    static void generate(StimuliProvider& sp,
-                         const std::string& dirName,
-                         const std::string& type,
+    static void generate(const DeepNet& deepNet, StimuliProvider& sp,
+                         const std::string& dirName, const std::string& type,
                          Database::StimuliSet set,
-                         int nbStimuliMax = -1,
-                         bool normalize = false,
-                         DeepNet* deepNet = NULL,
+                         bool unsignedData, CellExport::Precision precision,
+                         int nbStimuliMax, 
                          ExportFormat exportFormat = CHW);
 
-    static void generate(StimuliProvider& sp,
+    static void generate(const DeepNet& deepNet, StimuliProvider& sp,
                          const std::string& dirName,
                          Database::StimuliSet set,
-                         int nbStimuliMax = -1,
-                         bool normalize = false,
-                         DeepNet* deepNet = NULL,
+                         bool unsignedData, CellExport::Precision precision,
+                         int nbStimuliMax, 
                          ExportFormat exportFormat = CHW);
 
-    static void generate(StimuliProvider& sp,
-                         const std::string& dirName,
-                         Database::StimuliSet set,
-                         double scaling,
-                         bool unsignedData,
-                         int nbStimuliMax = -1,
-                         DeepNet* deepNet = NULL,
-                         ExportFormat exportFormat = CHW);
+    static double stimuliRange(StimuliProvider& sp,
+                               const std::string& dirName,
+                               Database::StimuliSet set);
 
-    static double getStimuliRange(StimuliProvider& sp,
-                                  const std::string& dirName,
-                                  Database::StimuliSet set);
+    static bool unsignedStimuli(StimuliProvider& sp,
+                                const std::string& dirName,
+                                Database::StimuliSet set);
 
-    /**
-     * Return a pair of scaling and a bool indicating if the stimuli are unsigned.
-     */
-    static std::pair<double, bool> getScaling(StimuliProvider& sp,
-                                              const std::string& dirName,
-                                              Database::StimuliSet set,
-                                              bool normalize = false);
 protected:
-    static void writeStimulusValue(Float_T value, bool unsignedData, double scaling, 
-                                   CellExport::IntApprox approxMethod, 
+    static void writeStimulusValue(Float_T value, bool unsignedData, 
+                                   CellExport::Precision precision,
                                    std::ofstream& envStimuli,
                                    bool asBinary = true);
 
@@ -105,10 +86,6 @@ protected:
                                  std::size_t iStimulus,
                                  double scaling,
                                  std::ostream& ostream);
-    
-    template<typename T>
-    static T getScaledData(Float_T data, double scaling, 
-                           CellExport::IntApprox approxMethod);
 
     static StimuliData getStimuliData(StimuliProvider& sp,
                                       const std::string& dirName,

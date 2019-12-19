@@ -47,6 +47,7 @@
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Export/DeepNetExport.hpp"
+#include "Transformation/RangeAffineTransformation.hpp"
 
 
 N2D2::DeepNetQuantization::DeepNetQuantization(DeepNet& deepNet): mDeepNet(deepNet) {
@@ -309,6 +310,16 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
             cell->setQuantized(nbBits);
         }
     }
+
+
+    // Quantize inputs
+    assert(mDeepNet.getStimuliProvider() != nullptr);
+    mDeepNet.getStimuliProvider()->addChannelsOnTheFlyTransformation(
+        RangeAffineTransformation(RangeAffineTransformation::Multiplies, 
+                                  DeepNetExport::mEnvDataUnsigned?std::pow(2, nbBits) - 1:
+                                                                  std::pow(2, nbBits - 1) - 1),
+        Database::All
+    );
 }
 
 std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemeters(std::size_t nbBits) {

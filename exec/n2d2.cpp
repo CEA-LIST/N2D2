@@ -583,16 +583,16 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     deepNet->removeDropout();
     deepNet->fuseBatchNormWithConv();
 
-    const std::string exportDir = "export_" + opt.genExport + "_" + ((opt.nbBits > 0) ? "int" : "float") +
+    const std::string exportDir = "export_" + opt.genExport + "_" + 
+                                  ((opt.nbBits > 0) ? "int" : "float") +
                                   std::to_string(std::abs(opt.nbBits));
 
 
     // TODO Avoid these global variables.
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
+    DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::unsignedStimuli(*sp, 
+                                          exportDir + "/stimuli", Database::Validation);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
-    DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::getScaling(
-                                          *sp, exportDir + "/stimuli",
-                                          Database::Validation).second;
 
 
 
@@ -602,7 +602,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
 
 
-        const double stimuliRange = StimuliProviderExport::getStimuliRange(
+        const double stimuliRange = StimuliProviderExport::stimuliRange(
                                         *sp, exportDir + "/stimuli",
                                         Database::Validation);
         if (stimuliRange != 1.0) {
@@ -692,21 +692,12 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         afterCalibration = true;
     }
 
-    StimuliProviderExport::generate(*sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
-                                    opt.exportNbStimuliMax, false, deepNet.get());
+    StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
+                                    DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
+                                    opt.exportNbStimuliMax);
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
 
-    // TODO Move the rescaling of the inputs in quantizeNetwork 
-    // and adapt the StimuliProviderExport.
-    if(afterCalibration) {
-        sp->addChannelsOnTheFlyTransformation(
-            RangeAffineTransformation(RangeAffineTransformation::Multiplies, 
-                                      DeepNetExport::mEnvDataUnsigned?std::pow(2, opt.nbBits) - 1:
-                                                                      std::pow(2, opt.nbBits - 1) - 1),
-            Database::All
-        );
-    }
 
     return afterCalibration;
 }
