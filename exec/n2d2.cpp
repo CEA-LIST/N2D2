@@ -596,7 +596,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
 
 
-    bool afterCalibration;
+    bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
         DeepNetQuantization dnQuantization(*deepNet);
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
