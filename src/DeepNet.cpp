@@ -348,6 +348,22 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
     }
 }
 
+std::string N2D2::DeepNet::generateNewCellName(const std::string& baseName) const {
+    if(!hasCell(baseName)) {
+        return baseName;
+    }
+
+    std::string newCellName;
+
+    std::size_t i = 0;
+    do {
+        newCellName = baseName + "_" + std::to_string(i);
+        i++;
+    } while(hasCell(newCellName));
+
+    return newCellName;
+}
+
 void N2D2::DeepNet::addTarget(const std::shared_ptr<Target>& target)
 {
     std::shared_ptr<Cell> cell = target->getCell();

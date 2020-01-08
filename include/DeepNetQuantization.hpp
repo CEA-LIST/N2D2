@@ -132,8 +132,6 @@ private:
     static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
                                        std::size_t nbBits);
 
-    std::string getNewCellName(const std::string& baseName) const;
-
 private:
     DeepNet& mDeepNet;
 };

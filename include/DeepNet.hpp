@@ -64,6 +64,15 @@ public:
                         const std::shared_ptr<Cell>& child);
     void removeCell(const std::shared_ptr<Cell>& cell, bool reconnect = true);
 
+    /**
+     * Generate a cell name that doesn't exist in the DeepNet. 
+     * 
+     * The 'baseName' parameter will be used as initial name and if a cell with the 
+     * same name already exists in the DeepNe,t a suffix will be generated and appended
+     * to the 'baseName' to avoid any collision.
+     */
+    std::string generateNewCellName(const std::string& baseName) const;
+
 
     void addTarget(const std::shared_ptr<Target>& cell);
     void addMonitor(const std::string& name,

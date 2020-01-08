@@ -126,7 +126,8 @@ void N2D2::DeepNetQuantization::rescaleParentsToScaling(const std::shared_ptr<Ce
         
         assert(parentScaling < scaling);
         auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*parentCell))
-                                (mDeepNet, getNewCellName(parentCell->getName() + "_rescale_branch"), 
+                                (mDeepNet, 
+                                 mDeepNet.generateNewCellName(parentCell->getName() + "_rescale_branch"), 
                                  parentCell->getNbOutputs(), 
                                  Scaling::floatingPointScaling(
                                      std::vector<Float_T>(parentCell->getNbOutputs(), 
@@ -412,7 +413,7 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
 
                 auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*cell))
                                         (mDeepNet, 
-                                         getNewCellName(cell->getName() + "_rescale_params"), 
+                                         mDeepNet.generateNewCellName(cell->getName() + "_rescale_params"), 
                                          cell->getNbOutputs(), 
                                          Scaling::floatingPointScaling(
                                              std::move(scalingPerOutput))
@@ -512,7 +513,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
             const long double actQuantScaling = getActivationQuantizationScaling(*cell, nbBits);
             auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*cell))
                                     (mDeepNet, 
-                                     getNewCellName(cell->getName() + "_rescale_act"), 
+                                     mDeepNet.generateNewCellName(cell->getName() + "_rescale_act"), 
                                      cell->getNbOutputs(), 
                                      Scaling::floatingPointScaling(
                                          std::vector<Float_T>(cell->getNbOutputs(), 
@@ -688,7 +689,7 @@ void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
         for(auto grandParentCell: grandParentsCells) {
             auto grandParentScalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*grandParentCell))
                                             (mDeepNet, 
-                                             getNewCellName(grandParentCell->getName() + "_rescale_elemwise"), 
+                                             mDeepNet.generateNewCellName(grandParentCell->getName() + "_rescale_elemwise"), 
                                              grandParentCell->getNbOutputs(), 
                                              Scaling::floatingPointScaling(scalingPerOutput));
 
@@ -891,20 +892,4 @@ std::string N2D2::DeepNetQuantization::getCellModelType(const Cell& cell) {
     else {
         return Cell_Frame_Top::FRAME_TYPE;
     }
-}
-
-std::string N2D2::DeepNetQuantization::getNewCellName(const std::string& baseName) const {
-    if(!mDeepNet.hasCell(baseName)) {
-        return baseName;
-    }
-
-    std::string newCellName;
-
-    std::size_t i = 0;
-    do {
-        newCellName = baseName + "_" + std::to_string(i);
-        i++;
-    } while(mDeepNet.hasCell(newCellName));
-
-    return newCellName;
 }
