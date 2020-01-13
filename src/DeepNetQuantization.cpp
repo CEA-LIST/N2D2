@@ -459,7 +459,20 @@ void N2D2::DeepNetQuantization::quantizeActivations(
             long double activationScaling;
 
             const std::shared_ptr<Activation>& activation = cellFrame->getActivation();
-            if(activation) {
+            if(cell->getType() == ElemWiseCell::Type) {
+                activationScaling = getCellThreshold(cell->getName(),
+                                                    outputsHistogram, outputsRange, 
+                                                    nbBits, ClippingMode::NONE);
+            }
+            else if(cell->getType() == PoolCell::Type || 
+                    cell->getType() == ResizeCell::Type || 
+                    cell->getType() == ScalingCell::Type || 
+                    cell->getType() == SoftmaxCell::Type)
+            {
+                activationScalings[cell->getName()] = prevActivationScaling;
+                continue;
+            }
+            else if(activation) {
                 const bool clip =  cell->getNbOutputs() > 2 && 
                                    (activation->getType() == RectifierActivation::Type || 
                                     activation->getType() == LinearActivation::Type || 
@@ -481,19 +494,6 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                 activationScaling = getCellThreshold(cellStatsName, 
                                                     outputsHistogram, outputsRange, 
                                                     nbBits, clip?actClippingMode:ClippingMode::NONE);
-            }
-            else if(cell->getType() == ElemWiseCell::Type) {
-                activationScaling = getCellThreshold(cell->getName(),
-                                                    outputsHistogram, outputsRange, 
-                                                    nbBits, ClippingMode::NONE);
-            }
-            else if(cell->getType() == PoolCell::Type || 
-                    cell->getType() == ResizeCell::Type || 
-                    cell->getType() == ScalingCell::Type || 
-                    cell->getType() == SoftmaxCell::Type)
-            {
-                activationScalings[cell->getName()] = prevActivationScaling;
-                continue;
             }
             else {
                 throw std::runtime_error("Quantization of cell '" + cell->getName() + "' of type '" + 
@@ -540,7 +540,7 @@ double N2D2::DeepNetQuantization::getActivationQuantizationScaling(const Cell& c
     const std::shared_ptr<Activation>& activation = cellFrame.getActivation();
 
 
-    if(!activation) {
+    if(!activation || cell.getType() == ElemWiseCell::Type) {
         return 1.0;
     }
 
