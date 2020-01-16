@@ -66,11 +66,6 @@ data = {
 
     "WIKI" : ["IMDB-WIKI",4000,"https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki.tar.gz",\
         "https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki_crop.tar"],
-
-    "ILSVRC2012" : ["ILSVRC2012", 1400000, "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_train.tar",\
-        "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_train_t3.tar",\
-        "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_val.tar",\
-        "http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_test.tar"],
         
     "DVS" : ["dvs",110, "http://www.ini.uzh.ch/~tobi/dvs/events20051221T014416 freeway.mat.dat",\
         "http://www.ini.uzh.ch/~tobi/dvs/events-2005-12-28T11-14-28-0800 drive SC postoffice.dat",\
