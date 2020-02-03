@@ -957,6 +957,28 @@ void N2D2::Database::save(const std::string& dataPath,
     assert(saved == toSave);
 }
 
+void N2D2::Database::partitionStimulus(StimulusID id, StimuliSet set)
+{
+    if (set == Unpartitioned)
+        return;
+
+    std::vector<StimulusID>::iterator it
+        = std::find(mStimuliSets(Unpartitioned).begin(), 
+                    mStimuliSets(Unpartitioned).end(), id);
+
+    if (it != mStimuliSets(Unpartitioned).end()) {
+        mStimuliSets(set).push_back(id);
+        mStimuliSets(Unpartitioned).erase(it);
+    }
+    else {
+        std::ostringstream errorMsg;
+        errorMsg << "Database::partitionStimulus(): stimulus ID "
+            << id << " does not exist or is already partitionned.";
+
+        throw std::runtime_error(errorMsg.str());
+    }
+}
+
 void N2D2::Database::partitionStimuli(unsigned int nbStimuli, StimuliSet set)
 {
     if (set == Unpartitioned)

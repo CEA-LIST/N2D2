@@ -166,18 +166,22 @@ void N2D2::DIR_Database::loadDir(const std::string& dirPath,
     std::cout << "Found " << mStimuli.size() << " stimuli" << std::endl;
 }
 
-void N2D2::DIR_Database::loadFile(const std::string& fileName)
+N2D2::Database::StimulusID N2D2::DIR_Database::loadFile(
+    const std::string& fileName)
 {
-    loadFile(fileName, -1);
+    return loadFile(fileName, -1);
 }
 
-void N2D2::DIR_Database::loadFile(const std::string& fileName,
-                                  const std::string& labelName)
+N2D2::Database::StimulusID N2D2::DIR_Database::loadFile(
+    const std::string& fileName,
+    const std::string& labelName)
 {
-    loadFile(fileName, labelID(labelName));
+    return loadFile(fileName, labelID(labelName));
 }
 
-void N2D2::DIR_Database::loadFile(const std::string& fileName, int label)
+N2D2::Database::StimulusID N2D2::DIR_Database::loadFile(
+    const std::string& fileName,
+    int label)
 {
     if (!std::ifstream(fileName.c_str()).good())
         throw std::runtime_error(
@@ -185,4 +189,5 @@ void N2D2::DIR_Database::loadFile(const std::string& fileName, int label)
 
     mStimuli.push_back(Stimulus(fileName, label));
     mStimuliSets(Unpartitioned).push_back(mStimuli.size() - 1);
+    return (mStimuli.size() - 1);
 }

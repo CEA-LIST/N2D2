@@ -52,13 +52,13 @@ public:
                          int depth = 0,
                          const std::string& labelName = "",
                          int labelDepth = 0);
-    virtual void loadFile(const std::string& fileName);
-    virtual void loadFile(const std::string& fileName,
+    virtual StimulusID loadFile(const std::string& fileName);
+    virtual StimulusID loadFile(const std::string& fileName,
                           const std::string& labelName);
     virtual ~DIR_Database() {};
 
 protected:
-    virtual void loadFile(const std::string& fileName, int label);
+    virtual StimulusID loadFile(const std::string& fileName, int label);
 
     std::vector<std::string> mIgnoreMasks;
     std::vector<std::string> mValidExtensions;
