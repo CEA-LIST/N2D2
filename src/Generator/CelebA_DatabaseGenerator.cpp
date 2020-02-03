@@ -32,8 +32,8 @@ N2D2::CelebA_DatabaseGenerator::generate(IniParser& iniConfig,
     if (!iniConfig.currentSection(section))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    const bool inTheWild = iniConfig.getProperty<bool>("inTheWild", true);
-    const bool withLandmarks = iniConfig.getProperty<bool>("withLandmarks", false);
+    const bool inTheWild = iniConfig.getProperty<bool>("InTheWild", true);
+    const bool withLandmarks = iniConfig.getProperty<bool>("WithLandmarks", false);
     const std::string dataPath = iniConfig.getProperty<std::string>(
         "DataPath", N2D2_DATA("CelebA/Img"));
     const std::string labelPath = iniConfig.getProperty<std::string>(
