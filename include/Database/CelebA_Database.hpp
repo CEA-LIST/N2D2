@@ -37,7 +37,7 @@ class CelebA_Database : public DIR_Database {
 public:
     struct FaceParameters {
         // N2D2
-        Database::StimulusID id;
+        int id;
         // identity_CelebA.txt
         unsigned int identity;
         // list_bbox_celeba.txt

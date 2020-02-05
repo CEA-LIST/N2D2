@@ -306,20 +306,28 @@ void N2D2::CelebA_Database::loadStimuli(
         std::ostringstream labelStr;
         labelStr << fp.identity;
 
-        if (mInTheWild) {
-            mStimuli.push_back(Stimulus(dirPath + "/" + (*it).first, -1));
-            fp.id = mStimuli.size() - 1;
-            mStimuliSets(Unpartitioned).push_back(fp.id);
+        const std::string fileName = dirPath + "/" + (*it).first;
 
-            mStimuli.back().ROIs.push_back(new RectangularROI<int>(
-                labelID(labelStr.str()),
-                RectangularROI<int>::Point_T(fp.x_1, fp.y_1),
-                fp.width,
-                fp.height));
-        } 
+        if (std::ifstream(fileName.c_str()).good()) {
+            if (mInTheWild) {
+                mStimuli.push_back(Stimulus(fileName, -1));
+                fp.id = mStimuli.size() - 1;
+                mStimuliSets(Unpartitioned).push_back(fp.id);
+
+                mStimuli.back().ROIs.push_back(new RectangularROI<int>(
+                    labelID(labelStr.str()),
+                    RectangularROI<int>::Point_T(fp.x_1, fp.y_1),
+                    fp.width,
+                    fp.height));
+            } 
+            else
+                fp.id = loadFile(fileName, labelID(labelStr.str()));
+        }
         else {
-            fp.id = loadFile(dirPath + "/" + (*it).first,
-                             labelID(labelStr.str()));
+            fp.id = -1;
+
+            std::cout << Utils::cwarning << "CelebA_Database::loadStimuli(): "
+                "missing file: " << fileName << Utils::cdef << std::endl;
         }
     }
 }
@@ -387,16 +395,18 @@ void N2D2::CelebA_Database::partitionFace(
                                     + "\" for file: " + partitionFile);
         }
 
-        if (partition == 0)
-            partitionStimulus(fp.id, Learn);
-        else if (partition == 1)
-            partitionStimulus(fp.id, Validation);
-        else if (partition == 2)
-            partitionStimulus(fp.id, Test);
-        else {
-            throw std::runtime_error("CelebA_Database::partitionFace(): "
-                                    "unexpected value in line \"" + line
-                                    + "\" for file: " + partitionFile);
+        if (fp.id >= 0) {
+            if (partition == 0)
+                partitionStimulus(fp.id, Learn);
+            else if (partition == 1)
+                partitionStimulus(fp.id, Validation);
+            else if (partition == 2)
+                partitionStimulus(fp.id, Test);
+            else {
+                throw std::runtime_error("CelebA_Database::partitionFace(): "
+                                        "unexpected value in line \"" + line
+                                        + "\" for file: " + partitionFile);
+            }
         }
     }
 }
