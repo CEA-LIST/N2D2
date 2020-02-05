@@ -34,10 +34,12 @@ N2D2::CelebA_DatabaseGenerator::generate(IniParser& iniConfig,
 
     const bool inTheWild = iniConfig.getProperty<bool>("InTheWild", true);
     const bool withLandmarks = iniConfig.getProperty<bool>("WithLandmarks", false);
-    const std::string dataPath = iniConfig.getProperty<std::string>(
-        "DataPath", N2D2_DATA("CelebA/Img"));
-    const std::string labelPath = iniConfig.getProperty<std::string>(
-        "LabelPath", N2D2_DATA("CelebA/Anno"));
+    const std::string dataPath
+        = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
+            "DataPath", N2D2_DATA("CelebA/Img")));
+    const std::string labelPath
+        = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
+            "LabelPath", N2D2_DATA("CelebA/Anno")));
 
     std::shared_ptr<CelebA_Database> database = std::make_shared
         <CelebA_Database>(inTheWild, withLandmarks);

@@ -36,11 +36,13 @@ N2D2::Daimler_DatabaseGenerator::generate(IniParser& iniConfig,
     const double validation = iniConfig.getProperty<double>("Validation", 0.0);
     const double test = iniConfig.getProperty<double>("Test", 0.0);
     const bool fully = iniConfig.getProperty<double>("Fully", false);
-    const std::string dataPath = iniConfig.getProperty<std::string>(
-        "DataPath", N2D2_DATA("Daimler_pedestrian/DaimlerBenchmark/Data"));
-    const std::string labelPath = iniConfig.getProperty<std::string>(
-        "LabelPath",
-        N2D2_DATA("Daimler_pedestrian/DaimlerBenchmark/Data/GroundTruth2D.db"));
+    const std::string dataPath
+        = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
+            "DataPath", N2D2_DATA("Daimler_pedestrian/DaimlerBenchmark/Data")));
+    const std::string labelPath
+        = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
+            "LabelPath",
+            N2D2_DATA("Daimler_pedestrian/DaimlerBenchmark/Data/GroundTruth2D.db")));
 
     std::shared_ptr<Daimler_Database> database = std::make_shared
         <Daimler_Database>(learn, validation, test, fully);

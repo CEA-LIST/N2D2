@@ -34,10 +34,12 @@ N2D2::KITTI_Road_DatabaseGenerator::generate(IniParser& iniConfig,
 
     const double learn = iniConfig.getProperty<double>("Learn", 0.8);
 
-    const std::string dataPath = iniConfig.getProperty<std::string>(
-        "DataPath", N2D2_DATA("KITTI/data_road/training/image_2"));
-    const std::string labelPath = iniConfig.getProperty<std::string>(
-        "LabelPath", N2D2_DATA("KITTI/data_road/training/gt_image_2"));
+    const std::string dataPath
+        = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
+            "DataPath", N2D2_DATA("KITTI/data_road/training/image_2")));
+    const std::string labelPath
+        = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
+            "LabelPath", N2D2_DATA("KITTI/data_road/training/gt_image_2")));
 
     std::shared_ptr<KITTI_Road_Database> database = std::make_shared
         <KITTI_Road_Database>(learn);
