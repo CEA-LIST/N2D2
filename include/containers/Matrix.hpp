@@ -119,7 +119,7 @@ public:
     resize(unsigned int nbRows, unsigned int nbCols, const T& value = T());
     inline void
     assign(unsigned int nbRows, unsigned int nbCols, const T& value);
-    inline void clear();
+    inline virtual void clear();
     inline void swap(Matrix<T>& matrix);
     inline std::vector<T> row(unsigned int i) const;
     inline std::vector<T> col(unsigned int j) const;

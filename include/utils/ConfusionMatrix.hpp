@@ -54,65 +54,65 @@ public:
     ConfusionTable() : mTp(0), mTn(0), mFp(0), mFn(0) {};
     // Base metrics
     /// Sensitivity, recall, hit rate, or true positive rate (TPR)
-    double sensitivity() const
+    inline double sensitivity() const
     {
         return (mTp > 0) ? (mTp / (double)(mTp + mFn)) : 0.0;
     };
     /// Specificity, selectivity or true negative rate (TNR)
-    double specificity() const
+    inline double specificity() const
     {
         return (mTn > 0) ? (mTn / (double)(mTn + mFp)) : 0.0;
     };
     /// Precision or positive predictive value (PPV)
-    double precision() const
+    inline double precision() const
     {
         return (mTp > 0) ? (mTp / (double)(mTp + mFp)) : 0.0;
     };
     /// Negative predictive value (NPV)
-    double negativePredictiveValue() const
+    inline double negativePredictiveValue() const
     {
         return (mTn > 0) ? (mTn / (double)(mTn + mFn)) : 0.0;
     };
     /// Miss rate or false negative rate (FNR)
-    double missRate() const
+    inline double missRate() const
     {
         return (1.0 - sensitivity());
     };
     /// Fall-out or false positive rate (FPR)
-    double fallOut() const
+    inline double fallOut() const
     {
         return (1.0 - specificity());
     };
     /// False discovery rate (FDR)
-    double falseDiscoveryRate() const
+    inline double falseDiscoveryRate() const
     {
         return (1.0 - precision());
     };
     /// False omission rate (FOR)
-    double falseOmissionRate() const
+    inline double falseOmissionRate() const
     {
         return (1.0 - negativePredictiveValue());
     };
     // Combined metrics
     /// Accuracy (ACC)
-    double accuracy() const
+    inline double accuracy() const
     {
         return ((mTp + mTn) > 0)
             ? ((mTp + mTn) / (double)(mTp + mTn + mFp + mFn)) : 0.0;
     };
     /// F-score
-    double fScore(double beta = 1.0) const
+    inline double fScore(double beta = 1.0) const
     {
         return (mTp > 0) ? (1.0 + beta * beta) * (precision() * sensitivity())
                             / (beta * beta * precision() + sensitivity()) : 0.0;
     };
     /// Informedness or Bookmaker Informedness (BM)
-    double informedness() const
+    inline double informedness() const
     {
         return (sensitivity() + specificity() - 1.0);
     };
     /// Markedness (MK)
-    double markedness() const
+    inline double markedness() const
     {
         return (precision() + negativePredictiveValue() - 1.0);
     };
@@ -150,39 +150,39 @@ public:
                                      "unknown metric");
         }
     }
-    void tp(T tp)
+    inline void tp(T tp)
     {
         mTp += tp;
     };
-    void tn(T tn)
+    inline void tn(T tn)
     {
         mTn += tn;
     };
-    void fp(T fp)
+    inline void fp(T fp)
     {
         mFp += fp;
     };
-    void fn(T fn)
+    inline void fn(T fn)
     {
         mFn += fn;
     };
     /// true positive (TP), eqv. with hit
-    T tp() const
+    inline T tp() const
     {
         return mTp;
     };
     /// true negative (TN), eqv. with correct rejection
-    T tn() const
+    inline T tn() const
     {
         return mTn;
     };
     /// false positive (FP), eqv. with false alarm, Type I error
-    T fp() const
+    inline T fp() const
     {
         return mFp;
     };
     /// false negative (FN), eqv. with miss, Type II error
-    T fn() const
+    inline T fn() const
     {
         return mFn;
     };
@@ -197,19 +197,21 @@ private:
 template <class T>
 class ConfusionMatrix : public Matrix<T> {
 public:
-    ConfusionMatrix() : Matrix<T>()
+    ConfusionMatrix() : Matrix<T>(), mSum(0)
     {
     }
-    ConfusionMatrix(unsigned int nbRows) : Matrix<T>(nbRows)
+    ConfusionMatrix(unsigned int nbRows) : Matrix<T>(nbRows), mSum(0)
     {
     }
     ConfusionMatrix(unsigned int nbRows,
                     unsigned int nbCols,
                     const T& value = T())
-        : Matrix<T>(nbRows, nbCols, value)
+        : Matrix<T>(nbRows, nbCols, value), mSum(0)
     {
     }
-    ConfusionTable<T> getConfusionTable(unsigned int target) const;
+    inline void clear();
+    inline ConfusionTable<T> getConfusionTable(unsigned int target,
+                                               bool compute = true) const;
     std::vector<ConfusionTable<T> > getConfusionTables() const;
     void log(const std::string& fileName,
              const std::vector<std::string>& labels = std::vector
@@ -217,6 +219,13 @@ public:
     virtual ~ConfusionMatrix()
     {
     }
+
+private:
+    void computeSums() const;
+
+    mutable std::vector<unsigned long long int> mRowsSum;
+    mutable std::vector<unsigned long long int> mColsSum;
+    mutable unsigned long long int mSum;
 };
 }
 
@@ -238,30 +247,54 @@ const char* const EnumStrings<N2D2::ConfusionTableMetric>::data[]
 }
 
 template <class T>
-N2D2::ConfusionTable<T>
-N2D2::ConfusionMatrix<T>::getConfusionTable(unsigned int target) const
+void N2D2::ConfusionMatrix<T>::computeSums() const
 {
-    const unsigned int nbTargets = this->rows();
+    mRowsSum.assign(this->rows(), 0);
+    mColsSum.assign(this->rows(), 0);
+    mSum = 0;
+
+#pragma omp parallel for if (this->rows() > 128) reduction(+:mSum)
+    for (int n = 0; n < (int)this->rows(); ++n) {
+        for (unsigned int k = 0; k < this->rows(); ++k) {
+            mRowsSum[n] += (*this)(n, k);
+            mColsSum[n] += (*this)(k, n);
+        }
+
+        mSum += mRowsSum[n];
+    }
+}
+
+template <class T>
+void N2D2::ConfusionMatrix<T>::clear()
+{
+    Matrix<T>::clear();
+    mRowsSum.clear();
+    mColsSum.clear();
+    mSum = 0;
+}
+
+template <class T>
+N2D2::ConfusionTable<T>
+N2D2::ConfusionMatrix<T>::getConfusionTable(unsigned int target,
+                                            bool compute) const
+{
     ConfusionTable<T> conf;
 
-    for (unsigned int estimated = 0; estimated < nbTargets; ++estimated) {
-        if (target == estimated) {
-            // True Positives
-            conf.tp((*this)(target, estimated));
-        }
-        else {
-            // False Negatives
-            conf.fn((*this)(target, estimated));
-            // False Positives
-            conf.fp((*this)(estimated, target));
+    if (compute)
+        computeSums();
 
-            // True Negatives
-            for (unsigned int other = 0; other < nbTargets; ++other) {
-                if (other != target)
-                    conf.tn((*this)(other, estimated));
-            }
-        }
-    }
+    // True Positives
+    const T tp = (*this)(target, target);
+    conf.tp(tp);
+
+    // False Negatives
+    conf.fn(mRowsSum[target] - tp);
+
+    // False Positives
+    conf.fp(mColsSum[target] - tp);
+
+    // True Negatives
+    conf.tn(mSum - mRowsSum[target] - mColsSum[target] + tp);
 
     return conf;
 }
@@ -271,10 +304,13 @@ std::vector<N2D2::ConfusionTable<T> >
 N2D2::ConfusionMatrix<T>::getConfusionTables() const
 {
     const unsigned int nbTargets = this->rows();
-    std::vector<ConfusionTable<T> > confs;
+    std::vector<ConfusionTable<T> > confs(nbTargets);
 
-    for (unsigned int target = 0; target < nbTargets; ++target)
-        confs.push_back(getConfusionTable(target));
+    computeSums();
+
+#pragma omp parallel for if (nbTargets > 128)
+    for (int target = 0; target < (int)nbTargets; ++target)
+        confs[target] = getConfusionTable(target, false);
 
     return confs;
 }

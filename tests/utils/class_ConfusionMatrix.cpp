@@ -52,6 +52,13 @@ TEST(ConfusionMatrix, ConfusionTable)
     ASSERT_EQUALS(confTable1.fp(), 5);
     ASSERT_EQUALS(confTable1.fn(), 3);
     ASSERT_EQUALS(confTable1.tn(), 16);
+
+    ConfusionTable<unsigned int> confTable2 = conf.getConfusionTable(2);
+
+    ASSERT_EQUALS(confTable2.tp(), 11);
+    ASSERT_EQUALS(confTable2.fp(), 1);
+    ASSERT_EQUALS(confTable2.fn(), 2);
+    ASSERT_EQUALS(confTable2.tn(), 13);
 }
 
 RUN_TESTS()
