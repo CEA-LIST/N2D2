@@ -24,10 +24,16 @@
 
 N2D2::CelebA_Database::CelebA_Database(
     bool inTheWild,
-    bool withLandmarks)
+    bool withLandmarks,
+    bool withPartitioning,
+    double learn,
+    double validation)
     : DIR_Database(),
       mInTheWild(inTheWild),
-      mWithLandmarks(withLandmarks)
+      mWithLandmarks(withLandmarks),
+      mWithPartitioning(withPartitioning),
+      mLearn(learn),
+      mValidation(validation)
 {
     // ctor
 }
@@ -44,8 +50,14 @@ void N2D2::CelebA_Database::load(const std::string& dataPath,
     else
         loadStimuli(facesParam, dataPath + "/img_align_celeba/");
 
-    partitionFace(facesParam,
-                  Utils::dirName(labelPath) + "/Eval/list_eval_partition.txt");
+    if (mWithPartitioning) {
+        partitionFace(facesParam,
+                Utils::dirName(labelPath) + "/Eval/list_eval_partition.txt");
+    }
+    else {
+        partitionStimuliPerLabel(mLearn, mValidation,
+                                 1.0 - mLearn - mValidation);
+    }
 }
 
 std::map<std::string, N2D2::CelebA_Database::FaceParameters>

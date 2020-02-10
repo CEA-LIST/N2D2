@@ -59,7 +59,10 @@ public:
     };
 
     CelebA_Database(bool inTheWild,
-                    bool withLandmarks);
+                    bool withLandmarks,
+                    bool withPartitioning = true,
+                    double learn = 1.0,
+                    double validation = 0.0);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
@@ -80,6 +83,9 @@ protected:
 
     bool mInTheWild;
     bool mWithLandmarks;
+    bool mWithPartitioning;
+    double mLearn;
+    double mValidation;
 
 };
 }

@@ -34,6 +34,10 @@ N2D2::CelebA_DatabaseGenerator::generate(IniParser& iniConfig,
 
     const bool inTheWild = iniConfig.getProperty<bool>("InTheWild", true);
     const bool withLandmarks = iniConfig.getProperty<bool>("WithLandmarks", false);
+    const bool withPartitioning
+        = iniConfig.getProperty<bool>("WithPartitioning", true);
+    const double learn = iniConfig.getProperty<double>("Learn", 1.0);
+    const double validation = iniConfig.getProperty<double>("Validation", 0.0);
     const std::string dataPath
         = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
             "DataPath", N2D2_DATA("CelebA/Img")));
@@ -42,7 +46,8 @@ N2D2::CelebA_DatabaseGenerator::generate(IniParser& iniConfig,
             "LabelPath", N2D2_DATA("CelebA/Anno")));
 
     std::shared_ptr<CelebA_Database> database = std::make_shared
-        <CelebA_Database>(inTheWild, withLandmarks);
+        <CelebA_Database>(inTheWild, withLandmarks, withPartitioning,
+                          learn, validation);
     database->setParameters(iniConfig.getSection(section, true));
     database->load(dataPath, labelPath);
     return database;
