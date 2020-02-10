@@ -251,17 +251,21 @@ void N2D2::ConfusionMatrix<T>::computeSums() const
 {
     mRowsSum.assign(this->rows(), 0);
     mColsSum.assign(this->rows(), 0);
-    mSum = 0;
+    unsigned long long int sum = 0;
 
-#pragma omp parallel for if (this->rows() > 128) reduction(+:mSum)
+    // Old versions of OMP reduction don't recognize mutable,
+    // use a local variable instead
+#pragma omp parallel for if (this->rows() > 128) reduction(+:sum)
     for (int n = 0; n < (int)this->rows(); ++n) {
         for (unsigned int k = 0; k < this->rows(); ++k) {
             mRowsSum[n] += (*this)(n, k);
             mColsSum[n] += (*this)(k, n);
         }
 
-        mSum += mRowsSum[n];
+        sum += mRowsSum[n];
     }
+
+    mSum = sum;
 }
 
 template <class T>
