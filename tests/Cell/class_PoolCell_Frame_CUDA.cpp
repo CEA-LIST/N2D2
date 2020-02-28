@@ -78,6 +78,11 @@ public:
 
 };
 
+static MNIST_IDX_Database& getDatabase() {
+    static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+    return database;
+}
+
 TEST_DATASET(PoolCell_Frame_CUDA,
              PoolCell_Frame_CUDA,
              (unsigned int poolWidth,
@@ -362,10 +367,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                         std::vector<unsigned int>({paddingX, paddingY}),
                                         PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -503,10 +505,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                             std::vector<unsigned int>({paddingX, paddingY}),
                                             PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -820,10 +819,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                             std::vector<unsigned int>({paddingX, paddingY}),
                                             PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -962,10 +958,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                    std::vector<unsigned int>({paddingX, paddingY}),
                                    PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -1285,10 +1278,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                                     std::vector<unsigned int>({paddingX, paddingY}),
                                                     PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));
@@ -1430,10 +1420,7 @@ TEST_DATASET(PoolCell_Frame_CUDA,
                                    std::vector<unsigned int>({paddingX, paddingY}),
                                    PoolCell::Max);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 3}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.addTransformation(
         ColorSpaceTransformation(ColorSpaceTransformation::BGR));

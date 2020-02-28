@@ -29,6 +29,7 @@ const char* N2D2::FcCell::Type = "Fc";
 N2D2::FcCell::FcCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs)
     : Cell(deepNet, name, nbOutputs),
       mNoBias(this, "NoBias", false),
+      mNormalize(this, "Normalize", false),
       mBackPropagate(this, "BackPropagate", true),
       mWeightsExportFormat(this, "WeightsExportFormat", OC),
       mOutputsRemap(this, "OutputsRemap", "")

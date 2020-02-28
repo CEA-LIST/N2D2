@@ -187,8 +187,8 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
     }
 
     if (set == Database::Learn) {
-        targetCell->setOutputTarget(
-            mTargets, mTargetValue, mDefaultValue);
+        targetCell->setOutputTarget(mTargets);
+        targetCell->applyLoss(mTargetValue, mDefaultValue);
     }
 }
 

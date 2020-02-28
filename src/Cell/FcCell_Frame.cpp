@@ -127,6 +127,34 @@ void N2D2::FcCell_Frame<T>::load(const std::string& dirName)
 template <class T>
 void N2D2::FcCell_Frame<T>::propagate(bool inference)
 {
+    if (mNormalize) {
+        for (unsigned int n = 0, nbOutputs = mOutputs.dimZ(); n < nbOutputs;
+            ++n)
+        {
+            T sumSq(0.0);
+
+            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+                const unsigned int inputSize = mInputs[k].dimX()
+                    * mInputs[k].dimY() * mInputs[k].dimZ();
+                const Tensor<T>& synapses = mSynapses[k][n];
+
+                for (unsigned int i = 0; i < inputSize; ++i)
+                    sumSq += synapses(i) * synapses(i);
+            }
+
+            const T scale(1.0 / (std::sqrt(sumSq + 1.0e-6)));
+
+            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+                const unsigned int inputSize = mInputs[k].dimX()
+                    * mInputs[k].dimY() * mInputs[k].dimZ();
+                Tensor<T>& synapses = mSynapses[k];
+
+                for (unsigned int i = 0; i < inputSize; ++i)
+                    synapses(i, n) *= scale;
+            }
+        }
+    }
+
     mInputs.synchronizeDBasedToH();
 
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()

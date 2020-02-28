@@ -47,19 +47,27 @@ public:
     friend class UnitTest_FcCell_Frame_CUDA_float_addInput__env;
     friend class UnitTest_FcCell_Frame_CUDA_float_addInput;
     friend class UnitTest_FcCell_Frame_CUDA_float_propagate_input_check;
+    friend class UnitTest_FcCell_Frame_CUDA_float_propagate_normalize_check;
     friend class UnitTest_FcCell_Frame_CUDA_float_propagate_2_input_check;
     friend class UnitTest_FcCell_Frame_CUDA_float_propagate_weight_check;
     friend class UnitTest_FcCell_Frame_CUDA_double_addInput__env;
     friend class UnitTest_FcCell_Frame_CUDA_double_addInput;
     friend class UnitTest_FcCell_Frame_CUDA_double_propagate_input_check;
+    friend class UnitTest_FcCell_Frame_CUDA_double_propagate_normalize_check;
     friend class UnitTest_FcCell_Frame_CUDA_double_propagate_2_input_check;
     friend class UnitTest_FcCell_Frame_CUDA_double_propagate_weight_check;
     friend class UnitTest_FcCell_Frame_CUDA_half_addInput__env;
     friend class UnitTest_FcCell_Frame_CUDA_half_addInput;
     friend class UnitTest_FcCell_Frame_CUDA_half_propagate_input_check;
+    friend class UnitTest_FcCell_Frame_CUDA_half_propagate_normalize_check;
     friend class UnitTest_FcCell_Frame_CUDA_half_propagate_2_input_check;
     friend class UnitTest_FcCell_Frame_CUDA_half_propagate_weight_check;
 };
+
+static MNIST_IDX_Database& getDatabase() {
+    static MNIST_IDX_Database database(N2D2_DATA("mnist"));
+    return database;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // float
@@ -201,10 +209,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -254,6 +259,89 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 }
 
 TEST_DATASET(FcCell_Frame_CUDA_float,
+             propagate_normalize_check,
+             (unsigned int nbOutputs,
+              unsigned int channelsWidth,
+              unsigned int channelsHeight),
+             std::make_tuple(1U, 1U, 1U),
+             std::make_tuple(1U, 1U, 2U),
+             std::make_tuple(2U, 2U, 1U),
+             std::make_tuple(3U, 3U, 3U),
+             std::make_tuple(1U, 10U, 10U),
+             std::make_tuple(2U, 25U, 25U),
+             std::make_tuple(1U, 25U, 30U),
+             std::make_tuple(1U, 30U, 25U),
+             std::make_tuple(1U, 30U, 30U))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
+
+    Network net;
+    DeepNet dn(net);
+    FcCell_Frame_Test_CUDA<float> fc1(
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
+    fc1.setParameter("NoBias", true);
+    fc1.setParameter("Normalize", true);
+
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
+    env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    env.setCachePath();
+
+    env.readRandomBatch(Database::Test);
+
+    Tensor<Float_T>& in = env.getData();
+
+    ASSERT_EQUALS(in.dimZ(), 1U);
+    ASSERT_EQUALS(in.dimX(), channelsWidth);
+    ASSERT_EQUALS(in.dimY(), channelsHeight);
+
+    fc1.addInput(env);
+    fc1.initialize();
+
+    const unsigned int inputSize = fc1.getNbChannels() * fc1.getChannelsWidth()
+                                   * fc1.getChannelsHeight();
+    const unsigned int outputSize = fc1.getNbOutputs() * fc1.getOutputsWidth()
+                                    * fc1.getOutputsHeight();
+
+    ASSERT_EQUALS(inputSize, channelsWidth * channelsHeight);
+    ASSERT_EQUALS(outputSize, nbOutputs);
+
+    std::vector<float> norms;
+
+    for (unsigned int output = 0; output < outputSize; ++output) {
+        float norm = 0.0f;
+
+        for (unsigned int channel = 0; channel < inputSize; ++channel) {
+            const float w = output + channel + 1;
+
+            Tensor<float> weight({1}, w);
+            fc1.setWeight(output, channel, weight);
+
+            norm += w * w;
+        }
+
+        norms.push_back(std::sqrt(norm + 1.0e-6));
+    }
+
+    fc1.propagate();
+
+    for (unsigned int output = 0; output < outputSize; ++output) {
+        float sumSq = 0.0f;
+
+        for (unsigned int channel = 0; channel < inputSize; ++channel) {
+            Tensor<float> weight;
+            fc1.getWeight(output, channel, weight);
+
+            sumSq += weight(0) * weight(0);
+
+            ASSERT_EQUALS_DELTA(weight(0),
+                (output + channel + 1) / norms[output], 1e-5);
+        }
+
+        ASSERT_EQUALS_DELTA(sumSq, 1.0f, 1e-5);
+    }
+}
+
+TEST_DATASET(FcCell_Frame_CUDA_float,
              propagate_2_input_check,
              (unsigned int nbOutputs,
               unsigned int channelsWidth,
@@ -278,10 +366,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -541,10 +626,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -594,6 +676,89 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 }
 
 TEST_DATASET(FcCell_Frame_CUDA_double,
+             propagate_normalize_check,
+             (unsigned int nbOutputs,
+              unsigned int channelsWidth,
+              unsigned int channelsHeight),
+             std::make_tuple(1U, 1U, 1U),
+             std::make_tuple(1U, 1U, 2U),
+             std::make_tuple(2U, 2U, 1U),
+             std::make_tuple(3U, 3U, 3U),
+             std::make_tuple(1U, 10U, 10U),
+             std::make_tuple(2U, 25U, 25U),
+             std::make_tuple(1U, 25U, 30U),
+             std::make_tuple(1U, 30U, 25U),
+             std::make_tuple(1U, 30U, 30U))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
+
+    Network net;
+    DeepNet dn(net);
+    FcCell_Frame_Test_CUDA<double> fc1(
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
+    fc1.setParameter("NoBias", true);
+    fc1.setParameter("Normalize", true);
+
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
+    env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    env.setCachePath();
+
+    env.readRandomBatch(Database::Test);
+
+    Tensor<Float_T>& in = env.getData();
+
+    ASSERT_EQUALS(in.dimZ(), 1U);
+    ASSERT_EQUALS(in.dimX(), channelsWidth);
+    ASSERT_EQUALS(in.dimY(), channelsHeight);
+
+    fc1.addInput(env);
+    fc1.initialize();
+
+    const unsigned int inputSize = fc1.getNbChannels() * fc1.getChannelsWidth()
+                                   * fc1.getChannelsHeight();
+    const unsigned int outputSize = fc1.getNbOutputs() * fc1.getOutputsWidth()
+                                    * fc1.getOutputsHeight();
+
+    ASSERT_EQUALS(inputSize, channelsWidth * channelsHeight);
+    ASSERT_EQUALS(outputSize, nbOutputs);
+
+    std::vector<double> norms;
+
+    for (unsigned int output = 0; output < outputSize; ++output) {
+        double norm = 0.0;
+
+        for (unsigned int channel = 0; channel < inputSize; ++channel) {
+            const double w = output + channel + 1;
+
+            Tensor<double> weight({1}, w);
+            fc1.setWeight(output, channel, weight);
+
+            norm += w * w;
+        }
+
+        norms.push_back(std::sqrt(norm + 1.0e-6));
+    }
+
+    fc1.propagate();
+
+    for (unsigned int output = 0; output < outputSize; ++output) {
+        double sumSq = 0.0;
+
+        for (unsigned int channel = 0; channel < inputSize; ++channel) {
+            Tensor<double> weight;
+            fc1.getWeight(output, channel, weight);
+
+            sumSq += weight(0) * weight(0);
+
+            ASSERT_EQUALS_DELTA(weight(0),
+                (output + channel + 1) / norms[output], 1e-5);
+        }
+
+        ASSERT_EQUALS_DELTA(sumSq, 1.0, 1e-5);
+    }
+}
+
+TEST_DATASET(FcCell_Frame_CUDA_double,
              propagate_2_input_check,
              (unsigned int nbOutputs,
               unsigned int channelsWidth,
@@ -618,10 +783,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -886,10 +1048,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 
@@ -938,7 +1097,90 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
     }
 }
+/*
+TEST_DATASET(FcCell_Frame_CUDA_half,
+             propagate_normalize_check,
+             (unsigned int nbOutputs,
+              unsigned int channelsWidth,
+              unsigned int channelsHeight),
+             std::make_tuple(1U, 1U, 1U),
+             std::make_tuple(1U, 1U, 2U),
+             std::make_tuple(2U, 2U, 1U),
+             std::make_tuple(3U, 3U, 3U),
+             std::make_tuple(1U, 10U, 10U),
+             std::make_tuple(2U, 25U, 25U),
+             std::make_tuple(1U, 25U, 30U),
+             std::make_tuple(1U, 30U, 25U),
+             std::make_tuple(1U, 30U, 30U))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
+    Network net;
+    DeepNet dn(net);
+    FcCell_Frame_Test_CUDA<half_float::half> fc1(
+        dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
+    fc1.setParameter("NoBias", true);
+    fc1.setParameter("Normalize", true);
+
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
+    env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    env.setCachePath();
+
+    env.readRandomBatch(Database::Test);
+
+    Tensor<Float_T>& in = env.getData();
+
+    ASSERT_EQUALS(in.dimZ(), 1U);
+    ASSERT_EQUALS(in.dimX(), channelsWidth);
+    ASSERT_EQUALS(in.dimY(), channelsHeight);
+
+    fc1.addInput(env);
+    fc1.initialize();
+
+    const unsigned int inputSize = fc1.getNbChannels() * fc1.getChannelsWidth()
+                                   * fc1.getChannelsHeight();
+    const unsigned int outputSize = fc1.getNbOutputs() * fc1.getOutputsWidth()
+                                    * fc1.getOutputsHeight();
+
+    ASSERT_EQUALS(inputSize, channelsWidth * channelsHeight);
+    ASSERT_EQUALS(outputSize, nbOutputs);
+
+    std::vector<half_float::half> norms;
+
+    for (unsigned int output = 0; output < outputSize; ++output) {
+        half_float::half norm(0.0f);
+
+        for (unsigned int channel = 0; channel < inputSize; ++channel) {
+            const half_float::half w((output + channel + 1) / 100.0);
+
+            Tensor<half_float::half> weight({1}, w);
+            fc1.setWeight(output, channel, weight);
+
+            norm += w * w;
+        }
+
+        norms.push_back((half_float::half)std::sqrt(norm + 1.0e-6));
+    }
+
+    fc1.propagate();
+
+    for (unsigned int output = 0; output < outputSize; ++output) {
+        half_float::half sumSq(0.0f);
+
+        for (unsigned int channel = 0; channel < inputSize; ++channel) {
+            Tensor<half_float::half> weight;
+            fc1.getWeight(output, channel, weight);
+
+            sumSq += weight(0) * weight(0);
+
+            ASSERT_EQUALS_DELTA(weight(0),
+                ((output + channel + 1) / 100.0) / norms[output], 1e-2);
+        }
+
+        ASSERT_EQUALS_DELTA(sumSq, 1.0f, 1e-1);
+    }
+}
+*/
 TEST_DATASET(FcCell_Frame_CUDA_half,
              propagate_2_input_check,
              (unsigned int nbOutputs,
@@ -966,10 +1208,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
     fc1.setParameter("NoBias", true);
 
-    MNIST_IDX_Database database;
-    database.load(N2D2_DATA("mnist"));
-
-    Environment env(net, database, {channelsWidth, channelsHeight, 1}, 2, false);
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
     env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
     env.setCachePath();
 

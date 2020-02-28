@@ -141,7 +141,7 @@ public:
     std::vector<int> getTargetLabels(int output) const;
     const std::vector<std::string>& getTargetLabelsName() const;
     void logLabelsMapping(const std::string& fileName) const;
-    void targetLabelProvider(Database::StimuliSet set);
+    virtual void provideTargets(Database::StimuliSet set);
     virtual void process(Database::StimuliSet set);
     virtual void logEstimatedLabels(const std::string& dirName) const;
     virtual void logEstimatedLabelsJSON(const std::string& dirName,

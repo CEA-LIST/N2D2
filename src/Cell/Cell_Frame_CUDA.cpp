@@ -242,104 +242,129 @@ void N2D2::Cell_Frame_CUDA<T>::backPropagate()
 }
 
 template <class T>
-double N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets,
-                                                 double targetVal,
-                                                 double defaultVal)
+void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
 {
     if (targets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): target "
-                                "and output batch sizes don't match.");
-
-    if (targets.size() / targets.dimB() != 1)
-        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): require "
-                                "one target per batch.");
-
-    mOutputs.synchronizeDToH();
-
-    const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
-
-    double loss = 0.0;
-
-    for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
-        if (targets(0, batchPos) >= 0) {
-            if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
-                || (outputSize == 1 && (targets(0, batchPos) < 0
-                                        || targets(0, batchPos) > 1))) {
-                throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): "
-                                        "target not within output range.");
-            }
-        }
-
-        for (unsigned int index = 0; index < outputSize; ++index) {
-            if (targets(0, batchPos) >= 0) {
-                const double error
-                    = ((outputSize > 1 && (int)index == targets(0, batchPos))
-                       || (outputSize == 1 && targets(0, batchPos) == 1))
-                          ? targetVal - mOutputs(index, batchPos)
-                          : defaultVal - mOutputs(index, batchPos);
-
-                mDiffInputs(index, batchPos) = error;
-                loss += error * error;
-            } else
-                mDiffInputs(index, batchPos) = 0.0;
-        }
-    }
-
-    mDiffInputs.synchronizeHToD();
-
-    return (loss / mOutputs.dimB());
-}
-
-template <class T>
-double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const Tensor<int>& targets,
-                                                  double targetVal,
-                                                  double defaultVal)
-{
-    if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
                                 "and output batch sizes don't match.");
 
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
     {
         std::ostringstream errorStr;
         errorStr << "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target "
-            "matrix size. Expected " << mOutputsDims << ", got "
+            "size. Expected " << mOutputsDims << ", got "
             << targets.dims() << std::endl;
 
         throw std::domain_error(errorStr.str());
     }
 
-    mTargets.resize(targets.dims());
-    mTargets = targets;  // TODO: could be optimized by avoiding the copy
-    mTargets.synchronizeHToD();
+    if (targets.size() / targets.dimB() == 1) {
+        // Single target value per stimulus (ex: images classification)
+        const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
 
-    mNbTargetOutputs.resize(
-        {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
+        for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos)
+        {
+            if (targets(0, batchPos) >= 0) {
+                if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
+                    || (outputSize == 1 && (targets(0, batchPos) < 0
+                                            || targets(0, batchPos) > 1)))
+                {
+                    throw std::domain_error("Cell_Frame_CUDA<T>"
+                        "::setOutputTarget(): target not within output range.");
+                }
+            }
 
-    cudaPopulateNbTargetOutputs(CudaContext::getDeviceProp(),
-                                mTargets.getDevicePtr(),
-                                mNbTargetOutputs.getDevicePtr(),
-                                getNbOutputs(),
-                                mTargets.dimY(),
-                                mTargets.dimX(),
-                                mTargets.dimB());
+            for (unsigned int index = 0; index < outputSize; ++index) {
+                if (targets(0, batchPos) >= 0) {
+                    mDiffInputs(index, batchPos)
+                        = ((outputSize > 1
+                            && (int)index == targets(0, batchPos))
+                        || (outputSize == 1 && targets(0, batchPos) == 1))
+                            ? 1.0
+                            : -1.0;
+                }
+                else
+                    mDiffInputs(index, batchPos) = 0.0;
+            }
+        }
 
+        mDiffInputs.synchronizeHToD();
+    }
+    else {
+        // 2D target matrix per stimulus (ex: images segmentation)
+        mTargets.resize(targets.dims());
+        mTargets = targets;  // TODO: could be optimized by avoiding the copy
+        mTargets.synchronizeHToD();
+
+        mNbTargetOutputs.resize(
+            {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
+
+        cudaPopulateNbTargetOutputs(CudaContext::getDeviceProp(),
+                                    mTargets.getDevicePtr(),
+                                    mNbTargetOutputs.getDevicePtr(),
+                                    getNbOutputs(),
+                                    mTargets.dimY(),
+                                    mTargets.dimX(),
+                                    mTargets.dimB());
+        setOutputTargetsInternal();
+    }
+}
+
+template <class T>
+double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
+                                           double defaultVal)
+{
     mLossMem.resize(mOutputs.dims());
-
-    double loss = setOutputTargetsInternal(targetVal, defaultVal);
-
+    const double loss = applyLossInternal(targetVal, defaultVal);
     return (loss / mOutputs.dimB());
 }
 
 namespace N2D2 {
 template <>
-double Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal(
+void Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal()
+{
+    cudaHSetOutputTargets(CudaContext::getDeviceProp(),
+                                 mTargets.getDevicePtr(),
+                                 mNbTargetOutputs.getDevicePtr(),
+                                 mDiffInputs.getDevicePtr(),
+                                 mDiffInputs.dimZ(), // = getNbOutputs()
+                                 mDiffInputs.dimY(),
+                                 mDiffInputs.dimX(),
+                                 mDiffInputs.dimB());
+}
+
+template <>
+void Cell_Frame_CUDA<float>::setOutputTargetsInternal()
+{
+    cudaSSetOutputTargets(CudaContext::getDeviceProp(),
+                                 mTargets.getDevicePtr(),
+                                 mNbTargetOutputs.getDevicePtr(),
+                                 mDiffInputs.getDevicePtr(),
+                                 mDiffInputs.dimZ(), // = getNbOutputs()
+                                 mDiffInputs.dimY(),
+                                 mDiffInputs.dimX(),
+                                 mDiffInputs.dimB());
+}
+
+template <>
+void Cell_Frame_CUDA<double>::setOutputTargetsInternal()
+{
+    cudaDSetOutputTargets(CudaContext::getDeviceProp(),
+                                 mTargets.getDevicePtr(),
+                                 mNbTargetOutputs.getDevicePtr(),
+                                 mDiffInputs.getDevicePtr(),
+                                 mDiffInputs.dimZ(), // = getNbOutputs()
+                                 mDiffInputs.dimY(),
+                                 mDiffInputs.dimX(),
+                                 mDiffInputs.dimB());
+}
+
+template <>
+double Cell_Frame_CUDA<half_float::half>::applyLossInternal(
     double targetVal,
     double defaultVal)
 {
-    return cudaHSetOutputTargets(CudaContext::getDeviceProp(),
-                                 mTargets.getDevicePtr(),
-                                 mNbTargetOutputs.getDevicePtr(),
+    return cudaHApplyLoss(CudaContext::getDeviceProp(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),
                                  mDiffInputs.getDevicePtr(),
@@ -352,13 +377,11 @@ double Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal(
 }
 
 template <>
-double Cell_Frame_CUDA<float>::setOutputTargetsInternal(
+double Cell_Frame_CUDA<float>::applyLossInternal(
     double targetVal,
     double defaultVal)
 {
-    return cudaSSetOutputTargets(CudaContext::getDeviceProp(),
-                                 mTargets.getDevicePtr(),
-                                 mNbTargetOutputs.getDevicePtr(),
+    return cudaSApplyLoss(CudaContext::getDeviceProp(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),
                                  mDiffInputs.getDevicePtr(),
@@ -371,13 +394,11 @@ double Cell_Frame_CUDA<float>::setOutputTargetsInternal(
 }
 
 template <>
-double Cell_Frame_CUDA<double>::setOutputTargetsInternal(
+double Cell_Frame_CUDA<double>::applyLossInternal(
     double targetVal,
     double defaultVal)
 {
-    return cudaDSetOutputTargets(CudaContext::getDeviceProp(),
-                                 mTargets.getDevicePtr(),
-                                 mNbTargetOutputs.getDevicePtr(),
+    return cudaDApplyLoss(CudaContext::getDeviceProp(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),
                                  mDiffInputs.getDevicePtr(),
@@ -391,7 +412,7 @@ double Cell_Frame_CUDA<double>::setOutputTargetsInternal(
 }
 
 template <class T>
-double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
+void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
 {
     if (baseTargets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
@@ -409,20 +430,25 @@ double N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
         throw std::domain_error(errorStr.str());
     }
 
-    mOutputs.synchronizeDToH();
-
     const Tensor<T>& targets = tensor_cast<T>(baseTargets);
 
+    for (unsigned int index = 0; index < mOutputs.size(); ++index)
+        mDiffInputs(index) = targets(index);
+}
+
+template <class T>
+double N2D2::Cell_Frame_CUDA<T>::applyLoss()
+{
     double loss = 0.0;
+    mOutputs.synchronizeDToH();
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index) {
-        const double error = targets(index) - mOutputs(index);
+        const double error = mDiffInputs(index) - mOutputs(index);
         mDiffInputs(index) = error;
         loss += error * error;
     }
 
     mDiffInputs.synchronizeHToD();
-
     return (loss / mOutputs.dimB());
 }
 

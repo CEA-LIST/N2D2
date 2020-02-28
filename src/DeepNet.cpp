@@ -1748,6 +1748,30 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
     if (timings != NULL)
         (*timings).clear();
 
+    // Provide targets
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets)
+    {
+        //std::cout << "process " << (*itTargets)->getName() << std::endl;
+        time1 = std::chrono::high_resolution_clock::now();
+        (*itTargets)->provideTargets(Database::Learn);
+
+        if (timings != NULL) {
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+            time2 = std::chrono::high_resolution_clock::now();
+            (*timings).push_back(std::make_pair(
+                (*itTargets)->getCell()->getName() + "."
+                + (*itTargets)->getType() + "[provide]",
+                std::chrono::duration_cast
+                <std::chrono::duration<double> >(time2 - time1).count()));
+        }
+    }
+
     // Signal propagation
     for (unsigned int l = 1; l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
@@ -1783,7 +1807,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
         }
     }
 
-    // Set targets
+    // Targets processing
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
          = mTargets.begin(),
          itTargetsEnd = mTargets.end();
@@ -1810,7 +1834,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
             time2 = std::chrono::high_resolution_clock::now();
             (*timings).push_back(std::make_pair(
                 (*itTargets)->getCell()->getName() + "."
-                + (*itTargets)->getType(),
+                + (*itTargets)->getType() + "[process]",
                 std::chrono::duration_cast
                 <std::chrono::duration<double> >(time2 - time1).count()));
         }
@@ -1900,6 +1924,30 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
     if (timings != NULL)
         (*timings).clear();
+
+    // Provide targets
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets)
+    {
+        //std::cout << "process " << (*itTargets)->getName() << std::endl;
+        time1 = std::chrono::high_resolution_clock::now();
+        (*itTargets)->provideTargets(set);
+
+        if (timings != NULL) {
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+            time2 = std::chrono::high_resolution_clock::now();
+            (*timings).push_back(std::make_pair(
+                (*itTargets)->getCell()->getName() + "."
+                + (*itTargets)->getType() + "[provide]",
+                std::chrono::duration_cast
+                <std::chrono::duration<double> >(time2 - time1).count()));
+        }
+    }
 
     // Signal propagation
     for (unsigned int l = 1; l < nbLayers; ++l) {

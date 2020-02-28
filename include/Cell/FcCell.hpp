@@ -135,6 +135,8 @@ protected:
 
     /// If true, the output neurons don't have bias
     Parameter<bool> mNoBias;
+    /// If true, normalize the weights (L2 norm)
+    Parameter<bool> mNormalize;
     /// If true, enable backpropogation
     Parameter<bool> mBackPropagate;
     Parameter<WeightsExportFormat> mWeightsExportFormat;

@@ -40,9 +40,36 @@ void cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
                                  unsigned int batchSize);
 
 //Half
-double cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+void cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
                              int* targets,
                              unsigned int* nbTargetOutputs,
+                             half_float::half* diffInputs,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             unsigned int batchSize);
+
+//Float
+void cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+                             int* targets,
+                             unsigned int* nbTargetOutputs,
+                             float* diffInputs,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             unsigned int batchSize);
+//Double
+void cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+                             int* targets,
+                             unsigned int* nbTargetOutputs,
+                             double* diffInputs,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             unsigned int batchSize);
+
+//Half
+double cudaHApplyLoss(const cudaDeviceProp& deviceProp,
                              half_float::half* lossMem,
                              half_float::half* outputs,
                              half_float::half* diffInputs,
@@ -54,9 +81,7 @@ double cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
                              half_float::half defaultVal);
 
 //Float
-double cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
-                             int* targets,
-                             unsigned int* nbTargetOutputs,
+double cudaSApplyLoss(const cudaDeviceProp& deviceProp,
                              float* lossMem,
                              float* outputs,
                              float* diffInputs,
@@ -67,9 +92,7 @@ double cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
                              float targetVal,
                              float defaultVal);
 //Double
-double cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
-                             int* targets,
-                             unsigned int* nbTargetOutputs,
+double cudaDApplyLoss(const cudaDeviceProp& deviceProp,
                              double* lossMem,
                              double* outputs,
                              double* diffInputs,

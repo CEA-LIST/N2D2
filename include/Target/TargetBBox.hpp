@@ -136,6 +136,7 @@ public:
                             long unsigned int nbIterMax = 100000,
                             unsigned int nbClass = 1);
 
+    virtual void provideTargets(Database::StimuliSet /*set*/) {}
     virtual void process(Database::StimuliSet set);
     double getAverageSuccess(Database::StimuliSet set,
                              unsigned int avgWindow = 0) const;

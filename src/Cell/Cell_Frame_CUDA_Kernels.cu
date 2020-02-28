@@ -113,15 +113,11 @@ __global__ void cudaHReduce_kernel(__half* idata, __half* odata,
 __global__
 void cudaHSetOutputTargets_kernel(int* targets,
     unsigned int* nbTargetOutputs,
-    __half* lossMem,
-    __half* outputs,
     __half* diffInputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize,
-    __half targetVal,
-    __half defaultVal)
+    unsigned int batchSize)
 {
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
@@ -147,37 +143,16 @@ void cudaHSetOutputTargets_kernel(int* targets,
                     const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
                         + batchNbTargetOutputsOffset;
 
-#if __CUDA_ARCH__ >= 530
-                    const __half error = ((nbOutputs > 1
+                    diffInputs[outputsIdx] = ((nbOutputs > 1
                                 && targets[targetsIdx] == (int)output)
                             || (nbOutputs == 1 && targets[targetsIdx] == 1))
-                        ? __hsub(targetVal, outputs[outputsIdx])
-                        : __hsub(defaultVal, outputs[outputsIdx]);
-
-                    // __hdiv is undefined with CUDA 7.5
-                    diffInputs[outputsIdx]
-                        = __hmul(error, __float2half(1.0f / 
-                                (float)nbTargetOutputs[nbTargetOutputsIdx]));
-                    lossMem[outputsIdx] = __hmul(error, error);
-#else
-                    const float error = ((nbOutputs > 1
-                                && targets[targetsIdx] == (int)output)
-                            || (nbOutputs == 1 && targets[targetsIdx] == 1))
-
-                        ? __half2float(targetVal)
-                            - __half2float(outputs[outputsIdx])
-                        : __half2float(defaultVal)
-                            - __half2float(outputs[outputsIdx]);
-
-                    diffInputs[outputsIdx] = __float2half(error
-                                    / nbTargetOutputs[nbTargetOutputsIdx]);
-                    lossMem[outputsIdx] = __float2half(error * error);
-#endif
+                        ? __float2half(1.0f
+                            / (float)nbTargetOutputs[nbTargetOutputsIdx])
+                        : __float2half(-1.0f
+                            / (float)nbTargetOutputs[nbTargetOutputsIdx]);
                 }
-                else {
+                else
                     diffInputs[outputsIdx] = __float2half(0.0f);
-                    lossMem[outputsIdx] = __float2half(0.0f);
-                }
             }
         }
     }
@@ -216,15 +191,11 @@ __global__ void cudaSReduce_kernel(float* idata, float* odata,
 __global__
 void cudaSSetOutputTargets_kernel(int* targets,
     unsigned int* nbTargetOutputs,
-    float* lossMem,
-    float* outputs,
     float* diffInputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize,
-    float targetVal,
-    float defaultVal)
+    unsigned int batchSize)
 {
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
@@ -250,20 +221,14 @@ void cudaSSetOutputTargets_kernel(int* targets,
                     const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
                         + batchNbTargetOutputsOffset;
 
-                    const float error = ((nbOutputs > 1
+                    diffInputs[outputsIdx] = ((nbOutputs > 1
                                 && targets[targetsIdx] == (int)output)
                             || (nbOutputs == 1 && targets[targetsIdx] == 1))
-                        ? targetVal - outputs[outputsIdx]
-                        : defaultVal - outputs[outputsIdx];
-                    
-                    diffInputs[outputsIdx]
-                        = error / nbTargetOutputs[nbTargetOutputsIdx];
-                    lossMem[outputsIdx] = error * error;
+                        ? 1.0f / nbTargetOutputs[nbTargetOutputsIdx]
+                        : -1.0f / nbTargetOutputs[nbTargetOutputsIdx];
                 }
-                else {
+                else
                     diffInputs[outputsIdx] = 0.0f;
-                    lossMem[outputsIdx] = 0.0f;
-                }
             }
         }
     }
@@ -324,7 +289,157 @@ __global__ void cudaDReduce_kernel(double* idata, double* odata,
 __global__
 void cudaDSetOutputTargets_kernel(int* targets,
     unsigned int* nbTargetOutputs,
-    double* lossMem,
+    double* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize)
+{
+    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchTargetOffset = blockIdx.z
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
+                                           * ((nbOutputs > 1) ? nbOutputs : 2);
+
+    for (unsigned int output = blockIdx.x; output < nbOutputs;
+        output += gridDim.x) {                                
+        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
+                oy += blockDim.y) {
+            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
+                    ox += blockDim.x)
+            {
+                const unsigned int outputsIdx
+                    = ox + (oy + output * outputsHeight) * outputsWidth
+                        + batchOutputOffset;
+                const unsigned int targetsIdx = ox + oy * outputsWidth
+                    + batchTargetOffset;
+
+                if (targets[targetsIdx] >= 0) {
+                    const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
+                        + batchNbTargetOutputsOffset;
+
+                    diffInputs[outputsIdx] = ((nbOutputs > 1
+                                && targets[targetsIdx] == (int)output)
+                            || (nbOutputs == 1 && targets[targetsIdx] == 1))
+                        ? 1.0 / nbTargetOutputs[nbTargetOutputsIdx]
+                        : -1.0 / nbTargetOutputs[nbTargetOutputsIdx];
+                }
+                else
+                    diffInputs[outputsIdx] = 0.0;
+            }
+        }
+    }
+}
+
+//Half
+__global__
+void cudaHApplyLoss_kernel(__half* lossMem,
+    __half* outputs,
+    __half* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize,
+    __half targetVal,
+    __half defaultVal)
+{
+    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchTargetOffset = blockIdx.z
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
+                                           * ((nbOutputs > 1) ? nbOutputs : 2);
+
+    for (unsigned int output = blockIdx.x; output < nbOutputs;
+        output += gridDim.x) {                                
+        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
+                oy += blockDim.y) {
+            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
+                    ox += blockDim.x)
+            {
+                const unsigned int outputsIdx
+                    = ox + (oy + output * outputsHeight) * outputsWidth
+                        + batchOutputOffset;
+                const unsigned int targetsIdx = ox + oy * outputsWidth
+                    + batchTargetOffset;
+
+                if (__half2float(diffInputs[outputsIdx]) != 0.0f) {
+                    const __half val
+                        = (__half2float(diffInputs[outputsIdx]) > 0.0f)
+                                            ? targetVal : defaultVal;
+#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
+                    // __habs is not defined in this context...
+                    const __half error = __hmul(
+                        __hsub(val, outputs[outputsIdx]),
+                        __float2half(
+                            abs(__half2float(diffInputs[outputsIdx]))));
+                    lossMem[outputsIdx] = __hmul(error, error);
+#else
+                    const float error = (__half2float(val)
+                        - __half2float(outputs[outputsIdx]))
+                            * abs(__half2float(diffInputs[outputsIdx]));
+                    lossMem[outputsIdx] = __float2half(error * error);
+#endif
+                    diffInputs[outputsIdx] = error;
+                }
+                else
+                    lossMem[outputsIdx] = __float2half(0.0f);
+            }
+        }
+    }
+}
+
+//Float
+__global__
+void cudaSApplyLoss_kernel(float* lossMem,
+    float* outputs,
+    float* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize,
+    float targetVal,
+    float defaultVal)
+{
+    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchTargetOffset = blockIdx.z
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
+                                           * ((nbOutputs > 1) ? nbOutputs : 2);
+
+    for (unsigned int output = blockIdx.x; output < nbOutputs;
+        output += gridDim.x) {                                
+        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
+                oy += blockDim.y) {
+            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
+                    ox += blockDim.x)
+            {
+                const unsigned int outputsIdx
+                    = ox + (oy + output * outputsHeight) * outputsWidth
+                        + batchOutputOffset;
+                const unsigned int targetsIdx = ox + oy * outputsWidth
+                    + batchTargetOffset;
+
+                if (diffInputs[outputsIdx] != 0.0f) {
+                    const float val = (diffInputs[outputsIdx] > 0.0f)
+                                            ? targetVal : defaultVal;
+                    const float error = (val - outputs[outputsIdx])
+                                            * abs(diffInputs[outputsIdx]);
+                    diffInputs[outputsIdx] = error;
+                    lossMem[outputsIdx] = error * error;
+                }
+                else
+                    lossMem[outputsIdx] = 0.0f;
+            }
+        }
+    }
+}
+
+//Double
+__global__
+void cudaDApplyLoss_kernel(double* lossMem,
     double* outputs,
     double* diffInputs,
     unsigned int nbOutputs,
@@ -354,24 +469,16 @@ void cudaDSetOutputTargets_kernel(int* targets,
                 const unsigned int targetsIdx = ox + oy * outputsWidth
                     + batchTargetOffset;
 
-                if (targets[targetsIdx] >= 0) {
-                    const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
-                        + batchNbTargetOutputsOffset;
-
-                    const double error = ((nbOutputs > 1
-                                && targets[targetsIdx] == (int)output)
-                            || (nbOutputs == 1 && targets[targetsIdx] == 1))
-                        ? targetVal - outputs[outputsIdx]
-                        : defaultVal - outputs[outputsIdx];
-                    
-                    diffInputs[outputsIdx]
-                        = error / nbTargetOutputs[nbTargetOutputsIdx];
+                if (diffInputs[outputsIdx] != 0.0) {
+                    const double val = (diffInputs[outputsIdx] > 0.0)
+                                            ? targetVal : defaultVal;
+                    const double error = (val - outputs[outputsIdx])
+                                            * abs(diffInputs[outputsIdx]);
+                    diffInputs[outputsIdx] = error;
                     lossMem[outputsIdx] = error * error;
                 }
-                else {
-                    diffInputs[outputsIdx] = 0.0;
+                else
                     lossMem[outputsIdx] = 0.0;
-                }
             }
         }
     }
@@ -446,9 +553,112 @@ void N2D2::cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
 }
 
 //Half
-double N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+void N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
+    half_float::half* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize)
+{
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaHSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (targets,
+           nbTargetOutputs,
+           reinterpret_cast<__half*>(diffInputs),
+           nbOutputs,
+           outputsHeight,
+           outputsWidth,
+           batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+//Float
+void N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+    int* targets,
+    unsigned int* nbTargetOutputs,
+    float* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize)
+{
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (targets,
+           nbTargetOutputs,
+           diffInputs,
+           nbOutputs,
+           outputsHeight,
+           outputsWidth,
+           batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+//Double
+void N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+    int* targets,
+    unsigned int* nbTargetOutputs,
+    double* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize)
+{
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaDSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (targets,
+           nbTargetOutputs,
+           diffInputs,
+           nbOutputs,
+           outputsHeight,
+           outputsWidth,
+           batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+//Half
+double N2D2::cudaHApplyLoss(const cudaDeviceProp& deviceProp,
     half_float::half* lossMem,
     half_float::half* outputs,
     half_float::half* diffInputs,
@@ -473,10 +683,8 @@ double N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaHSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (targets,
-           nbTargetOutputs,
-           reinterpret_cast<__half*>(lossMem),
+    cudaHApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (reinterpret_cast<__half*>(lossMem),
            reinterpret_cast<__half*>(outputs),
            reinterpret_cast<__half*>(diffInputs),
            nbOutputs,
@@ -504,9 +712,7 @@ double N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
 }
 
 //Float
-double N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
-    int* targets,
-    unsigned int* nbTargetOutputs,
+double N2D2::cudaSApplyLoss(const cudaDeviceProp& deviceProp,
     float* lossMem,
     float* outputs,
     float* diffInputs,
@@ -531,10 +737,8 @@ double N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (targets,
-           nbTargetOutputs,
-           lossMem,
+    cudaSApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (lossMem,
            outputs,
            diffInputs,
            nbOutputs,
@@ -559,9 +763,7 @@ double N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
 }
 
 //Double
-double N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
-    int* targets,
-    unsigned int* nbTargetOutputs,
+double N2D2::cudaDApplyLoss(const cudaDeviceProp& deviceProp,
     double* lossMem,
     double* outputs,
     double* diffInputs,
@@ -586,10 +788,8 @@ double N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaDSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (targets,
-           nbTargetOutputs,
-           lossMem,
+    cudaDApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (lossMem,
            outputs,
            diffInputs,
            nbOutputs,

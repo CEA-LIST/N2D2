@@ -25,6 +25,7 @@
 #include "Filler/NormalFiller.hpp"
 #include "GradientCheck.hpp"
 #include "Cell/FcCell_Frame_CUDA.hpp"
+#include "Cell/FcCell_Frame_CUDA_Kernels.hpp"
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
 
@@ -105,6 +106,9 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
         mWeightsFiller->apply(mSynapses.back());
         mSynapses.back().synchronizeHToD();
     }
+
+    if (mNormalize)
+        mSynapsesNorm.resize({mOutputs.dimZ()});
 }
 
 template <class T>
@@ -143,6 +147,11 @@ namespace N2D2 {
 template <>
 void N2D2::FcCell_Frame_CUDA<half_float::half>::propagate(bool inference)
 {
+    if (mNormalize) {
+        throw std::runtime_error("FcCell_Frame_CUDA<half_float::half>"
+            "::propagate(): normalization not implemented in half precision.");
+    }
+
     mInputs.synchronizeHBasedToD();
 
     const half_float::half alpha(1.0f);
@@ -203,6 +212,31 @@ void N2D2::FcCell_Frame_CUDA<float>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
+    if (mNormalize) {
+        mSynapsesNorm.deviceTensor().fill(0.0f);
+
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            cudaSFcWeightsSumSq(CudaContext::getDeviceProp(),
+                                mSynapses[k].getDevicePtr(),
+                                mSynapsesNorm.getDevicePtr(),
+                                mInputs[k].size() / mInputs.dimB(),
+                                mOutputs.dimZ());
+        }
+
+        cudaSFcWeightsSqrt(CudaContext::getDeviceProp(),
+                            mSynapsesNorm.getDevicePtr(),
+                            mOutputs.dimZ(),
+                            1.0e-6);
+
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            cudaSFcWeightsNormalize(CudaContext::getDeviceProp(),
+                                mSynapses[k].getDevicePtr(),
+                                mSynapsesNorm.getDevicePtr(),
+                                mInputs[k].size() / mInputs.dimB(),
+                                mOutputs.dimZ());
+        }
+    }
+
     const float alpha = 1.0f;
     float beta = 0.0f;
 
@@ -259,6 +293,31 @@ template <>
 void N2D2::FcCell_Frame_CUDA<double>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
+
+    if (mNormalize) {
+        mSynapsesNorm.deviceTensor().fill(0.0);
+
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            cudaDFcWeightsSumSq(CudaContext::getDeviceProp(),
+                                mSynapses[k].getDevicePtr(),
+                                mSynapsesNorm.getDevicePtr(),
+                                mInputs[k].size() / mInputs.dimB(),
+                                mOutputs.dimZ());
+        }
+
+        cudaDFcWeightsSqrt(CudaContext::getDeviceProp(),
+                            mSynapsesNorm.getDevicePtr(),
+                            mOutputs.dimZ(),
+                            1.0e-6);
+
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            cudaDFcWeightsNormalize(CudaContext::getDeviceProp(),
+                                mSynapses[k].getDevicePtr(),
+                                mSynapsesNorm.getDevicePtr(),
+                                mInputs[k].size() / mInputs.dimB(),
+                                mOutputs.dimZ());
+        }
+    }
 
     const double alpha = 1.0;
     double beta = 0.0;

@@ -86,6 +86,7 @@ public:
     virtual void initialize(TargetType targetType,
                             const std::shared_ptr<RPCell>& RPCell,
                             const std::shared_ptr<AnchorCell>& anchorCell);
+    virtual void provideTargets(Database::StimuliSet /*set*/) {}
     virtual void process(Database::StimuliSet set);
     virtual void processCls(Database::StimuliSet set);
     virtual void processBBox(Database::StimuliSet set);

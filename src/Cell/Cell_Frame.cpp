@@ -237,122 +237,123 @@ void N2D2::Cell_Frame<T>::backPropagate()
 }
 
 template <class T>
-double N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets,
-                                            double targetVal,
-                                            double defaultVal)
+void N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets)
 {
     if (targets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame::setOutputTarget(): target "
                                 "and output batch sizes don't match.");
 
-    if (targets.size() / targets.dimB() != 1)
-        throw std::domain_error("Cell_Frame::setOutputTarget(): require "
-                                "one target per batch.");
-
-    const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
-
-    double loss = 0.0;
-
-    for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos) {
-        if (targets(0, batchPos) >= 0) {
-            if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
-                || (outputSize == 1 && (targets(0, batchPos) < 0
-                                        || targets(0, batchPos) > 1))) {
-                throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTarget(): "
-                                        "target not within output range.");
-            }
-        }
-
-        for (unsigned int index = 0; index < outputSize; ++index) {
-            if (targets(0, batchPos) >= 0) {
-                const double error
-                    = ((outputSize > 1 && (int)index == targets(0, batchPos))
-                       || (outputSize == 1 && targets(0, batchPos) == 1))
-                          ? targetVal - mOutputs(index, batchPos)
-                          : defaultVal - mOutputs(index, batchPos);
-
-                mDiffInputs(index, batchPos) = error;
-                loss += error * error;
-            } else
-                mDiffInputs(index, batchPos) = 0.0;
-        }
-    }
-
-    return (loss / mOutputs.dimB());
-}
-
-template <class T>
-double N2D2::Cell_Frame<T>::setOutputTargets(const Tensor<int>& targets,
-                                             double targetVal,
-                                             double defaultVal)
-{
-    if (targets.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame<T>::setOutputTargets(): target and "
-                                "output batch sizes don't match.");
-
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
     {
         std::ostringstream errorStr;
         errorStr << "Cell_Frame<T>::setOutputTargets(): wrong target "
-            "matrix size. Expected " << mOutputsDims << ", got "
+            "size. Expected " << mOutputsDims << ", got "
             << targets.dims() << std::endl;
 
         throw std::domain_error(errorStr.str());
     }
 
-    double loss = 0.0;
+    if (targets.size() / targets.dimB() == 1) {
+        // Single target value per stimulus (ex: images classification)
+        const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
 
-#pragma omp parallel for if (mOutputs.dimB() > 4) reduction(+:loss)
-    for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
-        const Tensor<int> target = targets[batchPos][0];
+        for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos)
+        {
+            if (targets(0, batchPos) >= 0) {
+                if ((outputSize > 1 && targets(0, batchPos) >= (int)outputSize)
+                    || (outputSize == 1 && (targets(0, batchPos) < 0
+                                            || targets(0, batchPos) > 1)))
+                {
+                    throw std::domain_error("Cell_Frame_CUDA<T>"
+                        "::setOutputTarget(): target not within output range.");
+                }
+            }
 
-        std::vector<unsigned int> nbTargetOutputs(
-            (getNbOutputs() > 1) ? getNbOutputs() : 2, 0);
+            for (unsigned int index = 0; index < outputSize; ++index) {
+                if (targets(0, batchPos) >= 0) {
+                    mDiffInputs(index, batchPos)
+                        = ((outputSize > 1
+                                && (int)index == targets(0, batchPos))
+                            || (outputSize == 1 && targets(0, batchPos) == 1))
+                                ? 1.0
+                                : -1.0;
+                }
+                else
+                    mDiffInputs(index, batchPos) = 0.0;
+            }
+        }
+    }
+    else {
+        // 2D target matrix per stimulus (ex: images segmentation)
+#pragma omp parallel for if (mOutputs.dimB() > 4)
+        for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
+            const Tensor<int> target = targets[batchPos][0];
 
-        for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
-            for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
-                if (target(ox, oy) >= 0) {
-                    if ((getNbOutputs() > 1 && target(ox, oy) >= (int)getNbOutputs())
-                        || (getNbOutputs() == 1
-                            && (target(ox, oy) < 0 || target(ox, oy) > 1)))
-                    {
-#pragma omp critical
+            std::vector<unsigned int> nbTargetOutputs(
+                (getNbOutputs() > 1) ? getNbOutputs() : 2, 0);
+
+            for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
+                for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
+                    if (target(ox, oy) >= 0) {
+                        if ((getNbOutputs() > 1
+                                && target(ox, oy) >= (int)getNbOutputs())
+                            || (getNbOutputs() == 1
+                                && (target(ox, oy) < 0 || target(ox, oy) > 1)))
                         {
-                            std::stringstream errorMsg;
-                            errorMsg << "Cell_Frame<T>:: "
-                                "setOutputTargets(): "
-                                "output target (" << target(ox, oy) << ") out "
-                                "of range [0," << (getNbOutputs()
-                                                - (getNbOutputs() > 1)) << "].";
+#pragma omp critical
+                            {
+                                std::stringstream errorMsg;
+                                errorMsg << "Cell_Frame<T>:: "
+                                    "setOutputTargets(): "
+                                    "output target (" << target(ox, oy)
+                                    << ") out of range [0," << (getNbOutputs()
+                                        - (getNbOutputs() > 1)) << "].";
 
-                            throw std::domain_error(errorMsg.str());
+                                throw std::domain_error(errorMsg.str());
+                            }
                         }
-                    }
 
-                    ++nbTargetOutputs[target(ox, oy)];
+                        ++nbTargetOutputs[target(ox, oy)];
+                    }
+                }
+            }
+
+            for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
+                for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
+                    for (unsigned int output = 0; output < getNbOutputs();
+                        ++output)
+                    {
+                        if (target(ox, oy) >= 0) {
+                            mDiffInputs(ox, oy, output, batchPos)
+                                = ((getNbOutputs() > 1
+                                    && target(ox, oy) == (int)output)
+                                || (getNbOutputs() == 1 && target(ox, oy) == 1))
+                                    ? 1.0 / nbTargetOutputs[target(ox, oy)]
+                                    : -1.0 / nbTargetOutputs[target(ox, oy)];
+                        }
+                        else
+                            mDiffInputs(ox, oy, output, batchPos) = 0.0;
+                    }
                 }
             }
         }
+    }
+}
 
-        for (unsigned int oy = 0; oy < mOutputsDims[1]; ++oy) {
-            for (unsigned int ox = 0; ox < mOutputsDims[0]; ++ox) {
-                for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                    if (target(ox, oy) >= 0) {
-                        const double error
-                            = ((getNbOutputs() > 1 && target(ox, oy) == (int)output)
-                               || (getNbOutputs() == 1 && target(ox, oy) == 1))
-                                  ? targetVal
-                                    - mOutputs(ox, oy, output, batchPos)
-                                  : defaultVal
-                                    - mOutputs(ox, oy, output, batchPos);
+template <class T>
+double N2D2::Cell_Frame<T>::applyLoss(double targetVal,
+                                      double defaultVal)
+{
+    double loss = 0.0;
 
-                        mDiffInputs(ox, oy, output, batchPos)
-                            = error / nbTargetOutputs[target(ox, oy)];
-                        loss += error * error;
-                    } else
-                        mDiffInputs(ox, oy, output, batchPos) = 0.0;
-                }
-            }
+    for (unsigned int index = 0; index < mOutputs.size(); ++index) {
+        if (mDiffInputs(index) != 0.0) {
+            const double val = (mDiffInputs(index) > 0)
+                                    ? targetVal : defaultVal;
+            const double error = (val - mOutputs(index))
+                                    * std::abs(mDiffInputs(index));
+            mDiffInputs(index) = error;
+            loss += error * error;
         }
     }
 
@@ -360,7 +361,7 @@ double N2D2::Cell_Frame<T>::setOutputTargets(const Tensor<int>& targets,
 }
 
 template <class T>
-double N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
+void N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
 {
     if (baseTargets.dimB() != mOutputs.dimB())
         throw std::domain_error("Cell_Frame<T>::setOutputTargets(): target and "
@@ -380,10 +381,17 @@ double N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
 
     const Tensor<T>& targets = tensor_cast<T>(baseTargets);
 
+    for (unsigned int index = 0; index < mOutputs.size(); ++index)
+        mDiffInputs(index) = targets(index);
+}
+
+template <class T>
+double N2D2::Cell_Frame<T>::applyLoss()
+{
     double loss = 0.0;
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index) {
-        const double error = targets(index) - mOutputs(index);
+        const double error = mDiffInputs(index) - mOutputs(index);
         mDiffInputs(index) = error;
         loss += error * error;
     }

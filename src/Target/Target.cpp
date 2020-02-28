@@ -339,7 +339,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
     }
 }
 
-void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
+void N2D2::Target::provideTargets(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
@@ -347,8 +347,7 @@ void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
     if (mDataAsTarget) {
         if (set == Database::Learn && targetCell) {
             // Update target values from input data
-            mLoss.push_back(
-                targetCell->setOutputTargets(mStimuliProvider->getTargetData()));
+            targetCell->setOutputTargets(mStimuliProvider->getTargetData());
         }
 
         return;
@@ -362,10 +361,6 @@ void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
     if (mTargets.empty()) {
         mTargets.resize({mCell->getOutputsWidth(), mCell->getOutputsHeight(), 1,
             labels.dimB()});
-        mEstimatedLabels.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
-        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
     }
 
     if (mPopulateTargets && validDatabase) {
@@ -507,7 +502,6 @@ void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
 
     //Set label associated to mTargets
     if (set == Database::Learn && targetCell) {
-        
         // Set targets
         if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
             for (unsigned int batchPos = 0; batchPos < mTargets.dimB();
@@ -520,94 +514,100 @@ void N2D2::Target::targetLabelProvider(Database::StimuliSet set)
                                 << Utils::cdef << std::endl;
                 }
             }
+        }
 
-            mLoss.push_back(targetCell->setOutputTarget(
-                mTargets, mTargetValue, mDefaultValue));
-        }
-        else {
-            mLoss.push_back(targetCell->setOutputTargets(
-                mTargets, mTargetValue, mDefaultValue));
-        }
+        targetCell->setOutputTarget(mTargets);
     }
 }
 
 void N2D2::Target::process(Database::StimuliSet set)
 {
-    targetLabelProvider(set);
+    std::shared_ptr<Cell_Frame_Top> targetCell 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
 
-    if (!mDataAsTarget) {
-        std::shared_ptr<Cell_Frame_Top> targetCell 
-            = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
-        std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
-            = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+    if (mDataAsTarget) {
+        mLoss.push_back(targetCell->applyLoss());
+        return;
+    }
 
-        BaseTensor& outputsBaseTensor = (targetCell)
-            ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
-        // Find batchSize to ignore invalid stimulus in batch (can occur for the 
-        // last batch of the set)
-        int batchSize = 0;
+    mLoss.push_back(targetCell->applyLoss(mTargetValue, mDefaultValue));
 
-        if (mStimuliProvider->getBatch().back() >= 0)
-            batchSize = (int)mTargets.dimB();
-        else {
-            for (; batchSize < (int)mTargets.dimB(); ++batchSize) {
-                const int id = mStimuliProvider->getBatch()[batchSize];
+    if (mEstimatedLabels.empty()) {
+        mEstimatedLabels.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, mTargets.dimB()});
+        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, mTargets.dimB()});
+    }
 
-                if (id < 0)
-                    break;
-            }
+    std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
+        = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+
+    BaseTensor& outputsBaseTensor = (targetCell)
+        ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
+    // Find batchSize to ignore invalid stimulus in batch (can occur for the 
+    // last batch of the set)
+    int batchSize = 0;
+
+    if (mStimuliProvider->getBatch().back() >= 0)
+        batchSize = (int)mTargets.dimB();
+    else {
+        for (; batchSize < (int)mTargets.dimB(); ++batchSize) {
+            const int id = mStimuliProvider->getBatch()[batchSize];
+
+            if (id < 0)
+                break;
         }
+    }
 
 
 #ifdef CUDA
-        CudaBaseTensor* outputsCudaBaseTensor 
-                = dynamic_cast<CudaBaseTensor*>(&outputsBaseTensor);
+    CudaBaseTensor* outputsCudaBaseTensor 
+            = dynamic_cast<CudaBaseTensor*>(&outputsBaseTensor);
 
-        if (outputsCudaBaseTensor != NULL) {
-            const unsigned int nbOutputs = outputsCudaBaseTensor->dimZ();
+    if (outputsCudaBaseTensor != NULL) {
+        const unsigned int nbOutputs = outputsCudaBaseTensor->dimZ();
 
-            if (mTargetTopN > nbOutputs) {
-                throw std::runtime_error("Target::process_Frame_CUDA(): target 'TopN' "
-                                        "parameter must be <= to the network "
-                                        "output size");
-            }
-            std::shared_ptr<CudaDeviceTensor<Float_T> > value
-                = cuda_device_tensor_cast<Float_T>(*outputsCudaBaseTensor);
-                
-            process_Frame_CUDA(value->getDevicePtr(), batchSize);
+        if (mTargetTopN > nbOutputs) {
+            throw std::runtime_error("Target::process_Frame_CUDA(): target 'TopN' "
+                                    "parameter must be <= to the network "
+                                    "output size");
         }
-        else {
+        std::shared_ptr<CudaDeviceTensor<Float_T> > value
+            = cuda_device_tensor_cast<Float_T>(*outputsCudaBaseTensor);
+            
+        process_Frame_CUDA(value->getDevicePtr(), batchSize);
+    }
+    else {
 #endif
-            outputsBaseTensor.synchronizeDToH();
-            process_Frame(outputsBaseTensor, batchSize);
+        outputsBaseTensor.synchronizeDToH();
+        process_Frame(outputsBaseTensor, batchSize);
 #ifdef CUDA
 
-            mEstimatedLabels.hostBased() = true;
-            mEstimatedLabelsValue.hostBased() = true;
-        }
+        mEstimatedLabels.hostBased() = true;
+        mEstimatedLabelsValue.hostBased() = true;
+    }
 #endif
 
-        if (mEstimatedLabelsValue.dimX() == 1
-            && mEstimatedLabelsValue.dimY() == 1)
-        {
-            static bool display = true;
+    if (mEstimatedLabelsValue.dimX() == 1
+        && mEstimatedLabelsValue.dimY() == 1)
+    {
+        static bool display = true;
 
-            if (set == Database::Test && display) {
-                mEstimatedLabels.synchronizeDBasedToH();
-                mEstimatedLabelsValue.synchronizeDBasedToH();
+        if (set == Database::Test && display) {
+            mEstimatedLabels.synchronizeDBasedToH();
+            mEstimatedLabelsValue.synchronizeDBasedToH();
 
-                std::cout << "[";
+            std::cout << "[";
 
-                for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
-                    std::cout << mEstimatedLabels(0, 0, i, 0) << ":"
-                        << std::setprecision(2)
-                        << std::fixed
-                        << mEstimatedLabelsValue(0, 0, i, 0) << " ";
-                }
-
-                std::cout << "]" << std::endl;
-                display = false;
+            for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
+                std::cout << mEstimatedLabels(0, 0, i, 0) << ":"
+                    << std::setprecision(2)
+                    << std::fixed
+                    << mEstimatedLabelsValue(0, 0, i, 0) << " ";
             }
+
+            std::cout << "]" << std::endl;
+            display = false;
         }
     }
 }
@@ -1590,7 +1590,7 @@ void init_Target(py::module &m) {
     .def("getTargetLabels", &Target::getTargetLabels, py::arg("output"))
     .def("getTargetLabelsName", &Target::getTargetLabelsName)
     .def("logLabelsMapping", &Target::logLabelsMapping, py::arg("fileName"))
-    .def("targetLabelProvider", &Target::targetLabelProvider, py::arg("set"))
+    .def("provideTargets", &Target::provideTargets, py::arg("set"))
     .def("process", &Target::process, py::arg("set"))
     .def("logEstimatedLabels", &Target::logEstimatedLabels, py::arg("dirName"))
     .def("logEstimatedLabelsJSON", &Target::logEstimatedLabelsJSON, py::arg("dirName"), py::arg("fileName") = "", py::arg("xOffset") = 0, py::arg("yOffset") = 0, py::arg("append") = false)

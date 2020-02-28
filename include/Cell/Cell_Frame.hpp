@@ -84,13 +84,11 @@ public:
                               BaseTensor& newDiffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
-    virtual double setOutputTarget(const Tensor<int>& targets,
-                                   double targetVal = 1.0,
-                                    double defaultVal = 0.0);
-    virtual double setOutputTargets(const Tensor<int>& targets,
-                                    double targetVal = 1.0,
-                                    double defaultVal = 0.0);
-    virtual double setOutputTargets(const BaseTensor& targets);
+    virtual void setOutputTarget(const Tensor<int>& targets);
+    virtual double applyLoss(double targetVal,
+                             double defaultVal);
+    virtual void setOutputTargets(const BaseTensor& targets);
+    virtual double applyLoss();
     virtual void setOutputErrors(const BaseTensor& errors);
     virtual BaseTensor& getOutputs()
     {

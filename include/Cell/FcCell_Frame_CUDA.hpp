@@ -98,6 +98,7 @@ protected:
     // Internal
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     CudaInterface<T> mSynapses;
+    CudaTensor<T> mSynapsesNorm;
     CudaTensor<T> mBias;
     CudaInterface<T> mDiffSynapses;
     CudaTensor<T> mDiffBias;
