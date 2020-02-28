@@ -81,8 +81,7 @@ N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
         throw std::runtime_error(errorStr.str());
     }
 
-    const std::string dataTypeName = onnx::TensorProto_DataType_Name(
-        (onnx::TensorProto_DataType) onnxTensor->data_type());
+    const std::string dataTypeName = onnxTensor->GetTypeName();
 
     if ((onnxTensor->data_type() == onnx::TensorProto_DataType_FLOAT
             && !std::is_same<T, float>::value)

@@ -22,12 +22,10 @@
 #include <google/protobuf/arena.h>
 #include <google/protobuf/arenastring.h>
 #include <google/protobuf/generated_message_util.h>
-#include <google/protobuf/metadata.h>
-#include <google/protobuf/message.h>
+#include <google/protobuf/message_lite.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
-#include <google/protobuf/generated_enum_reflection.h>
-#include <google/protobuf/unknown_field_set.h>
+#include <google/protobuf/generated_enum_util.h>
 // @@protoc_insertion_point(includes)
 
 namespace onnx {
@@ -49,6 +47,7 @@ class TensorProto;
 class TensorProto_Segment;
 class TensorShapeProto;
 class TensorShapeProto_Dimension;
+class TrainingInfoProto;
 class TypeProto;
 class TypeProto_Map;
 class TypeProto_Sequence;
@@ -77,16 +76,6 @@ const AttributeProto_AttributeType AttributeProto_AttributeType_AttributeType_MI
 const AttributeProto_AttributeType AttributeProto_AttributeType_AttributeType_MAX = AttributeProto_AttributeType_SPARSE_TENSORS;
 const int AttributeProto_AttributeType_AttributeType_ARRAYSIZE = AttributeProto_AttributeType_AttributeType_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* AttributeProto_AttributeType_descriptor();
-inline const ::std::string& AttributeProto_AttributeType_Name(AttributeProto_AttributeType value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    AttributeProto_AttributeType_descriptor(), value);
-}
-inline bool AttributeProto_AttributeType_Parse(
-    const ::std::string& name, AttributeProto_AttributeType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<AttributeProto_AttributeType>(
-    AttributeProto_AttributeType_descriptor(), name, value);
-}
 enum TensorProto_DataType {
   TensorProto_DataType_UNDEFINED = 0,
   TensorProto_DataType_FLOAT = 1,
@@ -113,16 +102,6 @@ const TensorProto_DataType TensorProto_DataType_DataType_MIN = TensorProto_DataT
 const TensorProto_DataType TensorProto_DataType_DataType_MAX = TensorProto_DataType_BFLOAT16;
 const int TensorProto_DataType_DataType_ARRAYSIZE = TensorProto_DataType_DataType_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* TensorProto_DataType_descriptor();
-inline const ::std::string& TensorProto_DataType_Name(TensorProto_DataType value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    TensorProto_DataType_descriptor(), value);
-}
-inline bool TensorProto_DataType_Parse(
-    const ::std::string& name, TensorProto_DataType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<TensorProto_DataType>(
-    TensorProto_DataType_descriptor(), name, value);
-}
 enum TensorProto_DataLocation {
   TensorProto_DataLocation_DEFAULT = 0,
   TensorProto_DataLocation_EXTERNAL = 1,
@@ -134,16 +113,6 @@ const TensorProto_DataLocation TensorProto_DataLocation_DataLocation_MIN = Tenso
 const TensorProto_DataLocation TensorProto_DataLocation_DataLocation_MAX = TensorProto_DataLocation_EXTERNAL;
 const int TensorProto_DataLocation_DataLocation_ARRAYSIZE = TensorProto_DataLocation_DataLocation_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* TensorProto_DataLocation_descriptor();
-inline const ::std::string& TensorProto_DataLocation_Name(TensorProto_DataLocation value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    TensorProto_DataLocation_descriptor(), value);
-}
-inline bool TensorProto_DataLocation_Parse(
-    const ::std::string& name, TensorProto_DataLocation* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<TensorProto_DataLocation>(
-    TensorProto_DataLocation_descriptor(), name, value);
-}
 enum Version {
   _START_VERSION = 0,
   IR_VERSION_2017_10_10 = 1,
@@ -151,7 +120,8 @@ enum Version {
   IR_VERSION_2017_11_3 = 3,
   IR_VERSION_2019_1_22 = 4,
   IR_VERSION_2019_3_18 = 5,
-  IR_VERSION = 6,
+  IR_VERSION_2019_9_19 = 6,
+  IR_VERSION = 7,
   Version_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   Version_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
@@ -160,19 +130,9 @@ const Version Version_MIN = _START_VERSION;
 const Version Version_MAX = IR_VERSION;
 const int Version_ARRAYSIZE = Version_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* Version_descriptor();
-inline const ::std::string& Version_Name(Version value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    Version_descriptor(), value);
-}
-inline bool Version_Parse(
-    const ::std::string& name, Version* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Version>(
-    Version_descriptor(), name, value);
-}
 // ===================================================================
 
-class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.AttributeProto) */ {
+class AttributeProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.AttributeProto) */ {
  public:
   AttributeProto();
   virtual ~AttributeProto();
@@ -184,8 +144,17 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const AttributeProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const AttributeProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(AttributeProto* other);
 
@@ -194,8 +163,7 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
   inline AttributeProto* New() const { return New(NULL); }
 
   AttributeProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const AttributeProto& from);
   void MergeFrom(const AttributeProto& from);
   void Clear();
@@ -206,11 +174,7 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -219,14 +183,14 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
   void InternalSwap(AttributeProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -266,17 +230,6 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
     AttributeProto_AttributeType_AttributeType_MAX;
   static const int AttributeType_ARRAYSIZE =
     AttributeProto_AttributeType_AttributeType_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  AttributeType_descriptor() {
-    return AttributeProto_AttributeType_descriptor();
-  }
-  static inline const ::std::string& AttributeType_Name(AttributeType value) {
-    return AttributeProto_AttributeType_Name(value);
-  }
-  static inline bool AttributeType_Parse(const ::std::string& name,
-      AttributeType* value) {
-    return AttributeProto_AttributeType_Parse(name, value);
-  }
 
   // accessors -------------------------------------------------------
 
@@ -448,7 +401,9 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
   // @@protoc_insertion_point(class_scope:onnx.AttributeProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr ref_attr_name_;
@@ -469,7 +424,11 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
   ::google::protobuf::RepeatedPtrField< ::onnx::GraphProto > graphs_;
   ::google::protobuf::RepeatedPtrField< ::onnx::SparseTensorProto > sparse_tensors_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -478,7 +437,7 @@ class AttributeProto : public ::google::protobuf::Message /* @@protoc_insertion_
 };
 // -------------------------------------------------------------------
 
-class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.ValueInfoProto) */ {
+class ValueInfoProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.ValueInfoProto) */ {
  public:
   ValueInfoProto();
   virtual ~ValueInfoProto();
@@ -490,8 +449,17 @@ class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const ValueInfoProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const ValueInfoProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(ValueInfoProto* other);
 
@@ -500,8 +468,7 @@ class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_
   inline ValueInfoProto* New() const { return New(NULL); }
 
   ValueInfoProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const ValueInfoProto& from);
   void MergeFrom(const ValueInfoProto& from);
   void Clear();
@@ -512,11 +479,7 @@ class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -525,14 +488,14 @@ class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_
   void InternalSwap(ValueInfoProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -572,13 +535,19 @@ class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_
   // @@protoc_insertion_point(class_scope:onnx.ValueInfoProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::onnx::TypeProto* type_;
   ::google::protobuf::internal::ArenaStringPtr doc_string_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -587,7 +556,7 @@ class ValueInfoProto : public ::google::protobuf::Message /* @@protoc_insertion_
 };
 // -------------------------------------------------------------------
 
-class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.NodeProto) */ {
+class NodeProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.NodeProto) */ {
  public:
   NodeProto();
   virtual ~NodeProto();
@@ -599,8 +568,17 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const NodeProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const NodeProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(NodeProto* other);
 
@@ -609,8 +587,7 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   inline NodeProto* New() const { return New(NULL); }
 
   NodeProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const NodeProto& from);
   void MergeFrom(const NodeProto& from);
   void Clear();
@@ -621,11 +598,7 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -634,14 +607,14 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   void InternalSwap(NodeProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -738,7 +711,9 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   // @@protoc_insertion_point(class_scope:onnx.NodeProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::RepeatedPtrField< ::std::string> input_;
   ::google::protobuf::RepeatedPtrField< ::std::string> output_;
@@ -748,7 +723,11 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::RepeatedPtrField< ::onnx::AttributeProto > attribute_;
   ::google::protobuf::internal::ArenaStringPtr doc_string_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -757,7 +736,138 @@ class NodeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
 };
 // -------------------------------------------------------------------
 
-class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.ModelProto) */ {
+class TrainingInfoProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TrainingInfoProto) */ {
+ public:
+  TrainingInfoProto();
+  virtual ~TrainingInfoProto();
+
+  TrainingInfoProto(const TrainingInfoProto& from);
+
+  inline TrainingInfoProto& operator=(const TrainingInfoProto& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const TrainingInfoProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TrainingInfoProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
+
+  void Swap(TrainingInfoProto* other);
+
+  // implements Message ----------------------------------------------
+
+  inline TrainingInfoProto* New() const { return New(NULL); }
+
+  TrainingInfoProto* New(::google::protobuf::Arena* arena) const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const TrainingInfoProto& from);
+  void MergeFrom(const TrainingInfoProto& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  void DiscardUnknownFields();
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TrainingInfoProto* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return _arena_ptr_;
+  }
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
+  }
+  public:
+
+  ::std::string GetTypeName() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .onnx.GraphProto initialization = 1;
+  bool has_initialization() const;
+  void clear_initialization();
+  static const int kInitializationFieldNumber = 1;
+  const ::onnx::GraphProto& initialization() const;
+  ::onnx::GraphProto* mutable_initialization();
+  ::onnx::GraphProto* release_initialization();
+  void set_allocated_initialization(::onnx::GraphProto* initialization);
+
+  // optional .onnx.GraphProto algorithm = 2;
+  bool has_algorithm() const;
+  void clear_algorithm();
+  static const int kAlgorithmFieldNumber = 2;
+  const ::onnx::GraphProto& algorithm() const;
+  ::onnx::GraphProto* mutable_algorithm();
+  ::onnx::GraphProto* release_algorithm();
+  void set_allocated_algorithm(::onnx::GraphProto* algorithm);
+
+  // repeated .onnx.StringStringEntryProto initialization_binding = 3;
+  int initialization_binding_size() const;
+  void clear_initialization_binding();
+  static const int kInitializationBindingFieldNumber = 3;
+  const ::onnx::StringStringEntryProto& initialization_binding(int index) const;
+  ::onnx::StringStringEntryProto* mutable_initialization_binding(int index);
+  ::onnx::StringStringEntryProto* add_initialization_binding();
+  ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >*
+      mutable_initialization_binding();
+  const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
+      initialization_binding() const;
+
+  // repeated .onnx.StringStringEntryProto update_binding = 4;
+  int update_binding_size() const;
+  void clear_update_binding();
+  static const int kUpdateBindingFieldNumber = 4;
+  const ::onnx::StringStringEntryProto& update_binding(int index) const;
+  ::onnx::StringStringEntryProto* mutable_update_binding(int index);
+  ::onnx::StringStringEntryProto* add_update_binding();
+  ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >*
+      mutable_update_binding();
+  const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
+      update_binding() const;
+
+  // @@protoc_insertion_point(class_scope:onnx.TrainingInfoProto)
+ private:
+
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
+  bool _is_default_instance_;
+  ::onnx::GraphProto* initialization_;
+  ::onnx::GraphProto* algorithm_;
+  ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto > initialization_binding_;
+  ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto > update_binding_;
+  mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
+  friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
+  friend void protobuf_AssignDesc_onnx_2eproto3();
+  friend void protobuf_ShutdownFile_onnx_2eproto3();
+
+  void InitAsDefaultInstance();
+  static TrainingInfoProto* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ModelProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.ModelProto) */ {
  public:
   ModelProto();
   virtual ~ModelProto();
@@ -769,8 +879,17 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const ModelProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const ModelProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(ModelProto* other);
 
@@ -779,8 +898,7 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   inline ModelProto* New() const { return New(NULL); }
 
   ModelProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const ModelProto& from);
   void MergeFrom(const ModelProto& from);
   void Clear();
@@ -791,11 +909,7 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -804,14 +918,14 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   void InternalSwap(ModelProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -906,10 +1020,24 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
       metadata_props() const;
 
+  // repeated .onnx.TrainingInfoProto training_info = 20;
+  int training_info_size() const;
+  void clear_training_info();
+  static const int kTrainingInfoFieldNumber = 20;
+  const ::onnx::TrainingInfoProto& training_info(int index) const;
+  ::onnx::TrainingInfoProto* mutable_training_info(int index);
+  ::onnx::TrainingInfoProto* add_training_info();
+  ::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto >*
+      mutable_training_info();
+  const ::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto >&
+      training_info() const;
+
   // @@protoc_insertion_point(class_scope:onnx.ModelProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::int64 ir_version_;
   ::google::protobuf::RepeatedPtrField< ::onnx::OperatorSetIdProto > opset_import_;
@@ -920,8 +1048,13 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::google::protobuf::internal::ArenaStringPtr doc_string_;
   ::onnx::GraphProto* graph_;
   ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto > metadata_props_;
+  ::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto > training_info_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -930,7 +1063,7 @@ class ModelProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
 };
 // -------------------------------------------------------------------
 
-class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.StringStringEntryProto) */ {
+class StringStringEntryProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.StringStringEntryProto) */ {
  public:
   StringStringEntryProto();
   virtual ~StringStringEntryProto();
@@ -942,8 +1075,17 @@ class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_in
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const StringStringEntryProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const StringStringEntryProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(StringStringEntryProto* other);
 
@@ -952,8 +1094,7 @@ class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_in
   inline StringStringEntryProto* New() const { return New(NULL); }
 
   StringStringEntryProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const StringStringEntryProto& from);
   void MergeFrom(const StringStringEntryProto& from);
   void Clear();
@@ -964,11 +1105,7 @@ class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_in
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -977,14 +1114,14 @@ class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_in
   void InternalSwap(StringStringEntryProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1015,12 +1152,18 @@ class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_in
   // @@protoc_insertion_point(class_scope:onnx.StringStringEntryProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr key_;
   ::google::protobuf::internal::ArenaStringPtr value_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1029,7 +1172,7 @@ class StringStringEntryProto : public ::google::protobuf::Message /* @@protoc_in
 };
 // -------------------------------------------------------------------
 
-class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TensorAnnotation) */ {
+class TensorAnnotation : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorAnnotation) */ {
  public:
   TensorAnnotation();
   virtual ~TensorAnnotation();
@@ -1041,8 +1184,17 @@ class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertio
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TensorAnnotation& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TensorAnnotation* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TensorAnnotation* other);
 
@@ -1051,8 +1203,7 @@ class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertio
   inline TensorAnnotation* New() const { return New(NULL); }
 
   TensorAnnotation* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TensorAnnotation& from);
   void MergeFrom(const TensorAnnotation& from);
   void Clear();
@@ -1063,11 +1214,7 @@ class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertio
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -1076,14 +1223,14 @@ class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertio
   void InternalSwap(TensorAnnotation* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1115,12 +1262,18 @@ class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertio
   // @@protoc_insertion_point(class_scope:onnx.TensorAnnotation)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr tensor_name_;
   ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto > quant_parameter_tensor_names_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1129,7 +1282,7 @@ class TensorAnnotation : public ::google::protobuf::Message /* @@protoc_insertio
 };
 // -------------------------------------------------------------------
 
-class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.GraphProto) */ {
+class GraphProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.GraphProto) */ {
  public:
   GraphProto();
   virtual ~GraphProto();
@@ -1141,8 +1294,17 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const GraphProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const GraphProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(GraphProto* other);
 
@@ -1151,8 +1313,7 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   inline GraphProto* New() const { return New(NULL); }
 
   GraphProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const GraphProto& from);
   void MergeFrom(const GraphProto& from);
   void Clear();
@@ -1163,11 +1324,7 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -1176,14 +1333,14 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   void InternalSwap(GraphProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1298,7 +1455,9 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   // @@protoc_insertion_point(class_scope:onnx.GraphProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::RepeatedPtrField< ::onnx::NodeProto > node_;
   ::google::protobuf::internal::ArenaStringPtr name_;
@@ -1310,7 +1469,11 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::google::protobuf::RepeatedPtrField< ::onnx::ValueInfoProto > value_info_;
   ::google::protobuf::RepeatedPtrField< ::onnx::TensorAnnotation > quantization_annotation_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1319,7 +1482,7 @@ class GraphProto : public ::google::protobuf::Message /* @@protoc_insertion_poin
 };
 // -------------------------------------------------------------------
 
-class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TensorProto.Segment) */ {
+class TensorProto_Segment : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorProto.Segment) */ {
  public:
   TensorProto_Segment();
   virtual ~TensorProto_Segment();
@@ -1331,8 +1494,17 @@ class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_inser
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TensorProto_Segment& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TensorProto_Segment* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TensorProto_Segment* other);
 
@@ -1341,8 +1513,7 @@ class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_inser
   inline TensorProto_Segment* New() const { return New(NULL); }
 
   TensorProto_Segment* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TensorProto_Segment& from);
   void MergeFrom(const TensorProto_Segment& from);
   void Clear();
@@ -1353,11 +1524,7 @@ class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_inser
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -1366,14 +1533,14 @@ class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_inser
   void InternalSwap(TensorProto_Segment* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1394,12 +1561,18 @@ class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_inser
   // @@protoc_insertion_point(class_scope:onnx.TensorProto.Segment)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::int64 begin_;
   ::google::protobuf::int64 end_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1408,7 +1581,7 @@ class TensorProto_Segment : public ::google::protobuf::Message /* @@protoc_inser
 };
 // -------------------------------------------------------------------
 
-class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TensorProto) */ {
+class TensorProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorProto) */ {
  public:
   TensorProto();
   virtual ~TensorProto();
@@ -1420,8 +1593,17 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TensorProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TensorProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TensorProto* other);
 
@@ -1430,8 +1612,7 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
   inline TensorProto* New() const { return New(NULL); }
 
   TensorProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TensorProto& from);
   void MergeFrom(const TensorProto& from);
   void Clear();
@@ -1442,11 +1623,7 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -1455,14 +1632,14 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void InternalSwap(TensorProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1512,17 +1689,6 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
     TensorProto_DataType_DataType_MAX;
   static const int DataType_ARRAYSIZE =
     TensorProto_DataType_DataType_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  DataType_descriptor() {
-    return TensorProto_DataType_descriptor();
-  }
-  static inline const ::std::string& DataType_Name(DataType value) {
-    return TensorProto_DataType_Name(value);
-  }
-  static inline bool DataType_Parse(const ::std::string& name,
-      DataType* value) {
-    return TensorProto_DataType_Parse(name, value);
-  }
 
   typedef TensorProto_DataLocation DataLocation;
   static const DataLocation DEFAULT =
@@ -1538,17 +1704,6 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
     TensorProto_DataLocation_DataLocation_MAX;
   static const int DataLocation_ARRAYSIZE =
     TensorProto_DataLocation_DataLocation_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  DataLocation_descriptor() {
-    return TensorProto_DataLocation_descriptor();
-  }
-  static inline const ::std::string& DataLocation_Name(DataLocation value) {
-    return TensorProto_DataLocation_Name(value);
-  }
-  static inline bool DataLocation_Parse(const ::std::string& name,
-      DataLocation* value) {
-    return TensorProto_DataLocation_Parse(name, value);
-  }
 
   // accessors -------------------------------------------------------
 
@@ -1709,7 +1864,9 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
   // @@protoc_insertion_point(class_scope:onnx.TensorProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > dims_;
   mutable int _dims_cached_byte_size_;
@@ -1732,7 +1889,11 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uint64_data_;
   mutable int _uint64_data_cached_byte_size_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1741,7 +1902,7 @@ class TensorProto : public ::google::protobuf::Message /* @@protoc_insertion_poi
 };
 // -------------------------------------------------------------------
 
-class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.SparseTensorProto) */ {
+class SparseTensorProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.SparseTensorProto) */ {
  public:
   SparseTensorProto();
   virtual ~SparseTensorProto();
@@ -1753,8 +1914,17 @@ class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_inserti
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const SparseTensorProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const SparseTensorProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(SparseTensorProto* other);
 
@@ -1763,8 +1933,7 @@ class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_inserti
   inline SparseTensorProto* New() const { return New(NULL); }
 
   SparseTensorProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const SparseTensorProto& from);
   void MergeFrom(const SparseTensorProto& from);
   void Clear();
@@ -1775,11 +1944,7 @@ class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_inserti
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -1788,14 +1953,14 @@ class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_inserti
   void InternalSwap(SparseTensorProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1834,14 +1999,20 @@ class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_inserti
   // @@protoc_insertion_point(class_scope:onnx.SparseTensorProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::onnx::TensorProto* values_;
   ::onnx::TensorProto* indices_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > dims_;
   mutable int _dims_cached_byte_size_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1850,7 +2021,7 @@ class SparseTensorProto : public ::google::protobuf::Message /* @@protoc_inserti
 };
 // -------------------------------------------------------------------
 
-class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto.Dimension) */ {
+class TensorShapeProto_Dimension : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto.Dimension) */ {
  public:
   TensorShapeProto_Dimension();
   virtual ~TensorShapeProto_Dimension();
@@ -1862,7 +2033,6 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TensorShapeProto_Dimension& default_instance();
 
   enum ValueCase {
@@ -1871,6 +2041,16 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
     VALUE_NOT_SET = 0,
   };
 
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TensorShapeProto_Dimension* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
+
   void Swap(TensorShapeProto_Dimension* other);
 
   // implements Message ----------------------------------------------
@@ -1878,8 +2058,7 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
   inline TensorShapeProto_Dimension* New() const { return New(NULL); }
 
   TensorShapeProto_Dimension* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TensorShapeProto_Dimension& from);
   void MergeFrom(const TensorShapeProto_Dimension& from);
   void Clear();
@@ -1890,11 +2069,7 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -1903,14 +2078,14 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
   void InternalSwap(TensorShapeProto_Dimension* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -1960,7 +2135,9 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
   void clear_value();
   inline void clear_has_value();
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr denotation_;
   union ValueUnion {
@@ -1971,7 +2148,11 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
 
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -1980,7 +2161,7 @@ class TensorShapeProto_Dimension : public ::google::protobuf::Message /* @@proto
 };
 // -------------------------------------------------------------------
 
-class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto) */ {
+class TensorShapeProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TensorShapeProto) */ {
  public:
   TensorShapeProto();
   virtual ~TensorShapeProto();
@@ -1992,8 +2173,17 @@ class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertio
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TensorShapeProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TensorShapeProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TensorShapeProto* other);
 
@@ -2002,8 +2192,7 @@ class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertio
   inline TensorShapeProto* New() const { return New(NULL); }
 
   TensorShapeProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TensorShapeProto& from);
   void MergeFrom(const TensorShapeProto& from);
   void Clear();
@@ -2014,11 +2203,7 @@ class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertio
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -2027,14 +2212,14 @@ class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertio
   void InternalSwap(TensorShapeProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -2057,11 +2242,17 @@ class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertio
   // @@protoc_insertion_point(class_scope:onnx.TensorShapeProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::RepeatedPtrField< ::onnx::TensorShapeProto_Dimension > dim_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -2070,7 +2261,7 @@ class TensorShapeProto : public ::google::protobuf::Message /* @@protoc_insertio
 };
 // -------------------------------------------------------------------
 
-class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Tensor) */ {
+class TypeProto_Tensor : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Tensor) */ {
  public:
   TypeProto_Tensor();
   virtual ~TypeProto_Tensor();
@@ -2082,8 +2273,17 @@ class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertio
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TypeProto_Tensor& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TypeProto_Tensor* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TypeProto_Tensor* other);
 
@@ -2092,8 +2292,7 @@ class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertio
   inline TypeProto_Tensor* New() const { return New(NULL); }
 
   TypeProto_Tensor* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TypeProto_Tensor& from);
   void MergeFrom(const TypeProto_Tensor& from);
   void Clear();
@@ -2104,11 +2303,7 @@ class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertio
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -2117,14 +2312,14 @@ class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertio
   void InternalSwap(TypeProto_Tensor* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -2148,12 +2343,18 @@ class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertio
   // @@protoc_insertion_point(class_scope:onnx.TypeProto.Tensor)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::onnx::TensorShapeProto* shape_;
   ::google::protobuf::int32 elem_type_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -2162,7 +2363,7 @@ class TypeProto_Tensor : public ::google::protobuf::Message /* @@protoc_insertio
 };
 // -------------------------------------------------------------------
 
-class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Sequence) */ {
+class TypeProto_Sequence : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Sequence) */ {
  public:
   TypeProto_Sequence();
   virtual ~TypeProto_Sequence();
@@ -2174,8 +2375,17 @@ class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insert
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TypeProto_Sequence& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TypeProto_Sequence* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TypeProto_Sequence* other);
 
@@ -2184,8 +2394,7 @@ class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insert
   inline TypeProto_Sequence* New() const { return New(NULL); }
 
   TypeProto_Sequence* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TypeProto_Sequence& from);
   void MergeFrom(const TypeProto_Sequence& from);
   void Clear();
@@ -2196,11 +2405,7 @@ class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insert
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -2209,14 +2414,14 @@ class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insert
   void InternalSwap(TypeProto_Sequence* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -2234,11 +2439,17 @@ class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insert
   // @@protoc_insertion_point(class_scope:onnx.TypeProto.Sequence)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::onnx::TypeProto* elem_type_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -2247,7 +2458,7 @@ class TypeProto_Sequence : public ::google::protobuf::Message /* @@protoc_insert
 };
 // -------------------------------------------------------------------
 
-class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Map) */ {
+class TypeProto_Map : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto.Map) */ {
  public:
   TypeProto_Map();
   virtual ~TypeProto_Map();
@@ -2259,8 +2470,17 @@ class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_p
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TypeProto_Map& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TypeProto_Map* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(TypeProto_Map* other);
 
@@ -2269,8 +2489,7 @@ class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_p
   inline TypeProto_Map* New() const { return New(NULL); }
 
   TypeProto_Map* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TypeProto_Map& from);
   void MergeFrom(const TypeProto_Map& from);
   void Clear();
@@ -2281,11 +2500,7 @@ class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_p
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -2294,14 +2509,14 @@ class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_p
   void InternalSwap(TypeProto_Map* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -2325,12 +2540,18 @@ class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_p
   // @@protoc_insertion_point(class_scope:onnx.TypeProto.Map)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::onnx::TypeProto* value_type_;
   ::google::protobuf::int32 key_type_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -2339,7 +2560,7 @@ class TypeProto_Map : public ::google::protobuf::Message /* @@protoc_insertion_p
 };
 // -------------------------------------------------------------------
 
-class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.TypeProto) */ {
+class TypeProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.TypeProto) */ {
  public:
   TypeProto();
   virtual ~TypeProto();
@@ -2351,7 +2572,6 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const TypeProto& default_instance();
 
   enum ValueCase {
@@ -2361,6 +2581,16 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
     VALUE_NOT_SET = 0,
   };
 
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const TypeProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
+
   void Swap(TypeProto* other);
 
   // implements Message ----------------------------------------------
@@ -2368,8 +2598,7 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   inline TypeProto* New() const { return New(NULL); }
 
   TypeProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const TypeProto& from);
   void MergeFrom(const TypeProto& from);
   void Clear();
@@ -2380,11 +2609,7 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -2393,14 +2618,14 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   void InternalSwap(TypeProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -2459,7 +2684,9 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   void clear_value();
   inline void clear_has_value();
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr denotation_;
   union ValueUnion {
@@ -2471,7 +2698,11 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
 
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -2480,7 +2711,7 @@ class TypeProto : public ::google::protobuf::Message /* @@protoc_insertion_point
 };
 // -------------------------------------------------------------------
 
-class OperatorSetIdProto : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:onnx.OperatorSetIdProto) */ {
+class OperatorSetIdProto : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:onnx.OperatorSetIdProto) */ {
  public:
   OperatorSetIdProto();
   virtual ~OperatorSetIdProto();
@@ -2492,8 +2723,17 @@ class OperatorSetIdProto : public ::google::protobuf::Message /* @@protoc_insert
     return *this;
   }
 
-  static const ::google::protobuf::Descriptor* descriptor();
   static const OperatorSetIdProto& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const OperatorSetIdProto* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
 
   void Swap(OperatorSetIdProto* other);
 
@@ -2502,8 +2742,7 @@ class OperatorSetIdProto : public ::google::protobuf::Message /* @@protoc_insert
   inline OperatorSetIdProto* New() const { return New(NULL); }
 
   OperatorSetIdProto* New(::google::protobuf::Arena* arena) const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
   void CopyFrom(const OperatorSetIdProto& from);
   void MergeFrom(const OperatorSetIdProto& from);
   void Clear();
@@ -2514,11 +2753,7 @@ class OperatorSetIdProto : public ::google::protobuf::Message /* @@protoc_insert
       ::google::protobuf::io::CodedInputStream* input);
   void SerializeWithCachedSizes(
       ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const {
-    return InternalSerializeWithCachedSizesToArray(false, output);
-  }
+  void DiscardUnknownFields();
   int GetCachedSize() const { return _cached_size_; }
   private:
   void SharedCtor();
@@ -2527,14 +2762,14 @@ class OperatorSetIdProto : public ::google::protobuf::Message /* @@protoc_insert
   void InternalSwap(OperatorSetIdProto* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return _internal_metadata_.arena();
+    return _arena_ptr_;
   }
-  inline void* MaybeArenaPtr() const {
-    return _internal_metadata_.raw_arena_ptr();
+  inline ::google::protobuf::Arena* MaybeArenaPtr() const {
+    return _arena_ptr_;
   }
   public:
 
-  ::google::protobuf::Metadata GetMetadata() const;
+  ::std::string GetTypeName() const;
 
   // nested types ----------------------------------------------------
 
@@ -2560,12 +2795,18 @@ class OperatorSetIdProto : public ::google::protobuf::Message /* @@protoc_insert
   // @@protoc_insertion_point(class_scope:onnx.OperatorSetIdProto)
  private:
 
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr _unknown_fields_;
+  ::google::protobuf::Arena* _arena_ptr_;
+
   bool _is_default_instance_;
   ::google::protobuf::internal::ArenaStringPtr domain_;
   ::google::protobuf::int64 version_;
   mutable int _cached_size_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_onnx_2eproto3_impl();
+  #else
   friend void  protobuf_AddDesc_onnx_2eproto3();
+  #endif
   friend void protobuf_AssignDesc_onnx_2eproto3();
   friend void protobuf_ShutdownFile_onnx_2eproto3();
 
@@ -2808,7 +3049,11 @@ inline void AttributeProto::clear_t() {
 }
 inline const ::onnx::TensorProto& AttributeProto::t() const {
   // @@protoc_insertion_point(field_get:onnx.AttributeProto.t)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return t_ != NULL ? *t_ : *default_instance().t_;
+#else
   return t_ != NULL ? *t_ : *default_instance_->t_;
+#endif
 }
 inline ::onnx::TensorProto* AttributeProto::mutable_t() {
   
@@ -2846,7 +3091,11 @@ inline void AttributeProto::clear_g() {
 }
 inline const ::onnx::GraphProto& AttributeProto::g() const {
   // @@protoc_insertion_point(field_get:onnx.AttributeProto.g)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return g_ != NULL ? *g_ : *default_instance().g_;
+#else
   return g_ != NULL ? *g_ : *default_instance_->g_;
+#endif
 }
 inline ::onnx::GraphProto* AttributeProto::mutable_g() {
   
@@ -2884,7 +3133,11 @@ inline void AttributeProto::clear_sparse_tensor() {
 }
 inline const ::onnx::SparseTensorProto& AttributeProto::sparse_tensor() const {
   // @@protoc_insertion_point(field_get:onnx.AttributeProto.sparse_tensor)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return sparse_tensor_ != NULL ? *sparse_tensor_ : *default_instance().sparse_tensor_;
+#else
   return sparse_tensor_ != NULL ? *sparse_tensor_ : *default_instance_->sparse_tensor_;
+#endif
 }
 inline ::onnx::SparseTensorProto* AttributeProto::mutable_sparse_tensor() {
   
@@ -3175,7 +3428,11 @@ inline void ValueInfoProto::clear_type() {
 }
 inline const ::onnx::TypeProto& ValueInfoProto::type() const {
   // @@protoc_insertion_point(field_get:onnx.ValueInfoProto.type)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return type_ != NULL ? *type_ : *default_instance().type_;
+#else
   return type_ != NULL ? *type_ : *default_instance_->type_;
+#endif
 }
 inline ::onnx::TypeProto* ValueInfoProto::mutable_type() {
   
@@ -3569,6 +3826,154 @@ inline void NodeProto::set_allocated_doc_string(::std::string* doc_string) {
 
 // -------------------------------------------------------------------
 
+// TrainingInfoProto
+
+// optional .onnx.GraphProto initialization = 1;
+inline bool TrainingInfoProto::has_initialization() const {
+  return !_is_default_instance_ && initialization_ != NULL;
+}
+inline void TrainingInfoProto::clear_initialization() {
+  if (GetArenaNoVirtual() == NULL && initialization_ != NULL) delete initialization_;
+  initialization_ = NULL;
+}
+inline const ::onnx::GraphProto& TrainingInfoProto::initialization() const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.initialization)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return initialization_ != NULL ? *initialization_ : *default_instance().initialization_;
+#else
+  return initialization_ != NULL ? *initialization_ : *default_instance_->initialization_;
+#endif
+}
+inline ::onnx::GraphProto* TrainingInfoProto::mutable_initialization() {
+  
+  if (initialization_ == NULL) {
+    initialization_ = new ::onnx::GraphProto;
+  }
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.initialization)
+  return initialization_;
+}
+inline ::onnx::GraphProto* TrainingInfoProto::release_initialization() {
+  // @@protoc_insertion_point(field_release:onnx.TrainingInfoProto.initialization)
+  
+  ::onnx::GraphProto* temp = initialization_;
+  initialization_ = NULL;
+  return temp;
+}
+inline void TrainingInfoProto::set_allocated_initialization(::onnx::GraphProto* initialization) {
+  delete initialization_;
+  initialization_ = initialization;
+  if (initialization) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:onnx.TrainingInfoProto.initialization)
+}
+
+// optional .onnx.GraphProto algorithm = 2;
+inline bool TrainingInfoProto::has_algorithm() const {
+  return !_is_default_instance_ && algorithm_ != NULL;
+}
+inline void TrainingInfoProto::clear_algorithm() {
+  if (GetArenaNoVirtual() == NULL && algorithm_ != NULL) delete algorithm_;
+  algorithm_ = NULL;
+}
+inline const ::onnx::GraphProto& TrainingInfoProto::algorithm() const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.algorithm)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return algorithm_ != NULL ? *algorithm_ : *default_instance().algorithm_;
+#else
+  return algorithm_ != NULL ? *algorithm_ : *default_instance_->algorithm_;
+#endif
+}
+inline ::onnx::GraphProto* TrainingInfoProto::mutable_algorithm() {
+  
+  if (algorithm_ == NULL) {
+    algorithm_ = new ::onnx::GraphProto;
+  }
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.algorithm)
+  return algorithm_;
+}
+inline ::onnx::GraphProto* TrainingInfoProto::release_algorithm() {
+  // @@protoc_insertion_point(field_release:onnx.TrainingInfoProto.algorithm)
+  
+  ::onnx::GraphProto* temp = algorithm_;
+  algorithm_ = NULL;
+  return temp;
+}
+inline void TrainingInfoProto::set_allocated_algorithm(::onnx::GraphProto* algorithm) {
+  delete algorithm_;
+  algorithm_ = algorithm;
+  if (algorithm) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:onnx.TrainingInfoProto.algorithm)
+}
+
+// repeated .onnx.StringStringEntryProto initialization_binding = 3;
+inline int TrainingInfoProto::initialization_binding_size() const {
+  return initialization_binding_.size();
+}
+inline void TrainingInfoProto::clear_initialization_binding() {
+  initialization_binding_.Clear();
+}
+inline const ::onnx::StringStringEntryProto& TrainingInfoProto::initialization_binding(int index) const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_.Get(index);
+}
+inline ::onnx::StringStringEntryProto* TrainingInfoProto::mutable_initialization_binding(int index) {
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_.Mutable(index);
+}
+inline ::onnx::StringStringEntryProto* TrainingInfoProto::add_initialization_binding() {
+  // @@protoc_insertion_point(field_add:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >*
+TrainingInfoProto::mutable_initialization_binding() {
+  // @@protoc_insertion_point(field_mutable_list:onnx.TrainingInfoProto.initialization_binding)
+  return &initialization_binding_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
+TrainingInfoProto::initialization_binding() const {
+  // @@protoc_insertion_point(field_list:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_;
+}
+
+// repeated .onnx.StringStringEntryProto update_binding = 4;
+inline int TrainingInfoProto::update_binding_size() const {
+  return update_binding_.size();
+}
+inline void TrainingInfoProto::clear_update_binding() {
+  update_binding_.Clear();
+}
+inline const ::onnx::StringStringEntryProto& TrainingInfoProto::update_binding(int index) const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.update_binding)
+  return update_binding_.Get(index);
+}
+inline ::onnx::StringStringEntryProto* TrainingInfoProto::mutable_update_binding(int index) {
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.update_binding)
+  return update_binding_.Mutable(index);
+}
+inline ::onnx::StringStringEntryProto* TrainingInfoProto::add_update_binding() {
+  // @@protoc_insertion_point(field_add:onnx.TrainingInfoProto.update_binding)
+  return update_binding_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >*
+TrainingInfoProto::mutable_update_binding() {
+  // @@protoc_insertion_point(field_mutable_list:onnx.TrainingInfoProto.update_binding)
+  return &update_binding_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
+TrainingInfoProto::update_binding() const {
+  // @@protoc_insertion_point(field_list:onnx.TrainingInfoProto.update_binding)
+  return update_binding_;
+}
+
+// -------------------------------------------------------------------
+
 // ModelProto
 
 // optional int64 ir_version = 1;
@@ -3815,7 +4220,11 @@ inline void ModelProto::clear_graph() {
 }
 inline const ::onnx::GraphProto& ModelProto::graph() const {
   // @@protoc_insertion_point(field_get:onnx.ModelProto.graph)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return graph_ != NULL ? *graph_ : *default_instance().graph_;
+#else
   return graph_ != NULL ? *graph_ : *default_instance_->graph_;
+#endif
 }
 inline ::onnx::GraphProto* ModelProto::mutable_graph() {
   
@@ -3871,6 +4280,36 @@ inline const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProt
 ModelProto::metadata_props() const {
   // @@protoc_insertion_point(field_list:onnx.ModelProto.metadata_props)
   return metadata_props_;
+}
+
+// repeated .onnx.TrainingInfoProto training_info = 20;
+inline int ModelProto::training_info_size() const {
+  return training_info_.size();
+}
+inline void ModelProto::clear_training_info() {
+  training_info_.Clear();
+}
+inline const ::onnx::TrainingInfoProto& ModelProto::training_info(int index) const {
+  // @@protoc_insertion_point(field_get:onnx.ModelProto.training_info)
+  return training_info_.Get(index);
+}
+inline ::onnx::TrainingInfoProto* ModelProto::mutable_training_info(int index) {
+  // @@protoc_insertion_point(field_mutable:onnx.ModelProto.training_info)
+  return training_info_.Mutable(index);
+}
+inline ::onnx::TrainingInfoProto* ModelProto::add_training_info() {
+  // @@protoc_insertion_point(field_add:onnx.ModelProto.training_info)
+  return training_info_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto >*
+ModelProto::mutable_training_info() {
+  // @@protoc_insertion_point(field_mutable_list:onnx.ModelProto.training_info)
+  return &training_info_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto >&
+ModelProto::training_info() const {
+  // @@protoc_insertion_point(field_list:onnx.ModelProto.training_info)
+  return training_info_;
 }
 
 // -------------------------------------------------------------------
@@ -4435,7 +4874,11 @@ inline void TensorProto::clear_segment() {
 }
 inline const ::onnx::TensorProto_Segment& TensorProto::segment() const {
   // @@protoc_insertion_point(field_get:onnx.TensorProto.segment)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return segment_ != NULL ? *segment_ : *default_instance().segment_;
+#else
   return segment_ != NULL ? *segment_ : *default_instance_->segment_;
+#endif
 }
 inline ::onnx::TensorProto_Segment* TensorProto::mutable_segment() {
   
@@ -4858,7 +5301,11 @@ inline void SparseTensorProto::clear_values() {
 }
 inline const ::onnx::TensorProto& SparseTensorProto::values() const {
   // @@protoc_insertion_point(field_get:onnx.SparseTensorProto.values)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return values_ != NULL ? *values_ : *default_instance().values_;
+#else
   return values_ != NULL ? *values_ : *default_instance_->values_;
+#endif
 }
 inline ::onnx::TensorProto* SparseTensorProto::mutable_values() {
   
@@ -4896,7 +5343,11 @@ inline void SparseTensorProto::clear_indices() {
 }
 inline const ::onnx::TensorProto& SparseTensorProto::indices() const {
   // @@protoc_insertion_point(field_get:onnx.SparseTensorProto.indices)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return indices_ != NULL ? *indices_ : *default_instance().indices_;
+#else
   return indices_ != NULL ? *indices_ : *default_instance_->indices_;
+#endif
 }
 inline ::onnx::TensorProto* SparseTensorProto::mutable_indices() {
   
@@ -5183,7 +5634,11 @@ inline void TypeProto_Tensor::clear_shape() {
 }
 inline const ::onnx::TensorShapeProto& TypeProto_Tensor::shape() const {
   // @@protoc_insertion_point(field_get:onnx.TypeProto.Tensor.shape)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return shape_ != NULL ? *shape_ : *default_instance().shape_;
+#else
   return shape_ != NULL ? *shape_ : *default_instance_->shape_;
+#endif
 }
 inline ::onnx::TensorShapeProto* TypeProto_Tensor::mutable_shape() {
   
@@ -5225,7 +5680,11 @@ inline void TypeProto_Sequence::clear_elem_type() {
 }
 inline const ::onnx::TypeProto& TypeProto_Sequence::elem_type() const {
   // @@protoc_insertion_point(field_get:onnx.TypeProto.Sequence.elem_type)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return elem_type_ != NULL ? *elem_type_ : *default_instance().elem_type_;
+#else
   return elem_type_ != NULL ? *elem_type_ : *default_instance_->elem_type_;
+#endif
 }
 inline ::onnx::TypeProto* TypeProto_Sequence::mutable_elem_type() {
   
@@ -5281,7 +5740,11 @@ inline void TypeProto_Map::clear_value_type() {
 }
 inline const ::onnx::TypeProto& TypeProto_Map::value_type() const {
   // @@protoc_insertion_point(field_get:onnx.TypeProto.Map.value_type)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return value_type_ != NULL ? *value_type_ : *default_instance().value_type_;
+#else
   return value_type_ != NULL ? *value_type_ : *default_instance_->value_type_;
+#endif
 }
 inline ::onnx::TypeProto* TypeProto_Map::mutable_value_type() {
   
@@ -5605,6 +6068,8 @@ inline void OperatorSetIdProto::set_version(::google::protobuf::int64 value) {
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -5615,25 +6080,9 @@ namespace google {
 namespace protobuf {
 
 template <> struct is_proto_enum< ::onnx::AttributeProto_AttributeType> : ::google::protobuf::internal::true_type {};
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::onnx::AttributeProto_AttributeType>() {
-  return ::onnx::AttributeProto_AttributeType_descriptor();
-}
 template <> struct is_proto_enum< ::onnx::TensorProto_DataType> : ::google::protobuf::internal::true_type {};
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::onnx::TensorProto_DataType>() {
-  return ::onnx::TensorProto_DataType_descriptor();
-}
 template <> struct is_proto_enum< ::onnx::TensorProto_DataLocation> : ::google::protobuf::internal::true_type {};
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::onnx::TensorProto_DataLocation>() {
-  return ::onnx::TensorProto_DataLocation_descriptor();
-}
 template <> struct is_proto_enum< ::onnx::Version> : ::google::protobuf::internal::true_type {};
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::onnx::Version>() {
-  return ::onnx::Version_descriptor();
-}
 
 }  // namespace protobuf
 }  // namespace google

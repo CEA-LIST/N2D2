@@ -63,6 +63,7 @@
 #include "Target/TargetCompare.hpp"
 
 #include "third_party/onnx/onnx.proto3.pb.hpp"
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 #endif
 
 std::shared_ptr<N2D2::DeepNet>
@@ -494,11 +495,15 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
     onnx::ModelProto onnxModel;
 
     std::ifstream onnxFile(fileName.c_str(), std::ios::binary);
+    google::protobuf::io::IstreamInputStream zero_copy_input(&onnxFile);
 
     if (!onnxFile.good())
         throw std::runtime_error("Could not open ONNX file: " + fileName);
-    else if (!onnxModel.ParseFromIstream(&onnxFile))
+    else if (!onnxModel.ParseFromZeroCopyStream(&zero_copy_input)
+        || !onnxFile.eof())
+    {
         throw std::runtime_error("Failed to parse ONNX file: " + fileName);
+    }
 
     onnxFile.close();
 
@@ -1053,8 +1058,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
             assert(node.attribute_size() > 0);
 
             std::cout << Utils::cnotice << "  Ignore Cast operation to "
-                << onnx::TensorProto_DataType_Name(
-                    (onnx::TensorProto_DataType) node.attribute(0).i())
+                << node.attribute(0).GetTypeName()
                 << Utils::cdef << std::endl;
 
             std::cout << "  " << node.output(0) << " -> "

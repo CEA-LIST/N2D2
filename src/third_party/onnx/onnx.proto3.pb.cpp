@@ -12,511 +12,37 @@
 #include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/wire_format_lite_inl.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/generated_message_reflection.h>
-#include <google/protobuf/reflection_ops.h>
-#include <google/protobuf/wire_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 // @@protoc_insertion_point(includes)
 
 namespace onnx {
 
-namespace {
-
-const ::google::protobuf::Descriptor* AttributeProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  AttributeProto_reflection_ = NULL;
-const ::google::protobuf::EnumDescriptor* AttributeProto_AttributeType_descriptor_ = NULL;
-const ::google::protobuf::Descriptor* ValueInfoProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  ValueInfoProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* NodeProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  NodeProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* ModelProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  ModelProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* StringStringEntryProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  StringStringEntryProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TensorAnnotation_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TensorAnnotation_reflection_ = NULL;
-const ::google::protobuf::Descriptor* GraphProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  GraphProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TensorProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TensorProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TensorProto_Segment_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TensorProto_Segment_reflection_ = NULL;
-const ::google::protobuf::EnumDescriptor* TensorProto_DataType_descriptor_ = NULL;
-const ::google::protobuf::EnumDescriptor* TensorProto_DataLocation_descriptor_ = NULL;
-const ::google::protobuf::Descriptor* SparseTensorProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  SparseTensorProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TensorShapeProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TensorShapeProto_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TensorShapeProto_Dimension_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TensorShapeProto_Dimension_reflection_ = NULL;
-struct TensorShapeProto_DimensionOneofInstance {
-  ::google::protobuf::int64 dim_value_;
-  ::google::protobuf::internal::ArenaStringPtr dim_param_;
-}* TensorShapeProto_Dimension_default_oneof_instance_ = NULL;
-const ::google::protobuf::Descriptor* TypeProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TypeProto_reflection_ = NULL;
-struct TypeProtoOneofInstance {
-  const ::onnx::TypeProto_Tensor* tensor_type_;
-  const ::onnx::TypeProto_Sequence* sequence_type_;
-  const ::onnx::TypeProto_Map* map_type_;
-}* TypeProto_default_oneof_instance_ = NULL;
-const ::google::protobuf::Descriptor* TypeProto_Tensor_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TypeProto_Tensor_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TypeProto_Sequence_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TypeProto_Sequence_reflection_ = NULL;
-const ::google::protobuf::Descriptor* TypeProto_Map_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  TypeProto_Map_reflection_ = NULL;
-const ::google::protobuf::Descriptor* OperatorSetIdProto_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  OperatorSetIdProto_reflection_ = NULL;
-const ::google::protobuf::EnumDescriptor* Version_descriptor_ = NULL;
-
-}  // namespace
-
-
-void protobuf_AssignDesc_onnx_2eproto3() GOOGLE_ATTRIBUTE_COLD;
-void protobuf_AssignDesc_onnx_2eproto3() {
-  protobuf_AddDesc_onnx_2eproto3();
-  const ::google::protobuf::FileDescriptor* file =
-    ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
-      "onnx.proto3");
-  GOOGLE_CHECK(file != NULL);
-  AttributeProto_descriptor_ = file->message_type(0);
-  static const int AttributeProto_offsets_[16] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, ref_attr_name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, doc_string_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, f_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, i_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, s_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, t_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, g_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, sparse_tensor_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, floats_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, ints_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, strings_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, tensors_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, graphs_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, sparse_tensors_),
-  };
-  AttributeProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      AttributeProto_descriptor_,
-      AttributeProto::default_instance_,
-      AttributeProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(AttributeProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AttributeProto, _is_default_instance_));
-  AttributeProto_AttributeType_descriptor_ = AttributeProto_descriptor_->enum_type(0);
-  ValueInfoProto_descriptor_ = file->message_type(1);
-  static const int ValueInfoProto_offsets_[3] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ValueInfoProto, name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ValueInfoProto, type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ValueInfoProto, doc_string_),
-  };
-  ValueInfoProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      ValueInfoProto_descriptor_,
-      ValueInfoProto::default_instance_,
-      ValueInfoProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(ValueInfoProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ValueInfoProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ValueInfoProto, _is_default_instance_));
-  NodeProto_descriptor_ = file->message_type(2);
-  static const int NodeProto_offsets_[7] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, input_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, output_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, op_type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, domain_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, attribute_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, doc_string_),
-  };
-  NodeProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      NodeProto_descriptor_,
-      NodeProto::default_instance_,
-      NodeProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(NodeProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeProto, _is_default_instance_));
-  ModelProto_descriptor_ = file->message_type(3);
-  static const int ModelProto_offsets_[9] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, ir_version_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, opset_import_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, producer_name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, producer_version_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, domain_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, model_version_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, doc_string_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, graph_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, metadata_props_),
-  };
-  ModelProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      ModelProto_descriptor_,
-      ModelProto::default_instance_,
-      ModelProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(ModelProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ModelProto, _is_default_instance_));
-  StringStringEntryProto_descriptor_ = file->message_type(4);
-  static const int StringStringEntryProto_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StringStringEntryProto, key_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StringStringEntryProto, value_),
-  };
-  StringStringEntryProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      StringStringEntryProto_descriptor_,
-      StringStringEntryProto::default_instance_,
-      StringStringEntryProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(StringStringEntryProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StringStringEntryProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StringStringEntryProto, _is_default_instance_));
-  TensorAnnotation_descriptor_ = file->message_type(5);
-  static const int TensorAnnotation_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorAnnotation, tensor_name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorAnnotation, quant_parameter_tensor_names_),
-  };
-  TensorAnnotation_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TensorAnnotation_descriptor_,
-      TensorAnnotation::default_instance_,
-      TensorAnnotation_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TensorAnnotation),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorAnnotation, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorAnnotation, _is_default_instance_));
-  GraphProto_descriptor_ = file->message_type(6);
-  static const int GraphProto_offsets_[9] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, node_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, initializer_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, sparse_initializer_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, doc_string_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, input_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, output_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, value_info_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, quantization_annotation_),
-  };
-  GraphProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      GraphProto_descriptor_,
-      GraphProto::default_instance_,
-      GraphProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(GraphProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(GraphProto, _is_default_instance_));
-  TensorProto_descriptor_ = file->message_type(7);
-  static const int TensorProto_offsets_[14] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, dims_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, data_type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, segment_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, float_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, int32_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, string_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, int64_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, name_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, doc_string_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, raw_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, external_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, data_location_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, double_data_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, uint64_data_),
-  };
-  TensorProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TensorProto_descriptor_,
-      TensorProto::default_instance_,
-      TensorProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TensorProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto, _is_default_instance_));
-  TensorProto_Segment_descriptor_ = TensorProto_descriptor_->nested_type(0);
-  static const int TensorProto_Segment_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto_Segment, begin_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto_Segment, end_),
-  };
-  TensorProto_Segment_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TensorProto_Segment_descriptor_,
-      TensorProto_Segment::default_instance_,
-      TensorProto_Segment_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TensorProto_Segment),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto_Segment, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorProto_Segment, _is_default_instance_));
-  TensorProto_DataType_descriptor_ = TensorProto_descriptor_->enum_type(0);
-  TensorProto_DataLocation_descriptor_ = TensorProto_descriptor_->enum_type(1);
-  SparseTensorProto_descriptor_ = file->message_type(8);
-  static const int SparseTensorProto_offsets_[3] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SparseTensorProto, values_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SparseTensorProto, indices_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SparseTensorProto, dims_),
-  };
-  SparseTensorProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      SparseTensorProto_descriptor_,
-      SparseTensorProto::default_instance_,
-      SparseTensorProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(SparseTensorProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SparseTensorProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SparseTensorProto, _is_default_instance_));
-  TensorShapeProto_descriptor_ = file->message_type(9);
-  static const int TensorShapeProto_offsets_[1] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto, dim_),
-  };
-  TensorShapeProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TensorShapeProto_descriptor_,
-      TensorShapeProto::default_instance_,
-      TensorShapeProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TensorShapeProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto, _is_default_instance_));
-  TensorShapeProto_Dimension_descriptor_ = TensorShapeProto_descriptor_->nested_type(0);
-  static const int TensorShapeProto_Dimension_offsets_[4] = {
-    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(TensorShapeProto_Dimension_default_oneof_instance_, dim_value_),
-    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(TensorShapeProto_Dimension_default_oneof_instance_, dim_param_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto_Dimension, denotation_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto_Dimension, value_),
-  };
-  TensorShapeProto_Dimension_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TensorShapeProto_Dimension_descriptor_,
-      TensorShapeProto_Dimension::default_instance_,
-      TensorShapeProto_Dimension_offsets_,
-      -1,
-      -1,
-      -1,
-      TensorShapeProto_Dimension_default_oneof_instance_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto_Dimension, _oneof_case_[0]),
-      sizeof(TensorShapeProto_Dimension),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto_Dimension, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TensorShapeProto_Dimension, _is_default_instance_));
-  TypeProto_descriptor_ = file->message_type(10);
-  static const int TypeProto_offsets_[5] = {
-    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(TypeProto_default_oneof_instance_, tensor_type_),
-    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(TypeProto_default_oneof_instance_, sequence_type_),
-    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(TypeProto_default_oneof_instance_, map_type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto, denotation_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto, value_),
-  };
-  TypeProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TypeProto_descriptor_,
-      TypeProto::default_instance_,
-      TypeProto_offsets_,
-      -1,
-      -1,
-      -1,
-      TypeProto_default_oneof_instance_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto, _oneof_case_[0]),
-      sizeof(TypeProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto, _is_default_instance_));
-  TypeProto_Tensor_descriptor_ = TypeProto_descriptor_->nested_type(0);
-  static const int TypeProto_Tensor_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Tensor, elem_type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Tensor, shape_),
-  };
-  TypeProto_Tensor_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TypeProto_Tensor_descriptor_,
-      TypeProto_Tensor::default_instance_,
-      TypeProto_Tensor_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TypeProto_Tensor),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Tensor, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Tensor, _is_default_instance_));
-  TypeProto_Sequence_descriptor_ = TypeProto_descriptor_->nested_type(1);
-  static const int TypeProto_Sequence_offsets_[1] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Sequence, elem_type_),
-  };
-  TypeProto_Sequence_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TypeProto_Sequence_descriptor_,
-      TypeProto_Sequence::default_instance_,
-      TypeProto_Sequence_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TypeProto_Sequence),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Sequence, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Sequence, _is_default_instance_));
-  TypeProto_Map_descriptor_ = TypeProto_descriptor_->nested_type(2);
-  static const int TypeProto_Map_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Map, key_type_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Map, value_type_),
-  };
-  TypeProto_Map_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      TypeProto_Map_descriptor_,
-      TypeProto_Map::default_instance_,
-      TypeProto_Map_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(TypeProto_Map),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Map, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TypeProto_Map, _is_default_instance_));
-  OperatorSetIdProto_descriptor_ = file->message_type(11);
-  static const int OperatorSetIdProto_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(OperatorSetIdProto, domain_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(OperatorSetIdProto, version_),
-  };
-  OperatorSetIdProto_reflection_ =
-    ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
-      OperatorSetIdProto_descriptor_,
-      OperatorSetIdProto::default_instance_,
-      OperatorSetIdProto_offsets_,
-      -1,
-      -1,
-      -1,
-      sizeof(OperatorSetIdProto),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(OperatorSetIdProto, _internal_metadata_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(OperatorSetIdProto, _is_default_instance_));
-  Version_descriptor_ = file->enum_type(0);
-}
-
-namespace {
-
-GOOGLE_PROTOBUF_DECLARE_ONCE(protobuf_AssignDescriptors_once_);
-inline void protobuf_AssignDescriptorsOnce() {
-  ::google::protobuf::GoogleOnceInit(&protobuf_AssignDescriptors_once_,
-                 &protobuf_AssignDesc_onnx_2eproto3);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      AttributeProto_descriptor_, &AttributeProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      ValueInfoProto_descriptor_, &ValueInfoProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      NodeProto_descriptor_, &NodeProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      ModelProto_descriptor_, &ModelProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      StringStringEntryProto_descriptor_, &StringStringEntryProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TensorAnnotation_descriptor_, &TensorAnnotation::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      GraphProto_descriptor_, &GraphProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TensorProto_descriptor_, &TensorProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TensorProto_Segment_descriptor_, &TensorProto_Segment::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      SparseTensorProto_descriptor_, &SparseTensorProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TensorShapeProto_descriptor_, &TensorShapeProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TensorShapeProto_Dimension_descriptor_, &TensorShapeProto_Dimension::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TypeProto_descriptor_, &TypeProto::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TypeProto_Tensor_descriptor_, &TypeProto_Tensor::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TypeProto_Sequence_descriptor_, &TypeProto_Sequence::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      TypeProto_Map_descriptor_, &TypeProto_Map::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      OperatorSetIdProto_descriptor_, &OperatorSetIdProto::default_instance());
-}
-
-}  // namespace
-
 void protobuf_ShutdownFile_onnx_2eproto3() {
   delete AttributeProto::default_instance_;
-  delete AttributeProto_reflection_;
   delete ValueInfoProto::default_instance_;
-  delete ValueInfoProto_reflection_;
   delete NodeProto::default_instance_;
-  delete NodeProto_reflection_;
+  delete TrainingInfoProto::default_instance_;
   delete ModelProto::default_instance_;
-  delete ModelProto_reflection_;
   delete StringStringEntryProto::default_instance_;
-  delete StringStringEntryProto_reflection_;
   delete TensorAnnotation::default_instance_;
-  delete TensorAnnotation_reflection_;
   delete GraphProto::default_instance_;
-  delete GraphProto_reflection_;
   delete TensorProto::default_instance_;
-  delete TensorProto_reflection_;
   delete TensorProto_Segment::default_instance_;
-  delete TensorProto_Segment_reflection_;
   delete SparseTensorProto::default_instance_;
-  delete SparseTensorProto_reflection_;
   delete TensorShapeProto::default_instance_;
-  delete TensorShapeProto_reflection_;
   delete TensorShapeProto_Dimension::default_instance_;
-  delete TensorShapeProto_Dimension_default_oneof_instance_;
-  delete TensorShapeProto_Dimension_reflection_;
   delete TypeProto::default_instance_;
-  delete TypeProto_default_oneof_instance_;
-  delete TypeProto_reflection_;
   delete TypeProto_Tensor::default_instance_;
-  delete TypeProto_Tensor_reflection_;
   delete TypeProto_Sequence::default_instance_;
-  delete TypeProto_Sequence_reflection_;
   delete TypeProto_Map::default_instance_;
-  delete TypeProto_Map_reflection_;
   delete OperatorSetIdProto::default_instance_;
-  delete OperatorSetIdProto_reflection_;
 }
 
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+void protobuf_AddDesc_onnx_2eproto3_impl() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+#else
 void protobuf_AddDesc_onnx_2eproto3() GOOGLE_ATTRIBUTE_COLD;
 void protobuf_AddDesc_onnx_2eproto3() {
   static bool already_here = false;
@@ -524,93 +50,11 @@ void protobuf_AddDesc_onnx_2eproto3() {
   already_here = true;
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013onnx.proto3\022\004onnx\"\350\004\n\016AttributeProto\022\014"
-    "\n\004name\030\001 \001(\t\022\025\n\rref_attr_name\030\025 \001(\t\022\022\n\nd"
-    "oc_string\030\r \001(\t\0220\n\004type\030\024 \001(\0162\".onnx.Att"
-    "ributeProto.AttributeType\022\t\n\001f\030\002 \001(\002\022\t\n\001"
-    "i\030\003 \001(\003\022\t\n\001s\030\004 \001(\014\022\034\n\001t\030\005 \001(\0132\021.onnx.Ten"
-    "sorProto\022\033\n\001g\030\006 \001(\0132\020.onnx.GraphProto\022.\n"
-    "\rsparse_tensor\030\026 \001(\0132\027.onnx.SparseTensor"
-    "Proto\022\016\n\006floats\030\007 \003(\002\022\014\n\004ints\030\010 \003(\003\022\017\n\007s"
-    "trings\030\t \003(\014\022\"\n\007tensors\030\n \003(\0132\021.onnx.Ten"
-    "sorProto\022 \n\006graphs\030\013 \003(\0132\020.onnx.GraphPro"
-    "to\022/\n\016sparse_tensors\030\027 \003(\0132\027.onnx.Sparse"
-    "TensorProto\"\270\001\n\rAttributeType\022\r\n\tUNDEFIN"
-    "ED\020\000\022\t\n\005FLOAT\020\001\022\007\n\003INT\020\002\022\n\n\006STRING\020\003\022\n\n\006"
-    "TENSOR\020\004\022\t\n\005GRAPH\020\005\022\021\n\rSPARSE_TENSOR\020\013\022\n"
-    "\n\006FLOATS\020\006\022\010\n\004INTS\020\007\022\013\n\007STRINGS\020\010\022\013\n\007TEN"
-    "SORS\020\t\022\n\n\006GRAPHS\020\n\022\022\n\016SPARSE_TENSORS\020\014\"Q"
-    "\n\016ValueInfoProto\022\014\n\004name\030\001 \001(\t\022\035\n\004type\030\002"
-    " \001(\0132\017.onnx.TypeProto\022\022\n\ndoc_string\030\003 \001("
-    "\t\"\226\001\n\tNodeProto\022\r\n\005input\030\001 \003(\t\022\016\n\006output"
-    "\030\002 \003(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007op_type\030\004 \001(\t\022\016\n"
-    "\006domain\030\007 \001(\t\022\'\n\tattribute\030\005 \003(\0132\024.onnx."
-    "AttributeProto\022\022\n\ndoc_string\030\006 \001(\t\"\223\002\n\nM"
-    "odelProto\022\022\n\nir_version\030\001 \001(\003\022.\n\014opset_i"
-    "mport\030\010 \003(\0132\030.onnx.OperatorSetIdProto\022\025\n"
-    "\rproducer_name\030\002 \001(\t\022\030\n\020producer_version"
-    "\030\003 \001(\t\022\016\n\006domain\030\004 \001(\t\022\025\n\rmodel_version\030"
-    "\005 \001(\003\022\022\n\ndoc_string\030\006 \001(\t\022\037\n\005graph\030\007 \001(\013"
-    "2\020.onnx.GraphProto\0224\n\016metadata_props\030\016 \003"
-    "(\0132\034.onnx.StringStringEntryProto\"4\n\026Stri"
-    "ngStringEntryProto\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-    "\030\002 \001(\t\"k\n\020TensorAnnotation\022\023\n\013tensor_nam"
-    "e\030\001 \001(\t\022B\n\034quant_parameter_tensor_names\030"
-    "\002 \003(\0132\034.onnx.StringStringEntryProto\"\330\002\n\n"
-    "GraphProto\022\035\n\004node\030\001 \003(\0132\017.onnx.NodeProt"
-    "o\022\014\n\004name\030\002 \001(\t\022&\n\013initializer\030\005 \003(\0132\021.o"
-    "nnx.TensorProto\0223\n\022sparse_initializer\030\017 "
-    "\003(\0132\027.onnx.SparseTensorProto\022\022\n\ndoc_stri"
-    "ng\030\n \001(\t\022#\n\005input\030\013 \003(\0132\024.onnx.ValueInfo"
-    "Proto\022$\n\006output\030\014 \003(\0132\024.onnx.ValueInfoPr"
-    "oto\022(\n\nvalue_info\030\r \003(\0132\024.onnx.ValueInfo"
-    "Proto\0227\n\027quantization_annotation\030\016 \003(\0132\026"
-    ".onnx.TensorAnnotation\"\270\005\n\013TensorProto\022\014"
-    "\n\004dims\030\001 \003(\003\022\021\n\tdata_type\030\002 \001(\005\022*\n\007segme"
-    "nt\030\003 \001(\0132\031.onnx.TensorProto.Segment\022\026\n\nf"
-    "loat_data\030\004 \003(\002B\002\020\001\022\026\n\nint32_data\030\005 \003(\005B"
-    "\002\020\001\022\023\n\013string_data\030\006 \003(\014\022\026\n\nint64_data\030\007"
-    " \003(\003B\002\020\001\022\014\n\004name\030\010 \001(\t\022\022\n\ndoc_string\030\014 \001"
-    "(\t\022\020\n\010raw_data\030\t \001(\014\0223\n\rexternal_data\030\r "
-    "\003(\0132\034.onnx.StringStringEntryProto\0225\n\rdat"
-    "a_location\030\016 \001(\0162\036.onnx.TensorProto.Data"
-    "Location\022\027\n\013double_data\030\n \003(\001B\002\020\001\022\027\n\013uin"
-    "t64_data\030\013 \003(\004B\002\020\001\032%\n\007Segment\022\r\n\005begin\030\001"
-    " \001(\003\022\013\n\003end\030\002 \001(\003\"\332\001\n\010DataType\022\r\n\tUNDEFI"
-    "NED\020\000\022\t\n\005FLOAT\020\001\022\t\n\005UINT8\020\002\022\010\n\004INT8\020\003\022\n\n"
-    "\006UINT16\020\004\022\t\n\005INT16\020\005\022\t\n\005INT32\020\006\022\t\n\005INT64"
-    "\020\007\022\n\n\006STRING\020\010\022\010\n\004BOOL\020\t\022\013\n\007FLOAT16\020\n\022\n\n"
-    "\006DOUBLE\020\013\022\n\n\006UINT32\020\014\022\n\n\006UINT64\020\r\022\r\n\tCOM"
-    "PLEX64\020\016\022\016\n\nCOMPLEX128\020\017\022\014\n\010BFLOAT16\020\020\")"
-    "\n\014DataLocation\022\013\n\007DEFAULT\020\000\022\014\n\010EXTERNAL\020"
-    "\001\"h\n\021SparseTensorProto\022!\n\006values\030\001 \001(\0132\021"
-    ".onnx.TensorProto\022\"\n\007indices\030\002 \001(\0132\021.onn"
-    "x.TensorProto\022\014\n\004dims\030\003 \003(\003\"\225\001\n\020TensorSh"
-    "apeProto\022-\n\003dim\030\001 \003(\0132 .onnx.TensorShape"
-    "Proto.Dimension\032R\n\tDimension\022\023\n\tdim_valu"
-    "e\030\001 \001(\003H\000\022\023\n\tdim_param\030\002 \001(\tH\000\022\022\n\ndenota"
-    "tion\030\003 \001(\tB\007\n\005value\"\345\002\n\tTypeProto\022-\n\013ten"
-    "sor_type\030\001 \001(\0132\026.onnx.TypeProto.TensorH\000"
-    "\0221\n\rsequence_type\030\004 \001(\0132\030.onnx.TypeProto"
-    ".SequenceH\000\022\'\n\010map_type\030\005 \001(\0132\023.onnx.Typ"
-    "eProto.MapH\000\022\022\n\ndenotation\030\006 \001(\t\032B\n\006Tens"
-    "or\022\021\n\telem_type\030\001 \001(\005\022%\n\005shape\030\002 \001(\0132\026.o"
-    "nnx.TensorShapeProto\032.\n\010Sequence\022\"\n\telem"
-    "_type\030\001 \001(\0132\017.onnx.TypeProto\032<\n\003Map\022\020\n\010k"
-    "ey_type\030\001 \001(\005\022#\n\nvalue_type\030\002 \001(\0132\017.onnx"
-    ".TypeProtoB\007\n\005value\"5\n\022OperatorSetIdProt"
-    "o\022\016\n\006domain\030\001 \001(\t\022\017\n\007version\030\002 \001(\003*\261\001\n\007V"
-    "ersion\022\022\n\016_START_VERSION\020\000\022\031\n\025IR_VERSION"
-    "_2017_10_10\020\001\022\031\n\025IR_VERSION_2017_10_30\020\002"
-    "\022\030\n\024IR_VERSION_2017_11_3\020\003\022\030\n\024IR_VERSION"
-    "_2019_1_22\020\004\022\030\n\024IR_VERSION_2019_3_18\020\005\022\016"
-    "\n\nIR_VERSION\020\006b\006proto3", 3222);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "onnx.proto3", &protobuf_RegisterTypes);
+#endif
   AttributeProto::default_instance_ = new AttributeProto();
   ValueInfoProto::default_instance_ = new ValueInfoProto();
   NodeProto::default_instance_ = new NodeProto();
+  TrainingInfoProto::default_instance_ = new TrainingInfoProto();
   ModelProto::default_instance_ = new ModelProto();
   StringStringEntryProto::default_instance_ = new StringStringEntryProto();
   TensorAnnotation::default_instance_ = new TensorAnnotation();
@@ -620,9 +64,7 @@ void protobuf_AddDesc_onnx_2eproto3() {
   SparseTensorProto::default_instance_ = new SparseTensorProto();
   TensorShapeProto::default_instance_ = new TensorShapeProto();
   TensorShapeProto_Dimension::default_instance_ = new TensorShapeProto_Dimension();
-  TensorShapeProto_Dimension_default_oneof_instance_ = new TensorShapeProto_DimensionOneofInstance();
   TypeProto::default_instance_ = new TypeProto();
-  TypeProto_default_oneof_instance_ = new TypeProtoOneofInstance();
   TypeProto_Tensor::default_instance_ = new TypeProto_Tensor();
   TypeProto_Sequence::default_instance_ = new TypeProto_Sequence();
   TypeProto_Map::default_instance_ = new TypeProto_Map();
@@ -630,6 +72,7 @@ void protobuf_AddDesc_onnx_2eproto3() {
   AttributeProto::default_instance_->InitAsDefaultInstance();
   ValueInfoProto::default_instance_->InitAsDefaultInstance();
   NodeProto::default_instance_->InitAsDefaultInstance();
+  TrainingInfoProto::default_instance_->InitAsDefaultInstance();
   ModelProto::default_instance_->InitAsDefaultInstance();
   StringStringEntryProto::default_instance_->InitAsDefaultInstance();
   TensorAnnotation::default_instance_->InitAsDefaultInstance();
@@ -647,16 +90,20 @@ void protobuf_AddDesc_onnx_2eproto3() {
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_onnx_2eproto3);
 }
 
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+GOOGLE_PROTOBUF_DECLARE_ONCE(protobuf_AddDesc_onnx_2eproto3_once_);
+void protobuf_AddDesc_onnx_2eproto3() {
+  ::google::protobuf::GoogleOnceInit(&protobuf_AddDesc_onnx_2eproto3_once_,
+                 &protobuf_AddDesc_onnx_2eproto3_impl);
+}
+#else
 // Force AddDescriptors() to be called at static initialization time.
 struct StaticDescriptorInitializer_onnx_2eproto3 {
   StaticDescriptorInitializer_onnx_2eproto3() {
     protobuf_AddDesc_onnx_2eproto3();
   }
 } static_descriptor_initializer_onnx_2eproto3_;
-const ::google::protobuf::EnumDescriptor* Version_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return Version_descriptor_;
-}
+#endif
 bool Version_IsValid(int value) {
   switch(value) {
     case 0:
@@ -666,6 +113,7 @@ bool Version_IsValid(int value) {
     case 4:
     case 5:
     case 6:
+    case 7:
       return true;
     default:
       return false;
@@ -675,10 +123,6 @@ bool Version_IsValid(int value) {
 
 // ===================================================================
 
-const ::google::protobuf::EnumDescriptor* AttributeProto_AttributeType_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return AttributeProto_AttributeType_descriptor_;
-}
 bool AttributeProto_AttributeType_IsValid(int value) {
   switch(value) {
     case 0:
@@ -738,21 +182,36 @@ const int AttributeProto::kSparseTensorsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 AttributeProto::AttributeProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.AttributeProto)
 }
 
 void AttributeProto::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  t_ = const_cast< ::onnx::TensorProto*>(
+      ::onnx::TensorProto::internal_default_instance());
+#else
   t_ = const_cast< ::onnx::TensorProto*>(&::onnx::TensorProto::default_instance());
+#endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  g_ = const_cast< ::onnx::GraphProto*>(
+      ::onnx::GraphProto::internal_default_instance());
+#else
   g_ = const_cast< ::onnx::GraphProto*>(&::onnx::GraphProto::default_instance());
+#endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  sparse_tensor_ = const_cast< ::onnx::SparseTensorProto*>(
+      ::onnx::SparseTensorProto::internal_default_instance());
+#else
   sparse_tensor_ = const_cast< ::onnx::SparseTensorProto*>(&::onnx::SparseTensorProto::default_instance());
+#endif
 }
 
 AttributeProto::AttributeProto(const AttributeProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.AttributeProto)
@@ -784,7 +243,11 @@ void AttributeProto::SharedDtor() {
   ref_attr_name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   doc_string_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   s_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete t_;
     delete g_;
     delete sparse_tensor_;
@@ -796,13 +259,12 @@ void AttributeProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* AttributeProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return AttributeProto_descriptor_;
-}
-
 const AttributeProto& AttributeProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -1167,13 +629,13 @@ void AttributeProto::SerializeWithCachedSizes(
 
   // optional .onnx.TensorProto t = 5;
   if (this->has_t()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       5, *this->t_, output);
   }
 
   // optional .onnx.GraphProto g = 6;
   if (this->has_g()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       6, *this->g_, output);
   }
 
@@ -1205,13 +667,13 @@ void AttributeProto::SerializeWithCachedSizes(
 
   // repeated .onnx.TensorProto tensors = 10;
   for (unsigned int i = 0, n = this->tensors_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       10, this->tensors(i), output);
   }
 
   // repeated .onnx.GraphProto graphs = 11;
   for (unsigned int i = 0, n = this->graphs_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       11, this->graphs(i), output);
   }
 
@@ -1243,156 +705,17 @@ void AttributeProto::SerializeWithCachedSizes(
 
   // optional .onnx.SparseTensorProto sparse_tensor = 22;
   if (this->has_sparse_tensor()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       22, *this->sparse_tensor_, output);
   }
 
   // repeated .onnx.SparseTensorProto sparse_tensors = 23;
   for (unsigned int i = 0, n = this->sparse_tensors_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       23, this->sparse_tensors(i), output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.AttributeProto)
-}
-
-::google::protobuf::uint8* AttributeProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.AttributeProto)
-  // optional string name = 1;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.AttributeProto.name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->name(), target);
-  }
-
-  // optional float f = 2;
-  if (this->f() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(2, this->f(), target);
-  }
-
-  // optional int64 i = 3;
-  if (this->i() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->i(), target);
-  }
-
-  // optional bytes s = 4;
-  if (this->s().size() > 0) {
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        4, this->s(), target);
-  }
-
-  // optional .onnx.TensorProto t = 5;
-  if (this->has_t()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        5, *this->t_, false, target);
-  }
-
-  // optional .onnx.GraphProto g = 6;
-  if (this->has_g()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        6, *this->g_, false, target);
-  }
-
-  // repeated float floats = 7;
-  if (this->floats_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      7,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _floats_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->floats_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteFloatNoTagToArray(this->floats(i), target);
-  }
-
-  // repeated int64 ints = 8;
-  if (this->ints_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      8,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _ints_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->ints_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteInt64NoTagToArray(this->ints(i), target);
-  }
-
-  // repeated bytes strings = 9;
-  for (int i = 0; i < this->strings_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteBytesToArray(9, this->strings(i), target);
-  }
-
-  // repeated .onnx.TensorProto tensors = 10;
-  for (unsigned int i = 0, n = this->tensors_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        10, this->tensors(i), false, target);
-  }
-
-  // repeated .onnx.GraphProto graphs = 11;
-  for (unsigned int i = 0, n = this->graphs_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        11, this->graphs(i), false, target);
-  }
-
-  // optional string doc_string = 13;
-  if (this->doc_string().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->doc_string().data(), this->doc_string().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.AttributeProto.doc_string");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        13, this->doc_string(), target);
-  }
-
-  // optional .onnx.AttributeProto.AttributeType type = 20;
-  if (this->type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      20, this->type(), target);
-  }
-
-  // optional string ref_attr_name = 21;
-  if (this->ref_attr_name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->ref_attr_name().data(), this->ref_attr_name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.AttributeProto.ref_attr_name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        21, this->ref_attr_name(), target);
-  }
-
-  // optional .onnx.SparseTensorProto sparse_tensor = 22;
-  if (this->has_sparse_tensor()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        22, *this->sparse_tensor_, false, target);
-  }
-
-  // repeated .onnx.SparseTensorProto sparse_tensors = 23;
-  for (unsigned int i = 0, n = this->sparse_tensors_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        23, this->sparse_tensors(i), false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.AttributeProto)
-  return target;
 }
 
 int AttributeProto::ByteSize() const {
@@ -1534,21 +857,9 @@ int AttributeProto::ByteSize() const {
   return total_size;
 }
 
-void AttributeProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.AttributeProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const AttributeProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const AttributeProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.AttributeProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.AttributeProto)
-    MergeFrom(*source);
-  }
+void AttributeProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const AttributeProto*>(&from));
 }
 
 void AttributeProto::MergeFrom(const AttributeProto& from) {
@@ -1598,13 +909,6 @@ void AttributeProto::MergeFrom(const AttributeProto& from) {
   }
 }
 
-void AttributeProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.AttributeProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void AttributeProto::CopyFrom(const AttributeProto& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:onnx.AttributeProto)
   if (&from == this) return;
@@ -1638,16 +942,12 @@ void AttributeProto::InternalSwap(AttributeProto* other) {
   tensors_.UnsafeArenaSwap(&other->tensors_);
   graphs_.UnsafeArenaSwap(&other->graphs_);
   sparse_tensors_.UnsafeArenaSwap(&other->sparse_tensors_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata AttributeProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = AttributeProto_descriptor_;
-  metadata.reflection = AttributeProto_reflection_;
-  return metadata;
+::std::string AttributeProto::GetTypeName() const {
+  return "onnx.AttributeProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -1881,7 +1181,11 @@ void AttributeProto::clear_t() {
 }
 const ::onnx::TensorProto& AttributeProto::t() const {
   // @@protoc_insertion_point(field_get:onnx.AttributeProto.t)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return t_ != NULL ? *t_ : *default_instance().t_;
+#else
   return t_ != NULL ? *t_ : *default_instance_->t_;
+#endif
 }
 ::onnx::TensorProto* AttributeProto::mutable_t() {
   
@@ -1919,7 +1223,11 @@ void AttributeProto::clear_g() {
 }
 const ::onnx::GraphProto& AttributeProto::g() const {
   // @@protoc_insertion_point(field_get:onnx.AttributeProto.g)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return g_ != NULL ? *g_ : *default_instance().g_;
+#else
   return g_ != NULL ? *g_ : *default_instance_->g_;
+#endif
 }
 ::onnx::GraphProto* AttributeProto::mutable_g() {
   
@@ -1957,7 +1265,11 @@ void AttributeProto::clear_sparse_tensor() {
 }
 const ::onnx::SparseTensorProto& AttributeProto::sparse_tensor() const {
   // @@protoc_insertion_point(field_get:onnx.AttributeProto.sparse_tensor)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return sparse_tensor_ != NULL ? *sparse_tensor_ : *default_instance().sparse_tensor_;
+#else
   return sparse_tensor_ != NULL ? *sparse_tensor_ : *default_instance_->sparse_tensor_;
+#endif
 }
 ::onnx::SparseTensorProto* AttributeProto::mutable_sparse_tensor() {
   
@@ -2201,19 +1513,24 @@ const int ValueInfoProto::kDocStringFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ValueInfoProto::ValueInfoProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.ValueInfoProto)
 }
 
 void ValueInfoProto::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  type_ = const_cast< ::onnx::TypeProto*>(
+      ::onnx::TypeProto::internal_default_instance());
+#else
   type_ = const_cast< ::onnx::TypeProto*>(&::onnx::TypeProto::default_instance());
+#endif
 }
 
 ValueInfoProto::ValueInfoProto(const ValueInfoProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.ValueInfoProto)
@@ -2236,7 +1553,11 @@ ValueInfoProto::~ValueInfoProto() {
 void ValueInfoProto::SharedDtor() {
   name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   doc_string_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete type_;
   }
 }
@@ -2246,13 +1567,12 @@ void ValueInfoProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* ValueInfoProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return ValueInfoProto_descriptor_;
-}
-
 const ValueInfoProto& ValueInfoProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -2366,7 +1686,7 @@ void ValueInfoProto::SerializeWithCachedSizes(
 
   // optional .onnx.TypeProto type = 2;
   if (this->has_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->type_, output);
   }
 
@@ -2381,42 +1701,6 @@ void ValueInfoProto::SerializeWithCachedSizes(
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.ValueInfoProto)
-}
-
-::google::protobuf::uint8* ValueInfoProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.ValueInfoProto)
-  // optional string name = 1;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.ValueInfoProto.name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->name(), target);
-  }
-
-  // optional .onnx.TypeProto type = 2;
-  if (this->has_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        2, *this->type_, false, target);
-  }
-
-  // optional string doc_string = 3;
-  if (this->doc_string().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->doc_string().data(), this->doc_string().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.ValueInfoProto.doc_string");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->doc_string(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.ValueInfoProto)
-  return target;
 }
 
 int ValueInfoProto::ByteSize() const {
@@ -2450,21 +1734,9 @@ int ValueInfoProto::ByteSize() const {
   return total_size;
 }
 
-void ValueInfoProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.ValueInfoProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const ValueInfoProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const ValueInfoProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.ValueInfoProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.ValueInfoProto)
-    MergeFrom(*source);
-  }
+void ValueInfoProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ValueInfoProto*>(&from));
 }
 
 void ValueInfoProto::MergeFrom(const ValueInfoProto& from) {
@@ -2483,13 +1755,6 @@ void ValueInfoProto::MergeFrom(const ValueInfoProto& from) {
 
     doc_string_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.doc_string_);
   }
-}
-
-void ValueInfoProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.ValueInfoProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void ValueInfoProto::CopyFrom(const ValueInfoProto& from) {
@@ -2512,16 +1777,12 @@ void ValueInfoProto::InternalSwap(ValueInfoProto* other) {
   name_.Swap(&other->name_);
   std::swap(type_, other->type_);
   doc_string_.Swap(&other->doc_string_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata ValueInfoProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = ValueInfoProto_descriptor_;
-  metadata.reflection = ValueInfoProto_reflection_;
-  return metadata;
+::std::string ValueInfoProto::GetTypeName() const {
+  return "onnx.ValueInfoProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -2581,7 +1842,11 @@ void ValueInfoProto::clear_type() {
 }
 const ::onnx::TypeProto& ValueInfoProto::type() const {
   // @@protoc_insertion_point(field_get:onnx.ValueInfoProto.type)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return type_ != NULL ? *type_ : *default_instance().type_;
+#else
   return type_ != NULL ? *type_ : *default_instance_->type_;
+#endif
 }
 ::onnx::TypeProto* ValueInfoProto::mutable_type() {
   
@@ -2668,7 +1933,7 @@ const int NodeProto::kDocStringFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NodeProto::NodeProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.NodeProto)
 }
@@ -2678,8 +1943,8 @@ void NodeProto::InitAsDefaultInstance() {
 }
 
 NodeProto::NodeProto(const NodeProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.NodeProto)
@@ -2705,7 +1970,11 @@ void NodeProto::SharedDtor() {
   op_type_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   domain_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   doc_string_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -2714,13 +1983,12 @@ void NodeProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* NodeProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return NodeProto_descriptor_;
-}
-
 const NodeProto& NodeProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -2944,7 +2212,7 @@ void NodeProto::SerializeWithCachedSizes(
 
   // repeated .onnx.AttributeProto attribute = 5;
   for (unsigned int i = 0, n = this->attribute_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       5, this->attribute(i), output);
   }
 
@@ -2969,84 +2237,6 @@ void NodeProto::SerializeWithCachedSizes(
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.NodeProto)
-}
-
-::google::protobuf::uint8* NodeProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.NodeProto)
-  // repeated string input = 1;
-  for (int i = 0; i < this->input_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->input(i).data(), this->input(i).length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.NodeProto.input");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(1, this->input(i), target);
-  }
-
-  // repeated string output = 2;
-  for (int i = 0; i < this->output_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->output(i).data(), this->output(i).length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.NodeProto.output");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(2, this->output(i), target);
-  }
-
-  // optional string name = 3;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.NodeProto.name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->name(), target);
-  }
-
-  // optional string op_type = 4;
-  if (this->op_type().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->op_type().data(), this->op_type().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.NodeProto.op_type");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->op_type(), target);
-  }
-
-  // repeated .onnx.AttributeProto attribute = 5;
-  for (unsigned int i = 0, n = this->attribute_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        5, this->attribute(i), false, target);
-  }
-
-  // optional string doc_string = 6;
-  if (this->doc_string().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->doc_string().data(), this->doc_string().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.NodeProto.doc_string");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        6, this->doc_string(), target);
-  }
-
-  // optional string domain = 7;
-  if (this->domain().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->domain().data(), this->domain().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.NodeProto.domain");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        7, this->domain(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.NodeProto)
-  return target;
 }
 
 int NodeProto::ByteSize() const {
@@ -3109,21 +2299,9 @@ int NodeProto::ByteSize() const {
   return total_size;
 }
 
-void NodeProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.NodeProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const NodeProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const NodeProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.NodeProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.NodeProto)
-    MergeFrom(*source);
-  }
+void NodeProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const NodeProto*>(&from));
 }
 
 void NodeProto::MergeFrom(const NodeProto& from) {
@@ -3152,13 +2330,6 @@ void NodeProto::MergeFrom(const NodeProto& from) {
   }
 }
 
-void NodeProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.NodeProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void NodeProto::CopyFrom(const NodeProto& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:onnx.NodeProto)
   if (&from == this) return;
@@ -3183,16 +2354,12 @@ void NodeProto::InternalSwap(NodeProto* other) {
   domain_.Swap(&other->domain_);
   attribute_.UnsafeArenaSwap(&other->attribute_);
   doc_string_.Swap(&other->doc_string_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata NodeProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = NodeProto_descriptor_;
-  metadata.reflection = NodeProto_reflection_;
-  return metadata;
+::std::string NodeProto::GetTypeName() const {
+  return "onnx.NodeProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -3519,6 +2686,459 @@ void NodeProto::clear_doc_string() {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int TrainingInfoProto::kInitializationFieldNumber;
+const int TrainingInfoProto::kAlgorithmFieldNumber;
+const int TrainingInfoProto::kInitializationBindingFieldNumber;
+const int TrainingInfoProto::kUpdateBindingFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+TrainingInfoProto::TrainingInfoProto()
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:onnx.TrainingInfoProto)
+}
+
+void TrainingInfoProto::InitAsDefaultInstance() {
+  _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  initialization_ = const_cast< ::onnx::GraphProto*>(
+      ::onnx::GraphProto::internal_default_instance());
+#else
+  initialization_ = const_cast< ::onnx::GraphProto*>(&::onnx::GraphProto::default_instance());
+#endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  algorithm_ = const_cast< ::onnx::GraphProto*>(
+      ::onnx::GraphProto::internal_default_instance());
+#else
+  algorithm_ = const_cast< ::onnx::GraphProto*>(&::onnx::GraphProto::default_instance());
+#endif
+}
+
+TrainingInfoProto::TrainingInfoProto(const TrainingInfoProto& from)
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
+  SharedCtor();
+  MergeFrom(from);
+  // @@protoc_insertion_point(copy_constructor:onnx.TrainingInfoProto)
+}
+
+void TrainingInfoProto::SharedCtor() {
+    _is_default_instance_ = false;
+  _cached_size_ = 0;
+  initialization_ = NULL;
+  algorithm_ = NULL;
+}
+
+TrainingInfoProto::~TrainingInfoProto() {
+  // @@protoc_insertion_point(destructor:onnx.TrainingInfoProto)
+  SharedDtor();
+}
+
+void TrainingInfoProto::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
+  if (this != default_instance_) {
+  #endif
+    delete initialization_;
+    delete algorithm_;
+  }
+}
+
+void TrainingInfoProto::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const TrainingInfoProto& TrainingInfoProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
+  if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
+  return *default_instance_;
+}
+
+TrainingInfoProto* TrainingInfoProto::default_instance_ = NULL;
+
+TrainingInfoProto* TrainingInfoProto::New(::google::protobuf::Arena* arena) const {
+  TrainingInfoProto* n = new TrainingInfoProto;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void TrainingInfoProto::Clear() {
+// @@protoc_insertion_point(message_clear_start:onnx.TrainingInfoProto)
+  if (GetArenaNoVirtual() == NULL && initialization_ != NULL) delete initialization_;
+  initialization_ = NULL;
+  if (GetArenaNoVirtual() == NULL && algorithm_ != NULL) delete algorithm_;
+  algorithm_ = NULL;
+  initialization_binding_.Clear();
+  update_binding_.Clear();
+}
+
+bool TrainingInfoProto::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:onnx.TrainingInfoProto)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional .onnx.GraphProto initialization = 1;
+      case 1: {
+        if (tag == 10) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_initialization()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(18)) goto parse_algorithm;
+        break;
+      }
+
+      // optional .onnx.GraphProto algorithm = 2;
+      case 2: {
+        if (tag == 18) {
+         parse_algorithm:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_algorithm()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(26)) goto parse_initialization_binding;
+        break;
+      }
+
+      // repeated .onnx.StringStringEntryProto initialization_binding = 3;
+      case 3: {
+        if (tag == 26) {
+         parse_initialization_binding:
+          DO_(input->IncrementRecursionDepth());
+         parse_loop_initialization_binding:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtualNoRecursionDepth(
+                input, add_initialization_binding()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(26)) goto parse_loop_initialization_binding;
+        if (input->ExpectTag(34)) goto parse_loop_update_binding;
+        input->UnsafeDecrementRecursionDepth();
+        break;
+      }
+
+      // repeated .onnx.StringStringEntryProto update_binding = 4;
+      case 4: {
+        if (tag == 34) {
+          DO_(input->IncrementRecursionDepth());
+         parse_loop_update_binding:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtualNoRecursionDepth(
+                input, add_update_binding()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(34)) goto parse_loop_update_binding;
+        input->UnsafeDecrementRecursionDepth();
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:onnx.TrainingInfoProto)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:onnx.TrainingInfoProto)
+  return false;
+#undef DO_
+}
+
+void TrainingInfoProto::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:onnx.TrainingInfoProto)
+  // optional .onnx.GraphProto initialization = 1;
+  if (this->has_initialization()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1, *this->initialization_, output);
+  }
+
+  // optional .onnx.GraphProto algorithm = 2;
+  if (this->has_algorithm()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2, *this->algorithm_, output);
+  }
+
+  // repeated .onnx.StringStringEntryProto initialization_binding = 3;
+  for (unsigned int i = 0, n = this->initialization_binding_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      3, this->initialization_binding(i), output);
+  }
+
+  // repeated .onnx.StringStringEntryProto update_binding = 4;
+  for (unsigned int i = 0, n = this->update_binding_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      4, this->update_binding(i), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:onnx.TrainingInfoProto)
+}
+
+int TrainingInfoProto::ByteSize() const {
+// @@protoc_insertion_point(message_byte_size_start:onnx.TrainingInfoProto)
+  int total_size = 0;
+
+  // optional .onnx.GraphProto initialization = 1;
+  if (this->has_initialization()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->initialization_);
+  }
+
+  // optional .onnx.GraphProto algorithm = 2;
+  if (this->has_algorithm()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->algorithm_);
+  }
+
+  // repeated .onnx.StringStringEntryProto initialization_binding = 3;
+  total_size += 1 * this->initialization_binding_size();
+  for (int i = 0; i < this->initialization_binding_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->initialization_binding(i));
+  }
+
+  // repeated .onnx.StringStringEntryProto update_binding = 4;
+  total_size += 1 * this->update_binding_size();
+  for (int i = 0; i < this->update_binding_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->update_binding(i));
+  }
+
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void TrainingInfoProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TrainingInfoProto*>(&from));
+}
+
+void TrainingInfoProto::MergeFrom(const TrainingInfoProto& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:onnx.TrainingInfoProto)
+  if (GOOGLE_PREDICT_FALSE(&from == this)) {
+    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
+  }
+  initialization_binding_.MergeFrom(from.initialization_binding_);
+  update_binding_.MergeFrom(from.update_binding_);
+  if (from.has_initialization()) {
+    mutable_initialization()->::onnx::GraphProto::MergeFrom(from.initialization());
+  }
+  if (from.has_algorithm()) {
+    mutable_algorithm()->::onnx::GraphProto::MergeFrom(from.algorithm());
+  }
+}
+
+void TrainingInfoProto::CopyFrom(const TrainingInfoProto& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:onnx.TrainingInfoProto)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TrainingInfoProto::IsInitialized() const {
+
+  return true;
+}
+
+void TrainingInfoProto::Swap(TrainingInfoProto* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void TrainingInfoProto::InternalSwap(TrainingInfoProto* other) {
+  std::swap(initialization_, other->initialization_);
+  std::swap(algorithm_, other->algorithm_);
+  initialization_binding_.UnsafeArenaSwap(&other->initialization_binding_);
+  update_binding_.UnsafeArenaSwap(&other->update_binding_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string TrainingInfoProto::GetTypeName() const {
+  return "onnx.TrainingInfoProto";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// TrainingInfoProto
+
+// optional .onnx.GraphProto initialization = 1;
+bool TrainingInfoProto::has_initialization() const {
+  return !_is_default_instance_ && initialization_ != NULL;
+}
+void TrainingInfoProto::clear_initialization() {
+  if (GetArenaNoVirtual() == NULL && initialization_ != NULL) delete initialization_;
+  initialization_ = NULL;
+}
+const ::onnx::GraphProto& TrainingInfoProto::initialization() const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.initialization)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return initialization_ != NULL ? *initialization_ : *default_instance().initialization_;
+#else
+  return initialization_ != NULL ? *initialization_ : *default_instance_->initialization_;
+#endif
+}
+::onnx::GraphProto* TrainingInfoProto::mutable_initialization() {
+  
+  if (initialization_ == NULL) {
+    initialization_ = new ::onnx::GraphProto;
+  }
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.initialization)
+  return initialization_;
+}
+::onnx::GraphProto* TrainingInfoProto::release_initialization() {
+  // @@protoc_insertion_point(field_release:onnx.TrainingInfoProto.initialization)
+  
+  ::onnx::GraphProto* temp = initialization_;
+  initialization_ = NULL;
+  return temp;
+}
+void TrainingInfoProto::set_allocated_initialization(::onnx::GraphProto* initialization) {
+  delete initialization_;
+  initialization_ = initialization;
+  if (initialization) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:onnx.TrainingInfoProto.initialization)
+}
+
+// optional .onnx.GraphProto algorithm = 2;
+bool TrainingInfoProto::has_algorithm() const {
+  return !_is_default_instance_ && algorithm_ != NULL;
+}
+void TrainingInfoProto::clear_algorithm() {
+  if (GetArenaNoVirtual() == NULL && algorithm_ != NULL) delete algorithm_;
+  algorithm_ = NULL;
+}
+const ::onnx::GraphProto& TrainingInfoProto::algorithm() const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.algorithm)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return algorithm_ != NULL ? *algorithm_ : *default_instance().algorithm_;
+#else
+  return algorithm_ != NULL ? *algorithm_ : *default_instance_->algorithm_;
+#endif
+}
+::onnx::GraphProto* TrainingInfoProto::mutable_algorithm() {
+  
+  if (algorithm_ == NULL) {
+    algorithm_ = new ::onnx::GraphProto;
+  }
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.algorithm)
+  return algorithm_;
+}
+::onnx::GraphProto* TrainingInfoProto::release_algorithm() {
+  // @@protoc_insertion_point(field_release:onnx.TrainingInfoProto.algorithm)
+  
+  ::onnx::GraphProto* temp = algorithm_;
+  algorithm_ = NULL;
+  return temp;
+}
+void TrainingInfoProto::set_allocated_algorithm(::onnx::GraphProto* algorithm) {
+  delete algorithm_;
+  algorithm_ = algorithm;
+  if (algorithm) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:onnx.TrainingInfoProto.algorithm)
+}
+
+// repeated .onnx.StringStringEntryProto initialization_binding = 3;
+int TrainingInfoProto::initialization_binding_size() const {
+  return initialization_binding_.size();
+}
+void TrainingInfoProto::clear_initialization_binding() {
+  initialization_binding_.Clear();
+}
+const ::onnx::StringStringEntryProto& TrainingInfoProto::initialization_binding(int index) const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_.Get(index);
+}
+::onnx::StringStringEntryProto* TrainingInfoProto::mutable_initialization_binding(int index) {
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_.Mutable(index);
+}
+::onnx::StringStringEntryProto* TrainingInfoProto::add_initialization_binding() {
+  // @@protoc_insertion_point(field_add:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >*
+TrainingInfoProto::mutable_initialization_binding() {
+  // @@protoc_insertion_point(field_mutable_list:onnx.TrainingInfoProto.initialization_binding)
+  return &initialization_binding_;
+}
+const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
+TrainingInfoProto::initialization_binding() const {
+  // @@protoc_insertion_point(field_list:onnx.TrainingInfoProto.initialization_binding)
+  return initialization_binding_;
+}
+
+// repeated .onnx.StringStringEntryProto update_binding = 4;
+int TrainingInfoProto::update_binding_size() const {
+  return update_binding_.size();
+}
+void TrainingInfoProto::clear_update_binding() {
+  update_binding_.Clear();
+}
+const ::onnx::StringStringEntryProto& TrainingInfoProto::update_binding(int index) const {
+  // @@protoc_insertion_point(field_get:onnx.TrainingInfoProto.update_binding)
+  return update_binding_.Get(index);
+}
+::onnx::StringStringEntryProto* TrainingInfoProto::mutable_update_binding(int index) {
+  // @@protoc_insertion_point(field_mutable:onnx.TrainingInfoProto.update_binding)
+  return update_binding_.Mutable(index);
+}
+::onnx::StringStringEntryProto* TrainingInfoProto::add_update_binding() {
+  // @@protoc_insertion_point(field_add:onnx.TrainingInfoProto.update_binding)
+  return update_binding_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >*
+TrainingInfoProto::mutable_update_binding() {
+  // @@protoc_insertion_point(field_mutable_list:onnx.TrainingInfoProto.update_binding)
+  return &update_binding_;
+}
+const ::google::protobuf::RepeatedPtrField< ::onnx::StringStringEntryProto >&
+TrainingInfoProto::update_binding() const {
+  // @@protoc_insertion_point(field_list:onnx.TrainingInfoProto.update_binding)
+  return update_binding_;
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ModelProto::kIrVersionFieldNumber;
 const int ModelProto::kOpsetImportFieldNumber;
 const int ModelProto::kProducerNameFieldNumber;
@@ -3528,22 +3148,28 @@ const int ModelProto::kModelVersionFieldNumber;
 const int ModelProto::kDocStringFieldNumber;
 const int ModelProto::kGraphFieldNumber;
 const int ModelProto::kMetadataPropsFieldNumber;
+const int ModelProto::kTrainingInfoFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ModelProto::ModelProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.ModelProto)
 }
 
 void ModelProto::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  graph_ = const_cast< ::onnx::GraphProto*>(
+      ::onnx::GraphProto::internal_default_instance());
+#else
   graph_ = const_cast< ::onnx::GraphProto*>(&::onnx::GraphProto::default_instance());
+#endif
 }
 
 ModelProto::ModelProto(const ModelProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.ModelProto)
@@ -3572,7 +3198,11 @@ void ModelProto::SharedDtor() {
   producer_version_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   domain_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   doc_string_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete graph_;
   }
 }
@@ -3582,13 +3212,12 @@ void ModelProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* ModelProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return ModelProto_descriptor_;
-}
-
 const ModelProto& ModelProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -3614,6 +3243,7 @@ void ModelProto::Clear() {
   graph_ = NULL;
   opset_import_.Clear();
   metadata_props_.Clear();
+  training_info_.Clear();
 }
 
 bool ModelProto::MergePartialFromCodedStream(
@@ -3622,7 +3252,7 @@ bool ModelProto::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:onnx.ModelProto)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(16383);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -3764,6 +3394,22 @@ bool ModelProto::MergePartialFromCodedStream(
           goto handle_unusual;
         }
         if (input->ExpectTag(114)) goto parse_loop_metadata_props;
+        if (input->ExpectTag(162)) goto parse_loop_training_info;
+        input->UnsafeDecrementRecursionDepth();
+        break;
+      }
+
+      // repeated .onnx.TrainingInfoProto training_info = 20;
+      case 20: {
+        if (tag == 162) {
+          DO_(input->IncrementRecursionDepth());
+         parse_loop_training_info:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtualNoRecursionDepth(
+                input, add_training_info()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(162)) goto parse_loop_training_info;
         input->UnsafeDecrementRecursionDepth();
         if (input->ExpectAtEnd()) goto success;
         break;
@@ -3845,105 +3491,29 @@ void ModelProto::SerializeWithCachedSizes(
 
   // optional .onnx.GraphProto graph = 7;
   if (this->has_graph()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       7, *this->graph_, output);
   }
 
   // repeated .onnx.OperatorSetIdProto opset_import = 8;
   for (unsigned int i = 0, n = this->opset_import_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       8, this->opset_import(i), output);
   }
 
   // repeated .onnx.StringStringEntryProto metadata_props = 14;
   for (unsigned int i = 0, n = this->metadata_props_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       14, this->metadata_props(i), output);
   }
 
+  // repeated .onnx.TrainingInfoProto training_info = 20;
+  for (unsigned int i = 0, n = this->training_info_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      20, this->training_info(i), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:onnx.ModelProto)
-}
-
-::google::protobuf::uint8* ModelProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.ModelProto)
-  // optional int64 ir_version = 1;
-  if (this->ir_version() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->ir_version(), target);
-  }
-
-  // optional string producer_name = 2;
-  if (this->producer_name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->producer_name().data(), this->producer_name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.ModelProto.producer_name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->producer_name(), target);
-  }
-
-  // optional string producer_version = 3;
-  if (this->producer_version().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->producer_version().data(), this->producer_version().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.ModelProto.producer_version");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->producer_version(), target);
-  }
-
-  // optional string domain = 4;
-  if (this->domain().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->domain().data(), this->domain().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.ModelProto.domain");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->domain(), target);
-  }
-
-  // optional int64 model_version = 5;
-  if (this->model_version() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(5, this->model_version(), target);
-  }
-
-  // optional string doc_string = 6;
-  if (this->doc_string().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->doc_string().data(), this->doc_string().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.ModelProto.doc_string");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        6, this->doc_string(), target);
-  }
-
-  // optional .onnx.GraphProto graph = 7;
-  if (this->has_graph()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        7, *this->graph_, false, target);
-  }
-
-  // repeated .onnx.OperatorSetIdProto opset_import = 8;
-  for (unsigned int i = 0, n = this->opset_import_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        8, this->opset_import(i), false, target);
-  }
-
-  // repeated .onnx.StringStringEntryProto metadata_props = 14;
-  for (unsigned int i = 0, n = this->metadata_props_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        14, this->metadata_props(i), false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.ModelProto)
-  return target;
 }
 
 int ModelProto::ByteSize() const {
@@ -4015,27 +3585,23 @@ int ModelProto::ByteSize() const {
         this->metadata_props(i));
   }
 
+  // repeated .onnx.TrainingInfoProto training_info = 20;
+  total_size += 2 * this->training_info_size();
+  for (int i = 0; i < this->training_info_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->training_info(i));
+  }
+
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
   return total_size;
 }
 
-void ModelProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.ModelProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const ModelProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const ModelProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.ModelProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.ModelProto)
-    MergeFrom(*source);
-  }
+void ModelProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ModelProto*>(&from));
 }
 
 void ModelProto::MergeFrom(const ModelProto& from) {
@@ -4045,6 +3611,7 @@ void ModelProto::MergeFrom(const ModelProto& from) {
   }
   opset_import_.MergeFrom(from.opset_import_);
   metadata_props_.MergeFrom(from.metadata_props_);
+  training_info_.MergeFrom(from.training_info_);
   if (from.ir_version() != 0) {
     set_ir_version(from.ir_version());
   }
@@ -4070,13 +3637,6 @@ void ModelProto::MergeFrom(const ModelProto& from) {
   if (from.has_graph()) {
     mutable_graph()->::onnx::GraphProto::MergeFrom(from.graph());
   }
-}
-
-void ModelProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.ModelProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void ModelProto::CopyFrom(const ModelProto& from) {
@@ -4105,16 +3665,13 @@ void ModelProto::InternalSwap(ModelProto* other) {
   doc_string_.Swap(&other->doc_string_);
   std::swap(graph_, other->graph_);
   metadata_props_.UnsafeArenaSwap(&other->metadata_props_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  training_info_.UnsafeArenaSwap(&other->training_info_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata ModelProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = ModelProto_descriptor_;
-  metadata.reflection = ModelProto_reflection_;
-  return metadata;
+::std::string ModelProto::GetTypeName() const {
+  return "onnx.ModelProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -4364,7 +3921,11 @@ void ModelProto::clear_graph() {
 }
 const ::onnx::GraphProto& ModelProto::graph() const {
   // @@protoc_insertion_point(field_get:onnx.ModelProto.graph)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return graph_ != NULL ? *graph_ : *default_instance().graph_;
+#else
   return graph_ != NULL ? *graph_ : *default_instance_->graph_;
+#endif
 }
 ::onnx::GraphProto* ModelProto::mutable_graph() {
   
@@ -4422,6 +3983,36 @@ ModelProto::metadata_props() const {
   return metadata_props_;
 }
 
+// repeated .onnx.TrainingInfoProto training_info = 20;
+int ModelProto::training_info_size() const {
+  return training_info_.size();
+}
+void ModelProto::clear_training_info() {
+  training_info_.Clear();
+}
+const ::onnx::TrainingInfoProto& ModelProto::training_info(int index) const {
+  // @@protoc_insertion_point(field_get:onnx.ModelProto.training_info)
+  return training_info_.Get(index);
+}
+::onnx::TrainingInfoProto* ModelProto::mutable_training_info(int index) {
+  // @@protoc_insertion_point(field_mutable:onnx.ModelProto.training_info)
+  return training_info_.Mutable(index);
+}
+::onnx::TrainingInfoProto* ModelProto::add_training_info() {
+  // @@protoc_insertion_point(field_add:onnx.ModelProto.training_info)
+  return training_info_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto >*
+ModelProto::mutable_training_info() {
+  // @@protoc_insertion_point(field_mutable_list:onnx.ModelProto.training_info)
+  return &training_info_;
+}
+const ::google::protobuf::RepeatedPtrField< ::onnx::TrainingInfoProto >&
+ModelProto::training_info() const {
+  // @@protoc_insertion_point(field_list:onnx.ModelProto.training_info)
+  return training_info_;
+}
+
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 
 // ===================================================================
@@ -4432,7 +4023,7 @@ const int StringStringEntryProto::kValueFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 StringStringEntryProto::StringStringEntryProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.StringStringEntryProto)
 }
@@ -4442,8 +4033,8 @@ void StringStringEntryProto::InitAsDefaultInstance() {
 }
 
 StringStringEntryProto::StringStringEntryProto(const StringStringEntryProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.StringStringEntryProto)
@@ -4465,7 +4056,11 @@ StringStringEntryProto::~StringStringEntryProto() {
 void StringStringEntryProto::SharedDtor() {
   key_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -4474,13 +4069,12 @@ void StringStringEntryProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* StringStringEntryProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return StringStringEntryProto_descriptor_;
-}
-
 const StringStringEntryProto& StringStringEntryProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -4590,35 +4184,6 @@ void StringStringEntryProto::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_end:onnx.StringStringEntryProto)
 }
 
-::google::protobuf::uint8* StringStringEntryProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.StringStringEntryProto)
-  // optional string key = 1;
-  if (this->key().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->key().data(), this->key().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.StringStringEntryProto.key");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->key(), target);
-  }
-
-  // optional string value = 2;
-  if (this->value().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->value().data(), this->value().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.StringStringEntryProto.value");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->value(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.StringStringEntryProto)
-  return target;
-}
-
 int StringStringEntryProto::ByteSize() const {
 // @@protoc_insertion_point(message_byte_size_start:onnx.StringStringEntryProto)
   int total_size = 0;
@@ -4643,21 +4208,9 @@ int StringStringEntryProto::ByteSize() const {
   return total_size;
 }
 
-void StringStringEntryProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.StringStringEntryProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const StringStringEntryProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const StringStringEntryProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.StringStringEntryProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.StringStringEntryProto)
-    MergeFrom(*source);
-  }
+void StringStringEntryProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const StringStringEntryProto*>(&from));
 }
 
 void StringStringEntryProto::MergeFrom(const StringStringEntryProto& from) {
@@ -4673,13 +4226,6 @@ void StringStringEntryProto::MergeFrom(const StringStringEntryProto& from) {
 
     value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
   }
-}
-
-void StringStringEntryProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.StringStringEntryProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void StringStringEntryProto::CopyFrom(const StringStringEntryProto& from) {
@@ -4701,16 +4247,12 @@ void StringStringEntryProto::Swap(StringStringEntryProto* other) {
 void StringStringEntryProto::InternalSwap(StringStringEntryProto* other) {
   key_.Swap(&other->key_);
   value_.Swap(&other->value_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata StringStringEntryProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = StringStringEntryProto_descriptor_;
-  metadata.reflection = StringStringEntryProto_reflection_;
-  return metadata;
+::std::string StringStringEntryProto::GetTypeName() const {
+  return "onnx.StringStringEntryProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -4814,7 +4356,7 @@ const int TensorAnnotation::kQuantParameterTensorNamesFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TensorAnnotation::TensorAnnotation()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TensorAnnotation)
 }
@@ -4824,8 +4366,8 @@ void TensorAnnotation::InitAsDefaultInstance() {
 }
 
 TensorAnnotation::TensorAnnotation(const TensorAnnotation& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TensorAnnotation)
@@ -4845,7 +4387,11 @@ TensorAnnotation::~TensorAnnotation() {
 
 void TensorAnnotation::SharedDtor() {
   tensor_name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -4854,13 +4400,12 @@ void TensorAnnotation::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TensorAnnotation::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorAnnotation_descriptor_;
-}
-
 const TensorAnnotation& TensorAnnotation::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -4959,36 +4504,11 @@ void TensorAnnotation::SerializeWithCachedSizes(
 
   // repeated .onnx.StringStringEntryProto quant_parameter_tensor_names = 2;
   for (unsigned int i = 0, n = this->quant_parameter_tensor_names_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, this->quant_parameter_tensor_names(i), output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TensorAnnotation)
-}
-
-::google::protobuf::uint8* TensorAnnotation::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TensorAnnotation)
-  // optional string tensor_name = 1;
-  if (this->tensor_name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->tensor_name().data(), this->tensor_name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.TensorAnnotation.tensor_name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->tensor_name(), target);
-  }
-
-  // repeated .onnx.StringStringEntryProto quant_parameter_tensor_names = 2;
-  for (unsigned int i = 0, n = this->quant_parameter_tensor_names_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        2, this->quant_parameter_tensor_names(i), false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TensorAnnotation)
-  return target;
 }
 
 int TensorAnnotation::ByteSize() const {
@@ -5016,21 +4536,9 @@ int TensorAnnotation::ByteSize() const {
   return total_size;
 }
 
-void TensorAnnotation::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TensorAnnotation)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TensorAnnotation* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TensorAnnotation>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TensorAnnotation)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TensorAnnotation)
-    MergeFrom(*source);
-  }
+void TensorAnnotation::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TensorAnnotation*>(&from));
 }
 
 void TensorAnnotation::MergeFrom(const TensorAnnotation& from) {
@@ -5043,13 +4551,6 @@ void TensorAnnotation::MergeFrom(const TensorAnnotation& from) {
 
     tensor_name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.tensor_name_);
   }
-}
-
-void TensorAnnotation::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TensorAnnotation)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void TensorAnnotation::CopyFrom(const TensorAnnotation& from) {
@@ -5071,16 +4572,12 @@ void TensorAnnotation::Swap(TensorAnnotation* other) {
 void TensorAnnotation::InternalSwap(TensorAnnotation* other) {
   tensor_name_.Swap(&other->tensor_name_);
   quant_parameter_tensor_names_.UnsafeArenaSwap(&other->quant_parameter_tensor_names_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TensorAnnotation::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TensorAnnotation_descriptor_;
-  metadata.reflection = TensorAnnotation_reflection_;
-  return metadata;
+::std::string TensorAnnotation::GetTypeName() const {
+  return "onnx.TensorAnnotation";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -5177,7 +4674,7 @@ const int GraphProto::kQuantizationAnnotationFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 GraphProto::GraphProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.GraphProto)
 }
@@ -5187,8 +4684,8 @@ void GraphProto::InitAsDefaultInstance() {
 }
 
 GraphProto::GraphProto(const GraphProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.GraphProto)
@@ -5210,7 +4707,11 @@ GraphProto::~GraphProto() {
 void GraphProto::SharedDtor() {
   name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   doc_string_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -5219,13 +4720,12 @@ void GraphProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* GraphProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return GraphProto_descriptor_;
-}
-
 const GraphProto& GraphProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -5436,7 +4936,7 @@ void GraphProto::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_start:onnx.GraphProto)
   // repeated .onnx.NodeProto node = 1;
   for (unsigned int i = 0, n = this->node_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1, this->node(i), output);
   }
 
@@ -5452,7 +4952,7 @@ void GraphProto::SerializeWithCachedSizes(
 
   // repeated .onnx.TensorProto initializer = 5;
   for (unsigned int i = 0, n = this->initializer_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       5, this->initializer(i), output);
   }
 
@@ -5468,113 +4968,35 @@ void GraphProto::SerializeWithCachedSizes(
 
   // repeated .onnx.ValueInfoProto input = 11;
   for (unsigned int i = 0, n = this->input_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       11, this->input(i), output);
   }
 
   // repeated .onnx.ValueInfoProto output = 12;
   for (unsigned int i = 0, n = this->output_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       12, this->output(i), output);
   }
 
   // repeated .onnx.ValueInfoProto value_info = 13;
   for (unsigned int i = 0, n = this->value_info_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       13, this->value_info(i), output);
   }
 
   // repeated .onnx.TensorAnnotation quantization_annotation = 14;
   for (unsigned int i = 0, n = this->quantization_annotation_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       14, this->quantization_annotation(i), output);
   }
 
   // repeated .onnx.SparseTensorProto sparse_initializer = 15;
   for (unsigned int i = 0, n = this->sparse_initializer_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       15, this->sparse_initializer(i), output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.GraphProto)
-}
-
-::google::protobuf::uint8* GraphProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.GraphProto)
-  // repeated .onnx.NodeProto node = 1;
-  for (unsigned int i = 0, n = this->node_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        1, this->node(i), false, target);
-  }
-
-  // optional string name = 2;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.GraphProto.name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->name(), target);
-  }
-
-  // repeated .onnx.TensorProto initializer = 5;
-  for (unsigned int i = 0, n = this->initializer_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        5, this->initializer(i), false, target);
-  }
-
-  // optional string doc_string = 10;
-  if (this->doc_string().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->doc_string().data(), this->doc_string().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.GraphProto.doc_string");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        10, this->doc_string(), target);
-  }
-
-  // repeated .onnx.ValueInfoProto input = 11;
-  for (unsigned int i = 0, n = this->input_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        11, this->input(i), false, target);
-  }
-
-  // repeated .onnx.ValueInfoProto output = 12;
-  for (unsigned int i = 0, n = this->output_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        12, this->output(i), false, target);
-  }
-
-  // repeated .onnx.ValueInfoProto value_info = 13;
-  for (unsigned int i = 0, n = this->value_info_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        13, this->value_info(i), false, target);
-  }
-
-  // repeated .onnx.TensorAnnotation quantization_annotation = 14;
-  for (unsigned int i = 0, n = this->quantization_annotation_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        14, this->quantization_annotation(i), false, target);
-  }
-
-  // repeated .onnx.SparseTensorProto sparse_initializer = 15;
-  for (unsigned int i = 0, n = this->sparse_initializer_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        15, this->sparse_initializer(i), false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.GraphProto)
-  return target;
 }
 
 int GraphProto::ByteSize() const {
@@ -5657,21 +5079,9 @@ int GraphProto::ByteSize() const {
   return total_size;
 }
 
-void GraphProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.GraphProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const GraphProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const GraphProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.GraphProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.GraphProto)
-    MergeFrom(*source);
-  }
+void GraphProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const GraphProto*>(&from));
 }
 
 void GraphProto::MergeFrom(const GraphProto& from) {
@@ -5694,13 +5104,6 @@ void GraphProto::MergeFrom(const GraphProto& from) {
 
     doc_string_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.doc_string_);
   }
-}
-
-void GraphProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.GraphProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void GraphProto::CopyFrom(const GraphProto& from) {
@@ -5729,16 +5132,12 @@ void GraphProto::InternalSwap(GraphProto* other) {
   output_.UnsafeArenaSwap(&other->output_);
   value_info_.UnsafeArenaSwap(&other->value_info_);
   quantization_annotation_.UnsafeArenaSwap(&other->quantization_annotation_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata GraphProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = GraphProto_descriptor_;
-  metadata.reflection = GraphProto_reflection_;
-  return metadata;
+::std::string GraphProto::GetTypeName() const {
+  return "onnx.GraphProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -6046,10 +5445,6 @@ GraphProto::quantization_annotation() const {
 
 // ===================================================================
 
-const ::google::protobuf::EnumDescriptor* TensorProto_DataType_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorProto_DataType_descriptor_;
-}
 bool TensorProto_DataType_IsValid(int value) {
   switch(value) {
     case 0:
@@ -6097,10 +5492,6 @@ const TensorProto_DataType TensorProto::DataType_MIN;
 const TensorProto_DataType TensorProto::DataType_MAX;
 const int TensorProto::DataType_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-const ::google::protobuf::EnumDescriptor* TensorProto_DataLocation_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorProto_DataLocation_descriptor_;
-}
 bool TensorProto_DataLocation_IsValid(int value) {
   switch(value) {
     case 0:
@@ -6124,7 +5515,7 @@ const int TensorProto_Segment::kEndFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TensorProto_Segment::TensorProto_Segment()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TensorProto.Segment)
 }
@@ -6134,8 +5525,8 @@ void TensorProto_Segment::InitAsDefaultInstance() {
 }
 
 TensorProto_Segment::TensorProto_Segment(const TensorProto_Segment& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TensorProto.Segment)
@@ -6154,7 +5545,11 @@ TensorProto_Segment::~TensorProto_Segment() {
 }
 
 void TensorProto_Segment::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -6163,13 +5558,12 @@ void TensorProto_Segment::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TensorProto_Segment::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorProto_Segment_descriptor_;
-}
-
 const TensorProto_Segment& TensorProto_Segment::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -6284,23 +5678,6 @@ void TensorProto_Segment::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_end:onnx.TensorProto.Segment)
 }
 
-::google::protobuf::uint8* TensorProto_Segment::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TensorProto.Segment)
-  // optional int64 begin = 1;
-  if (this->begin() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->begin(), target);
-  }
-
-  // optional int64 end = 2;
-  if (this->end() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->end(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TensorProto.Segment)
-  return target;
-}
-
 int TensorProto_Segment::ByteSize() const {
 // @@protoc_insertion_point(message_byte_size_start:onnx.TensorProto.Segment)
   int total_size = 0;
@@ -6325,21 +5702,9 @@ int TensorProto_Segment::ByteSize() const {
   return total_size;
 }
 
-void TensorProto_Segment::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TensorProto.Segment)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TensorProto_Segment* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TensorProto_Segment>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TensorProto.Segment)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TensorProto.Segment)
-    MergeFrom(*source);
-  }
+void TensorProto_Segment::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TensorProto_Segment*>(&from));
 }
 
 void TensorProto_Segment::MergeFrom(const TensorProto_Segment& from) {
@@ -6353,13 +5718,6 @@ void TensorProto_Segment::MergeFrom(const TensorProto_Segment& from) {
   if (from.end() != 0) {
     set_end(from.end());
   }
-}
-
-void TensorProto_Segment::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TensorProto.Segment)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void TensorProto_Segment::CopyFrom(const TensorProto_Segment& from) {
@@ -6381,16 +5739,12 @@ void TensorProto_Segment::Swap(TensorProto_Segment* other) {
 void TensorProto_Segment::InternalSwap(TensorProto_Segment* other) {
   std::swap(begin_, other->begin_);
   std::swap(end_, other->end_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TensorProto_Segment::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TensorProto_Segment_descriptor_;
-  metadata.reflection = TensorProto_Segment_reflection_;
-  return metadata;
+::std::string TensorProto_Segment::GetTypeName() const {
+  return "onnx.TensorProto.Segment";
 }
 
 
@@ -6414,19 +5768,24 @@ const int TensorProto::kUint64DataFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TensorProto::TensorProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TensorProto)
 }
 
 void TensorProto::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  segment_ = const_cast< ::onnx::TensorProto_Segment*>(
+      ::onnx::TensorProto_Segment::internal_default_instance());
+#else
   segment_ = const_cast< ::onnx::TensorProto_Segment*>(&::onnx::TensorProto_Segment::default_instance());
+#endif
 }
 
 TensorProto::TensorProto(const TensorProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TensorProto)
@@ -6453,7 +5812,11 @@ void TensorProto::SharedDtor() {
   name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   doc_string_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   raw_data_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete segment_;
   }
 }
@@ -6463,13 +5826,12 @@ void TensorProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TensorProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorProto_descriptor_;
-}
-
 const TensorProto& TensorProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -6782,7 +6144,7 @@ void TensorProto::SerializeWithCachedSizes(
 
   // optional .onnx.TensorProto.Segment segment = 3;
   if (this->has_segment()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       3, *this->segment_, output);
   }
 
@@ -6870,7 +6232,7 @@ void TensorProto::SerializeWithCachedSizes(
 
   // repeated .onnx.StringStringEntryProto external_data = 13;
   for (unsigned int i = 0, n = this->external_data_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       13, this->external_data(i), output);
   }
 
@@ -6881,157 +6243,6 @@ void TensorProto::SerializeWithCachedSizes(
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TensorProto)
-}
-
-::google::protobuf::uint8* TensorProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TensorProto)
-  // repeated int64 dims = 1;
-  if (this->dims_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      1,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _dims_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->dims_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteInt64NoTagToArray(this->dims(i), target);
-  }
-
-  // optional int32 data_type = 2;
-  if (this->data_type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->data_type(), target);
-  }
-
-  // optional .onnx.TensorProto.Segment segment = 3;
-  if (this->has_segment()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        3, *this->segment_, false, target);
-  }
-
-  // repeated float float_data = 4 [packed = true];
-  if (this->float_data_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      4,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _float_data_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->float_data_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteFloatNoTagToArray(this->float_data(i), target);
-  }
-
-  // repeated int32 int32_data = 5 [packed = true];
-  if (this->int32_data_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      5,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _int32_data_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->int32_data_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteInt32NoTagToArray(this->int32_data(i), target);
-  }
-
-  // repeated bytes string_data = 6;
-  for (int i = 0; i < this->string_data_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteBytesToArray(6, this->string_data(i), target);
-  }
-
-  // repeated int64 int64_data = 7 [packed = true];
-  if (this->int64_data_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      7,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _int64_data_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->int64_data_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteInt64NoTagToArray(this->int64_data(i), target);
-  }
-
-  // optional string name = 8;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.TensorProto.name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        8, this->name(), target);
-  }
-
-  // optional bytes raw_data = 9;
-  if (this->raw_data().size() > 0) {
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        9, this->raw_data(), target);
-  }
-
-  // repeated double double_data = 10 [packed = true];
-  if (this->double_data_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      10,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _double_data_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->double_data_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteDoubleNoTagToArray(this->double_data(i), target);
-  }
-
-  // repeated uint64 uint64_data = 11 [packed = true];
-  if (this->uint64_data_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      11,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _uint64_data_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->uint64_data_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteUInt64NoTagToArray(this->uint64_data(i), target);
-  }
-
-  // optional string doc_string = 12;
-  if (this->doc_string().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->doc_string().data(), this->doc_string().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.TensorProto.doc_string");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        12, this->doc_string(), target);
-  }
-
-  // repeated .onnx.StringStringEntryProto external_data = 13;
-  for (unsigned int i = 0, n = this->external_data_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        13, this->external_data(i), false, target);
-  }
-
-  // optional .onnx.TensorProto.DataLocation data_location = 14;
-  if (this->data_location() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      14, this->data_location(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TensorProto)
-  return target;
 }
 
 int TensorProto::ByteSize() const {
@@ -7196,21 +6407,9 @@ int TensorProto::ByteSize() const {
   return total_size;
 }
 
-void TensorProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TensorProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TensorProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TensorProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TensorProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TensorProto)
-    MergeFrom(*source);
-  }
+void TensorProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TensorProto*>(&from));
 }
 
 void TensorProto::MergeFrom(const TensorProto& from) {
@@ -7249,13 +6448,6 @@ void TensorProto::MergeFrom(const TensorProto& from) {
   }
 }
 
-void TensorProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TensorProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void TensorProto::CopyFrom(const TensorProto& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:onnx.TensorProto)
   if (&from == this) return;
@@ -7287,16 +6479,12 @@ void TensorProto::InternalSwap(TensorProto* other) {
   std::swap(data_location_, other->data_location_);
   double_data_.UnsafeArenaSwap(&other->double_data_);
   uint64_data_.UnsafeArenaSwap(&other->uint64_data_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TensorProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TensorProto_descriptor_;
-  metadata.reflection = TensorProto_reflection_;
-  return metadata;
+::std::string TensorProto::GetTypeName() const {
+  return "onnx.TensorProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -7388,7 +6576,11 @@ void TensorProto::clear_segment() {
 }
 const ::onnx::TensorProto_Segment& TensorProto::segment() const {
   // @@protoc_insertion_point(field_get:onnx.TensorProto.segment)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return segment_ != NULL ? *segment_ : *default_instance().segment_;
+#else
   return segment_ != NULL ? *segment_ : *default_instance_->segment_;
+#endif
 }
 ::onnx::TensorProto_Segment* TensorProto::mutable_segment() {
   
@@ -7808,20 +7000,30 @@ const int SparseTensorProto::kDimsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 SparseTensorProto::SparseTensorProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.SparseTensorProto)
 }
 
 void SparseTensorProto::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  values_ = const_cast< ::onnx::TensorProto*>(
+      ::onnx::TensorProto::internal_default_instance());
+#else
   values_ = const_cast< ::onnx::TensorProto*>(&::onnx::TensorProto::default_instance());
+#endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  indices_ = const_cast< ::onnx::TensorProto*>(
+      ::onnx::TensorProto::internal_default_instance());
+#else
   indices_ = const_cast< ::onnx::TensorProto*>(&::onnx::TensorProto::default_instance());
+#endif
 }
 
 SparseTensorProto::SparseTensorProto(const SparseTensorProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.SparseTensorProto)
@@ -7840,7 +7042,11 @@ SparseTensorProto::~SparseTensorProto() {
 }
 
 void SparseTensorProto::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete values_;
     delete indices_;
   }
@@ -7851,13 +7057,12 @@ void SparseTensorProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* SparseTensorProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return SparseTensorProto_descriptor_;
-}
-
 const SparseTensorProto& SparseTensorProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -7959,13 +7164,13 @@ void SparseTensorProto::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_start:onnx.SparseTensorProto)
   // optional .onnx.TensorProto values = 1;
   if (this->has_values()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1, *this->values_, output);
   }
 
   // optional .onnx.TensorProto indices = 2;
   if (this->has_indices()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->indices_, output);
   }
 
@@ -7980,41 +7185,6 @@ void SparseTensorProto::SerializeWithCachedSizes(
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.SparseTensorProto)
-}
-
-::google::protobuf::uint8* SparseTensorProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.SparseTensorProto)
-  // optional .onnx.TensorProto values = 1;
-  if (this->has_values()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        1, *this->values_, false, target);
-  }
-
-  // optional .onnx.TensorProto indices = 2;
-  if (this->has_indices()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        2, *this->indices_, false, target);
-  }
-
-  // repeated int64 dims = 3;
-  if (this->dims_size() > 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
-      3,
-      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
-      target);
-    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
-      _dims_cached_byte_size_, target);
-  }
-  for (int i = 0; i < this->dims_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteInt64NoTagToArray(this->dims(i), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.SparseTensorProto)
-  return target;
 }
 
 int SparseTensorProto::ByteSize() const {
@@ -8058,21 +7228,9 @@ int SparseTensorProto::ByteSize() const {
   return total_size;
 }
 
-void SparseTensorProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.SparseTensorProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const SparseTensorProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const SparseTensorProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.SparseTensorProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.SparseTensorProto)
-    MergeFrom(*source);
-  }
+void SparseTensorProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const SparseTensorProto*>(&from));
 }
 
 void SparseTensorProto::MergeFrom(const SparseTensorProto& from) {
@@ -8087,13 +7245,6 @@ void SparseTensorProto::MergeFrom(const SparseTensorProto& from) {
   if (from.has_indices()) {
     mutable_indices()->::onnx::TensorProto::MergeFrom(from.indices());
   }
-}
-
-void SparseTensorProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.SparseTensorProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void SparseTensorProto::CopyFrom(const SparseTensorProto& from) {
@@ -8116,16 +7267,12 @@ void SparseTensorProto::InternalSwap(SparseTensorProto* other) {
   std::swap(values_, other->values_);
   std::swap(indices_, other->indices_);
   dims_.UnsafeArenaSwap(&other->dims_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata SparseTensorProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = SparseTensorProto_descriptor_;
-  metadata.reflection = SparseTensorProto_reflection_;
-  return metadata;
+::std::string SparseTensorProto::GetTypeName() const {
+  return "onnx.SparseTensorProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -8141,7 +7288,11 @@ void SparseTensorProto::clear_values() {
 }
 const ::onnx::TensorProto& SparseTensorProto::values() const {
   // @@protoc_insertion_point(field_get:onnx.SparseTensorProto.values)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return values_ != NULL ? *values_ : *default_instance().values_;
+#else
   return values_ != NULL ? *values_ : *default_instance_->values_;
+#endif
 }
 ::onnx::TensorProto* SparseTensorProto::mutable_values() {
   
@@ -8179,7 +7330,11 @@ void SparseTensorProto::clear_indices() {
 }
 const ::onnx::TensorProto& SparseTensorProto::indices() const {
   // @@protoc_insertion_point(field_get:onnx.SparseTensorProto.indices)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return indices_ != NULL ? *indices_ : *default_instance().indices_;
+#else
   return indices_ != NULL ? *indices_ : *default_instance_->indices_;
+#endif
 }
 ::onnx::TensorProto* SparseTensorProto::mutable_indices() {
   
@@ -8248,20 +7403,18 @@ const int TensorShapeProto_Dimension::kDenotationFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TensorShapeProto_Dimension::TensorShapeProto_Dimension()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TensorShapeProto.Dimension)
 }
 
 void TensorShapeProto_Dimension::InitAsDefaultInstance() {
   _is_default_instance_ = true;
-  TensorShapeProto_Dimension_default_oneof_instance_->dim_value_ = GOOGLE_LONGLONG(0);
-  TensorShapeProto_Dimension_default_oneof_instance_->dim_param_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 TensorShapeProto_Dimension::TensorShapeProto_Dimension(const TensorShapeProto_Dimension& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TensorShapeProto.Dimension)
@@ -8285,7 +7438,11 @@ void TensorShapeProto_Dimension::SharedDtor() {
   if (has_value()) {
     clear_value();
   }
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -8294,13 +7451,12 @@ void TensorShapeProto_Dimension::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TensorShapeProto_Dimension::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorShapeProto_Dimension_descriptor_;
-}
-
 const TensorShapeProto_Dimension& TensorShapeProto_Dimension::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -8450,40 +7606,6 @@ void TensorShapeProto_Dimension::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_end:onnx.TensorShapeProto.Dimension)
 }
 
-::google::protobuf::uint8* TensorShapeProto_Dimension::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TensorShapeProto.Dimension)
-  // optional int64 dim_value = 1;
-  if (has_dim_value()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->dim_value(), target);
-  }
-
-  // optional string dim_param = 2;
-  if (has_dim_param()) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->dim_param().data(), this->dim_param().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.TensorShapeProto.Dimension.dim_param");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->dim_param(), target);
-  }
-
-  // optional string denotation = 3;
-  if (this->denotation().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->denotation().data(), this->denotation().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.TensorShapeProto.Dimension.denotation");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->denotation(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TensorShapeProto.Dimension)
-  return target;
-}
-
 int TensorShapeProto_Dimension::ByteSize() const {
 // @@protoc_insertion_point(message_byte_size_start:onnx.TensorShapeProto.Dimension)
   int total_size = 0;
@@ -8520,21 +7642,9 @@ int TensorShapeProto_Dimension::ByteSize() const {
   return total_size;
 }
 
-void TensorShapeProto_Dimension::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TensorShapeProto.Dimension)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TensorShapeProto_Dimension* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TensorShapeProto_Dimension>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TensorShapeProto.Dimension)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TensorShapeProto.Dimension)
-    MergeFrom(*source);
-  }
+void TensorShapeProto_Dimension::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TensorShapeProto_Dimension*>(&from));
 }
 
 void TensorShapeProto_Dimension::MergeFrom(const TensorShapeProto_Dimension& from) {
@@ -8561,13 +7671,6 @@ void TensorShapeProto_Dimension::MergeFrom(const TensorShapeProto_Dimension& fro
   }
 }
 
-void TensorShapeProto_Dimension::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TensorShapeProto.Dimension)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void TensorShapeProto_Dimension::CopyFrom(const TensorShapeProto_Dimension& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:onnx.TensorShapeProto.Dimension)
   if (&from == this) return;
@@ -8588,16 +7691,12 @@ void TensorShapeProto_Dimension::InternalSwap(TensorShapeProto_Dimension* other)
   denotation_.Swap(&other->denotation_);
   std::swap(value_, other->value_);
   std::swap(_oneof_case_[0], other->_oneof_case_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TensorShapeProto_Dimension::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TensorShapeProto_Dimension_descriptor_;
-  metadata.reflection = TensorShapeProto_Dimension_reflection_;
-  return metadata;
+::std::string TensorShapeProto_Dimension::GetTypeName() const {
+  return "onnx.TensorShapeProto.Dimension";
 }
 
 
@@ -8608,7 +7707,7 @@ const int TensorShapeProto::kDimFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TensorShapeProto::TensorShapeProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TensorShapeProto)
 }
@@ -8618,8 +7717,8 @@ void TensorShapeProto::InitAsDefaultInstance() {
 }
 
 TensorShapeProto::TensorShapeProto(const TensorShapeProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TensorShapeProto)
@@ -8636,7 +7735,11 @@ TensorShapeProto::~TensorShapeProto() {
 }
 
 void TensorShapeProto::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -8645,13 +7748,12 @@ void TensorShapeProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TensorShapeProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TensorShapeProto_descriptor_;
-}
-
 const TensorShapeProto& TensorShapeProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -8722,25 +7824,11 @@ void TensorShapeProto::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_start:onnx.TensorShapeProto)
   // repeated .onnx.TensorShapeProto.Dimension dim = 1;
   for (unsigned int i = 0, n = this->dim_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1, this->dim(i), output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TensorShapeProto)
-}
-
-::google::protobuf::uint8* TensorShapeProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TensorShapeProto)
-  // repeated .onnx.TensorShapeProto.Dimension dim = 1;
-  for (unsigned int i = 0, n = this->dim_size(); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        1, this->dim(i), false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TensorShapeProto)
-  return target;
 }
 
 int TensorShapeProto::ByteSize() const {
@@ -8761,21 +7849,9 @@ int TensorShapeProto::ByteSize() const {
   return total_size;
 }
 
-void TensorShapeProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TensorShapeProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TensorShapeProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TensorShapeProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TensorShapeProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TensorShapeProto)
-    MergeFrom(*source);
-  }
+void TensorShapeProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TensorShapeProto*>(&from));
 }
 
 void TensorShapeProto::MergeFrom(const TensorShapeProto& from) {
@@ -8784,13 +7860,6 @@ void TensorShapeProto::MergeFrom(const TensorShapeProto& from) {
     ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
   }
   dim_.MergeFrom(from.dim_);
-}
-
-void TensorShapeProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TensorShapeProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void TensorShapeProto::CopyFrom(const TensorShapeProto& from) {
@@ -8811,16 +7880,12 @@ void TensorShapeProto::Swap(TensorShapeProto* other) {
 }
 void TensorShapeProto::InternalSwap(TensorShapeProto* other) {
   dim_.UnsafeArenaSwap(&other->dim_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TensorShapeProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TensorShapeProto_descriptor_;
-  metadata.reflection = TensorShapeProto_reflection_;
-  return metadata;
+::std::string TensorShapeProto::GetTypeName() const {
+  return "onnx.TensorShapeProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -9033,19 +8098,24 @@ const int TypeProto_Tensor::kShapeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TypeProto_Tensor::TypeProto_Tensor()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TypeProto.Tensor)
 }
 
 void TypeProto_Tensor::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  shape_ = const_cast< ::onnx::TensorShapeProto*>(
+      ::onnx::TensorShapeProto::internal_default_instance());
+#else
   shape_ = const_cast< ::onnx::TensorShapeProto*>(&::onnx::TensorShapeProto::default_instance());
+#endif
 }
 
 TypeProto_Tensor::TypeProto_Tensor(const TypeProto_Tensor& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TypeProto.Tensor)
@@ -9064,7 +8134,11 @@ TypeProto_Tensor::~TypeProto_Tensor() {
 }
 
 void TypeProto_Tensor::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete shape_;
   }
 }
@@ -9074,13 +8148,12 @@ void TypeProto_Tensor::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TypeProto_Tensor::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TypeProto_Tensor_descriptor_;
-}
-
 const TypeProto_Tensor& TypeProto_Tensor::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -9169,30 +8242,11 @@ void TypeProto_Tensor::SerializeWithCachedSizes(
 
   // optional .onnx.TensorShapeProto shape = 2;
   if (this->has_shape()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->shape_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TypeProto.Tensor)
-}
-
-::google::protobuf::uint8* TypeProto_Tensor::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TypeProto.Tensor)
-  // optional int32 elem_type = 1;
-  if (this->elem_type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->elem_type(), target);
-  }
-
-  // optional .onnx.TensorShapeProto shape = 2;
-  if (this->has_shape()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        2, *this->shape_, false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TypeProto.Tensor)
-  return target;
 }
 
 int TypeProto_Tensor::ByteSize() const {
@@ -9219,21 +8273,9 @@ int TypeProto_Tensor::ByteSize() const {
   return total_size;
 }
 
-void TypeProto_Tensor::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TypeProto.Tensor)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TypeProto_Tensor* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TypeProto_Tensor>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TypeProto.Tensor)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TypeProto.Tensor)
-    MergeFrom(*source);
-  }
+void TypeProto_Tensor::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TypeProto_Tensor*>(&from));
 }
 
 void TypeProto_Tensor::MergeFrom(const TypeProto_Tensor& from) {
@@ -9247,13 +8289,6 @@ void TypeProto_Tensor::MergeFrom(const TypeProto_Tensor& from) {
   if (from.has_shape()) {
     mutable_shape()->::onnx::TensorShapeProto::MergeFrom(from.shape());
   }
-}
-
-void TypeProto_Tensor::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TypeProto.Tensor)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void TypeProto_Tensor::CopyFrom(const TypeProto_Tensor& from) {
@@ -9275,16 +8310,12 @@ void TypeProto_Tensor::Swap(TypeProto_Tensor* other) {
 void TypeProto_Tensor::InternalSwap(TypeProto_Tensor* other) {
   std::swap(elem_type_, other->elem_type_);
   std::swap(shape_, other->shape_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TypeProto_Tensor::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TypeProto_Tensor_descriptor_;
-  metadata.reflection = TypeProto_Tensor_reflection_;
-  return metadata;
+::std::string TypeProto_Tensor::GetTypeName() const {
+  return "onnx.TypeProto.Tensor";
 }
 
 
@@ -9295,19 +8326,24 @@ const int TypeProto_Sequence::kElemTypeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TypeProto_Sequence::TypeProto_Sequence()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TypeProto.Sequence)
 }
 
 void TypeProto_Sequence::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  elem_type_ = const_cast< ::onnx::TypeProto*>(
+      ::onnx::TypeProto::internal_default_instance());
+#else
   elem_type_ = const_cast< ::onnx::TypeProto*>(&::onnx::TypeProto::default_instance());
+#endif
 }
 
 TypeProto_Sequence::TypeProto_Sequence(const TypeProto_Sequence& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TypeProto.Sequence)
@@ -9325,7 +8361,11 @@ TypeProto_Sequence::~TypeProto_Sequence() {
 }
 
 void TypeProto_Sequence::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete elem_type_;
   }
 }
@@ -9335,13 +8375,12 @@ void TypeProto_Sequence::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TypeProto_Sequence::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TypeProto_Sequence_descriptor_;
-}
-
 const TypeProto_Sequence& TypeProto_Sequence::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -9409,25 +8448,11 @@ void TypeProto_Sequence::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_start:onnx.TypeProto.Sequence)
   // optional .onnx.TypeProto elem_type = 1;
   if (this->has_elem_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1, *this->elem_type_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TypeProto.Sequence)
-}
-
-::google::protobuf::uint8* TypeProto_Sequence::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TypeProto.Sequence)
-  // optional .onnx.TypeProto elem_type = 1;
-  if (this->has_elem_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        1, *this->elem_type_, false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TypeProto.Sequence)
-  return target;
 }
 
 int TypeProto_Sequence::ByteSize() const {
@@ -9447,21 +8472,9 @@ int TypeProto_Sequence::ByteSize() const {
   return total_size;
 }
 
-void TypeProto_Sequence::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TypeProto.Sequence)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TypeProto_Sequence* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TypeProto_Sequence>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TypeProto.Sequence)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TypeProto.Sequence)
-    MergeFrom(*source);
-  }
+void TypeProto_Sequence::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TypeProto_Sequence*>(&from));
 }
 
 void TypeProto_Sequence::MergeFrom(const TypeProto_Sequence& from) {
@@ -9472,13 +8485,6 @@ void TypeProto_Sequence::MergeFrom(const TypeProto_Sequence& from) {
   if (from.has_elem_type()) {
     mutable_elem_type()->::onnx::TypeProto::MergeFrom(from.elem_type());
   }
-}
-
-void TypeProto_Sequence::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TypeProto.Sequence)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void TypeProto_Sequence::CopyFrom(const TypeProto_Sequence& from) {
@@ -9499,16 +8505,12 @@ void TypeProto_Sequence::Swap(TypeProto_Sequence* other) {
 }
 void TypeProto_Sequence::InternalSwap(TypeProto_Sequence* other) {
   std::swap(elem_type_, other->elem_type_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TypeProto_Sequence::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TypeProto_Sequence_descriptor_;
-  metadata.reflection = TypeProto_Sequence_reflection_;
-  return metadata;
+::std::string TypeProto_Sequence::GetTypeName() const {
+  return "onnx.TypeProto.Sequence";
 }
 
 
@@ -9520,19 +8522,24 @@ const int TypeProto_Map::kValueTypeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TypeProto_Map::TypeProto_Map()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TypeProto.Map)
 }
 
 void TypeProto_Map::InitAsDefaultInstance() {
   _is_default_instance_ = true;
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  value_type_ = const_cast< ::onnx::TypeProto*>(
+      ::onnx::TypeProto::internal_default_instance());
+#else
   value_type_ = const_cast< ::onnx::TypeProto*>(&::onnx::TypeProto::default_instance());
+#endif
 }
 
 TypeProto_Map::TypeProto_Map(const TypeProto_Map& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TypeProto.Map)
@@ -9551,7 +8558,11 @@ TypeProto_Map::~TypeProto_Map() {
 }
 
 void TypeProto_Map::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
     delete value_type_;
   }
 }
@@ -9561,13 +8572,12 @@ void TypeProto_Map::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TypeProto_Map::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TypeProto_Map_descriptor_;
-}
-
 const TypeProto_Map& TypeProto_Map::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -9656,30 +8666,11 @@ void TypeProto_Map::SerializeWithCachedSizes(
 
   // optional .onnx.TypeProto value_type = 2;
   if (this->has_value_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->value_type_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TypeProto.Map)
-}
-
-::google::protobuf::uint8* TypeProto_Map::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TypeProto.Map)
-  // optional int32 key_type = 1;
-  if (this->key_type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->key_type(), target);
-  }
-
-  // optional .onnx.TypeProto value_type = 2;
-  if (this->has_value_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        2, *this->value_type_, false, target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TypeProto.Map)
-  return target;
 }
 
 int TypeProto_Map::ByteSize() const {
@@ -9706,21 +8697,9 @@ int TypeProto_Map::ByteSize() const {
   return total_size;
 }
 
-void TypeProto_Map::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TypeProto.Map)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TypeProto_Map* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TypeProto_Map>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TypeProto.Map)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TypeProto.Map)
-    MergeFrom(*source);
-  }
+void TypeProto_Map::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TypeProto_Map*>(&from));
 }
 
 void TypeProto_Map::MergeFrom(const TypeProto_Map& from) {
@@ -9734,13 +8713,6 @@ void TypeProto_Map::MergeFrom(const TypeProto_Map& from) {
   if (from.has_value_type()) {
     mutable_value_type()->::onnx::TypeProto::MergeFrom(from.value_type());
   }
-}
-
-void TypeProto_Map::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TypeProto.Map)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void TypeProto_Map::CopyFrom(const TypeProto_Map& from) {
@@ -9762,16 +8734,12 @@ void TypeProto_Map::Swap(TypeProto_Map* other) {
 void TypeProto_Map::InternalSwap(TypeProto_Map* other) {
   std::swap(key_type_, other->key_type_);
   std::swap(value_type_, other->value_type_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TypeProto_Map::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TypeProto_Map_descriptor_;
-  metadata.reflection = TypeProto_Map_reflection_;
-  return metadata;
+::std::string TypeProto_Map::GetTypeName() const {
+  return "onnx.TypeProto.Map";
 }
 
 
@@ -9785,21 +8753,18 @@ const int TypeProto::kDenotationFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TypeProto::TypeProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.TypeProto)
 }
 
 void TypeProto::InitAsDefaultInstance() {
   _is_default_instance_ = true;
-  TypeProto_default_oneof_instance_->tensor_type_ = const_cast< ::onnx::TypeProto_Tensor*>(&::onnx::TypeProto_Tensor::default_instance());
-  TypeProto_default_oneof_instance_->sequence_type_ = const_cast< ::onnx::TypeProto_Sequence*>(&::onnx::TypeProto_Sequence::default_instance());
-  TypeProto_default_oneof_instance_->map_type_ = const_cast< ::onnx::TypeProto_Map*>(&::onnx::TypeProto_Map::default_instance());
 }
 
 TypeProto::TypeProto(const TypeProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.TypeProto)
@@ -9823,7 +8788,11 @@ void TypeProto::SharedDtor() {
   if (has_value()) {
     clear_value();
   }
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -9832,13 +8801,12 @@ void TypeProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* TypeProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return TypeProto_descriptor_;
-}
-
 const TypeProto& TypeProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -9972,19 +8940,19 @@ void TypeProto::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_start:onnx.TypeProto)
   // optional .onnx.TypeProto.Tensor tensor_type = 1;
   if (has_tensor_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1, *value_.tensor_type_, output);
   }
 
   // optional .onnx.TypeProto.Sequence sequence_type = 4;
   if (has_sequence_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       4, *value_.sequence_type_, output);
   }
 
   // optional .onnx.TypeProto.Map map_type = 5;
   if (has_map_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       5, *value_.map_type_, output);
   }
 
@@ -9999,45 +8967,6 @@ void TypeProto::SerializeWithCachedSizes(
   }
 
   // @@protoc_insertion_point(serialize_end:onnx.TypeProto)
-}
-
-::google::protobuf::uint8* TypeProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.TypeProto)
-  // optional .onnx.TypeProto.Tensor tensor_type = 1;
-  if (has_tensor_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        1, *value_.tensor_type_, false, target);
-  }
-
-  // optional .onnx.TypeProto.Sequence sequence_type = 4;
-  if (has_sequence_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        4, *value_.sequence_type_, false, target);
-  }
-
-  // optional .onnx.TypeProto.Map map_type = 5;
-  if (has_map_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        5, *value_.map_type_, false, target);
-  }
-
-  // optional string denotation = 6;
-  if (this->denotation().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->denotation().data(), this->denotation().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.TypeProto.denotation");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        6, this->denotation(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.TypeProto)
-  return target;
 }
 
 int TypeProto::ByteSize() const {
@@ -10083,21 +9012,9 @@ int TypeProto::ByteSize() const {
   return total_size;
 }
 
-void TypeProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.TypeProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const TypeProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const TypeProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.TypeProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.TypeProto)
-    MergeFrom(*source);
-  }
+void TypeProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const TypeProto*>(&from));
 }
 
 void TypeProto::MergeFrom(const TypeProto& from) {
@@ -10128,13 +9045,6 @@ void TypeProto::MergeFrom(const TypeProto& from) {
   }
 }
 
-void TypeProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.TypeProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void TypeProto::CopyFrom(const TypeProto& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:onnx.TypeProto)
   if (&from == this) return;
@@ -10155,16 +9065,12 @@ void TypeProto::InternalSwap(TypeProto* other) {
   denotation_.Swap(&other->denotation_);
   std::swap(value_, other->value_);
   std::swap(_oneof_case_[0], other->_oneof_case_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata TypeProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = TypeProto_descriptor_;
-  metadata.reflection = TypeProto_reflection_;
-  return metadata;
+::std::string TypeProto::GetTypeName() const {
+  return "onnx.TypeProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -10194,7 +9100,11 @@ void TypeProto_Tensor::clear_shape() {
 }
 const ::onnx::TensorShapeProto& TypeProto_Tensor::shape() const {
   // @@protoc_insertion_point(field_get:onnx.TypeProto.Tensor.shape)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return shape_ != NULL ? *shape_ : *default_instance().shape_;
+#else
   return shape_ != NULL ? *shape_ : *default_instance_->shape_;
+#endif
 }
 ::onnx::TensorShapeProto* TypeProto_Tensor::mutable_shape() {
   
@@ -10236,7 +9146,11 @@ void TypeProto_Sequence::clear_elem_type() {
 }
 const ::onnx::TypeProto& TypeProto_Sequence::elem_type() const {
   // @@protoc_insertion_point(field_get:onnx.TypeProto.Sequence.elem_type)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return elem_type_ != NULL ? *elem_type_ : *default_instance().elem_type_;
+#else
   return elem_type_ != NULL ? *elem_type_ : *default_instance_->elem_type_;
+#endif
 }
 ::onnx::TypeProto* TypeProto_Sequence::mutable_elem_type() {
   
@@ -10292,7 +9206,11 @@ void TypeProto_Map::clear_value_type() {
 }
 const ::onnx::TypeProto& TypeProto_Map::value_type() const {
   // @@protoc_insertion_point(field_get:onnx.TypeProto.Map.value_type)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return value_type_ != NULL ? *value_type_ : *default_instance().value_type_;
+#else
   return value_type_ != NULL ? *value_type_ : *default_instance_->value_type_;
+#endif
 }
 ::onnx::TypeProto* TypeProto_Map::mutable_value_type() {
   
@@ -10531,7 +9449,7 @@ const int OperatorSetIdProto::kVersionFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 OperatorSetIdProto::OperatorSetIdProto()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _arena_ptr_(NULL) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:onnx.OperatorSetIdProto)
 }
@@ -10541,8 +9459,8 @@ void OperatorSetIdProto::InitAsDefaultInstance() {
 }
 
 OperatorSetIdProto::OperatorSetIdProto(const OperatorSetIdProto& from)
-  : ::google::protobuf::Message(),
-    _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(),
+    _arena_ptr_(NULL) {
   SharedCtor();
   MergeFrom(from);
   // @@protoc_insertion_point(copy_constructor:onnx.OperatorSetIdProto)
@@ -10563,7 +9481,11 @@ OperatorSetIdProto::~OperatorSetIdProto() {
 
 void OperatorSetIdProto::SharedDtor() {
   domain_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
   if (this != default_instance_) {
+  #endif
   }
 }
 
@@ -10572,13 +9494,12 @@ void OperatorSetIdProto::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* OperatorSetIdProto::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return OperatorSetIdProto_descriptor_;
-}
-
 const OperatorSetIdProto& OperatorSetIdProto::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_onnx_2eproto3();
+#else
   if (default_instance_ == NULL) protobuf_AddDesc_onnx_2eproto3();
+#endif
   return *default_instance_;
 }
 
@@ -10681,29 +9602,6 @@ void OperatorSetIdProto::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_end:onnx.OperatorSetIdProto)
 }
 
-::google::protobuf::uint8* OperatorSetIdProto::InternalSerializeWithCachedSizesToArray(
-    bool /*deterministic*/, ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:onnx.OperatorSetIdProto)
-  // optional string domain = 1;
-  if (this->domain().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->domain().data(), this->domain().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "onnx.OperatorSetIdProto.domain");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->domain(), target);
-  }
-
-  // optional int64 version = 2;
-  if (this->version() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->version(), target);
-  }
-
-  // @@protoc_insertion_point(serialize_to_array_end:onnx.OperatorSetIdProto)
-  return target;
-}
-
 int OperatorSetIdProto::ByteSize() const {
 // @@protoc_insertion_point(message_byte_size_start:onnx.OperatorSetIdProto)
   int total_size = 0;
@@ -10728,21 +9626,9 @@ int OperatorSetIdProto::ByteSize() const {
   return total_size;
 }
 
-void OperatorSetIdProto::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:onnx.OperatorSetIdProto)
-  if (GOOGLE_PREDICT_FALSE(&from == this)) {
-    ::google::protobuf::internal::MergeFromFail(__FILE__, __LINE__);
-  }
-  const OperatorSetIdProto* source = 
-      ::google::protobuf::internal::DynamicCastToGenerated<const OperatorSetIdProto>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:onnx.OperatorSetIdProto)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:onnx.OperatorSetIdProto)
-    MergeFrom(*source);
-  }
+void OperatorSetIdProto::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const OperatorSetIdProto*>(&from));
 }
 
 void OperatorSetIdProto::MergeFrom(const OperatorSetIdProto& from) {
@@ -10757,13 +9643,6 @@ void OperatorSetIdProto::MergeFrom(const OperatorSetIdProto& from) {
   if (from.version() != 0) {
     set_version(from.version());
   }
-}
-
-void OperatorSetIdProto::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:onnx.OperatorSetIdProto)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void OperatorSetIdProto::CopyFrom(const OperatorSetIdProto& from) {
@@ -10785,16 +9664,12 @@ void OperatorSetIdProto::Swap(OperatorSetIdProto* other) {
 void OperatorSetIdProto::InternalSwap(OperatorSetIdProto* other) {
   domain_.Swap(&other->domain_);
   std::swap(version_, other->version_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _unknown_fields_.Swap(&other->_unknown_fields_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata OperatorSetIdProto::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = OperatorSetIdProto_descriptor_;
-  metadata.reflection = OperatorSetIdProto_reflection_;
-  return metadata;
+::std::string OperatorSetIdProto::GetTypeName() const {
+  return "onnx.OperatorSetIdProto";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
