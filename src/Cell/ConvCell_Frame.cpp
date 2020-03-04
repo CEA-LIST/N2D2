@@ -237,11 +237,16 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
 
     Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffSharedSynapses.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
 void N2D2::ConvCell_Frame<T>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame<T>::backPropagate();
 
     const T alpha = T(1.0);
@@ -263,6 +268,7 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
                                                mMapping.rows(offset,
                                                           mInputs[k].dimZ()));
 
+        mDiffSharedSynapses[k].setValid();
         offset += mInputs[k].dimZ();
     }
 
@@ -271,6 +277,8 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
 
         ConvCell_Frame_Kernels::backwardBias<T>(&alpha, mDiffInputs,
                                              &beta, mDiffBias);
+        
+        mDiffBias.setValid();
     }
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
@@ -305,11 +313,14 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
 template <class T>
 void N2D2::ConvCell_Frame<T>::update()
 {
-    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
-        mWeightsSolvers[k]->update(
-            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+        if (mDiffSharedSynapses[k].isValid()) {
+            mWeightsSolvers[k]->update(
+                mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+        }
+    }
 
-    if (!mNoBias)
+    if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 

@@ -148,7 +148,7 @@ void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 template <class T>
 void N2D2::PoolCell_Frame<T>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame<T>::backPropagate();

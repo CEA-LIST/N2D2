@@ -37,6 +37,11 @@ public:
              const std::vector<std::shared_ptr<Cell> >& parents,
              IniParser& iniConfig,
              const std::string& section);
+    static void generateParams(const std::shared_ptr<DropoutCell>& cell,
+                                    IniParser& iniConfig,
+                                    const std::string& section,
+                                    const std::string& model,
+                                    const DataType& dataType);
 
 private:
     static Registrar<CellGenerator> mRegistrar;

@@ -124,7 +124,7 @@ void N2D2::LRNCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 template <class T>
 void N2D2::LRNCell_Frame_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;

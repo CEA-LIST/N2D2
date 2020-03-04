@@ -799,6 +799,9 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 
 void N2D2::AnchorCell_Frame::backPropagate()
 {
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+        return;
+
     Cell_Frame<Float_T>::backPropagate();
 
     const unsigned int nbAnchors = mAnchors.size();

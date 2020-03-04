@@ -237,7 +237,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     const unsigned int nbInputs = mInputs.size();

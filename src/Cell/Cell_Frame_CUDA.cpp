@@ -316,6 +316,8 @@ double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
 {
     mLossMem.resize(mOutputs.dims());
     const double loss = applyLossInternal(targetVal, defaultVal);
+
+    mDiffInputs.setValid();
     return (loss / mOutputs.dimB());
 }
 
@@ -448,6 +450,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLoss()
         loss += error * error;
     }
 
+    mDiffInputs.setValid();
     mDiffInputs.synchronizeHToD();
     return (loss / mOutputs.dimB());
 }
@@ -476,6 +479,7 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
     for (unsigned int index = 0; index < mOutputs.size(); ++index)
         mDiffInputs(index) = errors(index);
 
+    mDiffInputs.setValid();
     mDiffInputs.synchronizeHToD();
 }
 

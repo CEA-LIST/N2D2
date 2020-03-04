@@ -125,7 +125,7 @@ void N2D2::SoftmaxCell_Frame<T>::propagate(bool /*inference*/)
 template <class T>
 void N2D2::SoftmaxCell_Frame<T>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     const unsigned int size = mInputs.dimB() * getNbChannels();

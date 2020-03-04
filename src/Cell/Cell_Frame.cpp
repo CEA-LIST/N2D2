@@ -357,6 +357,8 @@ double N2D2::Cell_Frame<T>::applyLoss(double targetVal,
         }
     }
 
+    mDiffInputs.setValid();
+
     return (loss / mOutputs.dimB());
 }
 
@@ -396,6 +398,8 @@ double N2D2::Cell_Frame<T>::applyLoss()
         loss += error * error;
     }
 
+    mDiffInputs.setValid();
+
     return (loss / mOutputs.dimB());
 }
 
@@ -422,6 +426,8 @@ void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
 
     for (unsigned int index = 0; index < mOutputs.size(); ++index)
         mDiffInputs(index) = errors(index);
+
+    mDiffInputs.setValid();
 }
 
 template <class T>

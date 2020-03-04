@@ -69,10 +69,8 @@ public:
                              const std::shared_ptr<DeepNet>& deepNet,
                              IniParser& iniConfig,
                              const std::string& section);
-
-protected:
     static std::map<std::string, std::string>
-    getConfig(const std::string& model, IniParser& iniConfig);
+        getConfig(const std::string& model, IniParser& iniConfig);
 };
 }
 

@@ -165,7 +165,7 @@ void N2D2::ResizeCell_Frame::propagateNearestNeighbor(bool /*inference*/) {
 
 void N2D2::ResizeCell_Frame::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame<Float_T>::backPropagate();

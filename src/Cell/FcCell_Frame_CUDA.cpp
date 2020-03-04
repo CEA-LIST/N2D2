@@ -369,11 +369,16 @@ void N2D2::FcCell_Frame_CUDA<double>::propagate(bool inference)
 
     Cell_Frame_CUDA<double>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffSynapses.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <>
 void N2D2::FcCell_Frame_CUDA<half_float::half>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame_CUDA<half_float::half>::backPropagate();
 
     //  1   <-->    batch   <-->    mInputs.b()
@@ -406,6 +411,8 @@ void N2D2::FcCell_Frame_CUDA<half_float::half>::backPropagate()
             reinterpret_cast<const __half*>(&beta),
             reinterpret_cast<__half*>(mDiffSynapses[k].getDevicePtr()),
             inputSize));
+
+        mDiffSynapses[k].setValid();
     }
 
     if (!mNoBias) {
@@ -429,6 +436,8 @@ void N2D2::FcCell_Frame_CUDA<half_float::half>::backPropagate()
             reinterpret_cast<const __half*>(&beta),
             reinterpret_cast<__half*>(mDiffBias.getDevicePtr()),
             1));
+
+        mDiffBias.setValid();
     }
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
@@ -473,6 +482,9 @@ void N2D2::FcCell_Frame_CUDA<half_float::half>::backPropagate()
 template <>
 void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame_CUDA<float>::backPropagate();
 
     //  1   <-->    batch   <-->    mInputs.b()
@@ -503,6 +515,8 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                         &beta,
                                         mDiffSynapses[k].getDevicePtr(),
                                         inputSize));
+
+        mDiffSynapses[k].setValid();
     }
 
     if (!mNoBias) {
@@ -521,6 +535,8 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                         &beta,
                                         mDiffBias.getDevicePtr(),
                                         1));
+
+        mDiffBias.setValid();
     }
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
@@ -563,6 +579,9 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
 template <>
 void N2D2::FcCell_Frame_CUDA<double>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame_CUDA<double>::backPropagate();
 
     //  1   <-->    batch   <-->    mInputs.b()
@@ -593,6 +612,8 @@ void N2D2::FcCell_Frame_CUDA<double>::backPropagate()
                                         &beta,
                                         mDiffSynapses[k].getDevicePtr(),
                                         inputSize));
+
+        mDiffSynapses[k].setValid();
     }
 
     if (!mNoBias) {
@@ -611,6 +632,8 @@ void N2D2::FcCell_Frame_CUDA<double>::backPropagate()
                                         &beta,
                                         mDiffBias.getDevicePtr(),
                                         1));
+
+        mDiffBias.setValid();
     }
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
@@ -655,16 +678,20 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::update()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
-        mWeightsSolvers[k]
-            ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+        if (mDiffSynapses[k].isValid()) {
+            mWeightsSolvers[k]
+                ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+        }
     }
 
-    double minVal, maxVal;
-    //TODO: implement common scaling for all the solvers in the cell
-    std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
-    mActivation->setPreQuantizeScaling(maxVal);
+    if (mActivation) {
+        double minVal, maxVal;
+        //TODO: implement common scaling for all the solvers in the cell
+        std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
+        mActivation->setPreQuantizeScaling(maxVal);
+    }
 
-    if (!mNoBias)
+    if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
 }
 

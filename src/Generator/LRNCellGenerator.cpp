@@ -64,10 +64,7 @@ N2D2::LRNCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
     }
 
     // Set configuration parameters defined in the INI file
-    cell->setParameters(getConfig(model, iniConfig));
-
-    // Load configuration file (if exists)
-    cell->loadParameters(section + ".cfg", true);
+    generateParams(cell, iniConfig, section, model, dataType);
 
     // Connect the cell to the parents
     for (std::vector<std::shared_ptr<Cell> >::const_iterator it
@@ -92,4 +89,16 @@ N2D2::LRNCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet,
     std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
+}
+
+void N2D2::LRNCellGenerator::generateParams(const std::shared_ptr<LRNCell>& cell,
+                                  IniParser& iniConfig,
+                                  const std::string& section,
+                                  const std::string& model,
+                                  const DataType& /*dataType*/)
+{
+    cell->setParameters(getConfig(model, iniConfig));
+
+    // Load configuration file (if exists)
+    cell->loadParameters(section + ".cfg", true);
 }

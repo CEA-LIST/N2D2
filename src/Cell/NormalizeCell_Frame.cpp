@@ -107,6 +107,9 @@ void N2D2::NormalizeCell_Frame<T>::propagate(bool /*inference*/) {
 
 template<class T>
 void N2D2::NormalizeCell_Frame<T>::backPropagate() {
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+        return;
+
     Cell_Frame<T>::backPropagate();
 
     const T beta((mDiffOutputs[0].isValid()) ? 1.0 : 0.0);

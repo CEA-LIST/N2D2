@@ -176,7 +176,7 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::ResizeCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame_CUDA<Float_T>::backPropagate();

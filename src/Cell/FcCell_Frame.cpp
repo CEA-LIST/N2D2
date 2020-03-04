@@ -217,11 +217,16 @@ void N2D2::FcCell_Frame<T>::propagate(bool inference)
 
     Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffSynapses.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
 void N2D2::FcCell_Frame<T>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame<T>::backPropagate();
 
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
@@ -308,6 +313,8 @@ void N2D2::FcCell_Frame<T>::backPropagate()
                 }
             }
         }
+
+        mDiffSynapses[k].setValid();
     }
 
     if (!mNoBias) {
@@ -323,6 +330,8 @@ void N2D2::FcCell_Frame<T>::backPropagate()
 
             mDiffBias(output) = sum + beta * mDiffBias(output);
         }
+
+        mDiffBias.setValid();
     }
 
     mDiffOutputs.synchronizeHToD();
@@ -331,11 +340,14 @@ void N2D2::FcCell_Frame<T>::backPropagate()
 template <class T>
 void N2D2::FcCell_Frame<T>::update()
 {
-    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
-        mWeightsSolvers[k]
-            ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+        if (mDiffSynapses[k].isValid()) {
+            mWeightsSolvers[k]
+                ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+        }
+    }
 
-    if (!mNoBias)
+    if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
 }
 

@@ -40,6 +40,11 @@ public:
                                               <std::shared_ptr<Cell> >& parents,
                                               IniParser& iniConfig,
                                               const std::string& section);
+    static void generateParams(const std::shared_ptr<ConvCell>& cell,
+                                    IniParser& iniConfig,
+                                    const std::string& section,
+                                    const std::string& model,
+                                    const DataType& dataType);
     static void postGenerate(const std::shared_ptr<Cell>& cell,
                              const std::shared_ptr<DeepNet>& deepNet,
                              IniParser& iniConfig,

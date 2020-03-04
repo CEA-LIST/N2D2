@@ -238,11 +238,16 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffScale.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame_CUDA<T>::backPropagate();
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
@@ -281,6 +286,9 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
                                         mSavedMean.getDevicePtr(),
                                         mSavedVariance.getDevicePtr()));
 
+    mDiffScale.setValid();
+    mDiffBias.setValid();
+
     mDiffOutputs[0].deviceTensor() = *diffOutput0;
     mDiffOutputs[0].setValid();
     mDiffOutputs.synchronizeDToHBased();
@@ -289,8 +297,11 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::update()
 {
-    mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
-    mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+    if (mDiffScale.isValid())
+        mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+
+    if (mDiffBias.isValid())
+        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
 template <class T>

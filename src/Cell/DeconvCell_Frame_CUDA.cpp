@@ -408,11 +408,16 @@ void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool inference)
 
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffSharedSynapses.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame_CUDA<T>::backPropagate();
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
@@ -487,6 +492,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
             }
         }
 
+        mDiffSharedSynapses[k].setValid();
         nbChannels += mInputs[k].dimZ();
     }
 
@@ -502,6 +508,8 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
                                          &beta,
                                          mDiffBias.getCudnnTensorDesc(),
                                          mDiffBias.getDevicePtr()));
+
+        mDiffBias.setValid();
     }
 
     /** Si il ne s'agit pas de la première couche */
@@ -541,11 +549,14 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::update()
 {
-    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k)
-        mWeightsSolvers[k]->update(
-            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+    for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+        if (mDiffSharedSynapses[k].isValid()) {
+            mWeightsSolvers[k]->update(
+                mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+        }
+    }
 
-    if (!mNoBias)
+    if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 

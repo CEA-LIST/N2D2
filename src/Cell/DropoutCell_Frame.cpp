@@ -142,7 +142,7 @@ void N2D2::DropoutCell_Frame<T>::propagate(bool inference)
 template <class T>
 void N2D2::DropoutCell_Frame<T>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     unsigned int offset = 0;

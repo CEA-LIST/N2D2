@@ -256,11 +256,16 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 
     Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffScale.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame<T>::backPropagate();
 
     const T betaScale = (mScaleSolver->isNewIteration()) ? T(0.0) : T(1.0);
@@ -360,6 +365,9 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
         outputOffset += input.dimZ();
     }
 
+    mDiffScale.setValid();
+    mDiffBias.setValid();
+
     if (!mDiffOutputs.empty()) {
         mDiffOutputs.setValid();
         mDiffOutputs.synchronizeHToD();
@@ -373,8 +381,11 @@ void N2D2::BatchNormCell_Frame<T>::update()
     assert(mBias->size() == mDiffBias.size());
     assert(mScale->size() == mBias->size());
 
-    mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
-    mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+    if (mDiffScale.isValid())
+        mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+
+    if (mDiffBias.isValid())
+        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 
 template <class T>

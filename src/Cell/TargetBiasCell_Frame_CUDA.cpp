@@ -158,6 +158,11 @@ void N2D2::TargetBiasCell_Frame_CUDA<double>::propagate(bool inference) {
 
 template <>
 void N2D2::TargetBiasCell_Frame_CUDA<half_float::half>::backPropagate() {
+    if (!mDiffInputs.isValid())
+        return;
+
+    Cell_Frame_CUDA<half_float::half>::backPropagate();
+
     const half_float::half alpha(1.0f);
 
     std::shared_ptr<CudaDeviceTensor<half_float::half> > diffOutput0
@@ -176,6 +181,8 @@ void N2D2::TargetBiasCell_Frame_CUDA<half_float::half>::backPropagate() {
                        mDiffInputs.getDevicePtr(),
                        mDiffOutputs[0].size() * sizeof(half_float::half),
                        cudaMemcpyDeviceToDevice));
+
+        mDiffOutputs[0].setValid();
     }
 
     mDiffOutputs[0].deviceTensor() = *diffOutput0;
@@ -183,6 +190,11 @@ void N2D2::TargetBiasCell_Frame_CUDA<half_float::half>::backPropagate() {
 
 template <>
 void N2D2::TargetBiasCell_Frame_CUDA<float>::backPropagate() {
+    if (!mDiffInputs.isValid())
+        return;
+
+    Cell_Frame_CUDA<float>::backPropagate();
+
     const float alpha = 1.0f;
 
     std::shared_ptr<CudaDeviceTensor<float> > diffOutput0
@@ -205,6 +217,8 @@ void N2D2::TargetBiasCell_Frame_CUDA<float>::backPropagate() {
                        mDiffInputs.getDevicePtr(),
                        mDiffOutputs[0].size() * sizeof(float),
                        cudaMemcpyDeviceToDevice));
+
+        mDiffOutputs[0].setValid();
     }
 
     mDiffOutputs[0].deviceTensor() = *diffOutput0;
@@ -212,6 +226,11 @@ void N2D2::TargetBiasCell_Frame_CUDA<float>::backPropagate() {
 
 template <>
 void N2D2::TargetBiasCell_Frame_CUDA<double>::backPropagate() {
+    if (!mDiffInputs.isValid())
+        return;
+
+    Cell_Frame_CUDA<double>::backPropagate();
+
     const double alpha = 1.0;
 
     std::shared_ptr<CudaDeviceTensor<double> > diffOutput0
@@ -234,6 +253,8 @@ void N2D2::TargetBiasCell_Frame_CUDA<double>::backPropagate() {
                        mDiffInputs.getDevicePtr(),
                        mDiffOutputs[0].size() * sizeof(double),
                        cudaMemcpyDeviceToDevice));
+
+        mDiffOutputs[0].setValid();
     }
 
     mDiffOutputs[0].deviceTensor() = *diffOutput0;

@@ -65,10 +65,7 @@ N2D2::DropoutCellGenerator::generate(Network& /*network*/, const DeepNet& deepNe
     }
 
     // Set configuration parameters defined in the INI file
-    cell->setParameters(getConfig(model, iniConfig));
-
-    // Load configuration file (if exists)
-    cell->loadParameters(section + ".cfg", true);
+    generateParams(cell, iniConfig, section, model, dataType);
 
     const unsigned int x0 = iniConfig.getProperty
                             <unsigned int>("InputOffsetX", 0);
@@ -95,4 +92,16 @@ N2D2::DropoutCellGenerator::generate(Network& /*network*/, const DeepNet& deepNe
     std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
 
     return cell;
+}
+
+void N2D2::DropoutCellGenerator::generateParams(const std::shared_ptr<DropoutCell>& cell,
+                                  IniParser& iniConfig,
+                                  const std::string& section,
+                                  const std::string& model,
+                                  const DataType& /*dataType*/)
+{
+    cell->setParameters(getConfig(model, iniConfig));
+
+    // Load configuration file (if exists)
+    cell->loadParameters(section + ".cfg", true);
 }

@@ -85,6 +85,32 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/, const DeepNet& deep
     }
 
     // Set configuration parameters defined in the INI file
+    generateParams(cell, iniConfig, section, model, dataType);
+
+    // Connect the cell to the parents
+    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
+         = parents.begin(),
+         itEnd = parents.end();
+         it != itEnd;
+         ++it) {
+        if (!(*it))
+            cell->addInput(sp, 0, 0, sp.getSizeX(), sp.getSizeY());
+        else
+            cell->addInput((*it).get());
+    }
+
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
+
+    return cell;
+}
+
+void N2D2::BatchNormCellGenerator::generateParams(const std::shared_ptr<BatchNormCell>& cell,
+                                  IniParser& iniConfig,
+                                  const std::string& section,
+                                  const std::string& model,
+                                  const DataType& dataType)
+{
     std::shared_ptr<Solver> solvers
         = (dataType == Float16)
             ? SolverGenerator::generate(iniConfig, section, model, Float32, "Solvers")
@@ -134,23 +160,6 @@ N2D2::BatchNormCellGenerator::generate(Network& /*network*/, const DeepNet& deep
 
     // Load configuration file (if exists)
     cell->loadParameters(section + ".cfg", true);
-
-    // Connect the cell to the parents
-    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
-         = parents.begin(),
-         itEnd = parents.end();
-         it != itEnd;
-         ++it) {
-        if (!(*it))
-            cell->addInput(sp, 0, 0, sp.getSizeX(), sp.getSizeY());
-        else
-            cell->addInput((*it).get());
-    }
-
-    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
-    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
-
-    return cell;
 }
 
 void N2D2::BatchNormCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,

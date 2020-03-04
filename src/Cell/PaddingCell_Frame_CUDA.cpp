@@ -133,7 +133,7 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::PaddingCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     unsigned int outputOffset = 0;

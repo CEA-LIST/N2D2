@@ -84,6 +84,44 @@ N2D2::FcCellGenerator::generate(Network& network, const DeepNet& deepNet,
     }
 
     // Set configuration parameters defined in the INI file
+    generateParams(cell, iniConfig, section, model, dataType);
+
+    const unsigned int x0 = iniConfig.getProperty
+                            <unsigned int>("InputOffsetX", 0);
+    const unsigned int y0 = iniConfig.getProperty
+                            <unsigned int>("InputOffsetY", 0);
+    const unsigned int width = iniConfig.getProperty
+                               <unsigned int>("InputWidth", 0);
+    const unsigned int height = iniConfig.getProperty
+                                <unsigned int>("InputHeight", 0);
+
+    // Connect the cell to the parents
+    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
+         = parents.begin(),
+         itEnd = parents.end();
+         it != itEnd;
+         ++it) {
+        if (!(*it))
+            cell->addInput(sp, x0, y0, width, height);
+        else
+            cell->addInput((*it).get(), x0, y0, width, height);
+    }
+
+    std::cout << "  # Synapses: " << cell->getNbSynapses() << std::endl;
+    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
+    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
+
+    cell->writeMap("map/" + section + "_map.dat");
+
+    return cell;
+}
+
+void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
+                                  IniParser& iniConfig,
+                                  const std::string& section,
+                                  const std::string& model,
+                                  const DataType& dataType)
+{
     std::shared_ptr<Solver> solvers
         = SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
 
@@ -138,33 +176,4 @@ N2D2::FcCellGenerator::generate(Network& network, const DeepNet& deepNet,
     if (iniConfig.isProperty("BiasFiller"))
         cell->setBiasFiller(
             FillerGenerator::generate(iniConfig, section, "BiasFiller", dataType));
-
-    const unsigned int x0 = iniConfig.getProperty
-                            <unsigned int>("InputOffsetX", 0);
-    const unsigned int y0 = iniConfig.getProperty
-                            <unsigned int>("InputOffsetY", 0);
-    const unsigned int width = iniConfig.getProperty
-                               <unsigned int>("InputWidth", 0);
-    const unsigned int height = iniConfig.getProperty
-                                <unsigned int>("InputHeight", 0);
-
-    // Connect the cell to the parents
-    for (std::vector<std::shared_ptr<Cell> >::const_iterator it
-         = parents.begin(),
-         itEnd = parents.end();
-         it != itEnd;
-         ++it) {
-        if (!(*it))
-            cell->addInput(sp, x0, y0, width, height);
-        else
-            cell->addInput((*it).get(), x0, y0, width, height);
-    }
-
-    std::cout << "  # Synapses: " << cell->getNbSynapses() << std::endl;
-    std::cout << "  # Inputs dims: " << cell->getInputsDims() << std::endl;
-    std::cout << "  # Outputs dims: " << cell->getOutputsDims() << std::endl;
-
-    cell->writeMap("map/" + section + "_map.dat");
-
-    return cell;
 }

@@ -87,6 +87,9 @@ void N2D2::TargetBiasCell_Frame<T>::propagate(bool inference) {
 
 template<class T>
 void N2D2::TargetBiasCell_Frame<T>::backPropagate() {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame<T>::backPropagate();
 
     const T beta((mDiffOutputs[0].isValid()) ? 1.0 : 0.0);

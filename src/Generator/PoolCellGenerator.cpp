@@ -156,10 +156,7 @@ N2D2::PoolCellGenerator::generate(Network& network, const DeepNet& deepNet,
     }
 
     // Set configuration parameters defined in the INI file
-    cell->setParameters(getConfig(model, iniConfig));
-
-    // Load configuration file (if exists)
-    cell->loadParameters(section + ".cfg", true);
+    generateParams(cell, iniConfig, section, model, dataType);
 
     // Connect the cell to the parents
     MappingGenerator::Mapping defaultMapping
@@ -210,4 +207,16 @@ N2D2::PoolCellGenerator::generate(Network& network, const DeepNet& deepNet,
     cell->writeMap("map/" + section + "_map.dat");
 
     return cell;
+}
+
+void N2D2::PoolCellGenerator::generateParams(const std::shared_ptr<PoolCell>& cell,
+                                  IniParser& iniConfig,
+                                  const std::string& section,
+                                  const std::string& model,
+                                  const DataType& /*dataType*/)
+{
+    cell->setParameters(getConfig(model, iniConfig));
+
+    // Load configuration file (if exists)
+    cell->loadParameters(section + ".cfg", true);
 }

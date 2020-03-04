@@ -32,6 +32,7 @@ namespace N2D2 {
 
 class DeepNet;
 class Network;
+class IniParser;
 
 class DeepNetGenerator {
 public:
@@ -41,13 +42,14 @@ public:
                                                    const std::string& fileName);
 #ifdef ONNX
     static std::shared_ptr<DeepNet> generateFromONNX(Network& network,
-                                                   const std::string& fileName,
-                                                std::shared_ptr<DeepNet> deepNet
-                                                = std::shared_ptr<DeepNet>());
+        const std::string& fileName,
+        IniParser& iniConfig,
+        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>());
 
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
-                                 const onnx::GraphProto& graph);
+        const onnx::GraphProto& graph,
+        IniParser& iniConfig);
     template <class T>
     static Tensor<T> ONNX_unpackTensor(const onnx::TensorProto* tensor,
                                        const std::vector<unsigned int>& expectedDims

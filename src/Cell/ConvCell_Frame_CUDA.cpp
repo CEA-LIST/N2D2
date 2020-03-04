@@ -624,11 +624,16 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
 
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffSharedSynapses.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 {
+    if (!mDiffInputs.isValid())
+        return;
+
     Cell_Frame_CUDA<T>::backPropagate();
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
@@ -701,6 +706,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
             }
         }
 
+        mDiffSharedSynapses[k].setValid();
         nbChannels += mInputs[k].dimZ();
     }
 
@@ -716,6 +722,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
                                          &beta,
                                          mDiffBias.getCudnnTensorDesc(),
                                          mDiffBias.getDevicePtr()));
+
+        mDiffBias.setValid();
     }
 
     /** Si il ne s'agit pas de la première couche */
@@ -769,16 +777,20 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::update()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
-        mWeightsSolvers[k]->update(
-            mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+        if (mDiffSharedSynapses[k].isValid()) {
+            mWeightsSolvers[k]->update(
+                mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+        }
     }
 
-    double minVal, maxVal;
-    //TODO: implement common scaling for all the solvers in the cell
-    std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
-    mActivation->setPreQuantizeScaling(maxVal);
+    if (mActivation) {
+        double minVal, maxVal;
+        //TODO: implement common scaling for all the solvers in the cell
+        std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
+        mActivation->setPreQuantizeScaling(maxVal);
+    }
 
-    if (!mNoBias)
+    if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }
 

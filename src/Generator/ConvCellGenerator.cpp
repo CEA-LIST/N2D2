@@ -199,66 +199,7 @@ N2D2::ConvCellGenerator::generate(Network& network, const DeepNet& deepNet,
             + "] in configuration file: " + iniConfig.getFileName());
     }
 
-    // Set configuration parameters defined in the INI file
-    std::shared_ptr<Solver> solvers = SolverGenerator::generate(iniConfig,
-                                                                section,
-                                                                model,
-                                                                dataType,
-                                                                "Solvers");
-
-    if (solvers) {
-        cell->setBiasSolver(solvers);
-        cell->setWeightsSolver(solvers->clone());
-    }
-
-    std::shared_ptr<Solver> biasSolver = SolverGenerator::generate(iniConfig,
-                                                                   section,
-                                                                   model,
-                                                                   dataType,
-                                                                "BiasSolver");
-
-    if (biasSolver)
-        cell->setBiasSolver(biasSolver);
-
-    std::shared_ptr<Solver> weightsSolver = SolverGenerator::generate(iniConfig,
-                                                                      section,
-                                                                      model,
-                                                                      dataType,
-                                                            "WeightsSolver");
-
-    if (weightsSolver)
-        cell->setWeightsSolver(weightsSolver);
-
-    std::map<std::string, std::string> params = getConfig(model, iniConfig);
-
-    if (cell->getBiasSolver()) {
-        cell->getBiasSolver()->setPrefixedParameters(params, "Solvers.", false);
-        cell->getBiasSolver()->setPrefixedParameters(params, "BiasSolver.");
-    }
-
-    if (cell->getWeightsSolver()) {
-        cell->getWeightsSolver()->setPrefixedParameters(params, "Solvers.");
-        cell->getWeightsSolver()->setPrefixedParameters(params,
-                                                        "WeightsSolver.");
-    }
-
-    // Will be processed in postGenerate
-    iniConfig.ignoreProperty("WeightsSharing");
-    iniConfig.ignoreProperty("BiasesSharing");
-
-    cell->setParameters(params);
-
-    // Load configuration file (if exists)
-    cell->loadParameters(section + ".cfg", true);
-
-    // Set fillers
-    if (iniConfig.isProperty("WeightsFiller"))
-        cell->setWeightsFiller(
-            FillerGenerator::generate(iniConfig, section, "WeightsFiller", dataType));
-
-    if (iniConfig.isProperty("BiasFiller"))
-        cell->setBiasFiller(
-            FillerGenerator::generate(iniConfig, section, "BiasFiller", dataType));
+    generateParams(cell, iniConfig, section, model, dataType);
 
     // Connect the cell to the parents
     MappingGenerator::Mapping defaultMapping
@@ -331,6 +272,74 @@ N2D2::ConvCellGenerator::generate(Network& network, const DeepNet& deepNet,
     cell->writeMap("map/" + section + "_map.dat");
 
     return cell;
+}
+
+void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& cell,
+                                  IniParser& iniConfig,
+                                  const std::string& section,
+                                  const std::string& model,
+                                  const DataType& dataType)
+{
+    // Set configuration parameters defined in the INI file
+    std::shared_ptr<Solver> solvers = SolverGenerator::generate(iniConfig,
+                                                                section,
+                                                                model,
+                                                                dataType,
+                                                                "Solvers");
+
+    if (solvers) {
+        cell->setBiasSolver(solvers);
+        cell->setWeightsSolver(solvers->clone());
+    }
+
+    std::shared_ptr<Solver> biasSolver = SolverGenerator::generate(iniConfig,
+                                                                   section,
+                                                                   model,
+                                                                   dataType,
+                                                                "BiasSolver");
+
+    if (biasSolver)
+        cell->setBiasSolver(biasSolver);
+
+    std::shared_ptr<Solver> weightsSolver = SolverGenerator::generate(iniConfig,
+                                                                      section,
+                                                                      model,
+                                                                      dataType,
+                                                            "WeightsSolver");
+
+    if (weightsSolver)
+        cell->setWeightsSolver(weightsSolver);
+
+    std::map<std::string, std::string> params = getConfig(model, iniConfig);
+
+    if (cell->getBiasSolver()) {
+        cell->getBiasSolver()->setPrefixedParameters(params, "Solvers.", false);
+        cell->getBiasSolver()->setPrefixedParameters(params, "BiasSolver.");
+    }
+
+    if (cell->getWeightsSolver()) {
+        cell->getWeightsSolver()->setPrefixedParameters(params, "Solvers.");
+        cell->getWeightsSolver()->setPrefixedParameters(params,
+                                                        "WeightsSolver.");
+    }
+
+    // Will be processed in postGenerate
+    iniConfig.ignoreProperty("WeightsSharing");
+    iniConfig.ignoreProperty("BiasesSharing");
+
+    cell->setParameters(params);
+
+    // Load configuration file (if exists)
+    cell->loadParameters(section + ".cfg", true);
+
+    // Set fillers
+    if (iniConfig.isProperty("WeightsFiller"))
+        cell->setWeightsFiller(
+            FillerGenerator::generate(iniConfig, section, "WeightsFiller", dataType));
+
+    if (iniConfig.isProperty("BiasFiller"))
+        cell->setBiasFiller(
+            FillerGenerator::generate(iniConfig, section, "BiasFiller", dataType));
 }
 
 void N2D2::ConvCellGenerator::postGenerate(const std::shared_ptr<Cell>& cell,

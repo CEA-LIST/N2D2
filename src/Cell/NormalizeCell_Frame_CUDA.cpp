@@ -190,7 +190,7 @@ void N2D2::NormalizeCell_Frame_CUDA<double>::propagate(bool inference)
 template <>
 void N2D2::NormalizeCell_Frame_CUDA<half_float::half>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     mDiffInputs.synchronizeHBasedToD();
@@ -234,7 +234,7 @@ void N2D2::NormalizeCell_Frame_CUDA<half_float::half>::backPropagate()
 template <>
 void N2D2::NormalizeCell_Frame_CUDA<float>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     mDiffInputs.synchronizeHBasedToD();
@@ -278,7 +278,7 @@ void N2D2::NormalizeCell_Frame_CUDA<float>::backPropagate()
 template <>
 void N2D2::NormalizeCell_Frame_CUDA<double>::backPropagate()
 {
-    if (mDiffOutputs.empty())
+    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     mDiffInputs.synchronizeHBasedToD();
