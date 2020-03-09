@@ -1573,9 +1573,173 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Gather
         //GatherElements
         //GatherND
-        //else if (node.op_type() == "Gemm") {
+        else if (node.op_type() == "Gemm" || node.op_type() == "MatMul") {
+            const std::string inputData1 = redirectName(node.input(0));
+            const std::string inputData2 = redirectName(node.input(1));
+            std::string inputData;
 
-        //}
+            if ((itInit = initializer.find(inputData1)) != initializer.end()
+                && initializer.find(inputData2) == initializer.end())
+            {
+                inputData = inputData2;
+            }
+            else if ((itInit = initializer.find(inputData2))
+                    != initializer.end()
+                && initializer.find(inputData1) == initializer.end())
+            {
+                inputData = inputData1;
+            }
+
+            // Attribute are for Gemm only
+            float alpha = 1.0;
+            float beta = 1.0;
+            //bool transA = false;
+            //bool transB = false;
+
+            if (node.op_type() == "Gemm") {
+                if ((itAttr = attribute.find("alpha")) != attribute.end())
+                    alpha = (*itAttr).second->f();
+
+                if ((itAttr = attribute.find("beta")) != attribute.end())
+                    beta = (*itAttr).second->f();
+
+                //if ((itAttr = attribute.find("transA")) != attribute.end())
+                //    transA = (*itAttr).second->f();
+
+                //if ((itAttr = attribute.find("transB")) != attribute.end())
+                //    transB = (*itAttr).second->f();
+            }
+
+            if (!inputData.empty()) {
+                Tensor<Float_T> weights
+                    = ONNX_unpackTensor<Float_T>((*itInit).second);
+
+                if ((itShape = shape.find((*itInit).first)) != shape.end())
+                    weights.reshape((*itShape).second);
+
+                std::map<std::string, std::vector<std::string> >
+                    ::const_iterator itConcat;
+                std::vector<std::shared_ptr<Cell> > parentCells;
+
+                std::shared_ptr<Activation> activation
+                    = std::shared_ptr<Activation>();
+
+                std::shared_ptr<FcCell> fcCell
+                    = Registrar<FcCell>::create<Float_T>(model)(deepNet->getNetwork(),
+                                                                *deepNet, 
+                                                                node.output(0),
+                                                                weights.dimB(),
+                                                                activation);
+
+                if (!(node.op_type() == "Gemm" && node.input_size() > 2))
+                    fcCell->setParameter<bool>("NoBias", true);
+
+                if (iniConfig.currentSection(node.name(), false)) {
+                    FcCellGenerator::generateParams(fcCell, iniConfig,
+                        node.name(), model, Float32);
+                }
+                else if (iniConfig.currentSection(onnxName + ":Fc_def", false)) {
+                    FcCellGenerator::generateParams(fcCell, iniConfig,
+                        onnxName + ":Fc_def", model, Float32);
+                }
+
+                if ((itConcat = concat.find(inputData)) != concat.end()) {
+                    for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                        const std::string input = (*itConcat).second[i];
+                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                        parentCells.push_back(inputCell);
+
+                        fcCell->addInput(inputCell.get());
+                    }
+                }
+                else {
+                    std::shared_ptr<Cell> inputDataCell
+                        = (deepNet->getCells().empty())
+                            ? std::shared_ptr<Cell>()
+                            : deepNet->getCell(inputData);
+                    parentCells.push_back(inputDataCell);
+
+                    if (inputDataCell)
+                        fcCell->addInput(inputDataCell.get());
+                    else {
+                        fcCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
+
+                deepNet->addCell(fcCell, parentCells);
+                fcCell->initialize();
+                cell = fcCell;
+
+                std::cout << "  # Synapses: " << fcCell->getNbSynapses()
+                    << std::endl;
+    
+                if (fcCell->getInputsSize() != weights.size() / weights.dimB())
+                {
+                    throw std::runtime_error("Unsupported operation: "
+                        + node.op_type() + " with weights size mismatch");
+                }
+
+                // Init weights
+                if (node.op_type() == "Gemm") {
+                    weights.reshape({1, fcCell->getInputsSize(),
+                                    fcCell->getNbOutputs()});
+                }
+                else {
+                    // weights is transposed for Fc vs MatMul!
+                    weights.reshape({1, fcCell->getNbOutputs(),
+                                    fcCell->getInputsSize()});
+                }
+
+                for (unsigned int output = 0;
+                    output < fcCell->getNbOutputs(); ++output)
+                {
+                    for (unsigned int channel = 0;
+                        channel < fcCell->getInputsSize(); ++channel)
+                    {
+                        Tensor<Float_T> w = (node.op_type() == "Gemm")
+                            ? weights[output][channel]
+                            : weights[channel][output];
+
+                        if (alpha != 1.0) {
+                            for (unsigned int i = 0; i < w.size(); ++i)
+                                w(i) *= alpha;
+                        }
+
+                        fcCell->setWeight(output, channel, w);
+                    }
+                }
+
+                // Init bias (Gemm only)
+                if (node.op_type() == "Gemm" && node.input_size() > 2) {
+                    if ((itInit = initializer.find(node.input(2)))
+                        != initializer.end())
+                    {
+                        Tensor<Float_T> bias
+                            = ONNX_unpackTensor<Float_T>((*itInit).second,
+                                {(unsigned int)fcCell->getNbOutputs()});
+                        bias.reshape({1, fcCell->getNbOutputs()});
+
+                        for (unsigned int output = 0;
+                            output < fcCell->getNbOutputs(); ++output)
+                        {
+                            if (beta != 1.0)
+                                bias[output](0) *= beta;
+
+                            fcCell->setBias(output, bias[output]);
+                        }
+                    }
+                    else {
+                        std::cout << "  No initializer for \"" << node.input(2)
+                            << "\"" << std::endl;
+                    }
+                }
+            }
+            else {
+                throw std::runtime_error("Unsupported operation: "
+                    + node.op_type() + " without Cell");
+            }
+        }
         //GlobalAveragePool -> see AveragePool
         //GlobalLpPool
         //GlobalMaxPool -> see AveragePool
@@ -1693,112 +1857,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Loop
         //LpNormalization
         //LpPool
-        else if (node.op_type() == "MatMul") {
-            const std::string inputData1 = redirectName(node.input(0));
-            const std::string inputData2 = redirectName(node.input(1));
-            std::string inputData;
-
-            if ((itInit = initializer.find(inputData1)) != initializer.end()
-                && initializer.find(inputData2) == initializer.end())
-            {
-                inputData = inputData2;
-            }
-            else if ((itInit = initializer.find(inputData2))
-                    != initializer.end()
-                && initializer.find(inputData1) == initializer.end())
-            {
-                inputData = inputData1;
-            }
-
-            if (!inputData.empty()) {
-                Tensor<Float_T> weights
-                    = ONNX_unpackTensor<Float_T>((*itInit).second);
-
-                if ((itShape = shape.find((*itInit).first)) != shape.end())
-                    weights.reshape((*itShape).second);
-
-                std::map<std::string, std::vector<std::string> >
-                    ::const_iterator itConcat;
-                std::vector<std::shared_ptr<Cell> > parentCells;
-
-                std::shared_ptr<Activation> activation
-                    = std::shared_ptr<Activation>();
-
-                std::shared_ptr<FcCell> fcCell
-                    = Registrar<FcCell>::create<Float_T>(model)(deepNet->getNetwork(),
-                                                                *deepNet, 
-                                                                node.output(0),
-                                                                weights.dimB(),
-                                                                activation);
-
-                fcCell->setParameter<bool>("NoBias", true);
-
-                if (iniConfig.currentSection(node.name(), false)) {
-                    FcCellGenerator::generateParams(fcCell, iniConfig,
-                        node.name(), model, Float32);
-                }
-                else if (iniConfig.currentSection(onnxName + ":Fc_def", false)) {
-                    FcCellGenerator::generateParams(fcCell, iniConfig,
-                        onnxName + ":Fc_def", model, Float32);
-                }
-
-                if ((itConcat = concat.find(inputData)) != concat.end()) {
-                    for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
-                        const std::string input = (*itConcat).second[i];
-                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
-                        parentCells.push_back(inputCell);
-
-                        fcCell->addInput(inputCell.get());
-                    }
-                }
-                else {
-                    std::shared_ptr<Cell> inputDataCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputData);
-                    parentCells.push_back(inputDataCell);
-
-                    if (inputDataCell)
-                        fcCell->addInput(inputDataCell.get());
-                    else {
-                        fcCell->addInput(*sp, 0, 0,
-                                            sp->getSizeX(), sp->getSizeY());
-                    }
-                }
-
-                deepNet->addCell(fcCell, parentCells);
-                fcCell->initialize();
-                cell = fcCell;
-
-                std::cout << "  # Synapses: " << fcCell->getNbSynapses()
-                    << std::endl;
-    
-                if (fcCell->getInputsSize() != weights.size() / weights.dimB())
-                {
-                    throw std::runtime_error("Unsupported operation: MatMul"
-                        " with weights size mismatch");
-                }
-
-                // weights is transposed for Fc vs MatMul!
-                weights.reshape({1, fcCell->getNbOutputs(),
-                                 fcCell->getInputsSize()});
-
-                for (unsigned int output = 0;
-                    output < fcCell->getNbOutputs(); ++output)
-                {
-                    for (unsigned int channel = 0;
-                        channel < fcCell->getInputsSize(); ++channel)
-                    {
-                        fcCell->setWeight(output, channel,
-                                          weights[channel][output]);
-                    }
-                }
-            }
-            else {
-                throw std::runtime_error("Unsupported operation: MatMul without"
-                    " Cell");
-            }
-        }
+        //MatMul -> see Gemm
         //MatMulInteger
         //Max -> see Sum
         //MaxPool -> see AveragePool
