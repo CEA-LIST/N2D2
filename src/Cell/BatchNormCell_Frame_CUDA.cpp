@@ -161,12 +161,12 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
         }
     }
 
-    if(mMovingAverageMomentum <= 0.0 || mMovingAverageMomentum >= 1.0)
+    if(mMovingAverageMomentum < 0.0 || mMovingAverageMomentum >= 1.0)
     {
         std::stringstream msgStr;
         msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
             " in cell " + mName + ", wrong value for MovingAverageMomentum. "
-            "Expected value range ]0.0, 1.0[ whereas actual value is "
+            "Expected value range [0.0, 1.0[ whereas actual value is "
             << mMovingAverageMomentum << std::endl;
 
         throw std::runtime_error(msgStr.str());
@@ -191,7 +191,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
     std::shared_ptr<CudaDeviceTensor<T> > input0
         = cuda_device_tensor_cast<T>(mInputs[0]);
 
-    if (inference) {
+    if (inference || mMovingAverageMomentum == 0.0) {
         CHECK_CUDNN_STATUS(cudnnBatchNormalizationForwardInference(
             CudaContext::cudnnHandle(),
             mMode,

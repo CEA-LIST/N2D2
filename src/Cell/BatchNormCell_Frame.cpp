@@ -138,12 +138,12 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
     mDiffBias.resize(requiredDims);
     mDiffSavedMean.resize(requiredDims);
     mDiffSavedVariance.resize(requiredDims);
-    if(mMovingAverageMomentum <= 0.0 || mMovingAverageMomentum >= 1.0)
+    if(mMovingAverageMomentum < 0.0 || mMovingAverageMomentum >= 1.0)
     {
         std::stringstream msgStr;
         msgStr << "BatchNormCell_Frame<T>::initialize():"
             " in cell " + mName + ", wrong value for MovingAverageMomentum. "
-            "Expected value range ]0.0, 1.0[ whereas actual value is "
+            "Expected value range [0.0, 1.0[ whereas actual value is "
             << mMovingAverageMomentum << std::endl;
 
         throw std::runtime_error(msgStr.str());
@@ -162,7 +162,7 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
         const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
         const unsigned int size = mInputs.dimB() * input.dimZ();
 
-        if (inference) {
+        if (inference || mMovingAverageMomentum == 0.0) {
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
