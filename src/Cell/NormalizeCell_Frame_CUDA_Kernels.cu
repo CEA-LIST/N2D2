@@ -45,7 +45,7 @@ void cudaHNormalizeL2Forward_kernel(const __half alpha,
                 ox += blockDim.x)
         {
 #if __CUDA_ARCH__ >= 530
-            __half sumSq(0.0f);
+            __half sumSq = __float2half(0.0f);
 
             for (unsigned int output = 0; output < nbOutputs; ++output) {
                 const unsigned int idx = batchOffset
@@ -205,7 +205,7 @@ void cudaHNormalizeL2Backward_kernel(const __half alpha,
                 ox += blockDim.x)
         {
 #if __CUDA_ARCH__ >= 530
-            __half a(0.0f);
+            __half a = __float2half(0.0f);
 
             for (unsigned int output = 0; output < nbOutputs; ++output) {
                 const unsigned int idx = batchOffset
@@ -218,16 +218,19 @@ void cudaHNormalizeL2Backward_kernel(const __half alpha,
                 const unsigned int idx = batchOffset
                     + ox + (oy + output * outputsHeight) * outputsWidth;
 
+                const __half factor = __float2half(1.0f
+                                            / __half2float(normData[idx]));
+
                 if (! __heq(beta, __float2half(0.0f))) {
                     diffOutputs[idx] = __hadd(
-                        __hdiv(__hsub(diffInputs[idx], __hmul(outputs[idx], a)),
-                              normData[idx]),
+                        __hmul(__hsub(diffInputs[idx], __hmul(outputs[idx], a)),
+                              factor),
                         __hmul(beta, diffOutputs[idx]));
                 }
                 else {
                     diffOutputs[idx] =
-                        __hdiv(__hsub(diffInputs[idx], __hmul(outputs[idx], a)),
-                              normData[idx]);
+                        __hmul(__hsub(diffInputs[idx], __hmul(outputs[idx], a)),
+                              factor);
                 }
             }
 #else
