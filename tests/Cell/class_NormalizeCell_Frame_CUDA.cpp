@@ -44,6 +44,8 @@ public:
 TEST(NormalizeCell_Frame_CUDA,
      propagate)
 {
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
     Network net;
     DeepNet dn(net);
     
