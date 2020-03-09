@@ -22,6 +22,7 @@
 #include <string>
 
 #include "DeepNet.hpp"
+#include "GradientCheck.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame.hpp"
 #include "Cell/NormalizeCell.hpp"
