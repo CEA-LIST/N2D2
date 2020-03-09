@@ -150,6 +150,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
+    softmax1.mDiffInputs.setValid();
     softmax1.mDiffInputs.synchronizeHToD();
 
     softmax1.backPropagate();
@@ -279,6 +280,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
+    softmax1.mDiffInputs.setValid();
     softmax1.mDiffInputs.synchronizeHToD();
 
     softmax1.backPropagate();
@@ -411,6 +413,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
+    softmax1.mDiffInputs.setValid();
     softmax1.mDiffInputs.synchronizeHToD();
 
     softmax1.backPropagate();

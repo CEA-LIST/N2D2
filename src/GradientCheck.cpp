@@ -98,6 +98,7 @@ void N2D2::GradientCheck<T>::initialize(Interface<>& inputs,
     for (int index = 0; index < (int)outputs.size(); ++index)
         diffInputs(index) = 1.0 - outputs(index);
 
+    diffInputs.setValid();
     diffInputs.synchronizeHToD();
     backPropagate();
 }

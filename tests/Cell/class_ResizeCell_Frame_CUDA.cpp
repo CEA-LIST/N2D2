@@ -117,6 +117,7 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
      * Resize outputsProp to outputsBackprop with N2D2 through backpropagate
      */
     resize.mDiffInputs = resize.getOutputs();
+    resize.mDiffInputs.setValid();
     resize.mDiffInputs.synchronizeHToD();
     resize.backPropagate();
 

@@ -144,6 +144,8 @@ TEST_DATASET(SoftmaxCell_Frame_float,
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
 
+    softmax1.mDiffInputs.setValid();
+
     softmax1.backPropagate();
     const Tensor<float>& outputs = tensor_cast<float>(softmax1.getOutputs());
 
@@ -264,6 +266,8 @@ TEST_DATASET(SoftmaxCell_Frame_double,
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
+
+    softmax1.mDiffInputs.setValid();
 
     softmax1.backPropagate();
     const Tensor<double>& outputs = tensor_cast<double>(softmax1.getOutputs());
@@ -388,6 +392,8 @@ TEST_DATASET(SoftmaxCell_Frame_half,
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         softmax1.mDiffInputs(nbOutputs - 1, batchPos) = 1.0;
+
+    softmax1.mDiffInputs.setValid();
 
     softmax1.backPropagate();
     const Tensor<half_float::half>& outputs
