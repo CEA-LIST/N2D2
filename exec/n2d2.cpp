@@ -239,6 +239,7 @@ public:
                                                      "stimulus (0 = no log)");
         logJSON =     opts.parse("-log-json", "log JSON annotations");
         logDbStats =  opts.parse("-log-db-stats", "log database stimuli and ROIs stats");
+        logKernels =  opts.parse("-log-kernels", "log kernels afer learning");
         genConfig =   opts.parse("-cfg", "save base configuration and exit");
         genExport =   opts.parse("-export", std::string(), "generate an export and exit");
         nbBits =      opts.parse("-nbbits", 8, "number of bits per weight for exports");
@@ -320,6 +321,7 @@ public:
     unsigned int logOutputs;
     bool logJSON;
     bool logDbStats;
+    bool logKernels;
     bool genConfig;
     std::string genExport;
     int nbBits;
@@ -1241,7 +1243,8 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         }
     }
 
-    deepNet->logFreeParameters("kernels");
+    if (opt.logKernels)
+        deepNet->logFreeParameters("kernels");
 
     // We are still in future batch, need to synchronize for the following
     sp->synchronize();
