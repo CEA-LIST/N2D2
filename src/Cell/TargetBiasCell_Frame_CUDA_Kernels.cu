@@ -33,11 +33,20 @@ __global__ void cudaHTargetBiasPropagate_kernel(
     for (unsigned int i = index; i < size; i += stride) {
         outputs[i] = inputs[i];
 
-        if (__half2float(diffInputs[i]) > 0.0f
-            && __half2float(inputs[i]) > -__half2float(bias))
+#if __CUDA_ARCH__ >= 530
+        if (__hgt(diffInputs[i], __float2half(0.0f))
+            && __hgt(inputs[i], __hneg(bias)))
         {
             outputs[i] = __hadd(outputs[i], bias);
         }
+#else
+        if (__half2float(diffInputs[i]) > 0.0f
+            && __half2float(inputs[i]) > -__half2float(bias))
+        {
+            outputs[i] = __float2half(__half2float(outputs[i])
+                + __half2float(bias));
+        }
+#endif
     }
 }
 
