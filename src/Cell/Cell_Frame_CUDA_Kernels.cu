@@ -375,13 +375,14 @@ void cudaHApplyLoss_kernel(__half* lossMem,
                         __float2half(
                             abs(__half2float(diffInputs[outputsIdx]))));
                     lossMem[outputsIdx] = __hmul(error, error);
+                    diffInputs[outputsIdx] = error;
 #else
                     const float error = (__half2float(val)
                         - __half2float(outputs[outputsIdx]))
                             * abs(__half2float(diffInputs[outputsIdx]));
                     lossMem[outputsIdx] = __float2half(error * error);
+                    diffInputs[outputsIdx] = __float2half(error);
 #endif
-                    diffInputs[outputsIdx] = error;
                 }
                 else
                     lossMem[outputsIdx] = __float2half(0.0f);
