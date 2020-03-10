@@ -275,6 +275,15 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
     for (auto itParentLayers = mParentLayers.begin(); itParentLayers != mParentLayers.end(); ) {
         if (itParentLayers->first == cellName) {
             parents.push_back(itParentLayers->second);
+
+            // The next element after a child in the multimap might be a parent,
+            // depending on the name of the cells.
+            // In this case, itChildPos will be invalided. If this happens, we
+            // provide an invalid hint to multimap::insert(), which causes
+            // undefined behavior and corrupt the multimap.
+            if (itChildPos == itParentLayers)
+                itChildPos = mParentLayers.end();
+
             itParentLayers = mParentLayers.erase(itParentLayers);
         }
         else if(itParentLayers->second == cellName) {

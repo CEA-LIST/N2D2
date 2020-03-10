@@ -656,6 +656,9 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 // TODO Use a pool of threads
                 auto reportTask = std::async(std::launch::async, [&]() { 
+#ifdef CUDA
+                    CudaContext::setDevice(cudaDevice);
+#endif
                     deepNet->test(Database::Validation);
                     dnQuantization.reportOutputsRange(outputsRange);
                     dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 

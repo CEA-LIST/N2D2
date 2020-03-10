@@ -40,6 +40,7 @@
 
 #ifdef ONNX
 #include "N2D2.hpp"
+#include "Activation/LinearActivation.hpp"
 #include "Activation/RectifierActivation.hpp"
 #include "Activation/LogisticActivation.hpp"
 #include "Activation/SoftplusActivation.hpp"
@@ -950,7 +951,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             const unsigned int nbOutputs = initializer[inputScale]->dims(0);
 
             std::shared_ptr<Activation> activation
-                = std::shared_ptr<Activation>();
+                = Registrar<LinearActivation>::create<Float_T>(model)();
 
             std::shared_ptr<BatchNormCell> batchNormCell
                 = Registrar<BatchNormCell>::create<Float_T>(model)(*deepNet, 
@@ -1146,7 +1147,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 std::shared_ptr<Cell_Frame_Top> cellFrame
                     = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-                if (cellFrame->getActivation()) {
+                if (cellFrame->getActivation()
+                    && cellFrame->getActivation()->getType()
+                        != LinearActivation::Type)
+                {
                     throw std::runtime_error("Cell " + cell->getName()
                         + " already has an activation!");
                 }
@@ -1311,7 +1315,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             const std::vector<unsigned int> subSampleDims(kernelDims.size(), 1);
             std::shared_ptr<Activation> activation
-                = std::shared_ptr<Activation>();
+                = Registrar<LinearActivation>::create<Float_T>(model)();
 
             // Asymmetric padding
             bool paddingCellRequired = false;
@@ -1622,7 +1626,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 std::vector<std::shared_ptr<Cell> > parentCells;
 
                 std::shared_ptr<Activation> activation
-                    = std::shared_ptr<Activation>();
+                    = Registrar<LinearActivation>::create<Float_T>(model)();
 
                 std::shared_ptr<FcCell> fcCell
                     = Registrar<FcCell>::create<Float_T>(model)(deepNet->getNetwork(),
@@ -1839,7 +1843,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (cellFrame->getActivation()) {
+            if (cellFrame->getActivation()
+                && cellFrame->getActivation()->getType()
+                    != LinearActivation::Type)
+            {
                 throw std::runtime_error("Cell " + cell->getName()
                     + " already has an activation!");
             }
@@ -1902,7 +1909,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (cellFrame->getActivation()) {
+            if (cellFrame->getActivation()
+                && cellFrame->getActivation()->getType()
+                    != LinearActivation::Type)
+            {
                 throw std::runtime_error("Cell " + cell->getName()
                     + " already has an activation!");
             }
@@ -1979,7 +1989,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (cellFrame->getActivation()) {
+            if (cellFrame->getActivation()
+                && cellFrame->getActivation()->getType()
+                    != LinearActivation::Type)
+            {
                 throw std::runtime_error("Cell " + cell->getName()
                     + " already has an activation!");
             }
@@ -2091,7 +2104,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (cellFrame->getActivation()) {
+            if (cellFrame->getActivation()
+                && cellFrame->getActivation()->getType()
+                    != LinearActivation::Type)
+            {
                 throw std::runtime_error("Cell " + cell->getName()
                     + " already has an activation!");
             }
@@ -2335,7 +2351,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            if (cellFrame->getActivation()) {
+            if (cellFrame->getActivation()
+                && cellFrame->getActivation()->getType()
+                    != LinearActivation::Type)
+            {
                 throw std::runtime_error("Cell " + cell->getName()
                     + " already has an activation!");
             }
