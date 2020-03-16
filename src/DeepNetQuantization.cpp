@@ -49,6 +49,7 @@
 #include "Export/DeepNetExport.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 
+#define VERBOSE_QUANT
 
 N2D2::DeepNetQuantization::DeepNetQuantization(DeepNet& deepNet): mDeepNet(deepNet) {
 }
@@ -283,6 +284,10 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
     quantizeActivations(outputsHistogram, outputsRange, biasScalings,
                         nbBits, actClippingMode);
 
+#ifdef VERBOSE_QUANT
+    std::cout << "  Scaling approximation [" << (int)actScalingMode << "]:"
+        << std::endl;
+#endif
 
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
@@ -312,8 +317,11 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
         }
     }
 
-
     // Quantize inputs
+#ifdef VERBOSE_QUANT
+    std::cout << "  Inputs quantization" << std::endl;
+#endif
+
     assert(mDeepNet.getStimuliProvider() != nullptr);
     mDeepNet.getStimuliProvider()->addTopTransformation(
         RangeAffineTransformation(RangeAffineTransformation::Multiplies, 
@@ -321,9 +329,17 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
                                                                   std::pow(2, nbBits - 1) - 1),
         Database::All
     );
+
+#ifdef VERBOSE_QUANT
+    std::cout << "  Done!" << std::endl;
+#endif
 }
 
 std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemeters(std::size_t nbBits) {
+#ifdef VERBOSE_QUANT
+    std::cout << "  Quantizing free parameters:" << std::endl;
+#endif
+
     std::unordered_map<std::string, long double> biasScalings;
 
     std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
@@ -357,6 +373,11 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
             cell->processFreeParameters([&](Float_T b) { return b*(bQuantScaling/biasScaling); }, 
                                         Cell::Additive);
             biasScalings[cell->getName()] = biasScaling;
+
+#ifdef VERBOSE_QUANT
+            std::cout << "  - " << cell->getName() << ": " << biasScaling
+                << std::endl;
+#endif
         }
     }
 
@@ -368,6 +389,10 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
 std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemetersPerOutputCh(
                                                                             std::size_t nbBits) 
 {
+#ifdef VERBOSE_QUANT
+    std::cout << "  Quantizing free parameters [per output channel]:" << std::endl;
+#endif
+
     std::unordered_map<std::string, long double> biasScalings;
 
     std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
@@ -427,6 +452,11 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
 
 
             biasScalings[cell->getName()] = biasScaling;
+
+#ifdef VERBOSE_QUANT
+            std::cout << "  - " << cell->getName() << ": " << biasScaling
+                << std::endl;
+#endif
         }
     }
 
@@ -441,6 +471,10 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                 std::unordered_map<std::string, long double>& biasScalings,
                 std::size_t nbBits, ClippingMode actClippingMode)
 {
+#ifdef VERBOSE_QUANT
+    std::cout << "  Quantizing activations:" << std::endl;
+#endif
+
     std::unordered_map<std::string, long double> activationScalings;
     
     std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
@@ -500,6 +534,13 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                                          cell->getType() + "' is not supported yet.");
             }
 
+#ifdef VERBOSE_QUANT
+            std::cout << "  - " << cell->getName() << ": "
+                << "prev=" << prevActivationScaling
+                << ", act=" << activationScaling
+                << ", bias=" << biasScalings.at(cell->getName()) << std::endl;
+#endif
+
             activationScaling /= biasScalings.at(cell->getName());
             activationScaling = (activationScaling == 0.0)?1.0:activationScaling;
             activationScalings[cell->getName()] = activationScaling;
@@ -526,6 +567,15 @@ void N2D2::DeepNetQuantization::quantizeActivations(
 
             activationScalings[scalingCell->getName()] = activationScalings[cell->getName()];
             biasScalings[scalingCell->getName()] = biasScalings[cell->getName()];
+
+#ifdef VERBOSE_QUANT
+            std::cout << "      quant=" << actQuantScaling
+                << ", global scaling=" << Utils::cnotice << activationScaling
+                << Utils::cdef << " -> cell scaling=" << Utils::cwarning
+                    << ((prevActivationScaling/activationScaling)
+                                /actQuantScaling)
+                << Utils::cdef << std::endl;
+#endif
         }
     }
 
@@ -566,6 +616,10 @@ double N2D2::DeepNetQuantization::getActivationQuantizationScaling(const Cell& c
 }
 
 void N2D2::DeepNetQuantization::fuseScalingCells() {
+#ifdef VERBOSE_QUANT
+    std::cout << "  Fuse scaling cells:" << std::endl;
+#endif
+
     // Get a copy, the loop may modify the graph
     const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
 
@@ -596,6 +650,9 @@ void N2D2::DeepNetQuantization::fuseScalingCells() {
                 throw std::runtime_error("Invalid cell.");
             }
 
+#ifdef VERBOSE_QUANT
+            std::cout << "  - fuse: " << cell->getName() << std::endl;
+#endif
 
             std::shared_ptr<Activation> parentCellActivation = parentCellFrame->getActivation();
             if(parentCellActivation)  {
@@ -622,21 +679,37 @@ void N2D2::DeepNetQuantization::fuseScalingCellWithParentActivation(
                                                     const std::shared_ptr<ScalingCell>& scalingCell, 
                                                     Activation& parentCellActivation)
 {
+    const std::vector<Float_T>& scalingPerOutput = scalingCell->getScaling()
+                                                                .getFloatingPointScaling()
+                                                                .getScalingPerOutput();
     const ScalingMode parentScalingMode = parentCellActivation.getActivationScaling().getMode();
     if(parentScalingMode == ScalingMode::NONE) {
         parentCellActivation.setActivationScaling(
             std::move(scalingCell->getScaling())
         );
 
+//#ifdef VERBOSE_QUANT
+//        std::cout << "      with parent act: NONE"
+//            << " x " << scalingPerOutput[0] << " -> "
+//            << Utils::cwarning << scalingPerOutput[0]
+//            << Utils::cdef << std::endl;
+//#endif
+
         mDeepNet.removeCell(scalingCell);
     }
     else if(parentScalingMode == ScalingMode::FLOAT_MULT) {
-        const std::vector<Float_T>& scalingPerOutput = scalingCell->getScaling()
-                                                                   .getFloatingPointScaling()
-                                                                   .getScalingPerOutput();
         std::vector<Float_T> parentScalingPerOutput = parentCellActivation.getActivationScaling()
                                                                           .getFloatingPointScaling()
                                                                           .getScalingPerOutput();
+
+#ifdef VERBOSE_QUANT
+        std::cout << "      with parent act: " << parentScalingPerOutput[0]
+            << " x " << scalingPerOutput[0] << " -> "
+            << Utils::cwarning
+            << (scalingPerOutput[0] * parentScalingPerOutput[0])
+            << Utils::cdef << std::endl;
+#endif
+
         for(std::size_t o = 0; o < parentScalingPerOutput.size(); o++) {
             parentScalingPerOutput[o] *= scalingPerOutput[o];
         }
@@ -661,6 +734,14 @@ void N2D2::DeepNetQuantization::fuseScalingCellWithParentScalingCell(
     std::vector<Float_T> parentScalingPerOutput = parentScalingCell->getScaling()
                                                                     .getFloatingPointScaling()
                                                                     .getScalingPerOutput();
+
+#ifdef VERBOSE_QUANT
+    std::cout << "      with parent scaling: " << parentScalingPerOutput[0]
+        << " x " << scalingPerOutput[0] << " -> "
+        << Utils::cwarning << (scalingPerOutput[0] * parentScalingPerOutput[0])
+        << Utils::cdef << std::endl;
+#endif
+
     for(std::size_t o = 0; o < parentScalingPerOutput.size(); o++) {
         parentScalingPerOutput[o] *= scalingPerOutput[o];
     }
@@ -684,6 +765,11 @@ void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
         const std::vector<Float_T>& scalingPerOutput = scalingCell->getScaling()
                                                                    .getFloatingPointScaling()
                                                                    .getScalingPerOutput();
+
+#ifdef VERBOSE_QUANT
+        std::cout << "      move above parent: "
+            << scalingPerOutput[0] << std::endl;
+#endif
 
         auto grandParentsCells = parentElemWiseCell->getParentsCells();
         for(auto grandParentCell: grandParentsCells) {
@@ -716,6 +802,11 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
                                                             .getFloatingPointScaling()
                                                             .getScalingPerOutput();
 
+#ifdef VERBOSE_QUANT
+    std::cout << "  - " << cell.getName() << ": " << floatScalingPerOutput[0]
+        << std::endl;
+#endif
+
     const std::size_t nbFractionalBits = std::min(nbBits*2, (std::size_t) 24);
 
     std::vector<std::int32_t> fixedScalingPerOutput(floatScalingPerOutput.size());
@@ -724,6 +815,11 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
     }
     
     cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput));
+
+#ifdef VERBOSE_QUANT
+    std::cout << "    FIXED_MULT: " << fixedScalingPerOutput[0]
+        << " x 2 ^ [- " << nbFractionalBits << "]" << std::endl;
+#endif
 }
 
 std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approximateScalingWithPowerOf2Divs(
@@ -826,6 +922,12 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
     const std::vector<Float_T>& scalingPerOutput = activation.getActivationScaling()
                                                              .getFloatingPointScaling()
                                                              .getScalingPerOutput();
+
+#ifdef VERBOSE_QUANT
+    std::cout << "  - " << cell.getName() << ": " << scalingPerOutput[0]
+        << std::endl;
+#endif
+
     if(actScalingMode == ScalingMode::FLOAT_MULT) {
         // Nothing to do.
     }
@@ -859,6 +961,11 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
         }
 
         activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint));
+
+#ifdef VERBOSE_QUANT
+        std::cout << "    FIXED_MULT: " << scalingFixedPoint[0]
+            << " x 2 ^ [- " << nbFractionalBits << "]" << std::endl;
+#endif
     }
     else if(actScalingMode == ScalingMode::SINGLE_SHIFT) {
         std::vector<unsigned char> shifts;
@@ -868,6 +975,10 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
         }
 
         activation.setActivationScaling(Scaling::singleShiftScaling(shifts));
+
+#ifdef VERBOSE_QUANT
+        std::cout << "    SINGLE_SHIFT: 2 ^ [- " << (int)shifts[0] << "]" << std::endl;
+#endif
     }
     else if(actScalingMode == ScalingMode::DOUBLE_SHIFT) {
         std::vector<std::pair<unsigned char, unsigned char>> shifts;
@@ -878,6 +989,11 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
         }
 
         activation.setActivationScaling(Scaling::doubleShiftScaling(shifts));
+
+#ifdef VERBOSE_QUANT
+        std::cout << "    DOUBLE_SHIFT: 2 ^ [- " << (int)shifts[0].first << "] "
+            << " + 2 ^ [- " << (int)shifts[0].second << "]" << std::endl;
+#endif
     }
     else {
         throw std::runtime_error("Unsupported scaling mode.");
