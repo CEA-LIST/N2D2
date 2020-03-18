@@ -704,6 +704,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
 
+    deepNet->exportNetworkFreeParameters("weights_export");
 
     return afterCalibration;
 }

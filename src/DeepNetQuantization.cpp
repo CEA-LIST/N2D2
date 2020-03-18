@@ -549,9 +549,15 @@ void N2D2::DeepNetQuantization::quantizeActivations(
 
             activationScaling /= biasScalings.at(cell->getName());
             activationScaling = (activationScaling == 0.0)?1.0:activationScaling;
+
+            if(cell->getType() == ElemWiseCell::Type
+                && activationScaling < prevActivationScaling)
+            {
+                // Don't "upscale" ElemWise activations
+                activationScaling = prevActivationScaling;
+            }
+
             activationScalings[cell->getName()] = activationScaling;
-
-
 
             cell->processFreeParameters([&](Float_T d) { return d/prevActivationScaling; },
                                         Cell::Additive);
