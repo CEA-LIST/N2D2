@@ -71,6 +71,7 @@
 
 #include "third_party/onnx/onnx.proto3.pb.hpp"
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/coded_stream.h>
 #endif
 
 std::shared_ptr<N2D2::DeepNet>
@@ -523,10 +524,12 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
 
     std::ifstream onnxFile(fileName.c_str(), std::ios::binary);
     google::protobuf::io::IstreamInputStream zero_copy_input(&onnxFile);
+    google::protobuf::io::CodedInputStream coded_input(&zero_copy_input);
+    coded_input.SetTotalBytesLimit(1073741824, 536870912);
 
     if (!onnxFile.good())
         throw std::runtime_error("Could not open ONNX file: " + fileName);
-    else if (!onnxModel.ParseFromZeroCopyStream(&zero_copy_input)
+    else if (!onnxModel.ParseFromCodedStream(&coded_input)
         || !onnxFile.eof())
     {
         throw std::runtime_error("Failed to parse ONNX file: " + fileName);
