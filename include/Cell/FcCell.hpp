@@ -94,7 +94,7 @@ public:
     virtual void logFreeParameters(const std::string& fileName,
                                    unsigned int output) const;
     virtual void logFreeParameters(const std::string& dirName) const;
-    unsigned long long int getNbSynapses() const;
+    unsigned long long int getNbSynapses(bool includeBias = true) const;
     std::shared_ptr<Solver> getWeightsSolver()
     {
         return mWeightsSolver;

@@ -70,9 +70,12 @@ void N2D2::FcCell::logFreeParameters(const std::string& dirName) const
 }
 
 // TODO: handle mMapping
-unsigned long long int N2D2::FcCell::getNbSynapses() const
+unsigned long long int N2D2::FcCell::getNbSynapses(bool includeBias) const
 {
-    return getNbOutputs() * (getInputsSize() + !mNoBias);
+    if (includeBias)
+        return getNbOutputs() * (getInputsSize() + !mNoBias);
+    else
+        return getNbOutputs() * getInputsSize();
 }
 
 void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
