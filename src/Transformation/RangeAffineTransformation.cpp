@@ -30,7 +30,8 @@ N2D2::RangeAffineTransformation::RangeAffineTransformation(
     : mFirstOperator(firstOperator),
       mFirstValue(firstValue),
       mSecondOperator(secondOperator),
-      mSecondValue(secondValue)
+      mSecondValue(secondValue),
+      mTruncate(this, "Truncate", false)
 {
     // ctor
 }
@@ -43,9 +44,21 @@ N2D2::RangeAffineTransformation::RangeAffineTransformation(
     : mFirstOperator(firstOperator),
       mFirstValue(std::vector<double>(1, firstValue)),
       mSecondOperator(secondOperator),
-      mSecondValue(std::vector<double>(1, secondValue))
+      mSecondValue(std::vector<double>(1, secondValue)),
+      mTruncate(this, "Truncate", false)
 {
     // ctor
+}
+
+N2D2::RangeAffineTransformation::RangeAffineTransformation(
+    const RangeAffineTransformation& trans)
+    : mFirstOperator(trans.mFirstOperator),
+      mFirstValue(trans.mFirstValue),
+      mSecondOperator(trans.mSecondOperator),
+      mSecondValue(trans.mSecondValue),
+      mTruncate(this, "Truncate", trans.mTruncate)
+{
+    // copy-ctor
 }
 
 void
@@ -91,6 +104,12 @@ N2D2::RangeAffineTransformation::apply(cv::Mat& frame,
     }
 
     cv::merge(channels, frame);
+
+    if (mTruncate) {
+        cv::Mat frameInt;
+        frame.convertTo(frameInt, CV_32S);
+        frameInt.convertTo(frame, opencv_data_type<Float_T>::value);
+    }
 }
 
 void N2D2::RangeAffineTransformation::applyOperator(

@@ -323,10 +323,16 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
 #endif
 
     assert(mDeepNet.getStimuliProvider() != nullptr);
+    RangeAffineTransformation affineTrans(RangeAffineTransformation::Multiplies, 
+                DeepNetExport::mEnvDataUnsigned?std::pow(2, nbBits) - 1:
+                                                std::pow(2, nbBits - 1) - 1);
+    // Ensure that the inputs are representable as integers.
+    // This is the case for unsigned 8-bit images scaled in the [0,1] range.
+    // But for signed inputs, it depends on the scaling method.
+    affineTrans.setParameter<bool>("Truncate", true);
+
     mDeepNet.getStimuliProvider()->addTopTransformation(
-        RangeAffineTransformation(RangeAffineTransformation::Multiplies, 
-                                  DeepNetExport::mEnvDataUnsigned?std::pow(2, nbBits) - 1:
-                                                                  std::pow(2, nbBits - 1) - 1),
+        affineTrans,
         Database::All
     );
 

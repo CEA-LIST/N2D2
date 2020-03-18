@@ -47,6 +47,7 @@ public:
                               double firstValue,
                               Operator secondOperator = Plus,
                               double secondValue = 0.0);
+    RangeAffineTransformation(const RangeAffineTransformation& trans);
     const char* getType() const
     {
         return Type;
@@ -83,6 +84,8 @@ private:
     const std::vector<double> mFirstValue;
     const Operator mSecondOperator;
     const std::vector<double> mSecondValue;
+
+    Parameter<bool> mTruncate;
 };
 }
 
