@@ -1129,7 +1129,8 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
     Utils::createDirectories(dirName);
 
 
-    StimuliProvider::logData(dirName + "/env.dat", mStimuliProvider->getData());
+    StimuliProvider::logData(dirName + "/env.dat",
+                             mStimuliProvider->getData()[batchPos]);
 
     const unsigned int nbLayers = mLayers.size();
 
