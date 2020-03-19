@@ -100,9 +100,9 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSynapses.push_back(new CudaTensor<T>(
-            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}), 0);
         mDiffSynapses.push_back(new CudaTensor<T>(
-            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}), 0);
         mWeightsFiller->apply(mSynapses.back());
         mSynapses.back().synchronizeHToD();
     }
@@ -935,9 +935,6 @@ void N2D2::FcCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<Fl
 template <class T>
 N2D2::FcCell_Frame_CUDA<T>::~FcCell_Frame_CUDA()
 {
-    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
-        delete &mSynapses[k];
-
     if (mOnesVector != NULL) {
         cudaFree(mOnesVector);
         mOnesVector = NULL;

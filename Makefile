@@ -169,7 +169,7 @@ else
     endif
   else
     # Compile in debug with -O2
-    OPT:=-O2 -g -rdynamic
+    OPT:=-O2 -g -rdynamic -fsanitize=leak
 
     ifdef PROFILING
       $(info Compiling with -pg flag can cause gdb to hang on __libc_fork call)
