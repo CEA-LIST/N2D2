@@ -22,6 +22,7 @@
 #include <cassert>
 #include "RangeStats.hpp"
 #include "utils/Gnuplot.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::RangeStats::RangeStats()
     : mMinVal(0.0), mMaxVal(0.0), mMoments(3, 0.0)
@@ -88,6 +89,11 @@ void N2D2::RangeStats::load(std::istream& state) {
 void N2D2::RangeStats::saveOutputsRange(const std::string& fileName,
                                const std::unordered_map<std::string, RangeStats>& outputsRange)
 {
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
     std::ofstream state(fileName.c_str(), std::fstream::binary);
 
     if (!state.good())

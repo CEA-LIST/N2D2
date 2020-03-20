@@ -42,6 +42,7 @@
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ElemWiseCell.hpp"
+#include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ResizeCell.hpp"
 #include "Cell/ScalingCell.hpp"
@@ -504,7 +505,8 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                                                     outputsHistogram, outputsRange, 
                                                     nbBits, ClippingMode::NONE);
             }
-            else if(cell->getType() == PoolCell::Type || 
+            else if(cell->getType() == PaddingCell::Type || 
+                    cell->getType() == PoolCell::Type || 
                     cell->getType() == ResizeCell::Type || 
                     cell->getType() == ScalingCell::Type || 
                     cell->getType() == SoftmaxCell::Type)
