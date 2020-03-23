@@ -44,5 +44,6 @@ std::vector<unsigned int> N2D2::DropoutCell::getReceptiveField(
 
 void N2D2::DropoutCell::setOutputsDims()
 {
-    mOutputsDims = mInputsDims;
+    mOutputsDims[0] = mInputsDims[0];
+    mOutputsDims[1] = mInputsDims[1];
 }
