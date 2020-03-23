@@ -622,7 +622,11 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
     else {
         sp = deepNet->getStimuliProvider();
 
-        if (sp->getSize() != size) {
+        if (sp->getSize() != size
+            && !(std::equal(size.begin(), size.end(), sp->getSize().begin())
+                && std::all_of(sp->getSize().begin() + size.size(),
+                               sp->getSize().end(), [](size_t i){return i == 1;})))
+        {
             std::ostringstream errorStr;
             errorStr << "Unexpected size for ONNX input \""
                 << (*dataInput.begin()).first << "\": got " << size
@@ -1640,7 +1644,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             float alpha = 1.0;
             float beta = 1.0;
             //bool transA = false;
-            //bool transB = false;
+            bool transB = false;
 
             if (node.op_type() == "Gemm") {
                 if ((itAttr = attribute.find("alpha")) != attribute.end())
@@ -1652,8 +1656,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 //if ((itAttr = attribute.find("transA")) != attribute.end())
                 //    transA = (*itAttr).second->f();
 
-                //if ((itAttr = attribute.find("transB")) != attribute.end())
-                //    transB = (*itAttr).second->f();
+                if ((itAttr = attribute.find("transB")) != attribute.end())
+                    transB = (*itAttr).second->f();
             }
 
             if (!inputData.empty()) {
@@ -1662,6 +1666,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
                 if ((itShape = shape.find((*itInit).first)) != shape.end())
                     weights.reshape((*itShape).second);
+
+                const unsigned int nbOutputs = (transB)
+                    ? weights.dimB() : weights.size() / weights.dimB();
 
                 std::map<std::string, std::vector<std::string> >
                     ::const_iterator itConcat;
@@ -1674,7 +1681,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     = Registrar<FcCell>::create<Float_T>(model)(deepNet->getNetwork(),
                                                                 *deepNet, 
                                                                 node.output(0),
-                                                                weights.dimB(),
+                                                                nbOutputs,
                                                                 activation);
 
                 if (!(node.op_type() == "Gemm" && node.input_size() > 2))
@@ -1720,19 +1727,23 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 std::cout << "  # Synapses: " << fcCell->getNbSynapses()
                     << std::endl;
     
-                if (fcCell->getInputsSize() != weights.size() / weights.dimB())
+                if (fcCell->getInputsSize() != weights.size() / nbOutputs)
                 {
-                    throw std::runtime_error("Unsupported operation: "
-                        + node.op_type() + " with weights size mismatch");
+                    std::ostringstream errorStr;
+                    errorStr << "Unsupported operation: "
+                        << node.op_type() << " with weights size mismatch."
+                        " Inputs dims: " << fcCell->getInputsDims()
+                        << ", weights dims: " << weights.dims();
+
+                    throw std::runtime_error(errorStr.str());
                 }
 
                 // Init weights
-                if (node.op_type() == "Gemm") {
+                if (transB) {
                     weights.reshape({1, fcCell->getInputsSize(),
                                     fcCell->getNbOutputs()});
                 }
                 else {
-                    // weights is transposed for Fc vs MatMul!
                     weights.reshape({1, fcCell->getNbOutputs(),
                                     fcCell->getInputsSize()});
                 }
@@ -1743,7 +1754,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     for (unsigned int channel = 0;
                         channel < fcCell->getInputsSize(); ++channel)
                     {
-                        Tensor<Float_T> w = (node.op_type() == "Gemm")
+                        Tensor<Float_T> w = (transB)
                             ? weights[output][channel]
                             : weights[channel][output];
 
@@ -1988,6 +1999,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         << std::endl;
                 }
 
+                std::reverse(newShape.begin(), newShape.end());
                 shape[inputData] = newShape;
             }
             else {
@@ -2217,7 +2229,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     std::shared_ptr<Cell_Frame_Top> cellFrame
                         = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-                    if (!cellFrame->getActivation()) {
+                    if (!cellFrame->getActivation()
+                        || cellFrame->getActivation()->getType()
+                            == LinearActivation::Type)
+                    {
                         cell->setParameter<bool>("NoBias", false);
                         cell->initialize(); // Re-init with bias!
 
