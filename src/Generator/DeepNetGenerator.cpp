@@ -1706,7 +1706,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if ((itShape = shape.find((*itInit).first)) != shape.end())
                     weights.reshape((*itShape).second);
 
-                const unsigned int nbOutputs = (transB)
+                const unsigned int nbOutputs = (!transB)
                     ? weights.dimB() : weights.size() / weights.dimB();
 
                 std::map<std::string, std::vector<std::string> >
@@ -1778,7 +1778,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
 
                 // Init weights
-                if (transB) {
+                if (!transB) {
                     weights.reshape({1, fcCell->getInputsSize(),
                                     fcCell->getNbOutputs()});
                 }
@@ -1793,7 +1793,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     for (unsigned int channel = 0;
                         channel < fcCell->getInputsSize(); ++channel)
                     {
-                        Tensor<Float_T> w = (transB)
+                        Tensor<Float_T> w = (!transB)
                             ? weights[output][channel]
                             : weights[channel][output];
 
@@ -2470,6 +2470,18 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Transpose
         //Unique
         //Unsqueeze
+        else if (node.op_type() == "Unsqueeze") {
+            assert(node.attribute_size() > 0);
+
+            std::cout << Utils::cnotice << "  Ignore Unsqueeze operation to "
+                << node.attribute(0).GetTypeName()
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         //else if (node.op_type() == "Upsample") {
 
         //}
