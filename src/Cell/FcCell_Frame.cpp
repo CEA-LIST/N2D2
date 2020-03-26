@@ -83,11 +83,11 @@ void N2D2::FcCell_Frame<T>::initialize()
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSynapses.push_back(new Tensor<T>(
-            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}), 0);
         mDiffSynapses.push_back(new Tensor<T>(
-            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}));
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}), 0);
         mDropConnectMask.push_back(new Tensor<bool>(
-            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}, true));
+            {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}, true), 0);
         mWeightsFiller->apply(mSynapses.back());
     }
 }
@@ -446,8 +446,7 @@ void N2D2::FcCell_Frame<T>::loadFreeParameters(const std::string& fileName,
 template <class T>
 N2D2::FcCell_Frame<T>::~FcCell_Frame()
 {
-    for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k)
-        delete &mSynapses[k];
+    //dtor
 }
 
 namespace N2D2 {

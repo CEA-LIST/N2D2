@@ -94,7 +94,7 @@ void N2D2::PoolCell_Frame<T>::initialize()
 
         if (mArgMax.size() == k) {
             mArgMax.push_back(new Tensor<PoolCell_Frame_Kernels::ArgMax>
-                              (mOutputs.dims()));
+                              (mOutputs.dims()), 0);
         }
     }
 }
@@ -232,8 +232,7 @@ std::pair<double, double> N2D2::PoolCell_Frame<T>::getOutputsRange() const {
 template <class T>
 N2D2::PoolCell_Frame<T>::~PoolCell_Frame()
 {
-    for (unsigned int k = 0, size = mArgMax.size(); k < size; ++k)
-        delete &mArgMax[k];
+    //dtor
 }
 
 namespace N2D2 {
