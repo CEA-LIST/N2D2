@@ -209,6 +209,7 @@ public:
                       CompositeTransformation trans
                         = CompositeTransformation(),
                       bool subDirPerClass = true);
+    void append(const Database& database);
     void partitionStimulus(StimulusID id, StimuliSet set);
     void partitionStimuli(unsigned int nbStimuli, StimuliSet set);
     void partitionStimuli(double learn, double validation, double test);

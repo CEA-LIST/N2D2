@@ -957,6 +957,56 @@ void N2D2::Database::save(const std::string& dataPath,
     assert(saved == toSave);
 }
 
+void N2D2::Database::append(const Database& database) {
+    const unsigned int offsetID = mStimuli.size();
+    const unsigned int offsetLabelID = mLabelsName.size();
+
+    mStimuli.reserve(offsetID + database.mStimuli.size());
+
+    for (std::vector<Stimulus>::const_iterator it = database.mStimuli.begin(),
+        itEnd = database.mStimuli.end(); it != itEnd; ++it)
+    {
+        mStimuli.push_back((*it));
+
+        if (mStimuli.back().label >= 0)
+            mStimuli.back().label += offsetLabelID;
+
+        for (std::vector<ROI*>::const_iterator itROIs
+            = mStimuli.back().ROIs.begin(), 
+            itROIsEnd = mStimuli.back().ROIs.end(); itROIs != itROIsEnd;
+            ++itROIs)
+        {
+            if ((*itROIs)->getLabel() >= 0)
+                (*itROIs)->setLabel((*itROIs)->getLabel() + offsetLabelID);
+        }
+    }
+
+    mLabelsName.insert(mLabelsName.end(),
+        database.mLabelsName.begin(), database.mLabelsName.end());
+    mStimuliData.insert(mStimuliData.end(),
+        database.mStimuliData.begin(), database.mStimuliData.end());
+    mStimuliLabelsData.insert(mStimuliLabelsData.end(),
+        database.mStimuliLabelsData.begin(), database.mStimuliLabelsData.end());
+    mStimuliTargetData.insert(mStimuliTargetData.end(),
+        database.mStimuliTargetData.begin(), database.mStimuliTargetData.end());
+
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(All);
+
+    for (std::vector<StimuliSet>::const_iterator itSet = stimuliSets.begin(),
+                                                 itSetEnd = stimuliSets.end();
+         itSet != itSetEnd;
+         ++itSet)
+    {
+        const unsigned int size = database.mStimuliSets(*itSet).size();
+        mStimuliSets(*itSet).reserve(mStimuliSets(*itSet).size() + size);
+
+        for (int i = 0; i < (int)size; ++i) {
+            const StimulusID id = database.mStimuliSets(*itSet)[i];
+            mStimuliSets(*itSet).push_back(id + offsetID);
+        }
+    }
+}
+
 void N2D2::Database::partitionStimulus(StimulusID id, StimuliSet set)
 {
     if (set == Unpartitioned)
