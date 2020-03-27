@@ -747,7 +747,9 @@ void N2D2::TargetScore::correctLastBatch(
                                     batchSuccess.end(), -1.0),
                         batchSuccess.end());
 
-    if (batchSuccess.size() < batchSize) {
+    if (!success.empty() && !batchSuccess.empty()
+        && batchSuccess.size() < batchSize)
+    {
         // Compute the correct cumulative score sum
         const double scoreSum = batchSize
                 * std::accumulate(success.begin(), success.end(), 0.0)
