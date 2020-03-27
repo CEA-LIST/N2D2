@@ -220,7 +220,6 @@ public:
         validMetric = opts.parse("-valid-metric", ConfusionTableMetric::Sensitivity,
                                                   "validation metric to use (default is "
                                                   "Sensitivity)");
-        objectDetector = opts.parse("-object-detector-metric", "use object detector metrics");
         stopValid =   opts.parse("-stop-valid", 0U, "max. number of successive lower score "
                                                    "validation");
         test =        opts.parse("-test", "perform testing");
@@ -307,7 +306,6 @@ public:
     int preSamples;
     unsigned int findLr;
     ConfusionTableMetric validMetric;
-    bool objectDetector;
     unsigned int stopValid;
     bool test;
     bool fuse;
@@ -421,25 +419,24 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                         itTargets = deepNet->getTargets().begin(),
                         itTargetsEnd = deepNet->getTargets().end();
                     itTargets != itTargetsEnd;
-                    ++itTargets) {
-                if(!opt.objectDetector)
-                {
-                    std::shared_ptr<TargetScore> target
-                        = std::dynamic_pointer_cast
-                        <TargetScore>(*itTargets);
+                    ++itTargets)
+            {
+                std::shared_ptr<TargetScore> targetScore
+                    = std::dynamic_pointer_cast
+                    <TargetScore>(*itTargets);
 
-                    if (target)
-                        std::cout << (100.0 * target->getAverageSuccess(
-                                                    Database::Test)) << "% ";
+                if (targetScore) {
+                    std::cout << (100.0 * targetScore->getAverageSuccess(
+                                                Database::Test)) << "% ";
                 }
-                else {
-                    std::shared_ptr<TargetBBox> target
-                        = std::dynamic_pointer_cast
-                        <TargetBBox>(*itTargets);
 
-                    if (target)
-                        std::cout << (100.0 * target->getAverageSuccess(
-                                                    Database::Test)) << "% ";
+                std::shared_ptr<TargetBBox> targetBBox
+                    = std::dynamic_pointer_cast
+                    <TargetBBox>(*itTargets);
+
+                if (targetBBox) {
+                    std::cout << (100.0 * targetBBox->getAverageSuccess(
+                                                Database::Test)) << "% ";
                 }
             }
             std::cout << std::endl;
@@ -452,28 +449,23 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                         itTargets = deepNet->getTargets().begin(),
                         itTargetsEnd = deepNet->getTargets().end();
                     itTargets != itTargetsEnd;
-                    ++itTargets) {
-                if(!opt.objectDetector)
-                {
-                    std::shared_ptr<TargetScore> target
-                        = std::dynamic_pointer_cast
-                        <TargetScore>(*itTargets);
+                    ++itTargets)
+            {
+                std::shared_ptr<TargetScore> targetScore
+                    = std::dynamic_pointer_cast
+                    <TargetScore>(*itTargets);
 
-                    if (target) {
-                        target->logSuccess(testName, Database::Test);
-                        target->logTopNSuccess(testName, Database::Test);
-                    }
+                if (targetScore) {
+                    targetScore->logSuccess(testName, Database::Test);
+                    targetScore->logTopNSuccess(testName, Database::Test);
                 }
-                else {
 
-                    std::shared_ptr<TargetBBox> target
-                        = std::dynamic_pointer_cast
-                        <TargetBBox>(*itTargets);
+                std::shared_ptr<TargetBBox> targetBBox
+                    = std::dynamic_pointer_cast
+                    <TargetBBox>(*itTargets);
 
-                    if (target) 
-                        target->logSuccess(testName, Database::Test);
-                    
-                }
+                if (targetBBox) 
+                    targetBBox->logSuccess(testName, Database::Test);
             }
         }
     }
@@ -496,59 +488,55 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                     itTargets = deepNet->getTargets().begin(),
                     itTargetsEnd = deepNet->getTargets().end();
                 itTargets != itTargetsEnd;
-                ++itTargets) {
-            if(!opt.objectDetector)
-            {
+                ++itTargets)
+        {
+            std::shared_ptr<TargetScore> targetScore
+                = std::dynamic_pointer_cast<TargetScore>(*itTargets);
 
-                std::shared_ptr<TargetScore> target
-                    = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+            if (targetScore) {
+                std::cout << "Final recognition rate: "
+                            << (100.0 * targetScore->getAverageSuccess(
+                                            Database::Test))
+                            << "%"
+                                "    (error rate: "
+                            << 100.0 * (1.0 - targetScore->getAverageSuccess(
+                                                Database::Test)) << "%)"
+                            << std::endl;
 
-                if (target) {
-                    std::cout << "Final recognition rate: "
-                                << (100.0 * target->getAverageSuccess(
-                                                Database::Test))
-                                << "%"
-                                    "    (error rate: "
-                                << 100.0 * (1.0 - target->getAverageSuccess(
-                                                    Database::Test)) << "%)"
-                                << std::endl;
-
-                    std::cout << "    Sensitivity: " << (100.0
-                        * target->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::Sensitivity))
-                                << "% / Specificity: " << (100.0
-                        * target->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::Specificity))
-                                << "% / Precision: " << (100.0
-                        * target->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::Precision))
-                                << "%\n"
-                                "    Accuracy: " << (100.0
-                        * target->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::Accuracy))
-                                << "% / F1-score: " << (100.0
-                        * target->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::F1Score))
-                                << "% / Informedness: " << (100.0
-                        * target->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::Informedness))
-                                << "%\n" << std::endl;
-                }
+                std::cout << "    Sensitivity: " << (100.0
+                    * targetScore->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Sensitivity))
+                            << "% / Specificity: " << (100.0
+                    * targetScore->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Specificity))
+                            << "% / Precision: " << (100.0
+                    * targetScore->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Precision))
+                            << "%\n"
+                            "    Accuracy: " << (100.0
+                    * targetScore->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Accuracy))
+                            << "% / F1-score: " << (100.0
+                    * targetScore->getAverageScore(Database::Test,
+                                ConfusionTableMetric::F1Score))
+                            << "% / Informedness: " << (100.0
+                    * targetScore->getAverageScore(Database::Test,
+                                ConfusionTableMetric::Informedness))
+                            << "%\n" << std::endl;
             }
-            else {
-                std::shared_ptr<TargetBBox> target
-                    = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
+            
+            std::shared_ptr<TargetBBox> targetBBox
+                = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
 
-                if (target) {
-                    std::cout << "Final recognition rate: "
-                                << (100.0 * target->getAverageSuccess(
-                                                Database::Test))
-                                << "%"
-                                    "    (error rate: "
-                                << 100.0 * (1.0 - target->getAverageSuccess(
-                                                    Database::Test)) << "%)"
-                                << std::endl;
-                }
+            if (targetBBox) {
+                std::cout << "Final recognition rate: "
+                            << (100.0 * targetBBox->getAverageSuccess(
+                                            Database::Test))
+                            << "%"
+                                "    (error rate: "
+                            << 100.0 * (1.0 - targetBBox->getAverageSuccess(
+                                                Database::Test)) << "%)"
+                            << std::endl;
             }
         }
     }
@@ -964,24 +952,23 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         itTargets = deepNet->getTargets().begin(),
                         itTargetsEnd = deepNet->getTargets().end();
                     itTargets != itTargetsEnd;
-                    ++itTargets) {
-                if(!opt.objectDetector)
-                {
-                    std::shared_ptr<TargetScore> target
-                        = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+                    ++itTargets)
+            {
+                std::shared_ptr<TargetScore> targetScore
+                    = std::dynamic_pointer_cast<TargetScore>(*itTargets);
 
-                    if (target)
-                        std::cout << (100.0 * target->getAverageSuccess(
-                                                    Database::Learn,
-                                                    avgBatchWindow)) << "% ";
+                if (targetScore) {
+                    std::cout << (100.0 * targetScore->getAverageSuccess(
+                                                Database::Learn,
+                                                avgBatchWindow)) << "% ";
                 }
-                else {
-                    std::shared_ptr<TargetBBox> target
-                        = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
 
-                    if (target)
-                        std::cout << (100.0 * target->getAverageSuccess(
-                                                    Database::Learn)) << "% ";
+                std::shared_ptr<TargetBBox> targetBBox
+                    = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
+
+                if (targetBBox) {
+                    std::cout << (100.0 * targetBBox->getAverageSuccess(
+                                                Database::Learn)) << "% ";
                 }
             }
 
@@ -1015,29 +1002,26 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         itTargets = deepNet->getTargets().begin(),
                         itTargetsEnd = deepNet->getTargets().end();
                     itTargets != itTargetsEnd;
-                    ++itTargets) {
-                if(!opt.objectDetector)
-                {
-                    std::shared_ptr<TargetScore> target
-                        = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+                    ++itTargets)
+            {
+                std::shared_ptr<TargetScore> targetScore
+                    = std::dynamic_pointer_cast<TargetScore>(*itTargets);
 
-                    if (target) {
-                        target->logSuccess(
-                            "learning", Database::Learn, avgBatchWindow);
-                        // target->logTopNSuccess("learning", Database::Learn,
-                        // avgBatchWindow);
-                    }
+                if (targetScore) {
+                    targetScore->logSuccess(
+                        "learning", Database::Learn, avgBatchWindow);
+                    // targetScore->logTopNSuccess("learning", Database::Learn,
+                    // avgBatchWindow);
                 }
-                else {
-                    std::shared_ptr<TargetBBox> target
-                        = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
+                
+                std::shared_ptr<TargetBBox> targetBBox
+                    = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
 
-                    if (target) {
-                        target->logSuccess(
-                            "learning", Database::Learn, avgBatchWindow);
-                        // target->logTopNSuccess("learning", Database::Learn,
-                        // avgBatchWindow);
-                    }
+                if (targetBBox) {
+                    targetBBox->logSuccess(
+                        "learning", Database::Learn, avgBatchWindow);
+                    // targetBBox->logTopNSuccess("learning", Database::Learn,
+                    // avgBatchWindow);
                 }
             }
 
@@ -1102,24 +1086,21 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                             itTargets = deepNet->getTargets().begin(),
                             itTargetsEnd = deepNet->getTargets().end();
                         itTargets != itTargetsEnd;
-                        ++itTargets) {
-                    if(!opt.objectDetector)
-                    {
-                        std::shared_ptr<TargetScore> target
-                            = std::dynamic_pointer_cast
-                            <TargetScore>(*itTargets);
+                        ++itTargets)
+                {
+                    std::shared_ptr<TargetScore> targetScore
+                        = std::dynamic_pointer_cast
+                        <TargetScore>(*itTargets);
 
-                        if (!target)
-                            continue;
-
-                        const bool bestValidation = target->newValidationScore(
-                                target->getAverageScore(Database::Validation,
+                    if (targetScore) {
+                        const bool bestValidation = targetScore->newValidationScore(
+                                targetScore->getAverageScore(Database::Validation,
                                                         opt.validMetric));
 
                         if (bestValidation) {
                             std::cout << "\n+++ BEST validation score: "
                                         << (100.0
-                                            * target->getMaxValidationScore())
+                                            * targetScore->getMaxValidationScore())
                                         << "% [" << opt.validMetric << "]\n";
 
                             deepNet->log("validation", Database::Validation);
@@ -1130,32 +1111,32 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         else {
                             std::cout << "\n--- LOWER validation score: "
                                         << (100.0
-                                            * target->getLastValidationScore())
+                                            * targetScore->getLastValidationScore())
                                         << "% [" << opt.validMetric << "] (best was "
                                         << (100.0
-                                            * target->getMaxValidationScore())
+                                            * targetScore->getMaxValidationScore())
                                         << "%)\n" << std::endl;
 
                         }
 
                         std::cout << "    Sensitivity: " << (100.0
-                            * target->getAverageScore(Database::Validation,
+                            * targetScore->getAverageScore(Database::Validation,
                                         ConfusionTableMetric::Sensitivity))
                                     << "% / Specificity: " << (100.0
-                            * target->getAverageScore(Database::Validation,
+                            * targetScore->getAverageScore(Database::Validation,
                                         ConfusionTableMetric::Specificity))
                                     << "% / Precision: " << (100.0
-                            * target->getAverageScore(Database::Validation,
+                            * targetScore->getAverageScore(Database::Validation,
                                         ConfusionTableMetric::Precision))
                                     << "%\n"
                                     "    Accuracy: " << (100.0
-                            * target->getAverageScore(Database::Validation,
+                            * targetScore->getAverageScore(Database::Validation,
                                         ConfusionTableMetric::Accuracy))
                                     << "% / F1-score: " << (100.0
-                            * target->getAverageScore(Database::Validation,
+                            * targetScore->getAverageScore(Database::Validation,
                                         ConfusionTableMetric::F1Score))
                                     << "% / Informedness: " << (100.0
-                            * target->getAverageScore(Database::Validation,
+                            * targetScore->getAverageScore(Database::Validation,
                                         ConfusionTableMetric::Informedness))
                                     << "%\n" << std::endl;
 
@@ -1174,32 +1155,30 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         else
                             nbNoValid = 0;
 
-                        target->newValidationTopNScore(
-                            target->getAverageTopNScore(
+                        targetScore->newValidationTopNScore(
+                            targetScore->getAverageTopNScore(
                                 Database::Validation, opt.validMetric));
-                        target->logSuccess(
+                        targetScore->logSuccess(
                             "validation", Database::Validation, avgBatchWindow);
-                        target->logTopNSuccess(
+                        targetScore->logTopNSuccess(
                             "validation",
                             Database::Validation,
                             avgBatchWindow); // Top-N accuracy
-                        target->clearSuccess(Database::Validation);
+                        targetScore->clearSuccess(Database::Validation);
                     }
-                    else {
-                        std::shared_ptr<TargetBBox> target
-                            = std::dynamic_pointer_cast
-                            <TargetBBox>(*itTargets);
+                    
+                    std::shared_ptr<TargetBBox> targetBBox
+                        = std::dynamic_pointer_cast
+                        <TargetBBox>(*itTargets);
 
-                        if (!target)
-                            continue;
-
-                        const bool bestValidation = target->newValidationScore(
-                                target->getAverageSuccess(Database::Validation));
+                    if (targetBBox) {
+                        const bool bestValidation = targetBBox->newValidationScore(
+                                targetBBox->getAverageSuccess(Database::Validation));
 
                         if (bestValidation) {
                             std::cout << "\n+++ BEST validation score: "
                                         << (100.0
-                                            * target->getMaxValidationScore())
+                                            * targetBBox->getMaxValidationScore())
                                         << "% [" << opt.validMetric << "]\n";
 
                             deepNet->log("validation", Database::Validation);
@@ -1210,10 +1189,10 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         else {
                             std::cout << "\n--- LOWER validation score: "
                                         << (100.0
-                                            * target->getLastValidationScore())
+                                            * targetBBox->getLastValidationScore())
                                         << "% [" << opt.validMetric << "] (best was "
                                         << (100.0
-                                            * target->getMaxValidationScore())
+                                            * targetBBox->getMaxValidationScore())
                                         << "%)\n" << std::endl;
 
                         }
@@ -1232,9 +1211,9 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         }
                         else
                             nbNoValid = 0;
-                        target->logSuccess("validation", Database::Validation, avgBatchWindow);
-                        target->clearSuccess(Database::Validation);
 
+                        targetBBox->logSuccess("validation", Database::Validation, avgBatchWindow);
+                        targetBBox->clearSuccess(Database::Validation);
                     }
                 }
 
