@@ -267,6 +267,24 @@ void N2D2::TargetBiasCell_Frame_CUDA<T>::update() {
 }
 
 template<class T>
+double N2D2::TargetBiasCell_Frame_CUDA<T>::applyLoss(
+    double /*targetVal*/,
+    double /*defaultVal*/)
+{
+    // TargetBias takes a target for the forward pass only, which should no set
+    // mDiffInputs
+    return 0.0;
+}
+
+template<class T>
+double N2D2::TargetBiasCell_Frame_CUDA<T>::applyLoss()
+{
+    // TargetBias takes a target for the forward pass only, which should no set
+    // mDiffInputs
+    return 0.0;
+}
+
+template<class T>
 void N2D2::TargetBiasCell_Frame_CUDA<T>::checkGradient(double /*epsilon*/, double /*maxError*/) {
     throw std::runtime_error("checkGradient not supported yet.");
 }

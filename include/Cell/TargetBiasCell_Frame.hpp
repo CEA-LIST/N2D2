@@ -54,6 +54,8 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
+    virtual double applyLoss(double targetVal, double defaultVal);
+    virtual double applyLoss();
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
 };
 }
