@@ -71,6 +71,7 @@
 #include "Target/TargetROIs.hpp"
 #include "Target/TargetBBox.hpp"
 #include "Target/TargetScore.hpp"
+#include "Target/TargetMatching.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 
@@ -1214,6 +1215,52 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                         targetBBox->logSuccess("validation", Database::Validation, avgBatchWindow);
                         targetBBox->clearSuccess(Database::Validation);
+                    }
+
+                    std::shared_ptr<TargetMatching> targetMatching
+                        = std::dynamic_pointer_cast
+                        <TargetMatching>(*itTargets);
+
+                    if (targetMatching) {
+                        const bool bestValidation = targetMatching->newValidationEER(
+                                targetMatching->getEER());
+
+                        if (bestValidation) {
+                            std::cout << "\n+++ BEST validation EER: "
+                                        << (100.0
+                                            * targetMatching->getMinValidationEER())
+                                        << "%\n";
+
+                            deepNet->log("validation", Database::Validation);
+                            deepNet->exportNetworkFreeParameters(
+                                "weights_validation_EER");
+                            deepNet->save("net_state_validation_EER");
+                        }
+                        else {
+                            std::cout << "\n--- HIGHER validation EER: "
+                                        << (100.0
+                                            * targetMatching->getLastValidationEER())
+                                        << "% (best was "
+                                        << (100.0
+                                            * targetMatching->getMinValidationEER())
+                                        << "%)\n" << std::endl;
+
+                        }
+
+                        if (!bestValidation) {
+                            ++nbNoValid;
+
+                            if (opt.stopValid > 0 && nbNoValid >= opt.stopValid) {
+                                std::cout
+                                    << "\n--- Validation did not improve after "
+                                    << opt.stopValid << " steps\n" << std::endl;
+                                std::cout << "\n--- STOPPING THE LEARNING\n"
+                                            << std::endl;
+                                break;
+                            }
+                        }
+                        else
+                            nbNoValid = 0;
                     }
                 }
 
