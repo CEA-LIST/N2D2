@@ -31,6 +31,12 @@
 namespace N2D2 {
 class TargetMatching : public Target {
 public:
+    enum Distance {
+        L1,
+        L2,
+        Linf
+    };
+
     static std::shared_ptr<Target> create(const std::string& name,
                                           const std::shared_ptr<Cell>& cell,
                                           const std::shared_ptr
@@ -65,9 +71,11 @@ public:
         return Type;
     };
     bool newValidationEER(double validationEER);
+    bool newValidationEER(double validationEER, double validationFRR);
     double getLastValidationEER() const
     {
-        return (!mValidationEER.empty()) ? mValidationEER.back() : 0.0;
+        return (!mValidationEER.empty()) ? mValidationEER.back().second
+                                         : 0.0;
     };
     double getMinValidationEER() const
     {
@@ -75,6 +83,7 @@ public:
     };
 
     double getEER();
+    double getFRR();
     double getFRR(double targetFAR);
 
     virtual void provideTargets(Database::StimuliSet /*set*/) {}
@@ -88,11 +97,22 @@ protected:
     void computeDistances();
     std::pair<double, double> computeFAR_FRR(double threshold) const;
 
-    Parameter<unsigned int> mEER_NbSteps;
-    Parameter<double> mEER_Precision;
+    /**
+     * Compute the couple of values (FAR, FRR) in the ROC curve corresponding to
+     * equation a * FAR + b * FRR + c = 0, with a precision of mROC_Precision.
+    */
+    std::pair<double, double> computeROC(double a, double b, double c);
 
-    std::vector<double> mValidationEER;
+    Parameter<Distance> mDistance;
+    Parameter<unsigned int> mROC_NbSteps;
+    Parameter<double> mROC_Precision;
+    Parameter<double> mTargetFAR;
+
+    unsigned int nbBatches;
+    std::vector<std::pair<unsigned int, double> > mValidationEER;
+    std::vector<std::pair<unsigned int, double> > mValidationFRR;
     double mMinValidationEER;
+    double mMinValidationFRR;
     std::map<double, std::pair<double, double> > mROC;
 
     Tensor<int> mIDs;
@@ -105,6 +125,12 @@ protected:
 private:
     static Registrar<Target> mRegistrar;
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::TargetMatching::Distance>::data[]
+    = {"L1", "L2", "Linf"};
 }
 
 #endif // N2D2_TARGETMATCHING_H

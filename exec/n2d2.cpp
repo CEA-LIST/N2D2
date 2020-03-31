@@ -1222,8 +1222,11 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         <TargetMatching>(*itTargets);
 
                     if (targetMatching) {
-                        const bool bestValidation = targetMatching->newValidationEER(
-                                targetMatching->getEER());
+                        const bool bestValidation
+                            = targetMatching->newValidationEER(
+                                targetMatching->getEER(),
+                                targetMatching->getFRR());
+                        deepNet->log("validation", Database::Validation);
 
                         if (bestValidation) {
                             std::cout << "\n+++ BEST validation EER: "
@@ -1231,7 +1234,6 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetMatching->getMinValidationEER())
                                         << "%\n";
 
-                            deepNet->log("validation", Database::Validation);
                             deepNet->exportNetworkFreeParameters(
                                 "weights_validation_EER");
                             deepNet->save("net_state_validation_EER");
