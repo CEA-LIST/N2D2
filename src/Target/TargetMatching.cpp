@@ -138,8 +138,8 @@ std::pair<double, double> N2D2::TargetMatching::computeFAR_FRR(double threshold)
     assert(mDistances.size()
         == (mSignatures.dimB() * (mSignatures.dimB() - 1)) / 2);
 
-    unsigned long long int FA = 0;
-    unsigned long long int FR = 0;
+    unsigned long long int falseAcceptance = 0;
+    unsigned long long int falseRejection = 0;
     unsigned long long int countGenuine = 0;
     unsigned long long int countImposter = 0;
 
@@ -149,13 +149,13 @@ std::pair<double, double> N2D2::TargetMatching::computeFAR_FRR(double threshold)
         for (std::size_t j = 0; j < i; ++j) {
             if (mIDs(j) == mIDs(i)) {
                 if (mDistances(k) > threshold)
-                    ++FR;
+                    ++falseRejection;
 
                 ++countGenuine;
             }
             else {
                 if (mDistances(k) <= threshold)
-                    ++FA;
+                    ++falseAcceptance;
 
                 ++countImposter;
             }
@@ -166,9 +166,9 @@ std::pair<double, double> N2D2::TargetMatching::computeFAR_FRR(double threshold)
 
     assert(k == mDistances.size());
 
-    const double FAR = FA / (double)countImposter;
-    const double FRR = FR / (double)countGenuine;
-    return std::pair<double, double>(FAR, FRR);
+    const double FA_Rate = falseAcceptance / (double)countImposter;
+    const double FR_Rate = falseRejection / (double)countGenuine;
+    return std::pair<double, double>(FA_Rate, FR_Rate);
 }
 
 /**
@@ -182,10 +182,10 @@ double N2D2::TargetMatching::getEER() {
     if (mROC.empty())
         computeDistances();
 
-    double FAR, FRR;
-    std::tie(FAR, FRR) = computeROC(1.0, -1.0, 0.0);
+    double FA_Rate, FR_Rate;
+    std::tie(FA_Rate, FR_Rate) = computeROC(1.0, -1.0, 0.0);
 
-    return (FAR + FRR) / 2.0;
+    return (FA_Rate + FR_Rate) / 2.0;
 }
 
 double N2D2::TargetMatching::getFRR() {
@@ -196,10 +196,10 @@ double N2D2::TargetMatching::getFRR(double targetFAR) {
     if (mROC.empty())
         computeDistances();
 
-    double FAR, FRR;
-    std::tie(FAR, FRR) = computeROC(1.0, 0.0, -targetFAR);
+    double FA_Rate, FR_Rate;
+    std::tie(FA_Rate, FR_Rate) = computeROC(1.0, 0.0, -targetFAR);
 
-    return FRR;
+    return FR_Rate;
 }
 
 std::pair<double, double> N2D2::TargetMatching::computeROC(
@@ -232,13 +232,13 @@ std::pair<double, double> N2D2::TargetMatching::computeROC(
                 mROC[threshold] = FAR_FRR;
             }
 
-            double FAR, FRR;
-            std::tie(FAR, FRR) = FAR_FRR;
+            double FA_Rate, FR_Rate;
+            std::tie(FA_Rate, FR_Rate) = FAR_FRR;
 
-            if (std::abs(a * FAR + b * FRR + c) < mROC_Precision)
+            if (std::abs(a * FA_Rate + b * FR_Rate + c) < mROC_Precision)
                 return FAR_FRR;
 
-            diff.push_back(a * FAR + b * FRR + c);
+            diff.push_back(a * FA_Rate + b * FR_Rate + c);
             thresholds.push_back(threshold);
         }
 
@@ -315,11 +315,11 @@ void N2D2::TargetMatching::log(const std::string& fileName,
         }
 
         for (auto it = mROC.begin(); it != mROC.end(); ++it) {
-            double FAR, FRR;
-            std::tie(FAR, FRR) = (*it).second;
+            double FA_Rate, FR_Rate;
+            std::tie(FA_Rate, FR_Rate) = (*it).second;
             const double threshold = (*it).first;
 
-            data << FAR << " " << FRR << " " << threshold << "\n";
+            data << FA_Rate << " " << FR_Rate << " " << threshold << "\n";
         }
 
         data.close();
