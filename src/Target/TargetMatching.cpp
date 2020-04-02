@@ -326,6 +326,7 @@ void N2D2::TargetMatching::log(const std::string& fileName,
 
         Gnuplot gnuplot;
         gnuplot.set("grid").set("key off");
+        gnuplot.set("logscale x");
         gnuplot.setYlabel("1 - False Rejection Rate (FRR)");
         gnuplot.setXlabel("False Acceptance Rate (FAR)");
 
