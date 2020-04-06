@@ -254,11 +254,11 @@ void batchnormcell_propagate(
     unsigned int nbOutputs_,
     unsigned int outputOffset,
     DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
-    float bias[nbChannels],
-    float variances[nbChannels],
-    float means[nbChannels],
-    float scales[nbChannels],
-    float epsilon,
+    WDATA_T bias[nbChannels],
+    WDATA_T variances[nbChannels],
+    WDATA_T means[nbChannels],
+    WDATA_T scales[nbChannels],
+    double epsilon,
     ActivationFunction_T func);
 
 void batchnormcell_upropagate(
@@ -269,11 +269,11 @@ void batchnormcell_upropagate(
     unsigned int nbOutputs_,
     unsigned int outputOffset,
     DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
-    float bias[nbChannels],
-    float variances[nbChannels],
-    float means[nbChannels],
-    float scales[nbChannels],
-    float epsilon,
+    WDATA_T bias[nbChannels],
+    WDATA_T variances[nbChannels],
+    WDATA_T means[nbChannels],
+    WDATA_T scales[nbChannels],
+    double epsilon,
     ActivationFunction_T func);
 
 void fmpcell_propagate(unsigned int nbChannels,

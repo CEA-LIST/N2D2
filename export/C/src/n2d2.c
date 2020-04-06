@@ -262,11 +262,11 @@ void batchnormcell_propagate(
     unsigned int nbOutputs_,
     unsigned int outputOffset,
     DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
-    float bias[nbChannels],
-    float variances[nbChannels],
-    float means[nbChannels],
-    float scales[nbChannels],
-    float epsilon,
+    WDATA_T bias[nbChannels],
+    WDATA_T variances[nbChannels],
+    WDATA_T means[nbChannels],
+    WDATA_T scales[nbChannels],
+    double epsilon,
     ActivationFunction_T func)
 {
 #if NB_BITS > 0
@@ -276,13 +276,13 @@ void batchnormcell_propagate(
     return;
 #else
     for (unsigned int output = 0; output < nbChannels; ++output) {
-        const float var = sqrt(variances[output] + epsilon);
+        const WDATA_T var = sqrt(variances[output] + epsilon);
 
         for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
             for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
-                const float normalized
+                const WDATA_T normalized
                     = (inputs[output][oy][ox] - means[output]) / var;
-                const float sAs = scales[output] * normalized + bias[output];
+                const WDATA_T sAs = scales[output] * normalized + bias[output];
                 outputs[output + outputOffset][oy][ox] = sat(sAs, func, 0);
             }
         }
@@ -298,11 +298,11 @@ void batchnormcell_upropagate(
     unsigned int nbOutputs_,
     unsigned int outputOffset,
     DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
-    float bias[nbChannels],
-    float variances[nbChannels],
-    float means[nbChannels],
-    float scales[nbChannels],
-    float epsilon,
+    WDATA_T bias[nbChannels],
+    WDATA_T variances[nbChannels],
+    WDATA_T means[nbChannels],
+    WDATA_T scales[nbChannels],
+    double epsilon,
     ActivationFunction_T func)
 {
 #if NB_BITS > 0
@@ -312,13 +312,13 @@ void batchnormcell_upropagate(
     return;
 #else
     for (unsigned int output = 0; output < nbChannels; ++output) {
-        const float var = sqrt(variances[output] + epsilon);
+        const WDATA_T var = sqrt(variances[output] + epsilon);
 
         for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
             for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
-                const float normalized
+                const WDATA_T normalized
                     = (inputs[output][oy][ox] - means[output]) / var;
-                const float sAs = scales[output] * normalized + bias[output];
+                const WDATA_T sAs = scales[output] * normalized + bias[output];
                 outputs[output + outputOffset][oy][ox] = usat(sAs, func, 0);
             }
         }
