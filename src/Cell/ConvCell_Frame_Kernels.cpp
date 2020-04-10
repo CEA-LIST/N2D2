@@ -34,11 +34,11 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
                                            const Tensor<bool>& maps)
 {
     const unsigned int oxSize
-        = (unsigned int)((inputs.dimX() + 2 * desc.padding[0]
+        = (unsigned int)((inputs.dimX() + desc.padding[0] + desc.padding[2]
                           - sharedSynapses.dimX() + desc.stride[0])
                          / (double)desc.stride[0]);
     const unsigned int oySize
-        = (unsigned int)((inputs.dimY() + 2 * desc.padding[1]
+        = (unsigned int)((inputs.dimY() + desc.padding[1] + desc.padding[3]
                           - sharedSynapses.dimY() + desc.stride[1])
                          / (double)desc.stride[1]);
     const bool subSample = (desc.subSample[0] > 1 || desc.subSample[1] > 1);
@@ -174,12 +174,12 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                                                 const Tensor<bool>& maps)
 {
     const unsigned int oxStride
-        = desc.stride[0] * (unsigned int)((diffOutputs.dimX() + 2 * desc.padding[0]
-                                         - sharedSynapses.dimX() + desc.stride[0])
+        = desc.stride[0] * (unsigned int)((diffOutputs.dimX() + desc.padding[0]
+            + desc.padding[2] - sharedSynapses.dimX() + desc.stride[0])
                                         / (double)desc.stride[0]);
     const unsigned int oyStride
-        = desc.stride[1] * (unsigned int)((diffOutputs.dimY() + 2 * desc.padding[1]
-                                         - sharedSynapses.dimY() + desc.stride[1])
+        = desc.stride[1] * (unsigned int)((diffOutputs.dimY() + desc.padding[1]
+            + desc.padding[3] - sharedSynapses.dimY() + desc.stride[1])
                                         / (double)desc.stride[1]);
     const bool noSubSample = (desc.subSample[0] == 1 && desc.subSample[1] == 1);
 
@@ -326,11 +326,11 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const T* alpha,
                                                   const Tensor<bool>& maps)
 {
     const unsigned int oxSize
-        = (unsigned int)((inputs.dimX() + 2 * desc.padding[0]
+        = (unsigned int)((inputs.dimX() + desc.padding[0] + desc.padding[2]
                           - diffSharedSynapses.dimX() + desc.stride[0])
                          / (double)desc.stride[0]);
     const unsigned int oySize
-        = (unsigned int)((inputs.dimY() + 2 * desc.padding[1]
+        = (unsigned int)((inputs.dimY() + desc.padding[1] + desc.padding[3]
                           - diffSharedSynapses.dimY() + desc.stride[1])
                          / (double)desc.stride[1]);
     const bool noSubSample = (desc.subSample[0] == 1 && desc.subSample[1] == 1);

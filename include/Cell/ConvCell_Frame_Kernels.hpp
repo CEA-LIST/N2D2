@@ -30,7 +30,8 @@ namespace ConvCell_Frame_Kernels {
     struct Descriptor {
         const std::vector<unsigned int> subSample;
         const std::vector<unsigned int> stride;
-        const std::vector<int> padding;
+        // left, top, right, bottom (if 2D)
+        std::vector<int> padding;
         const std::vector<unsigned int> dilation;
 
         Descriptor(const std::vector<unsigned int>& subSample_,
@@ -42,6 +43,11 @@ namespace ConvCell_Frame_Kernels {
               padding(padding_),
               dilation(dilation_)
         {
+            if (padding.size() == stride.size()) {
+                // Duplicate left, top padding for right, bottom padding
+                for (std::size_t i = 0; i < stride.size(); ++i)
+                    padding.push_back(padding[i]);
+            }
         }
     };
 
