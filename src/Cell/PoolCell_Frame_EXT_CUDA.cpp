@@ -93,6 +93,28 @@ N2D2::PoolCell_Frame_EXT_CUDA<T>::PoolCell_Frame_EXT_CUDA(
 }
 
 template <class T>
+void N2D2::PoolCell_Frame_EXT_CUDA<T>::setExtendedPadding(
+    const std::vector<int>& paddingDims)
+{
+    PoolCell::setExtendedPadding(paddingDims);
+
+    PoolCell_Frame_Kernels::Descriptor poolDesc(mPoolDims.size(),
+                                                &mPoolDims[0],
+                                                &mStrideDims[0],
+                                                &mPaddingDims[0]);
+
+    for (std::size_t dim = 0; dim < mPaddingDims.size(); ++dim) {
+        // Don't care about bottom/right padding, not used anywhere
+        poolDesc.padding[dim] = mPaddingDims[dim] + paddingDims[dim];
+    }
+
+    CHECK_CUDA_STATUS(cudaMemcpy(mPoolDesc,
+                                 &poolDesc,
+                                 sizeof(poolDesc),
+                                 cudaMemcpyHostToDevice));
+}
+
+template <class T>
 void N2D2::PoolCell_Frame_EXT_CUDA<T>::initialize()
 {
     unsigned int offset = 0;

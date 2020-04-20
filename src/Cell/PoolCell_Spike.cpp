@@ -67,6 +67,13 @@ N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
     }
 }
 
+void N2D2::PoolCell_Spike::setExtendedPadding(
+    const std::vector<int>& /*paddingDims*/)
+{
+    throw std::domain_error("PoolCell_Spike: extended padding is currently not"
+                            " supported.");
+}
+
 void N2D2::PoolCell_Spike::initialize()
 {
     std::vector<size_t> inputsDims = mInputsDims;

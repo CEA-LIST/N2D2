@@ -143,6 +143,11 @@ public:
     {
         return mPaddingDims[1];
     };
+    const std::vector<int>& getExtendedPadding() const
+    {
+        return mExtPaddingDims;
+    };
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     unsigned int getDilationX() const
     {
         return mDilationDims[0];
@@ -227,6 +232,7 @@ protected:
     // Dilation for the convolution
     const std::vector<unsigned int> mDilationDims;
 
+    std::vector<int> mExtPaddingDims;
     std::shared_ptr<Filler> mWeightsFiller;
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;

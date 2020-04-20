@@ -86,6 +86,18 @@ N2D2::PoolCell_Frame<T>::PoolCell_Frame(const DeepNet& deepNet,
 }
 
 template <class T>
+void N2D2::PoolCell_Frame<T>::setExtendedPadding(
+    const std::vector<int>& paddingDims)
+{
+    PoolCell::setExtendedPadding(paddingDims);
+
+    for (std::size_t dim = 0; dim < mPaddingDims.size(); ++dim) {
+        // Don't care about bottom/right padding, not used anywhere
+        mPoolDesc.padding[dim] = mPaddingDims[dim] + paddingDims[dim];
+    }
+}
+
+template <class T>
 void N2D2::PoolCell_Frame<T>::initialize()
 {
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {

@@ -113,6 +113,24 @@ N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
 }
 
 template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::setExtendedPadding(
+    const std::vector<int>& paddingDims)
+{
+    ConvCell::setExtendedPadding(paddingDims);
+
+    std::vector<size_t> inputsDims(mInputsDims);
+    inputsDims.push_back(mInputs.dimB());
+
+    inputsDims[0] += paddingDims[0] + paddingDims[2];
+    inputsDims[1] += paddingDims[1] + paddingDims[3];
+
+    mPaddedInputs.clear();
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k)
+        mPaddedInputs.push_back(new CudaTensor<T>(inputsDims), 0);
+}
+
+template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 {
     if (!mNoBias) {
@@ -562,6 +580,40 @@ void N2D2::ConvCell_Frame_CUDA<T>::load(const std::string& dirName)
 }
 
 template <class T>
+std::shared_ptr<N2D2::CudaDeviceTensor<T> >
+N2D2::ConvCell_Frame_CUDA<T>::extPad(
+    unsigned int /*k*/,
+    std::shared_ptr<CudaDeviceTensor<T> > /*input*/)
+{
+    throw std::domain_error("ConvCell_Frame_CUDA::propagate(): extended"
+        " padding not yet supported.");
+}
+
+template <>
+std::shared_ptr<N2D2::CudaDeviceTensor<float> >
+N2D2::ConvCell_Frame_CUDA<float>::extPad(
+    unsigned int k,
+    std::shared_ptr<CudaDeviceTensor<float> > input)
+{
+    cudaSPadding(CudaContext::getDeviceProp(),
+                mPaddedInputs[k].dimZ(),
+                mPaddedInputs[k].dimX(),
+                mPaddedInputs[k].dimY(),
+                mInputs[k].dimZ(),
+                mPaddedInputs[k].dimB(),
+                mInputs[k].dimX(),
+                mInputs[k].dimY(),
+                mExtPaddingDims[0],
+                mExtPaddingDims[2],
+                mExtPaddingDims[1],
+                mExtPaddingDims[3],
+                input->getDevicePtr(),
+                mPaddedInputs[k].getDevicePtr());
+
+    return cuda_device_tensor_cast<float>(mPaddedInputs[k]);
+}
+
+template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
@@ -580,6 +632,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
 
         std::shared_ptr<CudaDeviceTensor<T> > input
             = cuda_device_tensor_cast<T>(mInputs[k]);
+
+        if (!mPaddedInputs.empty())
+            input = extPad(k, input);
 
         CHECK_CUDNN_STATUS(
             cudnnConvolutionForward(CudaContext::cudnnHandle(),
@@ -633,6 +688,11 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 {
     if (!mDiffInputs.isValid())
         return;
+
+    if (!mPaddedInputs.empty()) {
+        throw std::domain_error("ConvCell_Frame_CUDA::backPropagate(): extended"
+            " padding not yet supported.");
+    }
 
     Cell_Frame_CUDA<T>::backPropagate();
 

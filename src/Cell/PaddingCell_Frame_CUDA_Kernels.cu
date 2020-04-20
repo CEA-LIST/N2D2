@@ -75,9 +75,10 @@ __global__ void cudaSPadding_kernel( unsigned int nbOutputs,
 
 }
 
-void N2D2::cudaSPadding(unsigned int nbOutputs,
-                        unsigned int outputWidth,
-                        unsigned int outputHeight,
+void N2D2::cudaSPadding(const cudaDeviceProp& deviceProp,
+                        unsigned int nbOutputs,
+                        unsigned int outputsWidth,
+                        unsigned int outputsHeight,
                         unsigned int nbChannels,
                         unsigned int batchSize,
                         unsigned int inputWidth,
@@ -87,14 +88,25 @@ void N2D2::cudaSPadding(unsigned int nbOutputs,
                         int topPad,
                         int botPad,
                         const float* input,
-                        float* outputs,
-                        const dim3 blocksPerGrid,
-                        const dim3 threadsPerBlock)
+                        float* outputs)
 {
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
-    cudaSPadding_kernel<<<blocksPerGrid, threadsPerBlock>>>( nbOutputs,
-                                                            outputWidth,
-                                                            outputHeight, 
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
+
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSPadding_kernel<<<blocksPerGrid, threadsPerBlocks>>>( nbOutputs,
+                                                            outputsWidth,
+                                                            outputsHeight, 
                                                             nbChannels,
                                                             batchSize, 
                                                             inputWidth,

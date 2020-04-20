@@ -98,6 +98,11 @@ public:
     {
         return mPaddingDims[1];
     };
+    const std::vector<int>& getExtendedPadding() const
+    {
+        return mExtPaddingDims;
+    };
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     Pooling getPooling() const
     {
         return mPooling;
@@ -126,6 +131,8 @@ protected:
     const std::vector<unsigned int> mPaddingDims;
     // Pooling type
     const Pooling mPooling;
+
+    std::vector<int> mExtPaddingDims;
 };
 }
 

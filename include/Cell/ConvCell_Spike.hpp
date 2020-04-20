@@ -71,6 +71,7 @@ public:
                                                 dilationDims);
     }
 
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void
     propagateSpike(NodeIn* node, Time_T timestamp, EventType_T type = 0);

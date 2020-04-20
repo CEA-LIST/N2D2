@@ -164,6 +164,8 @@ void N2D2::DeepNet::addCellAfter(const std::shared_ptr<Cell>& newCell,
      * mCells 
      */
     mCells.insert(std::make_pair(newCell->getName(), newCell));
+
+    newCell->addInput(parent.get());
     
     /**
      * mParentLayers and cells inputs connections
@@ -194,8 +196,6 @@ void N2D2::DeepNet::addCellAfter(const std::shared_ptr<Cell>& newCell,
         childCellTop->replaceInput(parentCellTop->getOutputs(), newCellTop->getOutputs(), 
                                    newCellTop->getDiffInputs());
     }
-
-    newCell->addInput(parent.get());
 
     mParentLayers.insert(std::make_pair(newCell->getName(), parent->getName()));
 
@@ -313,10 +313,18 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                 child->clearInputs();
 
                 for(const std::string& parentName: parents) {
-                    auto parent = mCells.at(parentName);
+                    if (parentName == "env") {
+                        child->addInput(*mStimuliProvider, 0, 0,
+                            mStimuliProvider->getSizeX(),
+                            mStimuliProvider->getSizeY());
+                    }
+                    else {
+                        auto parent = mCells.at(parentName);
 
-                    child->addInput(parent.get());
-                    mParentLayers.emplace(child->getName(), parent->getName());
+                        child->addInput(parent.get());
+                    }
+
+                    mParentLayers.emplace(childName, parentName);
                 }
             }
         }

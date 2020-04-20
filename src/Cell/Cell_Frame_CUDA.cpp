@@ -209,6 +209,17 @@ void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
                                             BaseTensor& newInputs,
                                             BaseTensor& newDiffOutputs)
 {
+    assert(!newInputs.dims().empty());
+
+    // Define input-output sizes
+    std::vector<size_t> inputsDims = newInputs.dims();
+    inputsDims.pop_back();      // Remove batch
+
+    if (mInputs.size() > 1)
+        setInputsDims(inputsDims);
+    else
+        mInputsDims = inputsDims;
+
     bool foundOldInputs = false;
     for (unsigned int i = 0; i < mInputs.size(); ++i) {
         if (&mInputs[i] == &oldInputs) {
@@ -223,7 +234,16 @@ void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
     }
 
     if(!foundOldInputs) {
-        throw std::runtime_error("Can't replace input, the input has not been found.");
+        throw std::runtime_error("Cell_Frame_CUDA::replaceInput(): can't"
+            " replace input, the input has not been found.");
+    }
+
+    std::vector<size_t> oldOutputsDims(mOutputsDims);
+    setOutputsDims();
+
+    if (mOutputsDims != oldOutputsDims) {
+        throw std::runtime_error("Cell_Frame_CUDA::replaceInput(): can't"
+            " replace input, the output dimension has changed!");
     }
 }
 

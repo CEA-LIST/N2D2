@@ -46,9 +46,21 @@ N2D2::ConvCell::ConvCell(const DeepNet& deepNet,
       mSubSampleDims(subSampleDims),
       mStrideDims(strideDims),
       mPaddingDims(paddingDims),
-      mDilationDims(dilationDims)
+      mDilationDims(dilationDims),
+      mExtPaddingDims(2 * kernelDims.size(), 0)
 {
     // ctor
+}
+
+void N2D2::ConvCell::setExtendedPadding(const std::vector<int>& paddingDims)
+{
+    if (paddingDims.size() != mExtPaddingDims.size()) {
+        throw std::domain_error("ConvCell: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    mExtPaddingDims = paddingDims;
 }
 
 void N2D2::ConvCell::logFreeParameters(const std::string& fileName,
@@ -167,8 +179,9 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses(bool includeBias) co
             = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
 
         oSizes.push_back((unsigned int)((mInputsDims[dim]
-                            + 2 * mPaddingDims[dim] - kernelExtent
-                            + mStrideDims[dim]) / (double)mStrideDims[dim]));
+            + 2 * mPaddingDims[dim] + mExtPaddingDims[dim]
+            + mExtPaddingDims[mKernelDims.size() + dim]
+            - kernelExtent + mStrideDims[dim]) / (double)mStrideDims[dim]));
     }
 
     const size_t oSize = (!oSizes.empty())
@@ -194,11 +207,12 @@ unsigned long long int N2D2::ConvCell::getNbVirtualSynapses(bool includeBias) co
             const int kernelExtent
                 = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
             const int sMin = (int)std::max(
-                (int)mPaddingDims[dim] - (int)(oIndex[dim] * mStrideDims[dim]),
+                (int)mPaddingDims[dim] + mExtPaddingDims[dim]
+                    - (int)(oIndex[dim] * mStrideDims[dim]),
                 0);
             const int sMax = Utils::clamp
-                <int>(mInputsDims[dim] + mPaddingDims[dim] - oIndex[dim]
-                                                            * mStrideDims[dim],
+                <int>(mInputsDims[dim] + mPaddingDims[dim]
+                        + mExtPaddingDims[dim] - oIndex[dim] * mStrideDims[dim],
                       0,
                       kernelExtent);
 
@@ -931,10 +945,12 @@ void N2D2::ConvCell::setOutputsDims()
             = mDilationDims[dim] * (mKernelDims[dim] - 1) + 1;
 
         mOutputsDims[dim] = (unsigned int)std::ceil(
-            std::floor((mInputsDims[dim] + 2 * mPaddingDims[dim]
-                        - kernelExtent + mStrideDims[dim])
-                               / (double)mStrideDims[dim])
-                                    / (double)mSubSampleDims[dim]);
+            std::floor((mInputsDims[dim]
+                + 2 * mPaddingDims[dim] + mExtPaddingDims[dim]
+                + mExtPaddingDims[mKernelDims.size() + dim]
+                - kernelExtent + mStrideDims[dim])
+                        / (double)mStrideDims[dim])
+                            / (double)mSubSampleDims[dim]);
     }
 }
 

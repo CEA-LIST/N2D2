@@ -29,9 +29,10 @@
 #include "CudaUtils.hpp"
 namespace N2D2 {
 // Forward
-void cudaSPadding(unsigned int nbOutputs,
-                        unsigned int outputWidth,
-                        unsigned int outputHeight,
+void cudaSPadding(const cudaDeviceProp& deviceProp,
+                        unsigned int nbOutputs,
+                        unsigned int outputsWidth,
+                        unsigned int outputsHeight,
                         unsigned int nbChannels,
                         unsigned int batchSize,
                         unsigned int inputWidth,
@@ -41,9 +42,7 @@ void cudaSPadding(unsigned int nbOutputs,
                         int topPad,
                         int botPad,
                         const float* input,
-                        float* outputs,
-                        const dim3 blocksPerGrid,
-                        const dim3 threadsPerBlock);
+                        float* outputs);
 }
 
 #endif // N2D2_PADDINGCELL_FRAME_CUDA_KERNELS_H

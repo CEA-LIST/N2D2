@@ -539,12 +539,42 @@ void N2D2::Interface<T, STACKING_DIM>::replace(unsigned int t,
                                                tensor_type* tensor,
                                                size_t refs)
 {
-    if (!std::equal(tensor->dims().begin(),
-                     tensor->dims().end(), mData.at(t)->dims().begin()))
-    {
-        throw std::runtime_error("Interface::replace(): the new tensor must "
-                                 "have the same dimensions as the replaced "
-                                 "one.");
+    assert(t < mData.size());
+
+    const unsigned int stackingDim = (STACKING_DIM >= 0)
+        ? STACKING_DIM : tensor->nbDims() + STACKING_DIM;
+
+    if (mData.size() > 1) {
+        if (tensor->nbDims() != mData.back()->nbDims()) {
+            throw std::runtime_error("Interface::replace(): "
+                            "tensor must have the same number of dimensions");
+        }
+
+        for (unsigned int dim = 0; dim < tensor->nbDims(); ++dim) {
+            if ((STACKING_DIM < 0 || dim != (unsigned int)STACKING_DIM)
+                && (STACKING_DIM >= 0
+                    || tensor->nbDims() - dim != -STACKING_DIM)
+                && dim < mMatchingDim.size() && mMatchingDim[dim]
+                && tensor->dims()[dim] != mData.back()->dims()[dim])
+            {
+                throw std::runtime_error("Interface::replace(): "
+                                            "tensor dimension must match");
+            }
+        }
+
+        if (tensor->dims()[stackingDim] != mData.at(t)->dims()[stackingDim]) {
+            throw std::runtime_error("Interface::replace(): the new tensor must"
+                                    " have the same number of element in the"
+                                    " stacking dimension as the replaced one.");
+        }
+    }
+    else {
+        const size_t tensorOffset = 0;
+        const size_t indexOffset = 0;
+
+        mDataOffset.clear();
+        for (size_t index = 0; index < tensor->dims()[stackingDim]; ++index)
+            mDataOffset.push_back(std::make_pair(tensorOffset, indexOffset));
     }
 
     if (mDataRefs[t] == 0)

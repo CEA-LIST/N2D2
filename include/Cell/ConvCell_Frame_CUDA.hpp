@@ -29,6 +29,7 @@
 #include "DeepNet.hpp"
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor.hpp"
+#include "PaddingCell_Frame_CUDA_Kernels.hpp"
 
 namespace N2D2 {
 template <class T>
@@ -81,6 +82,7 @@ public:
                                                          activation);
     }
 
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
@@ -137,6 +139,9 @@ protected:
                           unsigned int channel,
                           const BaseTensor& value);
     inline void setBias(unsigned int output, const BaseTensor& value);
+    std::shared_ptr<CudaDeviceTensor<T> > extPad(
+        unsigned int k,
+        std::shared_ptr<CudaDeviceTensor<T> > input);
 
     // Internal
     std::vector<size_t> mNbGroups;
@@ -147,6 +152,7 @@ protected:
     std::shared_ptr<CudaTensor<T> > mBias;
     CudaInterface<T> mDiffSharedSynapses;
     CudaTensor<T> mDiffBias;
+    CudaInterface<T> mPaddedInputs;
 
     size_t mWorkspaceSize;
     void* mWorkspace;

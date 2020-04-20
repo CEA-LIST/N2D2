@@ -102,6 +102,13 @@ N2D2::ConvCell_Spike::ConvCell_Spike(Network& net,
     mBiasFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
 }
 
+void N2D2::ConvCell_Spike::setExtendedPadding(
+    const std::vector<int>& /*paddingDims*/)
+{
+    throw std::domain_error("ConvCell_Spike: extended padding is currently not"
+                            " supported.");
+}
+
 void N2D2::ConvCell_Spike::initialize()
 {
     mSharedSynapses.resize(

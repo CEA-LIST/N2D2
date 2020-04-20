@@ -71,29 +71,6 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
     }
-
-    const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (mOutputs.dimX() * mOutputs.dimY() < maxSize)
-                                       ? mOutputs.dimX() * mOutputs.dimY()
-                                       : maxSize;
-    const unsigned int reqWidth = (unsigned int) ceilf((float) groupSize / (float) mOutputs.dimX());
-
-    const unsigned int groupWidth = std::min(prefMultiple, reqWidth);
-
-    for(unsigned int i = 0; i < mInputs.size(); ++i)
-    {
-        dim3 block_size = {(unsigned int)mInputs[i].dimZ(), 1, (unsigned int)mOutputs.dimB()};
-        dim3 thread_size = {groupWidth, groupSize / groupWidth, 1};
-
-        if (i < GPU_THREAD_GRID.size())
-            continue;  // already initialized, skip!
-
-        GPU_THREAD_GRID.push_back(thread_size);
-        GPU_BLOCK_GRID.push_back(block_size);
-    }
 }
 
 void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
@@ -107,7 +84,8 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
         std::shared_ptr<CudaDeviceTensor<Float_T> > input
             = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[k]);
 
-        cudaSPadding(mOutputs.dimZ(),
+        cudaSPadding(CudaContext::getDeviceProp(),
+                    mOutputs.dimZ(),
                     mOutputs.dimX(),
                     mOutputs.dimY(),
                     mInputs[k].dimZ(),
@@ -119,9 +97,7 @@ void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
                     mTopPad,
                     mBotPad,
                     input->getDevicePtr(),
-                    mOutputs.getDevicePtr() + outputOffset,
-                    GPU_BLOCK_GRID[k],
-                    GPU_THREAD_GRID[k]);
+                    mOutputs.getDevicePtr() + outputOffset);
 
         outputOffset += mInputs[k].dimZ()*mOutputs.dimX()*mOutputs.dimY();
     }
@@ -144,7 +120,8 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
         std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
             = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
-        cudaSPadding(mDiffOutputs[k].dimZ(),
+        cudaSPadding(CudaContext::getDeviceProp(),
+                    mDiffOutputs[k].dimZ(),
                     mDiffOutputs[k].dimX(),
                     mDiffOutputs[k].dimY(),
                     mDiffInputs.dimZ(),
@@ -156,9 +133,7 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
                     -mTopPad,
                     -mBotPad,
                     mDiffInputs.getDevicePtr() + outputOffset,
-                    diffOutput->getDevicePtr(),
-                    GPU_BLOCK_GRID[k],
-                    GPU_THREAD_GRID[k]);
+                    diffOutput->getDevicePtr());
 
         outputOffset += mDiffOutputs[k].dimZ()
                             *mDiffInputs.dimX()

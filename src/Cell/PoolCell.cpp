@@ -34,9 +34,21 @@ N2D2::PoolCell::PoolCell(const DeepNet& deepNet, const std::string& name,
       mPoolDims(poolDims),
       mStrideDims(strideDims),
       mPaddingDims(paddingDims),
-      mPooling(pooling)
+      mPooling(pooling),
+      mExtPaddingDims(2 * poolDims.size(), 0)
 {
     // ctor
+}
+
+void N2D2::PoolCell::setExtendedPadding(const std::vector<int>& paddingDims)
+{
+    if (paddingDims.size() != mExtPaddingDims.size()) {
+        throw std::domain_error("PoolCell: the number of dimensions"
+                                " of padding must match the number of"
+                                " dimensions of the kernel.");
+    }
+
+    mExtPaddingDims = paddingDims;
 }
 
 unsigned long long int N2D2::PoolCell::getNbConnections() const
@@ -216,8 +228,10 @@ void N2D2::PoolCell::setOutputsDims()
 
     for (unsigned int dim = 0; dim < mPoolDims.size(); ++dim) {
         mOutputsDims[dim] = (unsigned int)((mInputsDims[dim]
-            + 2 * mPaddingDims[dim] - mPoolDims[dim] + mStrideDims[dim])
-                                           / (double)mStrideDims[dim]);
+            + 2 * mPaddingDims[dim] + mExtPaddingDims[dim]
+            + mExtPaddingDims[mPoolDims.size() + dim]
+            - mPoolDims[dim] + mStrideDims[dim])
+                    / (double)mStrideDims[dim]);
     }
 }
 

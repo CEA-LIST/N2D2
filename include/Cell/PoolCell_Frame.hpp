@@ -67,6 +67,7 @@ public:
                                                 activation);
     }
 
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();

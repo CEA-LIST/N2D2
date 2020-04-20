@@ -24,6 +24,7 @@
 
 #include "Cell_Frame_CUDA.hpp"
 #include "PoolCell.hpp"
+#include "PaddingCell_Frame_CUDA_Kernels.hpp"
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
@@ -72,6 +73,7 @@ public:
                                                          activation);
     }
 
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -83,7 +85,12 @@ public:
     virtual ~PoolCell_Frame_CUDA();
 
 protected:
+    std::shared_ptr<CudaDeviceTensor<T> > extPad(
+        unsigned int k,
+        std::shared_ptr<CudaDeviceTensor<T> > input);
+
     std::vector<cudnnTensorDescriptor_t> mOutputDesc;
+    CudaInterface<T> mPaddedInputs;
 
     cudnnPoolingDescriptor_t mPoolingDesc;
 

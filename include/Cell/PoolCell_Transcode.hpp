@@ -97,6 +97,7 @@ public:
     
     void clearInputs();
 
+    void setExtendedPadding(const std::vector<int>& paddingDims);
     void initialize();
     void spikeCodingCompare(const std::string& fileName) const;
     virtual ~PoolCell_Transcode() {};
@@ -227,6 +228,14 @@ void N2D2::PoolCell_Transcode<FRAME, SPIKE>::addInput(Cell* cell,
 template <class FRAME, class SPIKE>
 void N2D2::PoolCell_Transcode<FRAME, SPIKE>::clearInputs() {
     throw std::runtime_error("PoolCell_Transcode::clearInputs(): not supported.");
+}
+
+template <class FRAME, class SPIKE>
+void N2D2::PoolCell_Transcode<FRAME, SPIKE>::setExtendedPadding(
+    const std::vector<int>& paddingDims)
+{
+    FRAME::setExtendedPadding(paddingDims);
+    SPIKE::setExtendedPadding(paddingDims);
 }
 
 template <class FRAME, class SPIKE>

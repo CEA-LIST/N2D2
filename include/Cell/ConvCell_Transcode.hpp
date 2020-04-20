@@ -103,6 +103,7 @@ public:
     
     void clearInputs();
     
+    void setExtendedPadding(const std::vector<int>& paddingDims);
     void initialize();
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,
@@ -286,6 +287,14 @@ void N2D2::ConvCell_Transcode<FRAME, SPIKE>::addInput(Cell* cell,
 template <class FRAME, class SPIKE>
 void N2D2::ConvCell_Transcode<FRAME, SPIKE>::clearInputs() {
     throw std::runtime_error("ConvCell_Transcode::clearInputs(): not supported.");
+}
+
+template <class FRAME, class SPIKE>
+void N2D2::ConvCell_Transcode<FRAME, SPIKE>::setExtendedPadding(
+    const std::vector<int>& paddingDims)
+{
+    FRAME::setExtendedPadding(paddingDims);
+    SPIKE::setExtendedPadding(paddingDims);
 }
 
 template <class FRAME, class SPIKE>

@@ -112,6 +112,18 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const DeepNet& deepNet, const std::strin
 }
 
 template <class T>
+void N2D2::ConvCell_Frame<T>::setExtendedPadding(
+    const std::vector<int>& paddingDims)
+{
+    ConvCell::setExtendedPadding(paddingDims);
+
+    for (std::size_t dim = 0; dim < paddingDims.size(); ++dim) {
+        mConvDesc.padding[dim] = mPaddingDims[dim % mPaddingDims.size()]
+                                    + paddingDims[dim];
+    }
+}
+
+template <class T>
 void N2D2::ConvCell_Frame<T>::initialize()
 {
     if (!mNoBias) {

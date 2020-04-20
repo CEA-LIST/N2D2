@@ -75,6 +75,7 @@ public:
                                                     activation);
     }
 
+    virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
