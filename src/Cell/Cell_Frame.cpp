@@ -210,8 +210,13 @@ void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
     std::vector<size_t> inputsDims = newInputs.dims();
     inputsDims.pop_back();      // Remove batch
 
-    if (mInputs.size() > 1)
+    if (mInputs.size() > 1) {
+        std::vector<size_t> oldInputsDims = oldInputs.dims();
+        oldInputsDims.pop_back();      // Remove batch
+
+        mInputsDims.back() -= oldInputsDims.back();
         setInputsDims(inputsDims);
+    }
     else
         mInputsDims = inputsDims;
 
