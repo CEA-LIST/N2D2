@@ -43,6 +43,10 @@
 namespace N2D2 {
 
 class AbstractScaling {
+public:
+    /// Destructor
+    virtual ~AbstractScaling() {};
+
 protected:
     AbstractScaling() {
 #ifdef CUDA
