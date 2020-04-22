@@ -93,7 +93,9 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                const long long half = 1ull << (nbFractionalBits - 1);
+                const long long half = (nbFractionalBits > 0)
+                    ? (1ll << (nbFractionalBits - 1))
+                    : 0ll;
                 const long long res = (
                     static_cast<long long>(round(input[index])) * scalingFactorPerChannel[ch] + half
                 )  >> nbFractionalBits;
@@ -125,7 +127,9 @@ __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                const long long half = 1ull << (scalingFactorPerChannel[ch] - 1);
+                const long long half = (scalingFactorPerChannel[ch] > 0)
+                    ? (1ll << (scalingFactorPerChannel[ch] - 1))
+                    : 0ll;
                 const long long res = (
                     static_cast<long long>(round(input[index])) + half
                 ) >> scalingFactorPerChannel[ch];
@@ -157,7 +161,9 @@ __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                const long long half = 1ull << (scalingFactorPerChannel[ch].second - 1);
+                const long long half = (scalingFactorPerChannel[ch].second > 0)
+                    ? (1ll << (scalingFactorPerChannel[ch].second - 1))
+                    : 0ll;
                 const long long val = static_cast<long long>(round(input[index]));
                 const long long res = (
                     val + (val << scalingFactorPerChannel[ch].first) +  half

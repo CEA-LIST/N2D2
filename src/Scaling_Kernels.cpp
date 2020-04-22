@@ -80,7 +80,9 @@ void N2D2::fixedPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < heigth; y++) {
                 for(std::size_t x = 0; x < width; x++) {
-                    const long long half = 1ll << (nbFractionalBits - 1);
+                    const long long half = (nbFractionalBits > 0)
+                        ? (1ll << (nbFractionalBits - 1))
+                        : 0ll;
                     const long long val = static_cast<long long>(std::round(input(index)));
                     const long long res = (val*scalingFactorPerChannel[ch] + half) >> nbFractionalBits;
 
@@ -109,7 +111,9 @@ void N2D2::singleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& outpu
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < heigth; y++) {
                 for(std::size_t x = 0; x < width; x++) {
-                    const long long half = 1ll << (scalingFactorPerChannel[ch] - 1ll);
+                    const long long half = (scalingFactorPerChannel[ch] > 0)
+                        ? (1ll << (scalingFactorPerChannel[ch] - 1ll))
+                        : 0ll;
                     const long long val = static_cast<long long>(std::round(input(index)));
                     const long long res = (val + half) >> scalingFactorPerChannel[ch];
 
@@ -138,7 +142,9 @@ void N2D2::doubleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& outpu
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < heigth; y++) {
                 for(std::size_t x = 0; x < width; x++) {
-                    const long long half = 1ll << (scalingFactorPerChannel[ch].second - 1ll);
+                    const long long half = (scalingFactorPerChannel[ch].second > 0)
+                        ? (1ll << (scalingFactorPerChannel[ch].second - 1ll))
+                        : 0ll;
                     const long long val = static_cast<long long>(std::round(input(index)));
                     const long long res = (
                         val + (val << scalingFactorPerChannel[ch].first) +  half
