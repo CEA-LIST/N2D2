@@ -58,7 +58,7 @@ data = {
     "https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet34v2/resnet34v2.onnx" : "resnet-34-v2",
     "https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet50v2/resnet50v2.onnx" : "resnet-50-v2",
     "https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet101v2/resnet101v2.onnx" : "resnet-101-v2",
-    "https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet152v2/resnet152v2.onnx" : "resnet-152-v2"
+    "https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet152v2/resnet152v2.onnx" : "resnet-152-v2",
     "https://s3.amazonaws.com/download.onnx/models/opset_9/squeezenet.tar.gz": "squeezenet",
     "https://s3.amazonaws.com/onnx-model-zoo/vgg/vgg16/vgg16.onnx": "vgg16",
     "https://s3.amazonaws.com/onnx-model-zoo/vgg/vgg16-bn/vgg16-bn.onnx": "vgg16-bn",
