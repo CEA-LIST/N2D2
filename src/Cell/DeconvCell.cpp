@@ -535,29 +535,38 @@ void N2D2::DeconvCell::importFreeParameters(const std::string& fileName,
     }
 }
 
-void N2D2::DeconvCell::logFreeParametersDistrib(const std::string
-                                                & fileName) const
+void N2D2::DeconvCell::logFreeParametersDistrib(
+    const std::string& fileName,
+    FreeParametersType type) const
 {
     // Append all weights
     std::vector<double> weights;
     weights.reserve(getNbOutputs() * getNbChannels());
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-            if (!isConnection(channel, output))
-                continue;
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            {
+                if (!isConnection(channel, output))
+                    continue;
 
-            Tensor<double> kernel;
-            getWeight(output, channel, kernel);
-            weights.insert(weights.end(), kernel.begin(), kernel.end());
+                Tensor<double> kernel;
+                getWeight(output, channel, kernel);
+                weights.insert(weights.end(), kernel.begin(), kernel.end());
+            }
         }
 
-        if (!mNoBias) {
-            Tensor<double> bias;
-            getBias(output, bias);
-            weights.push_back(bias(0));
+        if (type == All || type == Additive) {
+            if (!mNoBias) {
+                Tensor<double> bias;
+                getBias(output, bias);
+                weights.push_back(bias(0));
+            }
         }
     }
+
+    if (weights.empty())
+        return;
 
     std::sort(weights.begin(), weights.end());
 
@@ -591,9 +600,9 @@ void N2D2::DeconvCell::logFreeParametersDistrib(const std::string
     gnuplot << "bin(x,width)=width*floor(x/width+0.5)";
     gnuplot.set("boxwidth", "binwidth");
     gnuplot.set("style data boxes").set("style fill solid noborder");
-    gnuplot.set("xtics", "0.2");
-    gnuplot.set("mxtics", "2");
-    gnuplot.set("grid", "mxtics");
+    //gnuplot.set("xtics", "0.2");
+    //gnuplot.set("mxtics", "2");
+    //gnuplot.set("grid", "mxtics");
     gnuplot.set("label", label.str());
     gnuplot.set("yrange", "[0:]");
 

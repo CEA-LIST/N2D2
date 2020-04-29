@@ -339,8 +339,9 @@ public:
      *
      * @param fileName      Destination file
     */
-    virtual void logFreeParametersDistrib(const std::string
-                                          & /*fileName*/) const {};
+    virtual void logFreeParametersDistrib(
+        const std::string& /*fileName*/,
+        FreeParametersType /*type*/ = All) const {};
 
     /**
      * Discretize cell free parameters

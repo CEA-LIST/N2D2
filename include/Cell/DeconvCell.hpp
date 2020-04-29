@@ -172,7 +172,8 @@ public:
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
-    virtual void logFreeParametersDistrib(const std::string& fileName) const;
+    virtual void logFreeParametersDistrib(const std::string& fileName,
+                                          FreeParametersType type = All) const;
     void writeMap(const std::string& fileName) const;
     void discretizeFreeParameters(unsigned int nbLevels);
     virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
