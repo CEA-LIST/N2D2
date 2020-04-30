@@ -69,6 +69,7 @@ public:
     void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
     // parameter to
     // discretize
+    std::pair<double, double> getOutputsRange() const;
     virtual ~PaddingCell_Frame_CUDA();
 
 private:

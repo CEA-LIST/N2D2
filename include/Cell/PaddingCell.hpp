@@ -89,6 +89,7 @@ public:
 
 protected:
     virtual void setOutputsDims();
+    std::pair<double, double> getOutputsRange() const;
 
     //void setTopPad (int pad) { mTopPad = pad; };
     //void setBotPad (int pad) { mBotPad = pad; };

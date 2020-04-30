@@ -55,3 +55,12 @@ void N2D2::PaddingCell::setOutputsDims()
     mOutputsDims[0] = (mInputsDims[0] + mLeftPad + mRightPad);
     mOutputsDims[1] = (mInputsDims[1] + mTopPad + mBotPad);
 }
+
+std::pair<double, double> N2D2::PaddingCell::getOutputsRange() const {
+    std::pair<double, double> parentOutputsRange = Cell::getOutputsRangeParents();
+
+    if(parentOutputsRange.first > 0.0)
+        parentOutputsRange.first = 0.0;
+
+    return parentOutputsRange;
+}

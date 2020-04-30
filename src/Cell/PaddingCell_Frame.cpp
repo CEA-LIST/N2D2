@@ -159,6 +159,9 @@ void N2D2::PaddingCell_Frame::checkGradient(double epsilon, double maxError)
     }
 }
 
+std::pair<double, double> N2D2::PaddingCell_Frame::getOutputsRange() const {
+    return PaddingCell::getOutputsRange();
+}
 
 N2D2::PaddingCell_Frame::~PaddingCell_Frame()
 {

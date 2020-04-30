@@ -174,6 +174,10 @@ void N2D2::PaddingCell_Frame_CUDA::checkGradient(double epsilon, double maxError
     }
 }
 
+std::pair<double, double> N2D2::PaddingCell_Frame_CUDA::getOutputsRange() const
+{
+    return PaddingCell::getOutputsRange();
+}
 
 N2D2::PaddingCell_Frame_CUDA::~PaddingCell_Frame_CUDA()
 {

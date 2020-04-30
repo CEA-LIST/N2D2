@@ -25,6 +25,7 @@
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/PaddingCell.hpp"
 #include "Export/CellExport.hpp"
 
 bool N2D2::DeepNetExport::mUnsignedData = true;
@@ -319,5 +320,15 @@ bool N2D2::DeepNetExport::isCellOutputUnsigned(const Cell& cell)  {
     }
 
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    return cellFrame.getOutputsRange().first >= 0.0;
+
+    if (cell.getType() == PaddingCell::Type) {
+        // Special case for PaddingCell because getOutputsRange() throw an
+        // exception if the parent cell is the env (which can happen for 
+        // padding).
+        // FIXME: find a better generic alternative...
+        return isCellInputsUnsigned(cell);
+    }
+    else {
+        return cellFrame.getOutputsRange().first >= 0.0;
+    }
 }
