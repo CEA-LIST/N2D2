@@ -333,7 +333,7 @@ void cudaDSetOutputTargets_kernel(int* targets,
 }
 
 //Half
-#if __CUDA_ARCH__ >= 530 && (!defined(CUDART_VERSION) || CUDART_VERSION < 10200)
+#if __CUDA_ARCH__ >= 530 && (!defined(CUDART_VERSION) || CUDART_VERSION < 10020)
 // __habs was introduced with CUDA 10.2
 __device__ __half __habs(__half x) {
     return __float2half(fabs(__half2float(x)));
