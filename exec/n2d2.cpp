@@ -271,6 +271,8 @@ public:
         weights =     opts.parse("-w", std::string(), "start with weights imported from a specified "
                                                       "location (even when loading a previously "
                                                       "saved state)");
+        ignoreNoExist =     opts.parse("-w-ignore", "intialize with default values weights that are " 
+                                                    "not provided");
         exportNoUnsigned =   opts.parse("-no-unsigned", "disable the use of unsigned data type in "
                                                         "integer exports");
         exportNbStimuliMax = opts.parse("-db-export", -1, "max. number of stimuli to export "
@@ -335,6 +337,7 @@ public:
     std::string saveTestSet;
     std::string load;
     std::string weights;
+    bool ignoreNoExist;
     int exportNbStimuliMax;
     bool version;
     std::string iniConfig;
@@ -548,14 +551,14 @@ void importFreeParemeters(const Options& opt, DeepNet& deepNet) {
     try {
         if (!opt.weights.empty()) {
             if (opt.weights != "/dev/null")
-                deepNet.importNetworkFreeParameters(opt.weights);
+                deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
         }
         else if (opt.load.empty()) {
             if (deepNet.getDatabase()->getNbStimuli(Database::Validation) > 0) {
-                deepNet.importNetworkFreeParameters("weights_validation");
+                deepNet.importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
             }
             else {
-                deepNet.importNetworkFreeParameters("weights");
+                deepNet.importNetworkFreeParameters("weights", opt.ignoreNoExist);
             }
         }
     }
@@ -1372,7 +1375,7 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
               std::shared_ptr<Environment>& env, Network& net, 
               Monitor& monitorEnv, Monitor& monitorOut) 
 {
-    deepNet->importNetworkFreeParameters("weights_range_normalized");
+    deepNet->importNetworkFreeParameters("weights_range_normalized", opt.ignoreNoExist);
 
     std::shared_ptr<Database> database = deepNet->getDatabase();
     
@@ -1855,9 +1858,9 @@ int main(int argc, char* argv[]) try
         else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty())
         {
             if (database.getNbStimuli(Database::Validation) > 0)
-                deepNet->importNetworkFreeParameters("weights_validation");
+                deepNet->importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
             else
-                deepNet->importNetworkFreeParameters("weights");
+                deepNet->importNetworkFreeParameters("weights", opt.ignoreNoExist);
         }
  
         if (opt.fuse)
