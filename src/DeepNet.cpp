@@ -1079,9 +1079,30 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
         if (noBias)
             convCell->setParameter<bool>("NoBias", false);
 
+        double meanVariance = 0.0;
+        unsigned int count = 0;
+
         for (std::size_t output = 0; output < convCell->getNbOutputs(); ++output) {
+            if (bnVariances(output) > 1.0e-12) {
+                meanVariance += bnVariances(output);
+                ++count;
+            }
+            else {
+                std::cout << "    zero-variance " << convCell->getName()
+                    << "[" << output << "]" << std::endl;
+            }
+        }
+
+        meanVariance /= count;
+
+        for (std::size_t output = 0; output < convCell->getNbOutputs(); ++output) {
+            // Corrected for zero-variance issue:
+            // "A Quantization-Friendly Separable Convolution for MobileNets"
+            // https://arxiv.org/pdf/1803.08607.pdf
+            // to help post-training quantization
             const double factor = bnScales(output)
-                            / std::sqrt(eps + bnVariances(output));
+                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
+                            ? bnVariances(output) : meanVariance));
 
             // Weights adjustments
             for (std::size_t channel = 0; channel < convCell->getNbChannels(); ++channel) {
