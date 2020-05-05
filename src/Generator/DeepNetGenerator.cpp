@@ -704,8 +704,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Atanh
         if (node.op_type() == "AveragePool"
             || node.op_type() == "GlobalAveragePool"
+            || node.op_type() == "ReduceMean"
             || node.op_type() == "MaxPool"
-            || node.op_type() == "GlobalMaxPool")
+            || node.op_type() == "GlobalMaxPool"
+            || node.op_type() == "ReduceMax")
         {
             const std::string inputX = redirectName(node.input(0));
             unsigned int nbOutputs = 0;
@@ -745,7 +747,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 std::reverse(kernelDims.begin(), kernelDims.end());
             }
             else if (node.op_type() == "GlobalAveragePool"
-                || node.op_type() == "GlobalMaxPool")
+                || node.op_type() == "ReduceMean"
+                || node.op_type() == "GlobalMaxPool"
+                || node.op_type() == "ReduceMax")
             {
                 assert(!inputsDims.empty());
                 kernelDims = std::vector<unsigned int>(inputsDims.begin(),
@@ -850,7 +854,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 map(i, i) = true;
 
             const PoolCell::Pooling pooling = (node.op_type() == "AveragePool"
-                || node.op_type() == "GlobalAveragePool")
+                || node.op_type() == "GlobalAveragePool"
+                || node.op_type() == "ReduceMean")
                     ? PoolCell::Average : PoolCell::Max;
 
             std::shared_ptr<PoolCell> poolCell
