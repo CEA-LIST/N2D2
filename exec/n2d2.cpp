@@ -592,6 +592,9 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
+        // fusePadding() necessary for crossLayerEqualization()
+        deepNet->fusePadding();
+
         DeepNetQuantization dnQuantization(*deepNet);
         dnQuantization.crossLayerEqualization();
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);

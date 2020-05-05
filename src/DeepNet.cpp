@@ -33,6 +33,8 @@
 #include "Cell/ConvCell_Spike.hpp"
 #include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
+#include "Cell/PoolCell.hpp"
+#include "Cell/PaddingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "utils/Utils.hpp"
 #include "Solver/Solver.hpp"
@@ -1130,6 +1132,95 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
 
         // Replace BatchNorm by Conv for BatchNorm childs
         // and BatchNorm cell removal from DeepNet
+        removeCell(cell, true);
+    }
+}
+
+void N2D2::DeepNet::fusePadding() {
+    std::cout << "Fuse Padding..." << std::endl;
+
+    for (auto it = mCells.begin(); it != mCells.end(); ) {
+        const std::shared_ptr<Cell>& cell = (*it).second;
+        ++it; // increase it before being potentially invalided by removeCell()
+
+        if (cell->getType() != PaddingCell::Type) {
+            continue;
+        }
+
+        // check if Conv/Pool are the only childs
+        bool fuse = true;
+        const std::vector<std::shared_ptr<Cell> > padChilds
+            = getChildCells(cell->getName());
+
+        for (auto itChild = padChilds.begin(); itChild != padChilds.end();
+            ++itChild)
+        {
+            if ((*itChild)->getType() != ConvCell::Type
+                && (*itChild)->getType() != PoolCell::Type)
+            {
+                std::cout << Utils::cnotice << "  cannot fuse Padding \""
+                    << cell->getName() << "\" because child cells are not all "
+                    "Conv/Pool"
+                    << Utils::cdef << std::endl;
+
+                fuse = false;
+                break;
+            }
+
+            // check if childs Conv/Pool have other parents
+            const std::vector<std::shared_ptr<Cell> > childParents
+                = getParentCells((*itChild)->getName());
+
+            if (childParents.size() > 1) {
+                std::cout << Utils::cnotice << "  cannot fuse Padding \""
+                    << cell->getName() << "\" because child Conv/Pool "
+                    "(\"" << (*itChild)->getName() << "\") has multiple "
+                    "parents" << Utils::cdef << std::endl;
+
+                fuse = false;
+                break;
+            }
+        }
+
+        if (!fuse)
+            continue;
+
+        std::shared_ptr<PaddingCell> padCell =
+            std::dynamic_pointer_cast<PaddingCell>(cell);
+
+        for (auto itChild = padChilds.begin(); itChild != padChilds.end();
+            ++itChild)
+        {
+            if ((*itChild)->getType() == ConvCell::Type) {
+                std::shared_ptr<ConvCell> convCell =
+                    std::dynamic_pointer_cast<ConvCell>(*itChild);
+
+                std::cout << "  fuse Padding \"" << cell->getName()
+                    << "\" with Conv \"" << convCell->getName() << "\""
+                    << std::endl;
+
+                convCell->setExtendedPadding({
+                    padCell->getLeftPad(),
+                    padCell->getTopPad(),
+                    padCell->getRightPad(),
+                    padCell->getBotPad()});
+            }
+            else if ((*itChild)->getType() == PoolCell::Type) {
+                std::shared_ptr<PoolCell> poolCell =
+                    std::dynamic_pointer_cast<PoolCell>(*itChild);
+
+                std::cout << "  fuse Padding \"" << cell->getName()
+                    << "\" with Pool \"" << poolCell->getName() << "\""
+                    << std::endl;
+
+                poolCell->setExtendedPadding({
+                    padCell->getLeftPad(),
+                    padCell->getTopPad(),
+                    padCell->getRightPad(),
+                    padCell->getBotPad()});
+            }
+        }
+
         removeCell(cell, true);
     }
 }

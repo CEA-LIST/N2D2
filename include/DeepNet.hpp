@@ -103,6 +103,7 @@ public:
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
     void fuseBatchNormWithConv();
+    void fusePadding();
     void removeDropout();
 
     // Setters
