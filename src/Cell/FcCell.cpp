@@ -453,6 +453,23 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRangePerO
     return std::make_pair(wMin, wMax);
 }
 
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRangePerChannel(
+            std::size_t channel) const 
+{
+    Float_T wMin = 0.0;
+    Float_T wMax = 0.0;
+
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        Tensor<Float_T> weight;
+        getWeight(output, channel, weight);
+
+        if (weight(0) < wMin)  wMin = weight(0);
+        if (weight(0) > wMax)  wMax = weight(0);
+    }
+
+    return std::make_pair(wMin, wMax);
+}
+
 void N2D2::FcCell::randomizeFreeParameters(double stdDev)
 {
     const unsigned int channelsSize = getInputsSize();
@@ -499,6 +516,18 @@ void N2D2::FcCell::processFreeParametersPerOutput(std::function<Float_T(Float_T)
         bias(0) = func(bias(0));
 
         setBias(output, bias);
+    }
+}
+
+void N2D2::FcCell::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func, 
+                                                    std::size_t channel) 
+{
+    for (std::size_t output = 0; output < getNbOutputs(); ++output) {
+        Tensor<Float_T> weight;
+        getWeight(output, channel, weight);
+        weight(0) = func(weight(0));
+
+        setWeight(output, channel, weight);
     }
 }
 

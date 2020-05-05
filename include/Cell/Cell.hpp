@@ -359,12 +359,19 @@ public:
     {
         return std::pair<Float_T, Float_T>();
     };
+    virtual std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(
+            std::size_t /*channel*/) const 
+    {
+        return std::pair<Float_T, Float_T>();
+    };
 
     virtual void processFreeParameters(std::function<Float_T(Float_T)> /*func*/,
                                        FreeParametersType /*type*/ = All) {};
     virtual void processFreeParametersPerOutput(std::function<Float_T(Float_T)> /*func*/,
                                                 std::size_t /*output*/,
                                                 FreeParametersType /*type*/ = All) {};
+    virtual void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
+                                                std::size_t /*channel*/) {};
     bool isFullMap() const {
         return (groupMap() == 1);
     }

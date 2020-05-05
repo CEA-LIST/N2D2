@@ -841,6 +841,31 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRangePe
     return std::make_pair(wMin, wMax);
 }
 
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRangePerChannel(
+            std::size_t channel) const 
+{
+    Float_T wMin = 0.0;
+    Float_T wMax = 0.0;
+
+    Tensor<Float_T> kernel;
+
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        if (!isConnection(channel, output))
+            continue;
+
+        getWeight(output, channel, kernel);
+
+        for (unsigned int index = 0; index < kernel.size(); ++index) {
+            const Float_T weight = kernel(index);
+
+            if (weight < wMin)  wMin = weight;
+            if (weight > wMax)  wMax = weight;
+        }
+    }
+
+    return std::make_pair(wMin, wMax);
+}
+
 void N2D2::ConvCell::randomizeFreeParameters(double stdDev)
 {
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
@@ -898,6 +923,25 @@ void N2D2::ConvCell::processFreeParametersPerOutput(std::function<Float_T(Float_
 
         setBias(output, bias);
     }    
+}
+
+void N2D2::ConvCell::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func, 
+                                                    std::size_t channel) 
+{
+    Tensor<Float_T> kernel;
+
+    for (std::size_t output = 0; output < getNbOutputs(); ++output) {
+        if (!isConnection(channel, output))
+            continue;
+
+        getWeight(output, channel, kernel);
+
+        for (std::size_t index = 0; index < kernel.size(); ++index) {
+            kernel(index) = func(kernel(index));
+        }
+
+        setWeight(output, channel, kernel);
+    }
 }
 
 void N2D2::ConvCell::processFreeParameters(std::function<Float_T(Float_T)> func,

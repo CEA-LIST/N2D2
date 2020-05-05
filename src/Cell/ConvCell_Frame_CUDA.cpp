@@ -1099,11 +1099,6 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters
         = ConvCell::getFreeParametersRange(withAdditiveParameters);
     mSynchronized = false;
 
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
-
-    mBias->synchronizeHToD();
-
     return range;
 }
 
@@ -1122,10 +1117,22 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output
         = ConvCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
     mSynchronized = false;
 
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
+    return range;
+}
 
-    mBias->synchronizeHToD();
+template <class T>
+std::pair<N2D2::Float_T, N2D2::Float_T>
+N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerChannel(std::size_t channel) const
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    const std::pair<Float_T, Float_T> range
+        = ConvCell::getFreeParametersRangePerChannel(channel);
+    mSynchronized = false;
 
     return range;
 }
@@ -1161,6 +1168,25 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<
 
     mSynchronized = true;
     ConvCell::processFreeParametersPerOutput(func, output, type);
+    mSynchronized = false;
+
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeHToD();
+
+    mBias->synchronizeHToD();
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func,
+                                                                  std::size_t channel)
+{
+    for (unsigned int i = 0; i < mInputs.size(); ++i)
+        mSharedSynapses[i].synchronizeDToH();
+
+    mBias->synchronizeDToH();
+
+    mSynchronized = true;
+    ConvCell::processFreeParametersPerChannel(func, channel);
     mSynchronized = false;
 
     for (unsigned int i = 0; i < mInputs.size(); ++i)

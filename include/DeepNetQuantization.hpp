@@ -50,6 +50,9 @@ public:
 
     void rescaleAdditiveParameters(double rescaleFactor);
 
+    void crossLayerEqualization(double maxQuantRangeDelta = 1.0,
+                                bool removeReLUClipping = true);
+
     void quantizeNetwork(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                          const std::unordered_map<std::string, RangeStats>& outputsRange,
                          std::size_t nbBits,

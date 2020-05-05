@@ -877,9 +877,6 @@ N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) 
     const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRange(withAdditiveParameters);
     mSynchronized = false;
 
-    mSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
-
     return range;
 }
 
@@ -895,8 +892,19 @@ N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output,
     const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
     mSynchronized = false;
 
-    mSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
+    return range;
+}
+
+template <class T>
+std::pair<N2D2::Float_T, N2D2::Float_T>
+N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRangePerChannel(std::size_t channel) const
+{
+    mSynapses.synchronizeDToH();
+    mBias.synchronizeDToH();
+
+    mSynchronized = true;
+    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRangePerChannel(channel);
+    mSynchronized = false;
 
     return range;
 }
@@ -926,6 +934,21 @@ void N2D2::FcCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<Fl
 
     mSynchronized = true;
     FcCell::processFreeParametersPerOutput(func, output, type);
+    mSynchronized = false;
+
+    mSynapses.synchronizeHToD();
+    mBias.synchronizeHToD();
+}
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func,
+                                                                std::size_t channel)
+{
+    mSynapses.synchronizeDToH();
+    mBias.synchronizeDToH();
+
+    mSynchronized = true;
+    FcCell::processFreeParametersPerChannel(func, channel);
     mSynchronized = false;
 
     mSynapses.synchronizeHToD();

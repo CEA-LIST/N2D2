@@ -44,6 +44,8 @@
 #include "Cell/ElemWiseCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/ConvCell.hpp"
+#include "Cell/FcCell.hpp"
 #include "Cell/ResizeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
@@ -340,6 +342,114 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
 #ifdef VERBOSE_QUANT
     std::cout << "  Done!" << std::endl;
 #endif
+}
+
+// See https://arxiv.org/pdf/1906.04721.pdf
+void N2D2::DeepNetQuantization::crossLayerEqualization(
+    double maxQuantRangeDelta,
+    bool removeReLUClipping)
+{
+#ifdef VERBOSE_QUANT
+    std::cout << "  Cross-layer equalization:" << std::endl;
+#endif
+
+    const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
+    double maxRangeDelta;
+
+    do {
+        maxRangeDelta = 0.0;
+
+        for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+            for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+                std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+                if(!cell) {
+                    throw std::runtime_error("Invalid cell.");
+                }
+
+                auto parentsCells = cell->getParentsCells();
+
+                if ((cell->getType() == ConvCell::Type
+                    || cell->getType() == FcCell::Type)
+                    && parentsCells.size() == 1
+                    && parentsCells[0]
+                    && parentsCells[0]->getChildrenCells().size() == 1
+                    && (parentsCells[0]->getType() == ConvCell::Type
+                    || parentsCells[0]->getType() == FcCell::Type))
+                {
+                    std::shared_ptr<Cell_Frame_Top> parentCellFrame
+                        = std::dynamic_pointer_cast<Cell_Frame_Top>(parentsCells[0]);
+                    const std::shared_ptr<Activation>& parentActivation
+                        = parentCellFrame->getActivation();
+
+                    if (parentActivation
+                        && parentActivation->getType() != LinearActivation::Type
+                        && parentActivation->getType() != RectifierActivation::Type)
+                    {
+                        // Activation function must be piece-wise linear.
+                        // Otherwise, skip this pair of layer
+                        continue;
+                    }
+
+                    if (parentActivation
+                        && parentActivation->getType() == RectifierActivation::Type)
+                    {
+                        // Remove clipping
+                        const double clipping
+                            = parentActivation->getParameter<double>("Clipping");
+
+                        if (clipping > 0.0) {
+                            if (removeReLUClipping) {
+                                parentActivation
+                                    ->setParameter<double>("Clipping", 0.0);
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                    }
+
+#ifdef VERBOSE_QUANT
+                    std::cout << "    - eq. " << cell->getName()
+                        << " and " << parentsCells[0]->getName() << std::endl;
+#endif
+
+                    for(std::size_t output = 0;
+                        output < parentsCells[0]->getNbOutputs(); output++)
+                    {
+                        const auto r1MinMax = parentsCells[0]
+                            ->getFreeParametersRangePerOutput(output, false);
+                        const auto r2MinMax = cell
+                            ->getFreeParametersRangePerChannel(output);
+
+                        const Float_T r1 = Utils::max_abs(r1MinMax.first,
+                                                          r1MinMax.second);
+                        const Float_T r2 = Utils::max_abs(r2MinMax.first,
+                                                          r2MinMax.second);
+
+                        const double scalingPerOutput = (1.0 / r2) * std::sqrt(r1 * r2);
+
+                        parentsCells[0]->processFreeParametersPerOutput([&](Float_T w) { 
+                                                                return w/scalingPerOutput; 
+                                                            }, output, Cell::All);
+                        cell->processFreeParametersPerChannel([&](Float_T w) { 
+                                                                return w*scalingPerOutput; 
+                                                            }, output);
+
+                        const double rangeDelta = std::abs(r1 - r2);
+
+                        if (rangeDelta > maxRangeDelta)
+                            maxRangeDelta = rangeDelta;
+                    }
+                }
+            }
+        }
+
+#ifdef VERBOSE_QUANT
+        std::cout << "    quant. range delta = " << maxRangeDelta
+            << std::endl;
+#endif
+    }
+    while (maxRangeDelta > maxQuantRangeDelta);
 }
 
 std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemeters(std::size_t nbBits) {

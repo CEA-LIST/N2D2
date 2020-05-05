@@ -197,12 +197,15 @@ public:
     virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
                                                                    bool withAdditiveParameters) const;
+    virtual std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     virtual void processFreeParameters(std::function<Float_T(Float_T)> func,
                                        FreeParametersType type = All);
     virtual void processFreeParametersPerOutput(std::function<Float_T(Float_T)> /*func*/,
                                                 std::size_t /*output*/,
                                                 FreeParametersType /*type*/ = All);
+    virtual void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
+                                                std::size_t /*channel*/);
     
     void getStats(Stats& stats) const;
     std::vector<unsigned int> getReceptiveField(

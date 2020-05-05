@@ -125,12 +125,15 @@ public:
     std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
                                                                 bool withAdditiveParameters) const;
+    std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     void processFreeParameters(std::function<Float_T(Float_T)> func,
                                FreeParametersType type = All);
     void processFreeParametersPerOutput(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*output*/,
                                         FreeParametersType /*type*/ = All);
+    void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
+                                        std::size_t /*channel*/);
 
     virtual ~ConvCell_Frame_CUDA();
 
