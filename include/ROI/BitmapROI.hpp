@@ -128,12 +128,15 @@ void N2D2::BitmapROI<T>::append(cv::Mat& labels,
 
     // Crop dataToScale if necessary (it can be the case after rescale())
     dataToScale = dataToScale(cv::Rect(0, 0,
-        std::min(labels.cols - mOrigin.x, dataToScale.cols),
-        std::min(labels.rows - mOrigin.y, dataToScale.rows)));
+        std::min(labels.cols - std::max(mOrigin.x, 0), dataToScale.cols),
+        std::min(labels.rows - std::max(mOrigin.y, 0), dataToScale.rows)));
 
     // Insert rescaled data patch
-    const cv::Rect patch = cv::Rect(mOrigin.x, mOrigin.y,
-                                    dataToScale.cols, dataToScale.rows);
+    const cv::Rect patch = cv::Rect(
+        std::max(mOrigin.x, 0),
+        std::max(mOrigin.y, 0),
+        dataToScale.cols,
+        dataToScale.rows);
 
     if (outsideMargin > 0) {
         cv::Mat bitmap = cv::Mat::zeros(labels.size(), dataToScale.type());
