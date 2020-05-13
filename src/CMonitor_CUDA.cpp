@@ -46,7 +46,7 @@ void N2D2::CMonitor_CUDA::initialize(unsigned int nbTimesteps,
                               *(*mInputs).dimZ();
 
         for (unsigned int k=0; k<nbTimesteps; k++) {
-            mActivity.push_back(new CudaTensor<char>((*mInputs).dims()));
+            mActivity.push_back(new CudaTensor<int>((*mInputs).dims()));
             mActivity.back().synchronizeHToD();
 
         }
@@ -90,7 +90,7 @@ bool N2D2::CMonitor_CUDA::tick(Time_T timestamp)
     mRelTimeIndex++;
     mTimeIndex.insert(std::make_pair(timestamp,mRelTimeIndex));
 
-    cudaUpdateActivity((*mInputs).getDevicePtr(),
+    cudaUpdateMetrics((*mInputs).getDevicePtr(),
                         mActivity[mRelTimeIndex].getDevicePtr(),
                         mFiringRate.getDevicePtr(),
                         mExampleFiringRate.getDevicePtr(),
@@ -157,7 +157,7 @@ void N2D2::CMonitor_CUDA::update(Time_T start, Time_T stop)
                         mDeviceWarpSize);
 
      // Calculate example metrics for each batch
-    cudaUpdateFiringRate(mOutputsActivity.getDevicePtr(),
+    cudaUpdateOutputsActivity(mOutputsActivity.getDevicePtr(),
                         mTotalOutputsActivity.getDevicePtr(),
                         (*mInputs).dimX(),
                         (*mInputs).dimY(),
@@ -165,6 +165,7 @@ void N2D2::CMonitor_CUDA::update(Time_T start, Time_T stop)
                         (*mInputs).dimB(),
                         mDeviceMaxThreads,
                         mDeviceWarpSize);
+
 
 
     cudaUpdateBatchFiringRate(mFiringRate.getDevicePtr(),

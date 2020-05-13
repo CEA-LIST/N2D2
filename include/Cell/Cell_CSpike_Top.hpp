@@ -37,8 +37,8 @@ public:
     }
     virtual bool tick(Time_T timestamp) = 0;
     virtual void reset(Time_T timestamp) = 0;
-    virtual Tensor<int>& getOutputsActivity() = 0;
-    virtual Tensor<int>& getOutputs() = 0;
+    virtual Tensor<Float_T>& getOutputsActivity() = 0;
+    virtual Tensor<Float_T>& getOutputs() = 0;
     virtual bool isCuda() const = 0;
     virtual ~Cell_CSpike_Top() {};
 };

@@ -33,7 +33,6 @@ public:
     CEnvironment_CUDA(Database& database,
                      const std::vector<size_t>& size,
                      unsigned int batchSize = 1,
-                     unsigned int nbSubStimuli = 1,
                      bool compositeStimuli = false);
 
     virtual void readBatch(Database::StimuliSet set,
@@ -43,36 +42,20 @@ public:
     virtual void initialize();
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
     virtual void reset(Time_T timestamp);
-    virtual const Tensor<int>& getTickData(unsigned int subIdx) const
+    
+    virtual Tensor<Float_T>& getTickData()
     {
-        //TODO: There is a problem with that
-        std::cout << "CEnv_CUDA getTickData const" << std::endl;
-        exit(0);
-        return mTickData[subIdx];
-    };
-    virtual Tensor<int>& getTickData(unsigned int subIdx)
-    {
-        mTickData[subIdx].synchronizeDToH();
-        return mTickData[subIdx];
-    };
-    virtual Interface<int>& getTickData()
-    {
-        for (unsigned int k=0; k<mTickData.size(); k++){
-            mTickData[k].synchronizeDToH();
-        }
+        //TODO: Delete synchronization if possible
+        mTickData.synchronizeDToH();
         return mTickData;
     };
-    virtual Tensor<int>& getTickOutputs()
-    {
-        mTickOutputs.synchronizeDToH();
-        return mTickOutputs;
-    };
+
     virtual ~CEnvironment_CUDA();
 
 protected:
-    CudaInterface<Time_T> mNextEventTime;
-    CudaInterface<int> mNextEventType;
-    std::vector<curandState*> mCurandStates;
+    CudaTensor<Time_T> mNextEventTime;
+    CudaTensor<int> mNextEventType;
+    curandState* mCurandState;
 
     unsigned int mDeviceMaxThreads;
 

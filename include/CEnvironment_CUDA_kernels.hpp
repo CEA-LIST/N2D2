@@ -27,8 +27,8 @@
 namespace N2D2 {
 
 void cudaNoConversion(float * data,
-                    float * tickOutputsTraces,
-                    float * tickOutputsTracesLearning,
+                    float * tickData,
+                    float * tickActivity,
                     float scaling,
                     unsigned int inputDimX,
                     unsigned int inputDimY,
@@ -55,8 +55,8 @@ void cudaGenerateInitialSpikes(float * data,
                         curandState * state);
 
 void cudaGenerateSpikes(float * data,
-                        int * tickData,
-                        int * tickOutputs,
+                        float * tickData,
+                        //float * tickOutputs,
                         unsigned long long int * nextEventTime,
                         int * nextEventType,
                         unsigned int inputDimX,
@@ -72,8 +72,6 @@ void cudaGenerateSpikes(float * data,
                         float periodRelStdDev,
                         unsigned long long int periodMin,
                         float mMaxFrequency,
-                        unsigned int nbSubStimuli,
-                        unsigned int subStimulus,
                         unsigned int nbBatches,
                         curandState * state);
 

@@ -56,7 +56,7 @@ class CMonitor {
 public:
     CMonitor();
 
-    virtual void add(Tensor<int>& input);
+    virtual void add(Tensor<float>& input);
 
     virtual void initialize(unsigned int nbTimesteps, unsigned int nbClasses=0);
     virtual bool tick(Time_T timestamp);
@@ -195,10 +195,10 @@ protected:
     /// The network that is monitored.
 
 #ifdef CUDA
-    CudaTensor<int>* mInputs;
+    CudaTensor<float>* mInputs;
 
-    CudaInterface<char> mActivity;
-    CudaTensor<char> mBatchActivity;
+    CudaInterface<int> mActivity;
+    CudaTensor<int> mBatchActivity;
 
     /// Firing rates of each neuron over all examples
     CudaTensor<unsigned int> mFiringRate;
@@ -229,10 +229,10 @@ protected:
     CudaTensor<unsigned int> mMaxClassResponse;
 
 #else
-    Tensor<int>* mInputs;
+    Tensor<float>* mInputs;
 
-    Interface<char> mActivity;
-    Tensor<char> mBatchActivity;
+    Interface<int> mActivity;
+    Tensor<int> mBatchActivity;
 
       /// Firing rates of each neuron over all examples
     Tensor<unsigned int> mFiringRate;

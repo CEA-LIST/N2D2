@@ -34,7 +34,6 @@
 #include "CudaUtils.hpp"
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "CMonitor_CUDA.hpp"
-#include "Cell/Cell_CSpike_CUDA.hpp"
 #endif
 
 namespace N2D2 {

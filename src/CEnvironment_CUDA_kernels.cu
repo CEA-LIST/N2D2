@@ -29,8 +29,8 @@
 
 
 __global__ void cudaNoConversion_kernel(float * data,
-                                        float * tickOutputsTraces,
-                                        float * tickOutputsTracesLearning,
+                                        float * tickData,
+                                        float * tickActivity,
                                         float scaling,
                                         unsigned int inputDimX,
                                         unsigned int inputDimY,
@@ -41,8 +41,8 @@ __global__ void cudaNoConversion_kernel(float * data,
 
     for (unsigned int idx = threadIdx.x; idx < inputSize; idx += blockDim.x) {
         float value = data[idx + batchOffset];
-        tickOutputsTraces[idx + batchOffset] = scaling*value;
-        tickOutputsTracesLearning[idx + batchOffset] += scaling*value;
+        tickData[idx + batchOffset] = round(scaling*value);
+        tickActivity[idx + batchOffset] += round(scaling*value);
     }
 }
 
@@ -169,8 +169,8 @@ __global__ void cudaGenerateInitialSpikes_kernel(float * data,
 
 
 __global__ void cudaGenerateSpikes_kernel(float * data,
-                                            int * tickData,
-                                            int * tickOutputs,
+                                            float * tickData,
+                                            //float * tickOutputs,
                                             unsigned long long int * nextEventTime,
                                             int * nextEventType,
                                             unsigned int inputDimX,
@@ -186,15 +186,11 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
                                             float periodRelStdDev,
                                             unsigned long long int periodMin,
                                             float maxFrequency,
-                                            unsigned int nbSubStimuli,
-                                            unsigned int subStimulus,
                                             curandState * state)
 {
     const unsigned int inputStride = blockDim.x;
     const unsigned int inputSize = inputDimX * inputDimY * inputDimZ;
-    const unsigned int inputSizeOutputs = inputDimX * inputDimY * inputDimZ * nbSubStimuli;
     const unsigned int batchOffset = blockIdx.x * inputSize;
-    const unsigned int batchOffsetOutputs = blockIdx.x * inputSizeOutputs;
 
     // Set local state for performance
     curandState local_state = state[threadIdx.x + blockIdx.x * blockDim.x];
@@ -207,8 +203,7 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
         if (nextEventType[idx + batchOffset] != 0 &&
         nextEventTime[idx + batchOffset] <= timestamp) {
             tickData[idx + batchOffset] = nextEventType[idx + batchOffset];
-            tickOutputs[idx + subStimulus * inputSize + batchOffsetOutputs] =
-                nextEventType[idx + batchOffset];
+           
             unsigned long long int eventTime;
             int eventType;
 
@@ -303,7 +298,6 @@ __global__ void cudaGenerateSpikes_kernel(float * data,
         }
         else {
             tickData[idx + batchOffset] = 0;
-            tickOutputs[idx + subStimulus * inputSize + batchOffsetOutputs] = 0;
         }
     }
 
@@ -321,8 +315,8 @@ __global__ void cudaSetupRng_kernel(curandState * state, unsigned int seed)
 
 
 void N2D2::cudaNoConversion(float * data,
-                            float * tickOutputsTraces,
-                            float * tickOutputsTracesLearning,
+                            float * tickData,
+                            float * tickActivity,
                             float scaling,
                             unsigned int inputsDimX,
                             unsigned int inputsDimY,
@@ -338,8 +332,8 @@ void N2D2::cudaNoConversion(float * data,
     const dim3 threadsPerBlocks = {groupSize, 1, 1};
 
     cudaNoConversion_kernel <<<blocksPerGrid, threadsPerBlocks>>>(data,
-                                tickOutputsTraces,
-                                tickOutputsTracesLearning,
+                                tickData,
+                                tickActivity,
                                 scaling,
                                 inputsDimX,
                                 inputsDimY,
@@ -390,8 +384,8 @@ void N2D2::cudaGenerateInitialSpikes(float * data,
 
 
 void N2D2::cudaGenerateSpikes(float * data,
-                                int * tickData,
-                                int * tickOutputs,
+                                float * tickData,
+                                //float * tickOutputs,
                                 unsigned long long int * nextEventTime,
                                 int * nextEventType,
                                 unsigned int inputDimX,
@@ -407,8 +401,6 @@ void N2D2::cudaGenerateSpikes(float * data,
                                 float periodRelStdDev,
                                 unsigned long long int periodMin,
                                 float maxFrequency,
-                                unsigned int nbSubStimuli,
-                                unsigned int subStimulus,
                                 unsigned int nbBatches,
                                 curandState * state)
 {
@@ -417,7 +409,7 @@ void N2D2::cudaGenerateSpikes(float * data,
     cudaGenerateSpikes_kernel <<<nbBatches, 16>>>
                                 (data,
                                 tickData,
-                                tickOutputs,
+                                //tickOutputs,
                                 nextEventTime,
                                 nextEventType,
                                 inputDimX,
@@ -433,8 +425,6 @@ void N2D2::cudaGenerateSpikes(float * data,
                                 periodRelStdDev,
                                 periodMin,
                                 maxFrequency,
-                                nbSubStimuli,
-                                subStimulus,
                                 state);
 }
 

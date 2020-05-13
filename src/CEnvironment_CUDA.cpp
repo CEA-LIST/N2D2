@@ -25,12 +25,10 @@
 N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
                                          const std::vector<size_t>& size,
                                          unsigned int batchSize,
-                                         unsigned int nbSubStimuli,
                                          bool compositeStimuli)
     : CEnvironment(database,
                     size,
                     batchSize,
-                    nbSubStimuli,
                     compositeStimuli)
 
 {
@@ -38,11 +36,12 @@ N2D2::CEnvironment_CUDA::CEnvironment_CUDA(Database& database,
 
 }
 
+
 void N2D2::CEnvironment_CUDA::readBatch(Database::StimuliSet set,
                                       unsigned int startIndex)
 {
     CEnvironment::readBatch(set, startIndex);
-    mRelationalData[0].synchronizeHToD();
+    mData.synchronizeHToD();
 
 }
 
@@ -50,32 +49,26 @@ void N2D2::CEnvironment_CUDA::readBatch(Database::StimuliSet set,
 void N2D2::CEnvironment_CUDA::readRandomBatch(Database::StimuliSet set)
 {
     StimuliProvider::readRandomBatch(set);
-    mRelationalData[0].synchronizeHToD();
+    mData.synchronizeHToD();
 }
 
 
 void N2D2::CEnvironment_CUDA::initialize()
 {
     CEnvironment::initialize();
+    
+    if (0 == mNextEventTime.size()){ 
+          
+        mNextEventTime.resize(mData.dims());
+        mNextEventType.resize(mData.dims());
 
-    for (unsigned int k=0; k<mRelationalData.size(); k++){
-        if (k < mNextEventTime.size())
-            continue;  // already initialized, skip!
-
-        mNextEventTime.push_back(new CudaTensor<Time_T>(
-                                                mRelationalData[k].dims()));
-        mNextEventType.push_back(new CudaTensor<int>(
-                                                mRelationalData[k].dims()));
-        curandState* state;
         // Allocate global memory on device for curand states
-        cudaMalloc((void **)&state, mRelationalData[k].dimB()*16*
+        cudaMalloc((void **)&mCurandState, mData.dimB()*16*
                                 sizeof(curandState));
         // Setup the initial curand states with the global seed value
-        cudaSetupRng(state,
+        cudaSetupRng(mCurandState,
                     Random::_mt[0],
-                    mRelationalData[k].dimB());
-
-        mCurandStates.push_back(state);
+                    mData.dimB());
     }
 
     const cudaDeviceProp& deviceProp = CudaContext::getDeviceProp();
@@ -95,19 +88,19 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
         return;
     }
     if (mNoConversion) {
-        for (unsigned int k=0; k<mRelationalData.size(); k++){
-            cudaNoConversion(mRelationalData[k].getDevicePtr(),
-                            mTickDataTraces[k].getDevicePtr(),
-                            mTickDataTracesLearning[k].getDevicePtr(),
-                            mScaling,
-                            mRelationalData[k].dimX(),
-                            mRelationalData[k].dimY(),
-                            mRelationalData[k].dimZ(),
-                            mRelationalData[k].dimB(),
-                            mDeviceMaxThreads);
-            //mTickDataTraces[k].synchronizeDToH();
-            //std::cout << mTickDataTraces[k] << std::endl;
-        }
+       
+        cudaNoConversion(mData.getDevicePtr(),
+                        mTickData.getDevicePtr(),
+                        mTickActivity.getDevicePtr(),
+                        mScaling,
+                        mData.dimX(),
+                        mData.dimY(),
+                        mData.dimZ(),
+                        mData.dimB(),
+                        mDeviceMaxThreads);
+        //mTickData.synchronizeDToH();
+        //std::cout << mTickData << std::endl;
+        
         return;
     }
 
@@ -115,56 +108,18 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
 
     if (!mInitialized) {
 
-         mTickOutputs.assign(
-                             {mRelationalData[0].dimX(),
-                            mRelationalData[0].dimY(),
-                            /*mRelationalData[0].dimZ()*mNbSubStimuli,*/
-                            mRelationalData[0].dimZ(),
-                            mRelationalData[0].dimB()}, 0);
+       
+        mData.synchronizeHToD();
+        mNextEventTime.assign(mData.dims(), start);
+        mNextEventType.assign(mData.dims(), 0);
+        mTickData.assign(mData.dims(), 0);
 
-
-        for (unsigned int k=0; k<mRelationalData.size(); k++){
-            mRelationalData[k].synchronizeHToD();
-            mNextEventTime[k].assign(mRelationalData[k].dims(), start);
-            mNextEventType[k].assign(mRelationalData[k].dims(), 0);
-            mTickData[k].assign(mRelationalData[k].dims(), 0);
-
-            cudaGenerateInitialSpikes(mRelationalData[k].getDevicePtr(),
-                                mNextEventTime[k].getDevicePtr(),
-                                mNextEventType[k].getDevicePtr(),
-                                mRelationalData[k].dimX(),
-                                mRelationalData[k].dimY(),
-                                mRelationalData[k].dimZ(),
-                                start,
-                                stop,
-                                mDiscardedLateStimuli,
-                                mStimulusType,
-                                mPeriodMeanMin,
-                                mPeriodMeanMax,
-                                mPeriodRelStdDev,
-                                mPeriodMin,
-                                mMaxFrequency,
-                                mRelationalData[k].dimB(),
-                                mCurandStates[k]);
-            // Setup the initial curand states with the global seed value
-            cudaSetupRng(mCurandStates[k],
-                    Random::_mt[0],
-                    mRelationalData[k].dimB());
-
-        }
-        mInitialized = true;
-    }
-
-    for (unsigned int k=0; k<mRelationalData.size(); k++){
-        cudaGenerateSpikes(mRelationalData[k].getDevicePtr(),
-                            mTickData[k].getDevicePtr(),
-                            mTickOutputs.getDevicePtr(),
-                            mNextEventTime[k].getDevicePtr(),
-                            mNextEventType[k].getDevicePtr(),
-                            mRelationalData[k].dimX(),
-                            mRelationalData[k].dimY(),
-                            mRelationalData[k].dimZ(),
-                            timestamp,
+        cudaGenerateInitialSpikes(mData.getDevicePtr(),
+                            mNextEventTime.getDevicePtr(),
+                            mNextEventType.getDevicePtr(),
+                            mData.dimX(),
+                            mData.dimY(),
+                            mData.dimZ(),
                             start,
                             stop,
                             mDiscardedLateStimuli,
@@ -174,20 +129,45 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
                             mPeriodRelStdDev,
                             mPeriodMin,
                             mMaxFrequency,
-                            mNbSubStimuli,
-                            k,
-                            mRelationalData[k].dimB(),
-                            mCurandStates[k]);
+                            mData.dimB(),
+                            mCurandState);
+        // Setup the initial curand states with the global seed value
+        cudaSetupRng(mCurandState,
+                Random::_mt[0],
+                mData.dimB());
 
+        
+        mInitialized = true;
     }
+
+    cudaGenerateSpikes(mData.getDevicePtr(),
+                        mTickData.getDevicePtr(),
+                        //mTickOutputs.getDevicePtr(),
+                        mNextEventTime.getDevicePtr(),
+                        mNextEventType.getDevicePtr(),
+                        mData.dimX(),
+                        mData.dimY(),
+                        mData.dimZ(),
+                        timestamp,
+                        start,
+                        stop,
+                        mDiscardedLateStimuli,
+                        mStimulusType,
+                        mPeriodMeanMin,
+                        mPeriodMeanMax,
+                        mPeriodRelStdDev,
+                        mPeriodMin,
+                        mMaxFrequency,
+                        mData.dimB(),
+                        mCurandState);
+    
 }
 
 void N2D2::CEnvironment_CUDA::reset(Time_T /*timestamp*/)
 {
     mInitialized = false;
-    for (unsigned int k=0; k<mRelationalData.size(); ++k){
-        mTickDataTracesLearning[k].assign(mTickDataTracesLearning[k].dims(), 0);
-    }
+    
+    mTickActivity.assign(mTickActivity.dims(), 0);
 
     mStopStimulus = false;
 }
@@ -195,9 +175,7 @@ void N2D2::CEnvironment_CUDA::reset(Time_T /*timestamp*/)
 
 N2D2::CEnvironment_CUDA::~CEnvironment_CUDA()
 {
-    for (unsigned int k=0; k<mCurandStates.size(); k++){
-        cudaFree(mCurandStates[k]);
-    }
+    cudaFree(mCurandState);
     // dtor
 }
 

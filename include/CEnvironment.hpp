@@ -48,10 +48,8 @@ public:
     CEnvironment(Database& database,
                  const std::vector<size_t>& size,
                  unsigned int batchSize = 1,
-                 unsigned int nbSubStimuli = 1,
                  bool compositeStimuli = false);
-    void addChannel(const CompositeTransformation& transformation,
-                    unsigned int subIdx=0);
+ 
     void setBatchSize(unsigned int batchSize);
 
     virtual void readBatch(Database::StimuliSet set,
@@ -65,56 +63,12 @@ public:
 
     virtual void loadAerStream(Time_T start,
                         Time_T stop);
-
-    void readRelationalStimulus();
-
-    void readRelationalStimulus(bool test,
-                                bool sleep=false,
-                                Float_T constantInput=0);
-
-    void readDatabaseRelationalStimulus(Database::StimuliSet set);
-
-    /*
-    Tensor4d<Float_T> makeInputIdentity(unsigned int subStimulus,
-                                        double scalingFactor);
-    void produceConstantInput(Float_T constantInput);
-    void produceRandomInput(Float_T mean, Float_T dev);*/
-    double getRelationalTarget(unsigned int subStimulus)
+    
+    Tensor<Float_T>& getInputData()
     {
-        return mRelationalTargets(subStimulus);
+        return mInputData;
     };
-    const Tensor<Float_T>& getRelationalTargets() const
-    {
-        return mRelationalTargets;
-    };
-    Interface<Float_T>& getRelationalData()
-    {
-        return mRelationalData;
-    };
-    const Tensor<Float_T>& getRelationalData(unsigned int subIdx) const
-    {
-        return mRelationalData[subIdx];
-    };
-    Tensor<Float_T>& getRelationalData(unsigned int subIdx)
-    {
-        return mRelationalData[subIdx];
-    };
-    const Tensor<Float_T>& getTickDataTrace(unsigned int subIdx) const
-    {
-        return mTickDataTraces[subIdx];
-    };
-    Tensor<Float_T>& getTickDataTrace(unsigned int subIdx)
-    {
-        return mTickDataTraces[subIdx];
-    };
-     const Tensor<Float_T>& getTickDataTraceLearning(unsigned int subIdx) const
-    {
-        return mTickDataTracesLearning[subIdx];
-    };
-    Tensor<Float_T>& getTickDataTraceLearning(unsigned int subIdx)
-    {
-        return mTickDataTracesLearning[subIdx];
-    };
+   
     bool doesSpikeConversion()
     {
         return !mNoConversion;
@@ -124,38 +78,24 @@ public:
     virtual void initialize();
     virtual void initializeSpikeGenerator(Time_T start, Time_T stop);
 
-    virtual Tensor<int>& getTickData(unsigned int subIdx)
-    {
-        return mTickData[subIdx];
-    };
-    virtual const Tensor<int>& getTickData(unsigned int subIdx) const
-    {
-        return mTickData[subIdx];
-    };
-    virtual Interface<int>& getTickData()
+    virtual Tensor<Float_T>& getTickData()
     {
         return mTickData;
     };
-    virtual Interface<Float_T>& getCurrentFiringRate()
+    
+    virtual Tensor<Float_T>& getTickActivity()
     {
-        return mCurrentFiringRate;
+        return mTickActivity;
     };
-    virtual Interface<Float_T>& getAccumulatedTickOutputs()
+   
+    virtual Tensor<long long unsigned int>& getTickFiringRate()
     {
-        return mAccumulatedTickOutputs;
+        return mTickFiringRate;
     };
-    virtual Tensor<int>& getTickOutputs()
-    {
-        return mTickOutputs;
-    };
+   
     bool isAerMode()
     {
         return dynamic_cast<AER_Database*>(&mDatabase);
-    };
-
-    unsigned int getNbSubStimuli()
-    {
-        return mNbSubStimuli;
     };
 
     Time_T getStopStimulusTime()
@@ -175,29 +115,24 @@ protected:
 
 #ifdef CUDA
     // If CUDA activated use CudaTensor to enable CUDA spike generation
-    CudaInterface<Float_T> mRelationalData;
+    CudaTensor<Float_T> mInputData;
 #else
-    Interface<Float_T> mRelationalData;
+    Tensor<Float_T> mInputData;
 #endif
 
-    Tensor<Float_T> mRelationalTargets;
 
 #ifdef CUDA
-    CudaInterface<int> mTickData;
-    CudaTensor<int> mTickOutputs;
-    CudaInterface<Float_T> mTickDataTraces;
-    CudaInterface<Float_T> mTickDataTracesLearning;
-    CudaInterface<Float_T> mCurrentFiringRate;
-    CudaInterface<Float_T> mAccumulatedTickOutputs;
+    CudaTensor<Float_T> mTickData;
+    //CudaTensor<int> mTickOutputs;
+    CudaTensor<Float_T> mTickActivity;
+    CudaTensor<long long unsigned int> mTickFiringRate;
 #else
-    Interface<int> mTickData;
-    Tensor<int> mTickOutputs;
-    Interface<Float_T> mTickDataTraces;
-    Interface<Float_T> mTickDataTracesLearning;
-    Interface<Float_T> mCurrentFiringRate;
-    Interface<Float_T> mAccumulatedTickOutputs;
+    Tensor<Float_T> mTickData;
+    //Tensor<int> mTickOutputs;
+    Tensor<Float_T> mTickActivity;
+    Tensor<long long unsigned int> mTickFiringRate;
 #endif
-    Interface<std::pair<Time_T, int> > mNextEvent;
+    Tensor<std::pair<Time_T, int> > mNextEvent;
 
     // With this iterator we avoid to iterate over all events in every tick
     std::vector<AerReadEvent>::iterator mEventIterator;
@@ -207,7 +142,7 @@ protected:
     Parameter<Float_T> mScaling;
     Parameter<Time_T> mStopStimulusTime;
     Parameter<std::string> mStreamPath;
-    unsigned int mNbSubStimuli;
+   
     long long unsigned int mLastTimestamp;
     bool mStopStimulus;
 

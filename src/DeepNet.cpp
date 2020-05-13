@@ -26,7 +26,6 @@
 #include "Monitor.hpp"
 #include "NodeEnv.hpp"
 #include "Cell/BatchNormCell.hpp"
-#include "Cell/Cell_CSpike_Top.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DeconvCell.hpp"
@@ -36,6 +35,7 @@
 #include "Cell/PoolCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
+#include "Cell/Cell_CSpike_Top.hpp"
 #include "utils/Utils.hpp"
 #include "Solver/Solver.hpp"
 
@@ -84,6 +84,7 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
     }
 
     mCells.insert(std::make_pair(cell->getName(), cell));
+
 }
 
 void N2D2::DeepNet::addCellBetween(const std::shared_ptr<Cell>& newCell,
@@ -483,10 +484,17 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
 
             (*itMonitor).second->update(start, stop);
 
-            //activity.push_back(std::make_pair(
-            //    (*itCell), (*itMonitor).second->getTotalBatchExampleFiringRate()));
             activity.push_back(std::make_pair(
-                (*itCell), (*itMonitor).second->getTotalBatchOutputsActivity()));
+                (*itCell), (*itMonitor).second->getTotalBatchExampleFiringRate()));
+            //activity.push_back(std::make_pair(
+            //    (*itCell), (*itMonitor).second->getTotalBatchOutputsActivity()));
+
+            /*Tensor<int>& diffRate =  (*itMonitor).second->getOutputsActivity();
+            diffRate.synchronizeDToH();
+            //std::cout << diffRate << std::endl;
+            std::cout << *itCell << " " <<
+                std::accumulate(diffRate.begin(),
+                                 diffRate.end(), 0) << std::endl;*/
 
         }
     }
@@ -838,12 +846,20 @@ void N2D2::DeepNet::checkGradient(double epsilon, double maxError)
 
 void N2D2::DeepNet::initialize()
 {
+
      std::shared_ptr<CEnvironment> cenv = std::dynamic_pointer_cast
         <CEnvironment>(mStimuliProvider);
 
+    std::cout << "Initialize Cenv" << std::endl;
     if (cenv) {
         cenv->initialize();
     }
+    else {
+        throw std::runtime_error("DeepNet::initialize(): CEnvironment cast failed!");
+    }
+
+    std::cout << "Initialized Cenv" << std::endl;
+
 
     for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
@@ -851,6 +867,7 @@ void N2D2::DeepNet::initialize()
              itCellEnd = mLayers[l].end();
              itCell != itCellEnd;
              ++itCell) {
+            std::cout << mCells[(*itCell)]->getType() << std::endl;
             mCells[(*itCell)]->initialize();
         }
     }

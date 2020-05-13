@@ -1,7 +1,7 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Johannes THIELE (olivier.bichler@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -27,10 +27,10 @@
 #include "Synapse_PCM.hpp"
 #include "Synapse_RRAM.hpp"
 #include "Synapse_Static.hpp"
-#include "Cell/Cell_CSpike.hpp"
 #include "Cell/Cell_Spike.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
+#include "Cell/Cell_CSpike_Top.hpp"
 #include "Generator/CellGenerator.hpp"
 #include "Generator/CEnvironmentGenerator.hpp"
 #include "Generator/DatabaseGenerator.hpp"
@@ -380,8 +380,8 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
                     deepNet->addTarget(target);
                 }
 
-                std::shared_ptr<Cell_CSpike> cellCSpike
-                    = std::dynamic_pointer_cast<Cell_CSpike>(cell);
+                std::shared_ptr<Cell_CSpike_Top> cellCSpike
+                    = std::dynamic_pointer_cast<Cell_CSpike_Top>(cell);
                 // Monitor for the cell
                 // Try different casts to find out Cell type
                 std::shared_ptr<Cell_Spike> cellSpike
@@ -453,13 +453,13 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
     if (Cenv) {
 #ifdef CUDA
         std::shared_ptr<CMonitor> cmonitor(new CMonitor_CUDA());
-        cmonitor->add(Cenv->getTickOutputs());
+        cmonitor->add(Cenv->getTickData());
 
         deepNet->addCMonitor("env", cmonitor);
 
 #else
         std::shared_ptr<CMonitor> cmonitor(new CMonitor());
-        cmonitor->add(Cenv->getTickOutputs());
+        cmonitor->add(Cenv->getTickData());
 
         deepNet->addCMonitor("env", cmonitor);
 

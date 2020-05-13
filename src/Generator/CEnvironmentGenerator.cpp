@@ -43,8 +43,6 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
 
     const unsigned int batchSize = iniConfig.getProperty
                                    <unsigned int>("BatchSize", 1U);
-    const unsigned int nbSubStimuli = iniConfig.getProperty
-                                   <unsigned int>("NbSubStimuli", 1U);
     const bool compositeStimuli = iniConfig.getProperty
                                   <bool>("CompositeStimuli", false);
     const std::string cachePath = iniConfig.getProperty
@@ -61,7 +59,7 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
 #else
 
         std::shared_ptr<CEnvironment_CUDA> cEnv(new CEnvironment_CUDA(
-            database, size, batchSize, nbSubStimuli, compositeStimuli));
+            database, size, batchSize, compositeStimuli));
 
 
         cEnv->setCachePath(cachePath);
@@ -85,7 +83,7 @@ std::shared_ptr<N2D2::CEnvironment> N2D2::CEnvironmentGenerator::generate(
     }
 
     std::shared_ptr<CEnvironment> cEnv(new CEnvironment(
-        database, size, batchSize, nbSubStimuli, compositeStimuli));
+        database, size, batchSize, compositeStimuli));
     cEnv->setCachePath(cachePath);
 
     if (readStream){

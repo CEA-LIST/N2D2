@@ -40,10 +40,11 @@ N2D2::CMonitor::CMonitor()
 
 
 
-void N2D2::CMonitor::add(Tensor<int>& input)
+void N2D2::CMonitor::add(Tensor<float>& input)
 {
+    //TODO: Add quantization function between cell and monitor to treat different float types
 #ifdef CUDA
-    mInputs = dynamic_cast<CudaTensor<int>*>(&(input));
+    mInputs = dynamic_cast<CudaTensor<float>*>(&(input));
 #else
     mInputs = &input;
 #endif
@@ -66,7 +67,7 @@ void N2D2::CMonitor::initialize(unsigned int nbTimesteps,
                               *(*mInputs).dimZ();
 
          for (unsigned int k=0; k<nbTimesteps; k++) {
-            mActivity.push_back(new Tensor<char>((*mInputs).dims()));
+            mActivity.push_back(new Tensor<int>((*mInputs).dims()));
 
         }
         mBatchActivity.resize({1, (*mInputs).dimX(), (*mInputs).dimY(),
@@ -107,11 +108,10 @@ bool N2D2::CMonitor::tick(Time_T timestamp)
                 for (unsigned int x=0; x<(*mInputs).dimX(); ++x) {
 
                     // Extract sign
-                    char activity = (*mInputs)(x, y ,channel, batch)/
-                                    std::abs((*mInputs)(x, y ,channel, batch));
+                    int activity = 0;
+                    if ((*mInputs)(x, y ,channel, batch) != 0) {
+                        activity = 1;
 
-                    //TODO: Adapt to negative spikes and integer input?
-                    if ((int)activity > 0) {
                         if (mFirstEventTime(batch) == 0) {
                             mFirstEventTime(batch) = timestamp;
                         }
@@ -160,9 +160,9 @@ unsigned int N2D2::CMonitor::getActivity(unsigned int x,
     unsigned int firingRate = 0;
     if (all) {
         for (unsigned int k=0; k<mTimeIndex.size(); k++) {
-            firingRate += (int)mActivity[k](x,y,z,batch);
-            if ((int)mActivity[k](x,y,z,batch) > 1){
-                std::cout << " Warning xyz: " << (int)mActivity[k](x,y,z,batch) << std::endl;
+            firingRate += mActivity[k](x,y,z,batch);
+            if (mActivity[k](x,y,z,batch) > 1){
+                std::cout << " Warning xyz: " << mActivity[k](x,y,z,batch) << std::endl;
                 exit(0);
             }
         }
@@ -175,7 +175,7 @@ unsigned int N2D2::CMonitor::getActivity(unsigned int x,
             "start or stop outside of map range");
         }
         for (unsigned int k=mTimeIndex.at(start); k<=mTimeIndex.at(stop); k++) {
-            firingRate += (int)mActivity[k](x,y,z,batch);
+            firingRate += mActivity[k](x,y,z,batch);
         }
     }
 
@@ -202,9 +202,9 @@ unsigned int N2D2::CMonitor::getActivity(unsigned int index,
     unsigned int firingRate = 0;
     if (all) {
         for (unsigned int k=0; k<mTimeIndex.size(); k++) {
-            firingRate += (int)mActivity[k](index,batch);
-            if ((int)mActivity[k](index,batch) > 1){
-                std::cout << " Warning index: " << (int)mActivity[k](index,batch) << std::endl;
+            firingRate += mActivity[k](index,batch);
+            if (mActivity[k](index,batch) > 1){
+                std::cout << " Warning index: " << mActivity[k](index,batch) << std::endl;
                 exit(0);
             }
         }
@@ -217,7 +217,7 @@ unsigned int N2D2::CMonitor::getActivity(unsigned int index,
             "start or stop outside of map range");
         }
         for (unsigned int k=mTimeIndex.at(start); k<=mTimeIndex.at(stop); k++) {
-            firingRate += (int)mActivity[k](index,batch);
+            firingRate += mActivity[k](index,batch);
         }
     }
 
@@ -458,7 +458,7 @@ void N2D2::CMonitor::logActivity(const std::string& fileName,
                 bool hasData = false;
                 for (std::map<Time_T, unsigned int>::const_iterator it=mTimeIndex.find(start);
                 it!=std::next(mTimeIndex.find(stop),1); ++it) {
-                    int activity = (int) mActivity[(*it).second](nodeId, batch);
+                    int activity = mActivity[(*it).second](nodeId, batch);
                     if(isEmpty && activity != 0) {
                         isEmpty = false;
                     }

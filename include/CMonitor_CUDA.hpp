@@ -27,7 +27,6 @@
 #include "CMonitor.hpp"
 #include "CEnvironment_CUDA.hpp"
 #include "CMonitor_CUDA_kernels.hpp"
-#include "Cell/Cell_CSpike_CUDA.hpp"
 
 
 

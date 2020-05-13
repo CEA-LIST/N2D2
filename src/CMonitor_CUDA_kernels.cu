@@ -47,11 +47,11 @@ static unsigned int findPower(unsigned int value)
 
 
 
-__global__ void cudaUpdateActivity_kernel(int * inputs,
-                                        char * activity,
-                                        unsigned int * firingRate,
+__global__ void cudaUpdateMetrics_kernel(float * inputs,
+                                        int * activity,
+                                        unsigned int * firingRate, // TODO: Make long
                                         unsigned int * exampleFiringRate,
-                                        int * totalOutput,
+                                        int * outputsActivity, //TODO: Make long
                                         unsigned long long int * firstEventTime,
                                         unsigned long long int * lastEventTime,
                                         unsigned int inputsDimX,
@@ -60,8 +60,6 @@ __global__ void cudaUpdateActivity_kernel(int * inputs,
                                         unsigned int long long timestamp)
 {
     const unsigned int inputSize = inputsDimZ * inputsDimX * inputsDimY;
-
-    // One batch per block z dimension
     const unsigned int batchInputOffset = blockIdx.z * inputSize;
 
     for (unsigned int channel = blockIdx.x; channel < inputsDimZ; channel += gridDim.x) {
@@ -70,14 +68,14 @@ __global__ void cudaUpdateActivity_kernel(int * inputs,
 
                     const unsigned int inputsIdx =
                         x + y*inputsDimX + channel*inputsDimX*inputsDimY;
-                    int act = inputs[inputsIdx + batchInputOffset];
-                    unsigned int actAbs = abs(act);
-                    char spike = act == 0 ? 0 : act/abs(act);
+                    
+                    int value = round(inputs[inputsIdx + batchInputOffset]);
+                    unsigned int event = value == 0 ? 0 : 1;
 
-                    activity[inputsIdx + batchInputOffset] = spike;
-                    firingRate[inputsIdx + batchInputOffset] += actAbs;
-                    exampleFiringRate[inputsIdx + batchInputOffset] += actAbs;
-                    totalOutput[inputsIdx + batchInputOffset] += act;
+                    activity[inputsIdx + batchInputOffset] = event;
+                    firingRate[inputsIdx + batchInputOffset] += event;
+                    exampleFiringRate[inputsIdx + batchInputOffset] += event;
+                    outputsActivity[inputsIdx + batchInputOffset] += value;
             }
         }
     }
@@ -86,8 +84,11 @@ __global__ void cudaUpdateActivity_kernel(int * inputs,
 
 
 
+
+
+
 __global__ void cudaUpdateFiringRate_kernel(unsigned int * firingRate,
-                                        unsigned int * totalFiringRatePartial,
+                                        unsigned int * totalFiringRate,
                                         unsigned int inputsDimX,
                                         unsigned int inputsDimY,
                                         unsigned int inputsDimZ)
@@ -126,15 +127,15 @@ __global__ void cudaUpdateFiringRate_kernel(unsigned int * firingRate,
     }
 
     if (threadIdx.x == 0) {
-        totalFiringRatePartial[blockIdx.x+gridDim.x*blockIdx.z] = partialSum[0];
+        totalFiringRate[blockIdx.x+gridDim.x*blockIdx.z] = partialSum[0];
     }
 
 
 }
 
 
-__global__ void cudaUpdateFiringRate_kernel(int * firingRate,
-                                        int * totalFiringRatePartial,
+__global__ void cudaUpdateOutputsActivity_kernel(int * outputsActivity,
+                                        int * totalOutputsActivity,
                                         unsigned int inputsDimX,
                                         unsigned int inputsDimY,
                                         unsigned int inputsDimZ)
@@ -153,12 +154,12 @@ __global__ void cudaUpdateFiringRate_kernel(int * firingRate,
     // Perform first level of reduction during initialization
     // This is more efficient since we need all threads to load data
     // but the partial sum will see only half of the threads active
-    //partialSum[threadIdx.x] = firingRate[partialIdx + batchInputOffset] +
-    //    firingRate[partialIdx + blockDim.x + batchInputOffset];
+    //partialSum[threadIdx.x] = outputsActivity[partialIdx + batchInputOffset] +
+    //    outputsActivity[partialIdx + blockDim.x + batchInputOffset];
 
     partialSum[threadIdx.x] = 0;
     if (partialIdx < inputSize){
-        partialSum[threadIdx.x] = firingRate[partialIdx + batchInputOffset];
+        partialSum[threadIdx.x] = outputsActivity[partialIdx + batchInputOffset];
     }
 
     __syncthreads();
@@ -173,7 +174,7 @@ __global__ void cudaUpdateFiringRate_kernel(int * firingRate,
     }
 
     if (threadIdx.x == 0) {
-        totalFiringRatePartial[blockIdx.x+gridDim.x*blockIdx.z] = partialSum[0];
+        totalOutputsActivity[blockIdx.x+gridDim.x*blockIdx.z] = partialSum[0];
     }
 
 
@@ -308,8 +309,8 @@ __global__ void cudaUpdateMostActive_kernel(unsigned int * exampleFiringRate,
 }
 
 
-void N2D2::cudaUpdateActivity(int * inputs,
-                            char * activity,
+void N2D2::cudaUpdateMetrics(float * inputs,
+                            int * activity,
                             unsigned int * firingRate,
                             unsigned int * exampleFiringRate,
                             int * totalOutput,
@@ -334,7 +335,7 @@ void N2D2::cudaUpdateActivity(int * inputs,
     const dim3 blocksPerGrid = {inputsDimZ, 1, batchSize};
     const dim3 threadsPerBlocks = {groupX, groupSize/groupX, 1};
 
-    cudaUpdateActivity_kernel <<<blocksPerGrid, threadsPerBlocks>>> (
+    cudaUpdateMetrics_kernel <<<blocksPerGrid, threadsPerBlocks>>> (
                 inputs,
                 activity,
                 firingRate,
@@ -408,7 +409,9 @@ void N2D2::cudaUpdateFiringRate(unsigned int * firingRate,
 
 
 
-void N2D2::cudaUpdateFiringRate(int * firingRate,
+
+
+void N2D2::cudaUpdateOutputsActivity(int * firingRate,
                             int * totalFiringRate,
                             unsigned int inputsDimX,
                             unsigned int inputsDimY,
@@ -432,7 +435,7 @@ void N2D2::cudaUpdateFiringRate(int * firingRate,
     int * blockSum;
     cudaMallocManaged(&blockSum, blocksPerGrid.x * blocksPerGrid.z * sizeof(unsigned int));
 
-    cudaUpdateFiringRate_kernel <<<blocksPerGrid, threadsPerBlocks, sharedSize>>> (
+    cudaUpdateOutputsActivity_kernel <<<blocksPerGrid, threadsPerBlocks, sharedSize>>> (
         firingRate,
         blockSum,
         inputsDimX,
@@ -449,7 +452,7 @@ void N2D2::cudaUpdateFiringRate(int * firingRate,
     const dim3 threadsPerBlocks2 = {nbBlocks, 1, 1};
     sharedSize = sizeof(unsigned int) * threadsPerBlocks2.x;
 
-    cudaUpdateFiringRate_kernel <<< blocksPerGrid2, threadsPerBlocks2.x, sharedSize>>> (
+    cudaUpdateOutputsActivity_kernel <<< blocksPerGrid2, threadsPerBlocks2.x, sharedSize>>> (
         blockSum,
         totalFiringRate,
         nbBlocks,
