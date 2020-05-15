@@ -39,7 +39,7 @@ public:
 
     static const char* Type;
 
-    PadCropTransformation(unsigned int width, unsigned int height);
+    PadCropTransformation(int width, int height);
     PadCropTransformation(const PadCropTransformation& trans);
     const char* getType() const
     {
@@ -58,9 +58,14 @@ public:
         return std::shared_ptr<PadCropTransformation>(doClone());
     }
     std::pair<unsigned int, unsigned int>
-    getOutputsSize(unsigned int /*width*/, unsigned int /*height*/) const
+    getOutputsSize(unsigned int width, unsigned int height) const
     {
-        return std::make_pair(mWidth, mHeight);
+        if (mAdditiveWH) {
+            return std::make_pair<unsigned int, unsigned int>(width + mWidth,
+                                                              height + mHeight);
+        }
+        else
+            return std::make_pair<unsigned int, unsigned int>(mWidth, mHeight);
     };
     int getOutputsDepth(int depth) const
     {
@@ -82,9 +87,11 @@ private:
                  const cv::Scalar& bgColor,
                  std::vector<std::shared_ptr<ROI> >& labelsROI) const;
 
-    const unsigned int mWidth;
-    const unsigned int mHeight;
+    const int mWidth;
+    const int mHeight;
 
+    /// If true, the width and height are added to the image's size
+    Parameter<bool> mAdditiveWH;
     /// Padding background color
     Parameter<BorderType> mBorderType;
     Parameter<std::vector<double> > mBorderValue;

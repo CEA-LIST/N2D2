@@ -55,6 +55,8 @@ public:
     inline std::shared_ptr<Transformation> operator[](unsigned int k);
     inline const std::shared_ptr<Transformation>
     operator[](unsigned int k) const;
+    void iterTransformations(std::function<void(const Transformation&)> func)
+        const;
     std::shared_ptr<CompositeTransformation> clone() const
     {
         return std::shared_ptr<CompositeTransformation>(doClone());

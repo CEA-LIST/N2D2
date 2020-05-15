@@ -51,3 +51,16 @@ int N2D2::CompositeTransformation::getOutputsDepth(int depth) const
 
     return depth;
 }
+
+void N2D2::CompositeTransformation::iterTransformations(
+    std::function<void(const Transformation&)> func) const
+{
+    for (std::vector<std::shared_ptr<Transformation> >::const_iterator it
+         = mTransformationSet.begin(),
+         itEnd = mTransformationSet.end();
+         it != itEnd;
+         ++it)
+    {
+        func(*(*it));
+    }
+}

@@ -22,10 +22,11 @@
 
 const char* N2D2::PadCropTransformation::Type = "PadCrop";
 
-N2D2::PadCropTransformation::PadCropTransformation(unsigned int width,
-                                                   unsigned int height)
+N2D2::PadCropTransformation::PadCropTransformation(int width,
+                                                   int height)
     : mWidth(width),
       mHeight(height),
+      mAdditiveWH(this, "AdditiveWH", false),
       mBorderType(this, "BorderType", MinusOneReflectBorder),
       mBorderValue(this, "BorderValue", std::vector<double>())
 {
@@ -36,6 +37,7 @@ N2D2::PadCropTransformation::PadCropTransformation(
     const PadCropTransformation& trans)
     : mWidth(trans.mWidth),
       mHeight(trans.mHeight),
+      mAdditiveWH(this, "AdditiveWH", trans.mAdditiveWH),
       mBorderType(this, "BorderType", trans.mBorderType),
       mBorderValue(this, "BorderValue", trans.mBorderValue)
 {
@@ -59,7 +61,10 @@ void N2D2::PadCropTransformation::apply(cv::Mat& frame,
         : cv::Scalar(bgColorValue[0], bgColorValue[1],
                      bgColorValue[2], bgColorValue[3]);
 
-    padCrop(frame, frame.cols, frame.rows, mWidth, mHeight, borderType, bgColor,
+    const int width = (mAdditiveWH) ? frame.cols + mWidth : mWidth;
+    const int height = (mAdditiveWH) ? frame.rows + mHeight : mHeight;
+
+    padCrop(frame, frame.cols, frame.rows, width, height, borderType, bgColor,
         labelsROI);
 
     if (labels.rows > 1 || labels.cols > 1) {
@@ -67,8 +72,8 @@ void N2D2::PadCropTransformation::apply(cv::Mat& frame,
         padCrop(labels,
                 labels.cols,
                 labels.rows,
-                mWidth,
-                mHeight,
+                width,
+                height,
                 cv::BORDER_CONSTANT,
                 cv::Scalar::all(-1),
                 emptyLabelsROI);
@@ -81,9 +86,12 @@ void N2D2::PadCropTransformation::reverse(cv::Mat& frame,
                                           <std::shared_ptr<ROI> >& labelsROI,
                                           int /*id*/)
 {
+    const int width = (mAdditiveWH) ? frame.cols + mWidth : mWidth;
+    const int height = (mAdditiveWH) ? frame.rows + mHeight : mHeight;
+
     padCrop(labels,
-            mWidth,
-            mHeight,
+            width,
+            height,
             frame.cols,
             frame.rows,
             cv::BORDER_CONSTANT,

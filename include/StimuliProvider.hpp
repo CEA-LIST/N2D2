@@ -167,6 +167,7 @@ public:
 
     /// Return a random StimulusID from the StimuliSet @p set
     Database::StimulusID getRandomID(Database::StimuliSet set);
+    Database::StimulusID getRandomIDWithLabel(Database::StimuliSet set, int label);
 
     /// Read a whole random batch from the StimuliSet @p set, apply all the
     /// transformations and put the results in
@@ -281,6 +282,8 @@ public:
     inline CompositeTransformation&
     getChannelOnTheFlyTransformation(unsigned int channel,
                                      Database::StimuliSet set);
+    void iterTransformations(Database::StimuliSet set,
+                        std::function<void(const Transformation&)> func) const;
     const std::vector<int>& getBatch()
     {
         return mBatch;

@@ -294,6 +294,24 @@ void N2D2::StimuliProvider::addChannelsOnTheFlyTransformation(
     }
 }
 
+void N2D2::StimuliProvider::iterTransformations(
+    Database::StimuliSet set,
+    std::function<void(const Transformation&)> func) const
+{
+    mTransformations(set).cacheable.iterTransformations(func);
+    mTransformations(set).onTheFly.iterTransformations(func);
+
+    // Channel transformations
+    for (size_t channel = 0; channel < mChannelsTransformations.size();
+        ++channel)
+    {
+        mChannelsTransformations[channel](set).cacheable
+            .iterTransformations(func);
+        mChannelsTransformations[channel](set).onTheFly
+            .iterTransformations(func);
+    }
+}
+
 void N2D2::StimuliProvider::addTopTransformation(const CompositeTransformation& transformation,
                                                  Database::StimuliSetMask setMask)
 {
@@ -572,6 +590,24 @@ N2D2::Database::StimulusID
 N2D2::StimuliProvider::getRandomID(Database::StimuliSet set)
 {
     return mDatabase.getStimulusID(set, getRandomIndex(set));
+}
+
+N2D2::Database::StimulusID
+N2D2::StimuliProvider::getRandomIDWithLabel(Database::StimuliSet set, int label)
+{
+    std::vector<Database::StimulusID> partitionWithLabel;
+
+    for (unsigned int index = 0; index < mDatabase.getNbStimuli(set); ++index) {
+        if (mDatabase.getStimulusLabel(set, index) == label
+            || mDatabase.getNbROIsWithLabel(label) > 0)
+        {
+            partitionWithLabel.push_back(mDatabase.getStimulusID(set, index));
+        }
+    }
+
+    const unsigned int randomIdx
+        = Random::randUniform(0, partitionWithLabel.size() - 1);
+    return partitionWithLabel[randomIdx];
 }
 
 void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
