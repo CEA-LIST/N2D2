@@ -850,16 +850,11 @@ void N2D2::DeepNet::initialize()
      std::shared_ptr<CEnvironment> cenv = std::dynamic_pointer_cast
         <CEnvironment>(mStimuliProvider);
 
-    std::cout << "Initialize Cenv" << std::endl;
     if (cenv) {
         cenv->initialize();
+        std::cout << "DeepNet::initialize(): " 
+                  << " Initialize CEnv environment" << std::endl;
     }
-    else {
-        throw std::runtime_error("DeepNet::initialize(): CEnvironment cast failed!");
-    }
-
-    std::cout << "Initialized Cenv" << std::endl;
-
 
     for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
@@ -867,7 +862,6 @@ void N2D2::DeepNet::initialize()
              itCellEnd = mLayers[l].end();
              itCell != itCellEnd;
              ++itCell) {
-            std::cout << mCells[(*itCell)]->getType() << std::endl;
             mCells[(*itCell)]->initialize();
         }
     }
