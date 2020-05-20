@@ -482,12 +482,12 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
             if (itMonitor ==  mCMonitors.end())
                 continue;
 
-            (*itMonitor).second->update(start, stop);
+            //(*itMonitor).second->update(start, stop);
 
-            activity.push_back(std::make_pair(
-                (*itCell), (*itMonitor).second->getTotalBatchExampleFiringRate()));
             //activity.push_back(std::make_pair(
-            //    (*itCell), (*itMonitor).second->getTotalBatchOutputsActivity()));
+            //    (*itCell), (*itMonitor).second->getIntegratedFiringRate()));
+            activity.push_back(std::make_pair(
+                  (*itCell), (*itMonitor).second->getIntegratedOutputsActivity()));
 
             /*Tensor<int>& diffRate =  (*itMonitor).second->getOutputsActivity();
             diffRate.synchronizeDToH();
@@ -518,11 +518,8 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
              itEnd = mCMonitors.end();
              it != itEnd;
              ++it) {
-            (*it).second->logActivity("activity_batchElem_0_" + (*it).first + ".dat", 0, true, start, stop);
-            //(*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",
-            //                            true, start, stop);
-            (*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",
-                                        true, 0, 0);
+            (*it).second->logActivity("activity_batchElem_0_" + (*it).first + ".dat", 0, true);
+            (*it).second->logFiringRate("firing_rate_" + (*it).first + ".dat",true);
 
         }
 
@@ -815,7 +812,7 @@ void N2D2::DeepNet::clearFiringRate()
          itEnd = mCMonitors.end();
          it != itEnd;
          ++it) {
-        (*it).second->clearFiringRate();
+        (*it).second->clearAccumulators();
     }
 }
 
@@ -855,7 +852,6 @@ void N2D2::DeepNet::initialize()
         std::cout << "DeepNet::initialize(): " 
                   << " Initialize CEnv environment" << std::endl;
     }
-
     for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
              = mLayers[l].begin(),
@@ -2309,7 +2305,6 @@ void N2D2::DeepNet::cReset(Time_T timestamp)
             if (itMonitor ==  mCMonitors.end())
                 continue;
 
-            //(*itMonitor).second->clearMostActive();
 
             (*itMonitor).second->reset(timestamp);
 
@@ -2337,8 +2332,7 @@ void N2D2::DeepNet::initializeCMonitors(unsigned int nbTimesteps)
                 continue;
             }
 
-            (*itMonitor).second->initialize(nbTimesteps,
-                    mStimuliProvider->getDatabase().getNbLabels());
+            (*itMonitor).second->initialize(nbTimesteps);
         }
     }
 }

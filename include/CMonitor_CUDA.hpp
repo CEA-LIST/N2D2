@@ -30,7 +30,6 @@
 
 
 
-
 namespace N2D2 {
 /**
  * The CMonitor_CUDA class provides tools to monitor the activity of the network.
@@ -38,10 +37,18 @@ namespace N2D2 {
 class CMonitor_CUDA: public CMonitor {
 public:
     CMonitor_CUDA();
-    virtual void initialize(unsigned int nbTimesteps,
-                            unsigned int nbClasses=0);
+    virtual void initialize(unsigned int nbTimesteps);
     virtual bool tick(Time_T timestamp);
-    virtual void update(Time_T start, Time_T stop);
+
+    virtual long long unsigned int getIntegratedFiringRate() const
+    {
+        return cudaIntegrateFiringRate(mFiringRate.getDevicePtr(), mFiringRate.size());
+    }
+
+    virtual long long int getIntegratedOutputsActivity() const
+    {
+        return cudaIntegrateOutputsActivity(mOutputsActivity.getDevicePtr(), mOutputsActivity.size());
+    }
 
 
 protected:

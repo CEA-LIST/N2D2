@@ -41,8 +41,8 @@ __global__ void cudaNoConversion_kernel(float * data,
 
     for (unsigned int idx = threadIdx.x; idx < inputSize; idx += blockDim.x) {
         float value = data[idx + batchOffset];
-        tickData[idx + batchOffset] = round(scaling*value);
-        tickActivity[idx + batchOffset] += round(scaling*value);
+        tickData[idx + batchOffset] = scaling*value;
+        tickActivity[idx + batchOffset] += scaling*value;
     }
 }
 

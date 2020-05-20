@@ -112,14 +112,14 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
     if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
         if (!mStopStimulus) {
             mStopStimulus = true;
-            clearTickOutput();
+            clearTickData();
         }
         return;
     }
     if (mNoConversion) {
         for (unsigned int idx = 0, size = mData.size(); idx < size; ++idx) {
-            mTickData(idx) = round(mScaling*mData(idx));
-            mTickActivity(idx) += mTickData(idx);
+            mTickData(idx) = mScaling*mData(idx);
+            mTickActivity(idx) += mScaling*mTickData(idx);
         }
 #ifdef CUDA
             mTickActivity.synchronizeHToD();
@@ -200,14 +200,6 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
     
 }
 
-// TODO: Redundant after refactoring?
-void N2D2::CEnvironment::readStimulus(Database::StimulusID id,
-                                         Database::StimuliSet set,
-                                         unsigned int batchPos)
-{
-    StimuliProvider::readStimulus(id, set, batchPos);
-
-}
 
 
 void N2D2::CEnvironment::loadAerStream(Time_T start,
@@ -273,7 +265,7 @@ void N2D2::CEnvironment::initializeSpikeGenerator(Time_T start, Time_T stop)
     }
 }
 
-void N2D2::CEnvironment::clearTickOutput()
+void N2D2::CEnvironment::clearTickData()
 {
     mTickData.assign(mTickData.dims(), 0);
 }

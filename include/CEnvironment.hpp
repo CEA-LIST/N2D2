@@ -57,10 +57,6 @@ public:
 
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
 
-    virtual void readStimulus(Database::StimulusID id,
-                      Database::StimuliSet set,
-                      unsigned int batchPos = 0);
-
     virtual void loadAerStream(Time_T start,
                         Time_T stop);
     
@@ -103,7 +99,7 @@ public:
         return mStopStimulusTime;
     };
 
-    void clearTickOutput();
+    void clearTickData();
 
     virtual ~CEnvironment();
 

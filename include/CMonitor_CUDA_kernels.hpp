@@ -24,73 +24,28 @@
 
 #include <curand_kernel.h>
 #include "CudaUtils.hpp"
+#include "thrust/reduce.h"
+#include <stdlib.h>
 
 
 namespace N2D2 {
 
 void cudaUpdateMetrics(float * inputs,
-                        int * activity,
-                        unsigned int * firingRate,
-                        unsigned int * exampleFiringRate,
-                        int * outputsActivity,
-                        unsigned long long int * firstEventTime,
-                        unsigned long long int * lastEventTime,
-                        unsigned int inputsDimX,
-                        unsigned int inputsDimY,
-                        unsigned int inputsDimZ,
-                        unsigned long long int timestamp,
-                        unsigned int batchSize,
-                        unsigned int maxNbThreads,
-                        unsigned int warpSize);
+                    int * activity,
+                    long long unsigned int * firingRate,
+                    long long unsigned int * totalFiringRate,
+                    long long int * outputsActivity,
+                    long long int * totalOutputsActivity,
+                    unsigned int inputsDimX,
+                    unsigned int inputsDimY,
+                    unsigned int inputsDimZ,
+                    unsigned int batchSize,
+                    unsigned int maxNbThreads,
+                    unsigned int warpSize);
 
+long long unsigned int cudaIntegrateFiringRate(long long unsigned int * firingRate, unsigned int size);
 
-void cudaUpdateOutputsActivity(int * outputsActivity,
-                        int * totalOutputsActivity,
-                        unsigned int inputsDimX,
-                        unsigned int inputsDimY,
-                        unsigned int inputsDimZ,
-                        unsigned int batchSize,
-                        unsigned int maxNbThreads,
-                        unsigned int warpSize);
-
-void cudaUpdateFiringRate(unsigned int * firingRate,
-                        unsigned int * totalFiringRate,
-                        unsigned int inputsDimX,
-                        unsigned int inputsDimY,
-                        unsigned int inputsDimZ,
-                        unsigned int batchSize,
-                        unsigned int maxNbThreads,
-                        unsigned int warpSize);
-
-
-void cudaUpdateBatchFiringRate(unsigned int * firingRate,
-                                    unsigned int * batchFiringRate,
-                                    unsigned int inputsDimX,
-                                    unsigned int inputsDimY,
-                                    unsigned int inputsDimZ,
-                                    unsigned int batchSize,
-                                    unsigned int maxNbThreads,
-                                    unsigned int warpSize);
-
-void cudaUpdateMostActive(unsigned int * exampleFiringRate,
-                            unsigned int * mostActiveId,
-                            unsigned int inputsDimX,
-                            unsigned int inputsDimY,
-                            unsigned int inputsDimZ,
-                            unsigned int batchSize,
-                            unsigned int maxNbThreads,
-                            unsigned int warpSize);
-
-/*
-void cudaUpdateMostActive(unsigned int * exampleIds,
-                            unsigned int * exampleFiringRate,
-                            unsigned int * mostActiveId,
-                            unsigned int inputsDimX,
-                            unsigned int inputsDimY,
-                            unsigned int inputsDimZ,
-                            unsigned int batchSize,
-                            unsigned int maxNbThreads,
-                            unsigned int warpSize);*/
+long long int cudaIntegrateOutputsActivity(long long int * outputsActivity, unsigned int size);
 
 }
 

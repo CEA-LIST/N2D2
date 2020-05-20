@@ -82,7 +82,7 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
     if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
         if (!mStopStimulus) {
             mStopStimulus = true;
-            clearTickOutput();
+            clearTickData();
         }
         //std::cout << "Stop stimulus at time " << timestamp << std::endl;
         return;
@@ -98,8 +98,7 @@ void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
                         mData.dimZ(),
                         mData.dimB(),
                         mDeviceMaxThreads);
-        //mTickData.synchronizeDToH();
-        //std::cout << mTickData << std::endl;
+        
         
         return;
     }
