@@ -912,6 +912,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             continue;
         }
 
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         const Tensor<int> target = mTargets[batchPos][0];
         const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
         const Tensor<Float_T> estimatedLabelsValue
@@ -1135,6 +1139,10 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             // set)
             continue;
         }
+
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
 
         const Tensor<int> target = mTargets[batchPos][0];
         const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];

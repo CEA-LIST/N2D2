@@ -38,6 +38,9 @@
             std::stringstream error;                                           \
             error << "CUDNN failure: " << cudnnGetErrorString(e) << " ("       \
                   << (int)e << ") in " << __FILE__ << ':' << __LINE__;         \
+            int dev;                                                           \
+            if (cudaGetDevice(&dev) == cudaSuccess)                            \
+                error << " on device #" << dev;                                \
             std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
@@ -51,6 +54,9 @@
             std::stringstream error;                                           \
             error << "Cuda failure: " << cudaGetErrorString(e) << " ("         \
                   << (int)e << ") in " << __FILE__ << ':' << __LINE__;         \
+            int dev;                                                           \
+            if (cudaGetDevice(&dev) == cudaSuccess)                            \
+                error << " on device #" << dev;                                \
             std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
@@ -65,6 +71,9 @@
             error << "Cublas failure: "                                        \
                   << N2D2::Cuda::cublasGetErrorString(e) << " ("               \
                   << (int)e << ") in " << __FILE__ << ':' << __LINE__;         \
+            int dev;                                                           \
+            if (cudaGetDevice(&dev) == cudaSuccess)                            \
+                error << " on device #" << dev;                                \
             std::cerr << error.str() << std::endl;                             \
             cudaDeviceReset();                                                 \
             throw std::runtime_error(error.str());                             \
