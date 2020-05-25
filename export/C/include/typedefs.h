@@ -47,6 +47,11 @@ typedef struct {
     float interpolation;
 } Interpolation;
 
+typedef enum {
+    Sum,
+    Mult
+} OpMode_T;
+
 #if defined(HAS_AP_CINT) && NB_BITS > 0 && NB_BITS != 8 && NB_BITS != 16 \
     && NB_BITS != 32 && NB_BITS != 64
 #define CONCAT(x, y) x##y

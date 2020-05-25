@@ -1410,6 +1410,111 @@ void poolcell_upropagate_unitmap(
     }
 }
 void
+elemwise_propagate(unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   unsigned int nbOutputs_,
+                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
+                   ActivationFunction_T func,
+                   int shift)
+{
+    /*
+    if (operation != Sum) {
+        fprintf(stderr,
+                "elemwise_propagate(): only Sum is implemented\n");
+        return;
+    }
+*/
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(3)
+#else
+#pragma omp parallel for
+#endif
+    for (unsigned int output = 0; output < nbOutputs_; ++output) {
+        for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
+            for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
+                    SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
+                                            inputs_b[nbOutputs_ + output][oy][ox]);
+
+                    outputs[output][oy][ox]
+                        = sat(opValue, func, shift);
+            }
+        }
+    }
+}
+
+void
+elemwise_upropagate(unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   unsigned int nbOutputs_,
+                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
+                   ActivationFunction_T func,
+                   int shift)
+{
+    /*if (operation != Sum) {
+        fprintf(stderr,
+                "elemwise_propagate(): only Sum is implemented\n");
+        return;
+    }*/
+
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(3)
+#else
+#pragma omp parallel for
+#endif
+    for (unsigned int output = 0; output < nbOutputs_; ++output) {
+        for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
+            for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
+                    SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
+                                            inputs_b[nbOutputs_ + output][oy][ox]);
+
+                    outputs[output][oy][ox]
+                        = usat(opValue, func, shift);
+            }
+        }
+    }
+}
+
+void
+scalingcell_propagate( unsigned int nbChannels,
+                   unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   DATA_T inputs[nbChannels][channelsHeight][channelsWidth],
+                   unsigned int outputsHeight,
+                   unsigned int outputsWidth,
+                   unsigned int nbOutputs,
+                   DATA_T outputs[nbOutputs][outputsHeight][outputsWidth],
+                   const int32_t rescaleFactorPerOutput[nbOutputs],
+                   unsigned int nbFractionalBits)
+{
+    if ( (nbChannels != nbOutputs) || (channelsHeight != outputsHeight)
+            || (channelsWidth != outputsWidth)  ) 
+    {
+        fprintf(stderr,
+                "scaling_propagate(): inputs dimensions must be equal to outputs dimensions\n");
+        return;
+    }  
+    for(unsigned int output = 0; output < nbChannels; ++ output) {
+        for(unsigned int oy = 0; oy < channelsHeight; ++oy) {
+            for(unsigned int ox = 0; ox < channelsWidth; ++ox) {
+#if NB_BITS > 0
+                const size_t half = (1u << (nbFractionalBits -1));
+                outputs[output][oy][ox] 
+                    = (inputs[output][oy][ox]*rescaleFactorPerOutput[output] 
+                        + half) >> nbFractionalBits;
+#else
+                outputs[output][oy][ox]  = inputs[output][oy][ox];
+#endif
+            }
+        }
+    }
+}
+
+
+void
 rbfcell_propagate_2d(unsigned int nbChannels,
                      unsigned int channelsHeight,
                      unsigned int channelsWidth,

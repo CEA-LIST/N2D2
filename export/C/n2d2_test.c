@@ -37,7 +37,7 @@
 
 #include "network.h"
 
-static const size_t CONFUSION_MATRIX_PRINT_MAX_TARGETS = 16;
+static const size_t CONFUSION_MATRIX_PRINT_MAX_TARGETS = 101;
 
 DATA_T env_data[ENV_NB_OUTPUTS][ENV_SIZE_Y][ENV_SIZE_X];
 uint32_t outputEstimated[OUTPUTS_HEIGHT][OUTPUTS_WIDTH];
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
         double success = 0;
         struct timeval start, end;
         double elapsed = 0.0;
-
+        unsigned int nbValidFiles = 0;
         char** fileList;
         unsigned int total = sortedFileList("stimuli", &fileList, 0);
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 
             unsigned int nbValidPredictions = 0;
             unsigned int nbPredictions = 0;
-
+            bool validPred = false;
             for (unsigned int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
                 for (unsigned int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
                     int iy = oy;
@@ -208,19 +208,22 @@ int main(int argc, char* argv[])
                         if (outputTargets[iy][ix] == (int)outputEstimated[oy][ox]) {
                             nbValidPredictions++;
                         }
+                        validPred = true;
                     }
                 }
             }
 
-
-            success += (nbPredictions > 0) ? ((float) nbValidPredictions / nbPredictions) : 1.0;
-
+            if(nbPredictions > 0)
+            {
+              success += (float) nbValidPredictions / nbPredictions;
+              ++nbValidFiles;
+            }
             ++n;
 #ifndef NRET
             printf("%.02f/%d    (avg = %02f%%)  @  %.02f us\n",
                    success,
                    n,
-                   100.0 * success / (float)n,
+                   100.0 * success / (float)(nbValidFiles > 0 ? nbValidFiles : 1),
                    duration);
 #endif
         }
@@ -231,9 +234,9 @@ int main(int argc, char* argv[])
 #endif
 
         printf("%sTested %d stimuli%s\n", ESC_BOLD, total, ESC_ALL_OFF);
-        printf("Success rate = %02f%%\n", 100.0 * success / (float)total);
+        printf("Success rate = %02f%%\n", 100.0 * success / (float)nbValidFiles);
 
-        successRate = 100.0 * success / (float)total;
+        successRate = 100.0 * success / (float)nbValidFiles;
 
 #ifdef _OPENMP
         printf("Process time per stimulus = %f us (%d threads)\n",

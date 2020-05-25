@@ -137,7 +137,10 @@ static inline SUM_T sht(SUM_T weightedSum, int shift) {
         return (weightedSum >> shift);
     else
         return (weightedSum << (-shift));
+#else
+    return weightedSum;
 #endif
+
 }
 
 static inline DATA_T
@@ -499,6 +502,38 @@ void poolcell_upropagate_unitmap(
     Pooling_T pooling,
     ActivationFunction_T func,
     int shift);
+
+void
+elemwise_propagate(unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   unsigned int nbOutputs_,
+                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
+                   ActivationFunction_T func,
+                   int shift);
+void
+elemwise_upropagate(unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   unsigned int nbOutputs_,
+                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
+                   ActivationFunction_T func,
+                   int shift);
+
+void
+scalingcell_propagate( unsigned int nbChannels,
+                   unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   DATA_T inputs[nbChannels][channelsHeight][channelsWidth],
+                   unsigned int outputsHeight,
+                   unsigned int outputsWidth,
+                   unsigned int nbOutputs,
+                   DATA_T outputs[nbOutputs][outputsHeight][outputsWidth],
+                   const int32_t rescaleFactorPerOutput[nbOutputs],
+                   unsigned int nbFractionalBits);
+
 void
 rbfcell_propagate_2d(unsigned int nbChannels,
                      unsigned int channelsHeight,
