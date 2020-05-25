@@ -315,12 +315,14 @@ bool N2D2::StimuliProvider::normalizeIntegersStimuli(int envCvDepth) {
 
 
         if(mChannelsTransformations.empty()) {
-            const double depthUnityValue = Utils::cvMatDepthUnityValue(depthSet);
-            if(depthUnityValue != 1.0) {
+            const std::pair<double, double> depthUnityValue
+                = Utils::cvMatDepthUnityValue(depthSet, mDataSignedMapping);
+            if(depthUnityValue.second != 1.0) {
                 normalizationOccured = true;
 
                 addOnTheFlyTransformation(
-                    RangeAffineTransformation(RangeAffineTransformation::Divides, depthUnityValue), 
+                    RangeAffineTransformation(RangeAffineTransformation::Plus, depthUnityValue.first,
+                                              RangeAffineTransformation::Divides, depthUnityValue.second), 
                     mDatabase.getStimuliSetMask(stimuliSet)
                 );
             }
@@ -332,13 +334,15 @@ bool N2D2::StimuliProvider::normalizeIntegersStimuli(int envCvDepth) {
                 chDepthSet = mChannelsTransformations[ch](stimuliSet).onTheFly.getOutputsDepth(chDepthSet);
 
 
-                const double depthUnityValue = Utils::cvMatDepthUnityValue(chDepthSet);
-                if(depthUnityValue != 1.0) {
+                const std::pair<double, double> depthUnityValue
+                    = Utils::cvMatDepthUnityValue(chDepthSet, mDataSignedMapping);
+                if(depthUnityValue.second != 1.0) {
                     normalizationOccured = true;
 
                     addChannelOnTheFlyTransformation(
                         ch,
-                        RangeAffineTransformation(RangeAffineTransformation::Divides, depthUnityValue), 
+                        RangeAffineTransformation(RangeAffineTransformation::Plus, depthUnityValue.first,
+                                                RangeAffineTransformation::Divides, depthUnityValue.second), 
                         mDatabase.getStimuliSetMask(stimuliSet)
                     );
                 }

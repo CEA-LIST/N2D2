@@ -311,7 +311,8 @@ namespace Utils {
     void colorReduce(cv::Mat& img, unsigned int nbColors);
     void colorDiscretize(cv::Mat& img, unsigned int nbLevels);
     std::string cvMatDepthToString(int depth);
-    double cvMatDepthUnityValue(int depth);
+    std::pair<double, double> cvMatDepthUnityValue(int depth,
+                                                   bool signedMapping = false);
 
     std::string searchAndReplace(const std::string& value,
                                  const std::string& search,

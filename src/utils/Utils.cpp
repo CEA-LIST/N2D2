@@ -281,23 +281,40 @@ std::string N2D2::Utils::cvMatDepthToString(int depth)
     }
 }
 
-double N2D2::Utils::cvMatDepthUnityValue(int depth)
+std::pair<double, double> N2D2::Utils::cvMatDepthUnityValue(int depth,
+                                                            bool signedMapping)
 {
     switch (depth) {
     case CV_8U:
-        return std::numeric_limits<unsigned char>::max();
+        return (signedMapping)
+            ? std::pair<double, double>(std::numeric_limits<char>::min(),
+                                        -std::numeric_limits<char>::min())
+            : std::pair<double, double>(0.0, std::numeric_limits<unsigned char>::max());
     case CV_8S:
-        return std::numeric_limits<char>::max();
+        return (signedMapping)
+            // Note: we replicate the behavior of Tensor<T>::convert()
+            // In this case, the first value is not 0!
+            ? std::pair<double, double>(std::numeric_limits<char>::min(),
+                                        -std::numeric_limits<char>::min())
+            : std::pair<double, double>(0.0, std::numeric_limits<char>::max());
     case CV_16U:
-        return std::numeric_limits<unsigned short>::max();
+        return (signedMapping)
+            ? std::pair<double, double>(std::numeric_limits<short>::min(),
+                                        -std::numeric_limits<short>::min())
+            : std::pair<double, double>(0.0, std::numeric_limits<unsigned short>::max());
     case CV_16S:
-        return std::numeric_limits<short>::max();
+        return (signedMapping)
+            // Note: we replicate the behavior of Tensor<T>::convert()
+            // In this case, the first value is not 0!
+            ? std::pair<double, double>(std::numeric_limits<short>::min(),
+                                        -std::numeric_limits<short>::min())
+            : std::pair<double, double>(0.0, std::numeric_limits<short>::max());
     case CV_32S:
-        return std::numeric_limits<int>::max();
+        return std::pair<double, double>(0.0, std::numeric_limits<int>::max());
     case CV_32F:
-        return 1.0;
+        return std::pair<double, double>(0.0, 1.0);
     case CV_64F:
-        return 1.0;
+        return std::pair<double, double>(0.0, 1.0);
     default:
         throw std::runtime_error(
             "Utils::cvMatDepthUnityValue(): unknown cv::Mat depth");
