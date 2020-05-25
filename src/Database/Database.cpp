@@ -1848,8 +1848,8 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
         cv::Mat dataConverted;
         data.convertTo(dataConverted,
                        mStimuliDepth,
-                       Utils::cvMatDepthUnityValue(mStimuliDepth)
-                       / Utils::cvMatDepthUnityValue(data.depth()));
+                       Utils::cvMatDepthUnityValue(mStimuliDepth).second
+                       / Utils::cvMatDepthUnityValue(data.depth()).second);
         data = dataConverted;
     }
 
