@@ -732,12 +732,12 @@ void N2D2::Database::extractSlices(unsigned int width,
 
                     if (overlapping) {
                         tl = RectangularROI<int>::Point_T(
-                            std::min(x, data.cols - width),
-                            std::min(y, data.rows - height));
+                            std::min((int)x, std::max(0, data.cols - (int)width)),
+                            std::min((int)y, std::max(0, data.rows - (int)height)));
                         // br is exclusive, as required by RectangularROI<>()
                         br = RectangularROI<int>::Point_T(
-                            tl.x + width,
-                            tl.y + height);
+                            std::min(tl.x + width, (unsigned int)data.cols),
+                            std::min(tl.y + height, (unsigned int)data.rows));
                     }
                     else {
                         tl = RectangularROI<int>::Point_T(x, y);
