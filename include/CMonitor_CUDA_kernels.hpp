@@ -24,7 +24,8 @@
 
 #include <curand_kernel.h>
 #include "CudaUtils.hpp"
-#include "thrust/reduce.h"
+#include <thrust/reduce.h>
+#include <thrust/device_ptr.h>
 #include <stdlib.h>
 
 
