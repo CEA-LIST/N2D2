@@ -49,6 +49,8 @@ def exportFreeParameters(modelName, targetDir):
                 name[offset] = "scales"
             elif name[offset] == "beta":
                 name[offset] = "biases"
+            elif name[offset] == "bias":
+                name[offset] = "biases"
             elif name[offset] == "moving_mean":
                 name[offset] = "means"
             elif name[offset] == "moving_variance":
