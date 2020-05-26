@@ -38,10 +38,11 @@ def exportFreeParameters(modelName, targetDir):
 
         for key in varToShapeMap:
             name = str(key).split("/")
-
             offset = -1
             if name[-1] == "Momentum":
                 offset = -2
+            if name[-1] == "global_step":
+                continue
 
             # Adapting batch norm naming convention
             if name[offset] == "gamma":
