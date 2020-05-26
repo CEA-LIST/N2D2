@@ -61,11 +61,11 @@ public:
     getOutputsSize(unsigned int width, unsigned int height) const
     {
         if (mAdditiveWH) {
-            return std::make_pair<unsigned int, unsigned int>(width + mWidth,
-                                                              height + mHeight);
+            return std::pair<unsigned int, unsigned int>(width + mWidth,
+                                                         height + mHeight);
         }
         else
-            return std::make_pair<unsigned int, unsigned int>(mWidth, mHeight);
+            return std::pair<unsigned int, unsigned int>(mWidth, mHeight);
     };
     int getOutputsDepth(int depth) const
     {
