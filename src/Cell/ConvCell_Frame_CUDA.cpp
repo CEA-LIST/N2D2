@@ -589,28 +589,30 @@ N2D2::ConvCell_Frame_CUDA<T>::extPad(
         " padding not yet supported.");
 }
 
-template <>
-std::shared_ptr<N2D2::CudaDeviceTensor<float> >
-N2D2::ConvCell_Frame_CUDA<float>::extPad(
-    unsigned int k,
-    std::shared_ptr<CudaDeviceTensor<float> > input)
-{
-    cudaSPadding(CudaContext::getDeviceProp(),
-                mPaddedInputs[k].dimZ(),
-                mPaddedInputs[k].dimX(),
-                mPaddedInputs[k].dimY(),
-                mInputs[k].dimZ(),
-                mPaddedInputs[k].dimB(),
-                mInputs[k].dimX(),
-                mInputs[k].dimY(),
-                mExtPaddingDims[0],
-                mExtPaddingDims[2],
-                mExtPaddingDims[1],
-                mExtPaddingDims[3],
-                input->getDevicePtr(),
-                mPaddedInputs[k].getDevicePtr());
+namespace N2D2 {
+    template <>
+    std::shared_ptr<CudaDeviceTensor<float> >
+    ConvCell_Frame_CUDA<float>::extPad(
+        unsigned int k,
+        std::shared_ptr<CudaDeviceTensor<float> > input)
+    {
+        cudaSPadding(CudaContext::getDeviceProp(),
+                    mPaddedInputs[k].dimZ(),
+                    mPaddedInputs[k].dimX(),
+                    mPaddedInputs[k].dimY(),
+                    mInputs[k].dimZ(),
+                    mPaddedInputs[k].dimB(),
+                    mInputs[k].dimX(),
+                    mInputs[k].dimY(),
+                    mExtPaddingDims[0],
+                    mExtPaddingDims[2],
+                    mExtPaddingDims[1],
+                    mExtPaddingDims[3],
+                    input->getDevicePtr(),
+                    mPaddedInputs[k].getDevicePtr());
 
-    return cuda_device_tensor_cast<float>(mPaddedInputs[k]);
+        return cuda_device_tensor_cast<float>(mPaddedInputs[k]);
+    }
 }
 
 template <class T>
