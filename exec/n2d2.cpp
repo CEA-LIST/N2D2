@@ -335,7 +335,7 @@ public:
     ScalingMode actScalingMode;
     bool actRescalePerOutput;
     bool exportNoUnsigned;
-    bool exportNoCrosslayerEqualization;
+    bool exportNoCrossLayerEqualization;
     double timeStep;
     std::string saveTestSet;
     std::string load;
