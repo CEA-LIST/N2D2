@@ -275,7 +275,7 @@ public:
                                                     "not provided");
         exportNoUnsigned =   opts.parse("-no-unsigned", "disable the use of unsigned data type in "
                                                         "integer exports");
-        exportNoCrossChannelEqualization =   opts.parse("-no-cce", "disable the use of cross channel"
+        exportNoCrossLayerEqualization =   opts.parse("-no-cle", "disable the use of cross layer"
                                                             " equalization in integer exports");
         exportNbStimuliMax = opts.parse("-db-export", -1, "max. number of stimuli to export "
                                                           "(0 = no dataset export, -1 = unlimited)");
@@ -335,7 +335,7 @@ public:
     ScalingMode actScalingMode;
     bool actRescalePerOutput;
     bool exportNoUnsigned;
-    bool exportNoCrossChannelEqualization;
+    bool exportNoCrosslayerEqualization;
     double timeStep;
     std::string saveTestSet;
     std::string load;
@@ -596,12 +596,12 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
         // fusePadding() necessary for crossLayerEqualization()
-        if(!opt.exportNoCrossChannelEqualization) {
+        if(!opt.exportNoCrossLayerEqualization) {
             deepNet->fusePadding();
         }
         DeepNetQuantization dnQuantization(*deepNet);
 
-        if(!opt.exportNoCrossChannelEqualization) {
+        if(!opt.exportNoCrossLayerEqualization) {
             dnQuantization.crossLayerEqualization();
         }
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
