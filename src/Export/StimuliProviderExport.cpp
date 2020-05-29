@@ -133,7 +133,7 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
         for(std::size_t t = 0; t < netNbTarget; ++t) {
             for (std::size_t y = 0; y < label.dimY(); ++y) {
                 for (std::size_t x = 0; x < label.dimX(); ++x) {
-                    const uint32_t outputTarget = deepNet.getTarget(t)->getLabelTarget(label(x, y));
+                    const int32_t outputTarget = deepNet.getTarget(t)->getLabelTarget(label(x, y));
 
                     envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
                                      sizeof(outputTarget));
