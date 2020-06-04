@@ -79,12 +79,8 @@ void N2D2::CEnvironment_CUDA::initialize()
 //TODO: Check that this has save behavior as CEnvironment!
 void N2D2::CEnvironment_CUDA::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
-    if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
-        if (!mStopStimulus) {
-            mStopStimulus = true;
-            clearTickData();
-        }
-        //std::cout << "Stop stimulus at time " << timestamp << std::endl;
+    
+    if (mStopStimulus) {
         return;
     }
     if (mNoConversion) {

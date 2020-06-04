@@ -445,10 +445,76 @@ void N2D2::DeepNet::addCMonitor(const std::string& name,
     mCMonitors.insert(std::make_pair(name, monitor));
 }
 
+
 std::vector<std::pair<std::string, long long int> >
-N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
+N2D2::DeepNet::getCMonitorOutputsActivities()
 {
     std::vector<std::pair<std::string, long long int> > activity;
+
+    // Update monitors
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin(),
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it) {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell) {
+
+            std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator
+            itMonitor = mCMonitors.find(*itCell);
+
+            if (itMonitor ==  mCMonitors.end())
+                continue;
+
+            activity.push_back(std::make_pair(
+                  (*itCell), (*itMonitor).second->getIntegratedOutputsActivity()));
+           
+        }
+    }
+
+    return activity;
+}
+
+
+
+std::vector<std::pair<std::string, long long unsigned int> >
+N2D2::DeepNet::getCMonitorFiringRates()
+{
+    std::vector<std::pair<std::string, long long unsigned int> > activity;
+
+    // Update monitors
+    for (std::vector<std::vector<std::string> >::const_iterator it
+         = mLayers.begin(),
+         itEnd = mLayers.end();
+         it != itEnd;
+         ++it) {
+        for (std::vector<std::string>::const_iterator itCell = (*it).begin(),
+                                                      itCellEnd = (*it).end();
+             itCell != itCellEnd;
+             ++itCell) {
+
+            std::map<std::string, std::shared_ptr<CMonitor> >::const_iterator
+            itMonitor = mCMonitors.find(*itCell);
+
+            if (itMonitor ==  mCMonitors.end())
+                continue;
+
+            activity.push_back(std::make_pair(
+                (*itCell), (*itMonitor).second->getIntegratedFiringRate()));
+           
+        }
+    }
+
+    return activity;
+}
+
+
+std::vector<std::pair<std::string, long long unsigned int> >
+N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
+{
+    std::vector<std::pair<std::string, long long unsigned int> > activity;
 
     // Update monitors
     for (std::vector<std::vector<std::string> >::const_iterator it
@@ -482,19 +548,8 @@ N2D2::DeepNet::update(bool log, Time_T start, Time_T stop, bool update)
             if (itMonitor ==  mCMonitors.end())
                 continue;
 
-            //(*itMonitor).second->update(start, stop);
-
-            //activity.push_back(std::make_pair(
-            //    (*itCell), (*itMonitor).second->getIntegratedFiringRate()));
             activity.push_back(std::make_pair(
-                  (*itCell), (*itMonitor).second->getIntegratedOutputsActivity()));
-
-            /*Tensor<int>& diffRate =  (*itMonitor).second->getOutputsActivity();
-            diffRate.synchronizeDToH();
-            //std::cout << diffRate << std::endl;
-            std::cout << *itCell << " " <<
-                std::accumulate(diffRate.begin(),
-                                 diffRate.end(), 0) << std::endl;*/
+                (*itCell), (*itMonitor).second->getIntegratedFiringRate()));
 
         }
     }

@@ -42,13 +42,6 @@ public:
     virtual void initialize();
     virtual void tick(Time_T timestamp, Time_T start, Time_T stop);
     virtual void reset(Time_T timestamp);
-    
-    virtual Tensor<Float_T>& getTickData()
-    {
-        //TODO: Delete synchronization if possible
-        mTickData.synchronizeDToH();
-        return mTickData;
-    };
 
     virtual ~CEnvironment_CUDA();
 

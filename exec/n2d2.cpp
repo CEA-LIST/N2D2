@@ -1325,7 +1325,7 @@ void learnStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
         net.run((i + 1) * presentTime);
 
         // Check activity
-        std::vector<std::pair<std::string, long long int> > activity
+        std::vector<std::pair<std::string, long long unsigned int> > activity
             = deepNet->update(
                 logStep, i * presentTime, (i + 1) * presentTime, logStep);
 
@@ -1334,7 +1334,7 @@ void learnStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
         long long int sumActivity = 0;
 
         for (std::vector
-                <std::pair<std::string, long long int> >::const_iterator it
+                <std::pair<std::string, long long unsigned int> >::const_iterator it
                 = activity.begin(),
                 itEnd = activity.end();
                 it != itEnd;
@@ -1416,14 +1416,14 @@ void testStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet,
         net.run((i + 1) * TimeUs);
 
         // Check activity
-        std::vector<std::pair<std::string, long long int> > activity
+        std::vector<std::pair<std::string, long long unsigned int> > activity
             = deepNet->update(logStep, i * TimeUs, (i + 1) * TimeUs, logStep);
 
         monitorEnv.update(i < 10);
 
         long long int sumActivity = 0;
 
-        for (std::vector<std::pair<std::string, long long int> >::const_iterator
+        for (std::vector<std::pair<std::string, long long unsigned int> >::const_iterator
                  it = activity.begin(),
                  itEnd = activity.end();
              it != itEnd;

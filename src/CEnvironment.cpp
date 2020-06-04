@@ -29,10 +29,10 @@ N2D2::CEnvironment::CEnvironment(Database& database,
     : StimuliProvider(database, size, batchSize, compositeStimuli),
       SpikeGenerator(),
       mInitialized(false),
+      mStopStimulus(false),
       mNextAerEventTime(0),
       mNoConversion(this, "NoConversion", false),
       mScaling(this, "Scaling", 1.0),
-      mStopStimulusTime(this, "StopStimulusTime", 0),
       mStreamPath(this, "StreamPath", "")
 {
    //ctor
@@ -49,8 +49,6 @@ N2D2::CEnvironment::CEnvironment(Database& database,
 
 void N2D2::CEnvironment::initialize()
 {
-    //mInputData = &getData();
-    //std::cout << mInputData << std::endl;
     mStopStimulus = false;
 }
 
@@ -109,11 +107,7 @@ void N2D2::CEnvironment::readBatch(Database::StimuliSet set,
 
 void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 {
-    if (mStopStimulusTime != 0 && timestamp > mStopStimulusTime * TimeNs + start) {
-        if (!mStopStimulus) {
-            mStopStimulus = true;
-            clearTickData();
-        }
+    if (mStopStimulus) {
         return;
     }
     if (mNoConversion) {
@@ -268,6 +262,12 @@ void N2D2::CEnvironment::initializeSpikeGenerator(Time_T start, Time_T stop)
 void N2D2::CEnvironment::clearTickData()
 {
     mTickData.assign(mTickData.dims(), 0);
+}
+
+void N2D2::CEnvironment::stopStimulus()
+{
+    clearTickData();
+    mStopStimulus = true;
 }
 
 N2D2::CEnvironment::~CEnvironment()

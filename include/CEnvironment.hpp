@@ -94,18 +94,16 @@ public:
         return dynamic_cast<AER_Database*>(&mDatabase);
     };
 
-    Time_T getStopStimulusTime()
-    {
-        return mStopStimulusTime;
-    };
 
     void clearTickData();
+
+    void stopStimulus();
 
     virtual ~CEnvironment();
 
 protected:
-    /// For each scale, tensor (x, y, channel, batch)
     bool mInitialized;
+    bool mStopStimulus;
 
     std::vector<AerReadEvent> mAerData;
 
@@ -136,11 +134,7 @@ protected:
 
     Parameter<bool> mNoConversion;
     Parameter<Float_T> mScaling;
-    Parameter<Time_T> mStopStimulusTime;
     Parameter<std::string> mStreamPath;
-   
-    long long unsigned int mLastTimestamp;
-    bool mStopStimulus;
 
 };
 }
