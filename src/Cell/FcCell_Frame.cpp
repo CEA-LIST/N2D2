@@ -58,8 +58,6 @@ N2D2::FcCell_Frame<T>::FcCell_Frame(const DeepNet& deepNet, const std::string& n
 {
     // ctor
     mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
-    mTopDownWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
-    mRecWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
     mBiasFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
     mWeightsSolver = std::make_shared<SGDSolver_Frame<T> >();
     mBiasSolver = std::make_shared<SGDSolver_Frame<T> >();

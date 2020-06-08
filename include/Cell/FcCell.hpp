@@ -71,14 +71,6 @@ public:
     {
         mWeightsFiller = filler;
     };
-    void setRecWeightsFiller(const std::shared_ptr<Filler>& filler)
-    {
-        mRecWeightsFiller = filler;
-    };
-    void setTopDownWeightsFiller(const std::shared_ptr<Filler>& filler)
-    {
-        mTopDownWeightsFiller = filler;
-    };
     void setBiasFiller(const std::shared_ptr<Filler>& filler)
     {
         mBiasFiller = filler;
@@ -147,10 +139,6 @@ protected:
     Parameter<std::string> mOutputsRemap;
 
     std::shared_ptr<Filler> mWeightsFiller;
-    // TODO: At the moment not used
-    std::shared_ptr<Filler> mTopDownWeightsFiller;
-    // TODO: At the moment not used
-    std::shared_ptr<Filler> mRecWeightsFiller;
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;
     std::shared_ptr<Solver> mBiasSolver;

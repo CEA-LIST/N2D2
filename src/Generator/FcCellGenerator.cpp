@@ -165,14 +165,6 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
         cell->setWeightsFiller(
             FillerGenerator::generate(iniConfig, section, "WeightsFiller", dataType));
 
-    if (iniConfig.isProperty("TopDownWeightsFiller"))
-        cell->setTopDownWeightsFiller(
-            FillerGenerator::generate(iniConfig, section, "TopDownWeightsFiller", dataType));
-
-    if (iniConfig.isProperty("RecWeightsFiller"))
-        cell->setRecWeightsFiller(
-            FillerGenerator::generate(iniConfig, section, "RecWeightsFiller", dataType));
-
     if (iniConfig.isProperty("BiasFiller"))
         cell->setBiasFiller(
             FillerGenerator::generate(iniConfig, section, "BiasFiller", dataType));

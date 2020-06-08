@@ -49,8 +49,6 @@ N2D2::FcCell_Spike::FcCell_Spike(Network& net, const DeepNet& deepNet,
 {
     // ctor
     mWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
-    mTopDownWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
-    mRecWeightsFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
     mBiasFiller = std::make_shared<NormalFiller<Float_T> >(0.0, 0.05);
 }
 
