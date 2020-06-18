@@ -36,8 +36,10 @@ N2D2::Database::Database(bool loadDataInMemory)
       mRandomPartitioning(this, "RandomPartitioning", true),
       mDataFileLabel(this, "DataFileLabel", true),
       mForceCompositeLabel(this, "ForceCompositeLabel", false),
+      mTargetDataPath(this, "TargetDataPath", ""),
       mLoadDataInMemory(loadDataInMemory),
-      mStimuliDepth(-1)
+      mStimuliDepth(-1),
+      mStimuliTargetDepth(-1)
 {
     // ctor
 }
@@ -1827,63 +1829,7 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
         }
     }
 
-    std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
-    std::transform(fileExtension.begin(),
-                   fileExtension.end(),
-                   fileExtension.begin(),
-                   ::tolower);
-
-    std::shared_ptr<DataFile> dataFile = Registrar
-        <DataFile>::create(fileExtension)();
-    cv::Mat data = dataFile->read(mStimuli[id].name);
-
-    // Check stimulus depth
-    if (data.depth() != mStimuliDepth) {
-        std::cout << Utils::cnotice << "Notice: converting depth from "
-                  << Utils::cvMatDepthToString(data.depth()) << " to "
-                  << Utils::cvMatDepthToString(mStimuliDepth)
-                  << " for stimulus: " << mStimuli[id].name << Utils::cdef
-                  << std::endl;
-
-        cv::Mat dataConverted;
-        data.convertTo(dataConverted,
-                       mStimuliDepth,
-                       Utils::cvMatDepthUnityValue(mStimuliDepth).second
-                       / Utils::cvMatDepthUnityValue(data.depth()).second);
-        data = dataConverted;
-    }
-
-    if (mStimuli[id].label >= 0
-        && !mStimuli[id].ROIs.empty()
-        && !mForceCompositeLabel)
-    {
-        bool extracted = false;
-
-        for (std::vector<ROI*>::const_iterator
-            itROIs = mStimuli[id].ROIs.begin(),
-            itROIsEnd = mStimuli[id].ROIs.end();
-            itROIs != itROIsEnd; ++itROIs)
-        {
-            if ((*itROIs)->getLabel() >= 0) {
-                // Non-composite stimulus with ROI
-                if (!extracted) {
-                    data = (*itROIs)->extract(data);
-                    extracted = true;
-                }
-                else {
-#pragma omp critical(Database__loadStimulusData)
-                    throw std::runtime_error("Database::loadStimulusData():"
-                        " number of ROIs should be 1 for non-composite"
-                        " stimuli");
-                }
-            }
-        }
-    }
-
-    if (mStimuli[id].slice != NULL)
-        data = mStimuli[id].slice->extract(data);
-
-    return data;
+    return loadData(id, mStimuliDepth, mStimuli[id].name);
 }
 
 cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
@@ -1962,6 +1908,104 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         } else
             return cv::Mat(1, 1, CV_32SC1, cv::Scalar(mStimuli[id].label));
     }
+}
+
+cv::Mat N2D2::Database::loadStimulusTargetData(StimulusID id) {
+    if (((std::string)mTargetDataPath).empty())
+        return cv::Mat();
+
+    // Initialize mStimuliDepth using the first stimulus
+    if (mStimuliTargetDepth == -1) {
+        const std::string fileName0 = (std::string)mTargetDataPath + "/"
+            + Utils::fileBaseName(mStimuli[0].name);
+
+#pragma omp critical(Database__loadStimulusTargetData)
+        if (mStimuliTargetDepth == -1) {
+            std::string fileExtension = Utils::fileExtension(fileName0);
+            std::transform(fileExtension.begin(),
+                           fileExtension.end(),
+                           fileExtension.begin(),
+                           ::tolower);
+
+            std::shared_ptr<DataFile> dataFile = Registrar
+                <DataFile>::create(fileExtension)();
+            mStimuliTargetDepth = dataFile->read(fileName0).depth();
+
+            std::cout << Utils::cnotice << "Notice: stimuli depth is "
+                      << Utils::cvMatDepthToString(mStimuliTargetDepth)
+                      << " (according to database first stimulus)"
+                      << Utils::cdef << std::endl;
+        }
+    }
+
+    const std::string fileName = (std::string)mTargetDataPath + "/"
+        + Utils::fileBaseName(mStimuli[id].name);
+
+    return loadData(id, mStimuliTargetDepth, fileName);
+}
+
+cv::Mat N2D2::Database::loadData(
+    StimulusID id,
+    int depth,
+    const std::string fileName) const
+{
+    std::string fileExtension = Utils::fileExtension(fileName);
+    std::transform(fileExtension.begin(),
+                   fileExtension.end(),
+                   fileExtension.begin(),
+                   ::tolower);
+
+    std::shared_ptr<DataFile> dataFile = Registrar
+        <DataFile>::create(fileExtension)();
+    cv::Mat data = dataFile->read(fileName);
+
+    // Check stimulus depth
+    if (data.depth() != depth) {
+        std::cout << Utils::cnotice << "Notice: converting depth from "
+                  << Utils::cvMatDepthToString(data.depth()) << " to "
+                  << Utils::cvMatDepthToString(depth)
+                  << " for stimulus: " << fileName << Utils::cdef
+                  << std::endl;
+
+        cv::Mat dataConverted;
+        data.convertTo(dataConverted,
+                       depth,
+                       Utils::cvMatDepthUnityValue(depth).second
+                       / Utils::cvMatDepthUnityValue(data.depth()).second);
+        data = dataConverted;
+    }
+
+    if (mStimuli[id].label >= 0
+        && !mStimuli[id].ROIs.empty()
+        && !mForceCompositeLabel)
+    {
+        bool extracted = false;
+
+        for (std::vector<ROI*>::const_iterator
+            itROIs = mStimuli[id].ROIs.begin(),
+            itROIsEnd = mStimuli[id].ROIs.end();
+            itROIs != itROIsEnd; ++itROIs)
+        {
+            if ((*itROIs)->getLabel() >= 0) {
+                // Non-composite stimulus with ROI
+                if (!extracted) {
+                    data = (*itROIs)->extract(data);
+                    extracted = true;
+                }
+                else {
+#pragma omp critical(Database__loadData)
+                    throw std::runtime_error("Database::loadStimulusData():"
+                        " number of ROIs should be 1 for non-composite"
+                        " stimuli");
+                }
+            }
+        }
+    }
+
+    if (mStimuli[id].slice != NULL)
+        data = mStimuli[id].slice->extract(data);
+
+    return data;
 }
 
 std::vector<unsigned int>

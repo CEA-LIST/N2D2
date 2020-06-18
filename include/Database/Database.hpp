@@ -323,8 +323,8 @@ protected:
     int labelID(const std::string& labelName);
     cv::Mat loadStimulusData(StimulusID id);
     cv::Mat loadStimulusLabelsData(StimulusID id) const;
-    virtual cv::Mat loadStimulusTargetData(StimulusID /*id*/)
-        { return cv::Mat(); };
+    cv::Mat loadStimulusTargetData(StimulusID id);
+    cv::Mat loadData(StimulusID id, int depth, const std::string fileName) const;
     std::vector<unsigned int> getLabelStimuliSetIndexes(int label,
                                                         StimuliSet set) const;
     std::vector<std::vector<unsigned int> >
@@ -357,6 +357,7 @@ protected:
     Parameter<bool> mDataFileLabel;
     // If true, force composite labels, discarding the stimulus label ID
     Parameter<bool> mForceCompositeLabel;
+    Parameter<std::string> mTargetDataPath;
 
     /**
      * TABLES
@@ -378,6 +379,8 @@ protected:
     bool mLoadDataInMemory;
     /// Stimuli depth
     int mStimuliDepth;
+    /// Stimuli target depth
+    int mStimuliTargetDepth;
 };
 }
 
