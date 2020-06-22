@@ -30,6 +30,7 @@
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor.hpp"
 
+
 namespace N2D2 {
 template <class T>
 class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<T> {
@@ -38,6 +39,7 @@ public:
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
+    using Cell_Frame_CUDA<T>::mQuantizer;
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 

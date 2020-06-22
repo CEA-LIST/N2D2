@@ -35,6 +35,8 @@
 #include "GradientCheck.hpp"
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"
+#include "Quantizer/Quantizer_CUDA.hpp"
+
 
 namespace N2D2 {
 
@@ -133,6 +135,8 @@ protected:
     CudaTensor<int> mTargets;
     CudaTensor<unsigned int> mNbTargetOutputs;
     CudaTensor<T> mLossMem;
+    
+    std::shared_ptr<Quantizer_CUDA> mQuantizer;
 
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;

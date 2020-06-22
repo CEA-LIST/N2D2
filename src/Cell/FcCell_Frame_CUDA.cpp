@@ -65,6 +65,7 @@ N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const DeepNet& deepNet, const std:
     mBiasFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
     mWeightsSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
     mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
+    //mQuantizer = std::make_shared<Quantizer_CUDA>();
 }
 
 template <class T>
@@ -107,6 +108,19 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
 
     if (mNormalize)
         mSynapsesNorm.resize({mOutputs.dimZ()});
+
+    
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mQuantizer) {
+            for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+                mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);
+                mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
+            }
+            //mQuantizer.addBiases(mBias);
+            mQuantizer->initialize();
+        }
+    }
+
 }
 
 template <class T>
@@ -244,8 +258,19 @@ void N2D2::FcCell_Frame_CUDA<float>::propagate(bool inference)
         if (k > 0)
             beta = 1.0f;
 
-        std::shared_ptr<CudaDeviceTensor<float> > input
-            = cuda_device_tensor_cast<float>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<float> > input;
+        std::shared_ptr<CudaDeviceTensor<float> > synapses;
+
+        // TODO: Implement for half and double? Training is always performed in float
+        if (mQuantizer) {
+            mQuantizer->propagate();
+            input = cuda_device_tensor_cast<float>(mQuantizer->getQuantizedActivations(k));
+            synapses = cuda_device_tensor_cast<float>(mQuantizer->getQuantizedWeights(k));
+        }
+        else {
+            input = cuda_device_tensor_cast<float>(mInputs[k]);
+            synapses = cuda_device_tensor_cast<float>(mSynapses[k]);
+        }
 
         // Computes mOutputs = alpha*mSynapses'*mInputs + beta*mOutputs
         CHECK_CUBLAS_STATUS(cublasSgemm(
@@ -256,7 +281,7 @@ void N2D2::FcCell_Frame_CUDA<float>::propagate(bool inference)
             mInputs.dimB(), // nb cols in mInputs and mOutputs
             inputSize, // nb cols in mSynapses' and nb rows in mInputs
             &alpha,
-            mSynapses[k].getDevicePtr(),
+            synapses->getDevicePtr(),
             inputSize,
             input->getDevicePtr(),
             inputSize,
@@ -266,6 +291,19 @@ void N2D2::FcCell_Frame_CUDA<float>::propagate(bool inference)
     }
 
     if (!mNoBias) {
+
+        std::shared_ptr<CudaDeviceTensor<float> > biases;
+
+        //TODO: Biases
+        /*if (mQuantizer) {
+            biases = cuda_device_tensor_cast<float>(mQuantizer->getQuantizedBiases());
+        }
+        else {
+            biases = cuda_device_tensor_cast<float>(mBias);
+        }*/
+
+        biases = cuda_device_tensor_cast<float>(mBias);
+
         // Computes mOutputs = alpha*mBias*mOnesVector + alpha*mOutputs
         CHECK_CUBLAS_STATUS(cublasSgemm(CudaContext::cublasHandle(),
                                         CUBLAS_OP_N,
@@ -274,7 +312,7 @@ void N2D2::FcCell_Frame_CUDA<float>::propagate(bool inference)
                                         mInputs.dimB(),
                                         1,
                                         &alpha,
-                                        mBias.getDevicePtr(),
+                                        biases->getDevicePtr(),
                                         mOutputs.dimZ(),
                                         mOnesVector,
                                         1,
@@ -474,7 +512,7 @@ void N2D2::FcCell_Frame_CUDA<half_float::half>::backPropagate()
         }
 
         mDiffOutputs.synchronizeDToHBased();
-    } // Sinon il s'agit de la première couche, inutile de calculer
+    } // Otherwise it is the first layer, no need to calculate
 }
 
 template <>
@@ -494,8 +532,18 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                        * mInputs[k].dimZ();
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
-        std::shared_ptr<CudaDeviceTensor<float> > input
-            = cuda_device_tensor_cast_nocopy<float>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<float> > inputs;
+        std::shared_ptr<CudaDeviceTensor<float> > diffSynapses;
+
+        if (mQuantizer) {
+            inputs = cuda_device_tensor_cast<float>(mQuantizer->getQuantizedActivations(k));
+            diffSynapses = cuda_device_tensor_cast<float>(mQuantizer->getDiffQuantizedWeights(k));
+        }
+        else {
+            inputs = cuda_device_tensor_cast<float>(mInputs[k]);
+            diffSynapses = cuda_device_tensor_cast<float>(mDiffSynapses[k]); 
+        }
+
 
         // mDiffSynapses.getDevicePtr() = mInputs.getDevicePtr *
         // mDiffInputs.getDevicePtr*
@@ -506,15 +554,16 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                         mOutputs.dimZ(),
                                         mInputs.dimB(),
                                         &alpha,
-                                        input->getDevicePtr(),
+                                        inputs->getDevicePtr(),
                                         inputSize,
                                         mDiffInputs.getDevicePtr(),
                                         mOutputs.dimZ(),
                                         &beta,
-                                        mDiffSynapses[k].getDevicePtr(),
+                                        diffSynapses->getDevicePtr(),
                                         inputSize));
-
+       
         mDiffSynapses[k].setValid();
+
     }
 
     if (!mNoBias) {
@@ -535,6 +584,8 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                         1));
 
         mDiffBias.setValid();
+
+        //TODO: DiffBias quantization
     }
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
@@ -544,10 +595,24 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                                 * mDiffOutputs[k].dimY()
                                                 * mDiffOutputs[k].dimZ();
 
-            std::shared_ptr<CudaDeviceTensor<float> > diffOutput
-                = (mDiffOutputs[k].isValid())
+            std::shared_ptr<CudaDeviceTensor<float> > diffOutputs;
+            std::shared_ptr<CudaDeviceTensor<float> > synapses;
+
+            if (mQuantizer) {
+                synapses = cuda_device_tensor_cast<float>
+                    (mQuantizer->getQuantizedWeights(k));
+                diffOutputs = (mDiffOutputs[k].isValid())
+                    ? cuda_device_tensor_cast<float>
+                        (mQuantizer->getDiffQuantizedActivations(k))
+                    : cuda_device_tensor_cast_nocopy<float>
+                        (mQuantizer->getDiffQuantizedActivations(k));
+            }
+            else {
+                synapses = cuda_device_tensor_cast<float>(mSynapses[k]);
+                diffOutputs = (mDiffOutputs[k].isValid())
                     ? cuda_device_tensor_cast<float>(mDiffOutputs[k])
                     : cuda_device_tensor_cast_nocopy<float>(mDiffOutputs[k]);
+            }
 
             // mDiffOutputs.getDevicePtr = mSynapses.getDevicePtr() *
             // mDiffInputs.getDevicePtr
@@ -558,20 +623,28 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
                                             mInputs.dimB(),
                                             mOutputs.dimZ(),
                                             &alpha,
-                                            mSynapses[k].getDevicePtr(),
+                                            synapses->getDevicePtr(),
                                             diffOutputSize,
                                             mDiffInputs.getDevicePtr(),
                                             mOutputs.dimZ(),
                                             &betaData,
-                                            diffOutput->getDevicePtr(),
+                                            diffOutputs->getDevicePtr(),
                                             diffOutputSize));
-
-            mDiffOutputs[k].deviceTensor() = *diffOutput;
+            
+            //mDiffOutputs[k].deviceTensor() = *diffOutputs;
+        
             mDiffOutputs[k].setValid();
+
+        }
+
+        // Calculate full precision weights and activation gradients
+        if (mQuantizer) {
+            mQuantizer->back_propagate();
         }
 
         mDiffOutputs.synchronizeDToHBased();
-    } // Sinon il s'agit de la première couche, inutile de calculer
+        
+    } // Otherwise it is the first layer, no need to calculate
 }
 
 template <>
@@ -668,7 +741,7 @@ void N2D2::FcCell_Frame_CUDA<double>::backPropagate()
         }
 
         mDiffOutputs.synchronizeDToHBased();
-    } // Sinon il s'agit de la première couche, inutile de calculer
+    } // Otherwise it is the first layer, no need to calculate
 }
 }
 
