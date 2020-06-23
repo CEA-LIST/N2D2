@@ -432,7 +432,7 @@ template <class T>
 void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
 {
     if (baseErrors.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame::setOutputTargets(): target "
+        throw std::domain_error("Cell_Frame::setOutputErrors(): target "
                                 "and output batch sizes don't match.");
 
     if (baseErrors.dimX() != mOutputsDims[0]

@@ -799,6 +799,13 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         else
             targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
+        const double alpha
+            = (mStimuliProvider->getParameter<bool>("DataSignedMapping"))
+                ? 128.0 : 255.0;
+        const double beta
+            = (mStimuliProvider->getParameter<bool>("DataSignedMapping"))
+                ? 128.0 : 0.0;
+
 #pragma omp parallel for if (size > 4)
         for (int batchPos = 0; batchPos < size; ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
@@ -844,7 +851,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
                     cv::Mat inputImg = (cv::Mat)mStimuliProvider->getTargetData(0, batchPos);
                     cv::Mat inputImg8U;
-                    inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+                    inputImg.convertTo(inputImg8U, CV_8U, alpha, beta);
 
                     fileName = dirPath + "/" + fileBaseName + "_target."
                                     + fileExtension;
@@ -878,7 +885,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             else {
                 const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
                 cv::Mat outputImg8U;
-                outputImg.convertTo(outputImg8U, CV_8U, 255.0);
+                outputImg.convertTo(outputImg8U, CV_8U, alpha, beta);
 
                 if (!cv::imwrite(fileName, outputImg8U)) {
 #pragma omp critical(Target__logEstimatedLabels)

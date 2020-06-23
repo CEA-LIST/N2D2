@@ -484,7 +484,7 @@ template <class T>
 void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
 {
     if (baseErrors.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputTargets(): target "
+        throw std::domain_error("Cell_Frame_CUDA<T>::setOutputErrors(): target "
                                 "and output batch sizes don't match.");
 
     if (baseErrors.dimX() != mOutputsDims[0]

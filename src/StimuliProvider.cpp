@@ -782,7 +782,7 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                                                           rawChannelsData[0],
                                                           rawChannelsLabels[0],
                                                           labelsROI)
-            .clone())  // make sure the database image will not be altered
+            .clone(), mDataSignedMapping)  // make sure the database image will not be altered
         : Tensor<Float_T>();
 
     if (data.nbDims() < mSize.size()) {

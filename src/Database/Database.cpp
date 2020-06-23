@@ -1914,10 +1914,10 @@ cv::Mat N2D2::Database::loadStimulusTargetData(StimulusID id) {
     if (((std::string)mTargetDataPath).empty())
         return cv::Mat();
 
-    // Initialize mStimuliDepth using the first stimulus
+    // Initialize mStimuliTargetDepth using the first stimulus
     if (mStimuliTargetDepth == -1) {
-        const std::string fileName0 = (std::string)mTargetDataPath + "/"
-            + Utils::fileBaseName(mStimuli[0].name);
+        const std::string fileName0 = Utils::expandEnvVars(mTargetDataPath)
+            + "/" + Utils::baseName(mStimuli[0].name);
 
 #pragma omp critical(Database__loadStimulusTargetData)
         if (mStimuliTargetDepth == -1) {
@@ -1938,8 +1938,8 @@ cv::Mat N2D2::Database::loadStimulusTargetData(StimulusID id) {
         }
     }
 
-    const std::string fileName = (std::string)mTargetDataPath + "/"
-        + Utils::fileBaseName(mStimuli[id].name);
+    const std::string fileName = Utils::expandEnvVars(mTargetDataPath)
+        + "/" + Utils::baseName(mStimuli[id].name);
 
     return loadData(id, mStimuliTargetDepth, fileName);
 }
