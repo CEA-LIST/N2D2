@@ -21,133 +21,108 @@
 #ifndef N2D2_QUANTIZER_CUDA_H
 #define N2D2_QUANTIZER_CUDA_H
 
-#include "Quantizer/Quantizer.hpp"
-#include "CudaUtils.hpp"
-#include "containers/CudaTensor.hpp"
-#include "Cell/Cell.hpp"
+//#include "Cell/Cell.hpp"
 //#include "utils/Parameterizable.hpp"
+#include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"
-
-
-//TODO: Everything in float or templated? In principle during QAT everything can remain in float
-//TODO: Make abstract class like Cell?
+//#include "Quantizer/Quantizer.hpp"
 
 namespace N2D2 {
 
-class Quantizer_CUDA:  public Quantizer {
+template <class T> class Quantizer_CUDA {
 public:
 
-    Quantizer_CUDA();
-
     //void addInput(BaseTensor& inputs, BaseTensor& diffOutputs);
-    virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights);
-    virtual void addActivations(BaseTensor& activations, BaseTensor& diffActivations);
-    virtual void addCell(Cell* cell);
+    virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
+    virtual void addActivations(BaseTensor& activations, BaseTensor& diffActivations) = 0;
+    //virtual void addCell(Cell* cell);
 
-    virtual void initialize();
-    virtual void update();
-    virtual void propagate();
-    virtual void back_propagate();
+    virtual void initialize(){};
+    virtual void update(){};
+    virtual void propagate() = 0;
+    virtual void back_propagate() = 0;
 
-    CudaTensor<float>& getQuantizedWeights(unsigned int k)
+    virtual CudaTensor<T>& getQuantizedWeights(unsigned int k)
     {
         return mQuantizedWeights[k];
     }
 
-    /*CudaTensor<float>& getQuantizedBiases()
-    {
-        return mQuantizedBiases;
-    }*/
+    //Tensor<float>& getQuantizedBiases() = 0;
 
-    CudaTensor<float>& getQuantizedActivations(unsigned int k)
+    virtual CudaTensor<T>& getQuantizedActivations(unsigned int k)
     {
         return mQuantizedActivations[k];
     }
 
-    CudaTensor<float>& getDiffFullPrecisionWeights(unsigned int k)
+
+    virtual CudaTensor<T>& getDiffFullPrecisionWeights(unsigned int k)
     {
         return mDiffFullPrecisionWeights[k];
     }
 
-    CudaTensor<float>& getDiffQuantizedWeights(unsigned int k)
+    virtual CudaBaseTensor& getDiffQuantizedWeights(unsigned int k)
     {
-        return mDiffFullPrecisionWeights[k];
+        return mDiffQuantizedWeights[k];
     }
 
-    /*CudaTensor<float>& getDiffFullPrecisionBiases()
-    {
-        return mDiffFullPrecisionBiases;
-    }*/
+    //Tensor<float>& getDiffFullPrecisionBiases() = 0;
 
-    CudaTensor<float>& getDiffFullPrecisionActivations(unsigned int k)
+    virtual CudaTensor<T>& getDiffFullPrecisionActivations(unsigned int k)
     {
         return mDiffFullPrecisionActivations[k];
     }
 
-    CudaTensor<float>& getDiffQuantizedActivations(unsigned int k)
+    virtual CudaBaseTensor& getDiffQuantizedActivations(unsigned int k)
     {
-        return mDiffFullPrecisionActivations[k];
+        return mDiffQuantizedActivations[k];
     }
 
-    std::shared_ptr<Quantizer_CUDA> clone() const
-    {
-        return std::shared_ptr<Quantizer_CUDA>(doClone());
-    }
-    
-
-    bool isCuda() const
+    virtual bool isCuda() const
     {
         return true;
-    };
+    }
 
-    virtual ~Quantizer_CUDA() /*{}*/;
+    //virtual ~Quantizer() {};
 
 protected:
 
-    //TODO: Quantizer configuration parameters set with Cell type or separately? 
-    //Parameter<float> mStepSize;
-    // etc.
-
-    /*
+  /*
         Structures shared by all kind of quantizers :
 
-       *mFullPrecisionWeights --->|    |---> mQuantizedWeights
-                                  |    |
-                                  |    |
-    mDiffFullPrecisionWeights <---|    |<--- *mDiffQuantizedWeights
+        *mFullPrecisionWeights --->|    |---> *mQuantizedWeights
+                                   |    |
+                                   |    |
+    *mDiffFullPrecisionWeights <---|    |<--- *mDiffQuantizedWeights
 
-       *mFullPrecisionActivations --->|    |---> mQuantizedActivations
-                                      |    |
-                                      |    |
-    mDiffFullPrecisionActivations <---|    |<--- *mDiffQuantizedActivations
+        *mFullPrecisionActivations --->|    |---> *mQuantizedActivations
+                                       |    |
+                                       |    |
+    *mDiffFullPrecisionActivations <---|    |<--- *mDiffQuantizedActivations
 
     */
 
     // Tensors for forward propagation
     CudaInterface<> mFullPrecisionWeights;
-    CudaInterface<float> mQuantizedWeights;
+    CudaInterface<T> mQuantizedWeights;
 
     //CudaTensor<float>* mFullPrecisionBiases;
     //CudaTensor<float> mQuantizedBiases;
 
     CudaInterface<> mFullPrecisionActivations;
-    CudaInterface<float> mQuantizedActivations;
+    CudaInterface<T> mQuantizedActivations;
 
     /// Tensors for backpropagation
-    CudaInterface<float> mDiffFullPrecisionWeights;
+    CudaInterface<T> mDiffFullPrecisionWeights;
     CudaInterface<> mDiffQuantizedWeights;
 
     //CudaTensor<float> mDiffFullPrecisionBiases;
     //CudaTensor<float>* mDiffQuantizedBiases;
 
-    CudaInterface<float> mDiffFullPrecisionActivations;
+    CudaInterface<T> mDiffFullPrecisionActivations;
     CudaInterface<> mDiffQuantizedActivations;
+    
 
 private:
-    virtual Quantizer_CUDA* doClone() const
-    {
-        return new Quantizer_CUDA(*this);
-    }
 
   
 };

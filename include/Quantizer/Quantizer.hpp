@@ -21,12 +21,9 @@
 #ifndef N2D2_QUANTIZER_H
 #define N2D2_QUANTIZER_H
 
-//#include "containers/CudaTensor.hpp"
-#include "Cell/Cell.hpp"
+//#include "Cell/Cell.hpp"
 #include "utils/Parameterizable.hpp"
 
-
-//TODO: Everything in float or templated? In principle during QAT everything can remain in float
 
 namespace N2D2 {
 
@@ -34,48 +31,43 @@ class Quantizer:  public Parameterizable {
 public:
 
     //void addInput(BaseTensor& inputs, BaseTensor& diffOutputs);
-    //virtual void addWeights(CudaTensor<float>& weights);
-    //virtual void addActivations(CudaTensor<float>& activations);
+    //virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
+    //virtual void addActivations(BaseTensor& activations, BaseTensor& diffActivations) = 0;
     //virtual void addCell(Cell* cell);
 
-    //virtual void initialize();
-    //virtual void update();
-    virtual void propagate() = 0;
-    virtual void back_propagate() = 0;
+    //virtual void initialize(){};
+    //virtual void update(){};
+    //virtual void propagate() = 0;
+    //virtual void back_propagate() = 0;
 
-    // TODO: Remove if not needed anymore
-    std::shared_ptr<Quantizer> clone() const
+    //virtual BaseTensor& getQuantizedWeights(unsigned int k) = 0;
+
+    //Tensor<float>& getQuantizedBiases() = 0;
+
+    //virtual BaseTensor& getQuantizedActivations(unsigned int k) = 0;
+
+    //Tensor<float>& getDiffFullPrecisionWeights(unsigned int k)
+
+    //virtual BaseTensor& getDiffQuantizedWeights(unsigned int k) = 0;
+
+    //Tensor<float>& getDiffFullPrecisionBiases() = 0;
+
+    //Tensor<float>& getDiffFullPrecisionActivations(unsigned int k)
+
+    //virtual BaseTensor& getDiffQuantizedActivations(unsigned int k) = 0;
+    
+    virtual bool isCuda() const
     {
-        return std::shared_ptr<Quantizer>(doClone());
+        return false;
     }
 
-    /*CudaTensor<float>& getQuantizedWeights()
-    {
-        return mQuantizedWeights;
-    }*/
-
-    /*CudaTensor<float>& getQuantizedActivations()
-    {
-        return mQuantizedActivations;
-    }*/
-
-    /*CudaTensor<float>& getDiffFullPrecisionWeights()
-    {
-        return mDiffFullPrecisionWeights;
-    }*/
-
-    /*CudaTensor<float>& getDiffFullPrecisionActivations()
-    {
-        return mDiffFullPrecisionActivations;
-    }*/
-    
-
-    virtual ~Quantizer() {};
+    //virtual ~Quantizer() {};
 
 protected:
 
+    
+
 private:
-    virtual Quantizer* doClone() const = 0;
 
   
 };

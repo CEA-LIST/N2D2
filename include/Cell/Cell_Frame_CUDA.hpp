@@ -97,6 +97,10 @@ public:
     virtual double applyLoss(double targetVal,
                              double defaultVal);
     virtual void setOutputTargets(const BaseTensor& targets);
+    virtual void setQuantizer(std::shared_ptr<Quantizer_CUDA<T>> quant)
+    {
+        mQuantizer = quant;
+    }
     virtual double applyLoss();
     virtual void setOutputErrors(const BaseTensor& errors);
     virtual BaseTensor& getOutputs();
@@ -136,7 +140,7 @@ protected:
     CudaTensor<unsigned int> mNbTargetOutputs;
     CudaTensor<T> mLossMem;
     
-    std::shared_ptr<Quantizer_CUDA> mQuantizer;
+    std::shared_ptr<Quantizer_CUDA<T>> mQuantizer;
 
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;

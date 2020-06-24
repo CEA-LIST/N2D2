@@ -141,7 +141,25 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
 
     if (weightsSolver)
         cell->setWeightsSolver(weightsSolver);
+/*
+#ifdef CUDA
+    std::shared_ptr<Cell_Frame_CUDA<dataType>> cellFrameCuda =
+        std::dynamic_pointer_cast<Cell_Frame_CUDA<dataType>> (cell);
+    if (cellFrameCuda) {
+        std::shared_ptr<Quantizer> quantizer
+            = QuantizerGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
 
+        if (quantizer) {
+            if (!quantizer.isCuda()) {
+                throw std::runtime_error("Error: FcCellGenerator::generateParams():" 
+                " Cell_Fram_CUDA needs Quantizer_CUDA!");
+            }
+            cellFrameCuda->setQuantizer(quantizer);
+        }
+      
+    }
+#endif
+*/
     std::map<std::string, std::string> params = getConfig(model, iniConfig);
 
     if (cell->getBiasSolver()) {

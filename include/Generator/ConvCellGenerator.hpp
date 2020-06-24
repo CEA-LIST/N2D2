@@ -26,6 +26,7 @@
 #include "Generator/FillerGenerator.hpp"
 #include "Generator/KernelGenerator.hpp"
 #include "Generator/MappingGenerator.hpp"
+#include "Generator/QuantizerGenerator.hpp"
 #include "utils/IniParser.hpp"
 
 namespace N2D2 {

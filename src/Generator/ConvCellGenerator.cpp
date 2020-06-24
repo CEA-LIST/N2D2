@@ -309,7 +309,13 @@ void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& ce
 
     if (weightsSolver)
         cell->setWeightsSolver(weightsSolver);
+/*
+    std::shared_ptr<Quantizer> quantizer
+        = QuantizerGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
 
+    if (quantizer)
+        cell->setQuantizer(quantizer);
+*/
     std::map<std::string, std::string> params = getConfig(model, iniConfig);
 
     if (cell->getBiasSolver()) {
