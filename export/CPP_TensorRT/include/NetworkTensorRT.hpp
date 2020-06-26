@@ -206,6 +206,33 @@ public:
         mParametersPath = path;
     };
 
+    void setDetectorThresholds(float* thresholds, unsigned int nbClass) {
+        if(mDetectorThresholds == NULL) {
+            mDetectorThresholds = new float[nbClass];
+
+            if (!mDetectorThresholds)
+                throw std::runtime_error(
+                    "setDetectorThresholds(): could not allocate memory");
+        }
+        std::cout << "Set Object detector Thresholds: " << std::endl;
+        for(size_t i = 0; i < nbClass; ++i) {
+            std::cout << "[" << i << "]=" <<  thresholds[i] << " ";
+            mDetectorThresholds[i] = thresholds[i];
+        }
+        std::cout << "\n" << std::endl;
+    };
+#ifdef WRAPPER_PYTHON
+    void setDetectorThresholdsPy(np::ndarray const & thresholds, unsigned int nbClass)
+    {
+        setDetectorThresholds(reinterpret_cast<float*>(thresholds.get_data()), nbClass);
+    };
+#endif
+    void setDetectorNMS(double nmsIoU) {
+        std::cout << "Set Object detector NMS IoU: " 
+                << nmsIoU << std::endl;
+        mDetectorNMS = nmsIoU;
+    };
+
     std::size_t mMaxBatchSize = 1;
     std::size_t mDeviceID = 0;
     std::size_t mIterBuild = 1;
@@ -216,7 +243,7 @@ public:
     std::string mCalibrationCacheName = "";
     std::string mCalibrationFolder = "";
     std::string mParametersPath = "dnn/";
-
+    
     /// Destructor
     ~Network() { /*free_memory();*/ };
 
@@ -234,6 +261,9 @@ public:
     nvinfer1::IBuilder* mNetBuilder;
     std::vector<nvinfer1::INetworkDefinition*> mNetDef;
     nvinfer1::DataType mDataType = nvinfer1::DataType::kFLOAT;
+
+    float* mDetectorThresholds = NULL;
+    double mDetectorNMS = -1.0;
 
     void createContext();
     void setIOMemory();

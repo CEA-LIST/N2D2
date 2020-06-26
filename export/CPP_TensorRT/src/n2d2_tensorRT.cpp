@@ -1862,6 +1862,12 @@ std::vector<nvinfer1::ITensor *>
 {
     std::vector<nvinfer1::ITensor *> output_tensor;
     std::cout << "Add object detect layer: " << layerName << std::endl;
+    bool useInternalThresholds = false;
+    bool useInternalNMS = false;
+    if(mDetectorThresholds != NULL)
+        useInternalThresholds = true;
+    if(mDetectorNMS >= 0.0)
+        useInternalNMS = true;
 
     for(unsigned int i = 0; i < inputs_tensor[0]->size(); ++i)
     {
@@ -1888,8 +1894,8 @@ std::vector<nvinfer1::ITensor *>
                                                                 nbProposals,
                                                                 nbCls,
                                                                 nbAnchors,
-                                                                nmsIoU,
-                                                                scoreThreshold,
+                                                                useInternalNMS ? mDetectorNMS : nmsIoU,
+                                                                useInternalThresholds ? mDetectorThresholds : scoreThreshold,
                                                                 maxParts,
                                                                 maxTemplates,
                                                                 numPartsPerClass,
@@ -2529,6 +2535,7 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("setCalibCache", &N2D2::Network::setCalibCache)
         .def("setCalibFolder", &N2D2::Network::setCalibFolder)
         .def("setParamPath", &N2D2::Network::setParamPath)
+        .def("setDetectorNMS", &N2D2::Network::setDetectorNMS)
 
         .def("estimated", &N2D2::Network::estimatedPy)
 
@@ -2545,8 +2552,8 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("asyncExe", &N2D2::Network::asyncExePy)
         .def("syncExe", &N2D2::Network::syncExePy)
         .def("addOverlay", &N2D2::Network::addOverlayPy)
-
-        
+        .def("setDetectorThresholds", &N2D2::Network::setDetectorThresholdsPy)
+       
 //        .def("syncExeGPU", &N2D2::Network::syncExeGPUPy)
     ;
     p::to_python_converter<std::vector<unsigned int, std::allocator<unsigned int> >, VecToList<unsigned int> >();
