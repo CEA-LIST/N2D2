@@ -21,14 +21,13 @@
 
 #include "common_cuda.hpp"
 #include "kernels_gpu.hpp"
-#include "../../include/utils.h"
-#include "../../include/params.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector_types.h>
 
 //Utils
-__device__ __inline__ DATA_T fclampf(DATA_T x, DATA_T min, DATA_T max)
+__device__ __inline__ float fclampf(float x, float min, float max)
 {
     return (x < min) ? min : (x > max) ? max : x;
 }
@@ -41,24 +40,17 @@ void anchor_kernel(unsigned int batchSize,
                     unsigned int outputWidth,
                     unsigned int stimuliHeight,
                     unsigned int stimuliWidth,
-                     unsigned int featureMapWidth,
-                     unsigned int featureMapHeight,
                     unsigned int scoresCls,
                     bool isFlip,
                     unsigned int nbAnchors,
-                    double xRatio,
-                    double yRatio,
-                    const DATA_T* anchors,
-                    const DATA_T* inputs,
-                    DATA_T* outputs)
+                    const float* anchors,
+                    const float* inputs,
+                    float* outputs)
 {
     const unsigned int batchInputOffset = blockIdx.z * (5 + scoresCls) * nbAnchors
                                         * outputHeight * outputWidth;
     const unsigned int batchOffset = blockIdx.z * 6 * nbAnchors
                                         * outputHeight * outputWidth;
-
-    //const float xOutputRatio = stimuliWidth / (float) (featureMapWidth - 1.0);
-    //const float yOutputRatio = stimuliHeight / (float) (featureMapHeight - 1.0);
     const float xOutputRatio = stimuliWidth;
     const float yOutputRatio = stimuliHeight;
 
@@ -71,31 +63,13 @@ void anchor_kernel(unsigned int batchSize,
             for (unsigned int xa = threadIdx.x; xa < outputWidth;
                  xa += blockDim.x)
             {
-                // Shifted anchors coordinates at (xa, ya)
-                const unsigned int anchorsIdx = k*4;
-                /*const int xa0 = (int)(anchors[anchorsIdx] + xa * xRatio);
-                const int ya0 = (int)(anchors[anchorsIdx + 1] + ya * yRatio);
-                const int xa1 = (int)(anchors[anchorsIdx + 2] + xa * xRatio);
-                const int ya1 = (int)(anchors[anchorsIdx + 3] + ya * yRatio);
-
-                // Anchors width and height
-                const int wa = xa1 - xa0;
-                const int ha = ya1 - ya0;*/
-                const float xa0 = (anchors[anchorsIdx] + xa * xRatio) 
-                                    / (float)(featureMapWidth - 1.0);
-                const float ya0 = (anchors[anchorsIdx + 1] + ya * yRatio) 
-                                    / (float)(featureMapHeight - 1.0);
-                const float xa1 = (anchors[anchorsIdx + 2] + xa * xRatio) 
-                                    / (float)(featureMapWidth - 1.0);
-                const float ya1 = (anchors[anchorsIdx + 3] + ya * yRatio) 
-                                    / (float)(featureMapHeight - 1.0);
-
-                // Anchors width and height
-                const float wa = xa1 - xa0;
-                const float ha = ya1 - ya0;
-                // Anchor center coordinates (xac, yac)
-                const DATA_T xac = xa0 + wa * 0.5;
-                const DATA_T yac = ya0 + ha * 0.5;
+                const size_t anchorsPrecomputeIdx = xa*4 + ya*outputWidth*4 
+                                                    + k*outputWidth*outputHeight*4;
+                //Pre-computed anchors for each coordinates
+                const float xac = anchors[anchorsPrecomputeIdx + 0];
+                const float yac = anchors[anchorsPrecomputeIdx + 1];
+                const float wa = anchors[anchorsPrecomputeIdx + 2];
+                const float ha = anchors[anchorsPrecomputeIdx + 3];
 
                 const unsigned int addrBase = batchOffset + xa + (ya + k * outputHeight) * outputWidth;
                 const unsigned int addrStep = outputHeight * outputWidth;
@@ -111,35 +85,24 @@ void anchor_kernel(unsigned int batchSize,
                                                 + ya * outputWidth 
                                                 + xa;
 
-
-                /**
-                 * 1st condition: "During  training,  we  ignore all
-                 * cross-boundary anchors so they do not contribute to  the
-                 * loss."
-                 * 2nd condition: "During testing, however, we still apply
-                 * the fully convolutional RPN  to  the  entire  image."
-                */
-
                 // Score
-                const DATA_T cls = inputs[addrClsBase];
+                const float cls = inputs[addrClsBase];
 
                 // Parameterized coordinates
-                const DATA_T txbb = inputs[addrCoordBase + scoresCls * nbAnchors * addrStep];
-                const DATA_T tybb = inputs[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep];
-                const DATA_T twbb = inputs[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep];
-                const DATA_T thbb = inputs[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep];
+                const float txbb = inputs[addrCoordBase + scoresCls * nbAnchors * addrStep];
+                const float tybb = inputs[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep];
+                const float twbb = inputs[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep];
+                const float thbb = inputs[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep];
 
                 // Predicted box center coordinates
-                const DATA_T xbbc = ((isFlip) ? -txbb : txbb) * wa
-                                        + xac;
-                const DATA_T ybbc = ((isFlip) ? -tybb : tybb) * ha
-                                        + yac;
-                DATA_T wbb = wa * exp(twbb);
-                DATA_T hbb = ha * exp(thbb);
+                const float xbbc = ((isFlip) ? -txbb : txbb) * wa + xac;
+                const float ybbc = ((isFlip) ? -tybb : tybb) * ha + yac;
+                float wbb = wa * exp(twbb);
+                float hbb = ha * exp(thbb);
 
                 // Predicted box top-left coordinates
-                DATA_T xbb = xbbc - wbb * 0.5;
-                DATA_T ybb = ybbc - hbb * 0.5;
+                float xbb = xbbc - wbb * 0.5;
+                float ybb = ybbc - hbb * 0.5;
 
                 /// During testing: "This  may  generate
                 /// cross-boundary proposal boxes, which we clip to
@@ -158,11 +121,6 @@ void anchor_kernel(unsigned int batchSize,
                 if (ybb + hbb > 1.0)
                     hbb = 1.0 - ybb;
 
-                // For inference, compute IoU on predicted boxes
-                // For learning, compute IoU on anchor boxes
-                // => if IoU is computed on predicted boxes during
-                // learning, predicted boxes may arbitrarily drift from
-                // anchors and learning does not converge
                 xbb *=  xOutputRatio;
                 wbb *=  xOutputRatio;
                 ybb *=  yOutputRatio;
@@ -180,20 +138,20 @@ void anchor_kernel(unsigned int batchSize,
 }
 
 __global__
-void roipooling_bilinear_kernel(const DATA_T alpha,
-                                const DATA_T* proposals,
+void roipooling_bilinear_kernel(const float alpha,
+                                const float* proposals,
                                 unsigned int proposalIdx,
                                 unsigned int nbProposals,
                                 unsigned int inputSizeY,
                                 unsigned int inputSizeX,
-                                const DATA_T* inputs,
+                                const float* inputs,
                                 unsigned int nbChannels,
                                 unsigned int channelsHeight,
                                 unsigned int channelsWidth,
                                 unsigned int batchSize,
                                 unsigned int channelOffset,
-                                const DATA_T beta,
-                                DATA_T* outputs,
+                                const float beta,
+                                float* outputs,
                                 unsigned int nbOutputs,
                                 unsigned int outputsHeight,
                                 unsigned int outputsWidth,
@@ -210,11 +168,11 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
 
-    const DATA_T xRatio = ceilf(inputSizeX / (DATA_T)channelsWidth);
-    const DATA_T yRatio = ceilf(inputSizeY / (DATA_T)channelsHeight);
+    const float xRatio = ceilf(inputSizeX / (float)channelsWidth);
+    const float yRatio = ceilf(inputSizeY / (float)channelsHeight);
 
-    DATA_T xOffset = 0.0;
-    DATA_T yOffset = 0.0;
+    float xOffset = 0.0;
+    float yOffset = 0.0;
 
     if (isFlip) {
         xOffset = (inputSizeX - 1) / xRatio
@@ -224,10 +182,10 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
     }
 
 
-    DATA_T x = proposals[0 + batchProposalsOffset] / xRatio - xOffset;
-    DATA_T y = proposals[1 + batchProposalsOffset] / yRatio - yOffset;
-    DATA_T w = proposals[2 + batchProposalsOffset] / xRatio;
-    DATA_T h = proposals[3 + batchProposalsOffset] / yRatio;
+    float x = proposals[0 + batchProposalsOffset] / xRatio - xOffset;
+    float y = proposals[1 + batchProposalsOffset] / yRatio - yOffset;
+    float w = proposals[2 + batchProposalsOffset] / xRatio;
+    float h = proposals[3 + batchProposalsOffset] / yRatio;
 
 
 
@@ -245,7 +203,7 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
     if (y + h > (int)channelsHeight)
         h = channelsHeight - y;
 
-    DATA_T xPoolRatio, yPoolRatio;
+    float xPoolRatio, yPoolRatio;
 
     if (bilinearTF) {
         xPoolRatio = w / (outputsWidth - 1);
@@ -263,7 +221,7 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
             for (unsigned int ox = threadIdx.x; ox < outputsWidth;
                  ox += blockDim.x)
             {
-                DATA_T sx, sy;
+                float sx, sy;
 
                 if (bilinearTF) {
                     sx = fminf(x + ox * xPoolRatio, channelsWidth - 1);
@@ -280,8 +238,8 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
                 const unsigned int sx0 = (int)(sx);
                 const unsigned int sy0 = (int)(sy);
 
-                const DATA_T dx = sx - sx0;
-                const DATA_T dy = sy - sy0;
+                const float dx = sx - sx0;
+                const float dy = sy - sy0;
 
                 const unsigned int idxI00 = sx0 + sy0*channelsWidth
                                             + channel*channelsHeight*channelsWidth
@@ -302,32 +260,32 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
                 const bool invalid = ignorePadding ? (((sx0 + 1 < channelsWidth )  && (sy0 + 1 < channelsHeight ))  ? false : true) : false;
 
 /**INITIAL
-                const DATA_T i00 = inputs[idxI00];
+                const float i00 = inputs[idxI00];
 
-                const DATA_T i10 = (sx0 + 1 < channelsWidth) ?
+                const float i10 = (sx0 + 1 < channelsWidth) ?
                                      inputs[idxI10] : 0.0;
 
-                const DATA_T i01 = (sy0 + 1 < channelsHeight) ?
+                const float i01 = (sy0 + 1 < channelsHeight) ?
                                      inputs[idxI01]: 0.0;
 
-                const DATA_T i11 = (sx0 + 1 < channelsWidth
+                const float i11 = (sx0 + 1 < channelsWidth
                                      && sy0 + 1 < channelsHeight)
                                      ? inputs[idxI11] : 0.0;
 **/
-                const DATA_T i00 = (!invalid) ? inputs[idxI00] : 0.0;
+                const float i00 = (!invalid) ? inputs[idxI00] : 0.0;
 
-                const DATA_T i10 = (sx0 + 1 < channelsWidth ) && (!invalid) ?
+                const float i10 = (sx0 + 1 < channelsWidth ) && (!invalid) ?
                                      inputs[idxI10] : 0.0;
 
-                const DATA_T i01 = (sy0 + 1 < channelsHeight ) && (!invalid)  ?
+                const float i01 = (sy0 + 1 < channelsHeight ) && (!invalid)  ?
                                      inputs[idxI01]: 0.0;
 
-                const DATA_T i11 = (sx0 + 1 < channelsWidth
+                const float i11 = (sx0 + 1 < channelsWidth
                                      && sy0 + 1 < channelsHeight ) && (!invalid)
                                      ? inputs[idxI11] : 0.0;
 
 
-                const DATA_T value = i00 * (1 - dx) * (1 - dy)
+                const float value = i00 * (1 - dx) * (1 - dy)
                 + i10 * dx * (1 - dy)
                 + i01 * (1 - dx) * dy
                 + i11 * (dx * dy);
@@ -341,7 +299,7 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
                     = ox + (oy + (channel + outputOffset) * outputsHeight)
                         * outputsWidth + batchOutputOffset;
 
-                //const DATA_T value =outputOffset;
+                //const float value =outputOffset;
                 //outputs[outputsIdx] = alpha * value + beta * outputs[outputsIdx];
 
                 outputs[outputsIdx] = alpha * value ;
@@ -353,15 +311,15 @@ void roipooling_bilinear_kernel(const DATA_T alpha,
 __global__ void batchnormcell_propagate_kernel( unsigned int nbChannels,
                                                 unsigned int channelsHeight,
                                                 unsigned int channelsWidth,
-                                                const DATA_T* inputs,
+                                                const float* inputs,
                                                 unsigned int nbOutputs_,
                                                 unsigned int outputOffset,
-                                                DATA_T* outputs,
-                                                const WDATA_T* bias,
-                                                const WDATA_T* variance,
-                                                const WDATA_T* mean,
-                                                const WDATA_T* scale,
-                                                const WDATA_T epsilon)
+                                                float* outputs,
+                                                const float* bias,
+                                                const float* variance,
+                                                const float* mean,
+                                                const float* scale,
+                                                const float epsilon)
 {
     const unsigned int batchOutputOffset
         = (blockIdx.z * blockDim.z + threadIdx.z)
@@ -986,7 +944,7 @@ __global__ void spatial_output_kernel(unsigned int nbClass,
                                       unsigned int targetHeight,
                                       unsigned int targetWidth,
                                       float threshold,
-                                      DATA_T* targetData,
+                                      float* targetData,
                                       uint32_t* outputEstimated)
 {
     const int batchInputOffset = targetWidth * targetHeight * nbClass * blockIdx.z;
@@ -1428,11 +1386,11 @@ __global__ void add_weighted_kernel(unsigned int batchSize,
                                       unsigned int nbOutputs,
                                       unsigned int outputsHeight,
                                       unsigned int outputsWidth,
-                                      DATA_T* estimated_labels,
+                                      float* estimated_labels,
                                       unsigned int nbChannels,
                                       unsigned int image_height,
                                       unsigned int image_width,
-                                      DATA_T* input_image,
+                                      float* input_image,
                                       unsigned char* workspace,
                                       float alpha)
 {
@@ -1478,11 +1436,11 @@ extern "C" void cuda_add_weighted(unsigned int batchSize,
                                   unsigned int nbOutputs,
                                   unsigned int outputsHeight,
                                   unsigned int outputsWidth,
-                                  DATA_T* estimated_labels,
+                                  float* estimated_labels,
                                   unsigned int nbChannels,
                                   unsigned int image_height,
                                   unsigned int image_width,
-                                  DATA_T* input_image,
+                                  float* input_image,
                                   unsigned char* workspace,
                                   float alpha,
                                   const dim3 threadsPerBlock,
@@ -1789,16 +1747,12 @@ extern "C" void cuda_anchor_propagate(  unsigned int batchSize,
                                         unsigned int outputWidth,
                                         unsigned int stimuliHeight,
                                         unsigned int stimuliWidth,
-                                        unsigned int featureMapWidth,
-                                        unsigned int featureMapHeight,
                                         unsigned int scoreCls,
                                         bool isFlip,
                                         unsigned int nbAnchors,
-                                        double xRatio,
-                                        double yRatio,
-                                        const DATA_T* anchors,
-                                        const DATA_T* inputs,
-                                        DATA_T* outputs,
+                                        const float* anchors,
+                                        const float* inputs,
+                                        float* outputs,
                                         dim3 threadsPerBlocks,
                                         dim3 blocksPerGrid,
                                         cudaStream_t stream)
@@ -1810,13 +1764,9 @@ extern "C" void cuda_anchor_propagate(  unsigned int batchSize,
                           outputWidth,
                           stimuliHeight,
                           stimuliWidth,
-                          featureMapWidth,
-                          featureMapHeight,
                           scoreCls,
                           isFlip,
                           nbAnchors,
-                          xRatio,
-                          yRatio,
                           anchors,
                           inputs,
                           outputs);
@@ -1826,15 +1776,15 @@ extern "C" void cuda_anchor_propagate(  unsigned int batchSize,
 extern "C" void cuda_batchnormcell_propagate(unsigned int nbChannels,
                                             unsigned int channelsHeight,
                                             unsigned int channelsWidth,
-                                            const DATA_T* inputs,
+                                            const float* inputs,
                                             unsigned int nbOutputs_,
                                             unsigned int outputOffset,
-                                            DATA_T* outputs,
-                                            const WDATA_T* bias,
-                                            const WDATA_T* variance,
-                                            const WDATA_T* mean,
-                                            const WDATA_T* scale,
-                                            const WDATA_T epsilon,
+                                            float* outputs,
+                                            const float* bias,
+                                            const float* variance,
+                                            const float* mean,
+                                            const float* scale,
+                                            const float epsilon,
                                             dim3 threadsPerBlocks,
                                             dim3 blocksPerGrid,
                                             cudaStream_t stream)
@@ -1858,20 +1808,20 @@ extern "C" void cuda_batchnormcell_propagate(unsigned int nbChannels,
 }
 
 extern "C" void cuda_roipooling_bilinear_propagate
-                                                (const DATA_T alpha,
-                                                 const DATA_T* proposals,
+                                                (const float alpha,
+                                                 const float* proposals,
                                                  unsigned int proposalIdx,
                                                  unsigned int nbProposals,
                                                  unsigned int inputSizeY,
                                                  unsigned int inputSizeX,
-                                                 const DATA_T* inputs,
+                                                 const float* inputs,
                                                  unsigned int nbChannels,
                                                  unsigned int channelsHeight,
                                                  unsigned int channelsWidth,
                                                  unsigned int batchSize,
                                                  unsigned int channelOffset,
-                                                 const DATA_T beta,
-                                                 DATA_T* outputs,
+                                                 const float beta,
+                                                 float* outputs,
                                                  unsigned int nbOutputs,
                                                  unsigned int outputsHeight,
                                                  unsigned int outputsWidth,
@@ -1913,7 +1863,7 @@ extern "C" void cuda_spatial_outputs(unsigned int nbClass,
                                          unsigned int targetWidth,
                                          unsigned int batchSize,
                                          float threshold,
-                                         DATA_T* targetData,
+                                         float* targetData,
                                          uint32_t* outputEstimated,
                                          dim3 threadsPerBlocks,
                                          dim3 blocksPerGrid,

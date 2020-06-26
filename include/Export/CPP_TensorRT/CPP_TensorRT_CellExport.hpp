@@ -63,8 +63,6 @@ public:
 
     virtual void generateCellProgramDescriptors(Cell& cell, std::ofstream& prog) = 0;
 
-    virtual void generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog) = 0;
-
     virtual void generateCellProgramInstanciateLayer(Cell& cell,
                                                     std::vector<std::string>& parentsName,
                                                     std::ofstream& prog) = 0;

@@ -33,10 +33,10 @@ void anchor_cpu(unsigned int batchSize,
                 double xRatio,
                 double yRatio,
                 std::vector<Anchor> anchors,
-                const DATA_T* inputs,
-                DATA_T* outputs/*,
-                DATA_T* maxIoU,
-                DATA_T* ArgMaxIoU*/)
+                const float* inputs,
+                float* outputs/*,
+                float* maxIoU,
+                float* ArgMaxIoU*/)
 {
 
     const unsigned int size = batchSize * nbAnchors;
@@ -65,8 +65,8 @@ void anchor_cpu(unsigned int batchSize,
                     const int ha = ya1 - ya0;
 
                     // Anchor center coordinates (xac, yac)
-                    const DATA_T xac = xa0 + wa / 2.0;
-                    const DATA_T yac = ya0 + ha / 2.0;
+                    const float xac = xa0 + wa / 2.0;
+                    const float yac = ya0 + ha / 2.0;
 
                     /**
                      * 1st condition: "During  training,  we  ignore all
@@ -92,28 +92,28 @@ void anchor_cpu(unsigned int batchSize,
                                                 + (k + (scoreCls + 3)*nbAnchors)*outputWidth*outputHeight
                                                 + batchPos*nbAnchors*outputHeight*outputWidth;;
 
-                    const DATA_T cls = inputs[clsIdx];
+                    const float cls = inputs[clsIdx];
 
                     // Parameterized coordinates
-                    const DATA_T txbb = inputs[txIdx];
+                    const float txbb = inputs[txIdx];
 
-                    const DATA_T tybb = inputs[tyIdx];
+                    const float tybb = inputs[tyIdx];
 
-                    const DATA_T twbb = inputs[twIdx];
+                    const float twbb = inputs[twIdx];
 
-                    const DATA_T thbb = inputs[thIdx];
+                    const float thbb = inputs[thIdx];
 
                     // Predicted box center coordinates
-                    const DATA_T xbbc = ((isFlip) ? -txbb : txbb) * wa
+                    const float xbbc = ((isFlip) ? -txbb : txbb) * wa
                                             + xac;
-                    const DATA_T ybbc = ((isFlip) ? -tybb : tybb) * ha
+                    const float ybbc = ((isFlip) ? -tybb : tybb) * ha
                                             + yac;
-                    DATA_T wbb = wa * std::exp(twbb);
-                    DATA_T hbb = ha * std::exp(thbb);
+                    float wbb = wa * std::exp(twbb);
+                    float hbb = ha * std::exp(thbb);
 
                     // Predicted box top-left coordinates
-                    DATA_T xbb = xbbc - wbb / 2.0;
-                    DATA_T ybb = ybbc - hbb / 2.0;
+                    float xbb = xbbc - wbb / 2.0;
+                    float ybb = ybbc - hbb / 2.0;
 
                     /// During testing: "This  may  generate
                     /// cross-boundary proposal boxes, which we clip to
@@ -177,12 +177,12 @@ void region_proposal_cpu(unsigned int batchSize,
                          double minWidth,
                          unsigned int scoreIndex,
                          unsigned int iouIndex,
-                         const DATA_T* inputs,
-                         DATA_T* outputs)
+                         const float* inputs,
+                         float* outputs)
 {
     for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos) {
         // Collect all ROIs in the "ROIs" vector
-        std::vector<std::pair<ROI, WDATA_T> > ROIs;
+        std::vector<std::pair<ROI, float> > ROIs;
         ROIs.reserve(nbAnchors * channelHeight * channelWidth);
 
         for (unsigned int k = 0; k < nbAnchors; ++k) {
@@ -198,9 +198,9 @@ void region_proposal_cpu(unsigned int batchSize,
                                                 + (k + 4*nbAnchors)*channelWidth*channelHeight
                                                 + batchPos*nbAnchors*channelWidth*channelHeight;
 
-                    const WDATA_T value = inputs[vIdx];
-                    const WDATA_T w = inputs[wIdx];
-                    const WDATA_T h = inputs[hIdx];
+                    const float value = inputs[vIdx];
+                    const float w = inputs[wIdx];
+                    const float h = inputs[hIdx];
 
                     if (value >= 0.0 && w >= minWidth && h >= minHeight) {
                         ROIs.push_back(std::make_pair(ROI(x, y, k, batchPos), value));
@@ -214,7 +214,7 @@ void region_proposal_cpu(unsigned int batchSize,
             std::partial_sort(ROIs.begin(),
                               ROIs.begin() + preNmsTopN,
                               ROIs.end(),
-                              PairSecondPred<ROI, WDATA_T, std::greater<WDATA_T> >());
+                              PairSecondPred<ROI, float, std::greater<float> >());
 
             // Drop the lowest score (unsorted) ROIs
             ROIs.resize(preNmsTopN);
@@ -222,7 +222,7 @@ void region_proposal_cpu(unsigned int batchSize,
         else {
             std::sort(ROIs.begin(),
                       ROIs.end(),
-                      PairSecondPred<ROI, WDATA_T, std::greater<WDATA_T> >());
+                      PairSecondPred<ROI, float, std::greater<float> >());
         }
 
         // Non-Maximum Suppression (NMS)
@@ -248,10 +248,10 @@ void region_proposal_cpu(unsigned int batchSize,
                        + (ROIMax.k + 4*nbAnchors)*channelWidth*channelHeight
                        + ROIMax.b*nbAnchors*channelWidth*channelHeight;
 
-            const WDATA_T x0 = inputs[xIdx];
-            const WDATA_T y0 = inputs[yIdx];
-            const WDATA_T w0 = inputs[wIdx];
-            const WDATA_T h0 = inputs[hIdx];
+            const float x0 = inputs[xIdx];
+            const float y0 = inputs[yIdx];
+            const float w0 = inputs[wIdx];
+            const float h0 = inputs[hIdx];
 
 
             for (unsigned int j = i + 1; j < ROIs.size(); ) {
@@ -270,21 +270,21 @@ void region_proposal_cpu(unsigned int batchSize,
                         + (ROI.k + 4*nbAnchors)*channelWidth*channelHeight
                         + ROI.b*nbAnchors*channelWidth*channelHeight;
 
-                const WDATA_T x = inputs[xIdx];
-                const WDATA_T y = inputs[yIdx];
-                const WDATA_T w = inputs[wIdx];
-                const WDATA_T h = inputs[hIdx];
+                const float x = inputs[xIdx];
+                const float y = inputs[yIdx];
+                const float w = inputs[wIdx];
+                const float h = inputs[hIdx];
 
-                const WDATA_T interLeft = std::max(x0, x);
-                const WDATA_T interRight = std::min(x0 + w0, x + w);
-                const WDATA_T interTop = std::max(y0, y);
-                const WDATA_T interBottom = std::min(y0 + h0, y + h);
+                const float interLeft = std::max(x0, x);
+                const float interRight = std::min(x0 + w0, x + w);
+                const float interTop = std::max(y0, y);
+                const float interBottom = std::min(y0 + h0, y + h);
 
                 if (interLeft < interRight && interTop < interBottom) {
-                    const WDATA_T interArea = (interRight - interLeft)
+                    const float interArea = (interRight - interLeft)
                                                 * (interBottom - interTop);
-                    const WDATA_T unionArea = w0 * h0 + w * h - interArea;
-                    const WDATA_T IoU = interArea / unionArea;
+                    const float unionArea = w0 * h0 + w * h - interArea;
+                    const float IoU = interArea / unionArea;
 
                     if (IoU > nmsIoU) {
                         // Suppress ROI
@@ -338,11 +338,11 @@ void ROIPooling_bilinear_cpu(unsigned int batchSize,
                              unsigned int stimuliWidth,
                              std::vector<nvinfer1::DimsCHW> featureDims,
                              unsigned int nbProposals,
-                             const DATA_T* inputs,
-                             DATA_T* outputs)
+                             const float* inputs,
+                             float* outputs)
 {
-    const DATA_T alpha = 1.0f;
-    DATA_T beta = 0.0f;
+    const float alpha = 1.0f;
+    float beta = 0.0f;
 
     unsigned int outputOffset = 0;
     unsigned int inputFeatureOffset = nbProposals*4;
@@ -368,10 +368,10 @@ void ROIPooling_bilinear_cpu(unsigned int batchSize,
                 {
                     const unsigned int inputBatch = batchPos / nbProposals;
 
-                    DATA_T x = (inputs[0 + batchPos*4] - 1.0) / xRatio;
-                    DATA_T y = (inputs[1 + batchPos*4] - 6.0) / yRatio;
-                    DATA_T w = (inputs[2 + batchPos*4] / xRatio);
-                    DATA_T h = (inputs[3 + batchPos*4] / yRatio);
+                    float x = (inputs[0 + batchPos*4] - 1.0) / xRatio;
+                    float y = (inputs[1 + batchPos*4] - 6.0) / yRatio;
+                    float w = (inputs[2 + batchPos*4] / xRatio);
+                    float h = (inputs[3 + batchPos*4] / yRatio);
 
                     // Crop ROI to image boundaries
                     if (x < 0) {
@@ -387,22 +387,22 @@ void ROIPooling_bilinear_cpu(unsigned int batchSize,
                     if (y + h > (int)featureDims[k].d[1])
                         h = featureDims[k].d[1] - y;
 
-                    const DATA_T yPoolRatio = h / (outputHeight - 1);
-                    const DATA_T xPoolRatio = w / (outputWidth - 1);
+                    const float yPoolRatio = h / (outputHeight - 1);
+                    const float xPoolRatio = w / (outputWidth - 1);
 
                     for (unsigned int oy = 0; oy < outputHeight; ++oy) {
                         for (unsigned int ox = 0; ox < outputWidth; ++ox) {
                             // -0.5 + (ox + 0.5) and not ox because the
                             // interpolation is done relative to the CENTER of
                             // the pixels
-                            const DATA_T sy = clamp_export<DATA_T>(y + oy * yPoolRatio, 0, featureDims[k].d[1] - 1);
-                            const DATA_T sx = clamp_export<DATA_T>(x + ox * xPoolRatio, 0, featureDims[k].d[2] - 1);
+                            const float sy = clamp_export<float>(y + oy * yPoolRatio, 0, featureDims[k].d[1] - 1);
+                            const float sx = clamp_export<float>(x + ox * xPoolRatio, 0, featureDims[k].d[2] - 1);
 
                             const unsigned int sx0 = (int)(sx);
                             const unsigned int sy0 = (int)(sy);
 
-                            const DATA_T dx = sx - sx0;
-                            const DATA_T dy = sy - sy0;
+                            const float dx = sx - sx0;
+                            const float dy = sy - sy0;
 
 
                             const unsigned int idxI00 = sx0 + sy0*featureDims[k].d[2]
@@ -442,19 +442,19 @@ void ROIPooling_bilinear_cpu(unsigned int batchSize,
                                                                 * featureDims[k].d[2]);
 
 
-                            const DATA_T i00 = inputs[idxI00];
+                            const float i00 = inputs[idxI00];
 
-                            const DATA_T i10 = (sx0 + 1 < featureDims[k].d[2]) ?
+                            const float i10 = (sx0 + 1 < featureDims[k].d[2]) ?
                                                  inputs[idxI10] : 0.0;
 
-                            const DATA_T i01 = (sy0 + 1 < featureDims[k].d[1]) ?
+                            const float i01 = (sy0 + 1 < featureDims[k].d[1]) ?
                                                  inputs[idxI01]: 0.0;
 
-                            const DATA_T i11 = (sx0 + 1 < featureDims[k].d[2]
+                            const float i11 = (sx0 + 1 < featureDims[k].d[2]
                                                  && sy0 + 1 < featureDims[k].d[1])
                                                  ? inputs[idxI11] : 0.0;
 
-                            const DATA_T value
+                            const float value
                                 = i00 * (1 - dx) * (1 - dy)
                                 + i10 * dx * (1 - dy)
                                 + i01 * (1 - dx) * dy
@@ -488,8 +488,8 @@ void object_det_cpu(unsigned int batchSize,
                     unsigned int nbClass,
                     double nmsIoU,
                     const float* scoreThreshold,
-                    const DATA_T* inputs,
-                    DATA_T* outputs)
+                    const float* inputs,
+                    float* outputs)
 {
 
     const int inputBatch = batchSize/(nbAnchors*nbClass);

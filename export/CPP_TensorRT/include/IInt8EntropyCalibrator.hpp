@@ -1,11 +1,12 @@
 #include "dnn_utils.hpp"
 
-class Int8EntropyCalibrator : public nvinfer1::IInt8EntropyCalibrator
+class Int8EntropyCalibrator : public nvinfer1::IInt8EntropyCalibrator2
 {
 public:
-    Int8EntropyCalibrator(BatchStream& stream, int firstBatch, bool readCache = true)
-        : mStream(stream)
-        , mReadCache(readCache)
+    Int8EntropyCalibrator(BatchStream& stream, int firstBatch, std::string cacheName, bool readCache = true)
+        : mStream(stream),
+          mCalibrationCacheName(cacheName),
+          mReadCache(readCache)
     {
         nvinfer1::Dims dims = mStream.getDims();
         mInputCount = mStream.getBatchSize() * dims.d[1] * dims.d[2] * dims.d[3];
@@ -52,13 +53,14 @@ public:
     }
 
 private:
-    static std::string calibrationTableName()
+    std::string calibrationTableName()
     {
-        return std::string("TensorRT_CalibrationEntropyTable");
+        return mCalibrationCacheName;
     }
     BatchStream mStream;
     size_t mInputCount;
     bool mReadCache{true};
+    std::string mCalibrationCacheName;
     void* mDeviceInput{nullptr};
     std::vector<char> mCalibrationCache;
 };

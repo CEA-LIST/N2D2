@@ -29,7 +29,6 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cudnn.h>
-#include "common_cuda.hpp"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -46,8 +45,9 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <string.h>
-#include "../../include/typedefs.h"
-#include "../../include/utils.h"
+#include "typedefs.h"
+#include "utils.h"
+#include "common_cuda.hpp"
 
 static unsigned int nextDivisor(unsigned int target, unsigned int value)
 {
@@ -155,10 +155,10 @@ struct ROI {
 };
 
 struct Anchor {
-    WDATA_T x0;
-    WDATA_T y0;
-    WDATA_T x1;
-    WDATA_T y1;
+    float x0;
+    float y0;
+    float x1;
+    float y1;
 };
 
 template <class T1, class T2, class Pred = std::less<T2> >

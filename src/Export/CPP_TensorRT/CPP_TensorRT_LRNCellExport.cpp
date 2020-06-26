@@ -32,7 +32,6 @@ void N2D2::CPP_TensorRT_LRNCellExport::generate(LRNCell& cell,
                                               const std::string& dirName)
 {
     N2D2::CPP_LRNCellExport::generate(cell, dirName);
-    Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
 
     const std::string fileName = dirName + "/dnn/include/"
@@ -82,10 +81,7 @@ void N2D2::CPP_TensorRT_LRNCellExport
     prog << "   " << "std::vector< nvinfer1::ITensor *> "
          << identifier << "_tensor;\n";
 
-    prog << "   " << identifier << "_tensor = " << "add_lrn(tsrRTHandles.netDef.back(),\n"
-         << "       " << "tsrRTHandles.netBuilder,\n"
-         << "       " << "mUseDLA,\n"
-         << "       " << "tsrRTHandles.dT,\n"
+    prog << "   " << identifier << "_tensor = " << "add_lrn(\n"
          << "       " << "\"LRN_NATIVE_" << identifier << "\",\n"
          << "       " << prefix << "_NB_OUTPUTS,\n"
          << "       " << input_name.str() << "tensor,\n"
@@ -96,25 +92,12 @@ void N2D2::CPP_TensorRT_LRNCellExport
 }
 
 void N2D2::CPP_TensorRT_LRNCellExport
-    ::generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog)
-{
-    prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&inout_buffer["
-                  << targetIdx + 1 << "], " // Added 1 for stride the input buffer
-                  << "sizeof(DATA_T)*batchSize"
-                  << "*NB_OUTPUTS[" << targetIdx << "]"
-                  << "*OUTPUTS_HEIGHT[" << targetIdx << "]"
-                  << "*OUTPUTS_WIDTH[" << targetIdx << "]"
-                  << "));\n";
-}
-
-void N2D2::CPP_TensorRT_LRNCellExport
     ::generateCellProgramInstanciateOutput(Cell& cell,
                                            unsigned int targetIdx,
                                            std::ofstream& prog)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "   " << "add_target(tsrRTHandles.netDef.back(), " << identifier << "_tensor, "
+    prog << "   " << "add_target(" << identifier << "_tensor, "
                   << targetIdx << ");\n";
-
 }

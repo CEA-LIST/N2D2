@@ -7,12 +7,19 @@ namespace fp16
 {
 // Code added before equivalent code was available via cuda.
 // This code needs to be removed when we ship for cuda-9.2.
-template<typename T, typename U> T bitwise_cast(U u)
+    template<typename T, typename U> T bitwise_cast(U u);
+
+    inline __half __float2half(float f);
+    inline float __half2float(__half h);
+
+
+};
+template<typename T, typename U> T fp16::bitwise_cast(U u)
 {
     return *reinterpret_cast<T*>(&u);
 }
 
-__half __float2half(float f)
+inline __half fp16::__float2half(float f)
 {
     uint32_t x = bitwise_cast<uint32_t, float>(f);
     uint32_t u = (x & 0x7fffffff);
@@ -66,7 +73,7 @@ __half __float2half(float f)
     return bitwise_cast<__half, uint16_t>(sign | uint16_t(exponent<<10) | uint16_t(mantissa));
 }
 
-float __half2float(__half h)
+inline float fp16::__half2float(__half h)
 {
     uint16_t x        = bitwise_cast<uint16_t,__half>(h);
     uint32_t sign     = ((x >> 15) & 1);
@@ -104,6 +111,5 @@ float __half2float(__half h)
     return bitwise_cast<float, uint32_t>( (sign<<31) | (exponent<<23) | mantissa );
 }
 
-};
 
 #endif // _TRT_FP16_H_

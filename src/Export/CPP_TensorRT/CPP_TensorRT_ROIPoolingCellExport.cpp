@@ -33,7 +33,6 @@ void N2D2::CPP_TensorRT_ROIPoolingCellExport::generate(ROIPoolingCell& cell,
                                               const std::string& dirName)
 {
     N2D2::CPP_ROIPoolingCellExport::generate(cell, dirName);
-    Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
 
     const std::string fileName = dirName + "/dnn/include/"
@@ -147,11 +146,8 @@ void N2D2::CPP_TensorRT_ROIPoolingCellExport
     prog << "   " << "std::vector< nvinfer1::ITensor *> "
          << identifier << "_tensor;\n";
 
-    prog << "   " << identifier << "_tensor = " << "add_ROIpooling(tsrRTHandles.netDef.back(),\n"
-         << "       " << "pluginFactory,\n"
-         << "       " << "tsrRTHandles.dT,\n"
+    prog << "   " << identifier << "_tensor = " << "add_ROIpooling("
          << "       " << "\"ROIPooling_GPU_" << identifier << "\",\n"
-         << "       " << "batchSize,\n"
          << "       " << prefix << "_NB_OUTPUTS,\n"
          << "       " << prefix << "_OUTPUTS_HEIGHT,\n"
          << "       " << prefix << "_OUTPUTS_WIDTH,\n"
@@ -170,27 +166,13 @@ void N2D2::CPP_TensorRT_ROIPoolingCellExport
 }
 
 void N2D2::CPP_TensorRT_ROIPoolingCellExport
-    ::generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog)
-{
-    prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&inout_buffer["
-                  << targetIdx + 1 << "], " // Added 1 for stride the input buffer
-                  << "sizeof(DATA_T)*batchSize"
-                  //<< "*" << prefix << "_PARENT_PROPOSALS"
-                  << "*NB_OUTPUTS[" << targetIdx << "]"
-                  << "*OUTPUTS_HEIGHT[" << targetIdx << "]"
-                  << "*OUTPUTS_WIDTH[" << targetIdx << "]"
-                  << "));\n";
-}
-
-void N2D2::CPP_TensorRT_ROIPoolingCellExport
     ::generateCellProgramInstanciateOutput(Cell& cell,
                                            unsigned int targetIdx,
                                            std::ofstream& prog)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
 
-    prog << "   " << "add_target(tsrRTHandles.netDef.back(), " << identifier << "_tensor, "
+    prog << "   " << "add_target(" << identifier << "_tensor, "
                   << targetIdx << ");\n";
 
 }

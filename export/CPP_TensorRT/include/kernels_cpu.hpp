@@ -34,10 +34,10 @@ void anchor_cpu(unsigned int batchSize,
                 double xRatio,
                 double yRatio,
                 std::vector<Anchor> anchors,
-                const DATA_T* inputs,
-                DATA_T* outputs/*,
-                DATA_T* maxIoU,
-                DATA_T* ArgMaxIoU*/);
+                const float* inputs,
+                float* outputs/*,
+                float* maxIoU,
+                float* ArgMaxIoU*/);
 
 void region_proposal_cpu(unsigned int batchSize,
                          unsigned int nbOutputs,
@@ -53,8 +53,8 @@ void region_proposal_cpu(unsigned int batchSize,
                          double minWidth,
                          unsigned int scoreIndex,
                          unsigned int iouIndex,
-                         const DATA_T* inputs,
-                         DATA_T* outputs);
+                         const float* inputs,
+                         float* outputs);
 
 void ROIPooling_bilinear_cpu(unsigned int batchSize,
                              unsigned int nbOutputs,
@@ -64,8 +64,8 @@ void ROIPooling_bilinear_cpu(unsigned int batchSize,
                              unsigned int stimuliWidth,
                              std::vector<nvinfer1::DimsCHW> featureDims,
                              unsigned int nbProposals,
-                             const DATA_T* inputs,
-                             DATA_T* outputs);
+                             const float* inputs,
+                             float* outputs);
 
 void object_det_cpu(unsigned int batchSize,
                     unsigned int nbOutputs,
@@ -78,7 +78,7 @@ void object_det_cpu(unsigned int batchSize,
                     unsigned int nbClass,
                     double nmsIoU,
                     const float* scoreThreshold,
-                    const DATA_T* inputs,
-                    DATA_T* outputs);
+                    const float* inputs,
+                    float* outputs);
 
 #endif
