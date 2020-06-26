@@ -100,6 +100,10 @@ public:
     {
         return mBiasSolver;
     };
+    std::shared_ptr<Quantizer> getQuantizer()
+    {
+        return mQuantizer;
+    };
     virtual void getWeight(unsigned int output,
                            unsigned int channel, BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;

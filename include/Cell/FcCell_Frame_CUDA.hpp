@@ -39,7 +39,6 @@ public:
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
-    using Cell_Frame_CUDA<T>::mQuantizer;
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
 

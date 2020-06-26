@@ -133,33 +133,32 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
     std::shared_ptr<Solver> biasSolver
         = SolverGenerator::generate(iniConfig, section, model, dataType, "BiasSolver");
 
-    if (biasSolver)
+    if (biasSolver){
         cell->setBiasSolver(biasSolver);
+    }
 
     std::shared_ptr<Solver> weightsSolver
         = SolverGenerator::generate(iniConfig, section, model, dataType, "WeightsSolver");
 
-    if (weightsSolver)
+    if (weightsSolver) {
         cell->setWeightsSolver(weightsSolver);
-/*
-#ifdef CUDA
-    std::shared_ptr<Cell_Frame_CUDA<dataType>> cellFrameCuda =
-        std::dynamic_pointer_cast<Cell_Frame_CUDA<dataType>> (cell);
-    if (cellFrameCuda) {
-        std::shared_ptr<Quantizer> quantizer
-            = QuantizerGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
-
-        if (quantizer) {
-            if (!quantizer.isCuda()) {
-                throw std::runtime_error("Error: FcCellGenerator::generateParams():" 
-                " Cell_Fram_CUDA needs Quantizer_CUDA!");
-            }
-            cellFrameCuda->setQuantizer(quantizer);
-        }
-      
     }
-#endif
-*/
+    
+
+    std::shared_ptr<Quantizer> quantizer
+        = QuantizerGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
+
+    if (quantizer) {
+        cell->setQuantizer(quantizer);
+
+        std::shared_ptr<Solver> quantizerSolver
+            = SolverGenerator::generate(iniConfig, section, model, dataType, "QuantizerSolver");
+
+        if (quantizerSolver) {
+            cell->getQuantizer()->setSolver(quantizerSolver);
+        }
+    }
+
     std::map<std::string, std::string> params = getConfig(model, iniConfig);
 
     if (cell->getBiasSolver()) {
@@ -172,6 +171,19 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
         cell->getWeightsSolver()->setPrefixedParameters(params,
                                                         "WeightsSolver.");
     }
+    if (cell->getQuantizer()) {
+        std::cout << "Added " << cell->getName() <<  " quantizer" << std::endl; 
+        cell->getQuantizer()->setPrefixedParameters(params, "Quantizers.");
+        cell->getQuantizer()->setPrefixedParameters(params,
+                                                        "Quantizer.");
+        if (cell->getQuantizer()->getSolver()) {
+            std::cout << "Added " << cell->getName() <<  " quantizer solver " << cell->getQuantizer()->getSolver()->getType() << std::endl; 
+            cell->getQuantizer()->setPrefixedParameters(params, "QuantizerSolvers.");
+            cell->getQuantizer()->setPrefixedParameters(params,
+                                                        "QuantizerSolver.");
+        }
+    }
+
 
     cell->setParameters(params);
 

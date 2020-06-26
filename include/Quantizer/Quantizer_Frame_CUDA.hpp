@@ -18,23 +18,24 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_QUANTIZER_CUDA_H
-#define N2D2_QUANTIZER_CUDA_H
+#ifndef N2D2_QUANTIZER_FRAME_CUDA_H
+#define N2D2_QUANTIZER_FRAME_CUDA_H
 
 //#include "Cell/Cell.hpp"
 //#include "utils/Parameterizable.hpp"
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"
-//#include "Quantizer/Quantizer.hpp"
+#include "Quantizer/Quantizer.hpp"
 
 namespace N2D2 {
 
-template <class T> class Quantizer_CUDA {
+template <class T> 
+class Quantizer_Frame_CUDA: virtual public Quantizer {
 public:
 
     //void addInput(BaseTensor& inputs, BaseTensor& diffOutputs);
-    virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
-    virtual void addActivations(BaseTensor& activations, BaseTensor& diffActivations) = 0;
+    //virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
+    //virtual void addActivations(BaseTensor& activations, BaseTensor& diffActivations) = 0;
     //virtual void addCell(Cell* cell);
 
     virtual void initialize(){};
@@ -42,37 +43,47 @@ public:
     virtual void propagate() = 0;
     virtual void back_propagate() = 0;
 
-    virtual CudaTensor<T>& getQuantizedWeights(unsigned int k)
+    virtual BaseTensor& getQuantizedWeights(unsigned int k)
     {
         return mQuantizedWeights[k];
     }
 
-    //Tensor<float>& getQuantizedBiases() = 0;
+    virtual BaseTensor& getQuantizedBiases()
+    {
+        return mQuantizedBiases;
+    }
 
-    virtual CudaTensor<T>& getQuantizedActivations(unsigned int k)
+    virtual BaseTensor& getQuantizedActivations(unsigned int k)
     {
         return mQuantizedActivations[k];
     }
 
-
-    virtual CudaTensor<T>& getDiffFullPrecisionWeights(unsigned int k)
+    virtual BaseTensor& getDiffFullPrecisionWeights(unsigned int k)
     {
         return mDiffFullPrecisionWeights[k];
     }
 
-    virtual CudaBaseTensor& getDiffQuantizedWeights(unsigned int k)
+    virtual BaseTensor& getDiffQuantizedWeights(unsigned int k)
     {
         return mDiffQuantizedWeights[k];
     }
 
-    //Tensor<float>& getDiffFullPrecisionBiases() = 0;
+    virtual BaseTensor& getDiffFullPrecisionBiases()
+    {
+        return mDiffFullPrecisionBiases;
+    }
 
-    virtual CudaTensor<T>& getDiffFullPrecisionActivations(unsigned int k)
+    virtual BaseTensor& getDiffQuantizedBiases()
+    {
+        return *mDiffQuantizedBiases;
+    }
+
+    virtual BaseTensor& getDiffFullPrecisionActivations(unsigned int k)
     {
         return mDiffFullPrecisionActivations[k];
     }
 
-    virtual CudaBaseTensor& getDiffQuantizedActivations(unsigned int k)
+    virtual BaseTensor& getDiffQuantizedActivations(unsigned int k)
     {
         return mDiffQuantizedActivations[k];
     }
@@ -86,7 +97,7 @@ public:
 
 protected:
 
-  /*
+    /*
         Structures shared by all kind of quantizers :
 
         *mFullPrecisionWeights --->|    |---> *mQuantizedWeights
@@ -105,8 +116,8 @@ protected:
     CudaInterface<> mFullPrecisionWeights;
     CudaInterface<T> mQuantizedWeights;
 
-    //CudaTensor<float>* mFullPrecisionBiases;
-    //CudaTensor<float> mQuantizedBiases;
+    std::shared_ptr<CudaBaseTensor> mFullPrecisionBiases;
+    CudaTensor<T> mQuantizedBiases;
 
     CudaInterface<> mFullPrecisionActivations;
     CudaInterface<T> mQuantizedActivations;
@@ -115,8 +126,8 @@ protected:
     CudaInterface<T> mDiffFullPrecisionWeights;
     CudaInterface<> mDiffQuantizedWeights;
 
-    //CudaTensor<float> mDiffFullPrecisionBiases;
-    //CudaTensor<float>* mDiffQuantizedBiases;
+    CudaTensor<T> mDiffFullPrecisionBiases;
+    std::shared_ptr<CudaBaseTensor> mDiffQuantizedBiases;
 
     CudaInterface<T> mDiffFullPrecisionActivations;
     CudaInterface<> mDiffQuantizedActivations;
@@ -129,5 +140,5 @@ private:
 }
 
 
-#endif // N2D2_QUANTIZER_CUDA_H
+#endif // N2D2_QUANTIZER_FRAME_CUDA_H
 

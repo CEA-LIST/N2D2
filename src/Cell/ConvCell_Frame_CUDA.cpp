@@ -546,10 +546,11 @@ the API cudnnGetConvolutionForwardMaxCount().
         CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
     }
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (mQuantizer) {
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
                 mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
+                mQuantizer->addBiases(*mBias, mDiffBias);
                 mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
             }
             //mQuantizer.addBiases(mBias);
@@ -646,11 +647,13 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
         std::shared_ptr<CudaDeviceTensor<T> > input;
         std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
 
-        // TODO: Implement for half and double? Training is always performed in float
+        // TODO: At the moment the Quantizer works only for float
         if (mQuantizer) {
             mQuantizer->propagate();
-            input = cuda_device_tensor_cast<T>(mQuantizer->getQuantizedActivations(k));
-            sharedSynapses = cuda_device_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
+            input = cuda_device_tensor_cast<T>
+                (cuda_tensor_cast<T>(mQuantizer->getQuantizedActivations(k)));
+            sharedSynapses = cuda_device_tensor_cast<T>
+                (cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
         }
         else {
             input = cuda_device_tensor_cast<T>(mInputs[k]);
@@ -679,15 +682,13 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
     if (!mNoBias) {
         std::shared_ptr<CudaDeviceTensor<T> > biases;
 
-        //TODO: Biases
-        /*if (mQuantizer) {
-            biases = cuda_device_tensor_cast<T>(mQuantizer->getQuantizedBiases());
+        if (mQuantizer) {
+            biases = cuda_device_tensor_cast<T>
+                (cuda_tensor_cast<T>(mQuantizer->getQuantizedBiases()));
         }
         else {
-            biases = cuda_device_tensor_cast<T>(mBias);
-        }*/
-
-        biases = cuda_device_tensor_cast<T>(*mBias);
+            biases = cuda_device_tensor_cast<T>(*mBias);
+        }
 /**
  * 2.0
  * Ajoute le biais au tenseur de destination.
@@ -749,8 +750,10 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
         std::shared_ptr<CudaDeviceTensor<T> > diffSharedSynapses;
 
         if (mQuantizer) {
-            input = cuda_device_tensor_cast_nocopy<T>(mQuantizer->getQuantizedActivations(k));
-            diffSharedSynapses = cuda_device_tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k));
+            input = cuda_device_tensor_cast_nocopy<T>
+                (cuda_tensor_cast<T>(mQuantizer->getQuantizedActivations(k)));
+            diffSharedSynapses = cuda_device_tensor_cast<T>
+                (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k)));
         }
         else {
             input = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
@@ -819,18 +822,26 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
         const typename Cuda::cudnn_scaling_type<T>::type beta
             = (mBiasSolver->isNewIteration()) ? 0.0f : 1.0f;
 
+        std::shared_ptr<CudaDeviceTensor<float> > diffBiases;
+
+        if (mQuantizer) {
+            diffBiases = cuda_device_tensor_cast<float>
+                (cuda_tensor_cast<float>(mQuantizer->getDiffQuantizedBiases()));
+        }
+        else {
+            diffBiases = cuda_device_tensor_cast<float>(mDiffBias);
+        }
+
         CHECK_CUDNN_STATUS(
             cudnnConvolutionBackwardBias(CudaContext::cudnnHandle(),
                                          &alpha,
                                          mDiffInputs.getCudnnTensorDesc(),
                                          mDiffInputs.getDevicePtr(),
                                          &beta,
-                                         mDiffBias.getCudnnTensorDesc(),
-                                         mDiffBias.getDevicePtr()));
+                                         diffBiases->getCudnnTensorDesc(),
+                                         diffBiases->getDevicePtr()));
 
         mDiffBias.setValid();
-
-        //TODO: DiffBias quantization
 
     }
 
@@ -845,12 +856,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
 
             if (mQuantizer) {
                 sharedSynapses = cuda_device_tensor_cast<T>
-                    (mQuantizer->getQuantizedWeights(k));
+                    (cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
                 diffOutputs = (mDiffOutputs[k].isValid())
                     ? cuda_device_tensor_cast<T>
-                        (mQuantizer->getDiffQuantizedActivations(k))
+                        (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)))
                     : cuda_device_tensor_cast_nocopy<T>
-                        (mQuantizer->getDiffQuantizedActivations(k));
+                        (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)));
             }
             else {
                 sharedSynapses = cuda_device_tensor_cast<T>(mSharedSynapses[k]);
