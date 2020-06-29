@@ -11,27 +11,17 @@
 class BatchStream
 {
 public:
-    BatchStream(int batchSize, int maxBatches, std::string prefix)
+    BatchStream(int batchSize, int dimC, int dimY, int dimX, int maxBatches, std::string prefix)
         : mBatchSize(batchSize)
         , mMaxBatches(maxBatches)
         , mPrefix(prefix)
     {
-        std::string inputFileName = mPrefix + std::string("0.batch");
-
-        FILE* file = fopen(inputFileName.c_str(), "rb");
-        if (!file)
-            throw std::runtime_error("Could not open calibration file  " + inputFileName);
-
-        int d[4];
-        size_t readSize = fread(d, sizeof(int), 4, file);
-        assert(readSize == 4);
         mDims.nbDims = 4;  //The number of dimensions.
-        mDims.d[0] = d[0]; //Batch Size
-        mDims.d[1] = d[1]; //Channels
-        mDims.d[2] = d[2]; //Height
-        mDims.d[3] = d[3]; //Width
+        mDims.d[0] = 1; //Batch Size
+        mDims.d[1] = dimC; //Channels
+        mDims.d[2] = dimY; //Height
+        mDims.d[3] = dimX; //Width
 
-        fclose(file);
         mImageSize = mDims.d[1] * mDims.d[2] * mDims.d[3];
         mBatch.resize(mBatchSize * mImageSize, 0);
         mFileBatch.resize(mDims.d[0] * mImageSize, 0);

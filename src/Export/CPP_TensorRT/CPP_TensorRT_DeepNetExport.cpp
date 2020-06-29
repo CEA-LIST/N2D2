@@ -65,7 +65,7 @@ void N2D2::CPP_TensorRT_DeepNetExport::generateIncludes(DeepNet& deepNet,
                                                         std::ofstream& prog)
 {
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
-    prog << "#include \"../include/env.hpp\n";
+    prog << "#include \"../include/env.hpp\"\n";
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
          = layers.begin() + 1,

@@ -165,24 +165,33 @@ void N2D2::Network::createContext()
                                     "./batches_calib/"
                                     : mCalibrationFolder;
             std::vector<std::string> filesCalib;
-
             struct dirent* pFile;
             DIR* pDir = opendir(calibDir.c_str());
-            if (pDir == NULL)
-                throw std::runtime_error(
-                    "Couldn't open the directory for input patterns: " + calibDir);
-
-            while ((pFile = readdir(pDir)) != NULL) {
-                if (pFile->d_name[0] != '.')
-                    filesCalib.push_back(std::string(calibDir + pFile->d_name));
+            if (pDir == NULL) {
+                //throw std::runtime_error(
+                //    "Couldn't open the directory for input patterns: " + calibDir);
+                std::cout << "No directory for batches calibration" << std::endl;
             }
-            closedir(pDir);
+            else {
+              while ((pFile = readdir(pDir)) != NULL) {
+                  if (pFile->d_name[0] != '.')
+                      filesCalib.push_back(std::string(calibDir + pFile->d_name));
+              }
+              closedir(pDir);
+            }
             unsigned int nbCalibFiles = filesCalib.size();
             if(nbCalibFiles == 0)
-                throw std::runtime_error("Cannot find calibration files in dir " + calibDir);
-
+                //throw std::runtime_error("Cannot find calibration files in dir " + calibDir);
+                std::cout << "Cannot find calibration files in dir " << calibDir << std::endl;
+                
             std::cout << "Using Entropy Calibrator" << std::endl;
-            BatchStream calibrationStream(1, nbCalibFiles, calibDir + "batch_calibration");
+            BatchStream calibrationStream(  1, //batchsize
+                                            getInputDimZ(), 
+                                            getInputDimY(), 
+                                            getInputDimX(), 
+                                            nbCalibFiles, 
+                                            calibDir + "batch_calibration");
+
             mCalibrator.reset(new Int8EntropyCalibrator(calibrationStream, 0, mCalibrationCacheName));
             mNetBuilder->setInt8Mode(true);
             mNetBuilder->setInt8Calibrator(mCalibrator.get());

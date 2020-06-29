@@ -46,5 +46,7 @@ typedef enum {
     EuclideanSum,
     Prod
 } Operation_T;
+typedef float WDATA_T;
+typedef float BDATA_T;
 
 #endif // N2D2_EXPORTC_TYPEDEFS_H
