@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
     std::cout << "Initialization of the tensorRT network done!" << std::endl;
 
     unsigned int inputSize = n2d2_dnn.getInputDimX()*n2d2_dnn.getInputDimY()*n2d2_dnn.getInputDimZ();
-    DATA_T* env_data = new DATA_T[inputSize * batchSize];
+    float* env_data = new float[inputSize * batchSize];
 
     unsigned int dimX = 1;
     unsigned int dimY = 1;

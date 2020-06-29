@@ -42,7 +42,7 @@ void envRead(const std::string& fileName,
                                       unsigned int size,
                                       unsigned int channelsHeight,
                                       unsigned int channelsWidth,
-                                      DATA_T* data,
+                                      float* data,
                                       bool noLabels,
                                       unsigned int outputsSize,
                                       int32_t* outputTargets)
@@ -88,7 +88,7 @@ void envRead(const std::string& fileName,
                  size * sizeof(inputsFixed[0]));
 
     for (unsigned int i = 0; i < size; ++i)
-        data[i] = (DATA_T)inputsFixed[i];
+        data[i] = (float)inputsFixed[i];
 #else
     stimuli.read(reinterpret_cast<char*>(&data[0]), size * sizeof(data[0]));
 #endif
@@ -220,15 +220,15 @@ void cv_ColorSpaceTransformation(cv::Mat& frame, CV_ColorSpace colorspace)
 
 }
 
-void cv_DrawBBOX(cv::Mat& frame, DATA_T* ROIs, unsigned int nbBBox, unsigned int stepIdx)
+void cv_DrawBBOX(cv::Mat& frame, float* ROIs, unsigned int nbBBox, unsigned int stepIdx)
 { 
         for(unsigned int i = 0; i < nbBBox; ++i)
     {
-        DATA_T x = ROIs[0 + i*stepIdx];
-        DATA_T y = ROIs[1 + i*stepIdx];
-        DATA_T w = ROIs[2 + i*stepIdx];
-        DATA_T h = ROIs[3 + i*stepIdx];
-        DATA_T cls = 0;
+        float x = ROIs[0 + i*stepIdx];
+        float y = ROIs[1 + i*stepIdx];
+        float w = ROIs[2 + i*stepIdx];
+        float h = ROIs[3 + i*stepIdx];
+        float cls = 0;
 
         if(stepIdx > 4)
             cls = ROIs[4 + i*stepIdx];
@@ -255,7 +255,7 @@ void cv_Display(cv::Mat frame, unsigned int displayW, unsigned int displayH)
         cv::imshow(frameWindow.c_str(), frame);
 }
 
-void cv_toBuffer(cv::Mat& frame, DATA_T * &input)
+void cv_toBuffer(cv::Mat& frame, float * &input)
 {
 
     for(unsigned int ch = 0; ch < frame.channels(); ++ch)
