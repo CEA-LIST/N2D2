@@ -183,7 +183,7 @@ void N2D2::Network::createContext()
             if(nbCalibFiles == 0)
                 //throw std::runtime_error("Cannot find calibration files in dir " + calibDir);
                 std::cout << "Cannot find calibration files in dir " << calibDir << std::endl;
-                
+
             std::cout << "Using Entropy Calibrator" << std::endl;
             BatchStream calibrationStream(  1, //batchsize
                                             getInputDimZ(), 
@@ -2580,6 +2580,8 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("initialize", &N2D2::Network::initialize)
 
         .def("setPrecision", &N2D2::Network::setPrecision)
+        .def("reportProfiling", &N2D2::Network::reportProfiling)
+        .def("setProfiling", &N2D2::Network::setProfiling)
         .def("setMaxBatchSize", &N2D2::Network::setMaxBatchSize)
         .def("setDeviceID", &N2D2::Network::setDeviceID)
         .def("setIterBuild", &N2D2::Network::setIterBuild)
