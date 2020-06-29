@@ -41,10 +41,7 @@ endif
 ifdef BOOST_NATIVE
 		CPPFLAGS:=$(CPPFLAGS) -DBOOST_NATIVE=1
 endif
-
 endif
-
-
 
 
 CPP_FILES= $(wildcard dnn/src/*.$(EXT_CPP)) $(wildcard src/*.$(EXT_CPP))
@@ -90,6 +87,11 @@ ifndef BOOST_NATIVE
 else
 		LPPFLAGS:=$(LPPFLAGS) -std=c++0x -L$(BOOST_LIB) -lboost_python -L$(BOOST_LIB) -lboost_numpy -L$(ARCHLIB) -lpython$(PYTHON_VERSION)
 endif
+endif
+
+ifdef ONNX
+		CPPFLAGS:=$(CPPFLAGS) -DONNX=1
+		LIBS:=$(LIBS) -lnvonnxparser
 endif
 
 ifndef WRAPPER_PYTHON

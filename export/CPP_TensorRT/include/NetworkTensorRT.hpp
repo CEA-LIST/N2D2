@@ -27,8 +27,6 @@
 #include "BatchStream.hpp"
 #include "fp16.h"
 
-#include "../dnn/include/env.hpp"
-
 #if NV_TENSORRT_MAJOR > 2
 #include "IInt8EntropyCalibrator.hpp"
 #endif
@@ -162,22 +160,39 @@ public:
                         unsigned int image_width,
                         float* input_image,
                         unsigned char* overlay_data,
-                        float alpha,
-                        cudaStream_t stream);
+                        float alpha);
 
 
     void dumpMem(int size, float* data, std::string fileName);
 
     void setProfiling();
     void reportProfiling(unsigned int nbIter);
-    unsigned int getOutputNbTargets(){ return NETWORK_TARGETS; };
-    unsigned int getOutputTarget(unsigned int target){ return NB_TARGET[target]; };
-    unsigned int getOutputDimZ(unsigned int target){ return NB_OUTPUTS[target]; };
-    unsigned int getOutputDimY(unsigned int target){ return OUTPUTS_HEIGHT[target]; };
-    unsigned int getOutputDimX(unsigned int target){ return OUTPUTS_WIDTH[target]; };
-    unsigned int getInputDimZ(){ return ENV_NB_OUTPUTS; };
-    unsigned int getInputDimY(){ return ENV_SIZE_Y; };
-    unsigned int getInputDimX(){ return ENV_SIZE_X; };
+    void setInputDims(unsigned int dimX, unsigned int dimY, unsigned int dimZ) 
+    { mInputDimensions.c() = dimZ;
+      mInputDimensions.h() = dimY;
+      mInputDimensions.w() = dimX; };
+
+    void setOutputNbTargets(unsigned int nbTargets) { mTargetsDimensions.resize(nbTargets); };
+
+    void setOutputTarget(unsigned int nbTarget, 
+                        unsigned int dimZ, 
+                        unsigned int dimY, 
+                        unsigned int dimX, 
+                        unsigned int t) {
+        mTargetsDimensions[t].n() = nbTarget;
+        mTargetsDimensions[t].c() = dimZ;
+        mTargetsDimensions[t].h() = dimY;
+        mTargetsDimensions[t].w() = dimX;
+    };
+
+    unsigned int getOutputNbTargets(){ return mTargetsDimensions.size(); };
+    unsigned int getOutputTarget(unsigned int target){ return mTargetsDimensions[target].n(); };
+    unsigned int getOutputDimZ(unsigned int target){ return mTargetsDimensions[target].c(); };
+    unsigned int getOutputDimY(unsigned int target){ return mTargetsDimensions[target].h(); };
+    unsigned int getOutputDimX(unsigned int target){ return mTargetsDimensions[target].w(); };
+    unsigned int getInputDimZ(){ return mInputDimensions.c(); };
+    unsigned int getInputDimY(){ return mInputDimensions.h(); };
+    unsigned int getInputDimX(){ return mInputDimensions.w(); };
 
     void setPrecision(int nbBits) { mNbBits = nbBits ; };
 
@@ -205,7 +220,11 @@ public:
     void setParamPath(std::string path) {
         mParametersPath = path;
     };
-
+#ifdef ONNX
+    void setONNXModel(std::string path) {
+        mONNXmodel = path;
+    };
+#endif
     void setDetectorThresholds(float* thresholds, unsigned int nbClass) {
         if(mDetectorThresholds == NULL) {
             mDetectorThresholds = new float[nbClass];
@@ -243,7 +262,9 @@ public:
     std::string mCalibrationCacheName = "";
     std::string mCalibrationFolder = "";
     std::string mParametersPath = "dnn/";
-    
+#ifdef ONNX
+    std::string mONNXmodel = "";
+#endif
     /// Destructor
     ~Network() { /*free_memory();*/ };
 
@@ -261,13 +282,17 @@ public:
     nvinfer1::IBuilder* mNetBuilder;
     std::vector<nvinfer1::INetworkDefinition*> mNetDef;
     nvinfer1::DataType mDataType = nvinfer1::DataType::kFLOAT;
-
     float* mDetectorThresholds = NULL;
     double mDetectorNMS = -1.0;
+    nvinfer1::DimsCHW mInputDimensions;
+    std::vector<nvinfer1::DimsNCHW> mTargetsDimensions;
 
     void createContext();
     void setIOMemory();
     void setTensorRTPrecision();
+#ifndef ONNX
+    void setInternalDimensions();
+#endif
 
     void add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
                     unsigned int targetIdx);
@@ -519,7 +544,7 @@ void N2D2::Network::asyncExe(Input_T* in_data, unsigned int batchSize) {
 
    CHECK_CUDA_STATUS(cudaMemcpyAsync(mInOutBuffer[0],
                                     in_data,
-                                    batchSize*ENV_BUFFER_SIZE*sizeof(Input_T),
+                                    batchSize  *mInputDimensions.c() * mInputDimensions.h() * mInputDimensions.w() *sizeof(Input_T),
                                     cudaMemcpyHostToDevice,
                                     mDataStream));
 
@@ -531,7 +556,7 @@ void N2D2::Network::syncExe(Input_T* in_data, unsigned int batchSize) {
 
    CHECK_CUDA_STATUS(cudaMemcpy(mInOutBuffer[0],
                                 in_data,
-                                batchSize*ENV_BUFFER_SIZE*sizeof(Input_T),
+                                batchSize  *mInputDimensions.c() * mInputDimensions.h() * mInputDimensions.w() *sizeof(Input_T),
                                 cudaMemcpyHostToDevice));
 
    mContext->execute(batchSize, reinterpret_cast<void**>(mInOutBuffer.data()));

@@ -26,6 +26,9 @@
 #include <sstream>
 #include <stdlib.h>
 #include <NvInfer.h>
+#ifdef ONNX
+#include <NvOnnxParser.h>
+#endif
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cudnn.h>

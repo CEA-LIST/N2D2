@@ -20,7 +20,10 @@
 */
 #include "PluginLayers.hpp"
 #include "NetworkTensorRT.hpp"
-#include <iostream>
+
+#ifndef ONNX
+#include "../dnn/include/env.hpp"
+#endif
 
 PluginFactory mPluginFactory;
 
@@ -54,8 +57,39 @@ void N2D2::Network::setTensorRTPrecision() {
 
 }
 
+#ifndef ONNX
+void N2D2::Network::setInternalDimensions() {
+    std::cout << "INPUTS/OUTPUTS Dimensions set as follow :" << std::endl;
+
+    setInputDims(ENV_SIZE_X, ENV_SIZE_Y, ENV_NB_OUTPUTS);
+
+    std::cout << "Inputs Dimensions { " << getInputDimX() << ", "
+                << getInputDimY() << ", " << getInputDimZ() << "}" 
+                << std::endl;
+
+    setOutputNbTargets(NETWORK_TARGETS);
+    std::cout << "Outputs Dimensions with NbTargets: " << NETWORK_TARGETS << std::endl;
+    for(unsigned int target = 0; target < getOutputNbTargets(); ++target)
+    {
+        setOutputTarget(NB_TARGET[target], 
+                        NB_OUTPUTS[target], 
+                        OUTPUTS_HEIGHT[target], 
+                        OUTPUTS_WIDTH[target], 
+                        target);
+
+        std::cout << "=====> Target " << target << " with output targets "
+            << getOutputTarget(target) << " have dimensions " 
+            << "{" << getOutputDimX(target) << ", " << getOutputDimY(target) << ", "
+            << getOutputDimZ(target) << "}" << std::endl;
+    }
+}
+#endif
+
 void N2D2::Network::initialize() {
     std::cout << "==== INITIALIZE ==== " << std::endl;
+#ifndef ONNX
+    setInternalDimensions();
+#endif
     setIOMemory();
     std::cout << "====> Set device I/O Memory Workspace" << std::endl;
     if(mInputEngine.empty()){
@@ -67,7 +101,20 @@ void N2D2::Network::initialize() {
         if(mDataType == nvinfer1::DataType::kHALF)
             mNetBuilder->setFp16Mode(true);
 #endif
+#ifdef ONNX
+        nvonnxparser::IParser* parser = 
+            nvonnxparser::createParser(*mNetBuilder->createNetwork(), 
+                                            gLogger);
+        parser->parseFromFile(mONNXmodel.c_str(), 0);
+
+        std::cout << "====> ONNX Model Network Description"
+                << " Load from file : " << mONNXmodel << std::endl;
+#else
         networkDefinition();
+
+        std::cout << "====> Network Description  load from "
+            << " internal N2D2 definition" << std::endl;
+#endif
         std::cout << "====> Set TensorRT Network Definition done" << std::endl;
     }
     createContext();
@@ -76,19 +123,20 @@ void N2D2::Network::initialize() {
 
 void N2D2::Network::setIOMemory() {
     //Add +1 for Input buffer
-    mInOutBuffer.resize(1U + NETWORK_TARGETS);
+    mInOutBuffer.resize(1U + mTargetsDimensions.size());
+    size_t InputBufferSize 
+        = mInputDimensions.c()*mInputDimensions.h()*mInputDimensions.w()*mMaxBatchSize*sizeof(float);
+    CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[0], InputBufferSize) );
 
-    CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[0], mMaxBatchSize*ENV_OUTPUTS_SIZE*sizeof(float)) );
-
-    for(size_t i = 0; i < NETWORK_TARGETS; ++i) {
-        size_t buffSize = mMaxBatchSize*NB_OUTPUTS[i]*OUTPUTS_HEIGHT[i]*OUTPUTS_WIDTH[i] * sizeof(float);
+    for(size_t i = 0; i < mTargetsDimensions.size(); ++i) {
+        size_t buffSize = mMaxBatchSize*mTargetsDimensions[i].c()*mTargetsDimensions[i].h()*mTargetsDimensions[i].w() * sizeof(float);
         CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[1 + i], buffSize));
     }
 
     //optional, usefull for acceleration of semantic map
     CHECK_CUDA_STATUS( cudaMalloc(&mWorkspaceGPU,
-                                  mMaxBatchSize*ENV_SIZE_X*ENV_SIZE_Y*3*sizeof(unsigned char)));
-
+                                  mMaxBatchSize*mInputDimensions.w()*mInputDimensions.h()*3*sizeof(unsigned char)));
+    CHECK_CUDA_STATUS(cudaStreamCreate(&mDataStream));
 }
 
 
@@ -240,9 +288,9 @@ void N2D2::Network::output(uint32_t* out_data, unsigned int target) {
 void N2D2::Network::estimated(uint32_t* out_data, unsigned int target, bool useGPU, float threshold) {
 
    spatial_output_generation(mMaxBatchSize,
-                            NB_OUTPUTS[target],
-                            OUTPUTS_HEIGHT[target],
-                            OUTPUTS_WIDTH[target],
+                            mTargetsDimensions[target].c(),
+                            mTargetsDimensions[target].h(),
+                            mTargetsDimensions[target].w(),
                             mInOutBuffer[target + 1],
                             out_data,
                             mDataStream,
@@ -252,26 +300,25 @@ void N2D2::Network::estimated(uint32_t* out_data, unsigned int target, bool useG
 
 void N2D2::Network::log_output(float* out_data, unsigned int target) {
 
-   get_output(  NB_OUTPUTS[target],
-                OUTPUTS_HEIGHT[target],
-                OUTPUTS_WIDTH[target],
+   get_output(  mTargetsDimensions[target].c(),
+                mTargetsDimensions[target].h(),
+                mTargetsDimensions[target].w(),
                 mInOutBuffer[target + 1],
                 out_data);
 }
 
 void N2D2::Network::addOverlay(unsigned char* overlay_data, unsigned int target, float alpha) {
 
-   add_weighted(NB_OUTPUTS[target],
-                OUTPUTS_HEIGHT[target],
-                OUTPUTS_WIDTH[target],
+   add_weighted(mTargetsDimensions[target].c(),
+                mTargetsDimensions[target].h(),
+                mTargetsDimensions[target].w(),
                 reinterpret_cast<float *>(mInOutBuffer[target + 1]),
-                ENV_NB_OUTPUTS,
-                ENV_SIZE_Y,
-                ENV_SIZE_X,
+                mInputDimensions.c(),
+                mInputDimensions.h(),
+                mInputDimensions.w(),
                 reinterpret_cast<float *>(mInOutBuffer[0]),
                 overlay_data,
-                alpha,
-                mDataStream);
+                alpha);
 }
 
 
@@ -2222,8 +2269,7 @@ void N2D2::Network::add_weighted(unsigned int nbOutputs,
                                     unsigned int image_width,
                                     float* input_image,
                                     unsigned char* overlay_data,
-                                    float alpha,
-                                    cudaStream_t stream)
+                                    float alpha)
 {
 /*
     unsigned char* gpuWorkspace;
@@ -2253,7 +2299,7 @@ void N2D2::Network::add_weighted(unsigned int nbOutputs,
                        alpha,
                        threadsPerBlocks,
                        blocksPerGrid,
-                       stream);
+                       mDataStream);
 
     CHECK_CUDA_STATUS(cudaMemcpy(overlay_data,
                                  mWorkspaceGPU,
@@ -2422,8 +2468,6 @@ void N2D2::Network::get_output( unsigned int nbOutputs,
                                  mMaxBatchSize * nbOutputs * outputsWidth * outputsHeight * sizeof(float),
                                  cudaMemcpyDeviceToHost));
     
-    std::cout << "Size: " << mMaxBatchSize * nbOutputs * outputsWidth * outputsHeight << std::endl;
-
 }
 
 void N2D2::Network::reportProfiling(unsigned int nbIter)
