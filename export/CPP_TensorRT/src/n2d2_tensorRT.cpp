@@ -103,9 +103,15 @@ void N2D2::Network::initialize() {
 #endif
 #ifdef ONNX
         nvonnxparser::IParser* parser = 
-            nvonnxparser::createParser(*mNetBuilder->createNetwork(), 
+            nvonnxparser::createParser(*mNetDef.back(), 
                                             gLogger);
-        parser->parseFromFile(mONNXmodel.c_str(), 0);
+        parser->parseFromFile(mONNXmodel.c_str(), 1);
+        std::cout << "Set output the layer number : " << mNetDef.back()->getNbLayers() - 1 << std::endl;
+
+        auto last_layer = mNetDef.back()->getLayer(mNetDef.back()->getNbLayers() - 1);
+        std::cout << "Last layer name: " << last_layer->getName() << std::endl;
+        //auto last_tensor = last_layer->getOutput(0);
+        //mNetDef.back()->markOutput(*last_tensor);
 
         std::cout << "====> ONNX Model Network Description"
                 << " Load from file : " << mONNXmodel << std::endl;
@@ -2591,7 +2597,13 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("setCalibFolder", &N2D2::Network::setCalibFolder)
         .def("setParamPath", &N2D2::Network::setParamPath)
         .def("setDetectorNMS", &N2D2::Network::setDetectorNMS)
-
+#ifdef ONNX
+        .def("setONNXModel", &N2D2::Network::setONNXModel)
+#endif
+        .def("setInputDims", &N2D2::Network::setInputDims)
+        .def("setOutputNbTargets", &N2D2::Network::setOutputNbTargets)
+        .def("setOutputTarget", &N2D2::Network::setOutputTarget)
+           
         .def("estimated", &N2D2::Network::estimatedPy)
 
         .def("getOutputNbTargets", &N2D2::Network::getOutputNbTargets)

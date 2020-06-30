@@ -267,6 +267,8 @@ public:
 #endif
     /// Destructor
     ~Network() { /*free_memory();*/ };
+    nvinfer1::DimsCHW mInputDimensions;
+    std::vector<nvinfer1::DimsNCHW> mTargetsDimensions;
 
     protected :
 
@@ -284,8 +286,6 @@ public:
     nvinfer1::DataType mDataType = nvinfer1::DataType::kFLOAT;
     float* mDetectorThresholds = NULL;
     double mDetectorNMS = -1.0;
-    nvinfer1::DimsCHW mInputDimensions;
-    std::vector<nvinfer1::DimsNCHW> mTargetsDimensions;
 
     void createContext();
     void setIOMemory();
