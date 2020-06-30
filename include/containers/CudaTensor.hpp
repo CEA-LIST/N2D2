@@ -156,7 +156,11 @@ protected:
     template <class U> friend std::shared_ptr<CudaDeviceTensor<U> >
         cuda_device_tensor_cast_nocopy(const CudaBaseTensor& base);
     template <class U>
+    friend CudaTensor<U> cuda_tensor_cast(const BaseTensor& base);
+    template <class U>
     friend CudaTensor<U> cuda_tensor_cast(const CudaBaseTensor& base);
+    template <class U>
+    friend CudaTensor<U> cuda_tensor_cast_nocopy(const BaseTensor& base);
     template <class U>
     friend CudaTensor<U> cuda_tensor_cast_nocopy(const CudaBaseTensor& base);
 };
@@ -272,7 +276,11 @@ protected:
     template <class U> friend std::shared_ptr<CudaDeviceTensor<U> >
         cuda_device_tensor_cast_nocopy(const CudaBaseTensor& base);
     template <class U>
+    friend CudaTensor<U> cuda_tensor_cast(const BaseTensor& base);
+    template <class U>
     friend CudaTensor<U> cuda_tensor_cast(const CudaBaseTensor& base);
+    template <class U>
+    friend CudaTensor<U> cuda_tensor_cast_nocopy(const BaseTensor& base);
     template <class U>
     friend CudaTensor<U> cuda_tensor_cast_nocopy(const CudaBaseTensor& base);
 };
@@ -358,6 +366,13 @@ cuda_device_tensor_cast_nocopy(const CudaBaseTensor& base)
 }
 
 template <class T>
+CudaTensor<T> cuda_tensor_cast(const BaseTensor& base)
+{
+    const CudaBaseTensor& cudaBase = dynamic_cast<const CudaBaseTensor&>(base);
+    return cuda_tensor_cast<T>(cudaBase);
+}
+
+template <class T>
 CudaTensor<T> cuda_tensor_cast(const CudaBaseTensor& base)
 {
     if (base.getType() == &typeid(T))
@@ -367,6 +382,13 @@ CudaTensor<T> cuda_tensor_cast(const CudaBaseTensor& base)
         tensor_cast<T>(base),
         cuda_device_tensor_cast<T>(base),
         base.mHostBased);
+}
+
+template <class T>
+CudaTensor<T> cuda_tensor_cast_nocopy(const BaseTensor& base)
+{
+    const CudaBaseTensor& cudaBase = dynamic_cast<const CudaBaseTensor&>(base);
+    return cuda_tensor_cast_nocopy<T>(cudaBase);
 }
 
 template <class T>
