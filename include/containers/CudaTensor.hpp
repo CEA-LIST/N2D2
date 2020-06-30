@@ -195,6 +195,7 @@ public:
     inline void append(const std::vector<T>& vec);
     inline void append(const Tensor<T>& frame);
     inline void clear();
+    inline void swap(CudaTensor<T>& tensor);
     inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
     inline const CudaTensor<T> operator[](size_t i) const;
@@ -767,6 +768,19 @@ template <typename T> void N2D2::CudaTensor<T>::clear()
     Tensor<T>::clear();
 
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+}
+
+template <class T>
+void N2D2::CudaTensor<T>::swap(CudaTensor<T>& tensor)
+{
+    Tensor<T>::swap(tensor);
+
+    // CudaBaseTensor
+    std::swap(mHostBased, tensor.mHostBased);
+    mDeviceTensors.swap(tensor.mDeviceTensors);
+
+    // CudaTensor<T>
+    mDeviceTensor.swap(tensor.mDeviceTensor);
 }
 
 template <class T> N2D2::CudaTensor<T> N2D2::CudaTensor<T>::clone() const {
