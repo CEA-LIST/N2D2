@@ -527,6 +527,29 @@ void N2D2::Target::process(Database::StimuliSet set)
 
     if (mDataAsTarget) {
         mLoss.push_back(targetCell->applyLoss());
+
+        //mLoss.push_back(targetCell->applyLossDistribWeighted(20, -1.0, 1.0));
+
+        //Tensor<Float_T> kernel({7, 7, 1, 1}, 1.0 / (7.0 * 7.0));
+        //kernel(0, 0, 0, 0) = 0.0;
+        //kernel(1, 0, 0, 0) = 2.0 / 16.0;
+        //kernel(2, 0, 0, 0) = 0.0;
+        //kernel(0, 1, 0, 0) = 2.0 / 16.0;
+        //kernel(1, 1, 0, 0) = 4.0 / 16.0;
+        //kernel(2, 1, 0, 0) = 2.0 / 16.0;
+        //kernel(0, 2, 0, 0) = 0.0;
+        //kernel(1, 2, 0, 0) = 2.0 / 16.0;
+        //kernel(2, 2, 0, 0) = 0.0;
+
+        //mLoss.push_back(targetCell->applyLossThroughKernel(kernel,
+        //    std::bind((double(Cell_Frame_Top::*)(unsigned int, double, double))
+        //            &Cell_Frame_Top::applyLossDistribWeighted,
+        //        targetCell.get(), 100U, -1.0, 1.0)));
+
+        //mLoss.push_back(targetCell->applyLossThroughKernel(kernel,
+        //    std::bind((double(Cell_Frame_Top::*)())
+        //        &Cell_Frame_Top::applyLoss,
+        //    targetCell.get())));
         return;
     }
 

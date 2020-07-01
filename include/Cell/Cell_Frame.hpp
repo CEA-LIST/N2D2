@@ -89,6 +89,11 @@ public:
                              double defaultVal);
     virtual void setOutputTargets(const BaseTensor& targets);
     virtual double applyLoss();
+    virtual double applyLossDistribWeighted(unsigned int quantSteps,
+                                            double rangeMin,
+                                            double rangeMax);
+    virtual double applyLossThroughKernel(const BaseTensor& kernel,
+        std::function<double()> lossFunc);
     virtual void setOutputErrors(const BaseTensor& errors);
     virtual BaseTensor& getOutputs()
     {

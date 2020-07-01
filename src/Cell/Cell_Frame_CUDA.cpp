@@ -24,6 +24,7 @@
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
+#include "Cell/ConvCell_Frame_Kernels.hpp"
 
 template <class T>
 N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
@@ -466,18 +467,211 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
 template <class T>
 double N2D2::Cell_Frame_CUDA<T>::applyLoss()
 {
-    double loss = 0.0;
     mOutputs.synchronizeDToH();
 
-    for (unsigned int index = 0; index < mOutputs.size(); ++index) {
-        const double error = mDiffInputs(index) - mOutputs(index);
-        mDiffInputs(index) = error;
-        loss += error * error;
-    }
+    const double loss = Cell_Frame_Top::applyLoss<T>(mDiffInputs, mOutputs);
 
     mDiffInputs.setValid();
     mDiffInputs.synchronizeHToD();
-    return (loss / mOutputs.dimB());
+    return loss;
+}
+
+template <class T>
+double N2D2::Cell_Frame_CUDA<T>::applyLossDistribWeighted(
+    unsigned int quantSteps,
+    double rangeMin,
+    double rangeMax)
+{
+    mOutputs.synchronizeDToH();
+
+    const double loss = Cell_Frame_Top::applyLossDistribWeighted<T>(
+        mDiffInputs, mOutputs,
+        quantSteps, rangeMin, rangeMax);
+
+    mDiffInputs.setValid();
+    mDiffInputs.synchronizeHToD();
+    return loss;
+}
+
+template <class T>
+double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
+    const BaseTensor& baseKernel,
+    std::function<double()> lossFunc)
+{
+    const Tensor<T>& kernel = tensor_cast<T>(baseKernel);
+    CudaTensor<T> cudaKernel(kernel.dims());
+    cudaKernel = kernel;  // TODO: could be optimized by avoiding the copy
+    cudaKernel.synchronizeHToD();
+
+    const int paddings[2] = {((int)kernel.dimY() - 1) / 2,
+                           ((int)kernel.dimX() - 1) / 2};
+    const int strides[2] = {1, 1};
+    const int upscales[2] = {1, 1};
+
+    cudnnConvolutionDescriptor_t convDesc;
+    CHECK_CUDNN_STATUS(cudnnCreateConvolutionDescriptor(&convDesc));
+    CHECK_CUDNN_STATUS(
+        cudnnSetConvolutionNdDescriptor(convDesc,
+                                        2,
+                                        &paddings[0],
+                                        &strides[0],
+                                        &upscales[0],
+                                        CUDNN_CROSS_CORRELATION,
+                                        CudaContext::data_type<T>::value));
+
+    const std::vector<int> kernels(cudaKernel.dims().rbegin(),
+                                   cudaKernel.dims().rend());
+
+    cudnnFilterDescriptor_t filterDesc;
+    CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&filterDesc));
+#if CUDNN_VERSION >= 5000
+    CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(filterDesc,
+                                                    CudaContext::data_type<T>::value,
+                                                    CUDNN_TENSOR_NCHW,
+                                                    4,
+                                                    &kernels[0]));
+#else
+    CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(filterDesc,
+                                                    CudaContext::data_type<T>::value,
+                                                    4,
+                                                    &kernels[0]));
+#endif
+
+    cudnnConvolutionFwdAlgo_t fwdAlgo = cudnnConvolutionFwdAlgo_t();
+    CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardAlgorithm(
+        CudaContext::cudnnHandle(),
+        mOutputs.getCudnnTensorDesc(),
+        filterDesc,
+        convDesc,
+        mOutputs.getCudnnTensorDesc(),
+        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+        0,
+        &fwdAlgo));
+
+    size_t workspaceSize = 0;
+    void* workspace;
+
+    CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardWorkspaceSize(
+        CudaContext::cudnnHandle(),
+        mOutputs.getCudnnTensorDesc(),
+        filterDesc,
+        convDesc,
+        mOutputs.getCudnnTensorDesc(),
+        fwdAlgo,
+        &workspaceSize));
+
+#if CUDNN_VERSION >= 5000
+    cudnnConvolutionBwdDataAlgo_t bwdAlgo = cudnnConvolutionBwdDataAlgo_t();
+    size_t bwdWorkspaceSize = 0;
+
+    CHECK_CUDNN_STATUS(cudnnGetConvolutionBackwardDataWorkspaceSize(
+        CudaContext::cudnnHandle(),
+        // same arguments as cudnnGetConvolutionBackwardDataAlgorithm() -->
+        filterDesc,
+        mOutputs.getCudnnTensorDesc(),
+        convDesc,
+        mOutputs.getCudnnTensorDesc(),
+        // <--
+        bwdAlgo,
+        &bwdWorkspaceSize));
+
+    if (bwdWorkspaceSize > workspaceSize)
+        workspaceSize = bwdWorkspaceSize;
+#endif
+
+    if (workspaceSize > 0)
+        CHECK_CUDA_STATUS(cudaMalloc(&workspace, workspaceSize));
+
+    const T alpha = T(1.0);
+    const T beta = T(0.0);
+
+    CudaTensor<T> outputs(mOutputs.dims());
+    CudaTensor<T> diffInputs(mDiffInputs.dims());
+
+    mOutputs.swap(outputs);
+    mDiffInputs.swap(diffInputs);
+
+    diffInputs.synchronizeHToD();
+
+    CHECK_CUDNN_STATUS(
+        cudnnConvolutionForward(CudaContext::cudnnHandle(),
+                                &alpha,
+                                outputs.getCudnnTensorDesc(),
+                                outputs.getDevicePtr(),
+                                filterDesc,
+                                cudaKernel.getDevicePtr(),
+                                convDesc,
+                                fwdAlgo,
+                                workspace,
+                                workspaceSize,
+                                &beta,
+                                mOutputs.getCudnnTensorDesc(),
+                                mOutputs.getDevicePtr()));
+
+    CHECK_CUDNN_STATUS(
+        cudnnConvolutionForward(CudaContext::cudnnHandle(),
+                                &alpha,
+                                diffInputs.getCudnnTensorDesc(),
+                                diffInputs.getDevicePtr(),
+                                filterDesc,
+                                cudaKernel.getDevicePtr(),
+                                convDesc,
+                                fwdAlgo,
+                                workspace,
+                                workspaceSize,
+                                &beta,
+                                mDiffInputs.getCudnnTensorDesc(),
+                                mDiffInputs.getDevicePtr()));
+
+    mOutputs.synchronizeDToH();
+    mDiffInputs.synchronizeDToH();
+
+    const double loss = lossFunc();
+
+    mDiffInputs.synchronizeHToD();
+
+#if CUDNN_VERSION >= 5000
+    CHECK_CUDNN_STATUS(cudnnConvolutionBackwardData(
+        CudaContext::cudnnHandle(),
+        &alpha,
+        filterDesc,
+        cudaKernel.getDevicePtr(),
+        mDiffInputs.getCudnnTensorDesc(),
+        mDiffInputs.getDevicePtr(),
+        convDesc,
+        bwdAlgo,
+        workspace,
+        workspaceSize,
+        &beta,
+        diffInputs.getCudnnTensorDesc(),
+        diffInputs.getDevicePtr()));
+#else
+    CHECK_CUDNN_STATUS(cudnnConvolutionBackwardData(
+        CudaContext::cudnnHandle(),
+        &alpha,
+        filterDesc,
+        cudaKernel.getDevicePtr(),
+        mDiffInputs.getCudnnTensorDesc(),
+        mDiffInputs.getDevicePtr(),
+        convDesc,
+        &beta,
+        diffInputs.getCudnnTensorDesc(),
+        diffInputs.getDevicePtr()));
+#endif
+
+    diffInputs.swap(mDiffInputs);
+    outputs.swap(mOutputs);
+
+    mDiffInputs.setValid();
+
+    // Clean-up CuDNN
+    cudnnDestroyFilterDescriptor(filterDesc);
+    cudnnDestroyConvolutionDescriptor(convDesc);
+
+    if (workspaceSize > 0)
+        cudaFree(workspace);
+
+    return loss;
 }
 
 template <class T>

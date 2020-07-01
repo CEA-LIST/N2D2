@@ -23,6 +23,95 @@
 const char* N2D2::Cell_Frame_Top::FRAME_TYPE = "Frame";
 const char* N2D2::Cell_Frame_Top::FRAME_CUDA_TYPE = "Frame_CUDA";
 
+template <class T>
+double N2D2::Cell_Frame_Top::applyLoss(
+    Tensor<T>& diffInputs,
+    const Tensor<T>& outputs)
+{
+    double loss = 0.0;
+
+    for (unsigned int index = 0; index < outputs.size(); ++index) {
+        const double error = diffInputs(index) - outputs(index);
+        diffInputs(index) = error;
+        loss += error * error;
+    }
+
+    return (loss / outputs.dimB());
+}
+
+template <class T>
+double N2D2::Cell_Frame_Top::applyLossDistribWeighted(
+    Tensor<T>& diffInputs,
+    const Tensor<T>& outputs,
+    unsigned int quantSteps,
+    double rangeMin,
+    double rangeMax)
+{
+    std::vector<unsigned int> dist(quantSteps, 0U);
+
+    for (unsigned int index = 0; index < outputs.size(); ++index) {
+        const unsigned int distIndex = Utils::clamp<unsigned int>(
+            Utils::round((quantSteps - 1)
+                * (diffInputs(index) - rangeMin)
+                    / (double)(rangeMax - rangeMin)),
+            0U, quantSteps - 1);
+
+        ++dist[distIndex];
+    }
+
+    double loss = 0.0;
+
+    for (unsigned int index = 0; index < outputs.size(); ++index) {
+        const unsigned int distIndex = Utils::clamp<unsigned int>(
+            Utils::round((quantSteps - 1)
+                * (diffInputs(index) - rangeMin)
+                    / (double)(rangeMax - rangeMin)),
+            0U, quantSteps - 1);
+
+        const double error = (diffInputs(index) - outputs(index))
+                                / dist[distIndex];
+
+        diffInputs(index) = error;
+        loss += error * error;
+    }
+
+    return (loss / outputs.dimB());
+}
+
+namespace N2D2 {
+template double Cell_Frame_Top::applyLoss(
+    Tensor<half_float::half>& diffInputs,
+    const Tensor<half_float::half>& outputs);
+
+template double Cell_Frame_Top::applyLoss(
+    Tensor<float>& diffInputs,
+    const Tensor<float>& outputs);
+
+template double Cell_Frame_Top::applyLoss(
+    Tensor<double>& diffInputs,
+    const Tensor<double>& outputs);
+
+template double Cell_Frame_Top::applyLossDistribWeighted(
+    Tensor<half_float::half>& diffInputs,
+    const Tensor<half_float::half>& outputs,
+    unsigned int quantSteps,
+    double rangeMin,
+    double rangeMax);
+
+template double Cell_Frame_Top::applyLossDistribWeighted(
+    Tensor<float>& diffInputs,
+    const Tensor<float>& outputs,
+    unsigned int quantSteps,
+    double rangeMin,
+    double rangeMax);
+
+template double Cell_Frame_Top::applyLossDistribWeighted(
+    Tensor<double>& diffInputs,
+    const Tensor<double>& outputs,
+    unsigned int quantSteps,
+    double rangeMin,
+    double rangeMax);
+}
 
 #ifdef PYBIND
 #include <pybind11/pybind11.h>
