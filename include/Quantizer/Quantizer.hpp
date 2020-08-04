@@ -35,6 +35,7 @@ public:
     virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
     virtual void addBiases(BaseTensor& biases, BaseTensor& diffBiases) = 0;
     virtual void addActivations(BaseTensor& activations, BaseTensor& diffActivations) = 0;
+    virtual void addActivations(BaseTensor& activations) = 0;
     //virtual void addCell(Cell* cell);
 
     virtual void initialize(){};
@@ -55,6 +56,8 @@ public:
         " without learnable parameters!");
         return mSolver;   
     };
+
+    virtual const char* getType() const = 0;
 
 
     virtual BaseTensor& getQuantizedWeights(unsigned int k) = 0;

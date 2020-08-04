@@ -342,12 +342,14 @@ void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& ce
                                                         "WeightsSolver.");
     }
     if (cell->getQuantizer()) {
-        std::cout << "Added " << cell->getName() <<  " quantizer" << std::endl; 
+        std::cout << "Added " <<  cell->getQuantizer()->getType() << 
+            " quantizer to " << cell->getName() << std::endl; 
         cell->getQuantizer()->setPrefixedParameters(params, "Quantizers.");
         cell->getQuantizer()->setPrefixedParameters(params,
                                                         "Quantizer.");
         if (cell->getQuantizer()->getSolver()) {
-            std::cout << "Added " << cell->getName() <<  " quantizer solver" << std::endl; 
+            std::cout << "Added " << cell->getQuantizer()->getSolver()->getType() << 
+             " quantizer solver to " << cell->getName() << std::endl; 
             cell->getQuantizer()->setPrefixedParameters(params, "QuantizerSolvers.");
             cell->getQuantizer()->setPrefixedParameters(params,
                                                         "QuantizerSolver.");

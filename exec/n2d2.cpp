@@ -1942,7 +1942,7 @@ int main(int argc, char* argv[]) try
     std::shared_ptr<Environment> env = std::dynamic_pointer_cast
         <Environment>(deepNet->getStimuliProvider());
 
-    if (!env)
+    if (!env) 
         return 0;
 
     // Spike-based testing
@@ -1954,6 +1954,7 @@ int main(int argc, char* argv[]) try
     if (opt.learnStdp > 0) {
         learnStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
     }
+
 
     testStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
 

@@ -547,15 +547,24 @@ the API cudnnGetConvolutionForwardMaxCount().
     }
 
     if (mQuantizer) {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
-                mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
-                mQuantizer->addBiases(*mBias, mDiffBias);
+        for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(*mBias, mDiffBias);
+        }
+        
+        if (!mDiffOutputs.empty()){
+            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
                 mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
             }
-            //mQuantizer.addBiases(mBias);
-            mQuantizer->initialize();
         }
+        else {
+            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+                mQuantizer->addActivations(mInputs[k]);
+            }
+        }
+        mQuantizer->initialize();
     }
 }
 
@@ -930,6 +939,10 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
 
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+
+    if(mQuantizer){
+        mQuantizer->update();
+    }
 }
 
 template <class T>

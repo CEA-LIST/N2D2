@@ -60,6 +60,7 @@ public:
 
     virtual BaseTensor& getDiffFullPrecisionWeights(unsigned int k)
     {
+        //mDiffFullPrecisionWeights[k].synchronizeDToH();
         return mDiffFullPrecisionWeights[k];
     }
 
@@ -116,7 +117,9 @@ protected:
     CudaInterface<> mFullPrecisionWeights;
     CudaInterface<T> mQuantizedWeights;
 
-    std::shared_ptr<CudaBaseTensor> mFullPrecisionBiases;
+    // TODO: Possible to avoid raw pointer? 
+    // Problem: mBias in Cell sometimes Tensor and sometimes shared_ptr
+    CudaBaseTensor* mFullPrecisionBiases;
     CudaTensor<T> mQuantizedBiases;
 
     CudaInterface<> mFullPrecisionActivations;
@@ -127,7 +130,7 @@ protected:
     CudaInterface<> mDiffQuantizedWeights;
 
     CudaTensor<T> mDiffFullPrecisionBiases;
-    std::shared_ptr<CudaBaseTensor> mDiffQuantizedBiases;
+    CudaBaseTensor* mDiffQuantizedBiases;
 
     CudaInterface<T> mDiffFullPrecisionActivations;
     CudaInterface<> mDiffQuantizedActivations;
