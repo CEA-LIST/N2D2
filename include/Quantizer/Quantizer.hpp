@@ -31,6 +31,10 @@ namespace N2D2 {
 class Quantizer:  public Parameterizable {
 public:
 
+    Quantizer()
+      : mBitPrecision(this, "bitPrecision", 8)
+    {};
+
      //void addInput(BaseTensor& inputs, BaseTensor& diffOutputs);
     virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
     virtual void addBiases(BaseTensor& biases, BaseTensor& diffBiases) = 0;
@@ -55,6 +59,11 @@ public:
         throw std::runtime_error("Error: Tried to get solver in Quantizer" 
         " without learnable parameters!");
         return mSolver;   
+    };
+    
+    void setBitPrecision(unsigned int bit)
+    {
+        mBitPrecision = bit;
     };
 
     virtual const char* getType() const = 0;
@@ -89,6 +98,8 @@ protected:
     // NOTE: At the moment only one solver for all
     // trainable parameters in quantizer
     std::shared_ptr<Solver> mSolver;
+    
+    Parameter<unsigned int> mBitPrecision;
     
 private:
 
