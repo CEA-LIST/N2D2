@@ -785,6 +785,7 @@ void N2D2::FcCell_Frame_CUDA<T>::update()
     }
 
     if(mQuantizer){
+        if (strcmp(mQuantizer->getType(),"LSQ") == 0) std::cout << getName() << ": ";
         mQuantizer->update();
     }
 }
