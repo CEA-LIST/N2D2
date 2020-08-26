@@ -28,7 +28,11 @@ N2D2::Registrar<N2D2::DeepNetExport> N2D2::CPP_TensorRT_DeepNetExport::mRegistra
 void N2D2::CPP_TensorRT_DeepNetExport::generate(DeepNet& deepNet,
                                              const std::string& dirName)
 {
-    CPP_DeepNetExport::generate(deepNet, dirName);
+    Utils::createDirectories(dirName + "/dnn/include");
+    Utils::createDirectories(dirName + "/dnn/src");
+
+    CPP_DeepNetExport::generateParamsHeader(dirName + "/include/params.h");
+    CPP_DeepNetExport::generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
 
     generateDeepNetProgram(
         deepNet, "N2D2::Network::", dirName + "/dnn/src/network.cpp");
