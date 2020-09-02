@@ -31,7 +31,7 @@ namespace N2D2 {
  * ConvCell, CPP_EXPORT
 **/
 
-class CPP_ConvCellExport : public ConvCellExport {
+class CPP_ConvCellExport : public ConvCellExport, public CPP_CellExport {
 public:
     static void generate(const ConvCell& cell, const std::string& dirName);
     static void generateHeaderFreeParameters(const ConvCell& cell,  std::ofstream& header);
@@ -39,13 +39,20 @@ public:
     static void generateHeaderConstants(const ConvCell& cell, std::ofstream& header);
 
     static void generateHeaderBias(const ConvCell& cell, std::ofstream& header);
-    static void generateHeaderBiasVariable(const ConvCell& cell, std::ofstream& header);
-    static void generateHeaderBiasValues(const ConvCell& cell, std::ofstream& header);
-
     static void generateHeaderWeights(const ConvCell& cell, std::ofstream& header);
+
+    static bool isDWConvolution(const Cell& cell);
+
+    static std::unique_ptr<CPP_ConvCellExport> getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                                 const Cell& cell, 
+                                 std::stringstream& includes,
+                                 std::stringstream& buffers, 
+                                 std::stringstream& functionCalls);
 
 private:
     static Registrar<ConvCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 

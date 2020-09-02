@@ -34,7 +34,7 @@ namespace N2D2 {
 class CPP_cuDNN_FMPCellExport : public FMPCellExport,
                                 public CPP_cuDNN_CellExport {
 public:
-    static void generate(FMPCell& cell, const std::string& dirName);
+    static void generate(const FMPCell& cell, const std::string& dirName);
 
     static std::unique_ptr<CPP_cuDNN_FMPCellExport> getInstance(Cell& cell);
 

@@ -67,9 +67,7 @@ void N2D2::CPP_FMPCellExport::generateHeaderConstants(const FMPCell& cell, std::
                                                         << prefix << "_OUTPUTS_HEIGHT)\n"
            << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
                                                          << prefix << "_CHANNELS_WIDTH*" 
-                                                         << prefix << "_CHANNELS_HEIGHT)\n"
-           << "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix << "_OUTPUTS_SIZE, " 
-                                                           << prefix << "_CHANNELS_SIZE))\n\n";
+                                                         << prefix << "_CHANNELS_HEIGHT)\n\n";
 }
 
 void N2D2::CPP_FMPCellExport::generateHeaderConnections(const FMPCell& cell, std::ofstream& header)

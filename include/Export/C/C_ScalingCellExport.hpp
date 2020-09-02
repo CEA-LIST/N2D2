@@ -34,6 +34,8 @@ public:
     static void generate(const ScalingCell& cell, const std::string& dirName);
     static void generateHeaderConstants(const ScalingCell& cell, std::ofstream& header);
 
+    static void generateScaling(const ScalingCell& cell, std::ofstream& header);
+
     static std::unique_ptr<C_ScalingCellExport> getInstance(Cell& cell);
     void generateCellData(Cell& cell,
                           const std::string& outputName,

@@ -23,6 +23,8 @@
 #include "Export/ScalingCellExport.hpp"
 #include "Export/CPP/CPP_CellExport.hpp"
 #include "Export/CPP/CPP_ScalingCellExport.hpp"
+#include "Export/C/C_CellExport.hpp"
+#include "Export/C/C_ScalingCellExport.hpp"
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
 
@@ -52,38 +54,97 @@ void N2D2::CPP_ScalingCellExport::generate(const ScalingCell& cell, const std::s
 }
 
 void N2D2::CPP_ScalingCellExport::generateHeaderConstants(const ScalingCell& cell, std::ofstream& header) {
-    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
+    const std::string prefix = N2D2::Utils::upperCase(identifier);
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
            << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
            << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
            << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
            << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
-           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
-           << "\n";
-    
-    if(cell.getScaling().getMode() == ScalingMode::FLOAT_MULT) {
-        const std::vector<Float_T>& rescaleFactorPerOutput = cell.getScaling()
-                                                                 .getFloatingPointScaling()
-                                                                 .getScalingPerOutput();
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n\n";
 
-        header << "static const float " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {"
-               << Utils::join(rescaleFactorPerOutput.begin(), rescaleFactorPerOutput.end(), ',') 
-               << "};\n";
-    }
-    else if(cell.getScaling().getMode() == ScalingMode::FIXED_MULT) {
-        const FixedPointScaling& fpScaling = cell.getScaling().getFixedPointScaling();
+    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
+                                                        << prefix << "_OUTPUTS_WIDTH*" 
+                                                        << prefix << "_OUTPUTS_HEIGHT)\n"
+           << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
+                                                         << prefix << "_CHANNELS_WIDTH*" 
+                                                         << prefix << "_CHANNELS_HEIGHT)\n\n";
 
-        header << "#define " << prefix << "_NB_FRACTIONAL_BITS " << fpScaling.getFractionalBits() << "\n";
-        header << "static const std::int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {"
-               << Utils::join(fpScaling.getScalingPerOutput().begin(), 
-                              fpScaling.getScalingPerOutput().end(), ',') 
-               << "};\n";
+    CPP_CellExport::generateScaling(prefix, cell.getScaling(),
+        DeepNetExport::isCellOutputUnsigned(cell), header);
+
+    // TODO: needed for DNeuro_V2 emulator. Use the CPP way in the future?
+    if (cell.getScaling().getMode() == ScalingMode::FLOAT_MULT
+        || cell.getScaling().getMode() == ScalingMode::FIXED_MULT)
+    {
+        C_ScalingCellExport::generateScaling(cell, header);
     }
-    else {
-        throw std::runtime_error("Unsupported scaling mode for cell " + cell.getName() + ".");
+}
+
+std::unique_ptr<N2D2::CPP_ScalingCellExport>
+N2D2::CPP_ScalingCellExport::getInstance(Cell& /*cell*/)
+{
+    return std::unique_ptr<CPP_ScalingCellExport>(new CPP_ScalingCellExport);
+}
+
+void N2D2::CPP_ScalingCellExport::generateCallCode(
+    const DeepNet& deepNet,
+    const Cell& cell, 
+    std::stringstream& includes,
+    std::stringstream& /*buffers*/, 
+    std::stringstream& functionCalls)
+{
+    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
+    const std::string prefix = N2D2::Utils::upperCase(identifier);
+
+    includes << "#include \"" << identifier << ".hpp\"\n";
+
+    generateBenchmarkStart(deepNet, cell, functionCalls);
+
+    const auto& parents = cell.getParentsCells();
+    if(parents.empty()) {
+        throw std::runtime_error("Cell must have a parent.");
     }
 
-    
-    header << "\n";
+    const std::string inputBuffer
+        = Utils::CIdentifier(parents[0] ? parents[0]->getName() + "_output"
+                                        : "inputs");
+    const std::string outputBuffer
+        = Utils::CIdentifier(cell.getName() + "_output");
+
+    functionCalls << "    scalingPropagate<" 
+                << prefix << "_NB_CHANNELS, "
+                << prefix << "_CHANNELS_HEIGHT, "
+                << prefix << "_CHANNELS_WIDTH, "
+                << prefix << "_NB_OUTPUTS, "
+                << prefix << "_OUTPUTS_HEIGHT, " 
+                << prefix << "_OUTPUTS_WIDTH, ";
+
+    // Memory mapping: input
+    const std::string parentIdentifier
+        = Utils::CIdentifier((parents[0]) ? parents[0]->getName() : "env");
+    const std::string parentPrefix
+        = N2D2::Utils::upperCase(parentIdentifier);
+
+    functionCalls << parentPrefix << "_MEM_CONT_OFFSET, "
+        << parentPrefix << "_MEM_CONT_SIZE, "
+        << parentPrefix << "_MEM_WRAP_OFFSET, "
+        << parentPrefix << "_MEM_WRAP_SIZE, "
+        << parentPrefix << "_MEM_STRIDE, ";
+
+    // Memory mapping: output
+    functionCalls << prefix << "_MEM_CONT_OFFSET, "
+                << prefix << "_MEM_CONT_SIZE, "
+                << prefix << "_MEM_WRAP_OFFSET, "
+                << prefix << "_MEM_WRAP_SIZE, "
+                << prefix << "_MEM_STRIDE"
+            << ">("
+                << inputBuffer << " , "
+                << outputBuffer << " , "
+                << prefix << "_SCALING"
+            << ");\n\n";
+
+    generateBenchmarkEnd(deepNet, cell, functionCalls);
+    generateSaveOutputs(deepNet, cell, functionCalls);
 }

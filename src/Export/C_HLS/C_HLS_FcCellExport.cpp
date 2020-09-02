@@ -129,5 +129,5 @@ void N2D2::C_HLS_FcCellExport::generateCellPrototype(
     if (input2d)
         prog << prefix << "_NB_CHANNELS, ";
 
-    prog << prefix << "_NB_WEIGHTS)\n";
+    prog << prefix << "_WEIGHTS_SIZE)\n";
 }

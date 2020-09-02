@@ -445,7 +445,7 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
 
     prog <<  "/*******INPUT DATA TRANSFER TO DEVICE*********/\n" ;
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy(" << inputsBuffer << "buffer[0]"
-        << ", in_data, batchSize*ENV_BUFFER_SIZE*sizeof(DATA_T),"
+        << ", in_data, batchSize*ENV_OUTPUTS_SIZE*sizeof(DATA_T),"
         << " cudaMemcpyHostToDevice) );\n";
 
     const std::vector<std::shared_ptr<Target> > outputTargets

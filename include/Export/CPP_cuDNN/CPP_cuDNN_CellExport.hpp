@@ -44,7 +44,7 @@ public:
         return rMap;
     }
 
-    static void generateHeaderIncludes(Cell& cell, std::ofstream& header);
+    static void generateHeaderIncludes(const Cell& cell, std::ofstream& header);
 
     inline static std::unique_ptr<CPP_cuDNN_CellExport> getInstance(Cell& cell);
 

@@ -97,8 +97,7 @@ void N2D2::C_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
         << "\n\n"
            "#define ENV_DATA_UNSIGNED " << mEnvDataUnsigned
         << "\n\n"
-           "#define ENV_OUTPUTS_SIZE (ENV_NB_OUTPUTS*ENV_SIZE_X*ENV_SIZE_Y)\n"
-           "#define ENV_BUFFER_SIZE (ENV_OUTPUTS_SIZE)\n\n";
+           "#define ENV_OUTPUTS_SIZE (ENV_NB_OUTPUTS*ENV_SIZE_X*ENV_SIZE_Y)\n\n";
 
     const std::shared_ptr<Cell> cell = deepNet.getTargetCell();
 

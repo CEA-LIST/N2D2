@@ -33,7 +33,7 @@ namespace N2D2 {
 class CPP_cuDNN_SoftmaxCellExport : public SoftmaxCellExport,
                                     public CPP_cuDNN_CellExport {
 public:
-    static void generate(SoftmaxCell& cell, const std::string& dirName);
+    static void generate(const SoftmaxCell& cell, const std::string& dirName);
 
     static std::unique_ptr<CPP_cuDNN_SoftmaxCellExport> getInstance(Cell& cell);
 

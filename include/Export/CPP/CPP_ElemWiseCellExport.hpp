@@ -30,13 +30,20 @@ namespace N2D2 {
  * Class for methods of ElemWise for all CPP exports type
  * ElemWiseCell, CPP_EXPORT
 **/
-class CPP_ElemWiseCellExport : public ElemWiseCellExport {
+class CPP_ElemWiseCellExport : public ElemWiseCellExport, public CPP_CellExport {
 public:
     static void generate(ElemWiseCell& cell, const std::string& dirName);
     static void generateHeaderConstants(ElemWiseCell& cell,
                                         std::ofstream& header);
     static void generateHeaderFreeParameters(ElemWiseCell& cell,
                                              std::ofstream& header);
+
+    static std::unique_ptr<CPP_ElemWiseCellExport> getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                                 const Cell& cell, 
+                                 std::stringstream& includes,
+                                 std::stringstream& buffers, 
+                                 std::stringstream& functionCalls);
 private:
     static Registrar<ElemWiseCellExport> mRegistrar;
 };

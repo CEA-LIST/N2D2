@@ -26,7 +26,9 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/PaddingCell.hpp"
+#include "Cell/ElemWiseCell.hpp"
 #include "Export/CellExport.hpp"
+#include "Export/CPP/Cells/CPP_ConcatCell.hpp"
 
 bool N2D2::DeepNetExport::mUnsignedData = true;
 bool N2D2::DeepNetExport::mEnvDataUnsigned = false;

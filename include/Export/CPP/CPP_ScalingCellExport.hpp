@@ -21,17 +21,25 @@
 #ifndef N2D2_CPP_SCALING_CELL_EXPORT_H
 #define N2D2_CPP_SCALING_CELL_EXPORT_H
 
-#include <iosfwd>
-#include <string>
+#include "Export/CPP/CPP_CellExport.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Export/ScalingCellExport.hpp"
 
 
 namespace N2D2 {
 
 class ScalingCell;
 
-class CPP_ScalingCellExport {
+class CPP_ScalingCellExport : public CPP_CellExport {
 public:
     static void generate(const ScalingCell& cell, const std::string& dirName);
+
+    static std::unique_ptr<CPP_ScalingCellExport> getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                            const Cell& cell,
+                            std::stringstream& includes,
+                            std::stringstream& buffers, 
+                            std::stringstream& functionCalls);
 
 private:
     static void generateHeaderConstants(const ScalingCell& cell, std::ofstream& header);
@@ -39,4 +47,3 @@ private:
 }
 
 #endif // N2D2_CPP_SCALING_CELL_EXPORT_H
-

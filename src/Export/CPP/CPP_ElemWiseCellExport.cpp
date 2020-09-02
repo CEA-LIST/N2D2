@@ -19,11 +19,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
 #include "Export/CPP/CPP_ElemWiseCellExport.hpp"
 
 N2D2::Registrar<N2D2::ElemWiseCellExport>
 N2D2::CPP_ElemWiseCellExport::mRegistrar(
-    "CPP", N2D2::CPP_ElemWiseCellExport::generate);
+    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
+    N2D2::CPP_ElemWiseCellExport::generate);
 
 void N2D2::CPP_ElemWiseCellExport::generate(ElemWiseCell& cell,
                                              const std::string& dirName)
@@ -53,6 +55,9 @@ void N2D2::CPP_ElemWiseCellExport::generateHeaderConstants(ElemWiseCell& cell,
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(
                                                     cell.getName()));
 
+    const auto parentsCells = cell.getParentsCells();
+    header << "#define " << prefix << "_NB_INPUTS " << parentsCells.size() << "\n";
+
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs()
            << "\n"
               "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
@@ -75,9 +80,7 @@ void N2D2::CPP_ElemWiseCellExport::generateHeaderConstants(ElemWiseCell& cell,
            << "_OUTPUTS_HEIGHT)\n"
               "#define " << prefix << "_CHANNELS_SIZE (" << prefix
            << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+           << "_CHANNELS_HEIGHT)\n\n";
 
     const std::vector<Float_T> weights = cell.getWeights();
     header << "static WDATA_T  " << prefix << "_WEIGHTS[";
@@ -134,4 +137,85 @@ void N2D2::CPP_ElemWiseCellExport::generateHeaderConstants(ElemWiseCell& cell,
            << std::endl;
 
 
+}
+
+std::unique_ptr<N2D2::CPP_ElemWiseCellExport>
+N2D2::CPP_ElemWiseCellExport::getInstance(Cell& /*cell*/)
+{
+    return std::unique_ptr<CPP_ElemWiseCellExport>(new CPP_ElemWiseCellExport);
+}
+
+void N2D2::CPP_ElemWiseCellExport::generateCallCode(
+    const DeepNet& deepNet,
+    const Cell& cell, 
+    std::stringstream& includes,
+    std::stringstream& /*buffers*/, 
+    std::stringstream& functionCalls)
+{
+    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
+    const std::string prefix = N2D2::Utils::upperCase(identifier);
+
+    // includes
+    includes << "#include \"" << identifier << ".hpp\"\n";
+
+    // functionCalls: input/output buffers
+    const std::string inputType = DeepNetExport::isCellInputsUnsigned(cell)
+        ? "UDATA_T" : "DATA_T";
+
+    const auto& parents = deepNet.getParentCells(cell.getName());
+
+    std::ostringstream inputBufferStr;
+
+    for (const auto& parentCell: parents) {
+        inputBufferStr << ", " << Utils::CIdentifier(parentCell->getName()
+                                                        + "_output");
+    }
+
+    const std::string inputBuffer = inputBufferStr.str();
+    const std::string outputBuffer = Utils::CIdentifier(cell.getName() + "_output");
+
+    generateBenchmarkStart(deepNet, cell, functionCalls);
+
+    // functionCalls: propagate
+    // elemWisePropagate is a variadic template
+    functionCalls << "    elemWisePropagate<" 
+                        << prefix << "_NB_INPUTS, "
+                        << prefix << "_CHANNELS_HEIGHT, "
+                        << prefix << "_CHANNELS_WIDTH, "
+                        << prefix << "_NB_OUTPUTS, "
+                        << prefix << "_OUTPUTS_HEIGHT, " 
+                        << prefix << "_OUTPUTS_WIDTH, "
+                        << prefix << "_ELEM_OP, "
+                        << prefix << "_ACTIVATION, "
+                        // Memory mapping: output
+                        << prefix << "_MEM_CONT_OFFSET, "
+                        << prefix << "_MEM_CONT_SIZE, "
+                        << prefix << "_MEM_WRAP_OFFSET, " 
+                        << prefix << "_MEM_WRAP_SIZE, " 
+                        << prefix << "_MEM_STRIDE";
+
+    for (const auto& parentCell: parents) {
+        const std::string parentIdentifier
+            = Utils::CIdentifier((parentCell) ? parentCell->getName() : "env");
+        const std::string parentPrefix
+            = N2D2::Utils::upperCase(parentIdentifier);
+
+        // Memory mapping: inputs
+        functionCalls << ", "
+            << parentPrefix << "_NB_OUTPUTS, "
+            << parentPrefix << "_MEM_CONT_OFFSET, "
+            << parentPrefix << "_MEM_CONT_SIZE, "
+            << parentPrefix << "_MEM_WRAP_OFFSET, "
+            << parentPrefix << "_MEM_WRAP_SIZE, "
+            << parentPrefix << "_MEM_STRIDE";
+    }
+
+    functionCalls << ">("
+                        << outputBuffer
+                        << inputBuffer << ", "
+                        << prefix << "_SCALING"
+                    << ");\n\n";
+
+    generateBenchmarkEnd(deepNet, cell, functionCalls);
+    generateSaveOutputs(deepNet, cell, functionCalls);
 }

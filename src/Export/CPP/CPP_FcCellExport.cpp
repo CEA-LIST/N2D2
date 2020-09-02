@@ -18,10 +18,24 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "DeepNet.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/FcCell.hpp"
+#include "Export/FcCellExport.hpp"
+#include "Export/DeepNetExport.hpp"
+#include "Export/CPP/CPP_ConvCellExport.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
 #include "Export/CPP/CPP_FcCellExport.hpp"
+#include "Export/CPP/CPP_DeepNetExport.hpp"
+#include "utils/Registrar.hpp"
+#include "utils/Utils.hpp"
 
-N2D2::Registrar<N2D2::FcCellExport>
-N2D2::CPP_FcCellExport::mRegistrar("CPP", N2D2::CPP_FcCellExport::generate);
+N2D2::Registrar<N2D2::FcCellExport> N2D2::CPP_FcCellExport::mRegistrar(
+    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
+    N2D2::CPP_FcCellExport::generate);
+
+N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_FcCellExport::mRegistrarType(
+        N2D2::FcCell::Type, N2D2::CPP_FcCellExport::getInstance);
 
 void N2D2::CPP_FcCellExport::generate(const FcCell& cell, const std::string& dirName) {
     Utils::createDirectories(dirName + "/dnn/include");
@@ -43,25 +57,25 @@ void N2D2::CPP_FcCellExport::generate(const FcCell& cell, const std::string& dir
 
 void N2D2::CPP_FcCellExport::generateHeaderConstants(const FcCell& cell, std::ofstream& header) {
     // Constants
-    const std::size_t channelsSize = cell.getNbChannels()*cell.getChannelsWidth()* cell.getChannelsHeight();
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
-           << "#define " << prefix << "_NB_CHANNELS " << channelsSize << "\n\n";
-
+           << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
+           << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+           << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+           << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
+           << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
     CPP_CellExport::generateActivationScaling(cell, header);
 
-    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS)\n"
-           << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS)\n"
-           << "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix << "_OUTPUTS_SIZE, " 
-                                                           << prefix << "_CHANNELS_SIZE))\n"
-           << "#define " << prefix << "_CHANNELS_HEIGHT 1\n"
-           << "#define " << prefix << "_OUTPUTS_HEIGHT 1\n"
-           << "#define " << prefix << "_OUTPUTS_WIDTH 1\n"
-           << "#define " << prefix << "_CHANNELS_WIDTH 1\n"
-           << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n";
+    header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
+                                                        << prefix << "_OUTPUTS_WIDTH*" 
+                                                        << prefix << "_OUTPUTS_HEIGHT)\n"
+           << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
+                                                         << prefix << "_CHANNELS_WIDTH*" 
+                                                         << prefix << "_CHANNELS_HEIGHT)\n\n";
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderFreeParameters(const FcCell & cell, std::ofstream& header) {
@@ -76,21 +90,15 @@ void N2D2::CPP_FcCellExport::generateHeaderFreeParameters(const FcCell & cell, s
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderBias(const FcCell & cell, std::ofstream& header) {
-    generateHeaderBiasVariable(cell, header);
-    generateHeaderBiasValues(cell, header);
-}
-
-void N2D2::CPP_FcCellExport::generateHeaderBiasVariable(const FcCell & cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
-    header << "static const BDATA_T " << identifier << "_biases"
-                << "[" << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
-}
 
-void N2D2::CPP_FcCellExport::generateHeaderBiasValues(const FcCell & cell, std::ofstream& header) {
+    header << "static const BDATA_T " << identifier << "_biases[" 
+               << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
+           <<"] __attribute__((section(\".nn_biasses\"))) = {";
+
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
     Tensor<Float_T> bias;
-    
-    header << "{";
     for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
         if (cell.getParameter<bool>("NoBias")) {
             header << "0";
@@ -103,9 +111,58 @@ void N2D2::CPP_FcCellExport::generateHeaderBiasValues(const FcCell & cell, std::
         CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
         header << ", ";
     }
+
     header << "};\n";
 }
 
+void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofstream& header) {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
+
+    header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+               << prefix << "_OUTPUTS_SIZE*" << prefix << "_CHANNELS_SIZE" 
+           << ")\n\n";
+
+    header << "// Flatten weights with the order[OUTPUTS_SIZE][CHANNELS_SIZE]. \n"
+           << "// If the previous cell was a 2D cell, CHANNELS_SIZE is flatten in "
+               << "the [CHANNELS_HEIGHT][CHANNELS_WIDTH][NB_CHANNELS] order.\n";
+    
+    header << "static const WDATA_T " << identifier << "_weights["
+               << prefix << "_WEIGHTS_SIZE"
+           << "] __attribute__((section(\".nn_weights\"))) = ";
+
+    header << "{\n";
+
+    Tensor<Float_T> weight;
+    
+    // Need it in OHWC order, the order in the weights tensor is OCHW.
+    std::size_t iweight = 0;
+    for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        for (std::size_t h = 0; h < cell.getChannelsHeight(); h++) {
+            for (std::size_t w = 0; w < cell.getChannelsWidth(); w++) {
+                for (std::size_t ch = 0; ch < cell.getNbChannels(); ch++) {
+                    const std::size_t wch = ch*cell.getChannelsHeight()*cell.getChannelsWidth() + 
+                                            h*cell.getChannelsWidth() + 
+                                            w;
+                    
+                    cell.getWeight(output,  wch, weight);
+
+                    CellExport::generateFreeParameter( weight(0), header);
+                    header << ", ";
+
+                    iweight++;
+                    if(iweight % 30 == 0) {
+                        header << "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    header << "};\n\n";
+}
+
+// Legacy function, may be removed in the future
 void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(const FcCell & cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
@@ -133,9 +190,9 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(const FcCell & cell, st
 
     const std::size_t nbWeights = weights.size();
 
-    header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
+    header << "#define " << prefix << "_WEIGHTS_SIZE " << nbWeights << "\n"
            << "static WDATA_T " << identifier
-           << "_weights_sparse[" << prefix << "_NB_WEIGHTS] = {\n";
+           << "_weights_sparse[" << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (std::size_t i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -147,7 +204,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(const FcCell & cell, st
     header << "};\n\n";
 
     header << "static unsigned short " << identifier
-        << "_weights_offsets[" << prefix << "_NB_WEIGHTS] = {\n";
+        << "_weights_offsets[" << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (std::size_t i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -165,38 +222,68 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsSparse(const FcCell & cell, st
               << "%)" << Utils::cdef << std::endl;
 }
 
-void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofstream& header) {
-    generateHeaderWeightsVariable(cell, header);
-    generateHeaderWeightsValues(cell, header);
+std::unique_ptr<N2D2::CPP_FcCellExport>
+N2D2::CPP_FcCellExport::getInstance(Cell& /*cell*/)
+{
+    return std::unique_ptr<CPP_FcCellExport>(new CPP_FcCellExport);
 }
 
-void N2D2::CPP_FcCellExport::generateHeaderWeightsVariable(const FcCell & cell, std::ofstream& header) {
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-    const std::string prefix = Utils::upperCase(identifier);
+void N2D2::CPP_FcCellExport::generateCallCode(
+    const DeepNet& deepNet,
+    const Cell& cell, 
+    std::stringstream& includes,
+    std::stringstream& /*buffers*/, 
+    std::stringstream& functionCalls)
+{
+    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
+    const std::string prefix = N2D2::Utils::upperCase(identifier);
 
-    header << "#define " << prefix << "_WEIGHTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n\n";
+    includes << "#include \"" << identifier << ".hpp\"\n";
 
-    // Weights
-    header << "const WDATA_T " << identifier << "_weights[" << prefix << "_WEIGHTS_SIZE] = \n";
-}
+    generateBenchmarkStart(deepNet, cell, functionCalls);
 
-void N2D2::CPP_FcCellExport::generateHeaderWeightsValues(const FcCell & cell, std::ofstream& header) {
-    const std::size_t channelsSize = cell.getInputsSize();
+    const auto& parents = deepNet.getParentCells(cell.getName());
+    const std::string inputBuffer
+        = Utils::CIdentifier(parents[0] ? parents[0]->getName() + "_output"
+                                        : "inputs");
+    const std::string outputBuffer
+        = Utils::CIdentifier(cell.getName() + "_output");
 
-    header << "{\n";
-    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
-        if (output > 0)
-            header << "\n";
+    functionCalls << "    fccellPropagate<"
+                << prefix << "_NB_CHANNELS, "
+                << prefix << "_CHANNELS_HEIGHT, "
+                << prefix << "_CHANNELS_WIDTH, "
+                << prefix << "_NB_OUTPUTS, "
+                << prefix << "_OUTPUTS_HEIGHT, " 
+                << prefix << "_OUTPUTS_WIDTH, "
+                << prefix << "_ACTIVATION, ";
 
-        for (std::size_t channel = 0; channel < channelsSize; ++channel) {
-            Tensor<Float_T> weight;
-            cell.getWeight(output, channel, weight);
+    // Memory mapping: input
+    const std::string parentIdentifier
+        = Utils::CIdentifier((parents[0]) ? parents[0]->getName() : "env");
+    const std::string parentPrefix
+        = N2D2::Utils::upperCase(parentIdentifier);
 
-            CellExport::generateFreeParameter(weight(0), header);
-            header << ", ";
-        }
-    }
+    functionCalls << parentPrefix << "_MEM_CONT_OFFSET, "
+        << parentPrefix << "_MEM_CONT_SIZE, "
+        << parentPrefix << "_MEM_WRAP_OFFSET, "
+        << parentPrefix << "_MEM_WRAP_SIZE, "
+        << parentPrefix << "_MEM_STRIDE, ";
 
-    header << "};\n\n";
+    // Memory mapping: output
+    functionCalls << prefix << "_MEM_CONT_OFFSET, "
+                << prefix << "_MEM_CONT_SIZE, "
+                << prefix << "_MEM_WRAP_OFFSET, "
+                << prefix << "_MEM_WRAP_SIZE, "
+                << prefix << "_MEM_STRIDE"
+            << ">("
+                << inputBuffer << " , "
+                << outputBuffer << ", "
+                << identifier << "_biases, "
+                << identifier << "_weights, "
+                << prefix << "_SCALING"
+            << ");\n\n";
+
+    generateBenchmarkEnd(deepNet, cell, functionCalls);
+    generateSaveOutputs(deepNet, cell, functionCalls);
 }

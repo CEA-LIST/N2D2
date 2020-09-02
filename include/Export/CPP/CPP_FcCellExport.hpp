@@ -30,7 +30,7 @@ namespace N2D2 {
  * Class for methods of FcCell for all CPP exports type
  * FcCell, CPP EXPORT
 **/
-class CPP_FcCellExport : public FcCellExport {
+class CPP_FcCellExport : public FcCellExport, public CPP_CellExport {
 public:
     static void generate(const FcCell& cell, const std::string& dirName);
     static void generateHeaderConstants(const FcCell& cell, std::ofstream& header);
@@ -38,16 +38,19 @@ public:
     static void generateHeaderFreeParameters(const FcCell& cell, std::ofstream& header);
 
     static void generateHeaderBias(const FcCell& cell, std::ofstream& header);
-    static void generateHeaderBiasVariable(const FcCell& cell, std::ofstream& header);
-    static void generateHeaderBiasValues(const FcCell& cell, std::ofstream& header);
-
     static void generateHeaderWeights(const FcCell& cell, std::ofstream& header);
     static void generateHeaderWeightsSparse(const FcCell& cell, std::ofstream& header);
-    static void generateHeaderWeightsVariable(const FcCell& cell, std::ofstream& header);
-    static void generateHeaderWeightsValues(const FcCell& cell, std::ofstream& header);
-    
+
+    static std::unique_ptr<CPP_FcCellExport> getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                                 const Cell& cell, 
+                                 std::stringstream& includes,
+                                 std::stringstream& buffers, 
+                                 std::stringstream& functionCalls);
+
 private:
     static Registrar<FcCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 

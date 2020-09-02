@@ -34,18 +34,13 @@ namespace N2D2 {
 class CPP_cuDNN_FcCellExport : public FcCellExport,
                                public CPP_cuDNN_CellExport {
 public:
-    static void generate(FcCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(FcCell& cell, std::ofstream& header);
-    static void generateHeaderFreeParameters(FcCell& cell,
+    static void generate(const FcCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const FcCell& cell, std::ofstream& header);
+    static void generateHeaderFreeParameters(const FcCell& cell,
                                              std::ofstream& header);
 
-    static void generateHeaderBias(FcCell& cell, std::ofstream& header);
-    static void generateHeaderBiasValues(FcCell& cell,
-                                                std::ofstream& header);
-
-    static void generateHeaderBiasVariable(FcCell& cell, std::ofstream& header);
-    static void generateHeaderWeights(FcCell& cell, std::ofstream& header);
-    static void generateHeaderWeightsSparse(FcCell& cell,
+    static void generateHeaderWeights(const FcCell& cell, std::ofstream& header);
+    static void generateHeaderWeightsSparse(const FcCell& cell,
                                             std::ofstream& header);
 
     static std::unique_ptr<CPP_cuDNN_FcCellExport> getInstance(Cell& cell);

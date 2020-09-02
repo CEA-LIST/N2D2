@@ -127,7 +127,7 @@ void N2D2::C_FcCellExport::generateHeaderWeightsVariable(const FcCell& cell,
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
-    header << "#define " << prefix << "_NB_WEIGHTS (" << prefix
+    header << "#define " << prefix << "_WEIGHTS_SIZE (" << prefix
            << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n\n";
 
     // Weights
@@ -191,9 +191,9 @@ void N2D2::C_FcCellExport::generateHeaderWeightsSparse(const FcCell& cell,
 
     const std::size_t nbWeights = weights.size();
 
-    header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
+    header << "#define " << prefix << "_WEIGHTS_SIZE " << nbWeights << "\n"
            << "static WDATA_T " << identifier << "_weights_sparse["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (std::size_t i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -205,7 +205,7 @@ void N2D2::C_FcCellExport::generateHeaderWeightsSparse(const FcCell& cell,
     header << "};\n\n";
 
     header << "static unsigned short " << identifier << "_weights_offsets["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (std::size_t i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -309,7 +309,7 @@ void N2D2::C_FcCellExport::generateCellFunction(
     prog << memProto << identifier << "_biases, ";
 
     if (mThreshold > 0.0) {
-        prog << memProto << prefix << "_NB_WEIGHTS, "
+        prog << memProto << prefix << "_WEIGHTS_SIZE, "
             << memProto << identifier << "_weights_sparse, "
             << memProto << identifier << "_weights_offsets, ";
     }

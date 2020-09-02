@@ -24,6 +24,7 @@
 
 #include "Export/CPP/CPP_CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
+#include "Export/MemoryManager.hpp"
 
 namespace N2D2 {
 /**
@@ -47,7 +48,23 @@ public:
     static void generateHeaderUtils(std::ofstream& header);
     static void generateProgramUtils(std::ofstream& prog);
 
+    static void generateNetworkPropagateFile(const DeepNet& deepNet, 
+                                             const std::string& filePath, 
+                                             const MemoryManager& memManager,
+                                             int memoryAlignment);
+    static void printStats(const DeepNet& deepNet, 
+                           const MemoryManager& memManager);
+
+    static MemoryManager generateMemory(DeepNet& deepNet,
+                                        bool wrapAroundBuffer,
+                                        bool noBranchConcatOpt,
+                                        bool includeInputInBuffer,
+                                        int memoryAlignment);
+    static void addBranchesCells(DeepNet& deepNet);
+
 private:
+    static std::string getCellModelType(const Cell& cell);
+
     static Registrar<DeepNetExport> mRegistrar;
 };
 }

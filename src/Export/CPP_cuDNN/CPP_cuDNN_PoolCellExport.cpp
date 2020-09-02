@@ -29,7 +29,7 @@ N2D2::Registrar<N2D2::CPP_cuDNN_CellExport>
 N2D2::CPP_cuDNN_PoolCellExport::mRegistrarType(
     PoolCell::Type, N2D2::CPP_cuDNN_PoolCellExport::getInstance);
 
-void N2D2::CPP_cuDNN_PoolCellExport::generate(PoolCell& cell,
+void N2D2::CPP_cuDNN_PoolCellExport::generate(const PoolCell& cell,
                                               const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/dnn/include");
@@ -49,7 +49,7 @@ void N2D2::CPP_cuDNN_PoolCellExport::generate(PoolCell& cell,
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConstants(PoolCell& cell,
+void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConstants(const PoolCell& cell,
                                                              std::ofstream
                                                              & header)
 {
@@ -85,7 +85,7 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConstants(PoolCell& cell,
                                    "#define " << prefix << "_POOLING "
            << cell.getPooling() << "\n\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
+    const Cell_Frame_Top* cellFrame = dynamic_cast<const Cell_Frame_Top*>(&cell);
 
     if (cellFrame != NULL) {
         header << "#define " << prefix << "_ACTIVATION "
@@ -99,12 +99,10 @@ void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConstants(PoolCell& cell,
            << "_OUTPUTS_HEIGHT)\n"
               "#define " << prefix << "_CHANNELS_SIZE (" << prefix
            << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+           << "_CHANNELS_HEIGHT)\n\n";
 }
 
-void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConnections(PoolCell& cell,
+void N2D2::CPP_cuDNN_PoolCellExport::generateHeaderConnections(const PoolCell& cell,
                                                                std::ofstream
                                                                & header)
 {
