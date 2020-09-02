@@ -271,7 +271,7 @@ define copy-to-bin
 endef
 
 define copy-resources-to-bin
-	@rsync -av $1/$2 $(N2D2_BINDIR)/$1/ --exclude *.cpp \
+	rsync -av $1/$2 $(N2D2_BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
 endef
 
@@ -292,7 +292,7 @@ tests : flexlm $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS))
 ifdef FLEXLM
 	$(shell rm -f ${LM_PATH}/lm_new_pic.o)
 endif
-	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
+	@$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
 	@$(foreach path,$(PARENT),$(call run-if-exists,$(path)/tests/run_all.sh);)
 
 all : exec tests
