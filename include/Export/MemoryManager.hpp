@@ -179,9 +179,7 @@ public:
     /// Expand an existing MemorySpace, without affecting its MemoryPlane
     /// This function rebuild the memory stack mMemStack
     void expand(std::shared_ptr<MemorySpace> memSpace,
-                unsigned int requiredSize,
-                const std::vector<std::shared_ptr<Cell> >&
-                additionalDependencies = std::vector<std::shared_ptr<Cell> >());
+                unsigned int requiredSize);
     /// Generates a MemoryPlane in a new MemorySpace
     MemoryPlane allocate(unsigned int size,
                          const std::vector<std::shared_ptr<Cell> >&

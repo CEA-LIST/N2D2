@@ -35,16 +35,12 @@ std::shared_ptr<N2D2::MemoryManager::MemorySpace> N2D2::MemoryManager::reserve(
 
 void N2D2::MemoryManager::expand(
     std::shared_ptr<MemorySpace> memSpace,
-    unsigned int requiredSize,
-    const std::vector<std::shared_ptr<Cell> >& additionalDependencies)
+    unsigned int requiredSize)
 {
     assert(std::find(mMemSpaces.begin(), mMemSpaces.end(), memSpace)
             != mMemSpaces.end());
 
     memSpace->size = std::max(memSpace->size, requiredSize);
-    memSpace->dependencies.insert(memSpace->dependencies.end(),
-                                  additionalDependencies.begin(),
-                                  additionalDependencies.end());
 
     // Rebuild the stack from the beginning, taking into account the new size.
     // Everything else stay the same.
@@ -141,8 +137,12 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
         // Expand in size and/or duration.
         // If memSpace was already released, put it back on the stack
         memSpace->released = -1;
-        expand(memSpace, requiredSize, additionalDependencies);
+        expand(memSpace, requiredSize);
     }
+
+    memSpace->dependencies.insert(memSpace->dependencies.end(),
+                                  additionalDependencies.begin(),
+                                  additionalDependencies.end());
 
     return MemoryPlane(memSpace, mClock, offset, size, stride, length, count);
 }
@@ -181,8 +181,13 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
         // Expand in size and/or duration.
         // If memSpace was already released, put it back on the stack
         memPlane.memSpace->released = -1;
-        expand(memPlane.memSpace, requiredSize, additionalDependencies);
+        expand(memPlane.memSpace, requiredSize);
     }
+
+    memPlane.memSpace->dependencies.insert(
+        memPlane.memSpace->dependencies.end(),
+        additionalDependencies.begin(),
+        additionalDependencies.end());
 
     const unsigned int finalOffset = memPlane.getFinalOffset()
         - memPlane.memSpace->offset + extraOffset;
