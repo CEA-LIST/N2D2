@@ -156,7 +156,7 @@ TEST_DATASET(DeepNetQuantization, quantization,
                     true, false, 500, 8, 
                     ClippingMode::KL_DIVERGENCE, ScalingMode::FLOAT_MULT,
                     96.5999, 96.6667),
-    
+
     std::make_tuple("tests_data/mnist_model/model.ini", "tests_data/mnist_model/weights", 
                     true, true, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FLOAT_MULT,
@@ -165,15 +165,15 @@ TEST_DATASET(DeepNetQuantization, quantization,
     std::make_tuple("tests_data/mnist_multibranch_model/model.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FLOAT_MULT,
-                    98.5999, 98.6000),
+                    98.5999, 98.5334),
     std::make_tuple("tests_data/mnist_multibranch_model/model.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FIXED_MULT,
-                    98.5999, 98.6000),
+                    98.5999, 98.5334),
     std::make_tuple("tests_data/mnist_multibranch_model/model.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::SINGLE_SHIFT,
-                    98.5999, 98.2667),
+                    98.5999, 98.4667),
     std::make_tuple("tests_data/mnist_multibranch_model/model.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::DOUBLE_SHIFT,
@@ -185,12 +185,12 @@ TEST_DATASET(DeepNetQuantization, quantization,
     std::make_tuple("tests_data/mnist_multibranch_model/model.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::KL_DIVERGENCE, ScalingMode::FLOAT_MULT,
-                    98.5999, 98.5334),
-    
+                    98.5999, 98.6000),
+
     std::make_tuple("tests_data/mnist_multibranch_model/model.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, true, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FLOAT_MULT,
-                    98.5999, 98.4667)
+                    98.5999, 98.6000)
 )
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
@@ -257,15 +257,15 @@ TEST_DATASET(DeepNetQuantization, quantization_CUDA,
     std::make_tuple("tests_data/mnist_multibranch_model/model_CUDA.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FLOAT_MULT,
-                    98.5999, 98.6000),
+                    98.5999, 98.5334),
     std::make_tuple("tests_data/mnist_multibranch_model/model_CUDA.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FIXED_MULT,
-                    98.5999, 98.6000),
+                    98.5999, 98.5334),
     std::make_tuple("tests_data/mnist_multibranch_model/model_CUDA.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::SINGLE_SHIFT,
-                    98.5999, 98.2667),
+                    98.5999, 98.4667),
     std::make_tuple("tests_data/mnist_multibranch_model/model_CUDA.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::NONE, ScalingMode::DOUBLE_SHIFT,
@@ -277,12 +277,12 @@ TEST_DATASET(DeepNetQuantization, quantization_CUDA,
     std::make_tuple("tests_data/mnist_multibranch_model/model_CUDA.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, false, 500, 8, 
                     ClippingMode::KL_DIVERGENCE, ScalingMode::FLOAT_MULT,
-                    98.5999, 98.5334),
+                    98.5999, 98.6000),
     
     std::make_tuple("tests_data/mnist_multibranch_model/model_CUDA.ini", "tests_data/mnist_multibranch_model/weights", 
                     true, true, 500, 8, 
                     ClippingMode::NONE, ScalingMode::FLOAT_MULT,
-                    98.5999, 98.4667)
+                    98.5999, 98.6000)
 )
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));

@@ -486,11 +486,7 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                 biasScaling *= wScalingCell;
             }
 
-            // Don't divide by biasScaling here, because it could lead to a loss 
-            // of precision because bias is stored as float, not long double
-            // This step has been merged in quantizeActivations()
-            // Original formula: b*(bQuantScaling/biasScaling)
-            cell->processFreeParameters([&](Float_T b) { return b*(bQuantScaling); }, 
+            cell->processFreeParameters([&](Float_T b) { return b*(bQuantScaling/biasScaling); }, 
                                         Cell::Additive);
             biasScalings[cell->getName()] = biasScaling;
 
@@ -547,10 +543,9 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                     cell->processFreeParametersPerOutput([&](Float_T w) { 
                                                             return w*(wQuantScaling/wScalingCellOutput); 
                                                          }, output, Cell::Multiplicative);
-                    // Don't divide by biasScaling here
                     cell->processFreeParametersPerOutput([&](Float_T b) { 
                                                              return b*(bQuantScaling/
-                                                                       (wScalingCellOutput)); 
+                                                                       (biasScaling*wScalingCellOutput)); 
                                                          }, output, Cell::Additive);
 
                     scalingPerOutput[output] = wScalingCellOutput/wScalingCell;
@@ -670,7 +665,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
 
             activationScalings[cell->getName()] = activationScaling;
 
-            cell->processFreeParameters([&](Float_T d) { return d/(biasScaling*prevActivationScaling); },
+            cell->processFreeParameters([&](Float_T d) { return d/prevActivationScaling; },
                                         Cell::Additive);
                                         
 
