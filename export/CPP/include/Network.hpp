@@ -511,8 +511,8 @@ private:
                                        weights + 4*weightsIncrement, weightedSum);
     }
 
-    N2D2_ALWAYS_INLINE inline Tick_T tick();
-    N2D2_ALWAYS_INLINE inline void benchmark(const char* name,
+    N2D2_ALWAYS_INLINE static Tick_T tick();
+    N2D2_ALWAYS_INLINE static void benchmark(const char* name,
                                              const Tick_T& start,
                                              const Tick_T& end,
                                              RunningMean_T& timing);
