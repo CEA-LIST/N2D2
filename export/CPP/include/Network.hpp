@@ -19,6 +19,8 @@
 #include <type_traits>
 #include <iostream>
 #include <chrono>
+#include <map>
+#include <numeric>
 
 #include "typedefs.h"
 
@@ -400,51 +402,6 @@ private:
         return saturate<Output_T>(rescaling(weightedSum, output), NB_BITS);
     }
 
-    template<typename Input_T>
-    N2D2_ALWAYS_INLINE static SUM_T dualMac(const Input_T* __restrict inputs, 
-                                            const WDATA_T* __restrict weights, 
-                                            SUM_T weightedSum,
-                                            int inputsIncrement = 1,
-                                            int weightsIncrement = 1) 
-    {
-        weightedSum += inputs[0] * weights[0];
-        weightedSum += inputs[inputsIncrement] * weights[weightsIncrement];
-
-        return weightedSum;
-    }
-
-    template<typename Input_T, 
-             typename std::enable_if<std::is_floating_point<Input_T>::value>::type* = nullptr>
-    N2D2_ALWAYS_INLINE static SUM_T quadMac(const Input_T* __restrict inputs, 
-                                            const WDATA_T* __restrict weights, 
-                                            SUM_T weightedSum,
-                                            int inputsIncrement = 1,
-                                            int weightsIncrement = 1) 
-    {
-        weightedSum += inputs[0*inputsIncrement] * weights[0*weightsIncrement];
-        weightedSum += inputs[1*inputsIncrement] * weights[1*weightsIncrement];
-        weightedSum += inputs[2*inputsIncrement] * weights[2*weightsIncrement];
-        weightedSum += inputs[3*inputsIncrement] * weights[3*weightsIncrement];
-
-        return weightedSum;
-    }
-#if NB_BITS > 0
-    template<typename Input_T, 
-             typename std::enable_if<!std::is_floating_point<Input_T>::value>::type* = nullptr>
-    N2D2_ALWAYS_INLINE static SUM_T quadMac(const Input_T* __restrict inputs, 
-                                            const WDATA_T* __restrict weights, 
-                                            SUM_T weightedSum,
-                                            int inputsIncrement = 1,
-                                            int weightsIncrement = 1) 
-    {
-        weightedSum += inputs[0*inputsIncrement] * weights[0*weightsIncrement];
-        weightedSum += inputs[1*inputsIncrement] * weights[1*weightsIncrement];
-        weightedSum += inputs[2*inputsIncrement] * weights[2*weightsIncrement];
-        weightedSum += inputs[3*inputsIncrement] * weights[3*weightsIncrement];
-
-        return weightedSum;
-    }
-#endif
     template<typename Output_T, typename T,  
              typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
     N2D2_ALWAYS_INLINE static Output_T saturate(T value, std::int32_t sat) {
@@ -459,56 +416,17 @@ private:
                                                                (T(1) << (sat - 1)) - 1);
     }
 
-    /**
-     * Multiply-accumulate the values in inputs and weights for NB_ITERATIONS.
-     * Using an explicit unrolling as unrolling a for-loop with '#pragma GCC unroll NB_ITERATIONS'
-     * is slower (TODO check why).
-     */
-    template<int NB_ITERATIONS, class Input_T, 
-             typename std::enable_if<(NB_ITERATIONS == 0)>::type* = nullptr>
-    N2D2_ALWAYS_INLINE static void macsOnRange(const Input_T* __restrict /*inputs*/, 
-                                               const WDATA_T* __restrict /*weights*/, 
-                                               SUM_T& __restrict /*weightedSum*/,
-                                               int /*inputsIncrement*/ = 1, 
-                                               int /*weightsIncrement*/ = 1) 
-    {
-    }
-
-    template<int NB_ITERATIONS, class Input_T, 
-             typename std::enable_if<(NB_ITERATIONS == 1)>::type* = nullptr>
+    template<int NB_ITERATIONS,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             class Input_T>
     N2D2_ALWAYS_INLINE static void macsOnRange(const Input_T* __restrict inputs, 
                                                const WDATA_T* __restrict weights, 
-                                               SUM_T& __restrict weightedSum,
-                                               int /*inputsIncrement*/ = 1, 
-                                               int /*weightsIncrement*/ = 1) 
+                                               SUM_T& __restrict weightedSum) 
     {
-        weightedSum += (*weights) * (*inputs);
-    }
-
-    template<int NB_ITERATIONS, class Input_T, 
-             typename std::enable_if<(NB_ITERATIONS >= 2 && NB_ITERATIONS < 4)>::type* = nullptr>
-    N2D2_ALWAYS_INLINE static void macsOnRange(const Input_T* __restrict inputs, 
-                                               const WDATA_T* __restrict weights, 
-                                               SUM_T& __restrict weightedSum,
-                                               int inputsIncrement = 1, 
-                                               int weightsIncrement = 1) 
-    {
-        weightedSum = dualMac(inputs, weights, weightedSum, inputsIncrement, weightsIncrement);
-        macsOnRange<NB_ITERATIONS - 2>(inputs + 2*inputsIncrement, 
-                                       weights + 2*weightsIncrement, weightedSum);
-    }
-
-    template<int NB_ITERATIONS, class Input_T, 
-             typename std::enable_if<(NB_ITERATIONS >= 4)>::type* = nullptr>
-    N2D2_ALWAYS_INLINE static void macsOnRange(const Input_T* __restrict inputs, 
-                                               const WDATA_T* __restrict weights, 
-                                               SUM_T& __restrict weightedSum,
-                                               int inputsIncrement = 1, 
-                                               int weightsIncrement = 1) 
-    {
-        weightedSum = quadMac(inputs, weights, weightedSum, inputsIncrement, weightsIncrement);
-        macsOnRange<NB_ITERATIONS - 4>(inputs + 4*inputsIncrement, 
-                                       weights + 4*weightsIncrement, weightedSum);
+        for (int iter = 0; iter < NB_ITERATIONS; ++iter) {
+            weightedSum += inputs[iter*INPUTS_INC] * weights[iter*WEIGHTS_INC];
+        }
     }
 
     N2D2_ALWAYS_INLINE static Tick_T tick();
@@ -738,23 +656,26 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                     0, KERNEL_HEIGHT);
         const int iy = (oy * STRIDE_Y) - PADDING_Y;
 
+#pragma omp parallel for collapse(2)
         for (int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
-            const int sxMin = (PADDING_X == 0) ? 0
-                : max(PADDING_X - (ox * STRIDE_X), 0);
-            const int sxMax = (PADDING_X == 0) ? KERNEL_WIDTH
-                : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
-                        0, KERNEL_WIDTH);
-            const int ix = (ox * STRIDE_X) - PADDING_X;
-
-            const int oPos = (ox + OUTPUTS_WIDTH * oy);
-            int oOffset = OUTPUT_MEM_STRIDE * oPos;
-
-            if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
-                oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
-                            - OUTPUT_MEM_CONT_SIZE;
-            }
-
             for (int output = 0; output < NB_OUTPUTS; ++output) {
+                // moved to inner loop for collapsing -->
+                const int sxMin = (PADDING_X == 0) ? 0
+                    : max(PADDING_X - (ox * STRIDE_X), 0);
+                const int sxMax = (PADDING_X == 0) ? KERNEL_WIDTH
+                    : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
+                            0, KERNEL_WIDTH);
+                const int ix = (ox * STRIDE_X) - PADDING_X;
+
+                const int oPos = (ox + OUTPUTS_WIDTH * oy);
+                int oOffset = OUTPUT_MEM_STRIDE * oPos;
+
+                if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
+                    oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
+                                - OUTPUT_MEM_CONT_SIZE;
+                }
+                // <--
+
                 SUM_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
@@ -844,23 +765,26 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                     0, KERNEL_HEIGHT);
         const int iy = (oy * STRIDE_Y) - PADDING_Y;
 
+#pragma omp parallel for collapse(2)
         for (int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
-            const int sxMin = (PADDING_X == 0) ? 0
-                : max(PADDING_X - (ox * STRIDE_X), 0);
-            const int sxMax = (PADDING_X == 0) ? KERNEL_WIDTH
-                : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
-                        0, KERNEL_WIDTH);
-            const int ix = (ox * STRIDE_X) - PADDING_X;
-
-            const int oPos = (ox + OUTPUTS_WIDTH * oy);
-            int oOffset = OUTPUT_MEM_STRIDE * oPos;
-
-            if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
-                oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
-                            - OUTPUT_MEM_CONT_SIZE;
-            }
-
             for (int output = 0; output < NB_OUTPUTS; ++output) {
+                // moved to inner loop for collapsing -->
+                const int sxMin = (PADDING_X == 0) ? 0
+                    : max(PADDING_X - (ox * STRIDE_X), 0);
+                const int sxMax = (PADDING_X == 0) ? KERNEL_WIDTH
+                    : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
+                            0, KERNEL_WIDTH);
+                const int ix = (ox * STRIDE_X) - PADDING_X;
+
+                const int oPos = (ox + OUTPUTS_WIDTH * oy);
+                int oOffset = OUTPUT_MEM_STRIDE * oPos;
+
+                if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
+                    oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
+                                - OUTPUT_MEM_CONT_SIZE;
+                }
+                // <--
+
                 SUM_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
@@ -882,10 +806,10 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
 
                     if (PADDING_X == 0 || sxMax - sxMin == KERNEL_WIDTH) {
-                        macsOnRange<KERNEL_WIDTH>(
+                        macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
                             inputs + iOffset + output, 
                             weights + wOffset, 
-                            weightedSum, INPUT_MEM_STRIDE, 1);
+                            weightedSum);
                     }
                     else {
                         for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
@@ -1068,6 +992,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
     static_assert(OUTPUTS_WIDTH == 1, "Outputs width should be 1");
     static_assert(OUTPUT_MEM_WRAP_SIZE == 0, "Output wrapping not supported");
 
+#pragma omp parallel for
     for (int och = 0; och < NB_OUTPUTS; och++) {
         SUM_T weightedSum = biasses[och];
 
@@ -1347,7 +1272,17 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::benchmark(const char* name,
                     / (timing.count + 1.0);
     ++timing.count;
 
-    std::cout << name << " timing = " << timing.mean << " us" << std::endl;
+    // Cumulative
+    static std::map<std::string, double> cumulative;
+    cumulative[name] = timing.mean;
+
+    const double cumMeanTiming = std::accumulate(cumulative.begin(),
+        cumulative.end(), 0, [] (double value,
+                            const std::map<std::string, double>::value_type& p)
+                   { return value + p.second; });
+
+    std::cout << name << " timing = " << timing.mean << " us -- "
+        << cumMeanTiming << " us" << std::endl;
 }
 
 #endif

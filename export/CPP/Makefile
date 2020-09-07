@@ -1,6 +1,7 @@
 CXX=g++
 override INCLUDE_DIRS += -I. -I./include -I./dnn/include
-override CXXFLAGS += -O3 -march=native -Wall -Wextra -pedantic -fsigned-char -std=c++0x -fPIC $(INCLUDE_DIRS) -DSTIMULI_DIRECTORY="\"./stimuli\""
+override CXXFLAGS += -std=c++11 -O3 -march=native -fopenmp -Wall -Wextra -pedantic -fsigned-char -std=c++0x -fPIC $(INCLUDE_DIRS) -DSTIMULI_DIRECTORY="\"./stimuli\""
+override LDFLAGS += -fopenmp
 
 EXEC=run_export
 SRC_FILES:=$(shell find . -iname "*.cpp")
