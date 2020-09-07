@@ -43,6 +43,9 @@ public:
 
 private:
     static void generateHeaderConstants(const ScalingCell& cell, std::ofstream& header);
+
+    static Registrar<ScalingCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 

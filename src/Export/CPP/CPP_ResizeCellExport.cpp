@@ -35,7 +35,7 @@ N2D2::Registrar<N2D2::ResizeCellExport> N2D2::CPP_ResizeCellExport::mRegistrar(
     N2D2::CPP_ResizeCellExport::generate);
 
 N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_ResizeCellExport::mRegistrarType(
-        N2D2::ResizeCell::Type, N2D2::CPP_ResizeCellExport::getInstance);
+    N2D2::ResizeCell::Type, N2D2::CPP_ResizeCellExport::getInstance);
 
 void N2D2::CPP_ResizeCellExport::generate(ResizeCell& cell,
                                              const std::string& dirName)

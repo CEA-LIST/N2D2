@@ -35,7 +35,7 @@ N2D2::Registrar<N2D2::FcCellExport> N2D2::CPP_FcCellExport::mRegistrar(
     N2D2::CPP_FcCellExport::generate);
 
 N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_FcCellExport::mRegistrarType(
-        N2D2::FcCell::Type, N2D2::CPP_FcCellExport::getInstance);
+    N2D2::FcCell::Type, N2D2::CPP_FcCellExport::getInstance);
 
 void N2D2::CPP_FcCellExport::generate(const FcCell& cell, const std::string& dirName) {
     Utils::createDirectories(dirName + "/dnn/include");

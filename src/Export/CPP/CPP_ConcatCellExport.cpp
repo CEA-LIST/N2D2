@@ -25,8 +25,9 @@
 
 // Specific cell to the CPP export, no Registrar to a generate
 
-N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_ConcatCellExport::mRegistrarType(
-        N2D2::CPP_ConcatCell::Type, N2D2::CPP_ConcatCellExport::getInstance);
+N2D2::Registrar<N2D2::CPP_CellExport>
+N2D2::CPP_ConcatCellExport::mRegistrarType(
+    N2D2::CPP_ConcatCell::Type, N2D2::CPP_ConcatCellExport::getInstance);
 
 void N2D2::CPP_ConcatCellExport::generate(const CPP_ConcatCell& cell,
                                         const std::string& dirName)

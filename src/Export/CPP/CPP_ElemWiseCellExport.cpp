@@ -27,6 +27,10 @@ N2D2::CPP_ElemWiseCellExport::mRegistrar(
     {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
     N2D2::CPP_ElemWiseCellExport::generate);
 
+N2D2::Registrar<N2D2::CPP_CellExport>
+N2D2::CPP_ElemWiseCellExport::mRegistrarType(
+    N2D2::ElemWiseCell::Type, N2D2::CPP_ElemWiseCellExport::getInstance);
+
 void N2D2::CPP_ElemWiseCellExport::generate(ElemWiseCell& cell,
                                              const std::string& dirName)
 {

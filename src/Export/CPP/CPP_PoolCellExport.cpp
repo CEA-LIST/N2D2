@@ -35,7 +35,7 @@ N2D2::Registrar<N2D2::PoolCellExport> N2D2::CPP_PoolCellExport::mRegistrar(
     N2D2::CPP_PoolCellExport::generate);
 
 N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_PoolCellExport::mRegistrarType(
-        N2D2::PoolCell::Type, N2D2::CPP_PoolCellExport::getInstance);
+    N2D2::PoolCell::Type, N2D2::CPP_PoolCellExport::getInstance);
 
 void N2D2::CPP_PoolCellExport::generate(const PoolCell& cell,
                                         const std::string& dirName)

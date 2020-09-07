@@ -46,6 +46,7 @@ public:
                                  std::stringstream& functionCalls);
 private:
     static Registrar<ElemWiseCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 

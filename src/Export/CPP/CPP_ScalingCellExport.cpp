@@ -28,9 +28,14 @@
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
 
+N2D2::Registrar<N2D2::ScalingCellExport>
+N2D2::CPP_ScalingCellExport::mRegistrar(
+    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
+    N2D2::CPP_ScalingCellExport::generate);
 
-static const N2D2::Registrar<N2D2::ScalingCellExport> registrar("CPP",  
-                                                                N2D2::CPP_ScalingCellExport::generate);
+N2D2::Registrar<N2D2::CPP_CellExport>
+N2D2::CPP_ScalingCellExport::mRegistrarType(
+    N2D2::ScalingCell::Type, N2D2::CPP_ScalingCellExport::getInstance);
 
 void N2D2::CPP_ScalingCellExport::generate(const ScalingCell& cell, const std::string& dirName) {
     Utils::createDirectories(dirName + "/dnn");

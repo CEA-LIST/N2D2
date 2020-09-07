@@ -37,7 +37,8 @@ N2D2::Registrar<N2D2::ConvCellExport> N2D2::CPP_ConvCellExport::mRegistrar(
     {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
     N2D2::CPP_ConvCellExport::generate);
 
-N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_ConvCellExport::mRegistrarType(
+N2D2::Registrar<N2D2::CPP_CellExport>
+N2D2::CPP_ConvCellExport::mRegistrarType(
         N2D2::ConvCell::Type, N2D2::CPP_ConvCellExport::getInstance);
 
 void N2D2::CPP_ConvCellExport::generate(const ConvCell& cell, const std::string& dirName) {

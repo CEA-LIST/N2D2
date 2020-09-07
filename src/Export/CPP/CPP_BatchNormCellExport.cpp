@@ -23,7 +23,8 @@
 #include "Export/CPP/CPP_BatchNormCellExport.hpp"
 
 N2D2::Registrar<N2D2::BatchNormCellExport>
-N2D2::CPP_BatchNormCellExport::mRegistrar("CPP", N2D2::CPP_BatchNormCellExport::generate);
+N2D2::CPP_BatchNormCellExport::mRegistrar(
+    "CPP", N2D2::CPP_BatchNormCellExport::generate);
 
 void N2D2::CPP_BatchNormCellExport::generate(const BatchNormCell& cell,
                                              const std::string& dirName)

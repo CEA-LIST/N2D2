@@ -23,7 +23,8 @@
 #include "Export/CPP/CPP_SoftmaxCellExport.hpp"
 
 N2D2::Registrar<N2D2::SoftmaxCellExport>
-N2D2::CPP_SoftmaxCellExport::mRegistrar("CPP", N2D2::CPP_SoftmaxCellExport::generate);
+N2D2::CPP_SoftmaxCellExport::mRegistrar(
+    "CPP", N2D2::CPP_SoftmaxCellExport::generate);
 
 void N2D2::CPP_SoftmaxCellExport::generate(const SoftmaxCell& cell,
                                            const std::string& dirName)
