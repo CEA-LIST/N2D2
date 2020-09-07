@@ -71,6 +71,7 @@ void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofst
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
 
     if (cellFrame.getActivation() == nullptr) {
+        header << "static const N2D2::NoScaling " << prefix << "_SCALING;\n";
         return;
     }
     

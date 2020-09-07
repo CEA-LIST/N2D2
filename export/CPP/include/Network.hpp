@@ -86,7 +86,7 @@ private:
     N2D2_ALWAYS_INLINE void concatenatePropagate(
         Output_T* __restrict outputs,
         const Input_T* __restrict firstInputs,
-        INPUTS... inputs);
+        INPUTS... inputs) const;
 
     template<// For all inputs
             int NB_INPUTS,
@@ -115,9 +115,9 @@ private:
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void elemWisePropagate(
         Output_T* __restrict outputs,
+        const Rescaling_T& __restrict rescaling,
         const Input_T* __restrict firstInputs,
-        INPUTS... inputs,
-        const Rescaling_T& __restrict rescaling);
+        INPUTS... inputs) const;
 
     /**
      * inputs[CHANNELS_HEIGHT*CHANNELS_WIDTH*NB_CHANNELS]
@@ -319,7 +319,7 @@ private:
     template<typename Output_T>
     N2D2_ALWAYS_INLINE void concatenate(
         Output_T* __restrict /*outputs*/,
-        int /*pos*/);
+        int /*pos*/) const;
 
     template<// For first input
             int INPUT_NB_CHANNELS,
@@ -337,12 +337,12 @@ private:
         Output_T* __restrict outputs,
         int pos,
         const Input_T* __restrict firstInputs,
-        INPUTS... inputs);
+        INPUTS... inputs) const;
 
-    template<typename Output_T>
-    N2D2_ALWAYS_INLINE void elemWise(
+    template<ElemWiseOp ELEM_OP>
+    N2D2_ALWAYS_INLINE SUM_T elemWise(
         int /*pos*/,
-        int /*ch*/);
+        int /*ch*/) const;
 
     template<ElemWiseOp ELEM_OP,
             // For first input
@@ -356,12 +356,12 @@ private:
             int... ARGS,
             typename... INPUTS,
             // Types
-            typename Input_T, typename Output_T>
-    N2D2_ALWAYS_INLINE void elemWise(
+            typename Input_T>
+    N2D2_ALWAYS_INLINE SUM_T elemWise(
         int pos,
         int ch,
         const Input_T* __restrict firstInputs,
-        INPUTS... inputs);
+        INPUTS... inputs) const;
 
     template<typename T>
     N2D2_ALWAYS_INLINE static T clamp(T v, T lo, T hi) {
@@ -440,7 +440,7 @@ private:
 template<typename Output_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenate(
     Output_T* __restrict /*outputs*/,
-    int /*pos*/) {}
+    int /*pos*/) const {}
 
 template<// For first input
          int INPUT_NB_CHANNELS,
@@ -458,7 +458,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenate(
     Output_T* __restrict outputs,
     int pos,
     const Input_T* __restrict firstInputs,
-    INPUTS... inputs)
+    INPUTS... inputs) const
 {
     int iOffset = INPUT_MEM_STRIDE * pos;
 
@@ -498,7 +498,7 @@ template<// For all inputs
 N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenatePropagate(
     Output_T* __restrict outputs,
     const Input_T* __restrict firstInputs,
-    INPUTS... inputs)
+    INPUTS... inputs) const
 {
     for (int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
         for (int ox = 0; ox < OUTPUTS_WIDTH; ox++) {
@@ -521,10 +521,13 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenatePropagate(
     }
 }
 
-template<typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWise(
+template<N2D2::Network::ElemWiseOp ELEM_OP>
+N2D2_ALWAYS_INLINE inline SUM_T N2D2::Network::elemWise(
     int /*pos*/,
-    int /*ch*/) {}
+    int /*ch*/) const
+{
+    return 0;
+}
 
 template<N2D2::Network::ElemWiseOp ELEM_OP,
          // For first input
@@ -538,12 +541,12 @@ template<N2D2::Network::ElemWiseOp ELEM_OP,
          int... ARGS,
          typename... INPUTS,
          // Types
-         typename Input_T, typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWise(
+         typename Input_T>
+N2D2_ALWAYS_INLINE inline SUM_T N2D2::Network::elemWise(
     int pos,
     int ch,
     const Input_T* __restrict firstInputs,
-    INPUTS... inputs)
+    INPUTS... inputs) const
 {
     int iOffset = INPUT_MEM_STRIDE * pos;
 
@@ -553,7 +556,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWise(
     }
 
     return firstInputs[iOffset + ch]
-                + elemWise<ARGS...>(pos, ch, inputs...);
+                + elemWise<ELEM_OP, ARGS...>(pos, ch, inputs...);
 }
 
 template<// For all inputs
@@ -583,9 +586,9 @@ template<// For all inputs
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWisePropagate(
     Output_T* __restrict outputs,
+    const Rescaling_T& __restrict rescaling,
     const Input_T* __restrict firstInputs,
-    INPUTS... inputs,
-    const Rescaling_T& __restrict rescaling)
+    INPUTS... inputs) const
 {
     static_assert(NB_INPUTS > 0, "Number of inputs must be > 0");
     static_assert(ELEM_OP == Sum, "Only Sum is supported");

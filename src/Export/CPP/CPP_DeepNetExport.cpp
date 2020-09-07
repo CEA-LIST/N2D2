@@ -674,6 +674,24 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
         buffers << "#define ENV_MEM_WRAP_SIZE 0\n";
     }
 
+    functionCalls << "#ifdef SAVE_OUTPUTS\n"
+                << "    std::ofstream env_stream(\"env_output.txt\");\n"
+                << "    saveOutputs("
+                << "ENV_NB_OUTPUTS, "
+                << "ENV_SIZE_Y, " 
+                << "ENV_SIZE_X, "
+                << "ENV_MEM_CONT_OFFSET, "
+                << "ENV_MEM_CONT_SIZE, "
+                << "ENV_MEM_WRAP_OFFSET, "
+                << "ENV_MEM_WRAP_SIZE, "
+                << "ENV_MEM_STRIDE, "
+                << "inputs, "
+                << "env_stream, "
+                << "Network::Format::CHW"
+                << ");\n"
+                << "    env_stream.close();\n"
+                << "#endif\n";
+
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer

@@ -215,9 +215,9 @@ void N2D2::CPP_ElemWiseCellExport::generateCallCode(
     }
 
     functionCalls << ">("
-                        << outputBuffer
-                        << inputBuffer << ", "
+                        << outputBuffer << ", "
                         << prefix << "_SCALING"
+                        << inputBuffer
                     << ");\n\n";
 
     generateBenchmarkEnd(deepNet, cell, functionCalls);
