@@ -173,6 +173,16 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
                     / (double)(std::max(size, stride) * length))
                         * (std::max(size, stride) * length);
         }
+
+        if (memPlane.count > 1) {
+            // Make sure that the intended margin with previous memPlane will be
+            // respected, as it may actually be lower because of the floor()
+            // in the memPlane getLimit() function.
+            requiredSize = memPlane.offset
+                + std::ceil((requiredSize - memPlane.offset)
+                    / (double)(memPlane.stride * memPlane.length))
+                        * (memPlane.stride * memPlane.length);
+        }
     }
 
     if (requiredSize > memPlane.memSpace->size
