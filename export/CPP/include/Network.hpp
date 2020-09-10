@@ -876,23 +876,26 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                     0, POOL_HEIGHT);
         const int iy = (oy * STRIDE_Y) - PADDING_Y;
 
+#pragma omp parallel for collapse(2)
         for (int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
-            const int sxMin = (PADDING_X == 0) ? 0
-                : max(PADDING_X - (ox * STRIDE_X), 0);
-            const int sxMax = (PADDING_X == 0) ? POOL_WIDTH
-                : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
-                        0, POOL_WIDTH);
-            const int ix = (ox * STRIDE_X) - PADDING_X;
-
-            const int oPos = (ox + OUTPUTS_WIDTH * oy);
-            int oOffset = OUTPUT_MEM_STRIDE * oPos;
-
-            if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
-                oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
-                            - OUTPUT_MEM_CONT_SIZE;
-            }
-
             for (int output = 0; output < NB_OUTPUTS; ++output) {
+                // moved to inner loop for collapsing -->
+                const int sxMin = (PADDING_X == 0) ? 0
+                    : max(PADDING_X - (ox * STRIDE_X), 0);
+                const int sxMax = (PADDING_X == 0) ? POOL_WIDTH
+                    : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
+                            0, POOL_WIDTH);
+                const int ix = (ox * STRIDE_X) - PADDING_X;
+
+                const int oPos = (ox + OUTPUTS_WIDTH * oy);
+                int oOffset = OUTPUT_MEM_STRIDE * oPos;
+
+                if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
+                    oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
+                                - OUTPUT_MEM_CONT_SIZE;
+                }
+                // <--
+
                 if (POOLING_TYPE == Max) {
                     Input_T maxVal = std::numeric_limits<Input_T>::lowest();
 
