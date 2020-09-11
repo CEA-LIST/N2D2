@@ -43,7 +43,9 @@ TEST(C_ConvCellExport, generate)
     cmd += " -I./include/ -I" + std::string(N2D2_PATH("export/C_HLS/include"));
     cmd += " include/conv_C_HLS.h";
 
+#ifndef WIN32
     ASSERT_EQUALS(system(cmd.c_str()), 0);
+#endif
 }
 
 RUN_TESTS()

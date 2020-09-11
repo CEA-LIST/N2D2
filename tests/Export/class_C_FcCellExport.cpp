@@ -42,7 +42,9 @@ TEST(C_FcCellExport, generate)
     cmd += " -I./include/ -I" + std::string(N2D2_PATH("export/C/include"));
     cmd += " include/fc_C.h";
 
+#ifndef WIN32
     ASSERT_EQUALS(system(cmd.c_str()), 0);
+#endif
 }
 
 RUN_TESTS()

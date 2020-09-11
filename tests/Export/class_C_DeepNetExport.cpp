@@ -21,7 +21,9 @@ TEST(C_DeepNetExport, generateParamsHeader)
 {
     C_DeepNetExport::generateParamsHeader("params.h");
 
+#ifndef WIN32
     ASSERT_EQUALS(system("g++ -Wall -Wextra -pedantic params.h"), 0);
+#endif
 }
 
 RUN_TESTS()
