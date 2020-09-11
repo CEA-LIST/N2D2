@@ -32,9 +32,15 @@ apt-get install -y \
     libhighgui-dev \
     libpugixml-dev \
     mongodb-dev \
-    libjsoncpp-dev \
-    libprotobuf-dev \
-    protobuf-compiler
+    libjsoncpp-dev
+
+# Install Protobuf 3
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.0.0/protobuf-cpp-3.0.0.tar.gz
+tar -xvf protobuf-cpp-3.0.0.tar.gz
+cd protobuf-3.0.0
+./configure --disable-shared CXXFLAGS="-fPIC"
+make -j 4
+make install
 
 if [ -n "$USE_CUDA" ] ; then
     # Install the "repo" package for CUDA
