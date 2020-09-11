@@ -32,7 +32,9 @@ apt-get install -y \
     libhighgui-dev \
     libpugixml-dev \
     mongodb-dev \
-    libjsoncpp-dev
+    libjsoncpp-dev \
+    libprotobuf-dev \
+    protobuf-compiler
 
 if [ -n "$USE_CUDA" ] ; then
     # Install the "repo" package for CUDA

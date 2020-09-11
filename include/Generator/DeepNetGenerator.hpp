@@ -25,7 +25,7 @@
 #include <string>
 
 #ifdef ONNX
-#include "third_party/onnx/onnx.proto3.pb.hpp"
+#include <onnx.pb.h>
 #endif
 
 namespace N2D2 {
