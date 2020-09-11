@@ -229,7 +229,7 @@ void N2D2::GraphViz::render(const std::string& fileName) const
     const std::string cmd = "dot -Tpng " + fileName
         + " -o " + Utils::fileBaseName(fileName) + ".png &";
 
-    const int ret = system(cmd.c_str());
+    const int ret = Utils::exec(cmd);
 
     if (ret < 0) {
         std::cout << Utils::cwarning << "Warning: could not plot GraphViz dot "

@@ -60,7 +60,7 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
                             + std::string(N2D2_PATH("export/" + type + "/*"))
                             + " " + dirName;
 #endif
-    const int ret = system(cmd.c_str());
+    const int ret = Utils::exec(cmd);
 
     if (ret != 0) {
         throw std::runtime_error("Warning: could not import files for " + type + " export "

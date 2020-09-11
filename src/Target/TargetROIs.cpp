@@ -623,9 +623,7 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
 #else
     const std::string cmd = "cat " + dirPath + "/*.log > " + dirPath + ".log";
 #endif
-    ret = system(cmd.c_str());
-    if (ret < 0) {
-    } // avoid ignoring return value warning
+    Utils::exec(cmd);
 }
 
 void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
