@@ -24,10 +24,12 @@
 #include <vector>
 
 #include "DeepNet.hpp"
+#include "StimuliProvider.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ElemWiseCell.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Export/CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "Export/CPP/CPP_DeepNetExport.hpp"
