@@ -67,6 +67,16 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
                                  "(copy return code: " + std::to_string(ret) + ").");
     }
 
+    std::cout << "-> Generating network" << std::endl;
+    Registrar<DeepNetExport>::create(type)(deepNet, dirName);
+
+    std::cout << "Done!" << std::endl;
+}
+
+void N2D2::DeepNetExport::generateCells(const DeepNet& deepNet,
+                                        const std::string& dirName,
+                                        const std::string& type)
+{
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
@@ -82,11 +92,6 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
             CellExport::generate(*deepNet.getCell(*it), dirName, type);
         }
     }
-
-    std::cout << "-> Generating network" << std::endl;
-    Registrar<DeepNetExport>::create(type)(deepNet, dirName);
-
-    std::cout << "Done!" << std::endl;
 }
 
 void N2D2::DeepNetExport::setExportParameters(

@@ -31,6 +31,8 @@ void N2D2::C_HLS_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/include");
     Utils::createDirectories(dirName + "/src");
 
+    DeepNetExport::generateCells(deepNet, dirName, "C_HLS");
+
     C_DeepNetExport::generateParamsHeader(dirName + "/include/params.h");
     C_DeepNetExport::generateEnvironmentHeader(deepNet,
                                                dirName + "/include/env.h");

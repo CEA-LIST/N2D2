@@ -31,6 +31,8 @@ void N2D2::CPP_TensorRT_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/dnn/include");
     Utils::createDirectories(dirName + "/dnn/src");
 
+    DeepNetExport::generateCells(deepNet, dirName, "CPP_TensorRT");
+
     CPP_DeepNetExport::generateParamsHeader(dirName + "/include/params.h");
     CPP_DeepNetExport::generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
 

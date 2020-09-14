@@ -88,6 +88,8 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
 
     memManager.log(dirName + "/memory_mapping.log");
 
+    DeepNetExport::generateCells(deepNet, dirName, "CPP");
+
     generateNetworkPropagateFile(deepNet, dirName + "/src/NetworkPropagate.cpp", 
                                  memManager, memoryAlignment);
     printStats(deepNet, memManager);
