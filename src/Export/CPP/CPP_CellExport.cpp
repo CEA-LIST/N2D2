@@ -77,7 +77,12 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
 void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofstream& header) {
     // TODO: needed for legacy code in CPP_Cuda and CPP_OpenCL
     // To be removed in the future --->
-    C_CellExport::generateActivationScaling(cell, header);
+    try {
+        C_CellExport::generateActivationScaling(cell, header);
+    }
+    catch (const std::exception& e) {
+        // Pass for scaling modes not supported by the C export
+    }
     // <---
 
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));

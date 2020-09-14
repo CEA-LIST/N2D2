@@ -92,14 +92,14 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
                                                               .getSingleShiftScaling()
                                                               .getScalingPerOutput();
         if(!Utils::all_same(scaling.begin(), scaling.end())) {
-            throw std::runtime_error("Single-shift with a global scaling per layer is the only activaion "
+            throw std::runtime_error("Single-shift with a global scaling per layer is the only activation "
                                      "scaling mode supported by the export.");
         }
 
         header << "#define " << prefix << "_SHIFT " << +scaling.front() << "\n";
     }
     else {
-        throw std::runtime_error("Single-shift with a global scaling per layer is the only activaion "
+        throw std::runtime_error("Single-shift with a global scaling per layer is the only activation "
                                  "scaling mode supported by the export.");
     }
 
