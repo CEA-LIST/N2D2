@@ -629,8 +629,13 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
         std::stringstream cmdNameStr;
         const char* pythonCmd = std::getenv("N2D2_PYTHON");
 
-        if (pythonCmd == NULL)
+        if (pythonCmd == NULL) {
+#ifdef WIN32
+            cmdNameStr << "python.exe";
+#else
             cmdNameStr << "python";
+#endif
+        }
         else
             cmdNameStr << pythonCmd;
 
