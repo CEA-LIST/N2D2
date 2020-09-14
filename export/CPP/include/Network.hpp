@@ -651,10 +651,16 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
     const WDATA_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
+    constexpr int OUTPUTS_HEIGHT_NOPAD
+        = (CHANNELS_HEIGHT - KERNEL_HEIGHT + STRIDE_Y) / STRIDE_Y;
+    constexpr int OUTPUTS_WIDTH_NOPAD
+        = (CHANNELS_WIDTH - KERNEL_WIDTH + STRIDE_X) / STRIDE_X;
+
     for (int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
         const int syMin = (PADDING_Y == 0) ? 0
             : max(PADDING_Y - (oy * STRIDE_Y), 0);
-        const int syMax = (PADDING_Y == 0) ? KERNEL_HEIGHT
+        const int syMax = (PADDING_Y == 0
+                && OUTPUTS_HEIGHT == OUTPUTS_HEIGHT_NOPAD) ? KERNEL_HEIGHT
             : clamp(CHANNELS_HEIGHT + PADDING_Y - (oy * STRIDE_Y), 
                     0, KERNEL_HEIGHT);
         const int iy = (oy * STRIDE_Y) - PADDING_Y;
@@ -665,7 +671,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                 // moved to inner loop for collapsing -->
                 const int sxMin = (PADDING_X == 0) ? 0
                     : max(PADDING_X - (ox * STRIDE_X), 0);
-                const int sxMax = (PADDING_X == 0) ? KERNEL_WIDTH
+                const int sxMax = (PADDING_X == 0
+                        && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                            ? KERNEL_WIDTH
                     : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
                             0, KERNEL_WIDTH);
                 const int ix = (ox * STRIDE_X) - PADDING_X;
@@ -682,8 +690,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                 SUM_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
-                    if (PADDING_Y != 0 && sy >= syMax - syMin)
+                    if ((PADDING_Y != 0
+                            || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
+                        && sy >= syMax - syMin)
+                    {
                         break;
+                    }
 
                     const int iPos = ((sxMin + ix)
                                         + CHANNELS_WIDTH * (iy + syMin + sy));
@@ -700,7 +712,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
 
                     if (NB_CHANNELS == INPUT_MEM_STRIDE
-                        && (PADDING_X == 0 || sxMax - sxMin == KERNEL_WIDTH))
+                        && ((PADDING_X == 0
+                            && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                                || sxMax - sxMin == KERNEL_WIDTH))
                     {
                         macsOnRange<KERNEL_WIDTH * NB_CHANNELS>(
                             inputs + iOffset, 
@@ -709,8 +723,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                     }
                     else {
                         for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
-                            if (PADDING_X != 0 && sx >= sxMax - sxMin)
+                            if ((PADDING_X != 0
+                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                && sx >= sxMax - sxMin)
+                            {
                                 break;
+                            }
 
                             macsOnRange<NB_CHANNELS>(
                                 // same input line so no wrapping can occur
@@ -760,10 +778,16 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
     static_assert(NB_CHANNELS == NB_OUTPUTS,
         "NB_CHANNELS should be equal to NB_OUTPUTS.");
 
+    constexpr int OUTPUTS_HEIGHT_NOPAD
+        = (CHANNELS_HEIGHT - KERNEL_HEIGHT + STRIDE_Y) / STRIDE_Y;
+    constexpr int OUTPUTS_WIDTH_NOPAD
+        = (CHANNELS_WIDTH - KERNEL_WIDTH + STRIDE_X) / STRIDE_X;
+
     for (int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
         const int syMin = (PADDING_Y == 0) ? 0
             : max(PADDING_Y - (oy * STRIDE_Y), 0);
-        const int syMax = (PADDING_Y == 0) ? KERNEL_HEIGHT
+        const int syMax = (PADDING_Y == 0
+                && OUTPUTS_HEIGHT == OUTPUTS_HEIGHT_NOPAD) ? KERNEL_HEIGHT
             : clamp(CHANNELS_HEIGHT + PADDING_Y - (oy * STRIDE_Y), 
                     0, KERNEL_HEIGHT);
         const int iy = (oy * STRIDE_Y) - PADDING_Y;
@@ -774,7 +798,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                 // moved to inner loop for collapsing -->
                 const int sxMin = (PADDING_X == 0) ? 0
                     : max(PADDING_X - (ox * STRIDE_X), 0);
-                const int sxMax = (PADDING_X == 0) ? KERNEL_WIDTH
+                const int sxMax = (PADDING_X == 0
+                        && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                            ? KERNEL_WIDTH
                     : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
                             0, KERNEL_WIDTH);
                 const int ix = (ox * STRIDE_X) - PADDING_X;
@@ -791,8 +817,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                 SUM_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
-                    if (PADDING_Y != 0 && sy >= syMax - syMin)
+                    if ((PADDING_Y != 0
+                            || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
+                        && sy >= syMax - syMin)
+                    {
                         break;
+                    }
 
                     const int iPos = ((sxMin + ix)
                                         + CHANNELS_WIDTH * (iy + syMin + sy));
@@ -808,7 +838,10 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                     const int wOffset = (sxMin
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
 
-                    if (PADDING_X == 0 || sxMax - sxMin == KERNEL_WIDTH) {
+                    if ((PADDING_X == 0
+                            && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                        || sxMax - sxMin == KERNEL_WIDTH)
+                    {
                         macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
                             inputs + iOffset + output, 
                             weights + wOffset, 
@@ -816,8 +849,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                     }
                     else {
                         for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
-                            if (PADDING_X != 0 && sx >= sxMax - sxMin)
+                            if ((PADDING_X != 0
+                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                && sx >= sxMax - sxMin)
+                            {
                                 break;
+                            }
 
                             weightedSum += inputs[iOffset + output
                                                     + sx * INPUT_MEM_STRIDE]
@@ -868,10 +905,16 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
     static_assert(ACTIVATION == Linear,
         "The export only supports a Linear activation.");
 
+    constexpr int OUTPUTS_HEIGHT_NOPAD
+        = (CHANNELS_HEIGHT - POOL_HEIGHT + STRIDE_Y) / STRIDE_Y;
+    constexpr int OUTPUTS_WIDTH_NOPAD
+        = (CHANNELS_WIDTH - POOL_WIDTH + STRIDE_X) / STRIDE_X;
+
     for (int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
         const int syMin = (PADDING_Y == 0) ? 0
             : max(PADDING_Y - (oy * STRIDE_Y), 0);
-        const int syMax = (PADDING_Y == 0) ? POOL_HEIGHT
+        const int syMax = (PADDING_Y == 0
+                && OUTPUTS_HEIGHT == OUTPUTS_HEIGHT_NOPAD) ? POOL_HEIGHT
             : clamp(CHANNELS_HEIGHT + PADDING_Y - (oy * STRIDE_Y), 
                     0, POOL_HEIGHT);
         const int iy = (oy * STRIDE_Y) - PADDING_Y;
@@ -882,7 +925,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                 // moved to inner loop for collapsing -->
                 const int sxMin = (PADDING_X == 0) ? 0
                     : max(PADDING_X - (ox * STRIDE_X), 0);
-                const int sxMax = (PADDING_X == 0) ? POOL_WIDTH
+                const int sxMax = (PADDING_X == 0
+                        && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                            ? POOL_WIDTH
                     : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
                             0, POOL_WIDTH);
                 const int ix = (ox * STRIDE_X) - PADDING_X;
@@ -900,8 +945,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                     Input_T maxVal = std::numeric_limits<Input_T>::lowest();
 
                     for (int sy = 0; sy < POOL_HEIGHT; ++sy) {
-                        if (PADDING_Y != 0 && sy >= syMax - syMin)
+                        if ((PADDING_Y != 0
+                                || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
+                            && sy >= syMax - syMin)
+                        {
                             break;
+                        }
 
                         const int iPos = ((sxMin + ix)
                                             + CHANNELS_WIDTH * (iy + syMin + sy));
@@ -915,8 +964,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                         }
 
                         for (int sx = 0; sx < POOL_WIDTH; ++sx) {
-                            if (PADDING_X != 0 && sx >= sxMax - sxMin)
+                            if ((PADDING_X != 0
+                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                && sx >= sxMax - sxMin)
+                            {
                                 break;
+                            }
 
                             if (inputs[iOffset + output + sx * INPUT_MEM_STRIDE]
                                 > maxVal)
@@ -933,8 +986,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                     SUM_T sum = 0;
 
                     for (int sy = 0; sy < POOL_HEIGHT; ++sy) {
-                        if (PADDING_Y != 0 && sy >= syMax - syMin)
+                        if ((PADDING_Y != 0
+                                || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
+                            && sy >= syMax - syMin)
+                        {
                             break;
+                        }
 
                         const int iPos = ((sxMin + ix)
                                             + CHANNELS_WIDTH * (iy + syMin + sy));
@@ -948,8 +1005,12 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                         }
 
                         for (int sx = 0; sx < POOL_WIDTH; ++sx) {
-                            if (PADDING_X != 0 && sx >= sxMax - sxMin)
+                            if ((PADDING_X != 0
+                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                && sx >= sxMax - sxMin)
+                            {
                                 break;
+                            }
 
                             sum += inputs[iOffset + output
                                     + sx * INPUT_MEM_STRIDE];
