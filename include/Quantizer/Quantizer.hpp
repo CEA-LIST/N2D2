@@ -46,6 +46,8 @@ public:
     virtual void update(){};
     virtual void propagate() = 0;
     virtual void back_propagate() = 0;
+    virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
+    virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
 
     virtual void setSolver(const std::shared_ptr<Solver>& solver)
     {

@@ -921,6 +921,10 @@ void N2D2::FcCell_Frame_CUDA<T>::exportFreeParameters(const std::string
     mSynchronized = true;
     FcCell::exportFreeParameters(fileName);
     mSynchronized = false;
+    if(mQuantizer) {
+        mQuantizer->exportFreeParameters(fileName);
+    }
+
 }
 
 template <class T>
@@ -933,6 +937,9 @@ void N2D2::FcCell_Frame_CUDA<T>::importFreeParameters(const std::string& fileNam
 
     mSynapses.synchronizeHToD();
     mBias.synchronizeHToD();
+    if(mQuantizer) {
+        mQuantizer->importFreeParameters(fileName, ignoreNotExists);
+    }
 }
 
 template <class T>

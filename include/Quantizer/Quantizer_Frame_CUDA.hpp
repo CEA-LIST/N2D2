@@ -93,6 +93,8 @@ public:
     {
         return true;
     }
+    virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
+    virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
 
     //virtual ~Quantizer() {};
 
@@ -141,7 +143,6 @@ private:
   
 };
 }
-
 
 #endif // N2D2_QUANTIZER_FRAME_CUDA_H
 
