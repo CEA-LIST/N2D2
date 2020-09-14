@@ -1,5 +1,8 @@
 @echo on
 
+echo Check Python install
+python --version
+
 echo Installing dirent
 git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
 
