@@ -552,6 +552,8 @@ std::string N2D2::Utils::exec(const std::string& cmd, int* status) {
         if (fgets(buffer.data(), 128, pipe.get()) != NULL)
             result += buffer.data();
     }
+
+    status = 0;
 #else
     int coutPipe[2];
     int cerrPipe[2];
