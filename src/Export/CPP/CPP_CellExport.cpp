@@ -55,10 +55,23 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    header << "#define " << prefix << "_ACTIVATION "  
-                         << (cellFrame.getActivation()?cellFrame.getActivation()->getType():
-                                                       "Linear") 
-                         << "\n";
+    const std::string type = (cellFrame.getActivation())
+        ? cellFrame.getActivation()->getType() : "Linear";
+
+    header << "#define " << prefix << "_ACTIVATION " << type << "\n";
+
+    if (cellFrame.getActivation()
+        && (type == "Rectifier" || type == "Linear"))
+    {
+        const double clipping = cellFrame.getActivation()
+            ->getParameter<double>("Clipping");
+
+        if (clipping > 0) {
+            std::cout << Utils::cwarning << "Clipping (" << clipping << ") for "
+                << type << " in cell " << cell.getName() << " is not supported!"
+                << Utils::cdef << std::endl;
+        }
+    }
 }
 
 void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofstream& header) {
