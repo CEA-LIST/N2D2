@@ -2,6 +2,7 @@
 
 echo Check Python install
 python --version
+python.exe -c "print ( 1 + 1 )"
 
 echo Installing dirent
 git clone -q --branch=master https://github.com/tronkko/dirent.git C:\projects\dirent
