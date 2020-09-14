@@ -32,6 +32,7 @@ void N2D2::C_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/include");
     Utils::createDirectories(dirName + "/src");
 
+    deepNet.fusePadding();  // probably already done, but make sure!
     DeepNetExport::generateCells(deepNet, dirName, "C");
 
     generateParamsHeader(dirName + "/include/params.h");
