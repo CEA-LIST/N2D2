@@ -61,17 +61,6 @@ void N2D2::CPP_ConvCellExport::generate(const ConvCell& cell, const std::string&
 
 void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std::ofstream& header) {
     // Constants
-    const std::size_t oxSize = (std::size_t) (
-        (cell.getChannelsWidth() + 2*cell.getPaddingX() - cell.getKernelWidth() + cell.getStrideX())/
-        static_cast<double>(cell.getStrideX())
-    );
-
-    const std::size_t oySize = (std::size_t)(
-        (cell.getChannelsHeight() + 2*cell.getPaddingY() - cell.getKernelHeight() + cell.getStrideY())/
-        static_cast<double>(cell.getStrideY())
-    );
-    
-        
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
     // Handle extended padding
@@ -80,6 +69,16 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
     padding[1] += cell.getPaddingY();  // Y_T
     padding[2] += cell.getPaddingX();  // X_R
     padding[3] += cell.getPaddingY();  // Y_B
+
+    const std::size_t oxSize = (std::size_t) (
+        (cell.getChannelsWidth() + padding[0] + padding[2] - cell.getKernelWidth() + cell.getStrideX())/
+        static_cast<double>(cell.getStrideX())
+    );
+
+    const std::size_t oySize = (std::size_t)(
+        (cell.getChannelsHeight() + padding[1] + padding[3] - cell.getKernelHeight() + cell.getStrideY())/
+        static_cast<double>(cell.getStrideY())
+    );
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
            << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
