@@ -156,7 +156,7 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
                                          CudaTensor<float>& diffData,
                                          unsigned int batchSize)
 {
-    const float rate = SGDSolver::getLearningRate(batchSize);
+    const float rate = SGDSolver::getLearningRate(batchSize, true);
 
     if (rate == 0.0)
         return;

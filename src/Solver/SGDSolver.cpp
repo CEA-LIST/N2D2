@@ -29,9 +29,11 @@ N2D2::SGDSolver::SGDSolver()
       mPower(this, "Power", 0.0),
       mIterationSize(this, "IterationSize", 1U),
       mMaxIterations(this, "MaxIterations", 0U),
+      mWarmUpDuration(this, "WarmUpDuration", 0U),
       mLearningRatePolicy(this, "LearningRatePolicy", None),
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
+      mUniqueStep(this, "UniqueStep", 0U),
       mQuantizationLevels(this, "QuantizationLevels", 0U),
       mClamping(this, "Clamping", ""),
       mIterationPass(0),
@@ -51,11 +53,13 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
       mPower(this, "Power", solver.mPower),
       mIterationSize(this, "IterationSize", solver.mIterationSize),
       mMaxIterations(this, "MaxIterations", solver.mMaxIterations),
+      mWarmUpDuration(this, "WarmUpDuration", solver.mWarmUpDuration),
       mLearningRatePolicy(this, "LearningRatePolicy",
                           solver.mLearningRatePolicy),
       mLearningRateStepSize(this, "LearningRateStepSize",
                             solver.mLearningRateStepSize),
       mLearningRateDecay(this, "LearningRateDecay", solver.mLearningRateDecay),
+      mUniqueStep(this, "UniqueStep", solver.mUniqueStep),
       mQuantizationLevels(this, "QuantizationLevels",
                           solver.mQuantizationLevels),
       mClamping(this, "Clamping", solver.mClamping),
@@ -89,7 +93,8 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
 
     if (mLearningRatePolicy == SGDSolver::StepDecay
         || mLearningRatePolicy == SGDSolver::ExponentialDecay
-        || mLearningRatePolicy == SGDSolver::InvTDecay)
+        || mLearningRatePolicy == SGDSolver::InvTDecay
+        || mLearningRatePolicy == SGDSolver::CosineDecay)
     {
         if (!(mLearningRateStepSize > 0)) {
             throw std::runtime_error("SGDSolver::getLearningRate(): parameter"
@@ -107,7 +112,21 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
             rate *= std::exp(-mLearningRateDecay * currentStep);
         else if (mLearningRatePolicy == SGDSolver::InvTDecay)
             rate *= 1.0 / (1.0 + mLearningRateDecay * currentStep);
-
+        else if (mLearningRatePolicy == SGDSolver::CosineDecay)
+        {
+            if(mWarmUpDuration > currentStep)
+            {
+                rate *= currentStep / (double) mWarmUpDuration;
+            }
+            else
+            {
+                const unsigned int step = currentStep - mWarmUpDuration;
+                double cosine_decay = 0.5 * (1.0 
+                                    + (double) std::cos(M_PI * (double) step / 
+                                     (double) (mMaxIterations - mWarmUpDuration)));
+                rate *=  std::max(0.0, cosine_decay) ;
+            }
+        }
         if (mNbIterations > 0) {
             const unsigned int prevPattern = (mNbIterations - 1)
                                                 * mIterationSize * batchSize;
