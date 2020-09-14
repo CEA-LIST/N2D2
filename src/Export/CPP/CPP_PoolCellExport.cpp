@@ -64,6 +64,13 @@ void N2D2::CPP_PoolCellExport::generateHeaderConstants(const PoolCell& cell,
     const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
     const std::string prefix = N2D2::Utils::upperCase(identifier);
 
+    // Handle extended padding
+    std::vector<int> padding = cell.getExtendedPadding();
+    padding[0] += cell.getPaddingX();  // X_L
+    padding[1] += cell.getPaddingY();  // Y_T
+    padding[2] += cell.getPaddingX();  // X_R
+    padding[3] += cell.getPaddingY();  // Y_B
+
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
            << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
            << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
@@ -80,8 +87,8 @@ void N2D2::CPP_PoolCellExport::generateHeaderConstants(const PoolCell& cell,
 
     header << "#define " << prefix << "_POOL_WIDTH " << cell.getPoolWidth() << "\n"
            << "#define " << prefix << "_POOL_HEIGHT " << cell.getPoolHeight() << "\n"
-           << "#define " << prefix << "_PADDING_X " << cell.getPaddingX() << "\n"
-           << "#define " << prefix << "_PADDING_Y " << cell.getPaddingY() << "\n"
+           << "#define " << prefix << "_PADDING_X " << padding[0] << "\n"
+           << "#define " << prefix << "_PADDING_Y " << padding[1] << "\n"
            << "#define " << prefix << "_STRIDE_X " << cell.getStrideX() << "\n"
            << "#define " << prefix << "_STRIDE_Y " << cell.getStrideY() << "\n"
            << "#define " << prefix << "_POOLING " << cell.getPooling() << "\n\n";
