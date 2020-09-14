@@ -42,10 +42,8 @@ else
 
     if [ -n "$CHECK_COVERAGE" ] ; then
         ARGS="$ARGS CHECK_COVERAGE=1"
-        # Redirect output to a file to limit the log size for Travis
-        make all -j $NUM_THREADS $ARGS > make.log
-    else
-        make all -j $NUM_THREADS $ARGS
     fi
+
+    make all -j $NUM_THREADS $ARGS
 fi
 
