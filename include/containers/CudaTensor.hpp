@@ -374,14 +374,6 @@ CudaTensor<T> cuda_tensor_cast(const BaseTensor& base)
     return cuda_tensor_cast<T>(cudaBase);
 }
 
-
-template <class T>
-CudaTensor<T> cuda_tensor_cast(const BaseTensor& base)
-{
-    const CudaBaseTensor& cudaBase = dynamic_cast<const CudaBaseTensor&>(base);
-    return cuda_tensor_cast<T>(cudaBase);
-}
-
 template <class T>
 CudaTensor<T> cuda_tensor_cast(const CudaBaseTensor& base)
 {
