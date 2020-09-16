@@ -34,7 +34,7 @@ namespace N2D2 {
 class CPP_cuDNN_BatchNormCellExport : public BatchNormCellExport,
                                       public CPP_cuDNN_CellExport {
 public:
-    static void generate(BatchNormCell& cell, const std::string& dirName);
+    static void generate(const BatchNormCell& cell, const std::string& dirName);
 
     static std::unique_ptr<CPP_cuDNN_BatchNormCellExport> getInstance(Cell
                                                                       & cell);

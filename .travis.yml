@@ -57,7 +57,7 @@ matrix:
       - sudo apt-get install -y lcov
       - gem install coveralls-lcov
     after_success:
-      - lcov -b . -d . -c -o ./coverage.info --no-external
+      - lcov -b . -d . -c -o ./coverage.info --no-external > lcov.log
       - lcov -r coverage.info "tests/*" -o coverage.info
       - coveralls-lcov coverage.info
     env:
@@ -73,6 +73,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libopencv-dev libcv-dev libhighgui-dev
   - sudo apt-get install -y gnuplot
+  - sudo apt-get install -y python
   - sudo -E ./.travis/install.sh
 
 # Build steps

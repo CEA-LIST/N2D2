@@ -49,18 +49,24 @@ void N2D2::C_ConvCellExport::generate(const ConvCell& cell,
 
 void N2D2::C_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std::ofstream& header) {
     // Constants
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+
+    // Handle extended padding
+    std::vector<int> padding = cell.getExtendedPadding();
+    padding[0] += cell.getPaddingX();  // X_L
+    padding[1] += cell.getPaddingY();  // Y_T
+    padding[2] += cell.getPaddingX();  // X_R
+    padding[3] += cell.getPaddingY();  // Y_B
+
     const std::size_t oxSize = (std::size_t) (
-        (cell.getChannelsWidth() + 2*cell.getPaddingX() - cell.getKernelWidth() + cell.getStrideX())/
+        (cell.getChannelsWidth() + padding[0] + padding[2] - cell.getKernelWidth() + cell.getStrideX())/
         static_cast<double>(cell.getStrideX())
     );
 
     const std::size_t oySize = (std::size_t)(
-        (cell.getChannelsHeight() + 2*cell.getPaddingY() - cell.getKernelHeight() + cell.getStrideY())/
+        (cell.getChannelsHeight() + padding[1] + padding[3] - cell.getKernelHeight() + cell.getStrideY())/
         static_cast<double>(cell.getStrideY())
     );
-    
-        
-    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
 
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
            << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
@@ -76,8 +82,8 @@ void N2D2::C_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std::
            << "#define " << prefix << "_SUB_SAMPLE_Y " << cell.getSubSampleY() << "\n"
            << "#define " << prefix << "_STRIDE_X " << cell.getStrideX() << "\n"
            << "#define " << prefix << "_STRIDE_Y " << cell.getStrideY() << "\n"
-           << "#define " << prefix << "_PADDING_X " << cell.getPaddingX() << "\n"
-           << "#define " << prefix << "_PADDING_Y " << cell.getPaddingY() << "\n\n";
+           << "#define " << prefix << "_PADDING_X " << padding[0] << "\n"
+           << "#define " << prefix << "_PADDING_Y " << padding[1] << "\n\n";
 
 
     C_CellExport::generateActivation(cell, header);

@@ -34,7 +34,7 @@ if [ -n "$USE_CMAKE" ] ; then
         ctest -j 4 --output-on-failure
     fi
 else
-    ARGS=""
+    ARGS="ONNX=1"
 
     if [ -n "$USE_CUDA" ] ; then
         ARGS="$ARGS CUDA=1"

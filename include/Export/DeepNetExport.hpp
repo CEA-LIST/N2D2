@@ -53,6 +53,9 @@ public:
     static void generate(DeepNet& deepNet,
                          const std::string& dirName,
                          const std::string& type);
+    static void generateCells(const DeepNet& deepNet,
+                              const std::string& dirName,
+                              const std::string& type);
     static void setExportParameters(const std::string& exportParameters);
 
     static bool isCellInputsUnsigned(const Cell& cell);

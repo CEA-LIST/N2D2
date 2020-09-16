@@ -139,6 +139,21 @@ if (MongoDB_FOUND)
     target_compile_definitions(n2d2_lib PUBLIC MONGODB=1)
 endif()
 
+INCLUDE(FindProtobuf)
+FIND_PACKAGE(Protobuf QUIET)
+if (Protobuf_FOUND)
+    file(DOWNLOAD https://raw.githubusercontent.com/onnx/onnx/master/onnx/onnx.proto3
+        ${CMAKE_BINARY_DIR}/onnx.proto)
+
+    INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
+    PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER ${CMAKE_BINARY_DIR}/onnx.proto)
+    ADD_LIBRARY(onnx_proto_lib ${PROTO_HEADER} ${PROTO_SRC})
+
+    get_filename_component("PROTO_HEADER_DIR" ${PROTO_HEADER} DIRECTORY)
+    target_include_directories(n2d2_lib PUBLIC ${PROTO_HEADER_DIR})
+    target_link_libraries(n2d2_lib onnx_proto_lib ${PROTOBUF_LIBRARY})
+    target_compile_definitions(n2d2_lib PUBLIC ONNX=1)
+endif()
 
 if(MSVC)
     if (EXISTS "$ENV{DIRENT_INCLUDE_DIR}")

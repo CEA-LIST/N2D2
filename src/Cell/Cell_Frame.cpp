@@ -22,6 +22,7 @@
 #include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 #include "third_party/half.hpp"
+#include "Cell/ConvCell_Frame_Kernels.hpp"
 
 template <class T>
 N2D2::Cell_Frame<T>::Cell_Frame(const DeepNet& deepNet, const std::string& name,
@@ -415,24 +416,81 @@ void N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
 template <class T>
 double N2D2::Cell_Frame<T>::applyLoss()
 {
-    double loss = 0.0;
+    return Cell_Frame_Top::applyLoss<T>(mDiffInputs, mOutputs);
+}
 
-    for (unsigned int index = 0; index < mOutputs.size(); ++index) {
-        const double error = mDiffInputs(index) - mOutputs(index);
-        mDiffInputs(index) = error;
-        loss += error * error;
-    }
+template <class T>
+double N2D2::Cell_Frame<T>::applyLossDistribWeighted(
+    unsigned int quantSteps,
+    double rangeMin,
+    double rangeMax)
+{
+    return Cell_Frame_Top::applyLossDistribWeighted<T>(
+        mDiffInputs, mOutputs,
+        quantSteps, rangeMin, rangeMax);
+}
+
+template <class T>
+double N2D2::Cell_Frame<T>::applyLossThroughKernel(
+    const BaseTensor& baseKernel,
+    std::function<double()> lossFunc)
+{
+    const Tensor<T>& kernel = tensor_cast<T>(baseKernel);
+
+    const ConvCell_Frame_Kernels::Descriptor desc(
+        std::vector<unsigned int>(2, 1U),
+        std::vector<unsigned int>(2, 1U),
+        {(int)std::floor(((int)kernel.dimX() - 1) / 2.0),
+         (int)std::floor(((int)kernel.dimY() - 1) / 2.0),
+         (int)std::ceil(((int)kernel.dimX() - 1) / 2.0),
+         (int)std::ceil(((int)kernel.dimY() - 1) / 2.0)},   // padding
+        std::vector<unsigned int>(2, 1U));
+
+    const T alpha = T(1.0);
+    const T beta = T(0.0);
+
+    Tensor<T> outputs(mOutputs.dims());
+    Tensor<T> diffInputs(mDiffInputs.dims());
+
+    mOutputs.swap(outputs);
+    mDiffInputs.swap(diffInputs);
+
+    ConvCell_Frame_Kernels::forward<T>(&alpha,
+                                        outputs,
+                                        kernel,
+                                        desc,
+                                        &beta,
+                                        mOutputs);
+
+    ConvCell_Frame_Kernels::forward<T>(&alpha,
+                                        diffInputs,
+                                        kernel,
+                                        desc,
+                                        &beta,
+                                        mDiffInputs);
+
+    const double loss = lossFunc();
+
+    ConvCell_Frame_Kernels::backwardData<T>(&alpha,
+                                            kernel,
+                                            mDiffInputs,
+                                            desc,
+                                            &beta,
+                                            diffInputs);
+
+    diffInputs.swap(mDiffInputs);
+    outputs.swap(mOutputs);
 
     mDiffInputs.setValid();
 
-    return (loss / mOutputs.dimB());
+    return loss;
 }
 
 template <class T>
 void N2D2::Cell_Frame<T>::setOutputErrors(const BaseTensor& baseErrors)
 {
     if (baseErrors.dimB() != mOutputs.dimB())
-        throw std::domain_error("Cell_Frame::setOutputTargets(): target "
+        throw std::domain_error("Cell_Frame::setOutputErrors(): target "
                                 "and output batch sizes don't match.");
 
     if (baseErrors.dimX() != mOutputsDims[0]

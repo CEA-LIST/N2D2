@@ -62,7 +62,13 @@ void N2D2::C_ScalingCellExport::generateHeaderConstants(const ScalingCell& cell,
            << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
            << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
            << "\n";
-    
+
+    generateScaling(cell, header);
+}
+
+void N2D2::C_ScalingCellExport::generateScaling(const ScalingCell& cell, std::ofstream& header) {
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+
     if(cell.getScaling().getMode() == ScalingMode::FLOAT_MULT) {
         const std::vector<Float_T>& rescaleFactorPerOutput = cell.getScaling()
                                                                  .getFloatingPointScaling()
@@ -84,7 +90,6 @@ void N2D2::C_ScalingCellExport::generateHeaderConstants(const ScalingCell& cell,
     else {
         throw std::runtime_error("Unsupported scaling mode for cell " + cell.getName() + ".");
     }
-
     
     header << "\n";
 }

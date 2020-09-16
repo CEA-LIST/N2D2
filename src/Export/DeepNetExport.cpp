@@ -26,7 +26,9 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/PaddingCell.hpp"
+#include "Cell/ElemWiseCell.hpp"
 #include "Export/CellExport.hpp"
+#include "Export/CPP/Cells/CPP_ConcatCell.hpp"
 
 bool N2D2::DeepNetExport::mUnsignedData = true;
 bool N2D2::DeepNetExport::mEnvDataUnsigned = false;
@@ -58,13 +60,23 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
                             + std::string(N2D2_PATH("export/" + type + "/*"))
                             + " " + dirName;
 #endif
-    const int ret = system(cmd.c_str());
+    const int ret = Utils::exec(cmd);
 
     if (ret != 0) {
         throw std::runtime_error("Warning: could not import files for " + type + " export "
                                  "(copy return code: " + std::to_string(ret) + ").");
     }
 
+    std::cout << "-> Generating network" << std::endl;
+    Registrar<DeepNetExport>::create(type)(deepNet, dirName);
+
+    std::cout << "Done!" << std::endl;
+}
+
+void N2D2::DeepNetExport::generateCells(const DeepNet& deepNet,
+                                        const std::string& dirName,
+                                        const std::string& type)
+{
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
@@ -80,11 +92,6 @@ void N2D2::DeepNetExport::generate(DeepNet& deepNet,
             CellExport::generate(*deepNet.getCell(*it), dirName, type);
         }
     }
-
-    std::cout << "-> Generating network" << std::endl;
-    Registrar<DeepNetExport>::create(type)(deepNet, dirName);
-
-    std::cout << "Done!" << std::endl;
 }
 
 void N2D2::DeepNetExport::setExportParameters(

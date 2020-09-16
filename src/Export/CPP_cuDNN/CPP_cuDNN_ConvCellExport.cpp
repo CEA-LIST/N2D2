@@ -29,7 +29,7 @@ N2D2::Registrar<N2D2::CPP_cuDNN_CellExport>
 N2D2::CPP_cuDNN_ConvCellExport::mRegistrarType(
     ConvCell::Type, N2D2::CPP_cuDNN_ConvCellExport::getInstance);
 
-void N2D2::CPP_cuDNN_ConvCellExport::generate(ConvCell& cell,
+void N2D2::CPP_cuDNN_ConvCellExport::generate(const ConvCell& cell,
                                               const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/dnn/include");
@@ -48,55 +48,16 @@ void N2D2::CPP_cuDNN_ConvCellExport::generate(ConvCell& cell,
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderFreeParameters(ConvCell
+void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderFreeParameters(const ConvCell
                                                                   & cell,
                                                                   std::ofstream
                                                                   & header)
 {
-    generateHeaderBias(cell, header);
+    CPP_ConvCellExport::generateHeaderBias(cell, header);
     generateHeaderWeights(cell, header);
 }
 
-void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBias(ConvCell& cell,
-                                                        std::ofstream& header)
-{
-    generateHeaderBiasVariable(cell, header);
-    generateHeaderBiasValues(cell, header);
-}
-
-void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBiasVariable(ConvCell& cell,
-                                                                std::ofstream
-                                                                & header)
-{
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-
-    header << "static BDATA_T " << identifier << "_biases["
-           << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
-}
-
-void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderBiasValues(ConvCell& cell,
-                                                      std::ofstream& header)
-{
-    header << "{";
-
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        if (output > 0)
-            header << ", ";
-
-        if (cell.getParameter<bool>("NoBias"))
-            header << "0";
-        else {
-            Tensor<Float_T> bias;
-            cell.getBias(output, bias);
-
-            CellExport::generateFreeParameter(bias(0), header);
-        }
-    }
-
-    header << "};\n";
-}
-
-void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderWeights(ConvCell& cell,
+void N2D2::CPP_cuDNN_ConvCellExport::generateHeaderWeights(const ConvCell& cell,
                                                            std::ofstream
                                                            & header)
 {

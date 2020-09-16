@@ -34,9 +34,9 @@ namespace N2D2 {
 class CPP_cuDNN_PoolCellExport : public PoolCellExport,
                                  public CPP_cuDNN_CellExport {
 public:
-    static void generate(PoolCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(PoolCell& cell, std::ofstream& header);
-    static void generateHeaderConnections(PoolCell& cell,
+    static void generate(const PoolCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const PoolCell& cell, std::ofstream& header);
+    static void generateHeaderConnections(const PoolCell& cell,
                                           std::ofstream& header);
 
     static std::unique_ptr<CPP_cuDNN_PoolCellExport> getInstance(Cell& cell);

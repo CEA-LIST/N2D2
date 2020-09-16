@@ -160,6 +160,8 @@ protected:
     template <class U>
     friend CudaTensor<U> cuda_tensor_cast(const CudaBaseTensor& base);
     template <class U>
+    friend CudaTensor<U> cuda_tensor_cast_nocopy(const BaseTensor& base);
+    template <class U>
     friend CudaTensor<U> cuda_tensor_cast_nocopy(const CudaBaseTensor& base);
 };
 
@@ -193,6 +195,7 @@ public:
     inline void append(const std::vector<T>& vec);
     inline void append(const Tensor<T>& frame);
     inline void clear();
+    inline void swap(CudaTensor<T>& tensor);
     inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
     inline const CudaTensor<T> operator[](size_t i) const;
@@ -277,6 +280,8 @@ protected:
     friend CudaTensor<U> cuda_tensor_cast(const BaseTensor& base);
     template <class U>
     friend CudaTensor<U> cuda_tensor_cast(const CudaBaseTensor& base);
+    template <class U>
+    friend CudaTensor<U> cuda_tensor_cast_nocopy(const BaseTensor& base);
     template <class U>
     friend CudaTensor<U> cuda_tensor_cast_nocopy(const CudaBaseTensor& base);
 };
@@ -371,6 +376,13 @@ CudaTensor<T> cuda_tensor_cast(const BaseTensor& base)
 
 
 template <class T>
+CudaTensor<T> cuda_tensor_cast(const BaseTensor& base)
+{
+    const CudaBaseTensor& cudaBase = dynamic_cast<const CudaBaseTensor&>(base);
+    return cuda_tensor_cast<T>(cudaBase);
+}
+
+template <class T>
 CudaTensor<T> cuda_tensor_cast(const CudaBaseTensor& base)
 {
     if (base.getType() == &typeid(T))
@@ -380,6 +392,13 @@ CudaTensor<T> cuda_tensor_cast(const CudaBaseTensor& base)
         tensor_cast<T>(base),
         cuda_device_tensor_cast<T>(base),
         base.mHostBased);
+}
+
+template <class T>
+CudaTensor<T> cuda_tensor_cast_nocopy(const BaseTensor& base)
+{
+    const CudaBaseTensor& cudaBase = dynamic_cast<const CudaBaseTensor&>(base);
+    return cuda_tensor_cast_nocopy<T>(cudaBase);
 }
 
 template <class T>
@@ -758,6 +777,19 @@ template <typename T> void N2D2::CudaTensor<T>::clear()
     Tensor<T>::clear();
 
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
+}
+
+template <class T>
+void N2D2::CudaTensor<T>::swap(CudaTensor<T>& tensor)
+{
+    Tensor<T>::swap(tensor);
+
+    // CudaBaseTensor
+    std::swap(mHostBased, tensor.mHostBased);
+    mDeviceTensors.swap(tensor.mDeviceTensors);
+
+    // CudaTensor<T>
+    mDeviceTensor.swap(tensor.mDeviceTensor);
 }
 
 template <class T> N2D2::CudaTensor<T> N2D2::CudaTensor<T>::clone() const {

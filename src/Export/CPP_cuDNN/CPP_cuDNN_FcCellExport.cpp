@@ -28,7 +28,7 @@ N2D2::Registrar<N2D2::CPP_cuDNN_CellExport>
 N2D2::CPP_cuDNN_FcCellExport::mRegistrarType(
     FcCell::Type, N2D2::CPP_cuDNN_FcCellExport::getInstance);
 
-void N2D2::CPP_cuDNN_FcCellExport::generate(FcCell& cell,
+void N2D2::CPP_cuDNN_FcCellExport::generate(const FcCell& cell,
                                             const std::string& dirName)
 {
     Utils::createDirectories(dirName + "/dnn/include");
@@ -48,7 +48,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generate(FcCell& cell,
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
+void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(const FcCell& cell,
                                                            std::ofstream
                                                            & header)
 {
@@ -63,7 +63,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
            << "\n"
               "#define " << prefix << "_NB_CHANNELS " << channelsSize << "\n\n";
 
-    const Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(&cell);
+    const Cell_Frame_Top* cellFrame = dynamic_cast<const Cell_Frame_Top*>(&cell);
 
     if (cellFrame != NULL) {
         header << "#define " << prefix << "_ACTIVATION "
@@ -76,8 +76,6 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
            << "_NB_OUTPUTS)\n"
               "#define " << prefix << "_CHANNELS_SIZE (" << prefix
            << "_NB_CHANNELS)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n"
               "#define " << prefix
            << "_CHANNELS_HEIGHT 1\n"
               "#define " << prefix << "_OUTPUTS_HEIGHT 1\n"
@@ -88,11 +86,11 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderConstants(FcCell& cell,
 }
 
 
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderFreeParameters(FcCell& cell,
+void N2D2::CPP_cuDNN_FcCellExport::generateHeaderFreeParameters(const FcCell& cell,
                                                                 std::ofstream
                                                                 & header)
 {
-    generateHeaderBias(cell, header);
+    CPP_FcCellExport::generateHeaderBias(cell, header);
 
     if (mThreshold > 0.0)
         generateHeaderWeightsSparse(cell, header);
@@ -100,46 +98,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderFreeParameters(FcCell& cell,
         generateHeaderWeights(cell, header);
 }
 
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBias(FcCell& cell,
-                                                      std::ofstream& header)
-{
-    generateHeaderBiasVariable(cell, header);
-    generateHeaderBiasValues(cell, header);
-}
-
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasVariable(FcCell& cell,
-                                                              std::ofstream
-                                                              & header)
-{
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-
-    header << "static BDATA_T " << identifier << "_biases["
-           << Utils::upperCase(identifier) << "_NB_OUTPUTS] = ";
-}
-
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderBiasValues(FcCell& cell,
-                                                    std::ofstream& header)
-{
-    header << "{";
-
-    for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
-        if (output > 0)
-            header << ", ";
-
-        if (cell.getParameter<bool>("NoBias"))
-            header << "0";
-        else {
-            Tensor<Float_T> bias;
-            cell.getBias(output, bias);
-
-            CellExport::generateFreeParameter(bias(0), header);
-        }
-    }
-
-    header << "};\n";
-}
-
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
+void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(const FcCell& cell,
                                                          std::ofstream& header)
 {
     const unsigned int channelsSize = cell.getNbChannels()
@@ -148,13 +107,12 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
-    header << "#define " << prefix << "_NB_WEIGHTS (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n\n";
+    header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+               << prefix << "_OUTPUTS_SIZE*" << prefix << "_CHANNELS_SIZE" 
+           << ")\n\n";
 
     // Weights flatten
-    header << "#define " << prefix << "_WEIGHTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n"
-           << "static WDATA_T " << identifier << "_weights_flatten["
+    header << "static WDATA_T " << identifier << "_weights_flatten["
            << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
@@ -172,7 +130,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeights(FcCell& cell,
     header << "};\n\n";
 }
 
-void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
+void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(const FcCell& cell,
                                                        std::ofstream& header)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
@@ -201,9 +159,9 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
 
     const unsigned int nbWeights = weights.size();
 
-    header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
+    header << "#define " << prefix << "_WEIGHTS_SIZE " << nbWeights << "\n"
            << "static WDATA_T " << identifier << "_weights_sparse["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -215,7 +173,7 @@ void N2D2::CPP_cuDNN_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
     header << "};\n\n";
 
     header << "static unsigned short " << identifier << "_weights_offsets["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
         if (i > 0)

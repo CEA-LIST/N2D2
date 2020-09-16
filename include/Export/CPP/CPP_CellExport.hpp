@@ -27,6 +27,7 @@
 #include <string>
 
 #include "Cell/Cell.hpp"
+#include "Scaling.hpp"
 #include "utils/Registrar.hpp"
 
 namespace N2D2 {
@@ -51,30 +52,30 @@ public:
 
     static void generateActivation(const Cell& cell, std::ofstream& header);
     static void generateActivationScaling(const Cell& cell, std::ofstream& header);
+    static void generateScaling(const std::string& prefix,
+                                const Scaling& scaling,
+                                bool outputUnsigned,
+                                std::ofstream& header);
 
     inline static std::unique_ptr<CPP_CellExport> getInstance(Cell& cell);
 
     virtual ~CPP_CellExport() {}
 
     // Commun methods for all cells
-    virtual void generateCellData(Cell& cell,
-                                  const std::string& outputName,
-                                  const std::string& outputSizeName,
-                                  std::ofstream& prog) = 0;
-    virtual void generateCellFunction(Cell& cell,
-                                      const std::vector
-                                      <std::shared_ptr<Cell> >& parentCells,
-                                      const std::string& inputName,
-                                      const std::string& outputName,
-                                      const std::string& outputSizeName,
-                                      std::ofstream& prog,
-                                      const std::string& funcProto = "",
-                                      const std::string& memProto = "",
-                                      bool memCompact = false) = 0;
-    virtual void generateOutputFunction(Cell& cell,
-                                        const std::string& inputName,
-                                        const std::string& outputName,
-                                        std::ofstream& prog) = 0;
+    virtual void generateCallCode(const DeepNet& deepNet,
+                                 const Cell& cell, 
+                                 std::stringstream& includes,
+                                 std::stringstream& buffers, 
+                                 std::stringstream& functionCalls) = 0;
+    virtual void generateBenchmarkStart(const DeepNet& deepNet,
+                                       const Cell& cell, 
+                                       std::stringstream& functionCalls);
+    virtual void generateBenchmarkEnd(const DeepNet& deepNet,
+                                      const Cell& cell, 
+                                      std::stringstream& functionCalls);
+    virtual void generateSaveOutputs(const DeepNet& deepNet,
+                                     const Cell& cell, 
+                                     std::stringstream& functionCalls);
 };
 }
 

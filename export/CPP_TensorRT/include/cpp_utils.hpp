@@ -59,7 +59,7 @@ void getFilesList(const std::string dir, std::vector<std::string>& files);
 
 void envRead(const std::string& fileName, unsigned int size,
              unsigned int channelsHeight, unsigned int channelsWidth,
-             DATA_T* data, bool noLabels,
+             float* data, bool noLabels,
              unsigned int outputsSize,
              int32_t* outputTargets);
 
@@ -78,8 +78,8 @@ enum CV_ColorSpace {
 
 cv::Mat cv_read(const std::string& fileName);
 void cv_ColorSpaceTransformation(cv::Mat& frame, CV_ColorSpace colorspace);
-void cv_DrawBBOX(cv::Mat& frame, DATA_T* ROIs, unsigned int nbBBox, unsigned int stepIdx = 4);
+void cv_DrawBBOX(cv::Mat& frame, float* ROIs, unsigned int nbBBox, unsigned int stepIdx = 4);
 void cv_Display(cv::Mat frame, unsigned int displayW, unsigned int displayH);
-void cv_toBuffer(cv::Mat& frame, DATA_T * &input);
+void cv_toBuffer(cv::Mat& frame, float * &input);
 
 #endif

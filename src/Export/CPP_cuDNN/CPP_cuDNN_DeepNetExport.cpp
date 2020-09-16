@@ -28,7 +28,13 @@ N2D2::Registrar<N2D2::DeepNetExport> N2D2::CPP_cuDNN_DeepNetExport::mRegistrar(
 void N2D2::CPP_cuDNN_DeepNetExport::generate(DeepNet& deepNet,
                                              const std::string& dirName)
 {
-    CPP_DeepNetExport::generate(deepNet, dirName);
+    Utils::createDirectories(dirName + "/dnn/include");
+    Utils::createDirectories(dirName + "/dnn/src");
+
+    DeepNetExport::generateCells(deepNet, dirName, "CPP_cuDNN");
+
+    CPP_DeepNetExport::generateParamsHeader(dirName + "/include/params.h");
+    CPP_DeepNetExport::generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
 
     generateDeepNetHeader(
         deepNet, "network_cudnn", dirName + "/dnn/include/network.hpp");
@@ -441,7 +447,7 @@ void N2D2::CPP_cuDNN_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
 
     prog <<  "/*******INPUT DATA TRANSFER TO DEVICE*********/\n" ;
     prog << "    CHECK_CUDA_STATUS( cudaMemcpy(" << inputsBuffer << "buffer[0]"
-        << ", in_data, batchSize*ENV_BUFFER_SIZE*sizeof(DATA_T),"
+        << ", in_data, batchSize*ENV_OUTPUTS_SIZE*sizeof(DATA_T),"
         << " cudaMemcpyHostToDevice) );\n";
 
     const std::vector<std::shared_ptr<Target> > outputTargets

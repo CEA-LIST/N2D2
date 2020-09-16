@@ -76,6 +76,11 @@ public:
                              double defaultVal) = 0;
     virtual void setOutputTargets(const BaseTensor& targets) = 0;
     virtual double applyLoss() = 0;
+    virtual double applyLossDistribWeighted(unsigned int quantSteps,
+                                            double rangeMin,
+                                            double rangeMax) = 0;
+    virtual double applyLossThroughKernel(const BaseTensor& kernel,
+        std::function<double()> lossFunc) = 0;
     virtual void setOutputErrors(const BaseTensor& errors) = 0;
     virtual BaseTensor& getOutputs() = 0;
     virtual const BaseTensor& getOutputs() const = 0;
@@ -104,6 +109,15 @@ public:
 
     virtual bool isCuda() const = 0;
     virtual ~Cell_Frame_Top() {};
+
+    template <class T>
+    static double applyLoss(Tensor<T>& diffInputs, const Tensor<T>& outputs);
+    template <class T>
+    static double applyLossDistribWeighted(Tensor<T>& diffInputs,
+                                           const Tensor<T>& outputs,
+                                           unsigned int quantSteps,
+                                           double rangeMin,
+                                           double rangeMax);
 
 protected:
     std::shared_ptr<Activation> mActivation;

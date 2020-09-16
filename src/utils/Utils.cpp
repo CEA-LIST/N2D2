@@ -22,6 +22,15 @@
 #include <cstring>
 #include <cerrno>
 #include <cmath>
+
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <spawn.h>
+#include <poll.h>
+#endif
+
 #include "utils/Utils.hpp"
 
 std::tuple<double, double, double>
@@ -508,23 +517,97 @@ bool N2D2::Utils::createDirectories(const std::string& dirName)
     return (status == 0);
 }
 
-std::string N2D2::Utils::exec(const std::string& cmd) {
+int N2D2::Utils::exec(const std::string& cmd) {
+#ifdef WIN32
+    return system(cmd.c_str());
+#else
+    std::string command = cmd;
+    std::string argsmem[] = {"sh","-c"}; // allows non-const access to literals
+    char* const args[] = {&argsmem[0][0], &argsmem[1][0], &command[0], nullptr};
+
+    pid_t pid;
+    if (posix_spawnp(&pid, args[0], NULL, NULL, &args[0], NULL) != 0) {
+        throw std::runtime_error("Utils::exec('" + cmd + "'): "
+            "posix_spawnp() failed: " + std::strerror(errno));
+    }
+
+    int status;
+    waitpid(pid, &status, 0);
+    return status;
+#endif
+}
+
+std::string N2D2::Utils::exec(const std::string& cmd, int* status) {
+    std::string result;
+
 #ifdef WIN32
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd.c_str(), "r"), _pclose);
-#else
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
-#endif
 
     if (!pipe)
         throw std::runtime_error("Utils::exec('" + cmd + "'): popen() failed: " + std::strerror(errno));
 
-    std::string result;
     std::array<char, 128> buffer;
 
     while (!feof(pipe.get())) {
         if (fgets(buffer.data(), 128, pipe.get()) != NULL)
             result += buffer.data();
     }
+
+    (*status) = 0;
+#else
+    int coutPipe[2];
+    int cerrPipe[2];
+
+    if (pipe(coutPipe) || pipe(cerrPipe)) {
+        throw std::runtime_error("Utils::exec('" + cmd + "'): "
+                                 "pipe returned an error.");
+    }
+
+    posix_spawn_file_actions_t action;
+    posix_spawn_file_actions_init(&action);
+    posix_spawn_file_actions_addclose(&action, coutPipe[0]);
+    posix_spawn_file_actions_addclose(&action, cerrPipe[0]);
+    posix_spawn_file_actions_adddup2(&action, coutPipe[1], 1);
+    posix_spawn_file_actions_adddup2(&action, cerrPipe[1], 2);
+    posix_spawn_file_actions_addclose(&action, coutPipe[1]);
+    posix_spawn_file_actions_addclose(&action, cerrPipe[1]);
+
+    std::string command = cmd;
+    std::string argsmem[] = {"sh","-c"}; // allows non-const access to literals
+    char* const args[] = {&argsmem[0][0], &argsmem[1][0], &command[0], nullptr};
+
+    pid_t pid;
+    if (posix_spawnp(&pid, args[0], &action, NULL, &args[0], NULL) != 0) {
+        throw std::runtime_error("Utils::exec('" + cmd + "'): "
+            "posix_spawnp() failed: " + std::strerror(errno));
+    }
+
+    close(coutPipe[1]), close(cerrPipe[1]); // close child-side of pipes
+
+    // Read from pipes
+    std::string buffer(1024, ' ');
+    std::vector<pollfd> plist = {{coutPipe[0], POLLIN, 0},
+                                 {cerrPipe[0], POLLIN, 0}};
+    for (int rval; (rval = poll(&plist[0], plist.size(), /*timeout*/-1))>0; ) {
+        if (plist[0].revents & POLLIN) {
+            int bytes_read = read(coutPipe[0], &buffer[0], buffer.length());
+            result += buffer.substr(0, static_cast<size_t>(bytes_read));
+        }
+        else if (plist[1].revents & POLLIN) {
+            int bytes_read = read(cerrPipe[0], &buffer[0], buffer.length());
+            result += buffer.substr(0, static_cast<size_t>(bytes_read));
+        }
+        else
+            break; // nothing left to read
+    }
+
+    int ret;
+    waitpid(pid, &ret, 0);
+    posix_spawn_file_actions_destroy(&action);
+
+    if (status != NULL)
+        (*status) = ret;
+#endif
 
     return result;
 }

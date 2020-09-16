@@ -21,7 +21,7 @@
 
 #include "Export/CPP_cuDNN/CPP_cuDNN_CellExport.hpp"
 
-void N2D2::CPP_cuDNN_CellExport::generateHeaderIncludes(Cell& cell,
+void N2D2::CPP_cuDNN_CellExport::generateHeaderIncludes(const Cell& cell,
                                                         std::ofstream& header)
 {
     CPP_CellExport::generateHeaderIncludes(cell, header);

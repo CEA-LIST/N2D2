@@ -15,6 +15,9 @@ appveyor DownloadFile ^
   -FileName opencv-2.4.13.2-vc14.exe
 opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
+echo Installing Protobuf
+choco install -y protoc
+
 if DEFINED USE_CUDA goto :use_cuda
 goto :endif
 

@@ -50,6 +50,7 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
 
 void confusion_print(unsigned int nbOutputs, unsigned int* confusion);
 
+// Required for DNeuro V2 emulator
 template<class T>
 const T& clamp(const T& v, const T& lo, const T& hi) {
     if(v < lo) {

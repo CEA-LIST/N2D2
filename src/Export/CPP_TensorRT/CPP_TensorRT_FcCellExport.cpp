@@ -31,7 +31,6 @@ N2D2::CPP_TensorRT_FcCellExport::mRegistrarType(
 void N2D2::CPP_TensorRT_FcCellExport::generate(FcCell& cell,
                                             const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
 
     const std::string fileName = dirName + "/dnn/include/"
@@ -89,8 +88,6 @@ void N2D2::CPP_TensorRT_FcCellExport::generateHeaderConstants(FcCell& cell,
            << "_NB_OUTPUTS)\n"
               "#define " << prefix << "_CHANNELS_SIZE (" << prefix
            << "_NB_CHANNELS)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n"
               "#define " << prefix
            << "_CHANNELS_HEIGHT 1\n"
               "#define " << prefix << "_OUTPUTS_HEIGHT 1\n"
@@ -159,13 +156,12 @@ void N2D2::CPP_TensorRT_FcCellExport::generateHeaderWeights(FcCell& cell,
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
-    header << "#define " << prefix << "_NB_WEIGHTS (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n\n";
+    header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+               << prefix << "_OUTPUTS_SIZE*" << prefix << "_CHANNELS_SIZE" 
+           << ")\n\n";
 /*
     // Weights flatten
-    header << "#define " << prefix << "_WEIGHTS_SIZE (" << prefix
-           << "_NB_OUTPUTS*" << prefix << "_NB_CHANNELS)\n"
-           << "static WDATA_T " << identifier << "_weights_flatten["
+    header << "static WDATA_T " << identifier << "_weights_flatten["
            << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int output = 0; output < cell.getNbOutputs(); ++output) {
@@ -252,9 +248,9 @@ void N2D2::CPP_TensorRT_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
 
     const unsigned int nbWeights = weights.size();
 
-    header << "#define " << prefix << "_NB_WEIGHTS " << nbWeights << "\n"
+    header << "#define " << prefix << "_WEIGHTS_SIZE " << nbWeights << "\n"
            << "static WDATA_T " << identifier << "_weights_sparse["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -266,7 +262,7 @@ void N2D2::CPP_TensorRT_FcCellExport::generateHeaderWeightsSparse(FcCell& cell,
     header << "};\n\n";
 
     header << "static unsigned short " << identifier << "_weights_offsets["
-           << prefix << "_NB_WEIGHTS] = {\n";
+           << prefix << "_WEIGHTS_SIZE] = {\n";
 
     for (unsigned int i = 0; i < nbWeights; ++i) {
         if (i > 0)
@@ -371,28 +367,16 @@ void N2D2::CPP_TensorRT_FcCellExport
     prog << "   " << "std::vector< nvinfer1::ITensor *> "
          << identifier << "_tensor;\n";
 
-    prog << "   " << identifier << "_tensor = " << "add_fc(tsrRTHandles.netDef.back(),\n"
-         << "       " << "tsrRTHandles.netBuilder,\n"
-         << "       " << "tsrRTHandles.dT,\n"
+    prog << "   " << identifier << "_tensor = " << "add_fc(\n"
          << "       " << "\"FullyConnected_NATIVE_" << identifier << "\",\n"
          << "       " << activationStr << ",\n"
          << "       " << prefix << "_NB_OUTPUTS,\n"
          << "       " << input_name.str() << "tensor,\n"
          //<< "       " << identifier << "_weights_flatten,\n"
-         << "       " << "\"dnn/weights/" << identifier << "_weights.syntxt\",\n"
-         << "       " << prefix << "_NB_WEIGHTS,\n"
-         << "       " << "\"dnn/weights/" << identifier << "_bias.syntxt\");\n";
+         << "       " << "mParametersPath + " << "\"weights/" << identifier << "_weights.syntxt\",\n"
+         << "       " << prefix << "_WEIGHTS_SIZE,\n"
+         << "       " << "mParametersPath +  " << "\"weights/" << identifier << "_bias.syntxt\");\n";
 
-}
-
-void N2D2::CPP_TensorRT_FcCellExport
-    ::generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog)
-{
-    prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&inout_buffer["
-                  << targetIdx + 1 << "], " // Added 1 for stride the input buffer
-                  << "sizeof(DATA_T)*batchSize"
-                  << "*NB_OUTPUTS[" << targetIdx << "]"
-                  << "));\n";
 }
 
 void N2D2::CPP_TensorRT_FcCellExport
@@ -401,8 +385,7 @@ void N2D2::CPP_TensorRT_FcCellExport
                                            std::ofstream& prog)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
-
-    prog << "   " << "add_target(tsrRTHandles.netDef.back(), " << identifier << "_tensor, "
+    prog << "   " << "add_target(" << identifier << "_tensor, "
                   << targetIdx << ");\n";
 
 }

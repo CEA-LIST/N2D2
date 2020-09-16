@@ -45,8 +45,6 @@ public:
                                             std::vector<std::string>& parentsName,
                                             std::ofstream& prog);
 
-    void generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog);
-
     void generateCellProgramInstanciateOutput(Cell& cell,
                                                unsigned int targetIdx,
                                                std::ofstream& prog);

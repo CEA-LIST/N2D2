@@ -527,6 +527,29 @@ void N2D2::Target::process(Database::StimuliSet set)
 
     if (mDataAsTarget) {
         mLoss.push_back(targetCell->applyLoss());
+
+        //mLoss.push_back(targetCell->applyLossDistribWeighted(20, -1.0, 1.0));
+
+        //Tensor<Float_T> kernel({7, 7, 1, 1}, 1.0 / (7.0 * 7.0));
+        //kernel(0, 0, 0, 0) = 0.0;
+        //kernel(1, 0, 0, 0) = 2.0 / 16.0;
+        //kernel(2, 0, 0, 0) = 0.0;
+        //kernel(0, 1, 0, 0) = 2.0 / 16.0;
+        //kernel(1, 1, 0, 0) = 4.0 / 16.0;
+        //kernel(2, 1, 0, 0) = 2.0 / 16.0;
+        //kernel(0, 2, 0, 0) = 0.0;
+        //kernel(1, 2, 0, 0) = 2.0 / 16.0;
+        //kernel(2, 2, 0, 0) = 0.0;
+
+        //mLoss.push_back(targetCell->applyLossThroughKernel(kernel,
+        //    std::bind((double(Cell_Frame_Top::*)(unsigned int, double, double))
+        //            &Cell_Frame_Top::applyLossDistribWeighted,
+        //        targetCell.get(), 100U, -1.0, 1.0)));
+
+        //mLoss.push_back(targetCell->applyLossThroughKernel(kernel,
+        //    std::bind((double(Cell_Frame_Top::*)())
+        //        &Cell_Frame_Top::applyLoss,
+        //    targetCell.get())));
         return;
     }
 
@@ -799,6 +822,13 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         else
             targetCellCSpike->getOutputsActivity().synchronizeDToH();
 
+        const double alpha
+            = (mStimuliProvider->getParameter<bool>("DataSignedMapping"))
+                ? 128.0 : 255.0;
+        const double beta
+            = (mStimuliProvider->getParameter<bool>("DataSignedMapping"))
+                ? 128.0 : 0.0;
+
 #pragma omp parallel for if (size > 4)
         for (int batchPos = 0; batchPos < size; ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
@@ -844,7 +874,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
                     cv::Mat inputImg = (cv::Mat)mStimuliProvider->getTargetData(0, batchPos);
                     cv::Mat inputImg8U;
-                    inputImg.convertTo(inputImg8U, CV_8U, 255.0);
+                    inputImg.convertTo(inputImg8U, CV_8U, alpha, beta);
 
                     fileName = dirPath + "/" + fileBaseName + "_target."
                                     + fileExtension;
@@ -878,7 +908,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             else {
                 const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
                 cv::Mat outputImg8U;
-                outputImg.convertTo(outputImg8U, CV_8U, 255.0);
+                outputImg.convertTo(outputImg8U, CV_8U, alpha, beta);
 
                 if (!cv::imwrite(fileName, outputImg8U)) {
 #pragma omp critical(Target__logEstimatedLabels)

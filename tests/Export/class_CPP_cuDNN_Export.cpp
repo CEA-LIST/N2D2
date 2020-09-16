@@ -133,6 +133,7 @@ TEST(CPP_cuDNN_Export, generate)
     DeepNetExport::mEnvDataUnsigned = false;
     CellExport::mPrecision = static_cast<CellExport::Precision>(-32);
 
+#ifndef WIN32
     std::string cmd = "rm -rf export_CPP_cuDNN_float32";
     ASSERT_EQUALS(system(cmd.c_str()), 0);
 
@@ -165,6 +166,7 @@ TEST(CPP_cuDNN_Export, generate)
     ASSERT_EQUALS(system(cmd.c_str()), 0);
     sucess_file >> success_rate;
     ASSERT_EQUALS_DELTA(success_rate, 96.3517, 1.e-3);
+#endif
 }
 
 RUN_TESTS()

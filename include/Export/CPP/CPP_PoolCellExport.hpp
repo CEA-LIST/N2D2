@@ -30,7 +30,7 @@ namespace N2D2 {
  * Class for methods of PoolCell for all CPP exports type
  * PoolCell, CPP EXPORT
 **/
-class CPP_PoolCellExport : public PoolCellExport {
+class CPP_PoolCellExport : public PoolCellExport, public CPP_CellExport {
 public:
     static void generate(const PoolCell& cell, const std::string& dirName);
     static void generateHeaderConstants(const PoolCell& cell,
@@ -38,13 +38,17 @@ public:
 
     static void generateHeaderConnections(const PoolCell& cell,
                                           std::ofstream& header);
-    static void generateHeaderConnectionsVariable(const PoolCell& cell,
-                                                  std::ofstream& header);
-    static void generateHeaderConnectionsValues(const PoolCell& cell,
-                                                std::ofstream& header);
+
+    static std::unique_ptr<CPP_PoolCellExport> getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                                 const Cell& cell, 
+                                 std::stringstream& includes,
+                                 std::stringstream& buffers, 
+                                 std::stringstream& functionCalls);
 
 private:
     static Registrar<PoolCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 

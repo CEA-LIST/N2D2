@@ -29,7 +29,7 @@ N2D2::Registrar<N2D2::CPP_cuDNN_CellExport>
 N2D2::CPP_cuDNN_SoftmaxCellExport::mRegistrarType(
     SoftmaxCell::Type, N2D2::CPP_cuDNN_SoftmaxCellExport::getInstance);
 
-void N2D2::CPP_cuDNN_SoftmaxCellExport::generate(SoftmaxCell& cell,
+void N2D2::CPP_cuDNN_SoftmaxCellExport::generate(const SoftmaxCell& cell,
                                                  const std::string& dirName)
 {
     CPP_SoftmaxCellExport::generate(cell, dirName);

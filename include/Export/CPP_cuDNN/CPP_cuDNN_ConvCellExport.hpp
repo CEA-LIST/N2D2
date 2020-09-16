@@ -34,19 +34,12 @@ namespace N2D2 {
 class CPP_cuDNN_ConvCellExport : public ConvCellExport,
                                  public CPP_cuDNN_CellExport {
 public:
-    static void generate(ConvCell& cell, const std::string& dirName);
-    static void generateHeaderConstants(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderFreeParameters(ConvCell& cell,
+    static void generate(const ConvCell& cell, const std::string& dirName);
+    static void generateHeaderConstants(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderFreeParameters(const ConvCell& cell,
                                              std::ofstream& header);
 
-    static void generateHeaderBias(ConvCell& cell, std::ofstream& header);
-    static void generateHeaderBiasVariable(ConvCell& cell,
-                                           std::ofstream& header);
-
-    static void generateHeaderBiasValues(ConvCell& cell,
-                                          std::ofstream& header);
-
-    static void generateHeaderWeights(ConvCell& cell, std::ofstream& header);
+    static void generateHeaderWeights(const ConvCell& cell, std::ofstream& header);
 
     static std::unique_ptr<CPP_cuDNN_ConvCellExport> getInstance(Cell& cell);
 

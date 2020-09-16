@@ -93,8 +93,7 @@ void N2D2::CPP_TensorRT_SoftmaxCellExport
         prog << "   " << "std::vector< nvinfer1::ITensor *> "
             << identifier << "_reshape_tensor;\n";
 
-        prog << "   " << identifier << "_reshape_tensor = " << "add_reshape(tsrRTHandles.netDef.back(),\n"
-            << "       " << "tsrRTHandles.dT,\n"
+        prog << "   " << identifier << "_reshape_tensor = " << "add_reshape("
             << "       " << "\"Reshape_NATIVE_" << prefix << "\",\n"
             << "       " << "GROUP_SIZE_" << prefix << ",\n"
             << "       " << "false,\n"
@@ -103,16 +102,14 @@ void N2D2::CPP_TensorRT_SoftmaxCellExport
         prog << "   " << "std::vector< nvinfer1::ITensor *> "
             << identifier << "_softmax_tensor;\n";
 
-        prog << "   " << identifier << "_softmax_tensor = " << "add_softmax(tsrRTHandles.netDef.back(),\n"
-            << "       " << "tsrRTHandles.dT,\n"
+        prog << "   " << identifier << "_softmax_tensor = " << "add_softmax("
             << "       " << "\"Softmax_NATIVE_" << prefix << "\",\n"
             << "       " << identifier << "_reshape_tensor);\n";
 
         prog << "   " << "std::vector< nvinfer1::ITensor *> "
             << identifier << "_tensor;\n";
 
-        prog << "   " << identifier << "_tensor = " << "add_reshape(tsrRTHandles.netDef.back(),\n"
-            << "       " << "tsrRTHandles.dT,\n"
+        prog << "   " << identifier << "_tensor = " << "add_reshape("
             << "       " << "\"RestoreShape_NATIVE_" << prefix << "\",\n"
             << "       " << "1,\n"
             << "       " << "true,\n"
@@ -128,25 +125,10 @@ void N2D2::CPP_TensorRT_SoftmaxCellExport
         prog << "   " << "std::vector< nvinfer1::ITensor *> "
             << identifier << "_tensor;\n";
 
-        prog << "   " << identifier << "_tensor = " << "add_softmax(tsrRTHandles.netDef.back(),\n"
-         << "       " << "tsrRTHandles.netBuilder,\n"
-            << "       " << "tsrRTHandles.dT,\n"
+        prog << "   " << identifier << "_tensor = " << "add_softmax("
             << "       " << "\"Softmax_NATIVE_" << prefix << "\",\n"
             << "       " << input_name.str() << "tensor);\n";
     }
-}
-
-void N2D2::CPP_TensorRT_SoftmaxCellExport
-    ::generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog)
-{
-
-    prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&inout_buffer["
-                  << targetIdx + 1 << "], " // Added 1 for stride the input buffer
-                  << "sizeof(DATA_T)*batchSize"
-                  << "*NB_OUTPUTS[" << targetIdx << "]"
-                  << "*OUTPUTS_HEIGHT[" << targetIdx << "]"
-                  << "*OUTPUTS_WIDTH[" << targetIdx << "]"
-                  << "));\n";
 }
 
 void N2D2::CPP_TensorRT_SoftmaxCellExport
@@ -156,7 +138,7 @@ void N2D2::CPP_TensorRT_SoftmaxCellExport
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    prog << "   " << "add_target(tsrRTHandles.netDef.back(), " << identifier << "_tensor, "
+    prog << "   " << "add_target(" << identifier << "_tensor, "
                   << targetIdx << ");\n";
 
 }

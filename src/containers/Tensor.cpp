@@ -526,10 +526,19 @@ void N2D2::Tensor<T>::load(std::istream& stream)
 template <class T>
 void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
 {
-    std::swap(mDims, tensor.mDims);
-    (*mData)().swap((*tensor.mData)());
+    assert(mData.unique());
+    assert(mDataOffset == 0);
+    assert(tensor.mDataOffset == 0);
+
+    // BaseTensor
+    mDims.swap(tensor.mDims);
+    std::swap((*mValid), (*tensor.mValid));
     std::swap(mSize, tensor.mSize);
     std::swap(mSizeM1, tensor.mSizeM1);
+    mDataTensors.swap(tensor.mDataTensors);
+
+    // Tensor<T>
+    (*mData)().swap((*tensor.mData)());
 
     assert((*mData)().size() == size());
     assert((*tensor.mData)().size() == tensor.size());

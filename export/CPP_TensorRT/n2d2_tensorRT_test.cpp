@@ -29,13 +29,17 @@
 #undef min
 #undef max
 #include "cpp_utils.hpp"
-#include "n2d2_tensorRT_inference.hpp"
+#include "NetworkTensorRT.hpp"
 
 int main(int argc, char* argv[])
 {
     std::string stimulus = "";
     std::string modelToSave = "";
     std::string modelToLoad = "";
+
+    std::string calibFile = "";
+    std::string calibFolder = "";
+    std::string paramPaths = "dnn/";
 
     std::string::size_type sz;   // alias of size_t
     unsigned int device = 0;
@@ -80,6 +84,24 @@ int main(int argc, char* argv[])
             std::string nextArg(argv[i + 1]);
             stimulus = nextArg;
             std::cout << "Option -stimulus: process the stimulus " << stimulus
+                      << std::endl;
+        }
+        else if (Arg.compare("-calib-cache") == 0) {
+            std::string nextArg(argv[i + 1]);
+            calibFile = nextArg;
+            std::cout << "Option -calib-cache: calibration cache file " << calibFile
+                      << std::endl;
+        }
+        else if (Arg.compare("-calib-folder") == 0) {
+            std::string nextArg(argv[i + 1]);
+            calibFolder = nextArg;
+            std::cout << "Option -calib-folder: calibration folder " << calibFolder
+                      << std::endl;
+        }
+        else if (Arg.compare("-params") == 0) {
+            std::string nextArg(argv[i + 1]);
+            paramPaths = nextArg;
+            std::cout << "Option -params: Weight parameters folder " << paramPaths
                       << std::endl;
         }
         else if (Arg.compare("-generate") == 0) {
@@ -148,23 +170,41 @@ int main(int argc, char* argv[])
     else
         throw std::runtime_error("Cannot run the TensorRT network with a numerical precision of : " + bitPrecision);
 
+
+    N2D2::Network n2d2_dnn;
+    n2d2_dnn.setPrecision(bitPrecision);
+    n2d2_dnn.setDeviceID(device);
+    n2d2_dnn.setIterBuild(iterBuild);
+    n2d2_dnn.setMaxBatchSize(batchSize);
+    n2d2_dnn.setInputEngine(modelToLoad);
+    n2d2_dnn.setOutputEngine(modelToSave);
+    n2d2_dnn.setCalibCache(calibFile);
+    n2d2_dnn.setCalibFolder(calibFolder);
+    n2d2_dnn.setParamPath(paramPaths);
     std::cout << "Initialization of the tensorRT network..." << std::endl;
-    n2d2_tensorRT_inference net(batchSize, device, iterBuild, bitPrecision, profiling, modelToLoad, modelToSave, useINT8);
+    n2d2_dnn.initialize();
     std::cout << "Initialization of the tensorRT network done!" << std::endl;
 
-    unsigned int inputSize = net.inputDimX()*net.inputDimY()*net.inputDimZ();
-    DATA_T* env_data = new DATA_T[inputSize * batchSize];
+    unsigned int inputSize = n2d2_dnn.getInputDimX()*n2d2_dnn.getInputDimY()*n2d2_dnn.getInputDimZ();
+    float* env_data = new float[inputSize * batchSize];
 
     unsigned int dimX = 1;
     unsigned int dimY = 1;
-    std::vector<unsigned int> outDimX = net.outputDimX();
-    std::vector<unsigned int> outDimY = net.outputDimY();
-    std::vector<unsigned int> outDimZ = net.outputDimZ();
-    std::vector<unsigned int> outTarget = net.outputTarget();
+    std::vector<unsigned int> outDimX;
+    std::vector<unsigned int> outDimY;
+    std::vector<unsigned int> outDimZ;
+    std::vector<unsigned int> outTarget;
+
+    for(size_t i = 0; i < n2d2_dnn.getOutputNbTargets(); ++i) {
+        outDimX.push_back(n2d2_dnn.getOutputDimX(i));
+        outDimY.push_back(n2d2_dnn.getOutputDimY(i));
+        outDimZ.push_back(n2d2_dnn.getOutputDimZ(i));
+        outTarget.push_back(n2d2_dnn.getOutputTarget(i));
+    }
 
     if (outDimX[0] > 1 || outDimY[0] > 1) {
-        dimX = net.inputDimX();
-        dimY = net.inputDimY();
+        dimX = n2d2_dnn.getInputDimX();
+        dimY = n2d2_dnn.getInputDimY();
     }
 
     int32_t* outputTargets = new int32_t[dimX * dimY * batchSize * outDimZ.size()];
@@ -185,29 +225,29 @@ int main(int argc, char* argv[])
 
         envRead(stimulus,
                 inputSize,
-                net.inputDimY(),
-                net.inputDimX(),
+                n2d2_dnn.getInputDimY(),
+                n2d2_dnn.getInputDimX(),
                 env_data,
                 noLabels,
                 dimX * dimY * outDimZ.size(),
                 outputTargets);
 
-        net.execute(env_data);
+        n2d2_dnn.syncExe(env_data, 1);
         
-        if(target_log >= 0)
-            net.logOutput(target_log);
+        //if(target_log >= 0)
+        //    net.logOutput(target_log);
 
         for(unsigned int targetIdx = 0; targetIdx < outDimZ.size(); ++targetIdx)
         {
 
-            net.estimated(outputEstimated[targetIdx], targetIdx);
+            n2d2_dnn.estimated(outputEstimated[targetIdx], targetIdx, false, 0.0f);
 
             if(!noLabels)
             {
                 unsigned int nbTargetLabels = (outDimZ[targetIdx] > 1 ? outDimZ[targetIdx] : 2);
 
-                double yRatio = net.inputDimY() / outDimY[targetIdx];
-                double xRatio = net.inputDimX() / outDimX[targetIdx];
+                double yRatio = n2d2_dnn.getInputDimY() / outDimY[targetIdx];
+                double xRatio = n2d2_dnn.getInputDimX() / outDimX[targetIdx];
 
 
                 unsigned int nbIgnored = 0;
@@ -277,8 +317,8 @@ int main(int argc, char* argv[])
                 fileName = *(filesIt + i);
                 envRead(fileName,
                             inputSize,
-                            net.inputDimY(),
-                            net.inputDimX(),
+                            n2d2_dnn.getInputDimY(),
+                            n2d2_dnn.getInputDimX(),
                             env_data + i * inputSize,
                             noLabels,                            
                             dimX * dimY *outDimZ.size(),
@@ -288,10 +328,10 @@ int main(int argc, char* argv[])
             //-------Neural Network---------//
             const std::chrono::high_resolution_clock::time_point start
                 = std::chrono::high_resolution_clock::now();
-            net.execute(env_data);
+            n2d2_dnn.syncExe(env_data, batchSize);
 
             for(unsigned int t = 0; t < outDimZ.size(); ++t)
-                net.estimated(outputEstimated[t], t, 0.5, true);
+                n2d2_dnn.estimated(outputEstimated[t], t, false, 0.0f);
 
             elapsed = 1.0e6 * std::chrono::duration_cast
                               <std::chrono::duration<double> >(
@@ -300,8 +340,8 @@ int main(int argc, char* argv[])
             elapsed_avg += elapsed;
             //---------------------------//
 
-            if(target_log >= 0)
-                net.logOutput(target_log);
+            //if(target_log >= 0)
+            //    n2d2_dnn.logOutput(target_log);
 
             //if(!noLabels)
             //{
@@ -315,8 +355,8 @@ int main(int argc, char* argv[])
                         unsigned int nbTargetLabels = (outDimZ[targetIdx] > 1 ?
                                                             outDimZ[targetIdx] : 2);
 
-                        double yRatio = net.inputDimY() / outDimY[targetIdx];
-                        double xRatio = net.inputDimX() / outDimX[targetIdx];
+                        double yRatio = n2d2_dnn.getInputDimY() / outDimY[targetIdx];
+                        double xRatio = n2d2_dnn.getInputDimX() / outDimX[targetIdx];
 
                         unsigned int nbIgnored = 0;
                         unsigned int nbHits = 0;
@@ -386,7 +426,7 @@ int main(int argc, char* argv[])
         }
 #endif
 
-        net.getProfiling(total);
+        //net.getProfiling(total);
 
 
         std::cout << "---" << std::endl;

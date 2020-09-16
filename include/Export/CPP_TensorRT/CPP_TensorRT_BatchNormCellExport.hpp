@@ -49,8 +49,6 @@ public:
                                                unsigned int targetIdx,
                                                std::ofstream& prog);
 
-    void generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog);
-
     void generateBatchNormProgramAddLayer(Cell& cell,
                                      std::vector<std::string>& parentsName,
                                      std::ofstream& prog);

@@ -72,9 +72,7 @@ void N2D2::CPP_AnchorCellExport::generateHeaderConstants(AnchorCell& cell,
            << "_OUTPUTS_HEIGHT)\n"
               "#define " << prefix << "_CHANNELS_SIZE (" << prefix
            << "_NB_CHANNELS*" << prefix << "_CHANNELS_WIDTH*" << prefix
-           << "_CHANNELS_HEIGHT)\n"
-              "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix
-           << "_OUTPUTS_SIZE, " << prefix << "_CHANNELS_SIZE))\n\n";
+           << "_CHANNELS_HEIGHT)\n\n";
 
     header << "#define " << prefix << "_FM_WIDTH "
                          << cell.getFeatureMapWidth() << "\n"

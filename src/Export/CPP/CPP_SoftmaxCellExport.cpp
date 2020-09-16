@@ -23,7 +23,8 @@
 #include "Export/CPP/CPP_SoftmaxCellExport.hpp"
 
 N2D2::Registrar<N2D2::SoftmaxCellExport>
-N2D2::CPP_SoftmaxCellExport::mRegistrar("CPP", N2D2::CPP_SoftmaxCellExport::generate);
+N2D2::CPP_SoftmaxCellExport::mRegistrar(
+    "CPP", N2D2::CPP_SoftmaxCellExport::generate);
 
 void N2D2::CPP_SoftmaxCellExport::generate(const SoftmaxCell& cell,
                                            const std::string& dirName)
@@ -63,9 +64,7 @@ void N2D2::CPP_SoftmaxCellExport::generateHeaderConstants(const SoftmaxCell& cel
                                                         << prefix << "_OUTPUTS_HEIGHT)\n"
            << "#define " << prefix << "_CHANNELS_SIZE (" << prefix << "_NB_CHANNELS*" 
                                                          << prefix << "_CHANNELS_WIDTH*" 
-                                                         << prefix << "_CHANNELS_HEIGHT)\n"
-           << "#define " << prefix << "_BUFFER_SIZE (MAX(" << prefix << "_OUTPUTS_SIZE, " 
-                                                           << prefix << "_CHANNELS_SIZE))\n\n";
+                                                         << prefix << "_CHANNELS_HEIGHT)\n\n";
 
     header << "#define " << "GROUP_SIZE_" << prefix << " " << cell.getGroupSize() << "\n";
 }

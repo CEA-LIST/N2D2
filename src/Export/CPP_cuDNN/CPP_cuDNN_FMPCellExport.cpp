@@ -29,7 +29,7 @@ N2D2::Registrar<N2D2::CPP_cuDNN_CellExport>
 N2D2::CPP_cuDNN_FMPCellExport::mRegistrarType(
     FMPCell::Type, N2D2::CPP_cuDNN_FMPCellExport::getInstance);
 
-void N2D2::CPP_cuDNN_FMPCellExport::generate(FMPCell& cell,
+void N2D2::CPP_cuDNN_FMPCellExport::generate(const FMPCell& cell,
                                              const std::string& dirName)
 {
     N2D2::CPP_FMPCellExport::generate(cell, dirName);

@@ -337,7 +337,8 @@ namespace Utils {
     bool match(const std::string& first, const std::string& second);
     std::string expandEnvVars(std::string str);
     bool createDirectories(const std::string& dirName);
-    std::string exec(const std::string& cmd);
+    int exec(const std::string& cmd);
+    std::string exec(const std::string& cmd, int* status);
     bool isAbsolutePath(const std::string& path);
     std::string dirName(const std::string& filePath, bool stripSlash = false);
     std::string baseName(const std::string& filePath);

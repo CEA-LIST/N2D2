@@ -1070,8 +1070,8 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             
             continue;
         }
-        
-        if(bnParents[0]->getType() != ConvCell::Type) {
+
+        if(!bnParents[0] || bnParents[0]->getType() != ConvCell::Type) {
             std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
                 << cell->getName() << "\" because parent cell (\""
                 << bnParents[0]->getName() << "\") is not a Conv"

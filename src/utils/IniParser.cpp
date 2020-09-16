@@ -629,13 +629,25 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
         std::stringstream cmdNameStr;
         const char* pythonCmd = std::getenv("N2D2_PYTHON");
 
-        if (pythonCmd == NULL)
+        if (pythonCmd == NULL) {
+#ifdef WIN32
+            cmdNameStr << "python.exe";
+#else
             cmdNameStr << "python";
+#endif
+        }
         else
             cmdNameStr << pythonCmd;
 
         cmdNameStr << " -c " << Utils::quoted("print (" + cmdName + ")");
-        std::string cmdValue = Utils::exec(cmdNameStr.str());
+
+        int status;
+        std::string cmdValue = Utils::exec(cmdNameStr.str(), &status);
+
+        if (status != 0) {
+            throw std::runtime_error("IniParser::getPropertyValue(): Python "
+                "interpreter returned code: " + std::to_string(status) + ".");
+        }
 
         // Left trim & right trim
         cmdValue.erase(cmdValue.begin(),

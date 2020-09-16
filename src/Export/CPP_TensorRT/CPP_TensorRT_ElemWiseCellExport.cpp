@@ -32,7 +32,6 @@ void N2D2::CPP_TensorRT_ElemWiseCellExport::generate(ElemWiseCell& cell,
                                               const std::string& dirName)
 {
     //N2D2::CPP_ElemWiseCellExport::generate(cell, dirName);
-    Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
 
     const std::string fileName = dirName + "/dnn/include/"
@@ -194,13 +193,9 @@ void N2D2::CPP_TensorRT_ElemWiseCellExport
     prog << "   " << "std::vector< nvinfer1::ITensor *> "
          << identifier << adderTreeStr << "_tensor;\n";
 
-    prog << "   " << identifier << adderTreeStr << "_tensor = " << "add_elementwise(tsrRTHandles.netDef.back(),\n"
-         << "       " << "tsrRTHandles.netBuilder,\n"
-         << "       " << "mUseDLA,\n"
-         << "       " << "tsrRTHandles.dT,\n"
+    prog << "   " << identifier << adderTreeStr << "_tensor = " << "add_elementwise(\n"
          << "       " << "\"ElemWise_NATIVE_" << identifier << adderTreeStr << "\",\n"
          << "       " << activationStr << ",\n"
-         << "       " << "batchSize,\n"
          << "       " << prefix << "_NB_OUTPUTS,\n"
          << "       " << prefix << "_OUTPUTS_HEIGHT,\n"
          << "       " << prefix << "_OUTPUTS_WIDTH,\n"
@@ -214,26 +209,12 @@ void N2D2::CPP_TensorRT_ElemWiseCellExport
 }
 
 void N2D2::CPP_TensorRT_ElemWiseCellExport
-    ::generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog)
-{
-
-    prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&inout_buffer["
-                  << targetIdx + 1 << "], " // Added 1 for stride the input buffer
-                  << "sizeof(DATA_T)*batchSize"
-                  << "*NB_OUTPUTS[" << targetIdx << "]"
-                  << "*OUTPUTS_HEIGHT[" << targetIdx << "]"
-                  << "*OUTPUTS_WIDTH[" << targetIdx << "]"
-                  << "));\n";
-}
-
-void N2D2::CPP_TensorRT_ElemWiseCellExport
     ::generateCellProgramInstanciateOutput(Cell& cell,
                                            unsigned int targetIdx,
                                            std::ofstream& prog)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
-
-    prog << "   " << "add_target(tsrRTHandles.netDef.back(), " << identifier << "_tensor, "
+    prog << "   " << "add_target(" << identifier << "_tensor, "
                   << targetIdx << ");\n";
 
 }

@@ -143,10 +143,7 @@ void N2D2::CPP_TensorRT_CellExport
     prog << "   " << "std::vector< nvinfer1::ITensor *> "
          << concatName.str() << "tensor;\n";
 
-    prog << "   " << concatName.str() << "tensor = " << "add_concat(tsrRTHandles.netDef.back(),\n"
-         << "       " << "tsrRTHandles.netBuilder,\n"
-         << "       " << "mUseDLA,\n"
-         << "       " << "tsrRTHandles.dT,\n"
+    prog << "   " << concatName.str() << "tensor = " << "add_concat("
          << "       " << "\"Concat_NATIVE_" << concatName.str() << "\",\n"
          << "       " << parentsName.size() << ",\n"
          << "       " << concatName.str() << "in_tensor);\n";

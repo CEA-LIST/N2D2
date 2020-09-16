@@ -36,46 +36,18 @@ namespace N2D2 {
 class CPP_TensorRT_DeepNetExport : public DeepNetExport {
 public:
     static void generate(DeepNet& deepNet, const std::string& dirName);
-
-    static void generateDeepNetHeader(DeepNet& deepNet,
-                                      const std::string& name,
-                                      const std::string& fileName);
     static void generateDeepNetProgram(DeepNet& deepNet,
                                        const std::string& name,
                                        const std::string& fileName);
-    static void generateHeaderConstants(DeepNet& deepNet,
-                                        std::ofstream& header);
-
     static void generateStimuliCalib(DeepNet& deepNet,
                                 const std::string& dirName);
-
-    //static void generateHeaderInit(DeepNet& deepNet, std::ofstream& header);
-    static void generateHeaderFunction(DeepNet& deepNet,
-                                       const std::string& name,
-                                       std::ofstream& header);
-    static void generateHeaderFree(DeepNet& deepNet, std::ofstream& header);
-
     static void generateProgramBegin(DeepNet& deepNet,
                                      std::ofstream& prog);
-    static void generateProgramDesc(DeepNet& deepNet, std::ofstream& prog);
-    static void generateProgramGlobalDefinition(DeepNet& deepNet,
-                                                std::ofstream& prog);
+    static void generateIncludes(DeepNet& deepNet,
+                                     std::ofstream& prog);
     static void generateProgramInitNetwork(DeepNet& deepNet,
                                            const std::string& name,
                                            std::ofstream& prog);
-    static void generateProgramFunction(DeepNet& deepNet,
-                                        const std::string& name,
-                                        std::ofstream& prog);
-    static void generateAsyncFunction(const std::string& name,
-                                        std::ofstream& prog);
-    static void generateSyncFunction(const std::string& name,
-                                     std::ofstream& prog);
-    static void generateSyncGPUFunction(const std::string& name,
-                                        std::ofstream& prog);
-    static void generateOutputFunction(const std::string& name,
-                                       std::ofstream& prog);
-    static void generateGetDevicePtr(const std::string& name, std::ofstream& prog);
-    static void generateProgramFree(DeepNet& deepNet, std::ofstream& prog);
 
 private:
     static Registrar<DeepNetExport> mRegistrar;

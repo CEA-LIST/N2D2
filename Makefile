@@ -30,6 +30,15 @@ EXT_CUDA=cu
 BIN:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find "$(path)/exec/" -name "*.$(EXT)")))
 BIN_TESTS:=$(foreach path, $(PARENT), $(subst .$(EXT),, $(shell find "$(path)/tests/" -name "*.$(EXT)")))
 
+ifndef N2D2_BINDIR
+  N2D2_BINDIR=bin
+endif
+
+OBJDIR=$(N2D2_BINDIR).obj
+SRC:=$(foreach path, $(PARENT), $(shell find "$(path)/src/" -name "*.$(EXT)"))
+SRC_CUDA=$(foreach path, $(PARENT), $(shell find "$(path)/src/" -name "*.$(EXT_CUDA)"))
+INCLUDES:=$(foreach path, $(PARENT), $(shell find "$(path)/include/" -name "*.hpp"))
+
 ifndef CXX
   CXX=g++
 endif
@@ -105,8 +114,11 @@ ifdef PYBIND
 endif
 
 ifdef ONNX
-  ONNX_MAKE:= $(shell $(MAKE) -C $(word 1,$(PARENT))/include/third_party/onnx)
-  CPPFLAGS:=$(CPPFLAGS) -DONNX
+  ONNX_MAKE:= $(shell $(MAKE) -C $(word 1,$(PARENT))/third_party/onnx)
+  SRC:=$(SRC) $(word 1,$(PARENT))/third_party/onnx/onnx.pb.cpp
+  INCLUDES:=$(INCLUDES) $(word 1,$(PARENT))/third_party/onnx/onnx.pb.h
+
+  CPPFLAGS:=$(CPPFLAGS) -isystem $(word 1,$(PARENT))/third_party/onnx -DONNX
   LDFLAGS:=$(LDFLAGS) `pkg-config --libs protobuf`
 endif
 
@@ -238,15 +250,6 @@ endif
 
 CPPFLAGS:= $(CPPFLAGS) -DN2D2_COMPILE_PATH=\"${CURDIR}\"
 
-ifndef N2D2_BINDIR
-  N2D2_BINDIR=bin
-endif
-
-OBJDIR=$(N2D2_BINDIR).obj
-SRC=$(foreach path, $(PARENT), $(shell find "$(path)/src/" -name "*.$(EXT)"))
-SRC_CUDA=$(foreach path, $(PARENT), $(shell find "$(path)/src/" -name "*.$(EXT_CUDA)"))
-INCLUDES=$(foreach path, $(PARENT), $(shell find "$(path)/include/" -name "*.hpp"))
-
 PCH_SRC=$(MAKEFILE_DIR)/include/Precompiled.hpp
 PCH_OUT=$(PCH_SRC).gch
 
@@ -271,7 +274,7 @@ define copy-to-bin
 endef
 
 define copy-resources-to-bin
-	@rsync -av $1/$2 $(N2D2_BINDIR)/$1/ --exclude *.cpp \
+	rsync -av $1/$2 $(N2D2_BINDIR)/$1/ --exclude *.cpp \
 	    > /dev/null 2>&1 || :
 endef
 
@@ -292,7 +295,7 @@ tests : flexlm $(addprefix $(N2D2_BINDIR)/, $(BIN_TESTS))
 ifdef FLEXLM
 	$(shell rm -f ${LM_PATH}/lm_new_pic.o)
 endif
-	$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
+	@$(foreach path,$(PARENT),$(call copy-resources-to-bin,$(path),tests);)
 	@$(foreach path,$(PARENT),$(call run-if-exists,$(path)/tests/run_all.sh);)
 
 all : exec tests

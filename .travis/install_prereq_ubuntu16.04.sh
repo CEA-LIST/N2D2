@@ -34,6 +34,14 @@ apt-get install -y \
     mongodb-dev \
     libjsoncpp-dev
 
+# Install Protobuf 3
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.0.0/protobuf-cpp-3.0.0.tar.gz
+tar -xvf protobuf-cpp-3.0.0.tar.gz
+cd protobuf-3.0.0
+./configure --disable-shared CXXFLAGS="-fPIC"
+make -j 4
+make install
+
 if [ -n "$USE_CUDA" ] ; then
     # Install the "repo" package for CUDA
     CUDA_REPO_PKG=cuda-repo-ubuntu1604_10.0.130-1_amd64.deb

@@ -31,15 +31,24 @@ namespace N2D2 {
  * Class for methods of Resize for all CPP exports type
  * ResizeCell, CPP_EXPORT
 **/
-class CPP_ResizeCellExport : public ResizeCellExport {
+class CPP_ResizeCellExport : public ResizeCellExport, public CPP_CellExport {
 public:
     static void generate(ResizeCell& cell, const std::string& dirName);
     static void generateHeaderConstants(ResizeCell& cell,
                                         std::ofstream& header);
     static void generateHeaderFreeParameters(ResizeCell& cell,
                                              std::ofstream& header);
+
+    static std::unique_ptr<CPP_ResizeCellExport> getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                                 const Cell& cell, 
+                                 std::stringstream& includes,
+                                 std::stringstream& buffers, 
+                                 std::stringstream& functionCalls);
+
 private:
     static Registrar<ResizeCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 

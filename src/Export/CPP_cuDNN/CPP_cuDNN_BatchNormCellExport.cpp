@@ -29,7 +29,7 @@ N2D2::Registrar<N2D2::CPP_cuDNN_CellExport>
 N2D2::CPP_cuDNN_BatchNormCellExport::mRegistrarType(
     BatchNormCell::Type, N2D2::CPP_cuDNN_BatchNormCellExport::getInstance);
 
-void N2D2::CPP_cuDNN_BatchNormCellExport::generate(BatchNormCell& cell,
+void N2D2::CPP_cuDNN_BatchNormCellExport::generate(const BatchNormCell& cell,
                                                    const std::string& dirName)
 {
     N2D2::CPP_BatchNormCellExport::generate(cell, dirName);

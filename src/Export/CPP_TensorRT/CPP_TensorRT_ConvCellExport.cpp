@@ -32,16 +32,15 @@ N2D2::CPP_TensorRT_ConvCellExport::mRegistrarType(
 void N2D2::CPP_TensorRT_ConvCellExport::generate(ConvCell& cell,
                                               const std::string& dirName)
 {
-    Utils::createDirectories(dirName + "/dnn");
     Utils::createDirectories(dirName + "/dnn/include");
     Utils::createDirectories(dirName + "/dnn/weights");
 
     const std::string fileName = dirName + "/dnn/include/"
         + Utils::CIdentifier(cell.getName()) + ".hpp";
 
-    const std::string weightName = dirName + "/dnn/weights/"
+    const std::string weightName = dirName + "/dnn//weights/"
         + Utils::CIdentifier(cell.getName()) + "_weights.syntxt";
-    const std::string biasName = dirName + "/dnn/weights/"
+    const std::string biasName = dirName + "/dnn//weights/"
         + Utils::CIdentifier(cell.getName()) + "_bias.syntxt";
 
     std::ofstream weights(weightName.c_str());
@@ -286,10 +285,7 @@ void N2D2::CPP_TensorRT_ConvCellExport
     prog << "   " << "std::vector< nvinfer1::ITensor *> "
          << identifier << "_tensor;\n";
 
-    prog << "   " << identifier << "_tensor = " << "add_convolution(tsrRTHandles.netDef.back(),\n"
-         << "       " << "tsrRTHandles.netBuilder,\n"
-         << "       " << "mUseDLA,\n"
-         << "       " << "tsrRTHandles.dT,\n"
+    prog << "   " << identifier << "_tensor = " << "add_convolution(\n"
          << "       " << "\"Convolution_NATIVE_" << identifier << "\",\n"
          << "       " << activationStr << ",\n"
          << "       " << prefix << "_NB_OUTPUTS,\n"
@@ -301,24 +297,12 @@ void N2D2::CPP_TensorRT_ConvCellExport
          << "       " << prefix << "_KERNEL_HEIGHT,\n"
          << "       " << input_name.str() << "tensor,\n"
         // << "       " << identifier << "_weights_flatten,\n"
-         << "       " << "\"dnn/weights/" << identifier << "_weights.syntxt\",\n"
+         << "       " << "mParametersPath + " << "\"weights/" << identifier << "_weights.syntxt\",\n"
          << "       " << prefix << "_WEIGHTS_SIZE,\n"
          //<< "       " << identifier << "_biases,\n"
-         << "       " << "\"dnn/weights/" << identifier << "_bias.syntxt\",\n"
+         << "       " << "mParametersPath + " << "\"weights/" << identifier << "_bias.syntxt\",\n"
          << "       " << prefix << "_NB_OUTPUTS);\n";
 
-}
-
-void N2D2::CPP_TensorRT_ConvCellExport
-    ::generateCellProgramAllocateMemory(unsigned int targetIdx, std::ofstream& prog)
-{
-    prog << "   " << "CHECK_CUDA_STATUS( cudaMalloc(&inout_buffer["
-                  << targetIdx + 1 << "], " // Added 1 for stride the input buffer
-                  << "sizeof(DATA_T)*batchSize"
-                  << "*NB_OUTPUTS[" << targetIdx << "]"
-                  << "*OUTPUTS_HEIGHT[" << targetIdx << "]"
-                  << "*OUTPUTS_WIDTH[" << targetIdx << "]"
-                  << "));\n";
 }
 
 void N2D2::CPP_TensorRT_ConvCellExport
@@ -327,7 +311,6 @@ void N2D2::CPP_TensorRT_ConvCellExport
                                            std::ofstream& prog)
 {
     const std::string identifier = Utils::CIdentifier(cell.getName());
-
-    prog << "   " << "add_target(tsrRTHandles.netDef.back(), " << identifier << "_tensor, "
+    prog << "   " << "add_target(" << identifier << "_tensor, "
                   << targetIdx << ");\n";
 }
