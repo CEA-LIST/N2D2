@@ -814,7 +814,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                          << "\n"
                          << "template<>\n"
                          << "void Network::propagate(const " << inputType << "* inputs, "
-                                                 << "std::int32_t* outputs) const \n"
+                                                 << "int32_t* outputs) const \n"
                          << "{\n"
                          << functionCalls.str()
                          << "\n"
