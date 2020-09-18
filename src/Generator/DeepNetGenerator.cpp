@@ -259,15 +259,22 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
                 // is determined by the other parents (this is the case for 
                 // ONNX)
                 if (itSections != sections.end()) {
-                    const std::map
-                        <std::string, unsigned int>::const_iterator itLayer
-                        = layersOrder.find((*itParent));
+                    iniConfig.currentSection(*itSections, false);
 
-                    if (itLayer != layersOrder.end())
-                        order = std::max(order, (*itLayer).second);
-                    else {
-                        knownOrder = false;
-                        break;
+                    // If this parent has no "Input" property, we make the same
+                    // assumption (probably an ONNX layer for which we added
+                    // parameters)
+                    if (iniConfig.isProperty("Input")) {
+                        const std::map<std::string, unsigned int>
+                            ::const_iterator itLayer
+                                = layersOrder.find((*itParent));
+
+                        if (itLayer != layersOrder.end())
+                            order = std::max(order, (*itLayer).second);
+                        else {
+                            knownOrder = false;
+                            break;
+                        }
                     }
                 }
             }
