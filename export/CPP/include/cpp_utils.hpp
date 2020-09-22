@@ -30,6 +30,7 @@
 #define N2D2_THROW_OR_ABORT(ex, msg) \
 do { std::cout << msg << std::endl; abort(); } while (false)
 #else
+#include <stdexcept>
 #define N2D2_THROW_OR_ABORT(ex, msg) throw ex(msg)
 #endif
 #define N2D2_ALWAYS_INLINE __attribute__((always_inline))

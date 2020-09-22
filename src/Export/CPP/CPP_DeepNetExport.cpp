@@ -639,10 +639,10 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     std::stringstream functionCalls;
 
     // Fill in includes, buffers and functionCalls for each layer
-    buffers << "#define BUFFER_SIZE " << memManager.getPeakUsage() << "\n"
+    buffers << "#define MEMORY_SIZE " << memManager.getPeakUsage() << "\n"
         "#define MEMORY_ALIGNMENT " << memoryAlignment << "\n"
-        "static DATA_T buffer[BUFFER_SIZE]"
-        " __attribute__((section(\".nn_buffer\")));\n";
+        "static DATA_T mem[MEMORY_SIZE]"
+        " __attribute__((section(\".nn_memory\")));\n";
 
     // env
     const std::vector<N2D2::MemoryManager::MemoryPlane>& envMemPlanes
@@ -745,7 +745,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << memPlane.getWrappedSize() <<"\n";
 
             buffers << dataType << "* " << identifier << "_output = "
-                << "(" << dataType << "*) buffer + " 
+                << "(" << dataType << "*) mem + " 
                 << prefix << "_MEM_CONT_OFFSET" <<";\n";
 
             // functionCalls
