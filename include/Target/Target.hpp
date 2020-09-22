@@ -168,6 +168,10 @@ public:
     {
         return mLoss;
     }
+    const Tensor<int>& getTargets() const
+    {
+        return mTargets;
+    }
     virtual void log(const std::string& /*fileName*/,
                      Database::StimuliSet /*set*/) {};
     virtual void clear(Database::StimuliSet set);
