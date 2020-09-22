@@ -921,6 +921,8 @@ N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulusBatch(
 
     batchRef[0] = id;
     std::fill(batchRef.begin() + 1, batchRef.end(), -1);
+    
+    return id;
 }
 
 N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulus(
