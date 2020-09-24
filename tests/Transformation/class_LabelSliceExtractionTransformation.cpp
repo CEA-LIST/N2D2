@@ -97,7 +97,7 @@ TEST_DATASET(LabelSliceExtractionTransformation,
              std::make_tuple(64, 64, 5),
              std::make_tuple(127, 63, 10),
              std::make_tuple(63, 127, 10),
-             std::make_tuple(63, 63, 10),
+             std::make_tuple(63, 63, 10)
              /*std::make_tuple(127, 63, -60),
              std::make_tuple(63, 127, -60),
              std::make_tuple(63, 63, -60)*/)
@@ -232,7 +232,7 @@ TEST_DATASET(LabelSliceExtractionTransformation,
              std::make_tuple(64, 64, 5),
              std::make_tuple(31, 63, 10),
              std::make_tuple(63, 31, 10),
-             std::make_tuple(63, 63, 10),
+             std::make_tuple(63, 63, 10)
              /*std::make_tuple(31, 63, -60),
              std::make_tuple(63, 31, -60),
              std::make_tuple(63, 63, -60)*/)
