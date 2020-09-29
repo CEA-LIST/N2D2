@@ -169,7 +169,8 @@ void cudaGetEstimatedLabel_kernel(const float* value,
         __syncthreads();
 
         if (threadIdx.x == 0 && threadIdx.y == 0) {
-            bbLabels[z] /= count;
+            if (count > 0)
+                bbLabels[z] /= count;
         }
     }
 }
