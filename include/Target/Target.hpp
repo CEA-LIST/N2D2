@@ -221,7 +221,6 @@ protected:
     TensorLabels_T mEstimatedLabels;
     TensorLabelsValue_T mEstimatedLabelsValue;
     std::shared_ptr<Target> mMaskLabelTarget;
-    bool mPopulateTargets;
     std::vector<Float_T> mLoss;
 
     mutable std::vector<std::string> mLabelsName;

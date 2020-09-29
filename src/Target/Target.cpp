@@ -60,8 +60,7 @@ N2D2::Target::Target(const std::string& name,
       mTargetValue(targetValue),
       mDefaultValue(defaultValue),
       mTargetTopN(targetTopN),
-      mDefaultTarget(-2),
-      mPopulateTargets(true)
+      mDefaultTarget(-2)
 {
     // ctor
     Utils::createDirectories(name);
@@ -363,7 +362,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
             labels.dimB()});
     }
 
-    if (mPopulateTargets && validDatabase) {
+    if (validDatabase) {
         // Generate targets
         const size_t size = mTargets.dimB() * mTargets.dimY();
 
