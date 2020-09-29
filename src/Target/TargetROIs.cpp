@@ -120,6 +120,10 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T*
             continue;
         }
 
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         std::vector<DetectedBB> detectedBB;
 
         // Extract estimated BB
