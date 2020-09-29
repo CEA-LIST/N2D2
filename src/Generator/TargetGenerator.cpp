@@ -174,8 +174,7 @@ void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
              itTargets != itTargetsEnd;
              ++itTargets) {
             if ((*itTargets)->getName() == labelTarget) {
-                std::static_pointer_cast
-                    <TargetROIs>(target)->setMaskLabelTarget(*itTargets);
+                target->setMaskLabelTarget(*itTargets);
                 found = true;
                 break;
             }

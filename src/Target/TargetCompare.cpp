@@ -47,7 +47,6 @@ N2D2::TargetCompare::TargetCompare(const std::string& name,
       mBatchPacked(this, "BatchPacked", 1)
 {
     // ctor
-    mPopulateTargets = false;
 }
 
 void N2D2::TargetCompare::process(Database::StimuliSet set)
