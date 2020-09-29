@@ -96,7 +96,6 @@ public:
     void logConfusionMatrix(const std::string& fileName,
                             Database::StimuliSet set) const;
     void clearConfusionMatrix(Database::StimuliSet set);
-    virtual void provideTargets(Database::StimuliSet /*set*/) {}
     virtual void process(Database::StimuliSet set);
     void processEstimatedLabels(Database::StimuliSet set,
                                 Float_T* values = NULL);
