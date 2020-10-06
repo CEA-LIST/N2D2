@@ -65,12 +65,6 @@ public:
     */
     void push_back(cuda_tensor_type* tensor, size_t refs = 1);
 
-    virtual void broadcast(int srcDev, int dstDev) const;
-    virtual void broadcastAllFrom(int srcDev) const;
-    virtual void broadcastAnyTo(int dstDev) const;
-
-    virtual void aggregateAllTo(int dstDev) const;
-
     virtual cuda_tensor_type& back();
     virtual const cuda_tensor_type& back() const;
     virtual cuda_tensor_type& operator[](unsigned int t);
@@ -143,42 +137,6 @@ const typename N2D2::CudaInterface<T, STACKING_DIM>::cuda_tensor_type& N2D2::Cud
 operator[](unsigned int t) const
 {
     return *dynamic_cast<cuda_tensor_type*>(mData.at(t));
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::broadcast(int srcDev, int dstDev) const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->broadcast(srcDev, dstDev);
-    }
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::broadcastAllFrom(int srcDev) const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->broadcastAllFrom(srcDev);
-    }
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::broadcastAnyTo(int dstDev) const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->broadcastAnyTo(dstDev);
-    }
-}
-
-template <class T, int STACKING_DIM>
-void N2D2::CudaInterface<T, STACKING_DIM>::aggregateAllTo(int dstDev) const
-{
-    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
-    {
-        dynamic_cast<cuda_tensor_type*>(*it)->aggregateAllTo(dstDev);
-    }
 }
 
 #endif // N2D2_CUDAINTERFACE_H

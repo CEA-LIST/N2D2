@@ -158,7 +158,7 @@ protected:
     CudaInterface<T> mPaddedInputs;
 
     size_t mWorkspaceSize;
-    std::vector<void*> mWorkspace;
+    void* mWorkspace;
 
     std::vector<cudnnFilterDescriptor_t> mFilterDesc;
     std::vector<cudnnConvolutionFwdAlgo_t> mFwdAlgo;
