@@ -941,7 +941,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 
     if(mQuantizer){
-        if (strcmp(mQuantizer->getType(),"LSQ") == 0) std::cout << getName() << ": ";
+        //if (strcmp(mQuantizer->getType(),"LSQ") == 0) std::cout << getName() << ": ";
         mQuantizer->update();
     }
 }
