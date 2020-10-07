@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Johannes THIELE (johannes.thiele@cea.fr)
+                    Vincent TEMPLIER (vincent.templier@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -34,6 +35,10 @@ N2D2::QuantizerGenerator::generate(IniParser& iniConfig,
 
     if (iniConfig.isProperty(name)) {
         const std::string type = iniConfig.getProperty<std::string>(name);
+        
+        if (type.compare("NoQuant") == 0)
+            return defaultQuantizer;
+
         return Registrar<QuantizerGenerator>::create(type)(iniConfig,
                                                         section,
                                                         model,
