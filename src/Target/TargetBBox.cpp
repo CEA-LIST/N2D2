@@ -464,7 +464,7 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
     //                                            .getDefaultLabelID());
 
     // Input image
-    cv::Mat img = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+    cv::Mat img = (cv::Mat)mStimuliProvider->getDataChannel(0, batchPos);
     cv::Mat img8U;
     // img.convertTo(img8U, CV_8U, 255.0);
 

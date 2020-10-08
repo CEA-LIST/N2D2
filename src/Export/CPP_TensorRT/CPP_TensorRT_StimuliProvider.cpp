@@ -95,7 +95,7 @@ void N2D2::CPP_TensorRT_StimuliProvider::generateCalibFiles(StimuliProvider& sp,
         sp.readStimulus(set, i);
 
         for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-            const Tensor<Float_T> frame = sp.getData(channel);
+            const Tensor<Float_T> frame = sp.getDataChannel(channel);
 
             for (unsigned int y = 0; y < envSizeY; ++y) {
                 for (unsigned int x = 0; x < envSizeX; ++x) {

@@ -64,6 +64,31 @@ public:
     typedef Tensor<Float_T> TensorData_T;
 #endif
 
+    struct ProvidedData {
+#ifdef CUDA
+        ProvidedData():
+            // mData and mFutureData are host-based by default.
+            // This can be changed with the hostBased() method if data is directly
+            // supplied to mData's device pointer.
+            data(true),
+            targetData(true) {}
+#endif
+
+        ProvidedData(ProvidedData&& other);
+        void swap(ProvidedData& other);
+
+        /// StimuliID of current batch
+        std::vector<int> batch;
+        /// Tensor (x, y, channel, batch)
+        TensorData_T data;
+        /// Tensor (x, y, channel, batch)
+        Tensor<int> labelsData;
+        /// Tensor (x, y, channel, batch)
+        TensorData_T targetData;
+        /// ROIs of current batch
+        std::vector<std::vector<std::shared_ptr<ROI> > > labelsROI;
+    };
+
     StimuliProvider(Database& database,
                     const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
@@ -75,6 +100,8 @@ public:
     /// Return a partial copy of the StimuliProvider. Only the parameters of the
     /// StimuliProvider are copied, the loaded stimuli data are zero-initialized.
     StimuliProvider cloneParameters() const;
+
+    void setMultiDevices(const std::vector<int>& devices);
 
     virtual void addChannel(const CompositeTransformation& /*transformation*/);
 
@@ -188,13 +215,14 @@ public:
     /// position @p batchPos in mData and mLabelsData
     /// @return StimulusID of the randomly chosen stimulus
     Database::StimulusID readRandomStimulus(Database::StimuliSet set,
-                                            unsigned int batchPos = 0);
+                                            unsigned int batchPos = 0,
+                                            int dev = -1);
 
     /// Read a whole batch from the StimuliSet @p set, apply all the
     /// transformations and put the results in
     /// mData and mLabelsData
     virtual void readBatch(Database::StimuliSet set, unsigned int startIndex);
-    void streamBatch(int startIndex = -1);
+    void streamBatch(int startIndex = -1, int dev = -1);
 
 //TODO: Required for spiking neural network batch parallelization
 /*
@@ -206,27 +234,32 @@ public:
 */
 
     void readStimulusBatch(Database::StimulusID id,
-                           Database::StimuliSet set);
+                           Database::StimuliSet set,
+                           int dev = -1);
 
     /// Read the stimulus with StimulusID @p id, apply all the transformations
     /// and put the results at batch
     /// position @p batchPos in mData and mLabelsData
     virtual void readStimulus(Database::StimulusID id,
                       Database::StimuliSet set,
-                      unsigned int batchPos = 0);
+                      unsigned int batchPos = 0,
+                      int dev = -1);
 
     Database::StimulusID readStimulusBatch(Database::StimuliSet set,
-                                           unsigned int index);
+                                           unsigned int index,
+                                           int dev = -1);
 
     /// Read the stimulus with index @p index in StimuliSet @p set, apply all
     /// the transformations and put the results at batch
     /// position @p batchPos in mData and mLabelsData
     Database::StimulusID readStimulus(Database::StimuliSet set,
                                       unsigned int index,
-                                      unsigned int batchPos = 0);
+                                      unsigned int batchPos = 0,
+                                      int dev = -1);
     void streamStimulus(const cv::Mat& mat,
                         Database::StimuliSet set,
-                        unsigned int batchPos = 0);
+                        unsigned int batchPos = 0,
+                        int dev = -1);
     void reverseLabels(const cv::Mat& mat,
                        Database::StimuliSet set,
                        Tensor<int>& labels,
@@ -288,49 +321,62 @@ public:
                                      Database::StimuliSet set);
     void iterTransformations(Database::StimuliSet set,
                         std::function<void(const Transformation&)> func) const;
-    const std::vector<int>& getBatch()
+    const std::vector<int>& getBatch(int dev = -1)
     {
-        return mBatch;
+        return mProvidedData[getDeviceIndex(dev)].batch;
     };
-    TensorData_T& getData()
+    TensorData_T& getDataInput()
     {
-        return mData;
+        return mProvidedData[0].data;
     };
-    TensorData_T& getTargetData()
+    TensorData_T& getData(int dev = -1)
     {
-        return (!mTargetData.empty()) ? mTargetData : mData;
+        return mProvidedData[getDeviceIndex(dev)].data;
     };
-    Tensor<int>& getLabelsData()
+    TensorData_T& getTargetData(int dev = -1)
     {
-        return mLabelsData;
+        return (!mProvidedData[getDeviceIndex(dev)].targetData.empty())
+            ? mProvidedData[getDeviceIndex(dev)].targetData
+            : mProvidedData[getDeviceIndex(dev)].data;
     };
-    const TensorData_T& getData() const
+    Tensor<int>& getLabelsData(int dev = -1)
     {
-        return mData;
+        return mProvidedData[getDeviceIndex(dev)].labelsData;
     };
-    const Tensor<int>& getLabelsData() const
+    const TensorData_T& getData(int dev = -1) const
     {
-        return mLabelsData;
+        return mProvidedData[getDeviceIndex(dev)].data;
     };
-    const TensorData_T& getTargetData() const
+    const Tensor<int>& getLabelsData(int dev = -1) const
     {
-        return (!mTargetData.empty()) ? mTargetData : mData;
+        return mProvidedData[getDeviceIndex(dev)].labelsData;
     };
+    const TensorData_T& getTargetData(int dev = -1) const
+    {
+        return (!mProvidedData[getDeviceIndex(dev)].targetData.empty())
+            ? mProvidedData[getDeviceIndex(dev)].targetData
+            : mProvidedData[getDeviceIndex(dev)].data;
+    };
+/*
     const std::vector<std::vector<std::shared_ptr<ROI> > >&
-    getLabelsROIs() const
+    getLabelsROIs(int dev = -1) const
     {
-        return mLabelsROI;
+        return mProvidedData[getDeviceIndex(dev)].labelsROI;
     };
-    const TensorData_T getData(unsigned int channel,
-                                    unsigned int batchPos = 0) const;
-    const Tensor<int> getLabelsData(unsigned int channel,
-                                      unsigned int batchPos = 0) const;
-    const TensorData_T getTargetData(unsigned int channel,
-                                     unsigned int batchPos = 0) const;
+*/
+    const TensorData_T getDataChannel(unsigned int channel,
+                                      unsigned int batchPos = 0,
+                                      int dev = -1) const;
+    const Tensor<int> getLabelsDataChannel(unsigned int channel,
+                                           unsigned int batchPos = 0,
+                                           int dev = -1) const;
+    const TensorData_T getTargetDataChannel(unsigned int channel,
+                                            unsigned int batchPos = 0,
+                                            int dev = -1) const;
     const std::vector<std::shared_ptr<ROI> >&
-    getLabelsROIs(unsigned int batchPos = 0) const
+    getLabelsROIs(unsigned int batchPos = 0, int dev = -1) const
     {
-        return mLabelsROI[batchPos];
+        return mProvidedData[getDeviceIndex(dev)].labelsROI[batchPos];
     };
     const std::string& getCachePath() const
     {
@@ -356,6 +402,7 @@ protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
+    int getDeviceIndex(int dev) const;
 
 protected:
     /// Map unsigned integer range to signed before convertion to Float_T
@@ -380,22 +427,14 @@ protected:
     TransformationsSets mTransformations;
     /// Channel transformations
     std::vector<TransformationsSets> mChannelsTransformations;
-    /// StimuliID of current batch
-    std::vector<int> mBatch;
-    std::vector<int> mFutureBatch;
-    /// Tensor (x, y, channel, batch)
-    TensorData_T mData;
-    TensorData_T mFutureData;
-    /// Tensor (x, y, channel, batch)
-    Tensor<int> mLabelsData;
-    Tensor<int> mFutureLabelsData;
-    /// Tensor (x, y, channel, batch)
-    TensorData_T mTargetData;
-    TensorData_T mFutureTargetData;
-    /// ROIs of current batch
-    std::vector<std::vector<std::shared_ptr<ROI> > > mLabelsROI;
-    std::vector<std::vector<std::shared_ptr<ROI> > > mFutureLabelsROI;
+    /// Provided data
+    std::vector<ProvidedData> mProvidedData;
+    /// Future provided data
+    std::vector<ProvidedData> mFutureProvidedData;
     bool mFuture;
+
+    std::vector<int> mDevices;
+    std::vector<int> mDevicesIndex;
 };
 }
 
