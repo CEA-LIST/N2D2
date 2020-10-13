@@ -115,7 +115,7 @@ public:
     virtual ~Cell_Frame_CUDA();
 
 protected:
-    virtual void setOutputTargetsInternal();
+    virtual void setOutputTargetInternal();
     virtual double applyLossInternal(double targetVal = 1.0,
                                      double defaultVal = 0.0);
 
@@ -149,13 +149,13 @@ protected:
 
 namespace N2D2 {
 template <>
-void Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal();
+void Cell_Frame_CUDA<half_float::half>::setOutputTargetInternal();
 
 template <>
-void Cell_Frame_CUDA<float>::setOutputTargetsInternal();
+void Cell_Frame_CUDA<float>::setOutputTargetInternal();
 
 template <>
-void Cell_Frame_CUDA<double>::setOutputTargetsInternal();
+void Cell_Frame_CUDA<double>::setOutputTargetInternal();
 
 template <>
 double Cell_Frame_CUDA<half_float::half>::applyLossInternal(

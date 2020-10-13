@@ -111,7 +111,7 @@ __global__ void cudaHReduce_kernel(__half* idata, __half* odata,
 }
 
 __global__
-void cudaHSetOutputTargets_kernel(int* targets,
+void cudaHSetOutputTarget_kernel(int* targets,
     unsigned int* nbTargetOutputs,
     __half* diffInputs,
     unsigned int nbOutputs,
@@ -189,7 +189,7 @@ __global__ void cudaSReduce_kernel(float* idata, float* odata,
 }
 
 __global__
-void cudaSSetOutputTargets_kernel(int* targets,
+void cudaSSetOutputTarget_kernel(int* targets,
     unsigned int* nbTargetOutputs,
     float* diffInputs,
     unsigned int nbOutputs,
@@ -287,7 +287,7 @@ __global__ void cudaDReduce_kernel(double* idata, double* odata,
 }
 
 __global__
-void cudaDSetOutputTargets_kernel(int* targets,
+void cudaDSetOutputTarget_kernel(int* targets,
     unsigned int* nbTargetOutputs,
     double* diffInputs,
     unsigned int nbOutputs,
@@ -568,7 +568,7 @@ void N2D2::cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
 }
 
 //Half
-void N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+void N2D2::cudaHSetOutputTarget(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
     half_float::half* diffInputs,
@@ -591,7 +591,7 @@ void N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaHSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+    cudaHSetOutputTarget_kernel<<<blocksPerGrid, threadsPerBlocks>>>
         (targets,
            nbTargetOutputs,
            reinterpret_cast<__half*>(diffInputs),
@@ -603,7 +603,7 @@ void N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
 }
 
 //Float
-void N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+void N2D2::cudaSSetOutputTarget(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
     float* diffInputs,
@@ -626,7 +626,7 @@ void N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+    cudaSSetOutputTarget_kernel<<<blocksPerGrid, threadsPerBlocks>>>
         (targets,
            nbTargetOutputs,
            diffInputs,
@@ -638,7 +638,7 @@ void N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
 }
 
 //Double
-void N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+void N2D2::cudaDSetOutputTarget(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
     double* diffInputs,
@@ -661,7 +661,7 @@ void N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaDSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+    cudaDSetOutputTarget_kernel<<<blocksPerGrid, threadsPerBlocks>>>
         (targets,
            nbTargetOutputs,
            diffInputs,

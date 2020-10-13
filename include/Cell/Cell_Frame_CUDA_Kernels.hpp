@@ -40,7 +40,7 @@ void cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
                                  unsigned int batchSize);
 
 //Half
-void cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+void cudaHSetOutputTarget(const cudaDeviceProp& deviceProp,
                              int* targets,
                              unsigned int* nbTargetOutputs,
                              half_float::half* diffInputs,
@@ -50,7 +50,7 @@ void cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
                              unsigned int batchSize);
 
 //Float
-void cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+void cudaSSetOutputTarget(const cudaDeviceProp& deviceProp,
                              int* targets,
                              unsigned int* nbTargetOutputs,
                              float* diffInputs,
@@ -59,7 +59,7 @@ void cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
                              unsigned int outputsWidth,
                              unsigned int batchSize);
 //Double
-void cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+void cudaDSetOutputTarget(const cudaDeviceProp& deviceProp,
                              int* targets,
                              unsigned int* nbTargetOutputs,
                              double* diffInputs,

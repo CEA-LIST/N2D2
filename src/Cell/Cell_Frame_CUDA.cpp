@@ -277,7 +277,7 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
     if (targets.dimX() != mOutputsDims[0] || targets.dimY() != mOutputsDims[1])
     {
         std::ostringstream errorStr;
-        errorStr << "Cell_Frame_CUDA<T>::setOutputTargets(): wrong target "
+        errorStr << "Cell_Frame_CUDA<T>::setOutputTarget(): wrong target "
             "size. Expected " << mOutputsDims << ", got "
             << targets.dims() << std::endl;
 
@@ -332,7 +332,7 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
                                     mTargets.dimY(),
                                     mTargets.dimX(),
                                     mTargets.dimB());
-        setOutputTargetsInternal();
+        setOutputTargetInternal();
     }
 }
 
@@ -349,9 +349,9 @@ double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
 
 namespace N2D2 {
 template <>
-void Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal()
+void Cell_Frame_CUDA<half_float::half>::setOutputTargetInternal()
 {
-    cudaHSetOutputTargets(CudaContext::getDeviceProp(),
+    cudaHSetOutputTarget(CudaContext::getDeviceProp(),
                                  mTargets.getDevicePtr(),
                                  mNbTargetOutputs.getDevicePtr(),
                                  mDiffInputs.getDevicePtr(),
@@ -362,9 +362,9 @@ void Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal()
 }
 
 template <>
-void Cell_Frame_CUDA<float>::setOutputTargetsInternal()
+void Cell_Frame_CUDA<float>::setOutputTargetInternal()
 {
-    cudaSSetOutputTargets(CudaContext::getDeviceProp(),
+    cudaSSetOutputTarget(CudaContext::getDeviceProp(),
                                  mTargets.getDevicePtr(),
                                  mNbTargetOutputs.getDevicePtr(),
                                  mDiffInputs.getDevicePtr(),
@@ -375,9 +375,9 @@ void Cell_Frame_CUDA<float>::setOutputTargetsInternal()
 }
 
 template <>
-void Cell_Frame_CUDA<double>::setOutputTargetsInternal()
+void Cell_Frame_CUDA<double>::setOutputTargetInternal()
 {
-    cudaDSetOutputTargets(CudaContext::getDeviceProp(),
+    cudaDSetOutputTarget(CudaContext::getDeviceProp(),
                                  mTargets.getDevicePtr(),
                                  mNbTargetOutputs.getDevicePtr(),
                                  mDiffInputs.getDevicePtr(),
