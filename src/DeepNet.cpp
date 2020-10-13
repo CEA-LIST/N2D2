@@ -907,15 +907,34 @@ void N2D2::DeepNet::initialize()
         std::cout << "DeepNet::initialize(): " 
                   << " Initialize CEnv environment" << std::endl;
     }
-    for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell) {
-            mCells[(*itCell)]->initialize();
+
+    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
+                                   mStimuliProvider->getDevices().end());
+
+    int currentDev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+#endif
+
+#pragma omp parallel for if (devices.size() > 1)
+    for (int dev = 0; dev < (int)devices.size(); ++dev) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+#endif
+        for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
+            for (std::vector<std::string>::const_iterator itCell
+                = mLayers[l].begin(),
+                itCellEnd = mLayers[l].end();
+                itCell != itCellEnd;
+                ++itCell) {
+                mCells[(*itCell)]->initialize();
+            }
         }
     }
+
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+#endif
 }
 
 void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
@@ -1434,7 +1453,7 @@ void N2D2::DeepNet::logSchedule(const std::string& dirName) const
         }
     }
 
-#pragma omp parallel for
+#pragma omp parallel for if (solvers.size() > 1)
     for (int i = 0; i < (int)solvers.size(); ++i) {
         if (solvers[i].second) {
             solvers[i].second->logSchedule(dirName + "/"
@@ -1935,12 +1954,86 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
 
 void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 {
-    const unsigned int nbLayers = mLayers.size();
+    if (timings != NULL)
+        (*timings).clear();
 
-    std::chrono::high_resolution_clock::time_point time1, time2;
+    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
+                                   mStimuliProvider->getDevices().end());
+
+    int currentDev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+#endif
+
+#pragma omp parallel for if (devices.size() > 1)
+    for (int dev = 0; dev < (int)devices.size(); ++dev) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+#endif
+        propagate(Database::Learn, (dev == 0) ? timings : NULL);
+        backPropagate((dev == 0) ? timings : NULL);
+    }
+
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+#endif
+    update(timings);
+}
+
+void N2D2::DeepNet::test(
+    Database::StimuliSet set,
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    if (mFreeParametersDiscretization > 0 && !mFreeParametersDiscretized) {
+        const std::string dirName = "weights_discretized";
+        Utils::createDirectories(dirName);
+
+        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
+             = mCells.begin(),
+             itEnd = mCells.end();
+             it != itEnd;
+             ++it) {
+            (*it).second->discretizeFreeParameters(
+                mFreeParametersDiscretization);
+            (*it).second->exportFreeParameters(dirName + "/" + (*it).first
+                                               + ".syntxt");
+            (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
+                                                   + ".distrib.dat");
+        }
+
+        mFreeParametersDiscretized = true;
+    }
 
     if (timings != NULL)
         (*timings).clear();
+
+    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
+                                   mStimuliProvider->getDevices().end());
+
+    int currentDev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+#endif
+
+#pragma omp parallel for if (devices.size() > 1)
+    for (int dev = 0; dev < (int)devices.size(); ++dev) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+#endif
+        propagate(set, (dev == 0) ? timings : NULL);
+    }
+
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+#endif
+}
+
+void N2D2::DeepNet::propagate(
+    Database::StimuliSet set,
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    const unsigned int nbLayers = mLayers.size();
+    std::chrono::high_resolution_clock::time_point time1, time2;
 
     // Provide targets
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
@@ -1951,7 +2044,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
     {
         //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
-        (*itTargets)->provideTargets(Database::Learn);
+        (*itTargets)->provideTargets(set);
 
         if (timings != NULL) {
 #ifdef CUDA
@@ -2033,6 +2126,13 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
                 <std::chrono::duration<double> >(time2 - time1).count()));
         }
     }
+}
+
+void N2D2::DeepNet::backPropagate(
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    const unsigned int nbLayers = mLayers.size();
+    std::chrono::high_resolution_clock::time_point time1, time2;
 
     // Error back-propagation
     for (unsigned int l = nbLayers - 1; l > 0; --l) {
@@ -2060,6 +2160,13 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
             }
         }
     }
+}
+
+void N2D2::DeepNet::update(
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    const unsigned int nbLayers = mLayers.size();
+    std::chrono::high_resolution_clock::time_point time1, time2;
 
     // Weights update
     for (unsigned int l = 1; l < nbLayers; ++l) {
@@ -2085,128 +2192,6 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
                     std::chrono::duration_cast
                     <std::chrono::duration<double> >(time2 - time1).count()));
             }
-        }
-    }
-}
-
-void N2D2::DeepNet::test(Database::StimuliSet set,
-                         std::vector<std::pair<std::string, double> >* timings)
-{
-    const unsigned int nbLayers = mLayers.size();
-
-    if (mFreeParametersDiscretization > 0 && !mFreeParametersDiscretized) {
-        const std::string dirName = "weights_discretized";
-        Utils::createDirectories(dirName);
-
-        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
-             = mCells.begin(),
-             itEnd = mCells.end();
-             it != itEnd;
-             ++it) {
-            (*it).second->discretizeFreeParameters(
-                mFreeParametersDiscretization);
-            (*it).second->exportFreeParameters(dirName + "/" + (*it).first
-                                               + ".syntxt");
-            (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
-                                                   + ".distrib.dat");
-        }
-
-        mFreeParametersDiscretized = true;
-    }
-
-    std::chrono::high_resolution_clock::time_point time1, time2;
-
-    if (timings != NULL)
-        (*timings).clear();
-
-    // Provide targets
-    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-         = mTargets.begin(),
-         itTargetsEnd = mTargets.end();
-         itTargets != itTargetsEnd;
-         ++itTargets)
-    {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
-        time1 = std::chrono::high_resolution_clock::now();
-        (*itTargets)->provideTargets(set);
-
-        if (timings != NULL) {
-#ifdef CUDA
-            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-            time2 = std::chrono::high_resolution_clock::now();
-            (*timings).push_back(std::make_pair(
-                (*itTargets)->getCell()->getName() + "."
-                + (*itTargets)->getType() + "[provide]",
-                std::chrono::duration_cast
-                <std::chrono::duration<double> >(time2 - time1).count()));
-        }
-    }
-
-    // Signal propagation
-    for (unsigned int l = 1; l < nbLayers; ++l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell) {
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
-
-            if (!cellFrame)
-                throw std::runtime_error(
-                    "DeepNet::test(): testing requires Cell_Frame_Top cells");
-
-            if (mSignalsDiscretization > 0)
-                cellFrame->discretizeSignals(mSignalsDiscretization);
-
-            time1 = std::chrono::high_resolution_clock::now();
-            cellFrame->propagate(true);
-
-
-            if (timings != NULL) {
-#ifdef CUDA
-                if(cellFrame->isCuda())
-                    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-                time2 = std::chrono::high_resolution_clock::now();
-                (*timings).push_back(std::make_pair(
-                    *itCell,
-                    std::chrono::duration_cast
-                    <std::chrono::duration<double> >(time2 - time1).count()));
-            }
-        }
-    }
-
-    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-         = mTargets.begin(),
-         itTargetsEnd = mTargets.end();
-         itTargets != itTargetsEnd;
-         ++itTargets)
-    {
-        std::shared_ptr<Cell_Frame_Top> cellFrame
-            = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
-                                                        getCell());
-
-        if (mSignalsDiscretization > 0) {
-            cellFrame->discretizeSignals(mSignalsDiscretization,
-                                         Cell_Frame_Top::Out);
-        }
-
-        time1 = std::chrono::high_resolution_clock::now();
-        (*itTargets)->process(set);
-
-        if (timings != NULL) {
-#ifdef CUDA
-            if (cellFrame->isCuda())
-                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-            time2 = std::chrono::high_resolution_clock::now();
-            (*timings).push_back(std::make_pair(
-                (*itTargets)->getCell()->getName() + "."
-                + (*itTargets)->getType(),
-                std::chrono::duration_cast
-                <std::chrono::duration<double> >(time2 - time1).count()));
         }
     }
 }

@@ -283,9 +283,9 @@ public:
         N2D2::DeepNetExport::setExportParameters(opts.parse("-export-parameters", std::string(), 
                                                                         "parameters for export"));
 
-    #ifdef CUDA
+#ifdef CUDA
         cudaDevice =  opts.parse("-dev", 0, "CUDA device ID");
-    #endif
+#endif
 
         version =     opts.parse("-v", "display version information");
         if (version) {
@@ -362,7 +362,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
     const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
         ? 1 : database->getNbStimuli(Database::Test);
-    const unsigned int batchSize = sp->getBatchSize();
+    const unsigned int batchSize = sp->getMultiBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
@@ -640,7 +640,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                               std::min(static_cast<unsigned int>(opt.calibration),
                                                        database->getNbStimuli(Database::Validation)):
                                               database->getNbStimuli(Database::Validation);
-            const std::size_t batchSize = sp->getBatchSize();
+            const std::size_t batchSize = sp->getMultiBatchSize();
             const std::size_t nbBatches = std::ceil(1.0*nbStimuli/batchSize);
 
 
@@ -722,7 +722,7 @@ void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     const double endLr = 10.0;
     const double grow = (1.0 / opt.findLr) * std::log(endLr / startLr);
 
-    const unsigned int batchSize = sp->getBatchSize();
+    const unsigned int batchSize = sp->getMultiBatchSize();
     const unsigned int nbBatch = std::ceil(opt.findLr / (double)batchSize);
     std::vector<std::pair<std::string, double> >* timings = NULL;
 
@@ -892,7 +892,7 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     unsigned int nextReport = opt.report;
     unsigned int nbNoValid = 0;
 
-    const unsigned int batchSize = sp->getBatchSize();
+    const unsigned int batchSize = sp->getMultiBatchSize();
     const unsigned int nbBatch = std::ceil(opt.learn / (double)batchSize);
     const unsigned int avgBatchWindow = opt.avgWindow / (double)batchSize;
 
@@ -1533,7 +1533,7 @@ void testCStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
         ? 1 : database->getNbStimuli(Database::Test);
-    const unsigned int batchSize = sp->getBatchSize();
+    const unsigned int batchSize = sp->getMultiBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
     for (unsigned int b = 0; b < nbBatch; ++b) {

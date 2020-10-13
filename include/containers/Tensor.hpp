@@ -223,6 +223,8 @@ public:
     /** Synchronize Host data To Device-based */
     virtual void synchronizeHToDBased() const {};
 
+    virtual void synchronizeToH(BaseTensor& tensor) const = 0;
+
     virtual BaseTensor& operator=(const BaseTensor& base) = 0;
 
     size_t nbDims() const
@@ -385,6 +387,7 @@ public:
     const Tensor<T> rows(size_t j0, size_t nb) const;
     double sum() const;
     double mean() const;
+    virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);

@@ -288,6 +288,8 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
         // Single target value per stimulus (ex: images classification)
         const unsigned int outputSize = mOutputs.size() / mOutputs.dimB();
 
+        Tensor<T> diffInputs(mDiffInputs.dims());
+
         for (unsigned int batchPos = 0; batchPos < mOutputs.dimB(); ++batchPos)
         {
             if (targets(0, batchPos) >= 0) {
@@ -302,7 +304,7 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
 
             for (unsigned int index = 0; index < outputSize; ++index) {
                 if (targets(0, batchPos) >= 0) {
-                    mDiffInputs(index, batchPos)
+                    diffInputs(index, batchPos)
                         = ((outputSize > 1
                             && (int)index == targets(0, batchPos))
                         || (outputSize == 1 && targets(0, batchPos) == 1))
@@ -310,20 +312,24 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
                             : -1.0;
                 }
                 else
-                    mDiffInputs(index, batchPos) = 0.0;
+                    diffInputs(index, batchPos) = 0.0;
             }
         }
 
-        mDiffInputs.synchronizeHToD();
+        mDiffInputs.synchronizeToD(diffInputs);
     }
     else {
         // 2D target matrix per stimulus (ex: images segmentation)
-        mTargets.resize(targets.dims());
-        mTargets = targets;  // TODO: could be optimized by avoiding the copy
-        mTargets.synchronizeHToD();
+        if (mTargets.empty() || mNbTargetOutputs.empty()) {
+#pragma omp critical(Cell_Frame_CUDA__setOutputTarget)
+            if (mTargets.empty() || mNbTargetOutputs.empty()) {
+                mTargets.resize(targets.dims());
+                mNbTargetOutputs.resize(
+                    {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
+            }
+        }
 
-        mNbTargetOutputs.resize(
-            {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
+        mTargets.synchronizeToD(targets);
 
         cudaPopulateNbTargetOutputs(CudaContext::getDeviceProp(),
                                     mTargets.getDevicePtr(),
@@ -459,20 +465,22 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTargets(const BaseTensor& baseTargets)
     }
 
     const Tensor<T>& targets = tensor_cast<T>(baseTargets);
-
-    for (unsigned int index = 0; index < mOutputs.size(); ++index)
-        mDiffInputs(index) = targets(index);
+    mDiffInputs.synchronizeToD(targets);
 }
 
 template <class T>
 double N2D2::Cell_Frame_CUDA<T>::applyLoss()
 {
-    mOutputs.synchronizeDToH();
+    Tensor<T> outputs(mOutputs.dims());
+    Tensor<T> diffInputs(mDiffInputs.dims());
 
-    const double loss = Cell_Frame_Top::applyLoss<T>(mDiffInputs, mOutputs);
+    mOutputs.synchronizeToH(outputs);
+    mDiffInputs.synchronizeToH(diffInputs);
+
+    const double loss = Cell_Frame_Top::applyLoss<T>(diffInputs, outputs);
 
     mDiffInputs.setValid();
-    mDiffInputs.synchronizeHToD();
+    mDiffInputs.synchronizeToD(diffInputs);
     return loss;
 }
 
@@ -482,14 +490,18 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossDistribWeighted(
     double rangeMin,
     double rangeMax)
 {
-    mOutputs.synchronizeDToH();
+    Tensor<T> outputs(mOutputs.dims());
+    Tensor<T> diffInputs(mDiffInputs.dims());
+
+    mOutputs.synchronizeToH(outputs);
+    mDiffInputs.synchronizeToH(diffInputs);
 
     const double loss = Cell_Frame_Top::applyLossDistribWeighted<T>(
-        mDiffInputs, mOutputs,
+        diffInputs, outputs,
         quantSteps, rangeMin, rangeMax);
 
     mDiffInputs.setValid();
-    mDiffInputs.synchronizeHToD();
+    mDiffInputs.synchronizeToD(diffInputs);
     return loss;
 }
 
@@ -500,8 +512,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
 {
     const Tensor<T>& kernel = tensor_cast<T>(baseKernel);
     CudaTensor<T> cudaKernel(kernel.dims());
-    cudaKernel = kernel;  // TODO: could be optimized by avoiding the copy
-    cudaKernel.synchronizeHToD();
+    cudaKernel.synchronizeToD(kernel);
 
     const int paddings[2] = {((int)kernel.dimY() - 1) / 2,
                            ((int)kernel.dimX() - 1) / 2};
@@ -591,8 +602,6 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
     mOutputs.swap(outputs);
     mDiffInputs.swap(diffInputs);
 
-    diffInputs.synchronizeHToD();
-
     CHECK_CUDNN_STATUS(
         cudnnConvolutionForward(CudaContext::cudnnHandle(),
                                 &alpha,
@@ -623,12 +632,18 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
                                 mDiffInputs.getCudnnTensorDesc(),
                                 mDiffInputs.getDevicePtr()));
 
+    // Workaround for multi-GPU: to be refactored/optimized
+    double loss;
+
+#pragma omp critical
+{
     mOutputs.synchronizeDToH();
     mDiffInputs.synchronizeDToH();
 
-    const double loss = lossFunc();
+    loss = lossFunc();
 
     mDiffInputs.synchronizeHToD();
+}
 
 #if CUDNN_VERSION >= 5000
     CHECK_CUDNN_STATUS(cudnnConvolutionBackwardData(

@@ -602,6 +602,11 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
 }
 
 template <class T>
+void N2D2::Tensor<T>::synchronizeToH(BaseTensor& tensor) const {
+    tensor = tensor_cast<T>(*this);
+}
+
+template <class T>
 N2D2::BaseTensor& N2D2::Tensor<T>::operator=(const BaseTensor& base)
 {
     assert(mDims.size() == base.nbDims());

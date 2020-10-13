@@ -407,22 +407,22 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
             {
                 if ((*itMisclass).second[estimated] > 0) {
 /*
-                    const std::vector<int> estimatedLabels
+                    const std::vector<int> estLabels
                         = getTargetLabels(estimated);
 
-                    std::ostringstream estimatedLabelsName;
+                    std::ostringstream estLabelsName;
 
-                    if (estimatedLabels[0]
+                    if (estLabels[0]
                         < (int)mStimuliProvider->getDatabase().getNbLabels())
                     {
-                        estimatedLabelsName << mStimuliProvider->getDatabase()
-                            .getLabelName(estimatedLabels[0]);
+                        estLabelsName << mStimuliProvider->getDatabase()
+                            .getLabelName(estLabels[0]);
                     }
                     else
-                        estimatedLabelsName << estimatedLabels[0];
+                        estLabelsName << estLabels[0];
 
-                    if (estimatedLabels.size() > 1)
-                        estimatedLabelsName << "...";
+                    if (estLabels.size() > 1)
+                        estLabelsName << "...";
 */
                     data << (*it).first;
 
@@ -434,7 +434,7 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
                     data << " " << target
                         //<< " " << targetLabelsName.str()
                         << " " << estimated
-                        //<< " " << estimatedLabelsName.str()
+                        //<< " " << estLabelsName.str()
                         << " " << (*itMisclass).second[estimated]
                         << "\n";
 
@@ -483,15 +483,10 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
-        if (targetCell)
-            targetCell->getOutputs().synchronizeDToH();
-        else
-            targetCellCSpike->getOutputsActivity().synchronizeDToH();
-
-        const Tensor<Float_T>& values
-            = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
-                           : tensor_cast<Float_T>
-                                (targetCellCSpike->getOutputsActivity());
+        BaseTensor& valuesBaseTensor = (targetCell)
+            ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
+        Tensor<Float_T> values;
+        valuesBaseTensor.synchronizeToH(values);
 
         mBatchSuccess.assign(values.dimB(), -1.0);
 
@@ -559,16 +554,23 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                  std::map<unsigned int, std::vector<unsigned int> > >&
             misclassified = mScoreSet[set].misclassified;
 
-        mBatchSuccess.assign(mTargets.dimB(), -1.0);
+        int dev = 0;
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
 
-        mEstimatedLabels.synchronizeDBasedToH();
-        mEstimatedLabelsValue.synchronizeDBasedToH();
+        const Tensor<int>& targets = mTargetData[dev].targets;
+        const TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+
+        estimatedLabels.synchronizeDBasedToH();
+
+        mBatchSuccess.assign(targets.dimB(), -1.0);
 
         if (mTargetTopN > 1)
-            mBatchTopNSuccess.assign(mTargets.dimB(), -1.0);
+            mBatchTopNSuccess.assign(targets.dimB(), -1.0);
 
-#pragma omp parallel for if (mTargets.dimB() > 4 && mTargets[0].size() > 1)
-        for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for if (targets.dimB() > 4 && targets[0].size() > 1)
+        for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
 
             if (id < 0) {
@@ -577,8 +579,8 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                 continue;
             }
 
-            const Tensor<int> target = mTargets[batchPos][0];
-            const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
+            const Tensor<int> target = targets[batchPos][0];
+            const Tensor<int> estLabels = estimatedLabels[batchPos];
             const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
                 ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
                 : TensorLabels_T();
@@ -598,9 +600,9 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
             if (target.size() == 1) {
                 if (target(0) >= 0) {
 #pragma omp atomic
-                    confusionMatrix(target(0), estimatedLabels(0)) += 1ULL;
+                    confusionMatrix(target(0), estLabels(0)) += 1ULL;
 
-                    mBatchSuccess[batchPos] = (estimatedLabels(0) == target(0));
+                    mBatchSuccess[batchPos] = (estLabels(0) == target(0));
 
                     if (!mBatchSuccess[batchPos]) {
                         // Misclassified
@@ -609,7 +611,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                         std::tie(itMisclass, std::ignore)
                             = misclass.insert(std::make_pair(target(0),
                                 std::vector<unsigned int>(nbTargets, 0U)));
-                        (*itMisclass).second[estimatedLabels(0)] = 1U;
+                        (*itMisclass).second[estLabels(0)] = 1U;
                     }
 
                     // Top-N case :
@@ -617,7 +619,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                         unsigned int topNscore = 0;
 
                         for (unsigned int n = 0; n < mTargetTopN; ++n) {
-                            if (estimatedLabels(n) == target(0))
+                            if (estLabels(n) == target(0))
                                 ++topNscore;
                         }
 
@@ -633,17 +635,17 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                 std::vector<unsigned int> nbHitsTopN(nbTargets, 0);
                 std::vector<unsigned int> nbLabels(nbTargets, 0);
 
-                for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
-                    for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
+                for (unsigned int oy = 0; oy < targets.dimY(); ++oy) {
+                    for (unsigned int ox = 0; ox < targets.dimX(); ++ox) {
                         if (target(ox, oy) >= 0) {
                             ++nbLabels[target(ox, oy)];
 
                             if (mask.empty() || mask(ox, oy) == mMaskedLabel) {
                                 confusion(target(ox, oy),
-                                          estimatedLabels(ox, oy, 0)) += 1;
+                                          estLabels(ox, oy, 0)) += 1;
 
                                 if (target(ox, oy)
-                                    == (int)estimatedLabels(ox, oy, 0))
+                                    == (int)estLabels(ox, oy, 0))
                                     ++nbHits[target(ox, oy)];
 
                                 // Top-N case :
@@ -651,7 +653,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                                     unsigned int topNscore = 0;
 
                                     for (unsigned int n = 0; n < mTargetTopN; ++n) {
-                                        if (estimatedLabels(ox, oy, n)
+                                        if (estLabels(ox, oy, n)
                                             == target(ox, oy))
                                             ++topNscore;
                                     }
@@ -670,7 +672,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                         {
                             // Masked no target = masked false positive
                             // Should affect the precision
-                            confusion(nbTargets, estimatedLabels(ox, oy, 0)) += 1;
+                            confusion(nbTargets, estLabels(ox, oy, 0)) += 1;
                         }
                     }
                 }

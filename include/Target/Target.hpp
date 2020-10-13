@@ -69,6 +69,12 @@ public:
     typedef Tensor<Float_T> TensorLabelsValue_T;
 #endif
 
+    struct TargetData {
+        Tensor<int> targets;
+        TensorLabels_T estimatedLabels;
+        TensorLabelsValue_T estimatedLabelsValue;
+    };
+
     static std::shared_ptr<Target> create(const std::string& name,
                                           const std::shared_ptr<Cell>& cell,
                                           const std::shared_ptr
@@ -150,13 +156,13 @@ public:
                                         unsigned int yOffset = 0,
                                         bool append = false) const;
     virtual void logLabelsLegend(const std::string& fileName) const;
-    const TensorLabels_T& getEstimatedLabels() const
+    const TensorLabels_T& getEstimatedLabels(int dev = -1) const
     {
-        return mEstimatedLabels;
+        return mTargetData[getDevice(dev)].estimatedLabels;
     };
-    const TensorLabelsValue_T& getEstimatedLabelsValue() const
+    const TensorLabelsValue_T& getEstimatedLabelsValue(int dev = -1) const
     {
-        return mEstimatedLabelsValue;
+        return mTargetData[getDevice(dev)].estimatedLabelsValue;
     };
     TensorLabelsValue_T getEstimatedLabels(const std::shared_ptr<ROI>& roi,
                                             unsigned int batchPos = 0,
@@ -168,9 +174,9 @@ public:
     {
         return mLoss;
     }
-    const Tensor<int>& getTargets() const
+    const Tensor<int>& getTargets(int dev = -1) const
     {
-        return mTargets;
+        return mTargetData[getDevice(dev)].targets;
     }
     virtual void log(const std::string& /*fileName*/,
                      Database::StimuliSet /*set*/) {};
@@ -182,6 +188,9 @@ public:
     void process_Frame_CUDA(Float_T* valuesDevPtr,
                             const int batchSize);
 #endif
+
+protected:
+    inline int getDevice(int dev) const;
 
 protected:
     Parameter<bool> mDataAsTarget;
@@ -217,9 +226,7 @@ protected:
 
     std::map<int, int> mLabelsMapping;
     int mDefaultTarget;
-    Tensor<int> mTargets;
-    TensorLabels_T mEstimatedLabels;
-    TensorLabelsValue_T mEstimatedLabelsValue;
+    std::vector<TargetData> mTargetData;
     std::shared_ptr<Target> mMaskLabelTarget;
     std::vector<Float_T> mLoss;
 
@@ -228,6 +235,17 @@ protected:
 private:
     static Registrar<Target> mRegistrar;
 };
+}
+
+int N2D2::Target::getDevice(int dev) const {
+#ifdef CUDA
+    if (dev == -1)
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    return dev;
+#else
+    return 0;
+#endif
 }
 
 #endif // N2D2_TARGET_H

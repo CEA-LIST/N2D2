@@ -101,7 +101,7 @@ public:
     /// StimuliProvider are copied, the loaded stimuli data are zero-initialized.
     StimuliProvider cloneParameters() const;
 
-    void setMultiDevices(const std::vector<int>& devices);
+    void setDevices(const std::set<int>& devices = std::set<int>());
 
     virtual void addChannel(const CompositeTransformation& /*transformation*/);
 
@@ -305,6 +305,14 @@ public:
     {
         return mBatchSize;
     };
+    unsigned int getMultiBatchSize() const
+    {
+        return mBatchSize * mDevices.size();
+    };
+    const std::set<int>& getDevices() const
+    {
+        return mDevices;
+    };
     bool isCompositeStimuli() const
     {
         return mCompositeStimuli;
@@ -323,45 +331,45 @@ public:
                         std::function<void(const Transformation&)> func) const;
     const std::vector<int>& getBatch(int dev = -1)
     {
-        return mProvidedData[getDeviceIndex(dev)].batch;
+        return mProvidedData[getDevice(dev)].batch;
     };
     TensorData_T& getDataInput()
     {
-        return mProvidedData[0].data;
+        return mProvidedData[getDevice(-1)].data;
     };
     TensorData_T& getData(int dev = -1)
     {
-        return mProvidedData[getDeviceIndex(dev)].data;
+        return mProvidedData[getDevice(dev)].data;
     };
     TensorData_T& getTargetData(int dev = -1)
     {
-        return (!mProvidedData[getDeviceIndex(dev)].targetData.empty())
-            ? mProvidedData[getDeviceIndex(dev)].targetData
-            : mProvidedData[getDeviceIndex(dev)].data;
+        return (!mProvidedData[getDevice(dev)].targetData.empty())
+            ? mProvidedData[getDevice(dev)].targetData
+            : mProvidedData[getDevice(dev)].data;
     };
     Tensor<int>& getLabelsData(int dev = -1)
     {
-        return mProvidedData[getDeviceIndex(dev)].labelsData;
+        return mProvidedData[getDevice(dev)].labelsData;
     };
     const TensorData_T& getData(int dev = -1) const
     {
-        return mProvidedData[getDeviceIndex(dev)].data;
+        return mProvidedData[getDevice(dev)].data;
     };
     const Tensor<int>& getLabelsData(int dev = -1) const
     {
-        return mProvidedData[getDeviceIndex(dev)].labelsData;
+        return mProvidedData[getDevice(dev)].labelsData;
     };
     const TensorData_T& getTargetData(int dev = -1) const
     {
-        return (!mProvidedData[getDeviceIndex(dev)].targetData.empty())
-            ? mProvidedData[getDeviceIndex(dev)].targetData
-            : mProvidedData[getDeviceIndex(dev)].data;
+        return (!mProvidedData[getDevice(dev)].targetData.empty())
+            ? mProvidedData[getDevice(dev)].targetData
+            : mProvidedData[getDevice(dev)].data;
     };
 /*
     const std::vector<std::vector<std::shared_ptr<ROI> > >&
     getLabelsROIs(int dev = -1) const
     {
-        return mProvidedData[getDeviceIndex(dev)].labelsROI;
+        return mProvidedData[getDevice(dev)].labelsROI;
     };
 */
     const TensorData_T getDataChannel(unsigned int channel,
@@ -376,7 +384,7 @@ public:
     const std::vector<std::shared_ptr<ROI> >&
     getLabelsROIs(unsigned int batchPos = 0, int dev = -1) const
     {
-        return mProvidedData[getDeviceIndex(dev)].labelsROI[batchPos];
+        return mProvidedData[getDevice(dev)].labelsROI[batchPos];
     };
     const std::string& getCachePath() const
     {
@@ -402,7 +410,7 @@ protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
-    int getDeviceIndex(int dev) const;
+    inline int getDevice(int dev) const;
 
 protected:
     /// Map unsigned integer range to signed before convertion to Float_T
@@ -433,8 +441,7 @@ protected:
     std::vector<ProvidedData> mFutureProvidedData;
     bool mFuture;
 
-    std::vector<int> mDevices;
-    std::vector<int> mDevicesIndex;
+    std::set<int> mDevices;
 };
 }
 
@@ -493,6 +500,17 @@ N2D2::StimuliProvider::readRawData(Database::StimuliSet set,
                                    unsigned int index) const
 {
     return readRawData(mDatabase.getStimulusID(set, index));
+}
+
+int N2D2::StimuliProvider::getDevice(int dev) const {
+#ifdef CUDA
+    if (dev == -1)
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    return dev;
+#else
+    return 0;
+#endif
 }
 
 #endif // N2D2_STIMULIPROVIDER_H

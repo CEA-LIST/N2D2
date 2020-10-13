@@ -357,34 +357,49 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
 
-    if (mTargets.empty()) {
-        mTargets.resize({mCell->getOutputsWidth(), mCell->getOutputsHeight(), 1,
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    if (mTargetData.empty()) {
+        int count = 1;
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+        mTargetData.resize(count);
+    }
+
+    Tensor<int>& targets = mTargetData[dev].targets;
+
+    if (targets.empty()) {
+        targets.resize({mCell->getOutputsWidth(), mCell->getOutputsHeight(), 1,
             labels.dimB()});
     }
 
     if (validDatabase) {
         // Generate targets
-        const size_t size = mTargets.dimB() * mTargets.dimY();
+        const size_t size = targets.dimB() * targets.dimY();
 
-        if (mTargets.dimX() != labels.dimX()
-            || mTargets.dimY() != labels.dimY()) {
-            const double xRatio = labels.dimX() / (double)mTargets.dimX();
-            const double yRatio = labels.dimY() / (double)mTargets.dimY();
+        if (targets.dimX() != labels.dimX()
+            || targets.dimY() != labels.dimY()) {
+            const double xRatio = labels.dimX() / (double)targets.dimX();
+            const double yRatio = labels.dimY() / (double)targets.dimY();
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16)
 #else
-#pragma omp parallel for if (mTargets.dimB() > 4 && size > 16)
+#pragma omp parallel for if (targets.dimB() > 4 && size > 16)
 #endif
-            for (int batchPos = 0; batchPos < (int)mTargets.dimB();
+            for (int batchPos = 0; batchPos < (int)targets.dimB();
                  ++batchPos) {
-                for (int y = 0; y < (int)mTargets.dimY(); ++y) {
+                for (int y = 0; y < (int)targets.dimY(); ++y) {
                     const int id = mStimuliProvider->getBatch()[batchPos];
 
                     if (id < 0)
                         continue;
 
-                    for (int x = 0; x < (int)mTargets.dimX(); ++x) {
+                    for (int x = 0; x < (int)targets.dimX(); ++x) {
                         const unsigned int xl0 = std::floor(x * xRatio);
                         const unsigned int xl1 = std::max(xl0 + 1,
                             (unsigned int)std::floor((x + 1) * xRatio));
@@ -440,7 +455,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
                                         > targetHist[i2 + 1];
                                 });
 
-                            mTargets(x, y, 0, batchPos)
+                            targets(x, y, 0, batchPos)
                                 = (targetHistIdx[0] == mWeakTarget
                                       && targetHistIdx[1] > 0)
                                 ? targetHistIdx[1]
@@ -451,7 +466,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
                                 = std::max_element(
                                     targetHist.begin(), targetHist.end());
 
-                            mTargets(x, y, 0, batchPos)
+                            targets(x, y, 0, batchPos)
                                 = std::distance(targetHist.begin(),
                                       maxElem)
                                 - 1; // -1 = ignore
@@ -462,8 +477,8 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
         }
         else {
             // one-to-one mapping
-#pragma omp parallel for if (mTargets.dimB() > 64 && size > 256)
-            for (int batchPos = 0; batchPos < (int)mTargets.dimB();
+#pragma omp parallel for if (targets.dimB() > 64 && size > 256)
+            for (int batchPos = 0; batchPos < (int)targets.dimB();
                  ++batchPos) {
                 const int id = mStimuliProvider->getBatch()[batchPos];
 
@@ -473,7 +488,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
                 // target only has 1 channel, whereas label has as many
                 // channels as environment channels
                 const Tensor<int> label = labels[batchPos][0];
-                Tensor<int> target = mTargets[batchPos][0];
+                Tensor<int> target = targets[batchPos][0];
 
                 for (int index = 0; index < (int)label.size(); ++index) {
                     target(index) = getLabelTarget(label(index));
@@ -499,13 +514,13 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
         }
     }
 
-    //Set label associated to mTargets
+    //Set label associated to targets
     if (set == Database::Learn && targetCell) {
         // Set targets
-        if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
-            for (unsigned int batchPos = 0; batchPos < mTargets.dimB();
+        if (targets.dimX() == 1 && targets.dimY() == 1) {
+            for (unsigned int batchPos = 0; batchPos < targets.dimB();
                     ++batchPos) {
-                if (mTargets(0, batchPos) < 0) {
+                if (targets(0, batchPos) < 0) {
                     std::cout << Utils::cwarning
                                 << "Target::setTargetsValue(): ignore label "
                                     "with 1D output for stimuli ID "
@@ -515,7 +530,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
             }
         }
 
-        targetCell->setOutputTarget(mTargets);
+        targetCell->setOutputTarget(targets);
     }
 }
 
@@ -554,11 +569,28 @@ void N2D2::Target::process(Database::StimuliSet set)
 
     mLoss.push_back(targetCell->applyLoss(mTargetValue, mDefaultValue));
 
-    if (mEstimatedLabels.empty()) {
-        mEstimatedLabels.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, mTargets.dimB()});
-        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, mTargets.dimB()});
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    if (mTargetData.empty()) {
+        int count = 1;
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+        mTargetData.resize(count);
+    }
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
+    if (estimatedLabels.empty()) {
+        estimatedLabels.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, targets.dimB()});
+        estimatedLabelsValue.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, targets.dimB()});
     }
 
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
@@ -571,9 +603,9 @@ void N2D2::Target::process(Database::StimuliSet set)
     int batchSize = 0;
 
     if (mStimuliProvider->getBatch().back() >= 0)
-        batchSize = (int)mTargets.dimB();
+        batchSize = (int)targets.dimB();
     else {
-        for (; batchSize < (int)mTargets.dimB(); ++batchSize) {
+        for (; batchSize < (int)targets.dimB(); ++batchSize) {
             const int id = mStimuliProvider->getBatch()[batchSize];
 
             if (id < 0)
@@ -601,31 +633,30 @@ void N2D2::Target::process(Database::StimuliSet set)
     }
     else {
 #endif
-        outputsBaseTensor.synchronizeDToH();
         process_Frame(outputsBaseTensor, batchSize);
 #ifdef CUDA
 
-        mEstimatedLabels.hostBased() = true;
-        mEstimatedLabelsValue.hostBased() = true;
+        estimatedLabels.hostBased() = true;
+        estimatedLabelsValue.hostBased() = true;
     }
 #endif
 
-    if (mEstimatedLabelsValue.dimX() == 1
-        && mEstimatedLabelsValue.dimY() == 1)
+    if (estimatedLabelsValue.dimX() == 1
+        && estimatedLabelsValue.dimY() == 1)
     {
         static bool display = true;
 
         if (set == Database::Test && display) {
-            mEstimatedLabels.synchronizeDBasedToH();
-            mEstimatedLabelsValue.synchronizeDBasedToH();
+            estimatedLabels.synchronizeDBasedToH();
+            estimatedLabelsValue.synchronizeDBasedToH();
 
             std::cout << "[";
 
-            for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
-                std::cout << mEstimatedLabels(0, 0, i, 0) << ":"
+            for (int i = 0; i < (int)estimatedLabelsValue.dimZ(); ++i) {
+                std::cout << estimatedLabels(0, 0, i, 0) << ":"
                     << std::setprecision(2)
                     << std::fixed
-                    << mEstimatedLabelsValue(0, 0, i, 0) << " ";
+                    << estimatedLabelsValue(0, 0, i, 0) << " ";
             }
 
             std::cout << "]" << std::endl;
@@ -638,6 +669,14 @@ void N2D2::Target::process(Database::StimuliSet set)
 void N2D2::Target::process_Frame_CUDA(Float_T* values,
                                       const int batchSize)
 { 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
     cudaGetEstimatedTarget( mTargetTopN,
                             mCell->getNbOutputs(),
                             mCell->getOutputsHeight(),
@@ -645,8 +684,8 @@ void N2D2::Target::process_Frame_CUDA(Float_T* values,
                             batchSize,
                             mBinaryThreshold,
                             values,
-                            mEstimatedLabelsValue.getDevicePtr(),
-                            mEstimatedLabels.getDevicePtr());
+                            estimatedLabelsValue.getDevicePtr(),
+                            estimatedLabels.getDevicePtr());
 }
 #endif
 
@@ -668,6 +707,9 @@ void N2D2::Target::process_Frame(BaseTensor& values,
 
     if (nbOutputs > 1 && mTargetTopN > 1)
         std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
+
+    TensorLabels_T& estimatedLabels = mTargetData[0].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[0].estimatedLabelsValue;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16) schedule(dynamic)
@@ -692,9 +734,9 @@ void N2D2::Target::process_Frame(BaseTensor& values,
                                         > value(ox, oy, i2, batchPos);});
 
                     for (unsigned int i = 0; i < mTargetTopN; ++i) {
-                        mEstimatedLabels(ox, oy, i, batchPos)
+                        estimatedLabels(ox, oy, i, batchPos)
                             = sortedLabelsIdx[i];
-                        mEstimatedLabelsValue(ox, oy, i, batchPos)
+                        estimatedLabelsValue(ox, oy, i, batchPos)
                             = value(ox, oy, sortedLabelsIdx[i], batchPos);
                     }
                 }
@@ -709,14 +751,14 @@ void N2D2::Target::process_Frame(BaseTensor& values,
                         }
                     }
 
-                    mEstimatedLabels(ox, oy, 0, batchPos) = maxIdx;
-                    mEstimatedLabelsValue(ox, oy, 0, batchPos) = maxVal;
+                    estimatedLabels(ox, oy, 0, batchPos) = maxIdx;
+                    estimatedLabelsValue(ox, oy, 0, batchPos) = maxVal;
                 }
                 else {
-                    mEstimatedLabels(ox, oy, 0, batchPos)
+                    estimatedLabels(ox, oy, 0, batchPos)
                         = (value(ox, oy, 0, batchPos) > mBinaryThreshold);
-                    mEstimatedLabelsValue(ox, oy, 0, batchPos)
-                        = (mEstimatedLabels(ox, oy, 0, batchPos) == 1)
+                    estimatedLabelsValue(ox, oy, 0, batchPos)
+                        = (estimatedLabels(ox, oy, 0, batchPos) == 1)
                                 ? value(ox, oy, 0, batchPos)
                                 : (1.0 - value(ox, oy, 0, batchPos));
                 }
@@ -736,7 +778,16 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
 
-    if (mTargets.dimX() == 1 && mTargets.dimY() == 1) {
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+    const TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    const TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
+    if (targets.dimX() == 1 && targets.dimY() == 1) {
 #if !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN32)
         const int ret = symlink(N2D2_PATH("tools/roc.py"),
                                 (dirPath + "_roc.py").c_str());
@@ -749,15 +800,11 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
-        if (targetCell)
-            targetCell->getOutputs().synchronizeDToH();
-        else
-            targetCellCSpike->getOutputsActivity().synchronizeDToH();
+        BaseTensor& valuesBaseTensor = (targetCell)
+            ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
+        Tensor<Float_T> values;
+        valuesBaseTensor.synchronizeToH(values);
 
-        const Tensor<Float_T>& values
-            = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
-                           : tensor_cast<Float_T>
-                                (targetCellCSpike->getOutputsActivity());
         const unsigned int nbOutputs = values.dimZ();
 
         const std::string fileName = dirPath + "/classif.log";
@@ -769,10 +816,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                     + fileName);
         }
 
-        mEstimatedLabels.synchronizeDBasedToH();
-        mEstimatedLabelsValue.synchronizeDBasedToH();
+        estimatedLabels.synchronizeDBasedToH();
+        estimatedLabelsValue.synchronizeDBasedToH();
 
-        for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+        for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
             const int id = mStimuliProvider->getBatch()[batchPos];
 
             if (id < 0) {
@@ -782,10 +829,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             }
 
             const Tensor<Float_T> value = values[batchPos];
-            const Tensor<int> target = mTargets[batchPos][0];
-            const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-            const Tensor<Float_T> estimatedLabelsValue
-                = mEstimatedLabelsValue[batchPos][0];
+            const Tensor<int> target = targets[batchPos][0];
+            const Tensor<int> estLabels = estimatedLabels[batchPos][0];
+            const Tensor<Float_T> estLabelsValue
+                = estimatedLabelsValue[batchPos][0];
 
             std::ostringstream imgFile;
 
@@ -797,8 +844,8 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             data << id
                 << " " << Utils::quoted(imgFile.str())
                 << " " << target(0)
-                << " " << estimatedLabels(0)
-                << " " << estimatedLabelsValue(0);
+                << " " << estLabels(0)
+                << " " << estLabelsValue(0);
 
             for (int i = 0; i < (int)nbOutputs; ++i)
                 data << " " << value(i);
@@ -814,13 +861,13 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             <Cell_Frame_Top>(mCell);
         std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
             = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
+
+        BaseTensor& valuesBaseTensor = (targetCell)
+            ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
+        Tensor<Float_T> values;
+        valuesBaseTensor.synchronizeToH(values);
+
         const int size = mStimuliProvider->getBatch().size();
-
-        if (targetCell)
-            targetCell->getOutputs().synchronizeDToH();
-        else
-            targetCellCSpike->getOutputsActivity().synchronizeDToH();
-
         const double alpha
             = (mStimuliProvider->getParameter<bool>("DataSignedMapping"))
                 ? 128.0 : 255.0;
@@ -837,12 +884,6 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 // the set)
                 continue;
             }
-
-            // Retrieve estimated labels
-            const Tensor<Float_T>& values
-                = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
-                               : tensor_cast<Float_T>
-                                    (targetCellCSpike->getOutputsActivity());
 
             std::string fileName;
 
@@ -928,11 +969,11 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
     const unsigned int nbTargets = getNbTargets();
 
-    mEstimatedLabels.synchronizeDBasedToH();
-    mEstimatedLabelsValue.synchronizeDBasedToH();
+    estimatedLabels.synchronizeDBasedToH();
+    estimatedLabelsValue.synchronizeDBasedToH();
 
-#pragma omp parallel for if (mTargets.dimB() > 4)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for if (targets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -945,20 +986,20 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         CudaContext::setDevice();
 #endif
 
-        const Tensor<int> target = mTargets[batchPos][0];
-        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        const Tensor<Float_T> estimatedLabelsValue
-            = mEstimatedLabelsValue[batchPos][0];
+        const Tensor<int> target = targets[batchPos][0];
+        const Tensor<int> estLabels = estimatedLabels[batchPos][0];
+        const Tensor<Float_T> estLabelsValue
+            = estimatedLabelsValue[batchPos][0];
 
         cv::Mat targetImgHsv;
 
         if (validDatabase) {
-            targetImgHsv = cv::Mat(cv::Size(mTargets.dimX(), mTargets.dimY()),
+            targetImgHsv = cv::Mat(cv::Size(targets.dimX(), targets.dimY()),
                                 CV_8UC3,
                                 cv::Scalar(0, 0, 0));
         }
 
-        cv::Mat estimatedImgHsv(cv::Size(mTargets.dimX(), mTargets.dimY()),
+        cv::Mat estimatedImgHsv(cv::Size(targets.dimX(), targets.dimY()),
                                 CV_8UC3,
                                 cv::Scalar(0, 0, 0));
 
@@ -976,8 +1017,8 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             throw std::runtime_error(errorStr.str());
         }
 
-        for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
-            for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
+        for (unsigned int oy = 0; oy < targets.dimY(); ++oy) {
+            for (unsigned int ox = 0; ox < targets.dimX(); ++ox) {
                 if (validDatabase) {
                     const int targetHue = (180 * target(ox, oy) / nbTargets
                                         + mLabelsHueOffset) % 180;
@@ -990,17 +1031,17 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                             : cv::Vec3f(0, 0, 127); // ignore = no color
                 }
 
-                const int estimatedHue = (180 * estimatedLabels(ox, oy)
+                const int estimatedHue = (180 * estLabels(ox, oy)
                                           / nbTargets + mLabelsHueOffset) % 180;
 
                 estimatedImgHsv.at<cv::Vec3b>(oy, ox)
                     = ((mask.empty() || mask(ox, oy) == mMaskedLabel)
                         && (!(mValueThreshold > 0.0)
-                            || estimatedLabelsValue(ox, oy) >= mValueThreshold))
-                        ? ((estimatedLabels(ox, oy) != mNoDisplayLabel)
+                            || estLabelsValue(ox, oy) >= mValueThreshold))
+                        ? ((estLabels(ox, oy) != mNoDisplayLabel)
                             ? cv::Vec3f(estimatedHue, 255,
                                        (mEstimatedLabelsValueDisplay)
-                                           ? 255 * estimatedLabelsValue(ox, oy)
+                                           ? 255 * estLabelsValue(ox, oy)
                                            : 255)
                             : cv::Vec3f(estimatedHue, 10, 127)) // no color
                         : cv::Vec3f(0, 0, 127); // not masked = no color
@@ -1120,7 +1161,16 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     const std::string dirPath = mName + "/" + dirName;
     Utils::createDirectories(dirPath);
 
-    if (mTargets.dimX() == 1 && mTargets.dimY() == 1)
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+    const TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    const TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
+    if (targets.dimX() == 1 && targets.dimY() == 1)
         return;
 
     if (mDataAsTarget)
@@ -1130,9 +1180,9 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
     const double xRatio = mStimuliProvider->getSizeX()
-        / (double)mEstimatedLabels.dimX();
+        / (double)estimatedLabels.dimX();
     const double yRatio = mStimuliProvider->getSizeY()
-        / (double)mEstimatedLabels.dimY();
+        / (double)estimatedLabels.dimY();
     const int scale = xRatio;
 
     if (xRatio != yRatio || xRatio != scale) {
@@ -1144,10 +1194,10 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     //const bool signedMapping
     //    = mStimuliProvider->getParameter<bool>("DataSignedMapping");
 
-    mEstimatedLabels.synchronizeDBasedToH();
+    estimatedLabels.synchronizeDBasedToH();
 
     if (mValueThreshold > 0.0)
-        mEstimatedLabelsValue.synchronizeDBasedToH();
+        estimatedLabelsValue.synchronizeDBasedToH();
 
     const time_t now = std::time(0);
     tm* localNow = std::localtime(&now);
@@ -1159,8 +1209,8 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
     omp_init_lock(&appendLock);
 #endif
 
-#pragma omp parallel for if (mTargets.dimB() > 4) schedule(dynamic)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for if (targets.dimB() > 4) schedule(dynamic)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -1173,10 +1223,10 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
         CudaContext::setDevice();
 #endif
 
-        const Tensor<int> target = mTargets[batchPos][0];
-        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
-        const Tensor<Float_T> estimatedLabelsValue
-            = mEstimatedLabelsValue[batchPos][0];
+        const Tensor<int> target = targets[batchPos][0];
+        const Tensor<int> estLabels = estimatedLabels[batchPos][0];
+        const Tensor<Float_T> estLabelsValue
+            = estimatedLabelsValue[batchPos][0];
 
         const TensorLabels_T mask = (mMaskLabelTarget && mMaskedLabel >= 0)
             ? mMaskLabelTarget->getEstimatedLabels()[batchPos][0]
@@ -1196,17 +1246,17 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
 
         std::map<int, Tensor<bool> > estimatedBitmaps;
 
-        for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
-            for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
-                if (estimatedLabels(ox, oy) != mNoDisplayLabel
+        for (unsigned int oy = 0; oy < targets.dimY(); ++oy) {
+            for (unsigned int ox = 0; ox < targets.dimX(); ++ox) {
+                if (estLabels(ox, oy) != mNoDisplayLabel
                     && (mask.empty() || mask(ox, oy) == mMaskedLabel)
                     && (!(mValueThreshold > 0.0)
-                        || estimatedLabelsValue(ox, oy) >= mValueThreshold))
+                        || estLabelsValue(ox, oy) >= mValueThreshold))
                 {
                     std::map<int, Tensor<bool> >::iterator itBitmap;
                     std::tie(itBitmap, std::ignore) = estimatedBitmaps.insert(
-                        std::make_pair(estimatedLabels(ox, oy),
-                                    Tensor<bool>(estimatedLabels.dims(), false)));
+                        std::make_pair(estLabels(ox, oy),
+                                    Tensor<bool>(estLabels.dims(), false)));
 
                     (*itBitmap).second(ox, oy) = true;
                 }
@@ -1395,7 +1445,7 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
     if (mDataAsTarget)
         return;
 
-    if (mTargets.dimX() == 1 && mTargets.dimY() == 1)
+    if (mCell->getOutputsWidth() == 1 && mCell->getOutputsHeight() == 1)
         return;
 
     // Legend image

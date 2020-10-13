@@ -56,38 +56,37 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mBatchSize(batchSize),
       mCompositeStimuli(compositeStimuli),
       mCachePath(""),
-      mFuture(false),
-      mDevices(1, 0),
-      mDevicesIndex(1, 0)
+      mFuture(false)
 {
     // ctor
-    std::vector<size_t> dataSize(mSize);
-    dataSize.push_back(batchSize);
+    int count = 1;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
 
-    std::vector<size_t> labelSize(mSize);
+    // mProvidedData is a vector, with one element per device
+    mProvidedData.resize(count);
+    mFutureProvidedData.resize(count);
 
-    if (mCompositeStimuli) {
-        // Last dimension is channel, mCompositeStimuli assumes unique label
-        // for all channels by default
-        labelSize.back() = 1;
+#ifdef CUDA
+    const char* gpuDevices = std::getenv("N2D2_GPU_DEVICES");
+
+    if (gpuDevices != NULL) {
+        std::stringstream gpuDevicesStr;
+        gpuDevicesStr.str(gpuDevices);
+
+        std::set<int> devices;
+        std::copy(std::istream_iterator<int>(gpuDevicesStr),
+                  std::istream_iterator<int>(),
+                  std::inserter(devices, devices.end()));
+        setDevices(devices);
     }
-    else
-        std::fill(labelSize.begin(), labelSize.end(), 1U);
-
-    labelSize.push_back(batchSize);
-
-    // mProvidedData is a vector, with one element per device (default: single)
-    mProvidedData.resize(1);
-    mProvidedData[0].batch.resize(batchSize);
-    mProvidedData[0].data.resize(dataSize);
-    mProvidedData[0].labelsData.resize(labelSize);
-    mProvidedData[0].labelsROI.resize(std::max(batchSize, 1u));
-
-    mFutureProvidedData.resize(1);
-    mFutureProvidedData[0].batch.resize(batchSize);
-    mFutureProvidedData[0].data.resize(dataSize);
-    mFutureProvidedData[0].labelsData.resize(labelSize);
-    mFutureProvidedData[0].labelsROI.resize(std::max(batchSize, 1u));
+    else {
+#endif
+        setDevices();
+#ifdef CUDA
+    }
+#endif
 }
 
 N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
@@ -121,42 +120,58 @@ N2D2::StimuliProvider N2D2::StimuliProvider::cloneParameters() const {
     return sp;
 }
 
-void N2D2::StimuliProvider::setMultiDevices(const std::vector<int>& devices)
+void N2D2::StimuliProvider::setDevices(const std::set<int>& devices)
 {
-    if (devices.empty())
-        mDevices.assign(1, 0);
+    std::vector<size_t> dataSize(mSize);
+    dataSize.push_back(mBatchSize);
+
+    std::vector<size_t> labelSize(mSize);
+
+    if (mCompositeStimuli) {
+        // Last dimension is channel, mCompositeStimuli assumes unique label
+        // for all channels by default
+        labelSize.back() = 1;
+    }
+    else
+        std::fill(labelSize.begin(), labelSize.end(), 1U);
+
+    labelSize.push_back(mBatchSize);
+
+#ifdef CUDA
+    int currentDev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+#endif
+
+    if (devices.empty()) {
+        mDevices.clear();
+        mDevices.insert(currentDev);
+    }
     else
         mDevices = devices;
 
-    int count = 1;
-#ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-#endif
-    mDevicesIndex.assign(count, -1);
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        if (mDevices.find(dev) != mDevices.end()) {
+            mProvidedData[dev].batch.resize(mBatchSize);
+            mProvidedData[dev].data.resize(dataSize);
+            mProvidedData[dev].labelsData.resize(labelSize);
+            mProvidedData[dev].labelsROI.resize(std::max(mBatchSize, 1u));
 
-    mProvidedData.resize(mDevices.size());
-    mFutureProvidedData.resize(mDevices.size());
-
-    const std::vector<size_t> dataSize = mProvidedData[0].data.dims();
-    const std::vector<size_t> labelSize = mProvidedData[0].labelsData.dims();
-
-    for (int devIndex = 0; devIndex < (int)mDevices.size(); ++devIndex) {
-        mProvidedData[devIndex].batch.resize(mBatchSize);
-        mProvidedData[devIndex].data.resize(dataSize);
-        mProvidedData[devIndex].labelsData.resize(labelSize);
-        mProvidedData[devIndex].labelsROI.resize(std::max(mBatchSize, 1u));
-
-        mFutureProvidedData[devIndex].batch.resize(mBatchSize);
-        mFutureProvidedData[devIndex].data.resize(dataSize);
-        mFutureProvidedData[devIndex].labelsData.resize(labelSize);
-        mFutureProvidedData[devIndex].labelsROI.resize(std::max(mBatchSize, 1u));
-
-        if (mDevices[devIndex] >= count) {
-            throw std::runtime_error("StimuliProvider::enableMultiDev(): "
-                "device to enable higher than the number of available devices");
+            mFutureProvidedData[dev].batch.resize(mBatchSize);
+            mFutureProvidedData[dev].data.resize(dataSize);
+            mFutureProvidedData[dev].labelsData.resize(labelSize);
+            mFutureProvidedData[dev].labelsROI.resize(std::max(mBatchSize, 1u));
         }
+        else {
+            mProvidedData[dev].batch.clear();
+            mProvidedData[dev].data.clear();
+            mProvidedData[dev].labelsData.clear();
+            mProvidedData[dev].labelsROI.clear();
 
-        mDevicesIndex[mDevices[devIndex]] = devIndex;
+            mFutureProvidedData[dev].batch.clear();
+            mFutureProvidedData[dev].data.clear();
+            mFutureProvidedData[dev].labelsData.clear();
+            mFutureProvidedData[dev].labelsROI.clear();
+        }
     }
 
 #ifdef CUDA
@@ -164,12 +179,20 @@ void N2D2::StimuliProvider::setMultiDevices(const std::vector<int>& devices)
     // originating from the GPU. In this case, there will be no HToD 
     // synchronization on the first layer. We handle it in StimuliProvider, in 
     // the readStimulus() method.
-    mProvidedData[0].data.hostBased() = false;
-    mProvidedData[0].targetData.hostBased() = false;
+    mProvidedData[currentDev].data.hostBased() = false;
+    mProvidedData[currentDev].targetData.hostBased() = false;
 
-    mFutureProvidedData[0].data.hostBased() = false;
-    mFutureProvidedData[0].targetData.hostBased() = false;
+    mFutureProvidedData[currentDev].data.hostBased() = false;
+    mFutureProvidedData[currentDev].targetData.hostBased() = false;
 #endif
+
+    if (!devices.empty()) {
+        std::cout << "Multi-GPU enabled with devices: ";
+        std::copy(devices.begin(),
+                  devices.end(),
+                  std::ostream_iterator<int>(std::cout, " "));
+        std::cout << std::endl;
+    }
 }
 
 void N2D2::StimuliProvider::addChannel(const CompositeTransformation
@@ -183,7 +206,12 @@ void N2D2::StimuliProvider::addChannel(const CompositeTransformation
     std::vector<size_t> dataSize(mSize);
     dataSize.push_back(mBatchSize);
 
-    std::vector<size_t> labelSize(mProvidedData[0].labelsData.dims());
+#ifdef CUDA
+    int dev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    std::vector<size_t> labelSize(mProvidedData[dev].labelsData.dims());
 
     if (!mChannelsTransformations.empty()) {
         labelSize.pop_back();
@@ -672,35 +700,38 @@ N2D2::StimuliProvider::getRandomIDWithLabel(Database::StimuliSet set, int label)
 
 void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 {
-    for (int devIndex = 0; devIndex < (int)mProvidedData.size(); ++devIndex) {
-        std::vector<int>& batchRef = (mFuture)
-            ? mFutureProvidedData[devIndex].batch
-            : mProvidedData[devIndex].batch;
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        if (mDevices.find(dev) != mDevices.end()) {
+            std::vector<int>& batchRef = (mFuture)
+                ? mFutureProvidedData[dev].batch
+                : mProvidedData[dev].batch;
 
-        for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
-            batchRef[batchPos] = getRandomID(set);
+            for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
+                batchRef[batchPos] = getRandomID(set);
+        }
     }
 
     unsigned int exceptCatch = 0;
 
 #pragma omp parallel for schedule(dynamic) collapse(2) if (mBatchSize > 1 || mProvidedData.size() > 1)
-    for (int devIndex = 0; devIndex < (int)mProvidedData.size(); ++devIndex) {
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
-            std::vector<int>& batchRef = (mFuture)
-                ? mFutureProvidedData[devIndex].batch
-                : mProvidedData[devIndex].batch;
+            if (mDevices.find(dev) != mDevices.end()) {
+                std::vector<int>& batchRef = (mFuture)
+                    ? mFutureProvidedData[dev].batch
+                    : mProvidedData[dev].batch;
 
-            try {
-                readStimulus(batchRef[batchPos], set, batchPos,
-                                                            mDevices[devIndex]);
-            }
-            catch (const std::exception& e)
-            {
-                #pragma omp critical(StimuliProvider__readRandomBatch)
+                try {
+                    readStimulus(batchRef[batchPos], set, batchPos, dev);
+                }
+                catch (const std::exception& e)
                 {
-                    std::cout << Utils::cwarning << e.what() << Utils::cdef
-                        << std::endl;
-                    ++exceptCatch;
+                    #pragma omp critical(StimuliProvider__readRandomBatch)
+                    {
+                        std::cout << Utils::cwarning << e.what() << Utils::cdef
+                            << std::endl;
+                        ++exceptCatch;
+                    }
                 }
             }
         }
@@ -708,15 +739,16 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 
     if (exceptCatch > 0) {
         std::cout << "Retry without multi-threading..." << std::endl;
-    
-        for (int devIndex = 0; devIndex < (int)mProvidedData.size(); ++devIndex) {
-            std::vector<int>& batchRef = (mFuture)
-                ? mFutureProvidedData[devIndex].batch
-                : mProvidedData[devIndex].batch;
 
-            for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
-                readStimulus(batchRef[batchPos], set, batchPos,
-                                                            mDevices[devIndex]);
+        for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+            if (mDevices.find(dev) != mDevices.end()) {
+                std::vector<int>& batchRef = (mFuture)
+                    ? mFutureProvidedData[dev].batch
+                    : mProvidedData[dev].batch;
+
+                for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
+                    readStimulus(batchRef[batchPos], set, batchPos, dev);
+                }
             }
         }
     }
@@ -744,39 +776,42 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         throw std::runtime_error(msg.str());
     }
 
-    for (int devIndex = 0; devIndex < (int)mProvidedData.size(); ++devIndex) {
-        std::vector<int>& batchRef = (mFuture)
-            ? mFutureProvidedData[devIndex].batch
-            : mProvidedData[devIndex].batch;
-        const unsigned int batchSize
-            = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        if (mDevices.find(dev) != mDevices.end()) {
+            std::vector<int>& batchRef = (mFuture)
+                ? mFutureProvidedData[dev].batch
+                : mProvidedData[dev].batch;
+            const unsigned int batchSize
+                = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
 
-        for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
-            batchRef[batchPos]
-                = mDatabase.getStimulusID(set, startIndex + batchPos);
+            for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
+                batchRef[batchPos]
+                    = mDatabase.getStimulusID(set, startIndex + batchPos);
+            }
+
+            std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
+            startIndex += batchSize;
         }
-
-        std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
-        startIndex += batchSize;
     }
 
 #pragma omp parallel for schedule(dynamic) collapse(2) if (mBatchSize > 1 || mProvidedData.size() > 1)
-    for (int devIndex = 0; devIndex < (int)mProvidedData.size(); ++devIndex) {
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
-            std::vector<int>& batchRef = (mFuture)
-                ? mFutureProvidedData[devIndex].batch
-                : mProvidedData[devIndex].batch;
+            if (mDevices.find(dev) != mDevices.end()) {
+                std::vector<int>& batchRef = (mFuture)
+                    ? mFutureProvidedData[dev].batch
+                    : mProvidedData[dev].batch;
 
-            if (batchRef[batchPos] >= 0) {
-                readStimulus(batchRef[batchPos], set, batchPos,
-                                                            mDevices[devIndex]);
+                if (batchRef[batchPos] >= 0) {
+                    readStimulus(batchRef[batchPos], set, batchPos, dev);
+                }
             }
         }
     }
 }
 
 void N2D2::StimuliProvider::streamBatch(int startIndex, int dev) {
-    std::vector<int>& batchRef = mProvidedData[getDeviceIndex(dev)].batch;
+    std::vector<int>& batchRef = mProvidedData[getDevice(dev)].batch;
 
     if (startIndex < 0)
         startIndex = batchRef.back() + 1;
@@ -789,8 +824,8 @@ void N2D2::StimuliProvider::readStimulusBatch(Database::StimulusID id,
                                               int dev)
 {
     std::vector<int>& batchRef = (mFuture)
-        ? mFutureProvidedData[getDeviceIndex(dev)].batch
-        : mProvidedData[getDeviceIndex(dev)].batch;
+        ? mFutureProvidedData[getDevice(dev)].batch
+        : mProvidedData[getDevice(dev)].batch;
 
     readStimulus(id, set, 0, dev);
 
@@ -811,10 +846,10 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
     validCacheFile << mCachePath << "/" << std::setfill('0') << std::setw(7)
                     << id << "_" << set << ".valid";
 
-    const int devIndex = getDeviceIndex(dev);
+    dev = getDevice(dev);
     std::vector<std::shared_ptr<ROI> >& labelsROI = (mFuture)
-        ? mFutureProvidedData[devIndex].labelsROI[batchPos]
-        : mProvidedData[devIndex].labelsROI[batchPos];
+        ? mFutureProvidedData[dev].labelsROI[batchPos]
+        : mProvidedData[dev].labelsROI[batchPos];
     labelsROI = mDatabase.getStimulusROIs(id);
 
     std::vector<cv::Mat> rawChannelsData;
@@ -946,14 +981,14 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
     }
 
     TensorData_T& dataRef = (mFuture)
-        ? mFutureProvidedData[devIndex].data
-        : mProvidedData[devIndex].data;
+        ? mFutureProvidedData[dev].data
+        : mProvidedData[dev].data;
     Tensor<int>& labelsRef = (mFuture)
-        ? mFutureProvidedData[devIndex].labelsData
-        : mProvidedData[devIndex].labelsData;
+        ? mFutureProvidedData[dev].labelsData
+        : mProvidedData[dev].labelsData;
     TensorData_T& targetDataRef = (mFuture)
-        ? mFutureProvidedData[devIndex].targetData
-        : mProvidedData[devIndex].targetData;
+        ? mFutureProvidedData[dev].targetData
+        : mProvidedData[dev].targetData;
 
     if (mBatchSize > 0) {
         TensorData_T dataRefPos = dataRef[batchPos];
@@ -1023,17 +1058,20 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
     }
 
 #ifdef CUDA
-    if (!mProvidedData[0].data.hostBased()) {
+    int currentDev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    if (!mProvidedData[currentDev].data.hostBased()) {
         // If hostBased() is false, multi-GPU is enabled.
-        // All the GPU data must be referenced in the mProvidedData[0]
+        // All the GPU data must be referenced in the mProvidedData[currentDev]
         // element, which is the input of the first layer.
         // The other elements are never synchronized on GPU, they stay on CPU.
-        if (dev >= 0)
-            CHECK_CUDA_STATUS(cudaSetDevice(dev));
-
-        mProvidedData[0].data.synchronizeToD(dataRef);
-        mProvidedData[0].targetData.synchronizeToD(targetDataRef);
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+        mProvidedData[currentDev].data.synchronizeToD(dataRef);
+        mProvidedData[currentDev].targetData.synchronizeToD(targetDataRef);
     }
+
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 #endif
 }
 
@@ -1041,8 +1079,8 @@ N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulusBatch(
     Database::StimuliSet set, unsigned int index, int dev)
 {
     std::vector<int>& batchRef = (mFuture)
-        ? mFutureProvidedData[getDeviceIndex(dev)].batch
-        : mProvidedData[getDeviceIndex(dev)].batch;
+        ? mFutureProvidedData[getDevice(dev)].batch
+        : mProvidedData[getDevice(dev)].batch;
 
     const Database::StimulusID id = readStimulus(set, index, 0, dev);
 
@@ -1067,8 +1105,8 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
                                            int dev)
 {
     TensorData_T& dataRef = (mFuture)
-        ? mFutureProvidedData[getDeviceIndex(dev)].data
-        : mProvidedData[getDeviceIndex(dev)].data;
+        ? mFutureProvidedData[getDevice(dev)].data
+        : mProvidedData[getDevice(dev)].data;
 
     // Apply global transformation
     cv::Mat rawData = mat.clone();
@@ -1113,16 +1151,19 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
     dataRef[batchPos] = data;
 
 #ifdef CUDA
-    if (!mProvidedData[0].data.hostBased()) {
+    int currentDev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    if (!mProvidedData[currentDev].data.hostBased()) {
         // If hostBased() is false, multi-GPU is enabled.
-        // All the GPU data must be referenced in the mProvidedData[0]
+        // All the GPU data must be referenced in the mProvidedData[currentDev]
         // element, which is the input of the first layer.
         // The other elements are never synchronized on GPU, they stay on CPU.
-        if (dev >= 0)
-            CHECK_CUDA_STATUS(cudaSetDevice(dev));
-
-        mProvidedData[0].data.synchronizeToD(dataRef);
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+        mProvidedData[currentDev].data.synchronizeToD(dataRef);
     }
+
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 #endif
 }
 
@@ -1159,10 +1200,15 @@ void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
     mBatchSize = batchSize;
 
     if (mBatchSize > 0) {
-        std::vector<size_t> dataSize(mProvidedData[0].data.dims());
+#ifdef CUDA
+        int dev = 0;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+        std::vector<size_t> dataSize(mProvidedData[dev].data.dims());
         dataSize.back() = mBatchSize;
 
-        std::vector<size_t> labelSize(mProvidedData[0].data.dims());
+        std::vector<size_t> labelSize(mProvidedData[dev].data.dims());
         labelSize.back() = mBatchSize;
 
         for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
@@ -1232,7 +1278,7 @@ N2D2::StimuliProvider::getDataChannel(unsigned int channel,
                                       unsigned int batchPos,
                                       int dev) const
 {
-    return TensorData_T(mProvidedData[getDeviceIndex(dev)]
+    return TensorData_T(mProvidedData[getDevice(dev)]
         .data[batchPos][channel]);
 }
 
@@ -1241,7 +1287,7 @@ N2D2::StimuliProvider::getLabelsDataChannel(unsigned int channel,
                                             unsigned int batchPos,
                                             int dev) const
 {
-    return Tensor<int>(mProvidedData[getDeviceIndex(dev)]
+    return Tensor<int>(mProvidedData[getDevice(dev)]
         .labelsData[batchPos][channel]);
 }
 
@@ -1250,9 +1296,9 @@ N2D2::StimuliProvider::getTargetDataChannel(unsigned int channel,
                                             unsigned int batchPos,
                                             int dev) const
 {
-    return TensorData_T((!mProvidedData[getDeviceIndex(dev)].targetData.empty())
-        ? mProvidedData[getDeviceIndex(dev)].targetData[batchPos][channel]
-        : mProvidedData[getDeviceIndex(dev)].data[batchPos][channel]);
+    return TensorData_T((!mProvidedData[getDevice(dev)].targetData.empty())
+        ? mProvidedData[getDevice(dev)].targetData[batchPos][channel]
+        : mProvidedData[getDevice(dev)].data[batchPos][channel]);
 }
 
 void N2D2::StimuliProvider::logData(const std::string& fileName,
@@ -1939,27 +1985,6 @@ void N2D2::StimuliProvider::saveDataCache(const std::string& fileName,
          it != itEnd;
          ++it)
         BinaryCvMat::write(os, *it);
-}
-
-int N2D2::StimuliProvider::getDeviceIndex(int dev) const {
-#ifdef CUDA
-    if (dev == -1)
-        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-
-    if (dev >= (int)mDevicesIndex.size()) {
-        throw std::runtime_error("StimuliProvider::getDeviceIndex(): "
-            "device out of range");
-    }
-
-    if (mDevicesIndex[dev] == -1) {
-        throw std::runtime_error("StimuliProvider::getDeviceIndex(): "
-            "device not mapped in StimuliProvider");
-    }
-
-    return mDevicesIndex[dev];
-#else
-    return 0;
-#endif
 }
 
 

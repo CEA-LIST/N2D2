@@ -266,16 +266,11 @@ void N2D2::TargetMatching::process(Database::StimuliSet set)
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
         = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
-    if (targetCell)
-        targetCell->getOutputs().synchronizeDToH();
-    else
-        targetCellCSpike->getOutputsActivity().synchronizeDToH();
-
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
-    const Tensor<Float_T>& values
-        = (targetCell) ? tensor_cast<Float_T>(targetCell->getOutputs())
-                        : tensor_cast<Float_T>
-                            (targetCellCSpike->getOutputsActivity());
+    BaseTensor& valuesBaseTensor = (targetCell)
+        ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
+    Tensor<Float_T> values;
+    valuesBaseTensor.synchronizeToH(values);
 
     for (int batchPos = 0; batchPos < (int)values.dimB(); ++batchPos) {
         const int id = mStimuliProvider->getBatch()[batchPos];
