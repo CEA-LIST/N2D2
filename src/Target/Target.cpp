@@ -363,11 +363,14 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
 #endif
 
     if (mTargetData.empty()) {
-        int count = 1;
+#pragma omp critical(Target__process)
+        if (mTargetData.empty()) {
+            int count = 1;
 #ifdef CUDA
-        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+            CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
 #endif
-        mTargetData.resize(count);
+            mTargetData.resize(count);
+        }
     }
 
     Tensor<int>& targets = mTargetData[dev].targets;
@@ -539,10 +542,39 @@ void N2D2::Target::process(Database::StimuliSet set)
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
 
-    if (mDataAsTarget) {
-        mLoss.push_back(targetCell->applyLoss());
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
 
-        //mLoss.push_back(targetCell->applyLossDistribWeighted(20, -1.0, 1.0));
+    if (mTargetData.empty()) {
+#pragma omp critical(Target__process_mTargetData)
+        if (mTargetData.empty()) {
+            int count = 1;
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+            mTargetData.resize(count);
+        }
+    }
+
+    if (mLoss.empty()) {
+#pragma omp critical(Target__process_mLoss)
+        if (mLoss.empty()) {
+            int count = 1;
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+            mLoss.resize(count);
+        }
+    }
+
+    std::vector<Float_T>& loss = mLoss[dev];
+
+    if (mDataAsTarget) {
+        //mLoss.push_back(targetCell->applyLoss());
+
+        loss.push_back(targetCell->applyLossDistribWeighted(20, -1.0, 1.0));
 
         //Tensor<Float_T> kernel({7, 7, 1, 1}, 1.0 / (7.0 * 7.0));
         //kernel(0, 0, 0, 0) = 0.0;
@@ -567,30 +599,17 @@ void N2D2::Target::process(Database::StimuliSet set)
         return;
     }
 
-    mLoss.push_back(targetCell->applyLoss(mTargetValue, mDefaultValue));
+    loss.push_back(targetCell->applyLoss(mTargetValue, mDefaultValue));
 
-    int dev = 0;
-#ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-#endif
-
-    if (mTargetData.empty()) {
-        int count = 1;
-#ifdef CUDA
-        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-#endif
-        mTargetData.resize(count);
-    }
-
-    const Tensor<int>& targets = mTargetData[dev].targets;
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
     TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
 
     if (estimatedLabels.empty()) {
         estimatedLabels.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, targets.dimB()});
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
         estimatedLabelsValue.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, targets.dimB()});
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
     }
 
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
@@ -603,9 +622,9 @@ void N2D2::Target::process(Database::StimuliSet set)
     int batchSize = 0;
 
     if (mStimuliProvider->getBatch().back() >= 0)
-        batchSize = (int)targets.dimB();
+        batchSize = (int)labels.dimB();
     else {
-        for (; batchSize < (int)targets.dimB(); ++batchSize) {
+        for (; batchSize < (int)labels.dimB(); ++batchSize) {
             const int id = mStimuliProvider->getBatch()[batchSize];
 
             if (id < 0)
@@ -669,10 +688,8 @@ void N2D2::Target::process(Database::StimuliSet set)
 void N2D2::Target::process_Frame_CUDA(Float_T* values,
                                       const int batchSize)
 { 
-    int dev = 0;
-#ifdef CUDA
+    int dev;
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-#endif
 
     TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
     TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
@@ -1645,9 +1662,33 @@ N2D2::Target::getEstimatedLabel(const std::shared_ptr<ROI>& roi,
     return std::make_pair(it - bbLabels.begin(), (*it)/* / size*/);
 }
 
+std::vector<N2D2::Float_T> N2D2::Target::getLoss() const
+{
+    if (mLoss.size() == 1)
+        return mLoss[0];
+    else {
+        std::vector<Float_T> loss;
+
+        for (int dev = 0; dev < (int)mLoss.size(); ++dev) {
+            if (!mLoss[dev].empty()) {
+                if (loss.empty())
+                    loss = mLoss[dev];
+                else {
+                    std::transform(mLoss[dev].begin(), mLoss[dev].end(),
+                                    loss.begin(), loss.begin(),
+                                    std::plus<Float_T>());
+                }
+            }
+        }
+
+        return loss;
+    }
+}
+
 void N2D2::Target::clear(Database::StimuliSet /*set*/)
 {
-    mLoss.clear();
+    for (int dev = 0; dev < (int)mLoss.size(); ++dev)
+        mLoss[dev].clear();
 }
 
 

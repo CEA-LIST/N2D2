@@ -80,21 +80,34 @@ bool N2D2::TargetScore::newValidationTopNScore(double validationTopNScore)
 
 double N2D2::TargetScore::getBatchAverageSuccess() const
 {
-    return (mBatchSuccess.size() > 0)
-               ? std::accumulate(mBatchSuccess.begin(),
-                                 mBatchSuccess.end(),
-                                 0.0) / (double)mBatchSuccess.size()
-               : 1.0;
+    double acc = 0.0;
+    unsigned int count = 0;
+
+    for (int dev = 0; dev < (int)mBatchSuccess.size(); ++dev) {
+        acc += std::accumulate(mBatchSuccess[dev].begin(),
+                               mBatchSuccess[dev].end(),
+                               0.0);
+        count += mBatchSuccess[dev].size();
+    }
+
+    return (count > 0) ? (acc / count) : 1.0;
 }
 
 double N2D2::TargetScore::getBatchAverageTopNSuccess() const
 {
-    if (!mDataAsTarget && mTargetTopN > 1)
-        return (mBatchTopNSuccess.size() > 0)
-                   ? std::accumulate(mBatchTopNSuccess.begin(),
-                                     mBatchTopNSuccess.end(),
-                                     0.0) / (double)mBatchTopNSuccess.size()
-                   : 1.0;
+    if (!mDataAsTarget && mTargetTopN > 1) {
+        double acc = 0.0;
+        unsigned int count = 0;
+
+        for (int dev = 0; dev < (int)mBatchTopNSuccess.size(); ++dev) {
+            acc += std::accumulate(mBatchTopNSuccess[dev].begin(),
+                                mBatchTopNSuccess[dev].end(),
+                                0.0);
+            count += mBatchTopNSuccess[dev].size();
+        }
+
+        return (count > 0) ? (acc / count) : 1.0;
+    }
     else
         return 0.0;
 }
@@ -469,13 +482,42 @@ void N2D2::TargetScore::clearScore(Database::StimuliSet set)
 }
 void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 {
-    if (mDataAsTarget) {
-        ConfusionMatrix<unsigned long long int>& confusionMatrix
-            = mScoreSet[set].confusionMatrix;
+    if (mScoreSet.find(set) == mScoreSet.end()) {
+#pragma omp critical(TargetScore__process_mScoreSet)
+        if (mScoreSet.find(set) == mScoreSet.end())
+            mScoreSet.insert(std::make_pair(set, Score()));
+    }
 
+    ConfusionMatrix<unsigned long long int>& confusionMatrix
+        = mScoreSet[set].confusionMatrix;
+
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    if (mBatchSuccess.empty()) {
+#pragma omp critical(TargetScore__process_mBatchSuccess)
+        if (mBatchSuccess.empty()) {
+            int count = 1;
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+            mBatchSuccess.resize(count);
+            mBatchTopNSuccess.resize(count);
+        }
+    }
+
+    std::vector<double>& batchSuccess = mBatchSuccess[dev];
+    std::vector<double>& batchTopNSuccess = mBatchTopNSuccess[dev];
+
+    if (mDataAsTarget) {
         if (confusionMatrix.empty()) {
-            confusionMatrix.resize(mConfusionQuantSteps,
-                                   mConfusionQuantSteps, 0);
+#pragma omp critical(TargetScore__process_confusionMatrix)
+            if (confusionMatrix.empty()) {
+                confusionMatrix.resize(mConfusionQuantSteps,
+                                    mConfusionQuantSteps, 0);
+            }
         }
 
         std::shared_ptr<Cell_Frame_Top> targetCell 
@@ -488,7 +530,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
         Tensor<Float_T> values;
         valuesBaseTensor.synchronizeToH(values);
 
-        mBatchSuccess.assign(values.dimB(), -1.0);
+        batchSuccess.assign(values.dimB(), -1.0);
 
 #pragma omp parallel for if (values.dimB() > 4 && values[0].size() > 1)
         for (int batchPos = 0; batchPos < (int)values.dimB(); ++batchPos) {
@@ -529,9 +571,9 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
             if (target.size() > 0)
                 mse /= target.size();
 
-            mBatchSuccess[batchPos] = mse;
+            batchSuccess[batchPos] = mse;
 
-#pragma omp critical(TargetScore__process)
+#pragma omp critical(TargetScore__process_confusionMatrix)
             std::transform(confusionMatrix.begin(), confusionMatrix.end(),
                         confusion.begin(),
                         confusionMatrix.begin(),
@@ -544,30 +586,26 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
             = (mMaskLabelTarget && mMaskedLabel >= 0)
                 ? (nbTargets + 1) : nbTargets;
 
-        ConfusionMatrix<unsigned long long int>& confusionMatrix
-            = mScoreSet[set].confusionMatrix;
-
-        if (confusionMatrix.empty())
-            confusionMatrix.resize(nbTargetsConfusion, nbTargetsConfusion, 0);
+        if (confusionMatrix.empty()) {
+#pragma omp critical(TargetScore__process_confusionMatrix)
+            if (confusionMatrix.empty())
+                confusionMatrix.resize(nbTargetsConfusion,
+                                       nbTargetsConfusion, 0);
+        }
 
         std::map<unsigned int,
                  std::map<unsigned int, std::vector<unsigned int> > >&
             misclassified = mScoreSet[set].misclassified;
-
-        int dev = 0;
-#ifdef CUDA
-        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-#endif
 
         const Tensor<int>& targets = mTargetData[dev].targets;
         const TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
 
         estimatedLabels.synchronizeDBasedToH();
 
-        mBatchSuccess.assign(targets.dimB(), -1.0);
+        batchSuccess.assign(targets.dimB(), -1.0);
 
         if (mTargetTopN > 1)
-            mBatchTopNSuccess.assign(targets.dimB(), -1.0);
+            batchTopNSuccess.assign(targets.dimB(), -1.0);
 
 #pragma omp parallel for if (targets.dimB() > 4 && targets[0].size() > 1)
         for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
@@ -602,9 +640,9 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 #pragma omp atomic
                     confusionMatrix(target(0), estLabels(0)) += 1ULL;
 
-                    mBatchSuccess[batchPos] = (estLabels(0) == target(0));
+                    batchSuccess[batchPos] = (estLabels(0) == target(0));
 
-                    if (!mBatchSuccess[batchPos]) {
+                    if (!batchSuccess[batchPos]) {
                         // Misclassified
                         std::map<unsigned int, std::vector<unsigned int> >
                             ::iterator itMisclass;
@@ -623,7 +661,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                                 ++topNscore;
                         }
 
-                        mBatchTopNSuccess[batchPos] = (topNscore > 0);
+                        batchTopNSuccess[batchPos] = (topNscore > 0);
                     }
                 }
             } else {
@@ -710,34 +748,37 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                         (*itMisclass).second[e] = confusion(nbTargets, e);
                 }
 
-                mBatchSuccess[batchPos] = (nbValidTargets > 0) ?
+                batchSuccess[batchPos] = (nbValidTargets > 0) ?
                     (success / nbValidTargets) : 1.0;
 
                 if (mTargetTopN > 1) {
-                    mBatchTopNSuccess[batchPos] = (nbValidTargets > 0) ?
+                    batchTopNSuccess[batchPos] = (nbValidTargets > 0) ?
                         (successTopN / nbValidTargets) : 1.0;
                 }
 
-#pragma omp critical(TargetScore__process)
+#pragma omp critical(TargetScore__process_confusionMatrix)
                 std::transform(confusionMatrix.begin(), confusionMatrix.end(),
                             confusion.begin(),
                             confusionMatrix.begin(),
                             std::plus<unsigned long long int>());
             }
 
-#pragma omp critical(TargetScore__process)
+#pragma omp critical(TargetScore__process_misclassified)
             misclassified[id].swap(misclass);
         }
     }
 
+#pragma omp critical
+{
     // Remove invalid/ignored batch positions before computing the score
-    correctLastBatch(mBatchSuccess, mScoreSet[set].success);
+    correctLastBatch(batchSuccess, mScoreSet[set].success);
     mScoreSet[set].success.push_back(getBatchAverageSuccess());
 
     if (!mDataAsTarget && mTargetTopN > 1) {
-        correctLastBatch(mBatchTopNSuccess, mScoreTopNSet[set].success);
+        correctLastBatch(batchTopNSuccess, mScoreTopNSet[set].success);
         mScoreTopNSet[set].success.push_back(getBatchAverageTopNSuccess());
     }
+}
 }
 
 void N2D2::TargetScore::correctLastBatch(

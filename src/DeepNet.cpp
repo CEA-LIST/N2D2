@@ -916,7 +916,7 @@ void N2D2::DeepNet::initialize()
     CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 #endif
 
-#pragma omp parallel for if (devices.size() > 1)
+    // NOT parallelizable
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
 #ifdef CUDA
         CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
@@ -2112,7 +2112,7 @@ void N2D2::DeepNet::propagate(
 
         //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
-        (*itTargets)->process(Database::Learn);
+        (*itTargets)->process(set);
 
         if (timings != NULL) {
 #ifdef CUDA

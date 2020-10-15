@@ -733,6 +733,9 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
                         ++exceptCatch;
                     }
                 }
+
+                if (batchPos + 1 == (int)mBatchSize)
+                    synchronizeToDevice(dev);
             }
         }
     }
@@ -749,6 +752,8 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
                 for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
                     readStimulus(batchRef[batchPos], set, batchPos, dev);
                 }
+
+                synchronizeToDevice(dev);
             }
         }
     }
@@ -805,6 +810,9 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
                 if (batchRef[batchPos] >= 0) {
                     readStimulus(batchRef[batchPos], set, batchPos, dev);
                 }
+
+                if (batchPos + 1 == (int)mBatchSize)
+                    synchronizeToDevice(dev);
             }
         }
     }
@@ -1056,23 +1064,6 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
             targetDataRef.push_back(targetData);
         }
     }
-
-#ifdef CUDA
-    int currentDev = 0;
-    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
-
-    if (!mProvidedData[currentDev].data.hostBased()) {
-        // If hostBased() is false, multi-GPU is enabled.
-        // All the GPU data must be referenced in the mProvidedData[currentDev]
-        // element, which is the input of the first layer.
-        // The other elements are never synchronized on GPU, they stay on CPU.
-        CHECK_CUDA_STATUS(cudaSetDevice(dev));
-        mProvidedData[currentDev].data.synchronizeToD(dataRef);
-        mProvidedData[currentDev].targetData.synchronizeToD(targetDataRef);
-    }
-
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-#endif
 }
 
 N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulusBatch(
@@ -1149,6 +1140,15 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
     }
 
     dataRef[batchPos] = data;
+}
+
+void N2D2::StimuliProvider::synchronizeToDevice(int dev) {
+    TensorData_T& dataRef = (mFuture)
+        ? mFutureProvidedData[dev].data
+        : mProvidedData[dev].data;
+    TensorData_T& targetDataRef = (mFuture)
+        ? mFutureProvidedData[dev].targetData
+        : mProvidedData[dev].targetData;
 
 #ifdef CUDA
     int currentDev = 0;
@@ -1161,6 +1161,7 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
         // The other elements are never synchronized on GPU, they stay on CPU.
         CHECK_CUDA_STATUS(cudaSetDevice(dev));
         mProvidedData[currentDev].data.synchronizeToD(dataRef);
+        mProvidedData[currentDev].targetData.synchronizeToD(targetDataRef);
     }
 
     CHECK_CUDA_STATUS(cudaSetDevice(currentDev));

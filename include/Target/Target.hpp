@@ -170,10 +170,7 @@ public:
     std::pair<int, Float_T> getEstimatedLabel(const std::shared_ptr<ROI>& roi,
                                               unsigned int batchPos = 0,
                                               Float_T* values = NULL) const;
-    const std::vector<Float_T>& getLoss() const
-    {
-        return mLoss;
-    }
+    std::vector<Float_T> getLoss() const;
     const Tensor<int>& getTargets(int dev = -1) const
     {
         return mTargetData[getDevice(dev)].targets;
@@ -228,7 +225,7 @@ protected:
     int mDefaultTarget;
     std::vector<TargetData> mTargetData;
     std::shared_ptr<Target> mMaskLabelTarget;
-    std::vector<Float_T> mLoss;
+    std::vector<std::vector<Float_T> > mLoss;
 
     mutable std::vector<std::string> mLabelsName;
 

@@ -97,13 +97,13 @@ public:
     {
         return mMaxValidationTopNScore;
     };
-    const std::vector<double>& getBatchSuccess() const
+    const std::vector<double>& getBatchSuccess(int dev = -1) const
     {
-        return mBatchSuccess;
+        return mBatchSuccess[getDevice(dev)];
     }
-    const std::vector<double>& getBatchTopNSuccess() const
+    const std::vector<double>& getBatchTopNSuccess(int dev = -1) const
     {
-        return mBatchTopNSuccess;
+        return mBatchTopNSuccess[getDevice(dev)];
     } // top-N accuracy
     double getBatchAverageSuccess() const;
     double getBatchAverageTopNSuccess() const; // top-N accuracy
@@ -152,8 +152,8 @@ protected:
     Parameter<double> mConfusionRangeMax;
     Parameter<unsigned int> mConfusionQuantSteps;
 
-    std::vector<double> mBatchSuccess;
-    std::vector<double> mBatchTopNSuccess; // top-N accuracy
+    std::vector<std::vector<double> > mBatchSuccess;
+    std::vector<std::vector<double> > mBatchTopNSuccess; // top-N accuracy
     std::vector<std::pair<unsigned int, double> > mValidationScore;
     std::vector<std::pair<unsigned int, double> > mValidationTopNScore; // top-N
     // accuracy

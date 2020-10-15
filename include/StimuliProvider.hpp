@@ -260,6 +260,8 @@ public:
                         Database::StimuliSet set,
                         unsigned int batchPos = 0,
                         int dev = -1);
+    void synchronizeToDevice(int dev);
+
     void reverseLabels(const cv::Mat& mat,
                        Database::StimuliSet set,
                        Tensor<int>& labels,
