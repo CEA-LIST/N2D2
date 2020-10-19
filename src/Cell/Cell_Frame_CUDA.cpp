@@ -346,7 +346,12 @@ template <class T>
 double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
                                            double defaultVal)
 {
-    mLossMem.resize(mOutputs.dims());
+    if (mLossMem.empty()) {
+#pragma omp critical(Cell_Frame_CUDA__applyLoss)
+        if (mLossMem.empty())
+            mLossMem.resize(mOutputs.dims());
+    }
+
     const double loss = applyLossInternal(targetVal, defaultVal);
 
     mDiffInputs.setValid();

@@ -667,6 +667,8 @@ void N2D2::StimuliProvider::synchronize()
         mProvidedData.swap(mFutureProvidedData);
         mFuture = false;
     }
+
+    synchronizeToDevices();
 }
 
 unsigned int N2D2::StimuliProvider::getRandomIndex(Database::StimuliSet set)
@@ -713,7 +715,7 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 
     unsigned int exceptCatch = 0;
 
-#pragma omp parallel for schedule(dynamic) collapse(2) if (mBatchSize > 1 || mProvidedData.size() > 1)
+#pragma omp parallel for schedule(dynamic) collapse(2) if (mProvidedData.size() > 1 || mBatchSize > 1)
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
             if (mDevices.find(dev) != mDevices.end()) {
@@ -733,9 +735,6 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
                         ++exceptCatch;
                     }
                 }
-
-                if (batchPos + 1 == (int)mBatchSize)
-                    synchronizeToDevice(dev);
             }
         }
     }
@@ -752,8 +751,6 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
                 for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
                     readStimulus(batchRef[batchPos], set, batchPos, dev);
                 }
-
-                synchronizeToDevice(dev);
             }
         }
     }
@@ -799,7 +796,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         }
     }
 
-#pragma omp parallel for schedule(dynamic) collapse(2) if (mBatchSize > 1 || mProvidedData.size() > 1)
+#pragma omp parallel for schedule(dynamic) collapse(2) if (mProvidedData.size() > 1 || mBatchSize > 1)
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
             if (mDevices.find(dev) != mDevices.end()) {
@@ -810,9 +807,6 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
                 if (batchRef[batchPos] >= 0) {
                     readStimulus(batchRef[batchPos], set, batchPos, dev);
                 }
-
-                if (batchPos + 1 == (int)mBatchSize)
-                    synchronizeToDevice(dev);
             }
         }
     }
@@ -1142,26 +1136,28 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
     dataRef[batchPos] = data;
 }
 
-void N2D2::StimuliProvider::synchronizeToDevice(int dev) {
-    TensorData_T& dataRef = (mFuture)
-        ? mFutureProvidedData[dev].data
-        : mProvidedData[dev].data;
-    TensorData_T& targetDataRef = (mFuture)
-        ? mFutureProvidedData[dev].targetData
-        : mProvidedData[dev].targetData;
-
+void N2D2::StimuliProvider::synchronizeToDevices() {
 #ifdef CUDA
     int currentDev = 0;
     CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 
-    if (!mProvidedData[currentDev].data.hostBased()) {
-        // If hostBased() is false, multi-GPU is enabled.
-        // All the GPU data must be referenced in the mProvidedData[currentDev]
-        // element, which is the input of the first layer.
-        // The other elements are never synchronized on GPU, they stay on CPU.
-        CHECK_CUDA_STATUS(cudaSetDevice(dev));
-        mProvidedData[currentDev].data.synchronizeToD(dataRef);
-        mProvidedData[currentDev].targetData.synchronizeToD(targetDataRef);
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        if (mDevices.find(dev) != mDevices.end()) {
+            TensorData_T& dataRef = mProvidedData[dev].data;
+            TensorData_T& targetDataRef = mProvidedData[dev].targetData;
+
+            if (!mProvidedData[currentDev].data.hostBased()) {
+                // If hostBased() is false, multi-GPU is enabled.
+                // All the GPU data must be referenced in the mProvidedData[currentDev]
+                // element, which is the input of the first layer.
+                // The other elements are never synchronized on GPU, they stay on CPU.
+                CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                mProvidedData[currentDev].data.synchronizeToD(dataRef);
+
+                if (!targetDataRef.empty())
+                    mProvidedData[currentDev].targetData.synchronizeToD(targetDataRef);
+            }
+        }
     }
 
     CHECK_CUDA_STATUS(cudaSetDevice(currentDev));

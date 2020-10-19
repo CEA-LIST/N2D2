@@ -171,6 +171,10 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
         Tensor<int> estLabels = estimatedLabels[batchPos];
         Tensor<Float_T> estLabelsValue = estimatedLabelsValue[batchPos];
 
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         if (value.size() > 1) {
             std::vector
                 <std::pair<Float_T, size_t> > sortedLabelsValues;
@@ -245,6 +249,10 @@ void N2D2::TargetRP::processBBox(Database::StimuliSet set)
 
 #pragma omp parallel for if (targets.dimB() > 16)
     for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const AnchorCell_Frame_Kernels::BBox_T& gt
             = mAnchorCell->getAnchorGT(anchors[batchPos]);
 /*

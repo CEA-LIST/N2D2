@@ -716,6 +716,7 @@ double N2D2::cudaHApplyLoss(const cudaDeviceProp& deviceProp,
         reinterpret_cast<__half*>(lossMem),
         reinterpret_cast<__half*>(lossMem),
         size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
     half_float::half hostLoss;
     CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,
@@ -767,6 +768,7 @@ double N2D2::cudaSApplyLoss(const cudaDeviceProp& deviceProp,
     const unsigned int size = outputsWidth * outputsHeight * nbOutputs
                                 * batchSize;
     cudaSReduce_kernel<<<(size + 255) / 256, 256>>>(lossMem, lossMem, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
     float hostLoss;
     CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,
@@ -818,6 +820,7 @@ double N2D2::cudaDApplyLoss(const cudaDeviceProp& deviceProp,
     const unsigned int size = outputsWidth * outputsHeight * nbOutputs
                                 * batchSize;
     cudaDReduce_kernel<<<(size + 255) / 256, 256>>>(lossMem, lossMem, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
     double hostLoss;
     CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,

@@ -363,7 +363,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
 #endif
 
     if (mTargetData.empty()) {
-#pragma omp critical(Target__process)
+#pragma omp critical(Target__provideTargets)
         if (mTargetData.empty()) {
             int count = 1;
 #ifdef CUDA
@@ -395,8 +395,13 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
 #pragma omp parallel for if (targets.dimB() > 4 && size > 16)
 #endif
             for (int batchPos = 0; batchPos < (int)targets.dimB();
-                 ++batchPos) {
+                 ++batchPos)
+            {
                 for (int y = 0; y < (int)targets.dimY(); ++y) {
+#ifdef CUDA
+                    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
                     const int id = mStimuliProvider->getBatch()[batchPos];
 
                     if (id < 0)
@@ -420,7 +425,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
 
                                 // Target range checking
                                 if (target >= (int)nbTargets) {
-#pragma omp critical(Target__process)
+#pragma omp critical(Target__provideTargets)
                                     {
                                         std::cout << Utils::cwarning
                                                   << "Stimulus #" << id
@@ -482,7 +487,12 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
             // one-to-one mapping
 #pragma omp parallel for if (targets.dimB() > 64 && size > 256)
             for (int batchPos = 0; batchPos < (int)targets.dimB();
-                 ++batchPos) {
+                 ++batchPos)
+            {
+#ifdef CUDA
+                CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
                 const int id = mStimuliProvider->getBatch()[batchPos];
 
                 if (id < 0)
@@ -498,7 +508,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
 
                     // Target range checking
                     if (target(index) >= (int)nbTargets) {
-#pragma omp critical(Target__process)
+#pragma omp critical(Target__provideTargets)
                         {
                             std::cout << Utils::cwarning << "Stimulus #" << id
                                       << " has target " << target(index)
@@ -547,24 +557,14 @@ void N2D2::Target::process(Database::StimuliSet set)
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 #endif
 
-    if (mTargetData.empty()) {
+    if (mTargetData.empty() || mLoss.empty()) {
 #pragma omp critical(Target__process_mTargetData)
-        if (mTargetData.empty()) {
+        if (mTargetData.empty() || mLoss.empty()) {
             int count = 1;
 #ifdef CUDA
             CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
 #endif
             mTargetData.resize(count);
-        }
-    }
-
-    if (mLoss.empty()) {
-#pragma omp critical(Target__process_mLoss)
-        if (mLoss.empty()) {
-            int count = 1;
-#ifdef CUDA
-            CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-#endif
             mLoss.resize(count);
         }
     }
@@ -632,6 +632,9 @@ void N2D2::Target::process(Database::StimuliSet set)
         }
     }
 
+    // batchSize may be 0 in multi-GPU for some GPUs...
+    if (batchSize == 0)
+        return;
 
 #ifdef CUDA
     CudaBaseTensor* outputsCudaBaseTensor 
@@ -894,6 +897,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
 #pragma omp parallel for if (size > 4)
         for (int batchPos = 0; batchPos < size; ++batchPos) {
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
             const int id = mStimuliProvider->getBatch()[batchPos];
 
             if (id < 0) {
@@ -991,6 +998,10 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
 #pragma omp parallel for if (targets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -998,10 +1009,6 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
             // set)
             continue;
         }
-
-#ifdef CUDA
-        CudaContext::setDevice();
-#endif
 
         const Tensor<int> target = targets[batchPos][0];
         const Tensor<int> estLabels = estimatedLabels[batchPos][0];
@@ -1228,6 +1235,10 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
 
 #pragma omp parallel for if (targets.dimB() > 4) schedule(dynamic)
     for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -1235,10 +1246,6 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
             // set)
             continue;
         }
-
-#ifdef CUDA
-        CudaContext::setDevice();
-#endif
 
         const Tensor<int> target = targets[batchPos][0];
         const Tensor<int> estLabels = estimatedLabels[batchPos][0];

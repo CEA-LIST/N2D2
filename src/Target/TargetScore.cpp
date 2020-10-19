@@ -534,6 +534,10 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 
 #pragma omp parallel for if (values.dimB() > 4 && values[0].size() > 1)
         for (int batchPos = 0; batchPos < (int)values.dimB(); ++batchPos) {
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
             const int id = mStimuliProvider->getBatch()[batchPos];
 
             if (id < 0) {
@@ -609,6 +613,10 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
 
 #pragma omp parallel for if (targets.dimB() > 4 && targets[0].size() > 1)
         for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
             const int id = mStimuliProvider->getBatch()[batchPos];
 
             if (id < 0) {

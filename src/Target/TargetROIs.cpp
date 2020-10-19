@@ -121,6 +121,10 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
 
 #pragma omp parallel for if (targets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -128,10 +132,6 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
             // set)
             continue;
         }
-
-#ifdef CUDA
-        CudaContext::setDevice();
-#endif
 
         std::vector<DetectedBB> detectedBB;
 
@@ -397,8 +397,15 @@ cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const
     std::vector<std::shared_ptr<ROI> > labelROIs
         = mStimuliProvider->getLabelsROIs(batchPos);
 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+
     if (mGenerateLabelsROIs
-        && labelROIs.empty() && mTargets[batchPos].size() > 1)
+        && labelROIs.empty() && targets[batchPos].size() > 1)
     {
         const Tensor<int>& labels = mStimuliProvider->getLabelsData();
         labelROIs = generateLabelsROIs(labels[batchPos][0]);
@@ -583,6 +590,10 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
 
 #pragma omp parallel for if (targets.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -673,6 +684,10 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
 
 #pragma omp parallel for if (targets.dimB() > 4) schedule(dynamic)
     for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {

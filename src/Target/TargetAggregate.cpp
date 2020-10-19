@@ -156,20 +156,43 @@ void N2D2::TargetAggregate::processEstimatedLabels(Database::StimuliSet set, Flo
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
 
     const unsigned int nbTargets = getNbTargets();
+
+    if (mScoreSet.find(set) == mScoreSet.end()) {
+#pragma omp critical(TargetAggregate__process_mScoreSet)
+        if (mScoreSet.find(set) == mScoreSet.end())
+            mScoreSet.insert(std::make_pair(set, Score()));
+    }
+
     ConfusionMatrix<unsigned long long int>& confusionMatrix
         = mScoreSet[set].confusionMatrix;
 
-    if (confusionMatrix.empty())
-        confusionMatrix.resize(nbTargets, nbTargets, 0);
+    if (confusionMatrix.empty()) {
+#pragma omp critical(TargetScore__process_confusionMatrix)
+        if (confusionMatrix.empty()) {
+            confusionMatrix.resize(nbTargets, nbTargets, 0);
+        }
+    }
 
     std::map<unsigned int,
                 std::map<unsigned int, std::vector<unsigned int> > >&
         misclassified = mScoreSet[set].misclassified;
 
-    mEstimatedLabels.synchronizeDBasedToH();
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
 
-#pragma omp parallel for if (mTargets.dimB() > 4)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+    const Tensor<int>& targets = mTargetData[dev].targets;
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+
+    estimatedLabels.synchronizeDBasedToH();
+
+#pragma omp parallel for if (targets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -178,10 +201,6 @@ void N2D2::TargetAggregate::processEstimatedLabels(Database::StimuliSet set, Flo
             continue;
         }
 
-#ifdef CUDA
-        CudaContext::setDevice();
-#endif
-
         std::map<unsigned int, std::vector<unsigned int> > misclass;
 
         const std::shared_ptr<ROI> globalBB
@@ -189,8 +208,8 @@ void N2D2::TargetAggregate::processEstimatedLabels(Database::StimuliSet set, Flo
                             0,
                             // RectangularROI<>() bottom right is exclusive
                             cv::Point(0, 0),
-                            cv::Point(mEstimatedLabels.dimX(),
-                                      mEstimatedLabels.dimY()));
+                            cv::Point(estimatedLabels.dimX(),
+                                      estimatedLabels.dimY()));
 
         Float_T score = 0.0;
         std::vector<std::pair<int, double> > scoreTopN;
@@ -230,7 +249,7 @@ void N2D2::TargetAggregate::processEstimatedLabels(Database::StimuliSet set, Flo
         }
 
         if (validDatabase) {
-            const Tensor<int> target = mTargets[batchPos];
+            const Tensor<int> target = targets[batchPos];
             const int bbLabel = globalBB->getLabel();
 
             // Extract ground true ROIs
