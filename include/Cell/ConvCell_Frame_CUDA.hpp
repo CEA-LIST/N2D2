@@ -238,8 +238,8 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
     if (!mSynchronized)
         sharedSynapses[output][channel].synchronizeDToH();
 */
-    std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
-    if (mQuantizer) {
+    //std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
+    /*if (mQuantizer) {
         const CudaTensor<T>& sharedSynapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
         sharedSynapses[output][channel].synchronizeDToH();
         value.resize(sharedSynapses[output][channel].dims());
@@ -247,15 +247,15 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
 
         //sharedSynapses = cuda_device_tensor_cast<T>
         //        (cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
-    }
-    else {
+    }*/
+    //else {
         const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
         if (!mSynchronized)
             sharedSynapses[output][channel].synchronizeDToH();
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
 
-    }
+    //}
     
 }
 
