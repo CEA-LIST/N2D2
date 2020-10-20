@@ -690,8 +690,8 @@ void N2D2::StimuliProvider::streamBatch(int startIndex) {
     std::iota(mBatch.begin(), mBatch.end(), startIndex);
 }
 
-void N2D2::StimuliProvider::readStimulusBatch(Database::StimuliSet set,
-                                              Database::StimulusID id)
+void N2D2::StimuliProvider::readStimulusBatch(Database::StimulusID id,
+                                              Database::StimuliSet set)
 {
     std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
 
@@ -910,6 +910,19 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
         labelsRef.clear();
         labelsRef.push_back(labels);
     }
+}
+
+N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulusBatch(
+    Database::StimuliSet set, unsigned int index)
+{
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    const Database::StimulusID id = readStimulus(set, index, 0);
+
+    batchRef[0] = id;
+    std::fill(batchRef.begin() + 1, batchRef.end(), -1);
+    
+    return id;
 }
 
 N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulus(
@@ -1796,7 +1809,7 @@ void init_StimuliProvider(py::module &m) {
     .def("readRandomStimulus", &StimuliProvider::readRandomStimulus, py::arg("set"), py::arg("batchPos") = 0)
     .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0)
     .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1)
-    .def("readStimulusBatch", &StimuliProvider::readStimulusBatch, py::arg("set"), py::arg("id"))
+    .def("readStimulusBatch", &StimuliProvider::readStimulusBatch, py::arg("id"), py::arg("set"))
     .def("readStimulus", (void (StimuliProvider::*)(Database::StimulusID, Database::StimuliSet, unsigned int)) &StimuliProvider::readStimulus, py::arg("id"), py::arg("set"), py::arg("batchPos") = 0)
     .def("readStimulus", (Database::StimulusID (StimuliProvider::*)(Database::StimuliSet, unsigned int, unsigned int)) &StimuliProvider::readStimulus, py::arg("set"), py::arg("index"), py::arg("batchPos") = 0)
     .def("readRawData", (Tensor<Float_T> (StimuliProvider::*)(Database::StimulusID) const) &StimuliProvider::readRawData, py::arg("id"))

@@ -73,6 +73,7 @@ public:
     {
         return Type;
     };
+    virtual void provideTargets(Database::StimuliSet /*set*/) {}
     virtual void process(Database::StimuliSet set);
     virtual ~TargetCompare();
 

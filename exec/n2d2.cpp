@@ -371,7 +371,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
         startTimeSp = std::chrono::high_resolution_clock::now();
         if (opt.testId >= 0)
-            sp->readStimulusBatch(Database::Test, opt.testId);
+            sp->readStimulusBatch(opt.testId, Database::Test);
         else
             sp->readBatch(Database::Test, idx);
         endTimeSp = std::chrono::high_resolution_clock::now();
@@ -740,8 +740,10 @@ void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         sp->synchronize();
         std::thread learnThread(learnThreadWrapper, deepNet, timings);
 
-        sp->future();
-        sp->readRandomBatch(Database::Learn);
+        if (b + 1 < nbBatch) {
+            sp->future();
+            sp->readRandomBatch(Database::Learn);
+        }
 
         std::ios::fmtflags f(std::cout.flags());
 
@@ -1066,6 +1068,8 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 std::cout << "Validation" << std::flush;
                 unsigned int progress = 0, progressPrev = 0;
 
+                // We are alread in sp->future(), read the first validation
+                // batch
                 sp->readBatch(Database::Validation, 0);
 
                 for (unsigned int bv = 1; bv <= nbBatchValid; ++bv) {
@@ -1095,6 +1099,8 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 std::cout << std::endl;
 
+                // We are in sp->future(), must read the next batch for the 
+                // learning
                 sp->readRandomBatch(Database::Learn);
 
                 for (std::vector<std::shared_ptr<Target> >::const_iterator
@@ -1535,7 +1541,7 @@ void testCStdp(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         const unsigned int idx = (opt.testIndex >= 0) ? opt.testIndex : i;
 
         if (opt.testId >= 0)
-            sp->readStimulusBatch(Database::Test, opt.testId);
+            sp->readStimulusBatch(opt.testId, Database::Test);
         else
             sp->readBatch(Database::Test, idx);
 

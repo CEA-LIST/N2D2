@@ -19,6 +19,8 @@
 */
 
 #include "Generator/TargetGenerator.hpp"
+#include "Target/TargetROIs.hpp"
+#include "Target/TargetAggregate.hpp"
 
 std::shared_ptr<N2D2::Target>
 N2D2::TargetGenerator::generate(const std::shared_ptr<Cell>& cell,
@@ -135,8 +137,15 @@ void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
     if (!iniConfig.currentSection(section))
         return;
 
-    if (target->getType() == std::string("TargetROIs")
-        && iniConfig.isProperty("ROIsLabelTarget")) {
+    if ((target->getType() == std::string("TargetROIs")
+        || target->getType() == std::string("TargetAggregate"))
+        && iniConfig.isProperty("ROIsLabelTarget"))
+    {
+        std::shared_ptr<TargetROIs> targetROIs
+            = std::dynamic_pointer_cast<TargetROIs>(target);
+        std::shared_ptr<TargetAggregate> targetAggregate
+            = std::dynamic_pointer_cast<TargetAggregate>(target);
+
         const std::string labelTarget = iniConfig.getProperty
                                         <std::string>("ROIsLabelTarget");
         bool found = false;
@@ -145,10 +154,14 @@ void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
              = deepNet->getTargets().begin(),
              itTargetsEnd = deepNet->getTargets().end();
              itTargets != itTargetsEnd;
-             ++itTargets) {
+             ++itTargets)
+        {
             if ((*itTargets)->getName() == labelTarget) {
-                std::static_pointer_cast
-                    <TargetROIs>(target)->setROIsLabelTarget(*itTargets);
+                if (targetROIs)
+                    targetROIs->setROIsLabelTarget(*itTargets);
+                else if (targetAggregate)
+                    targetAggregate->setROIsLabelTarget(*itTargets);
+
                 found = true;
                 break;
             }
@@ -174,8 +187,7 @@ void N2D2::TargetGenerator::postGenerate(const std::shared_ptr<Target>& target,
              itTargets != itTargetsEnd;
              ++itTargets) {
             if ((*itTargets)->getName() == labelTarget) {
-                std::static_pointer_cast
-                    <TargetROIs>(target)->setMaskLabelTarget(*itTargets);
+                target->setMaskLabelTarget(*itTargets);
                 found = true;
                 break;
             }

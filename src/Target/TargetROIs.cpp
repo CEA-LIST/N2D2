@@ -51,6 +51,7 @@ N2D2::TargetROIs::TargetROIs(const std::string& name,
       mFilterMaxAspectRatio(this, "FilterMaxAspectRatio", 0.0),
       mMergeMaxHDist(this, "MergeMaxHDist", 1U),
       mMergeMaxVDist(this, "MergeMaxVDist", 1U),
+      mGenerateLabelsROIs(this, "GenerateLabelsROIs", true),
       mScoreTopN(this, "ScoreTopN", 1U)
 {
     // ctor
@@ -89,9 +90,9 @@ void N2D2::TargetROIs::clearConfusionMatrix(Database::StimuliSet set)
     mScoreSet[set].confusionMatrix.clear();
 }
 
-void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T* values)
+void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
+                                              Float_T* values)
 {
-
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
 
@@ -120,6 +121,10 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T*
             continue;
         }
 
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         std::vector<DetectedBB> detectedBB;
 
         // Extract estimated BB
@@ -144,32 +149,13 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T*
 
         ComputerVision::ROI::filterSeparability(
             estimatedROIs, mMergeMaxHDist, mMergeMaxVDist);
-        //const int size_rois = estimatedROIs.size();
-//
-        /*for (std::vector<ComputerVision::ROI::Roi_T>::const_iterator it
+
+        for (std::vector<ComputerVision::ROI::Roi_T>::const_iterator it
              = estimatedROIs.begin(),
              itEnd = estimatedROIs.end();
              it != itEnd;
-             ++it) {*/
-
-        for(unsigned int roiIdx = 0; roiIdx < estimatedROIs.size(); ++roiIdx)
-        { 
-            ComputerVision::ROI::Roi_T estimatedROI = estimatedROIs[roiIdx];
-             const int bbLabel = estimatedROI.cls;
-            DetectedBB dbb(std::make_shared<RectangularROI<int> >(
-                               bbLabel,
-                               // RectangularROI<>() bottom right is exclusive,
-                               // but LSL_Box b.r. is inclusive
-                               cv::Point(Utils::round(xRatio * estimatedROI.j0),
-                                         Utils::round(yRatio * estimatedROI.i0)),
-                               cv::Point(Utils::round(xRatio * (estimatedROI.j1 + 1)),
-                                         Utils::round(yRatio * (estimatedROI.i1 + 1)))),
-                           0.0,
-                           std::shared_ptr<ROI>(),
-                           0.0,
-                           false);  
-
-            /*
+             ++it)
+        {
             const int bbLabel = (*it).cls;
             DetectedBB dbb(std::make_shared<RectangularROI<int> >(
                                bbLabel,
@@ -183,7 +169,7 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T*
                            std::shared_ptr<ROI>(),
                            0.0,
                            false);
-            */
+
             if (mScoreTopN > 1) {
                 TensorLabelsValue_T bbLabels = (mROIsLabelTarget)
                     ? mROIsLabelTarget->getEstimatedLabels(dbb.bb, batchPos, values)
@@ -249,6 +235,12 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set, Float_T*
                 }
             }
             else {
+                if (mGenerateLabelsROIs
+                    && labelROIs.empty() && target.size() > 1)
+                {
+                    labelROIs = generateLabelsROIs(labels[batchPos][0]);
+                }
+
                 // ROI and BB association
                 for (std::vector<DetectedBB>::iterator
                     itBB = detectedBB.begin(), itBBEnd = detectedBB.end();
@@ -394,8 +386,15 @@ cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const
 #endif
 
     // Draw targets ROIs
-    const std::vector<std::shared_ptr<ROI> >& labelROIs
+    std::vector<std::shared_ptr<ROI> > labelROIs
         = mStimuliProvider->getLabelsROIs(batchPos);
+
+    if (mGenerateLabelsROIs
+        && labelROIs.empty() && mTargets[batchPos].size() > 1)
+    {
+        const Tensor<int>& labels = mStimuliProvider->getLabelsData();
+        labelROIs = generateLabelsROIs(labels[batchPos][0]);
+    }
 
     for (std::vector<std::shared_ptr<ROI> >::const_iterator itLabel
          = labelROIs.begin(),
@@ -831,4 +830,74 @@ void N2D2::TargetROIs::clear(Database::StimuliSet set)
 {
     Target::clear(set);
     clearConfusionMatrix(set);
+}
+
+std::vector<std::shared_ptr<N2D2::ROI> > N2D2::TargetROIs::generateLabelsROIs(
+    const Tensor<int>& labels) const
+{
+    // Compute label ROIs from pixel-wise annotations.
+    // In this case, it makes sense to apply the same filtering
+    // to the obtained label ROIs, than the estimated ROIs.
+    std::vector<std::shared_ptr<ROI> > labelROIs;
+
+    ComputerVision::LSL_Box lsl(mMinSize);
+    lsl.process(Matrix<int>(labels.dimY(),
+                            labels.dimX(),
+                            labels.begin(),
+                            labels.end()));
+
+    std::vector<ComputerVision::ROI::Roi_T> estimatedROIs
+        = lsl.getRoi();
+
+    if (mFilterMinHeight > 0 || mFilterMinWidth > 0
+        || mFilterMinAspectRatio > 0.0 || mFilterMaxAspectRatio > 0.0) {
+        ComputerVision::ROI::filterSize(estimatedROIs,
+                                        mFilterMinHeight,
+                                        mFilterMinWidth,
+                                        mFilterMinAspectRatio,
+                                        mFilterMaxAspectRatio);
+    }
+
+    ComputerVision::ROI::filterSeparability(
+        estimatedROIs, mMergeMaxHDist, mMergeMaxVDist);
+
+    for (std::vector<ComputerVision::ROI::Roi_T>::iterator
+        it = estimatedROIs.begin(), itEnd = estimatedROIs.end();
+        it != itEnd; ++it)
+    {
+        std::map<int, unsigned int> labelsFreq;
+
+        for (size_t y = (*it).i0; y <= (*it).i1; ++y) {
+            for (size_t x = (*it).j0; x <= (*it).j1; ++x)
+                ++labelsFreq[labels(x, y)];
+        }
+    
+        const std::map<int, unsigned int>::const_iterator itFreq
+            = std::max_element(labelsFreq.begin(), labelsFreq.end(),
+                            Utils::PairSecondPred<int, unsigned int>());
+        
+        int label = (*itFreq).first;
+    
+        if (mWeakTarget >= -1 && getLabelTarget(label) == mWeakTarget) {
+            labelsFreq.erase(label);
+
+            const std::map<int, unsigned int>::const_iterator itFreq
+                = std::max_element(labelsFreq.begin(), labelsFreq.end(),
+                                Utils::PairSecondPred<int, unsigned int>());
+            
+            if (itFreq != labelsFreq.end())
+                label = (*itFreq).first;
+        }
+
+        if (label >= 0) {
+            labelROIs.push_back(std::make_shared<RectangularROI<int> >(
+                label,
+                // RectangularROI<>() bottom right is exclusive,
+                // but LSL_Box b.r. is inclusive
+                cv::Point((*it).j0, (*it).i0),
+                cv::Point((*it).j1 + 1, (*it).i1 + 1)));
+        }
+    }
+
+    return labelROIs;
 }

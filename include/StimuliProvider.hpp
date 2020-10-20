@@ -205,7 +205,8 @@ public:
                              std::vector<Database::StimulusID>& Ids);
 */
 
-    void readStimulusBatch(Database::StimuliSet set, Database::StimulusID id);
+    void readStimulusBatch(Database::StimulusID id,
+                           Database::StimuliSet set);
 
     /// Read the stimulus with StimulusID @p id, apply all the transformations
     /// and put the results at batch
@@ -213,6 +214,9 @@ public:
     virtual void readStimulus(Database::StimulusID id,
                       Database::StimuliSet set,
                       unsigned int batchPos = 0);
+
+    Database::StimulusID readStimulusBatch(Database::StimuliSet set,
+                                           unsigned int index);
 
     /// Read the stimulus with index @p index in StimuliSet @p set, apply all
     /// the transformations and put the results at batch

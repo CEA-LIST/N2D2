@@ -48,7 +48,7 @@ public:
     } RunningMean_T;
 
     template<typename Input_T>
-    void propagate(const Input_T* inputs, std::int32_t* outputs) const;
+    void propagate(const Input_T* inputs, int32_t* outputs) const;
 
     std::size_t inputHeight() const;
     std::size_t inputWidth() const;
@@ -316,6 +316,8 @@ private:
         Format format) const;
 
 private:
+    mutable std::map<std::string, double> cumulativeTiming;
+
     template<typename Output_T>
     N2D2_ALWAYS_INLINE void concatenate(
         Output_T* __restrict /*outputs*/,
@@ -429,11 +431,11 @@ private:
         }
     }
 
-    N2D2_ALWAYS_INLINE static Tick_T tick();
-    N2D2_ALWAYS_INLINE static void benchmark(const char* name,
-                                             const Tick_T& start,
-                                             const Tick_T& end,
-                                             RunningMean_T& timing);
+    N2D2_ALWAYS_INLINE Tick_T tick() const;
+    N2D2_ALWAYS_INLINE void benchmark(const char* name,
+                                      const Tick_T& start,
+                                      const Tick_T& end,
+                                      RunningMean_T& timing) const;
 };
 }
 
@@ -1324,14 +1326,14 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::scalingPropagate(
     }
 }
 
-N2D2_ALWAYS_INLINE inline N2D2::Network::Tick_T N2D2::Network::tick() {
+N2D2_ALWAYS_INLINE inline N2D2::Network::Tick_T N2D2::Network::tick() const {
     return std::chrono::high_resolution_clock::now();
 }
 
 N2D2_ALWAYS_INLINE inline void N2D2::Network::benchmark(const char* name,
                                                         const Tick_T& start,
                                                         const Tick_T& end,
-                                                        RunningMean_T& timing)
+                                                        RunningMean_T& timing) const
 {
     auto duration = std::chrono::duration_cast
                         <std::chrono::microseconds>(end - start).count();
@@ -1340,11 +1342,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::benchmark(const char* name,
     ++timing.count;
 
     // Cumulative
-    static std::map<std::string, double> cumulative;
-    cumulative[name] = timing.mean;
-
-    const double cumMeanTiming = std::accumulate(cumulative.begin(),
-        cumulative.end(), 0, [] (double value,
+    cumulativeTiming[name] = timing.mean;
+    const double cumMeanTiming = std::accumulate(cumulativeTiming.begin(),
+        cumulativeTiming.end(), 0, [] (double value,
                             const std::map<std::string, double>::value_type& p)
                    { return value + p.second; });
 

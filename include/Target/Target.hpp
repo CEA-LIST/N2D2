@@ -168,6 +168,10 @@ public:
     {
         return mLoss;
     }
+    const Tensor<int>& getTargets() const
+    {
+        return mTargets;
+    }
     virtual void log(const std::string& /*fileName*/,
                      Database::StimuliSet /*set*/) {};
     virtual void clear(Database::StimuliSet set);
@@ -217,7 +221,6 @@ protected:
     TensorLabels_T mEstimatedLabels;
     TensorLabelsValue_T mEstimatedLabelsValue;
     std::shared_ptr<Target> mMaskLabelTarget;
-    bool mPopulateTargets;
     std::vector<Float_T> mLoss;
 
     mutable std::vector<std::string> mLabelsName;

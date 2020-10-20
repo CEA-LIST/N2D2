@@ -24,13 +24,18 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <assert.h>
 
 #include <sys/types.h>
+
+#ifndef NO_DIRENT
 #include <dirent.h>
+#endif
 
 #include "cpp_utils.hpp"
 #include "utils.h"
@@ -38,17 +43,33 @@
 void getFilesList(const std::string& dir,
                   std::vector<std::string>& files)
 {
+#ifndef NO_DIRENT
     struct dirent* pFile;
     DIR* pDir = opendir(dir.c_str());
-    if (pDir == NULL)
-        throw std::runtime_error(
+    if (pDir == NULL) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
             "Couldn't open the directory for input patterns: " + dir);
+    }
 
     while ((pFile = readdir(pDir)) != NULL) {
         if (pFile->d_name[0] != '.')
             files.push_back(std::string(dir + "/" + pFile->d_name));
     }
     closedir(pDir);
+#else
+    std::ifstream dirList((dir + ".list").c_str());
+    if (!dirList.good()) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Couldn't open the directory file list for input patterns: "
+            + dir + ".list");
+    }
+
+    std::string line;
+    while (std::getline(dirList, line)) {
+        if (!line.empty())
+            files.push_back(line);
+    }
+#endif
     std::sort(files.begin(), files.end());
 }
 
@@ -69,15 +90,18 @@ void envRead(const std::string& fileName,
 {
     std::ifstream stimuli(fileName.c_str(), std::fstream::binary);
 
-    if (!stimuli.good())
-        throw std::runtime_error("Could not open file: " + fileName);
+    if (!stimuli.good()) {
+        N2D2_THROW_OR_ABORT(std::runtime_error, "Could not open file: "
+            + fileName);
+    }
 
     char header[2];
     stimuli.read(reinterpret_cast<char*>(&header[0]), sizeof(header));
 
-    if (header[0] != 'P' || (header[1] != '5' && header[1] != '6'))
-        throw std::runtime_error("Unknown PGM file format for file: "
-                                 + fileName);
+    if (header[0] != 'P' || (header[1] != '5' && header[1] != '6')) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Unknown PGM file format for file: " + fileName);
+    }
 
     int pixelWidth;
     int pixelHeight;
@@ -85,13 +109,18 @@ void envRead(const std::string& fileName,
 
     if (!(stimuli >> pixelWidth) || !(stimuli >> pixelHeight)
         || !(stimuli >> maxValue))
-        throw std::runtime_error("Error reading PGM image file: " + fileName);
+    {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Error reading PGM image file: " + fileName);
+    }
 
     stimuli.get();
 
     if (pixelWidth != (int)channelsWidth || pixelHeight != (int)channelsHeight)
-        throw std::runtime_error(
+    {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
             "PGM image size does not match array size for file: " + fileName);
+    }
 
 #if NB_BITS > 0 && NB_BITS != 8 && NB_BITS != 16 && NB_BITS != 32 && NB_BITS   \
                                                                      != 64
@@ -115,14 +144,18 @@ void envRead(const std::string& fileName,
     stimuli.read(reinterpret_cast<char*>(&outputTargets[0]),
                  outputsSize * sizeof(outputTargets[0]));
 
-    if (stimuli.eof())
-        throw std::runtime_error(
+    if (stimuli.eof()) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
             "End-of-file reached prematurely in data file: " + fileName);
-    else if (!stimuli.good())
-        throw std::runtime_error("Error while reading data file: " + fileName);
-    else if (stimuli.get() != std::fstream::traits_type::eof())
-        throw std::runtime_error("Data file size larger than expected: "
-                                 + fileName);
+    }
+    else if (!stimuli.good()) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Error while reading data file: " + fileName);
+    }
+    else if (stimuli.get() != std::fstream::traits_type::eof()) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Data file size larger than expected: " + fileName);
+    }
 }
 
 /**** Confusion Matrix ****/
@@ -183,12 +216,13 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         PPM_ASCII = 3,
         PBM_BINARY = 4,
         PGM_BINARY = 5,
-        PPM_BINARY = 6,
+        PPM_BINARY = 6
     };
     
     std::ifstream fileStream(file.c_str(), std::fstream::binary);
     if(!fileStream.is_open()) {
-        throw std::runtime_error("Couldn't open file '" + file + "'.");
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Couldn't open file '" + file + "'.");
     }
 
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
@@ -196,7 +230,8 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
     char header;
     fileStream >> header;
     if(header != 'P') {
-        throw std::runtime_error("The '" + file + "' file is not a valid Netpbm file.");
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "The '" + file + "' file is not a valid Netpbm file.");
     }
 
     std::size_t format; 
@@ -223,7 +258,12 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         dataOut.resize(width*height*nbChannels);
     }
     else if(dataOut.size() != width*height*nbChannels) {
-        throw std::runtime_error("dataOut (" + std::to_string(dataOut.size()) + ") should be empty or of size " + std::to_string(width*height*nbChannels) + ".");
+        std::ostringstream msgStr;
+        msgStr << "dataOut (" << dataOut.size()
+            << ") should be empty or of size " << (width*height*nbChannels)
+            << ".";
+
+        N2D2_THROW_OR_ABORT(std::runtime_error, msgStr.str());
     }
     assert(dataOut.size() == width*height*nbChannels);
     
@@ -259,14 +299,17 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         }
         case PGM_ASCII:        
         case PPM_ASCII:
-            std::copy_n(std::istream_iterator<std::size_t>(fileStream), dataOut.size(), dataOut.begin());
+            std::copy(std::istream_iterator<std::size_t>(fileStream),
+                      std::istream_iterator<std::size_t>(),
+                      std::back_inserter(dataOut));
             break;
         case PGM_BINARY:
         case PPM_BINARY:
             fileStream.read((char*) dataOut.data(), dataOut.size());
             break;
         default:
-            throw std::runtime_error("The '" + file + "' file is not a valid Netpbm file.");
+            N2D2_THROW_OR_ABORT(std::runtime_error,
+                "The '" + file + "' file is not a valid Netpbm file.");
     }
 
     
@@ -274,7 +317,7 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
     if(rescale && maxValue != 255) {
         std::transform(dataOut.begin(), dataOut.end(),  dataOut.begin(), 
                        [&](unsigned char v) { 
-                           return (unsigned char) std::lround(v*255.0/maxValue); 
+                           return (unsigned char) lround(v*255.0/maxValue); 
                         });
     }
 }

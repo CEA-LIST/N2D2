@@ -96,7 +96,6 @@ public:
     void logConfusionMatrix(const std::string& fileName,
                             Database::StimuliSet set) const;
     void clearConfusionMatrix(Database::StimuliSet set);
-    virtual void provideTargets(Database::StimuliSet /*set*/) {}
     virtual void process(Database::StimuliSet set);
     void processEstimatedLabels(Database::StimuliSet set,
                                 Float_T* values = NULL);
@@ -119,6 +118,10 @@ public:
     virtual void clear(Database::StimuliSet set);
 
 protected:
+    std::vector<std::shared_ptr<ROI> > generateLabelsROIs(
+        const Tensor<int>& labels) const;
+
+protected:
     Parameter<unsigned int> mMinSize;
     Parameter<double> mMinOverlap;
     Parameter<unsigned int> mFilterMinHeight;
@@ -127,6 +130,7 @@ protected:
     Parameter<double> mFilterMaxAspectRatio;
     Parameter<unsigned int> mMergeMaxHDist;
     Parameter<unsigned int> mMergeMaxVDist;
+    Parameter<bool> mGenerateLabelsROIs;
     Parameter<unsigned int> mScoreTopN;
 
     std::vector<std::vector<DetectedBB> > mDetectedBB;

@@ -101,7 +101,7 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
         const std::size_t maxValue = (precision > 0 && precision <= 8)?255:65535;
         envStimuli << envSizeX << " " << envSizeY << "\n" << maxValue << "\n";
 
-        sp.readStimulus(set, i);
+        sp.readStimulusBatch(set, i);
 
         // TODO Optimize loop to avoid checking 'precision' and 'unsignedData' constantly.
         if(exportFormat == CHW) {
@@ -126,14 +126,19 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
             }
         }
 
-        const Tensor<int> label = sp.getLabelsData(0);
-        const std::vector<std::shared_ptr<Target>> outputTargets = deepNet.getTargets();
-        const std::size_t netNbTarget = outputTargets.size();
+        const std::vector<std::shared_ptr<Target> > outputTargets
+            = deepNet.getTargets();
+        const std::size_t nbTargets = outputTargets.size();
 
-        for(std::size_t t = 0; t < netNbTarget; ++t) {
-            for (std::size_t y = 0; y < label.dimY(); ++y) {
-                for (std::size_t x = 0; x < label.dimX(); ++x) {
-                    const int32_t outputTarget = deepNet.getTarget(t)->getLabelTarget(label(x, y));
+        for(std::size_t t = 0; t < nbTargets; ++t) {
+            const std::shared_ptr<Target>& target = outputTargets[t];
+            target->provideTargets(set);
+
+            const Tensor<int>& targetData = target->getTargets();
+
+            for (std::size_t y = 0; y < targetData.dimY(); ++y) {
+                for (std::size_t x = 0; x < targetData.dimX(); ++x) {
+                    const int32_t outputTarget = targetData(x, y, 0, 0);
 
                     envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
                                      sizeof(outputTarget));
