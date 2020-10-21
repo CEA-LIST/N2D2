@@ -664,7 +664,11 @@ void N2D2::StimuliProvider::future()
 void N2D2::StimuliProvider::synchronize()
 {
     if (mFuture) {
-        mProvidedData.swap(mFutureProvidedData);
+        // Don't swap the vectors directly, as it would invalidate the
+        // address to the tensors
+        for (int dev = 0; dev < (int)mProvidedData.size(); ++dev)
+            mProvidedData[dev].swap(mFutureProvidedData[dev]);
+
         mFuture = false;
     }
 

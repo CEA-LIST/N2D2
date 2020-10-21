@@ -460,6 +460,11 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();
 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
 #pragma omp parallel for if (batch.size() > 4)
     for (int batchPos = 0; batchPos < (int)batch.size(); ++batchPos) {
         const int id = batch[batchPos];
@@ -469,6 +474,10 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
             // set)
             continue;
         }
+
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
 
         const std::string imgFile
             = mStimuliProvider->getDatabase().getStimulusName(id);
