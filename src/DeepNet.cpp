@@ -1970,7 +1970,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 #ifdef CUDA
         CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
 #endif
-        propagate(Database::Learn, (dev == 0) ? timings : NULL);
+        propagate(Database::Learn, false, (dev == 0) ? timings : NULL);
         backPropagate((dev == 0) ? timings : NULL);
     }
 
@@ -2020,7 +2020,7 @@ void N2D2::DeepNet::test(
 #ifdef CUDA
         CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
 #endif
-        propagate(set, (dev == 0) ? timings : NULL);
+        propagate(set, true, (dev == 0) ? timings : NULL);
     }
 
 #ifdef CUDA
@@ -2030,6 +2030,7 @@ void N2D2::DeepNet::test(
 
 void N2D2::DeepNet::propagate(
     Database::StimuliSet set,
+    bool inference,
     std::vector<std::pair<std::string, double> >* timings)
 {
     const unsigned int nbLayers = mLayers.size();
@@ -2079,7 +2080,7 @@ void N2D2::DeepNet::propagate(
             //std::cout << "propagate " << mCells[(*itCell)]->getName()
             //    << std::endl;
             time1 = std::chrono::high_resolution_clock::now();
-            cellFrame->propagate();
+            cellFrame->propagate(inference);
 
             if (timings != NULL) {
 #ifdef CUDA

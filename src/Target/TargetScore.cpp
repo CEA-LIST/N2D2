@@ -78,35 +78,25 @@ bool N2D2::TargetScore::newValidationTopNScore(double validationTopNScore)
         return false;
 }
 
-double N2D2::TargetScore::getBatchAverageSuccess() const
+double N2D2::TargetScore::getBatchAverageSuccess(int dev) const
 {
-    double acc = 0.0;
-    unsigned int count = 0;
-
-    for (int dev = 0; dev < (int)mBatchSuccess.size(); ++dev) {
-        acc += std::accumulate(mBatchSuccess[dev].begin(),
-                               mBatchSuccess[dev].end(),
-                               0.0);
-        count += mBatchSuccess[dev].size();
-    }
-
-    return (count > 0) ? (acc / count) : 1.0;
+    dev = getDevice(dev);
+    return (mBatchSuccess[dev].size() > 0)
+               ? std::accumulate(mBatchSuccess[dev].begin(),
+                                 mBatchSuccess[dev].end(),
+                                 0.0) / (double)mBatchSuccess[dev].size()
+               : 1.0;
 }
 
-double N2D2::TargetScore::getBatchAverageTopNSuccess() const
+double N2D2::TargetScore::getBatchAverageTopNSuccess(int dev) const
 {
     if (!mDataAsTarget && mTargetTopN > 1) {
-        double acc = 0.0;
-        unsigned int count = 0;
-
-        for (int dev = 0; dev < (int)mBatchTopNSuccess.size(); ++dev) {
-            acc += std::accumulate(mBatchTopNSuccess[dev].begin(),
-                                mBatchTopNSuccess[dev].end(),
-                                0.0);
-            count += mBatchTopNSuccess[dev].size();
-        }
-
-        return (count > 0) ? (acc / count) : 1.0;
+        dev = getDevice(dev);
+        return (mBatchTopNSuccess[dev].size() > 0)
+                ? std::accumulate(mBatchTopNSuccess[dev].begin(),
+                                    mBatchTopNSuccess[dev].end(),
+                                    0.0) / (double)mBatchTopNSuccess[dev].size()
+                : 1.0;
     }
     else
         return 0.0;
@@ -776,15 +766,15 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
         }
     }
 
-#pragma omp critical
+#pragma omp critical(TargetScore__process_success)
 {
     // Remove invalid/ignored batch positions before computing the score
     correctLastBatch(batchSuccess, mScoreSet[set].success);
-    mScoreSet[set].success.push_back(getBatchAverageSuccess());
+    mScoreSet[set].success.push_back(getBatchAverageSuccess(dev));
 
     if (!mDataAsTarget && mTargetTopN > 1) {
         correctLastBatch(batchTopNSuccess, mScoreTopNSet[set].success);
-        mScoreTopNSet[set].success.push_back(getBatchAverageTopNSuccess());
+        mScoreTopNSet[set].success.push_back(getBatchAverageTopNSuccess(dev));
     }
 }
 }

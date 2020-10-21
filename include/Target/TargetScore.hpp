@@ -105,8 +105,8 @@ public:
     {
         return mBatchTopNSuccess[getDevice(dev)];
     } // top-N accuracy
-    double getBatchAverageSuccess() const;
-    double getBatchAverageTopNSuccess() const; // top-N accuracy
+    double getBatchAverageSuccess(int dev = -1) const;
+    double getBatchAverageTopNSuccess(int dev = -1) const; // top-N accuracy
     const Score& getScore(Database::StimuliSet set) const
     {
         return (*mScoreSet.find(set)).second;

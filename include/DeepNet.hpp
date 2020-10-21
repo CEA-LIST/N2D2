@@ -99,7 +99,8 @@ public:
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
     void propagate(Database::StimuliSet set,
-        std::vector<std::pair<std::string, double> >* timings = NULL);
+                   bool inference,
+                std::vector<std::pair<std::string, double> >* timings = NULL);
     void backPropagate(std::vector<std::pair<std::string, double> >* timings = NULL);
     void update(std::vector<std::pair<std::string, double> >* timings = NULL);
     void cTicks(Time_T start, Time_T stop, Time_T timestep, bool record=false);

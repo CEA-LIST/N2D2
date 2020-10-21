@@ -175,24 +175,24 @@ void N2D2::StimuliProvider::setDevices(const std::set<int>& devices)
     }
 
 #ifdef CUDA
-    // hostBased() is set to false, which means the data is considered to be
-    // originating from the GPU. In this case, there will be no HToD 
-    // synchronization on the first layer. We handle it in StimuliProvider, in 
-    // the readStimulus() method.
-    mProvidedData[currentDev].data.hostBased() = false;
-    mProvidedData[currentDev].targetData.hostBased() = false;
+    if (mDevices.size() > 1) {
+        // hostBased() is set to false, which means the data is considered to be
+        // originating from the GPU. In this case, there will be no HToD 
+        // synchronization on the first layer. We handle it in StimuliProvider, in 
+        // the readStimulus() method.
+        mProvidedData[currentDev].data.hostBased() = false;
+        mProvidedData[currentDev].targetData.hostBased() = false;
 
-    mFutureProvidedData[currentDev].data.hostBased() = false;
-    mFutureProvidedData[currentDev].targetData.hostBased() = false;
-#endif
+        mFutureProvidedData[currentDev].data.hostBased() = false;
+        mFutureProvidedData[currentDev].targetData.hostBased() = false;
 
-    if (!devices.empty()) {
         std::cout << "Multi-GPU enabled with devices: ";
-        std::copy(devices.begin(),
-                  devices.end(),
+        std::copy(mDevices.begin(),
+                  mDevices.end(),
                   std::ostream_iterator<int>(std::cout, " "));
         std::cout << std::endl;
     }
+#endif
 }
 
 void N2D2::StimuliProvider::addChannel(const CompositeTransformation
