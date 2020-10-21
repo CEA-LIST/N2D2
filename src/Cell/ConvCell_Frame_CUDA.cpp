@@ -1080,6 +1080,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::importFreeParameters(const std::string
         mSharedSynapses[i].synchronizeHToD();
 
     mBias->synchronizeHToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mSharedSynapses.broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
 }
 
 template <class T>
@@ -1111,6 +1117,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::discretizeFreeParameters(unsigned int nbLevel
         mSharedSynapses[i].synchronizeHToD();
 
     mBias->synchronizeHToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mSharedSynapses.broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
 }
 
 template <class T>
@@ -1182,6 +1194,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<Float_T(F
         mSharedSynapses[i].synchronizeHToD();
 
     mBias->synchronizeHToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mSharedSynapses.broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
 }
 
 template <class T>
@@ -1202,6 +1220,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<
         mSharedSynapses[i].synchronizeHToD();
 
     mBias->synchronizeHToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mSharedSynapses.broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
 }
 
 template <class T>
@@ -1221,6 +1245,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerChannel(std::function
         mSharedSynapses[i].synchronizeHToD();
 
     mBias->synchronizeHToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mSharedSynapses.broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
 }
 
 template <class T>
