@@ -98,13 +98,16 @@ void learnThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
     deepNet->learn(timings);
 }
 
-void validationThreadWrapper(const std::shared_ptr<DeepNet>& deepNet)
+void inferThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
+                        Database::StimuliSet set,
+                        std::vector<std::pair<std::string, double> >* timings
+                            = NULL)
 {
 #ifdef CUDA
     CudaContext::setDevice(cudaDevice);
 #endif
 
-    deepNet->test(Database::Validation);
+    deepNet->test(set, timings);
 }
 
 //#define GPROF_INTERRUPT
@@ -365,18 +368,36 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     const unsigned int batchSize = sp->getMultiBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
+    startTimeSp = std::chrono::high_resolution_clock::now();
+    if (opt.testId >= 0)
+        sp->readStimulusBatch(opt.testId, Database::Test);
+    else
+        sp->readBatch(Database::Test, (opt.testIndex >= 0) ? opt.testIndex : 0);
+    endTimeSp = std::chrono::high_resolution_clock::now();
+
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
         const unsigned int idx = (opt.testIndex >= 0) ? opt.testIndex : i;
+        const unsigned int nextIdx = (b + 1) * batchSize;
 
-        startTimeSp = std::chrono::high_resolution_clock::now();
-        if (opt.testId >= 0)
-            sp->readStimulusBatch(opt.testId, Database::Test);
-        else
-            sp->readBatch(Database::Test, idx);
-        endTimeSp = std::chrono::high_resolution_clock::now();
+        timings.push_back(std::make_pair(
+            "sp", std::chrono::duration_cast
+            <std::chrono::duration<double> >(endTimeSp - startTimeSp)
+                                            .count()));
 
-        deepNet->test(Database::Test, &timings);
+        sp->synchronize();
+        std::thread inferThread(inferThreadWrapper,
+                                deepNet, Database::Test, &timings);
+
+        if (b + 1 < nbBatch) {
+            sp->future();
+
+            startTimeSp = std::chrono::high_resolution_clock::now();
+            sp->readBatch(Database::Test, nextIdx);
+            endTimeSp = std::chrono::high_resolution_clock::now();
+        }
+
+        inferThread.join();
 
         if (opt.logJSON)
             deepNet->logEstimatedLabelsJSON(testName);
@@ -400,11 +421,6 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
             deepNet->logOutputs("outputs_" + testName + "_" + numStr.str(),
                                 batchPos);
         }
-
-        timings.push_back(std::make_pair(
-            "sp", std::chrono::duration_cast
-            <std::chrono::duration<double> >(endTimeSp - startTimeSp)
-                                            .count()));
 
         if (!cumTimings.empty()) {
             std::transform(timings.begin(),
@@ -894,14 +910,23 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     const unsigned int batchSize = sp->getMultiBatchSize();
     const unsigned int nbBatch = std::ceil(opt.learn / (double)batchSize);
-    const unsigned int avgBatchWindow = opt.avgWindow / (double)batchSize;
+    const unsigned int avgBatchWindow = opt.avgWindow / (double)sp->getBatchSize();
 
+    startTimeSp = std::chrono::high_resolution_clock::now();
     sp->readRandomBatch(Database::Learn);
+    endTimeSp = std::chrono::high_resolution_clock::now();
 
     std::vector<std::pair<std::string, double> > timings, cumTimings;
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
+
+        if (opt.bench) {
+            timings.push_back(std::make_pair(
+                "sp", std::chrono::duration_cast
+                <std::chrono::duration<double> >(endTimeSp - startTimeSp)
+                                                .count()));
+        }
 
         sp->synchronize();
         std::thread learnThread(learnThreadWrapper,
@@ -934,11 +959,6 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         }
 
         if (opt.bench) {
-            timings.push_back(std::make_pair(
-                "sp", std::chrono::duration_cast
-                <std::chrono::duration<double> >(endTimeSp - startTimeSp)
-                                                .count()));
-
             if (!cumTimings.empty()) {
                 std::transform(timings.begin(),
                                 timings.end(),
@@ -1076,15 +1096,15 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                     const unsigned int k = bv * batchSize;
 
                     sp->synchronize();
-                    std::thread validationThread(validationThreadWrapper,
-                                                    deepNet);
+                    std::thread inferThread(inferThreadWrapper,
+                                            deepNet, Database::Validation, nullptr);
 
                     sp->future();
 
                     if (bv < nbBatchValid)
                         sp->readBatch(Database::Validation, k);
 
-                    validationThread.join();
+                    inferThread.join();
 
                     // Progress bar
                     progress
