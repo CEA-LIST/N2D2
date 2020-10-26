@@ -1709,10 +1709,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     beta = (*itAttr).second->f();
 
                 //if ((itAttr = attribute.find("transA")) != attribute.end())
-                //    transA = (*itAttr).second->f();
+                //    transA = (*itAttr).second->i();
 
                 if ((itAttr = attribute.find("transB")) != attribute.end())
-                    transB = (*itAttr).second->f();
+                    transB = (*itAttr).second->i();
             }
 
             if (!inputData.empty()) {
@@ -1722,7 +1722,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if ((itShape = shape.find((*itInit).first)) != shape.end())
                     weights.reshape((*itShape).second);
 
-                const unsigned int nbOutputs = (!transB)
+                const unsigned int nbOutputs = (transB)
                     ? weights.dimB() : weights.size() / weights.dimB();
 
                 std::map<std::string, std::vector<std::string> >
@@ -1788,13 +1788,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     errorStr << "Unsupported operation: "
                         << node.op_type() << " with weights size mismatch."
                         " Inputs dims: " << fcCell->getInputsDims()
-                        << ", weights dims: " << weights.dims();
+                        << ", weights dims: " << weights.dims()
+                        << ", nb. outputs: " << nbOutputs;
 
                     throw std::runtime_error(errorStr.str());
                 }
 
                 // Init weights
-                if (!transB) {
+                if (transB) {
                     weights.reshape({1, fcCell->getInputsSize(),
                                     fcCell->getNbOutputs()});
                 }
@@ -1809,7 +1810,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     for (unsigned int channel = 0;
                         channel < fcCell->getInputsSize(); ++channel)
                     {
-                        Tensor<Float_T> w = (!transB)
+                        Tensor<Float_T> w = (transB)
                             ? weights[output][channel]
                             : weights[channel][output];
 
