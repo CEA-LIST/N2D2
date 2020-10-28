@@ -112,6 +112,13 @@ public:
         NoTest,
         All
     };
+    enum CompositeLabel {
+        None,
+        Auto,
+        Default,
+        Disjoint,
+        Combine
+    };
 
     /**
      * This objects contains the list of stimuli in each database stimuli set.
@@ -362,8 +369,32 @@ protected:
     Parameter<bool> mRandomPartitioning;
     // If true, load image label with DataFile::readLabel()
     Parameter<bool> mDataFileLabel;
-    // If true, force composite labels, discarding the stimulus label ID
-    Parameter<bool> mForceCompositeLabel;
+    // A label is said to be composite when it is not a single labelID for the 
+    // stimulus (the stimulus label is a matrix of size > 1).
+    // For the same stimulus, different type of labels can be specified,
+    // i.e. the labelID, pixel-wise data and/or ROIs.
+    // The way these different label types are handled is configured with the
+    // mCompositeLabel parameter:
+    // - None: only the labelID is used, pixel-wise data are ignored and ROIs 
+    //         are loaded but ignored as well by loadStimulusLabelsData().
+    // - Auto: the label is only composite when pixel-wise data are present
+    //         or the stimulus labelID is -1 (in which case the defaultLabel
+    //         is used for the whole label matrix). If the label is composite
+    //         ROIs, if present, are applied. Otherwise, a single ROI is
+    //         allowed and is automatically extracted when fetching the 
+    //         stimulus.
+    // - Default: the label is always composite. The labelID is ignored.
+    //            If there is no pixel-wise data, the defaultLabel is used.
+    //            ROIs, if present, are applied.
+    // - Disjoint: the label is always composite.
+    //             If there is no pixel-wise data:
+    //             - the labelID is used if there is no ROI;
+    //             - the defaultLabel is used if there is any ROI.
+    //             ROIs, if present, are applied.
+    // - Combine: the label is always composite.
+    //            If there is no pixel-wise data, the labelID is used.
+    //            ROIs, if present, are applied.
+    Parameter<CompositeLabel> mCompositeLabel;
     Parameter<std::string> mTargetDataPath;
 
     /**
@@ -399,6 +430,9 @@ template <>
 const char* const EnumStrings<N2D2::Database::StimuliSetMask>::data[]
     = {"LearnOnly",    "ValidationOnly", "TestOnly", "NoLearn",
        "NoValidation", "NoTest",         "All"};
+template <>
+const char* const EnumStrings<N2D2::Database::CompositeLabel>::data[]
+    = {"None", "Auto", "Default", "Disjoint", "Combine"};
 }
 
 std::vector<N2D2::Database::StimulusID>& N2D2::Database::StimuliSets::

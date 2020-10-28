@@ -35,7 +35,7 @@ N2D2::Database::Database(bool loadDataInMemory)
       mROIsMargin(this, "ROIsMargin", 0U),
       mRandomPartitioning(this, "RandomPartitioning", true),
       mDataFileLabel(this, "DataFileLabel", true),
-      mForceCompositeLabel(this, "ForceCompositeLabel", false),
+      mCompositeLabel(this, "CompositeLabel", Auto),
       mTargetDataPath(this, "TargetDataPath", ""),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1),
@@ -766,7 +766,9 @@ void N2D2::Database::extractSlices(unsigned int width,
                         // Copy ROI
                         ROI* roi = (*itROIs)->clonePtr();
 
-                        if (mStimuli[id].label == -1 || mForceCompositeLabel) {
+                        if (mCompositeLabel != Auto
+                            || mStimuli[id].label == -1)
+                        {
                             // Composite stimuli
                             // Crop ROI
                             roi->padCrop(x, y, width, height);
@@ -1530,9 +1532,9 @@ N2D2::Database::getStimulusROIs(StimulusID id) const
                    std::back_inserter(stimulusROIs),
                    std::bind(&ROI::clone, std::placeholders::_1));
 
-    if (mStimuli[id].label >= 0
-        && !stimulusROIs.empty()
-        && !mForceCompositeLabel)
+    if (mCompositeLabel == Auto
+        && mStimuli[id].label >= 0
+        && !stimulusROIs.empty())
     {
         unsigned int nbLabelROIs = 0;
 
@@ -1862,7 +1864,10 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         labels = dataFile->readLabel(mStimuli[id].name);
     }
 
-    if (mStimuli[id].label == -1 || !labels.empty() || mForceCompositeLabel) {
+    if (mCompositeLabel != None && (mCompositeLabel != Auto
+                                    || mStimuli[id].label == -1
+                                    || !labels.empty()))
+    {
         std::shared_ptr<DataFile> dataFile = Registrar
             <DataFile>::create(fileExtension)();
 
@@ -1873,9 +1878,14 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         cv::Mat stimulus = dataFile->read(mStimuli[id].name);
 
         if (labels.empty()) {
-            // means mStimuli[id].label == -1
+            const int labelID = ((mCompositeLabel == Auto
+                    && mStimuli[id].label == -1)
+                || mCompositeLabel == Default
+                || (mCompositeLabel == Disjoint && !mStimuli[id].ROIs.empty()))
+                    ? defaultLabel : mStimuli[id].label;
+
             labels = cv::Mat(stimulus.rows, stimulus.cols, CV_32SC1,
-                             cv::Scalar(defaultLabel));
+                            cv::Scalar(labelID));
         }
         else if (mStimuli[id].label >= 0) {
             // use labels as a mask for the stimulus label
@@ -1908,7 +1918,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         return labels;
     } else {
         // Non-composite stimulus
-        if (!mStimuli[id].ROIs.empty()) {
+        if (mCompositeLabel == Auto && !mStimuli[id].ROIs.empty()) {
             if (mStimuli[id].ROIs.size() != 1) {
 #pragma omp critical(Database__loadStimulusLabelsData)
                 throw std::runtime_error("Database::loadStimulusLabelsData(): "
@@ -1989,9 +1999,9 @@ cv::Mat N2D2::Database::loadData(
         data = dataConverted;
     }
 
-    if (mStimuli[id].label >= 0
-        && !mStimuli[id].ROIs.empty()
-        && !mForceCompositeLabel)
+    if (mCompositeLabel == Auto
+        && mStimuli[id].label >= 0
+        && !mStimuli[id].ROIs.empty())
     {
         bool extracted = false;
 
