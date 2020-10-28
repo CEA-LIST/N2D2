@@ -291,9 +291,15 @@ public:
     bool isMatchingLabel(const std::string& labelMask) const;
     int getLabelID(const std::string& labelName) const;
     int getDefaultLabelID() const;
+    const std::vector<std::string>& getLabels() const
+    {
+        return mLabelsName;
+    }
     inline std::vector<int> getLabelsIDs(const std::vector
                                          <std::string>& names) const;
     std::vector<int> getMatchingLabelsIDs(const std::string& labelMask) const;
+    std::vector<int> getMatchingLabelsIDs(
+        const std::vector<std::string>& labelMask) const;
     inline const std::string& getLabelName(int label) const;
     int getStimuliDepth();
     cv::Mat getStimulusData(StimulusID id);

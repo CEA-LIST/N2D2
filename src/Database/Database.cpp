@@ -1629,14 +1629,25 @@ bool N2D2::Database::isMatchingLabel(const std::string& labelMask) const
 std::vector<int> N2D2::Database::getMatchingLabelsIDs(
     const std::string& labelMask) const
 {
+    return getMatchingLabelsIDs(std::vector<std::string>(1, labelMask));
+}
+
+std::vector<int> N2D2::Database::getMatchingLabelsIDs(
+    const std::vector<std::string>& labelMask) const
+{
     std::vector<int> labels;
 
     for (std::vector<std::string>::const_iterator it = mLabelsName.begin(),
         itBegin = mLabelsName.begin(), itEnd = mLabelsName.end();
         it != itEnd; ++it)
     {
-        if (Utils::match(labelMask, *it))
-            labels.push_back(it - itBegin);
+        for (std::vector<std::string>::const_iterator
+            itMask = labelMask.begin(), itMaskEnd = labelMask.end();
+            itMask != itMaskEnd; ++itMask)
+        {
+            if (Utils::match(*itMask, *it))
+                labels.push_back(it - itBegin);
+        }
     }
 
     return labels;
