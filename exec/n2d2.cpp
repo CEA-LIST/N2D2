@@ -591,10 +591,18 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                           exportDir + "/stimuli", Database::Validation);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
-
+    const std::size_t nbStimuli = (opt.calibration > 0)? 
+                                        std::min(static_cast<unsigned int>(opt.calibration),
+                                                database->getNbStimuli(Database::Validation)):
+                                        database->getNbStimuli(Database::Validation);
 
     bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
+        if (nbStimuli == 0) {
+            throw std::runtime_error("The Validation dataset to run the "
+                "calibration is empty!");
+        }
+
         // fusePadding() necessary for crossLayerEqualization()
         if(!opt.exportNoCrossLayerEqualization) {
             deepNet->fusePadding();
@@ -605,7 +613,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             dnQuantization.crossLayerEqualization();
         }
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
-
 
         const double stimuliRange = StimuliProviderExport::stimuliRange(
                                         *sp, exportDir + "/stimuli",
@@ -636,10 +643,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
         else {
-            const std::size_t nbStimuli = (opt.calibration > 0)? 
-                                              std::min(static_cast<unsigned int>(opt.calibration),
-                                                       database->getNbStimuli(Database::Validation)):
-                                              database->getNbStimuli(Database::Validation);
             const std::size_t batchSize = sp->getBatchSize();
             const std::size_t nbBatches = std::ceil(1.0*nbStimuli/batchSize);
 
