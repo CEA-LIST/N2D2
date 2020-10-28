@@ -154,7 +154,10 @@ void N2D2::StimuliProvider::addTransformation(const CompositeTransformation
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mTransformations(*it).cacheable.push_back(transformation);
+        mTransformations(*it).cacheable.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addOnTheFlyTransformation(
@@ -169,7 +172,10 @@ void N2D2::StimuliProvider::addOnTheFlyTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mTransformations(*it).onTheFly.push_back(transformation);
+        mTransformations(*it).onTheFly.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelTransformation(
@@ -186,8 +192,12 @@ void N2D2::StimuliProvider::addChannelTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations.back()(*it)
             .cacheable.push_back(transformation);
+        mChannelsTransformations.back()(*it)
+            .cacheable.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
@@ -204,7 +214,10 @@ void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations.back()(*it).onTheFly.push_back(transformation);
+        mChannelsTransformations.back()(*it).onTheFly.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelTransformation(
@@ -224,8 +237,12 @@ void N2D2::StimuliProvider::addChannelTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations[channel](*it)
             .cacheable.push_back(transformation);
+        mChannelsTransformations[channel](*it)
+            .cacheable.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
@@ -246,8 +263,12 @@ void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations[channel](*it)
             .onTheFly.push_back(transformation);
+        mChannelsTransformations[channel](*it)
+            .onTheFly.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelsTransformation(
@@ -266,8 +287,10 @@ void N2D2::StimuliProvider::addChannelsTransformation(
              = mChannelsTransformations.begin(),
              itTransEnd = mChannelsTransformations.end();
              itTrans != itTransEnd;
-             ++itTrans) {
+             ++itTrans)
+        {
             (*itTrans)(*it).cacheable.push_back(transformation);
+            (*itTrans)(*it).cacheable.setStimuliProvider(this);
         }
     }
 }
@@ -288,8 +311,10 @@ void N2D2::StimuliProvider::addChannelsOnTheFlyTransformation(
              = mChannelsTransformations.begin(),
              itTransEnd = mChannelsTransformations.end();
              itTrans != itTransEnd;
-             ++itTrans) {
+             ++itTrans)
+        {
             (*itTrans)(*it).onTheFly.push_back(transformation);
+            (*itTrans)(*it).onTheFly.setStimuliProvider(this);
         }
     }
 }

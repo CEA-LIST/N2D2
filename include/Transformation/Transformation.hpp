@@ -52,6 +52,7 @@
 
 namespace N2D2 {
 
+class StimuliProvider;
 class CompositeTransformation;
 
 template <class T>
@@ -71,6 +72,7 @@ struct opencv_data_type<double> {
 
 class Transformation : public Parameterizable {
 public:
+    Transformation(): mStimuliProvider(NULL) {}
     virtual const char* getType() const = 0;
     inline void apply(cv::Mat& frame, int id = -1);
     inline void apply(cv::Mat& frame, cv::Mat& labels, int id = -1);
@@ -98,6 +100,10 @@ public:
         return std::make_pair(0U, 0U);
     };
     virtual int getOutputsDepth(int depth) const = 0;
+    virtual void setStimuliProvider(StimuliProvider* sp)
+    {
+        mStimuliProvider = sp;
+    }
     virtual ~Transformation() {};
 
 protected:
@@ -107,6 +113,7 @@ protected:
         int offsetY,
         unsigned int width,
         unsigned int height);
+    StimuliProvider* mStimuliProvider;
 
 private:
     virtual Transformation* doClone() const = 0;
