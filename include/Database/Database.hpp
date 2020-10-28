@@ -143,7 +143,8 @@ public:
                           const std::string& relPath = "",
                           bool noImageSize = false);
     virtual void loadROIsDir(const std::string& dirName,
-                             const std::string& fileExt = "",
+                             const std::vector<std::string>& fileExt
+                                                = std::vector<std::string>(),
                              int depth = 0);
     virtual void saveROIs(const std::string& fileName,
                           const std::string& header = "") const;

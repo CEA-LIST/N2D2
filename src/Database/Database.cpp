@@ -107,7 +107,7 @@ void N2D2::Database::loadROIs(const std::string& fileName,
 }
 
 void N2D2::Database::loadROIsDir(const std::string& dirName,
-                                 const std::string& fileExt,
+                                 const std::vector<std::string>& fileExt,
                                  int depth)
 {
     DIR* pDir = opendir(dirName.c_str());
@@ -139,8 +139,11 @@ void N2D2::Database::loadROIsDir(const std::string& dirName,
             subDirs.push_back(filePath);
         else {
             // Ignore files with the wrong file extension
-            if (!fileExt.empty() && Utils::fileExtension(fileName) != fileExt)
+            if (!fileExt.empty() && std::find(fileExt.begin(), fileExt.end(),
+                Utils::fileExtension(fileName)) == fileExt.end())
+            {
                 continue;
+            }
 
             files.push_back(filePath);
         }
