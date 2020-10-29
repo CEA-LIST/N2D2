@@ -385,6 +385,7 @@ public:
     const Tensor<T> rows(size_t j0, size_t nb) const;
     double sum(bool valAbs=false) const;
     double mean(bool valAbs=false) const;
+    double std() const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);

@@ -745,6 +745,23 @@ double N2D2::Tensor<T>::mean(bool valAbs) const
 }
 
 template <class T>
+double N2D2::Tensor<T>::std() const
+{
+    double m = mean();
+    
+    double var = 0.0;
+
+    for (typename std::vector<T>::iterator it = (*mData)().begin();
+        it != (*mData)().end(); ++it)
+    {
+        var += pow(convertValue<double>(*it) - m, 2);
+    }
+    var = var/(*mData)().size();
+
+    return sqrt(var);
+}
+
+template <class T>
 bool N2D2::Tensor<T>::operator==(const Tensor& other) const {
     if(mDims != other.mDims) {
         return false;
