@@ -1990,9 +1990,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //OneHot
         //Or
         //PRelu
-        //else if (node.op_type() == "Pad") {
+        else if (node.op_type() == "Pad") {
+            std::cout << Utils::cnotice << "  Ignore Pad operation"
+                << Utils::cdef << std::endl;
 
-        //}
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         //Pow
         //QLinearConv
         //QLinearMatMul
