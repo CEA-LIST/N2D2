@@ -121,8 +121,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::setExtendedPadding(
     std::vector<size_t> inputsDims(mInputsDims);
     inputsDims.push_back(mInputs.dimB());
 
-    inputsDims[0] += paddingDims[0] + paddingDims[2];
-    inputsDims[1] += paddingDims[1] + paddingDims[3];
+    inputsDims[0] += paddingDims[0] + paddingDims[2];  // left + right
+    inputsDims[1] += paddingDims[1] + paddingDims[3];  // top + bottom
 
     mPaddedInputs.clear();
 
@@ -604,10 +604,10 @@ namespace N2D2 {
                     mPaddedInputs[k].dimB(),
                     mInputs[k].dimX(),
                     mInputs[k].dimY(),
-                    mExtPaddingDims[0],
-                    mExtPaddingDims[2],
-                    mExtPaddingDims[1],
-                    mExtPaddingDims[3],
+                    mExtPaddingDims[0], // left
+                    mExtPaddingDims[2], // right
+                    mExtPaddingDims[1], // top
+                    mExtPaddingDims[3], // bottom
                     input->getDevicePtr(),
                     mPaddedInputs[k].getDevicePtr());
 

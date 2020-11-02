@@ -61,6 +61,7 @@ void N2D2::ConvCell::setExtendedPadding(const std::vector<int>& paddingDims)
     }
 
     mExtPaddingDims = paddingDims;
+    setOutputsDims();
 }
 
 void N2D2::ConvCell::logFreeParameters(const std::string& fileName,

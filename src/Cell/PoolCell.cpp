@@ -49,6 +49,7 @@ void N2D2::PoolCell::setExtendedPadding(const std::vector<int>& paddingDims)
     }
 
     mExtPaddingDims = paddingDims;
+    setOutputsDims();
 }
 
 unsigned long long int N2D2::PoolCell::getNbConnections() const

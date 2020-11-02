@@ -1249,6 +1249,22 @@ void N2D2::DeepNet::fusePadding() {
 
         std::shared_ptr<PaddingCell> padCell =
             std::dynamic_pointer_cast<PaddingCell>(cell);
+        const std::vector<int> paddingDims = { padCell->getLeftPad(),
+                                               padCell->getTopPad(),
+                                               padCell->getRightPad(),
+                                               padCell->getBotPad() };
+
+        // Remove padding cell before setExtendedPadding(), because 
+        // setExtendedPadding() needs the correct cell's input dimensions, 
+        // which are the dimensions before padding!
+        removeCell(cell, true);
+
+        // Here the input dims of childs are correct but their output dims
+        // is automatically changed by the reconnection in removeCell() to 
+        // take into account the padding removal.
+        // At this point the graph is therefore corrupted, because the output
+        // dims change is not automatically propagated through the graph.
+        // The correct output dims will be recomputed by setExtendedPadding().
 
         for (auto itChild = padChilds.begin(); itChild != padChilds.end();
             ++itChild)
@@ -1261,11 +1277,7 @@ void N2D2::DeepNet::fusePadding() {
                     << "\" with Conv \"" << convCell->getName() << "\""
                     << std::endl;
 
-                convCell->setExtendedPadding({
-                    padCell->getLeftPad(),
-                    padCell->getTopPad(),
-                    padCell->getRightPad(),
-                    padCell->getBotPad()});
+                convCell->setExtendedPadding(paddingDims);
             }
             else if ((*itChild)->getType() == PoolCell::Type) {
                 std::shared_ptr<PoolCell> poolCell =
@@ -1275,15 +1287,11 @@ void N2D2::DeepNet::fusePadding() {
                     << "\" with Pool \"" << poolCell->getName() << "\""
                     << std::endl;
 
-                poolCell->setExtendedPadding({
-                    padCell->getLeftPad(),
-                    padCell->getTopPad(),
-                    padCell->getRightPad(),
-                    padCell->getBotPad()});
+                poolCell->setExtendedPadding(paddingDims);
             }
         }
 
-        removeCell(cell, true);
+        // At this point the graph is correct again.
     }
 }
 
