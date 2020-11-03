@@ -26,6 +26,8 @@
 #include "utils/Gnuplot.hpp"
 #include "utils/Registrar.hpp"
 
+#include <regex>
+
 const std::locale
 N2D2::Database::csvLocale(std::locale(),
                           new N2D2::Utils::streamIgnore(",; \t"));
@@ -37,6 +39,9 @@ N2D2::Database::Database(bool loadDataInMemory)
       mDataFileLabel(this, "DataFileLabel", true),
       mCompositeLabel(this, "CompositeLabel", Auto),
       mTargetDataPath(this, "TargetDataPath", ""),
+      mMultiChannelMatch(this, "MultiChannelMatch", ""),
+      mMultiChannelReplace(this, "MultiChannelReplace",
+                           std::vector<std::string>()),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1),
       mStimuliTargetDepth(-1)
@@ -1982,6 +1987,49 @@ cv::Mat N2D2::Database::loadData(
     std::shared_ptr<DataFile> dataFile = Registrar
         <DataFile>::create(fileExtension)();
     cv::Mat data = dataFile->read(fileName);
+
+    if (!((std::string)mMultiChannelMatch).empty()) {
+        const std::vector<std::string>& multiChannelReplace
+            = mMultiChannelReplace.get<std::vector<std::string> >();
+
+        std::vector<cv::Mat> channels;
+
+        for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
+            const std::regex regexp((std::string)mMultiChannelMatch);
+            cv::Mat chData;
+
+            if (std::regex_match(fileName, regexp)) {
+                const std::string chFileName
+                    = std::regex_replace(fileName, regexp,
+                                         multiChannelReplace[ch]);
+
+                if (chFileName == fileName)
+                    chData = data;
+                else if (std::ifstream(chFileName).good())
+                    chData = dataFile->read(chFileName);
+            }
+            //else {
+            //    std::cout << Utils::cwarning << "Warning: no match for channel "
+            //        "#" << ch << " for stimulus: " << fileName
+            //        << Utils::cdef << std::endl;
+            //}
+
+            if (chData.empty()) {
+                //std::cout << Utils::cnotice << "Notice: missing channel #"
+                //        << ch << " data for stimulus: " << fileName
+                //        << Utils::cdef << std::endl;
+
+                chData = cv::Mat(data.cols, data.rows, data.type(),
+                                 cv::Scalar(0));
+            }
+
+            channels.push_back(chData);
+        }
+
+        cv::merge(channels, data);
+    }
+    else
+        data = dataFile->read(fileName);
 
     // Check stimulus depth
     if (data.depth() != depth) {

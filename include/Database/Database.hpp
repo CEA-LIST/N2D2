@@ -396,6 +396,8 @@ protected:
     //            ROIs, if present, are applied.
     Parameter<CompositeLabel> mCompositeLabel;
     Parameter<std::string> mTargetDataPath;
+    Parameter<std::string> mMultiChannelMatch;
+    Parameter<std::vector<std::string> > mMultiChannelReplace;
 
     /**
      * TABLES
