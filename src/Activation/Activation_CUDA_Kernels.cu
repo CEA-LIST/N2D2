@@ -377,6 +377,111 @@ cudaDSoftplus_backPropagate_kernel(double* x, double* dx, unsigned int size)
     }
 }
 
+// Swish
+__global__ void cudaHSwish_propagate_kernel(__half* x,
+                                            __half* y,
+                                            __half* sigmoid,
+                                            unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+        const __half sig = __hdiv(__float2half(1.0f),
+                                  __hadd(__float2half(1.0f),
+                                         hexp(__hneg(x[i]))));
+#else
+        const __half sig
+            = __float2half(1.0f / (1.0f + exp(-__half2float(x[i]))));
+#endif
+
+        sigmoid[i] = sig;
+#if __CUDA_ARCH__ >= 530
+        y[i] = __hmul(x[i], sig);
+#else
+        y[i] = __float2half(__half2float(x[i]) * __half2float(sig));
+#endif
+    }
+}
+
+__global__ void cudaSSwish_propagate_kernel(float* x,
+                                            float* y,
+                                            float* sigmoid,
+                                            unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        const float sig = 1.0f / (1.0f + exp(-x[i]));
+        sigmoid[i] = sig;
+        y[i] = x[i] * sig;
+    }
+}
+
+__global__ void cudaDSwish_propagate_kernel(double* x,
+                                            double* y,
+                                            double* sigmoid,
+                                            unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        const double sig = 1.0 / (1.0 + exp(-x[i]));
+        sigmoid[i] = sig;
+        y[i] = x[i] * sig;
+    }
+}
+
+__global__ void cudaHSwish_backPropagate_kernel(__half* x,
+                                                __half* dx,
+                                                __half* sigmoid,
+                                                unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
+        dx[i] = __hmul(dx[i, __hadd(sigmoid[i],
+                             __hmul(x[i],
+                                    __hsub(__float2half(1.0f), sigmoid[i]))));
+#else
+        const float sig = __half2float(sigmoid[i]);
+        dx[i] = __float2half(__half2float(dx[i]) 
+            * (sig + __half2float(x[i]) * (1.0f - sig)));
+#endif
+    }
+}
+
+__global__ void cudaSSwish_backPropagate_kernel(float* x,
+                                                float* dx,
+                                                float* sigmoid,
+                                                unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        dx[i] *= sigmoid[i] + x[i] * (1.0f - sigmoid[i]);
+    }
+}
+
+__global__ void cudaDSwish_backPropagate_kernel(double* x,
+                                                double* dx,
+                                                double* sigmoid,
+                                                unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        dx[i] *= sigmoid[i] + x[i] * (1.0 - sigmoid[i]);
+    }
+}
+
 // Rectifier
 void N2D2::cudaHRectifier_propagate(half_float::half* x,
                                     half_float::half* y,
@@ -564,5 +669,72 @@ void N2D2::cudaDSoftplus_backPropagate(double* x, double* dx, unsigned int size)
 {
     cudaDSoftplus_backPropagate_kernel<<<(size + 255) / 256, 256>>>
         (x, dx, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+// Swish
+void N2D2::cudaHSwish_propagate(half_float::half* x,
+                                half_float::half* y,
+                                half_float::half* sigmoid,
+                                unsigned int size)
+{
+    cudaHSwish_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x),
+         reinterpret_cast<__half*>(y),
+         reinterpret_cast<__half*>(sigmoid),
+         size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSSwish_propagate(float* x,
+                                float* y,
+                                float* sigmoid,
+                                unsigned int size)
+{
+    cudaSSwish_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, y, sigmoid, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaDSwish_propagate(double* x,
+                                double* y,
+                                double* sigmoid,
+                                unsigned int size)
+{
+    cudaDSwish_propagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, y, sigmoid, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaHSwish_backPropagate(half_float::half* x,
+                                    half_float::half* dx,
+                                    half_float::half* sigmoid,
+                                    unsigned int size)
+{
+    cudaHSwish_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(x),
+         reinterpret_cast<__half*>(dx),
+         reinterpret_cast<__half*>(sigmoid),
+         size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaSSwish_backPropagate(float* x,
+                                    float* dx,
+                                    float* sigmoid,
+                                    unsigned int size)
+{
+    cudaSSwish_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, sigmoid, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+void N2D2::cudaDSwish_backPropagate(double* x,
+                                    double* dx,
+                                    double* sigmoid,
+                                    unsigned int size)
+{
+    cudaDSwish_backPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (x, dx, sigmoid, size);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
