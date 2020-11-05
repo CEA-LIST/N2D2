@@ -91,7 +91,8 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
 
     if (mLearningRatePolicy == SGDSolver::StepDecay
         || mLearningRatePolicy == SGDSolver::ExponentialDecay
-        || mLearningRatePolicy == SGDSolver::InvTDecay)
+        || mLearningRatePolicy == SGDSolver::InvTDecay
+        || mLearningRatePolicy == SGDSolver::CosineDecay)
     {
         if (!(mLearningRateStepSize > 0)) {
             throw std::runtime_error("SGDSolver::getLearningRate(): parameter"
