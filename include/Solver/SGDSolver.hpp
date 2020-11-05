@@ -45,7 +45,8 @@ public:
         ExponentialDecay,
         InvTDecay,
         PolyDecay,
-        InvDecay
+        InvDecay,
+        CosineDecay
     };
 
     SGDSolver();
@@ -103,6 +104,8 @@ protected:
     Parameter<unsigned int> mIterationSize;
     /// MaxIterations
     Parameter<unsigned long long int> mMaxIterations;
+    /// WarmUp Duration for Cosine Rules
+    Parameter<unsigned int> mWarmUpDuration;
     /// Learning rate decay policy
     Parameter<LearningRatePolicy> mLearningRatePolicy;
     /// Learning rate step size
@@ -134,7 +137,8 @@ const char* const EnumStrings<N2D2::SGDSolver::LearningRatePolicy>::data[]
        "ExponentialDecay",
        "InvTDecay",
        "PolyDecay",
-       "InvDecay"};
+       "InvDecay",
+       "CosineDecay"};
 }
 
 template <class T>
