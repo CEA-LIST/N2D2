@@ -48,5 +48,5 @@ typedef enum {
 } Operation_T;
 typedef float WDATA_T;
 typedef float BDATA_T;
-
+typedef float SUM_T;
 #endif // N2D2_EXPORTC_TYPEDEFS_H
