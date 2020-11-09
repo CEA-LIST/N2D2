@@ -247,9 +247,10 @@ void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
     std::vector<size_t> oldOutputsDims(mOutputsDims);
     setOutputsDims();
 
-    if (mOutputsDims != oldOutputsDims) {
+    if (mInputs.size() > 1 && mOutputsDims != oldOutputsDims) {
         throw std::runtime_error("Cell_Frame_CUDA::replaceInput(): can't"
-            " replace input, the output dimension has changed!");
+            " replace input, the output dimension has changed and doesn't"
+            " match the other inputs!");
     }
 }
 
