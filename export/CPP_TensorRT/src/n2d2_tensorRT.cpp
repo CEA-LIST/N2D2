@@ -87,6 +87,7 @@ void N2D2::Network::setInternalDimensions() {
 
 void N2D2::Network::initialize() {
     std::cout << "==== INITIALIZE ==== " << std::endl;
+    cudaSetDevice(mDeviceID);
 #ifndef ONNX
     setInternalDimensions();
 #endif
@@ -361,6 +362,8 @@ void N2D2::Network::add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
 std::vector<nvinfer1::ITensor *>
       N2D2::Network::add_activation(std::string layerName,
                         nvinfer1::ActivationType activation,
+                        double alpha,
+                        double beta,
                         std::vector<nvinfer1::ITensor *> inputs_tensor)
 {
         std::vector<nvinfer1::ITensor *> output_tensor;
@@ -368,11 +371,23 @@ std::vector<nvinfer1::ITensor *>
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
             std::string outName = layerName + "_Activation_" + std::to_string(i);
+            nvinfer1::ActivationType finalActivation = activation;
+            //Special cases for Clip Relu (Relu6) and Leaky Relu:
+            if(activation == nvinfer1::ActivationType::kRELU){
+                //ReluClipped:               
+                if(beta != 0.0 && alpha == 0.0) {
+                   finalActivation = nvinfer1::ActivationType::kCLIP;
+                 }
+                if(alpha != 0.0 && beta == 0.0) {
+                    finalActivation = nvinfer1::ActivationType::kLEAKY_RELU;
+                }
+            }
             auto layer = mNetDef.back()->addActivation(*inputs_tensor[i],
-                                            activation);
+                                            finalActivation);
 
-           layer->setName(outName.c_str());
-
+            layer->setAlpha(alpha);
+            layer->setBeta(beta);
+            layer->setName(outName.c_str());
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
@@ -563,6 +578,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;
@@ -720,6 +737,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;
@@ -949,6 +968,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;
@@ -1221,6 +1242,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;
@@ -1301,6 +1324,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;
@@ -1475,6 +1500,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;
@@ -1548,6 +1575,8 @@ std::vector<nvinfer1::ITensor *>
         if(activation.status)
             return(add_activation(layerName,
                                   activation.type,
+                                  activation.alpha,
+                                  activation.beta,
                                   output_tensor));
         else
             return output_tensor;

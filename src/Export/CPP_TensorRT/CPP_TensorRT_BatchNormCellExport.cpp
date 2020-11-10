@@ -98,7 +98,10 @@ void N2D2::CPP_TensorRT_BatchNormCellExport
     /*    if(cellFrame->getActivation())
             isActivated = true;*/
     std::string activationStr = isActivated ?
-                                    "LayerActivation(true, " + prefix + "_ACTIVATION_TENSORRT)"
+                                    "LayerActivation(true, " 
+                                    + prefix + "_ACTIVATION_TENSORRT, " 
+                                    + prefix + "_ALPHA_ACTIVATION_TENSORRT, "
+                                    + prefix + "_BETA_ACTIVATION_TENSORRT)"
                                     : "LayerActivation(false)";
 
     for(unsigned int i = 0; i < parentsName.size(); ++i)
