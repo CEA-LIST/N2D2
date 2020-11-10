@@ -187,7 +187,9 @@ int main(int argc, char* argv[])
     std::cout << "Initialization of the tensorRT network..." << std::endl;
     n2d2_dnn.initialize();
     std::cout << "Initialization of the tensorRT network done!" << std::endl;
-
+    if(profiling) {
+        n2d2_dnn.setProfiling();
+    }
     unsigned int inputSize = n2d2_dnn.getInputDimX()*n2d2_dnn.getInputDimY()*n2d2_dnn.getInputDimZ();
     float* env_data = new float[inputSize * batchSize];
 
