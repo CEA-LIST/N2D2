@@ -1526,6 +1526,27 @@ std::string N2D2::Database::getStimulusName(StimulusID id,
         return mStimuli[id].name;
 }
 
+N2D2::Database::StimuliSet N2D2::Database::getStimulusSet(StimulusID id)
+    const
+{
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(All);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+         = stimuliSets.begin(),
+         itSetEnd = stimuliSets.end();
+         itSet != itSetEnd;
+         ++itSet)
+    {
+        if (std::find(mStimuliSets(*itSet).begin(),
+            mStimuliSets(*itSet).end(), id) != mStimuliSets(*itSet).end())
+        {
+            return (*itSet);
+        }
+    }
+
+    return Unpartitioned;
+}
+
 std::vector<std::shared_ptr<N2D2::ROI> >
 N2D2::Database::getStimulusROIs(StimulusID id) const
 {

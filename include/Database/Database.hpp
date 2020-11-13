@@ -282,6 +282,7 @@ public:
                                        bool appendSlice = true) const;
     inline int getStimulusLabel(StimulusID id) const;
     inline int getStimulusLabel(StimuliSet set, unsigned int index) const;
+    StimuliSet getStimulusSet(StimulusID id) const;
     inline const ROI* getStimulusSlice(StimulusID id) const;
     inline const ROI* getStimulusSlice(StimuliSet set, unsigned int index)
         const;
