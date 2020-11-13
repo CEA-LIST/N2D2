@@ -924,9 +924,13 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::update()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
-        if (mDiffSharedSynapses[k].isValid()) {
+        if (mDiffSharedSynapses[k].isValid() && !mQuantizer) {
             mWeightsSolvers[k]->update(
                 mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+        }
+        else if (mDiffSharedSynapses[k].isValid() && mQuantizer) {
+            mWeightsSolvers[k]->update(
+                mSharedSynapses[k], mQuantizer->getDiffFullPrecisionWeights(k), mInputs.dimB());
         }
     }
 
@@ -937,9 +941,13 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
         mActivation->setPreQuantizeScaling(maxVal);
     }
 
-    if (!mNoBias && mDiffBias.isValid())
-        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
-
+    if (!mNoBias && mDiffBias.isValid()) {
+        if(!mQuantizer) {
+            mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        } else {
+            mBiasSolver->update(*mBias, mQuantizer->getDiffFullPrecisionBiases(), mInputs.dimB());
+        }
+    }
     if(mQuantizer){
         //if (strcmp(mQuantizer->getType(),"LSQ") == 0) std::cout << getName() << ": ";
         mQuantizer->update();

@@ -767,9 +767,13 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::update()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
-        if (mDiffSynapses[k].isValid()) {
+        if (mDiffSynapses[k].isValid() && !mQuantizer) {
             mWeightsSolvers[k]
                 ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+        }
+        else if (mDiffSynapses[k].isValid() && mQuantizer) {
+            mWeightsSolvers[k]->update(
+                mSynapses[k], mQuantizer->getDiffFullPrecisionWeights(k), mInputs.dimB());
         }
     }
 
@@ -781,7 +785,12 @@ void N2D2::FcCell_Frame_CUDA<T>::update()
     }
 
     if (!mNoBias && mDiffBias.isValid()){
-        mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
+        if(!mQuantizer) {
+            mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
+        }
+        else {
+            mBiasSolver->update(mBias, mQuantizer->getDiffFullPrecisionBiases(), mInputs.dimB());
+        }
     }
 
     if(mQuantizer){
