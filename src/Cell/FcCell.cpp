@@ -294,13 +294,6 @@ void N2D2::FcCell::logFreeParametersDistrib(
               std::ostream_iterator<double>(data, "\n"));
     data.close();
 
-    const std::pair<double, double> meanStdDev = Utils::meanStdDev(weights);
-
-    std::ostringstream label;
-    label << "\"Average: " << meanStdDev.first << "\\n";
-    label << "Std. dev.: " << meanStdDev.second << "\"";
-    label << " at graph 0.7, graph 0.8 front";
-
     // Plot results
     Gnuplot gnuplot;
     gnuplot.set("grid front").set("key off");
@@ -311,8 +304,18 @@ void N2D2::FcCell::logFreeParametersDistrib(
     //gnuplot.set("xtics", "0.2");
     //gnuplot.set("mxtics", "2");
     //gnuplot.set("grid", "mxtics");
-    gnuplot.set("label", label.str());
     gnuplot.set("yrange", "[0:]");
+
+    if (weights.size() > 1) {
+        const std::pair<double, double> meanStdDev = Utils::meanStdDev(weights);
+
+        std::ostringstream label;
+        label << "\"Average: " << meanStdDev.first << "\\n";
+        label << "Std. dev.: " << meanStdDev.second << "\"";
+        label << " at graph 0.7, graph 0.8 front";
+
+        gnuplot.set("label", label.str());
+    }
 
     gnuplot.set("style rect fc lt -1 fs solid 0.15 noborder behind");
     gnuplot.set("obj rect from graph 0, graph 0 to -1, graph 1");
