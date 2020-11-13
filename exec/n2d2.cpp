@@ -1663,12 +1663,23 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         // Reconstruct some frames to see the pre-processing
         Utils::createDirectories("frames");
 
+        std::ofstream frameNames("frames/frames.txt");
+
+        if (!frameNames.good())
+            throw std::runtime_error("Unable to write: frames/frames.txt");
+
         for (unsigned int i = 0, size = std::min(10U,
                                         database->getNbStimuli(Database::Learn));
                 i < size;
-                ++i) {
+                ++i)
+        {
             std::ostringstream fileName;
             fileName << "frames/frame_" << i << ".dat";
+
+            frameNames << fileName.str()
+                << " " << database->getStimulusName(Database::Learn, i)
+                << " " << database->getStimulusLabel(Database::Learn, i)
+                << std::endl;
 
             sp->readStimulus(Database::Learn, i);
             StimuliProvider::logData(fileName.str(), sp->getData()[0]);
@@ -1698,6 +1709,11 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 ++i) {
             std::ostringstream fileName;
             fileName << "frames/test_frame_" << i << ".dat";
+
+            frameNames << fileName.str()
+                << " " << database->getStimulusName(Database::Test, i)
+                << " " << database->getStimulusLabel(Database::Test, i)
+                << std::endl;
 
             sp->readStimulus(Database::Test, i);
             StimuliProvider::logData(fileName.str(), sp->getData()[0]);
