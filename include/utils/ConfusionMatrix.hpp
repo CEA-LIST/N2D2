@@ -498,12 +498,14 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
             << " " << conf[target].informedness() << "\n";
     }
 
-    avgSensitivity /= nbRelevant;
-    avgSpecificity /= nbRelevant;
-    avgPrecision /= nbRelevant;
-    avgAccuracy /= nbRelevant;
-    avgF1Score /= nbRelevant;
-    avgInformedness /= nbRelevant;
+    if (nbRelevant > 0) {
+        avgSensitivity /= nbRelevant;
+        avgSpecificity /= nbRelevant;
+        avgPrecision /= nbRelevant;
+        avgAccuracy /= nbRelevant;
+        avgF1Score /= nbRelevant;
+        avgInformedness /= nbRelevant;
+    }
 
     confData << "\n";
     confData << "- AVG"
