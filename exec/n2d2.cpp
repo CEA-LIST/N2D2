@@ -1128,9 +1128,15 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         << "% [" << opt.validMetric << "]\n";
 
                             deepNet->log("validation", Database::Validation);
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation");
-                            deepNet->save("net_state_validation");
+
+                            if (itTargets == deepNet->getTargets().begin()) {
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation");
+                                deepNet->save("net_state_validation");
+
+                                std::cout << "    'weights_validation' saved!"
+                                    << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- LOWER validation score: "
@@ -1206,9 +1212,15 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         << "% [" << opt.validMetric << "]\n";
 
                             deepNet->log("validation", Database::Validation);
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation");
-                            deepNet->save("net_state_validation");
+
+                            if (itTargets == deepNet->getTargets().begin()) {
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation");
+                                deepNet->save("net_state_validation");
+
+                                std::cout << "    'weights_validation' saved!"
+                                    << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- LOWER validation score: "
@@ -1257,9 +1269,14 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetMatching->getMinValidationEER())
                                         << "%\n";
 
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation_EER");
-                            deepNet->save("net_state_validation_EER");
+                            if (itTargets == deepNet->getTargets().begin()) {
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation_EER");
+                                deepNet->save("net_state_validation_EER");
+
+                                std::cout << "    'weights_validation_EER'"
+                                    " saved!" << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- HIGHER validation EER: "
