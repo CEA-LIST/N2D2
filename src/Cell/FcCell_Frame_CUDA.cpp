@@ -653,16 +653,15 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
         
             mDiffOutputs[k].setValid();
 
-        }
-
-        // Calculate full precision weights and activation gradients
-        if (mQuantizer) {
-            mQuantizer->back_propagate();
-        }
-
-        mDiffOutputs.synchronizeDToHBased();
-        
+        }     
     } // Otherwise it is the first layer, no need to calculate
+
+    if(mQuantizer && mBackPropagate) {
+        mQuantizer->back_propagate();
+    }
+    if(!mDiffOutputs.empty() && mBackPropagate) {
+        mDiffOutputs.synchronizeDToHBased();
+    }
 }
 
 template <>

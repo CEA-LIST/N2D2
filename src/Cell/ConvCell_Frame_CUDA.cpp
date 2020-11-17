@@ -560,6 +560,7 @@ the API cudnnGetConvolutionForwardMaxCount().
             }
         }
         else {
+            std::cout << "Empty DiffOutputs" << std::endl;
             for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
                 mQuantizer->addActivations(mInputs[k]);
             }
@@ -910,12 +911,13 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
             //mDiffOutputs[k].deviceTensor() = *diffOutput;
             mDiffOutputs[k].setValid();
         }
-
-        // Calculate full precision weights and activation gradients
-        if (mQuantizer) {
-            mQuantizer->back_propagate();
-        }
-
+    }
+    // Calculate full precision weights and activation gradients
+    if (mQuantizer && mBackPropagate) {
+        mQuantizer->back_propagate();
+    }
+    if (!mDiffOutputs.empty() && mBackPropagate)
+    {
         mDiffOutputs.synchronizeDToHBased();
     }
 }
