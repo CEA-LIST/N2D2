@@ -208,14 +208,16 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
         // mMomentumData = mMomentumData + diffData*rate
         CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
                                         diffData.size(),
-                                        &rateDiff,
+                                        mPolyakMomentum ? &rateDiff : &unit,
                                         diffData.getDevicePtr(),
                                         1,
                                         mMomentumData.getDevicePtr(),
                                         1));
 
         if (decay != 0.0f) {
-            const float alpha = -decay * rate;
+            //const float alpha = -decay * rate;
+            const float alpha = mPolyakMomentum ? -decay * rate : -decay;
+
             // mMomentumData = mMomentumData - decay*rate*data
             CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
                                             data.size(),
@@ -229,7 +231,7 @@ void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
         // data = data + mMomentumData
         CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
                                         mMomentumData.size(),
-                                        &unit,
+                                        mPolyakMomentum ? &unit : &rateDiff,
                                         mMomentumData.getDevicePtr(),
                                         1,
                                         cudaContinuousData.getDevicePtr(),
