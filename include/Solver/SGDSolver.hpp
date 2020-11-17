@@ -110,7 +110,8 @@ protected:
     Parameter<unsigned int> mQuantizationLevels;
     /// Weights clamping, format: "min:max", or ":max", or "min:", or empty
     Parameter<std::string> mClamping;
-
+    // Polyak Momentum method use for param update: true by default 
+    Parameter<bool> mPolyakMomentum;
     unsigned int mIterationPass;
     unsigned int mNbIterations;
     double mMinVal;
