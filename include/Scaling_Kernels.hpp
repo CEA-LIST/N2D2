@@ -23,6 +23,7 @@
 
 #include "FloatT.hpp"
 #include <utility>
+#include <vector>
 
 
 namespace N2D2 {

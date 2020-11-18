@@ -445,7 +445,7 @@ __global__ void cudaHSwish_backPropagate_kernel(__half* x,
 
     for (unsigned int i = index; i < size; i += stride) {
 #if __CUDA_ARCH__ >= 530
-        dx[i] = __hmul(dx[i, __hadd(sigmoid[i],
+        dx[i] = __hmul(dx[i], __hadd(sigmoid[i],
                              __hmul(x[i],
                                     __hsub(__float2half(1.0f), sigmoid[i]))));
 #else
