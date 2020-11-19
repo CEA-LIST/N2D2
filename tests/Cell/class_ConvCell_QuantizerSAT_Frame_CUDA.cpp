@@ -762,7 +762,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::vector<int>({(int)paddingX, (int)paddingY}),
         std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
-    conv2.setParameter("NoBias", true);
+    conv3.setParameter("NoBias", true);
 
     SATQuantizer_Frame_CUDA<float> quant1;
     quant1.setRange(range1);
@@ -788,10 +788,19 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs_conv3, true, 0);
 
 
+    Tensor<bool> mappingConv3;
+    mappingConv3.resize({nbOutputs_conv3, nbOutputs_conv3});
+    mappingConv3.fill(0);
+
+    for(size_t out = 0 ; out < nbOutputs_conv3; ++out) {
+        std::cout << "out, out " << out << std::endl;
+        mappingConv3(out,out) = 1;
+    }
+
     Tensor<float> out_diff({channelsWidth, channelsHeight, 1, batchSize});
     conv1.addInput(in, out_diff);
     conv2.addInput(&conv1);
-    conv3.addInput(&conv2, mapping);
+    conv3.addInput(&conv2, mappingConv3);
     softmax1.addInput(&conv3);
 
     conv1.setQuantizer(quantizer1);
@@ -950,7 +959,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                         if (sy==2 && sx==2) weight_tmp = 0.01;  
                     }
                     if(output==3){
-                        if (sy==0 && sx==0) weight_tmp = 0.01;
+                        if (sy==0 && sx==0) weight_tmp = 0.1;
                         if (sy==0 && sx==1) weight_tmp = -0.013;
                         if (sy==0 && sx==2) weight_tmp = 0.01;
 
@@ -972,7 +981,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     /*
         check init weights for conv3
     */
-    
     /*
     std::cout << "conv3 weights init (from conv cell) :" << std::endl;
     for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
@@ -1010,7 +1018,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         conv1.getOutputs().synchronizeHToD();
 
         conv2.getOutputs().synchronizeDToH();
-        	const Tensor<float>& out_conv2 = tensor_cast<float>(conv2.getOutputs());
+        const Tensor<float>& out_conv2 = tensor_cast<float>(conv2.getOutputs());
 
         for (unsigned int b = 0; b < out_conv2.dimB(); ++b) {
             for (unsigned int z = 0; z < out_conv2.dimZ(); ++z) {
@@ -1078,12 +1086,9 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         std::cout << "backpropagate" << std::endl;
 
-        /*
         quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
         quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
         quant3.getDiffFullPrecisionWeights(0).synchronizeDToH();
-        quant3.getFullPrecisionWeights(0).synchronizeDToH();
-        quant3.getQuantizedWeights(0).synchronizeDToH();
         quant2.getDiffFullPrecisionActivations(0).synchronizeDToH();
         quant3.getDiffFullPrecisionActivations(0).synchronizeDToH();
 
@@ -1139,15 +1144,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         for (unsigned int i=0; i<my_DiffFullPrecisionActivations_conv3[0].dims().back(); ++i) {
             std::cout << "conv3 :: k = " << 0 << " , i = " << i << "  , DiffFullPrecisionActivations = " << my_DiffFullPrecisionActivations_conv3[0][i] << std::endl;
         }
-
         
         quant1.getDiffFullPrecisionWeights(0).synchronizeHToD();
         quant2.getDiffFullPrecisionWeights(0).synchronizeHToD();
         quant3.getDiffFullPrecisionWeights(0).synchronizeHToD();
         quant2.getDiffFullPrecisionActivations(0).synchronizeHToD();
         quant3.getDiffFullPrecisionActivations(0).synchronizeHToD();
-        
-        */
 
         std::cout << "end of backpropagate" << std::endl;
 
@@ -1159,6 +1161,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         alphaEstimated3.synchronizeDToH();
         std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
         quant3.getAlpha(0).synchronizeHToD();
+        
+        
 
         conv2.update();
         quant2.getAlpha(0).synchronizeDToH();
@@ -1167,15 +1171,15 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
         quant2.getAlpha(0).synchronizeHToD();
         
-
-        conv1.update();
+        
+        conv1.update();   
         quant1.getAlpha(0).synchronizeDToH();
         CudaTensor<float> alphaEstimated1 = quant1.getAlpha(0);
         alphaEstimated1.synchronizeDToH();
         std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
         quant1.getAlpha(0).synchronizeHToD();
-        
-        
+             
+              
         std::cout << "conv1 weights after update : " << std::endl;
         for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
