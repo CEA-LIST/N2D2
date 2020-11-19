@@ -793,17 +793,3 @@ void N2D2::TargetScore::clear(Database::StimuliSet set)
     clearConfusionMatrix(set);
     clearMisclassified(set);
 }
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_TargetScore(py::module &m) {
-    py::class_<TargetScore, std::shared_ptr<TargetScore>, Target>(m, "TargetScore", py::multiple_inheritance());
-}
-}
-#endif

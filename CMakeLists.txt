@@ -82,6 +82,10 @@ project(N2D2)
 
 # n2d2_lib target
 file(GLOB_RECURSE src_files "src/*.cpp")
+file(GLOB_RECURSE src_files_python "src/python/*.cpp")
+foreach(item ${src_files_python})
+    list(REMOVE_ITEM src_files ${item})
+endforeach()
 add_library(n2d2_lib STATIC ${src_files})
 
 target_include_directories(n2d2_lib PUBLIC "include")
@@ -187,10 +191,10 @@ else()
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
 endif()
 
-pybind11_add_module(N2D2 SHARED)
+pybind11_add_module(N2D2 MODULE ${src_files_python})
 message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
-target_include_directories(n2d2_lib PUBLIC ${pybind11_INCLUDE_DIRS})
-target_compile_definitions(n2d2_lib PUBLIC PYBIND=1)
+target_include_directories(N2D2 PUBLIC ${pybind11_INCLUDE_DIRS})
+target_compile_definitions(N2D2 PUBLIC PYBIND=1)
 target_link_libraries_whole_archive(N2D2 n2d2_lib)
 
 
