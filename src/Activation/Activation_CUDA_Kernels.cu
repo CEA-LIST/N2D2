@@ -387,7 +387,8 @@ __global__ void cudaHSwish_propagate_kernel(__half* x,
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-#if __CUDA_ARCH__ >= 530
+// hexp and hlog are only available since CUDA 8.0
+#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
         const __half sig = __hdiv(__float2half(1.0f),
                                   __hadd(__float2half(1.0f),
                                          hexp(__hneg(x[i]))));
