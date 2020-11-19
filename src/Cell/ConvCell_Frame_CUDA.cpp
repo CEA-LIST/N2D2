@@ -1020,6 +1020,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileNam
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     if (!syn.good()) {
         if (ignoreNotExists) {
             std::cout << Utils::cnotice
@@ -1035,10 +1038,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileNam
         mSharedSynapses[k].load(syn);
 
     mSharedSynapses.synchronizeHToD();
+    mSharedSynapses.broadcastAllFrom(dev);
 
     if (!mNoBias) {
         mBias->load(syn);
         mBias->synchronizeHToD();
+        mBias->broadcastAllFrom(dev);
     }
 
     if (syn.eof())
