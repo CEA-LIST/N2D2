@@ -164,7 +164,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
                         const std::shared_ptr<DataTensor<T> >& data,
-                        const std::shared_ptr<std::vector<bool> >& valid,
+                        const std::shared_ptr<std::vector<char> >& valid,
                         size_t dataOffset,
                         size_t size,
                         size_t sizeM1)
@@ -187,7 +187,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims, T* dataPtr)
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const cv::Mat& mat, bool signedMapping)
-    : BaseTensor(std::vector<size_t>(), std::make_shared<std::vector<bool> >()),
+    : BaseTensor(std::vector<size_t>(), std::make_shared<std::vector<char> >()),
       mData(std::make_shared<DataTensor<T> >(std::vector<T>())),
       mDataOffset(0)
 {

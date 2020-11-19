@@ -277,8 +277,8 @@ public:
 
 protected:
     BaseTensor(const std::vector<size_t>& dims = std::vector<size_t>(),
-               const std::shared_ptr<std::vector<bool> >& valid
-                    = std::make_shared<std::vector<bool> >(),
+               const std::shared_ptr<std::vector<char> >& valid
+                    = std::make_shared<std::vector<char> >(),
                size_t size = 0,
                size_t sizeM1 = 0)
         : mDims(dims),
@@ -326,7 +326,7 @@ protected:
 
 protected:
     std::vector<size_t> mDims;
-    const std::shared_ptr<std::vector<bool> > mValid;
+    const std::shared_ptr<std::vector<char> > mValid;
 
     // Cached data
     size_t mSize;
@@ -452,7 +452,7 @@ public:
 protected:
     Tensor(const std::vector<size_t>& dims,
              const std::shared_ptr<DataTensor<T> >& data,
-             const std::shared_ptr<std::vector<bool> >& valid,
+             const std::shared_ptr<std::vector<char> >& valid,
              size_t dataOffset,
              size_t size,
              size_t sizeM1);
