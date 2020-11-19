@@ -106,7 +106,7 @@ protected:
     CudaInterface<T> mDiffSynapses;
     CudaTensor<T> mDiffBias;
 
-    T* mOnesVector; // Bias inputs
+    std::vector<T*> mOnesVector; // Bias inputs
     mutable bool mSynchronized;
 
 private:
