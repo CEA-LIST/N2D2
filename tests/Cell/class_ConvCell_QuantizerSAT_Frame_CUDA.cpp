@@ -659,12 +659,76 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     ///
     //fill input image with 1s
     //int counter = 0;
+    float input_tmp = 0.0f;
+
     for (unsigned int b = 0; b < in.dimB(); ++b) {
         for (unsigned int z = 0; z < in.dimZ(); ++z) {
             for (unsigned int y = 0; y < in.dimY(); ++y) {
                 for (unsigned int x = 0; x < in.dimX(); ++x) {
-                    if(b==0) in(x, y, z, b) = 1.0f;
-                    if(b==1) in(x, y, z, b) = 5.0f;
+                    if(b==0) {
+                        if(x==0 && y==0) input_tmp = 1.0f;
+                        if(x==1 && y==0) input_tmp = 5.0f;
+                        if(x==2 && y==0) input_tmp = 8.0f;
+                        if(x==3 && y==0) input_tmp = 10.0f;
+                        if(x==4 && y==0) input_tmp = 30.0f;
+
+                        if(x==0 && y==1) input_tmp = 65.0f;
+                        if(x==1 && y==1) input_tmp = 70.0f;
+                        if(x==2 && y==1) input_tmp = 80.0f;
+                        if(x==3 && y==1) input_tmp = 50.0f;
+                        if(x==4 && y==1) input_tmp = 125.0f;
+
+                        if(x==0 && y==2) input_tmp = 29.0f;
+                        if(x==1 && y==2) input_tmp = 30.0f;
+                        if(x==2 && y==2) input_tmp = 165.0f;
+                        if(x==3 && y==2) input_tmp = 1.0f;
+                        if(x==4 && y==2) input_tmp = 1.0f;
+
+                        if(x==0 && y==3) input_tmp = 1.0f;
+                        if(x==1 && y==3) input_tmp = 1.0f;
+                        if(x==2 && y==3) input_tmp = 1.0f;
+                        if(x==3 && y==3) input_tmp = 1.0f;
+                        if(x==4 && y==3) input_tmp = 1.0f;
+
+                        if(x==0 && y==4) input_tmp = 1.0f;
+                        if(x==1 && y==4) input_tmp = 1.0f;
+                        if(x==2 && y==4) input_tmp = 1.0f;
+                        if(x==3 && y==4) input_tmp = 1.0f;
+                        if(x==4 && y==4) input_tmp = 1.0f;
+                    }
+                    if(b==1) {
+                        if(x==0 && y==0) input_tmp = 1.0f;
+                        if(x==1 && y==0) input_tmp = 5.0f;
+                        if(x==2 && y==0) input_tmp = 8.0f;
+                        if(x==3 && y==0) input_tmp = 10.0f;
+                        if(x==4 && y==0) input_tmp = 30.0f;
+
+                        if(x==0 && y==1) input_tmp = 65.0f;
+                        if(x==1 && y==1) input_tmp = 70.0f;
+                        if(x==2 && y==1) input_tmp = 80.0f;
+                        if(x==3 && y==1) input_tmp = 50.0f;
+                        if(x==4 && y==1) input_tmp = 125.0f;
+
+                        if(x==0 && y==2) input_tmp = 29.0f;
+                        if(x==1 && y==2) input_tmp = 30.0f;
+                        if(x==2 && y==2) input_tmp = 73.0f;
+                        if(x==3 && y==2) input_tmp = 1.0f;
+                        if(x==4 && y==2) input_tmp = 1.0f;
+
+                        if(x==0 && y==3) input_tmp = 1.0f;
+                        if(x==1 && y==3) input_tmp = 55.0f;
+                        if(x==2 && y==3) input_tmp = 1.0f;
+                        if(x==3 && y==3) input_tmp = 1.0f;
+                        if(x==4 && y==3) input_tmp = 1.0f;
+
+                        if(x==0 && y==4) input_tmp = 1.0f;
+                        if(x==1 && y==4) input_tmp = 1.0f;
+                        if(x==2 && y==4) input_tmp = 1.0f;
+                        if(x==3 && y==4) input_tmp = 56.0f;
+                        if(x==4 && y==4) input_tmp = 1.0f;
+                    }
+
+                    in(x, y, z, b) = input_tmp/255.0f;
                     //counter++;
                     std::cout  << "b, z, y, x = " << b << ", " << z << ", " << y << ", " << x << ", input = " << in(x, y, z, b) << std::endl;
                 }
@@ -806,9 +870,9 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     // set weights for conv1
     /*
-     K1 = torch.Tensor([[[[0.025, 0.5, 0.075],
-                            [-0.01, 0.01, -0.01],
-                            [0.35, -0.5, 0.2]]]]) 
+    [[0.025, 0.5, 0.075],
+    [-0.01, 0.01, -0.01],
+    [0.35, -0.5, 0.2]]
     */
         for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
         for (unsigned int channel = 0; channel < nbChannels;
@@ -838,7 +902,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     }
 
     // set weights for conv2
-    // K2 = torch.Tensor([ [[[0.01]]], [[[-0.5]]], [[[0.3]]], [[[-0.0112]]]])
+    // [[[0.01]]], [[[0.01]]], [[[0.01]]], [[[0.01]]
     weight_tmp = 0.0f;
     for (unsigned int output = 0; output < nbOutputs_conv2; ++output) {
         for (unsigned int channel = 0; channel < nbChannels;
@@ -852,13 +916,13 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                         weight_tmp = 0.01;
                     }
                     if(output==1){
-                        weight_tmp = -0.5;            
+                        weight_tmp = 0.01;            
                     }
                     if(output==2){
-                        weight_tmp = 0.3;            
+                        weight_tmp = 0.01;            
                     }
                     if(output==3){
-                        weight_tmp = -0.0112;            
+                        weight_tmp = 0.01;            
                     }
                     kernel(sx, sy) = weight_tmp;
                     std::cout << "conv2 :: sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
@@ -870,21 +934,21 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     // set weights for conv3
     /*
-    K3 = torch.Tensor([[[[0.01, 0.01, 0.01],
-                         [0.01, 0.5, 0.01],
-                         [0.01, 0.01, 0.01]]],
-                         
-                        [[[0.1000, 0.1000, 0.1000],
-                          [0.1000, 0.5000, 0.1000],
-                          [0.1000, 0.1000, 0.1000]]],
+    [[[0.01, -0.013, 0.01],
+    [-0.01, 0.5, -0.013],
+    [0.01, -0.01, 0.01]]],
+                          
+    [[[0.01, -0.01, 0.01],
+    [-0.01, 0.5, -0.01],
+    [0.01, -0.01, 0.01]]],
 
-                        [[[0.1000, 0.1000, 0.1000],
-                        [0.1000, 0.5000, 0.1000],
-                        [0.1000, 0.1000, 0.1000]]],  
-
-                        [[[0.1000, 0.1000, 0.1000],
-                          [0.1000, 0.5000, 0.1000],
-                          [0.1000, 0.1000, 0.1000]]]])
+    [[[0.01, -0.01, 0.01],
+    [-0.01, 0.5, -0.01],
+    [0.013, -0.01, 0.01]]],
+                          
+    [[[0.10, -0.013, 0.01],
+    [-0.01, 0.9, -0.01],
+    [0.01, -0.01, 0.30]]],
     */
 
    weight_tmp = 0.0f;
@@ -896,20 +960,56 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                 for (unsigned int sy = 0; sy < kernelHeight; ++sy){
                     weight_tmp = 0.0f;
                     if(output==0){
-                        weight_tmp = 0.01;
+                        if (sy==0 && sx==0) weight_tmp = 0.01;
+                        if (sy==0 && sx==1) weight_tmp = -0.013;
+                        if (sy==0 && sx==2) weight_tmp = 0.01;
+
+                        if (sy==1 && sx==0) weight_tmp = -0.01;
                         if (sy==1 && sx==1) weight_tmp = 0.5;
+                        if (sy==1 && sx==2) weight_tmp = -0.013;
+
+                        if (sy==2 && sx==0) weight_tmp = 0.01;
+                        if (sy==2 && sx==1) weight_tmp = -0.01;
+                        if (sy==2 && sx==2) weight_tmp = 0.01;
                     }
                     if(output==1){
-                        weight_tmp = 0.1;         
-                        if (sy==1 && sx==1) weight_tmp = 0.5;   
+                        if (sy==0 && sx==0) weight_tmp = 0.01;
+                        if (sy==0 && sx==1) weight_tmp = -0.01;
+                        if (sy==0 && sx==2) weight_tmp = 0.01;
+
+                        if (sy==1 && sx==0) weight_tmp = -0.01;
+                        if (sy==1 && sx==1) weight_tmp = 0.5;
+                        if (sy==1 && sx==2) weight_tmp = -0.01;
+
+                        if (sy==2 && sx==0) weight_tmp = 0.01;
+                        if (sy==2 && sx==1) weight_tmp = -0.01;
+                        if (sy==2 && sx==2) weight_tmp = 0.01;
                     }
                     if(output==2){
-                        weight_tmp = 0.1;         
-                        if (sy==1 && sx==1) weight_tmp = 0.5;   
+                        if (sy==0 && sx==0) weight_tmp = 0.01;
+                        if (sy==0 && sx==1) weight_tmp = -0.01;
+                        if (sy==0 && sx==2) weight_tmp = 0.01;
+
+                        if (sy==1 && sx==0) weight_tmp = -0.01;
+                        if (sy==1 && sx==1) weight_tmp = 0.5;
+                        if (sy==1 && sx==2) weight_tmp = -0.01;
+
+                        if (sy==2 && sx==0) weight_tmp = 0.013;
+                        if (sy==2 && sx==1) weight_tmp = -0.01;
+                        if (sy==2 && sx==2) weight_tmp = 0.01;  
                     }
                     if(output==3){
-                        weight_tmp = 0.1;         
-                        if (sy==1 && sx==1) weight_tmp = 0.5;   
+                        if (sy==0 && sx==0) weight_tmp = 0.01;
+                        if (sy==0 && sx==1) weight_tmp = -0.013;
+                        if (sy==0 && sx==2) weight_tmp = 0.01;
+
+                        if (sy==1 && sx==0) weight_tmp = -0.01;
+                        if (sy==1 && sx==1) weight_tmp = 0.9;
+                        if (sy==1 && sx==2) weight_tmp = -0.01;
+
+                        if (sy==2 && sx==0) weight_tmp = 0.01;
+                        if (sy==2 && sx==1) weight_tmp = -0.01;
+                        if (sy==2 && sx==2) weight_tmp = 0.3;  
                     }
                     kernel(sx, sy) = weight_tmp;
                     std::cout << "conv3 :: output = "<< output << ", sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
@@ -921,6 +1021,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     /*
         check init weights for conv3
     */
+    
     /*
     std::cout << "conv3 weights init (from conv cell) :" << std::endl;
     for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
@@ -929,17 +1030,18 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             std::cout << "output = " << output << " , channel =  " << output << " , weight = " << weight << std::endl;
     }
     */
+    
     //several iterations for propagate, backpropagate, update
-    for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
+    for(unsigned int iter_index = 0; iter_index < 2; ++iter_index){
 
         std::cout << "iteration # " << iter_index << std::endl;
 
         std::cout << "propagate" << std::endl;
 
-        conv1.propagate();
-        conv2.propagate();
-        conv3.propagate();
-        softmax1.propagate();
+        conv1.propagate(false);
+        conv2.propagate(false);
+        conv3.propagate(false);
+        softmax1.propagate(false);
 
         conv1.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
@@ -990,17 +1092,20 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         for(unsigned int nout = 0; nout < nbOutputs_conv3; ++nout){
             for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos){
-                if(nout==0) {
-                    softmax1.mDiffInputs(nout, batchPos) = 1.0f;
+                std::cout << "nout = " << nout << " , batchPos = " << batchPos << "softmax output = " << out_softmax1(nout, batchPos) << std::endl;
+                if(batchPos == 0) {
+                    if(nout==0) {
+                        softmax1.mDiffInputs(nout, batchPos) = 1.0f;
+                    }
+                    else
+                        softmax1.mDiffInputs(nout, batchPos) = 0.0f; 
                 }
-                if(nout==1) {
-                    softmax1.mDiffInputs(nout, batchPos) = 0.0f;
-                }
-                if(nout==2) {
-                    softmax1.mDiffInputs(nout, batchPos) = 0.0f;
-                }
-                if(nout==3) {
-                    softmax1.mDiffInputs(nout, batchPos) = 0.0f;
+                if(batchPos == 1){
+                    if(nout==3) {
+                        softmax1.mDiffInputs(nout, batchPos) = 1.0f;
+                    }
+                    else
+                        softmax1.mDiffInputs(nout, batchPos) = 0.0f; 
                 }
                 std::cout << "softmax1.mDiffInputs(nout, batchPos) = " << softmax1.mDiffInputs(nout, batchPos) << std::endl;
             }
