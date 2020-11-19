@@ -35,10 +35,10 @@ function(target_link_libraries_whole_archive target linked_libs)
     if(MSVC)
         foreach(lib IN LISTS  linked_libs ARGN)
             set_property(TARGET ${target} APPEND PROPERTY LINK_FLAGS "/WHOLEARCHIVE:${lib}")
-            target_link_libraries(${target} ${lib})
+            target_link_libraries(${target} PUBLIC ${lib})
         endforeach()
     else()
-        target_link_libraries(${target} -Wl,--whole-archive ${linked_libs} ${ARGN} -Wl,--no-whole-archive)
+        target_link_libraries(${target} PUBLIC -Wl,--whole-archive ${linked_libs} ${ARGN} -Wl,--no-whole-archive)
     endif()
 endfunction()
 
@@ -92,50 +92,50 @@ if(MSVC)
     target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
-    target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char)
+    target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char -fPIC)
 endif()
 
 
 find_package(OpenCV REQUIRED)
-target_link_libraries(n2d2_lib ${OpenCV_LIBS})
+target_link_libraries(n2d2_lib PUBLIC ${OpenCV_LIBS})
 target_include_directories(n2d2_lib PUBLIC ${OpenCV_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
-target_link_libraries(n2d2_lib Threads::Threads)
+target_link_libraries(n2d2_lib PUBLIC Threads::Threads)
 
 find_package(Gnuplot REQUIRED)
 
 find_package(OpenMP QUIET)
 if(OpenMP_FOUND)
     target_compile_options(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
-    target_link_libraries(n2d2_lib ${OpenMP_CXX_FLAGS})
+    target_link_libraries(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
     target_compile_definitions(n2d2_lib PUBLIC OPENMP=1)
 endif()
 
 find_package(PugiXML QUIET)
 if(PUGIXML_FOUND)
     target_include_directories(n2d2_lib PUBLIC ${PUGIXML_INCLUDE_DIR})
-    target_link_libraries(n2d2_lib ${PUGIXML_LIBRARY})
+    target_link_libraries(n2d2_lib PUBLIC ${PUGIXML_LIBRARY})
     target_compile_definitions(n2d2_lib PUBLIC PUGIXML=1)
 endif()
 
 find_package(JsonCpp QUIET)
 if(JsonCpp_FOUND)
     target_include_directories(n2d2_lib PUBLIC ${JsonCpp_INCLUDE_DIR})
-    target_link_libraries(n2d2_lib ${JsonCpp_LIBRARY})
+    target_link_libraries(n2d2_lib PUBLIC ${JsonCpp_LIBRARY})
     target_compile_definitions(n2d2_lib PUBLIC JSONCPP=1)
 endif()
 
 find_package(MongoDB QUIET)
 if (MongoDB_FOUND)
     find_package(Boost REQUIRED COMPONENTS filesystem program_options system thread)
-    target_link_libraries(n2d2_lib ${Boost_LIBRARIES})
+    target_link_libraries(n2d2_lib PUBLIC ${Boost_LIBRARIES})
 
     find_package(OpenSSL REQUIRED)
-    target_link_libraries(n2d2_lib ${OPENSSL_LIBRARIES})
+    target_link_libraries(n2d2_lib PUBLIC ${OPENSSL_LIBRARIES})
 
     target_include_directories(n2d2_lib PUBLIC ${MongoDB_INCLUDE_DIR})
-    target_link_libraries(n2d2_lib ${MongoDB_LIBRARIES})
+    target_link_libraries(n2d2_lib PUBLIC ${MongoDB_LIBRARIES})
     target_compile_definitions(n2d2_lib PUBLIC MONGODB=1)
 endif()
 
@@ -148,10 +148,11 @@ if (Protobuf_FOUND)
     INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
     PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER ${CMAKE_BINARY_DIR}/onnx.proto)
     ADD_LIBRARY(onnx_proto_lib ${PROTO_HEADER} ${PROTO_SRC})
+    target_compile_options(onnx_proto_lib PUBLIC -fPIC)
 
     get_filename_component("PROTO_HEADER_DIR" ${PROTO_HEADER} DIRECTORY)
     target_include_directories(n2d2_lib PUBLIC ${PROTO_HEADER_DIR})
-    target_link_libraries(n2d2_lib onnx_proto_lib ${PROTOBUF_LIBRARY})
+    target_link_libraries(n2d2_lib PUBLIC onnx_proto_lib ${PROTOBUF_LIBRARY})
     target_compile_definitions(n2d2_lib PUBLIC ONNX=1)
 endif()
 
@@ -170,6 +171,29 @@ if(MSVC)
     endif()
 endif()
 
+# Python binding
+# Requires PyBind >= 2.2, because previous versions had a bug with virtual 
+# inherance: https://github.com/pybind/pybind11/issues/865
+find_package(Python COMPONENTS Interpreter Development)
+find_package(pybind11 CONFIG 2.2)
+if(NOT pybind11_FOUND)
+    find_package(pybind11 2.2)
+endif()
+
+if(pybind11_FOUND)
+    message(STATUS "System pybind11 found.")
+else()
+    message(STATUS "Using third_party/pybind11.")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
+endif()
+
+pybind11_add_module(N2D2 SHARED)
+message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
+target_include_directories(n2d2_lib PUBLIC ${pybind11_INCLUDE_DIRS})
+target_compile_definitions(n2d2_lib PUBLIC PYBIND=1)
+target_link_libraries_whole_archive(N2D2 n2d2_lib)
+
+
 
 set_target_properties(n2d2_lib PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
 set_target_properties(n2d2_lib PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_CURRENT_LIST_DIR}/include/Precompiled.hpp")
@@ -179,6 +203,7 @@ cotire(n2d2_lib)
 # n2d2_lib_cuda target
 find_package(CUDA)
 if(CUDA_FOUND)
+    set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
     find_package(CuDNN REQUIRED)
 
     file(GLOB_RECURSE src_files_cuda "src/*.cu")
@@ -188,11 +213,11 @@ if(CUDA_FOUND)
 
     # CUDA
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
-    target_link_libraries(n2d2_lib_cuda ${CUDA_LIBRARIES})
+    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES})
 
     # CuDNN
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDNN_INCLUDE_DIRS})
-    target_link_libraries(n2d2_lib_cuda ${CUDNN_LIBRARY})
+    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDNN_LIBRARY})
 
     # Cublas
     # Work-around due to a bug in CMake < 3.12.2
@@ -200,17 +225,15 @@ if(CUDA_FOUND)
          list(REMOVE_ITEM CUDA_CUBLAS_LIBRARIES "CUDA_cublas_device_LIBRARY-NOTFOUND")
     endif()
 
-    target_link_libraries(n2d2_lib_cuda ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_CUBLAS_LIBRARIES})
 
     # OpenCV
     find_package(OpenCV REQUIRED)
-    target_link_libraries(n2d2_lib_cuda ${OpenCV_LIBS})
+    target_link_libraries(n2d2_lib_cuda PUBLIC ${OpenCV_LIBS})
 
     target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
-    target_link_libraries(n2d2_lib n2d2_lib_cuda)
+    target_link_libraries(n2d2_lib PUBLIC n2d2_lib_cuda)
 endif()
-
-
 
 # The CMake is used directly and not through add_subdirectory
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
