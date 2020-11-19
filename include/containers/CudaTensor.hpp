@@ -54,6 +54,12 @@ template <> void thrust_copy(half_float::half* srcData, float* dstData,
                              size_t size);
 template <> void thrust_copy(half_float::half* srcData, double* dstData,
                              size_t size);
+template <> void thrust_copy(half_float::half* srcData, half_float::half* dstData,
+                             size_t size);
+template <> void thrust_copy(float* srcData, float* dstData,
+                             size_t size);
+template <> void thrust_copy(double* srcData, double* dstData,
+                             size_t size);
 
 template <typename T>
 void thrust_aggregate(T* /*srcData*/, T* /*dstData*/, size_t /*size*/) {}
@@ -660,7 +666,9 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
     int srcDev) const
 {
     assert(isDevicePtr(srcDev));
-
+    
+// Parallelisation here ?
+//#pragma omp parallel for if (mDataDevice.size() > 1)
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
         if (dev != srcDev && isDevicePtr(dev))
             broadcast(srcDev, dev);

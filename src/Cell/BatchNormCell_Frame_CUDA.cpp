@@ -25,6 +25,7 @@
 #include "GradientCheck.hpp"
 #include "DeepNet.hpp"
 #include "Cell/BatchNormCell_Frame_CUDA.hpp"
+#include "Cell/BatchNormCell_Frame_CUDA_Kernels.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -178,6 +179,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
 
     mDiffScale.resize(requiredDims, ParamT(0.0));
     mDiffBias.resize(requiredDims, ParamT(0.0));
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mScale->broadcastAnyTo(dev);
+    mBias->broadcastAnyTo(dev);
+    mMean->broadcastAnyTo(dev);
+    mVariance->broadcastAnyTo(dev);
 }
 
 template <class T>
@@ -297,11 +306,95 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::update()
 {
-    if (mDiffScale.isValid())
-        mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 
-    if (mDiffBias.isValid())
+    if (mDiffScale.isValid()){
+        mDiffScale.aggregateAllTo(currentDev);
+        mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+        mScale->broadcastAllFrom(currentDev);
+    }
+
+    if (mDiffBias.isValid()){
+        mDiffBias.aggregateAllTo(currentDev);
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        mBias->broadcastAllFrom(currentDev);
+    }
+
+    int count;
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+
+    std::shared_ptr<CudaTensor<ParamT> > cudaCopyMean = std::make_shared<CudaTensor<ParamT> >();
+
+    int nbActivateDev = 0;
+    for (int dev=0; dev < count; ++dev) {
+        if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+            ++nbActivateDev;
+            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+            cudaCopyMean->resize(mMean->dims(), ParamT(0.0));
+            mMean->synchronizeDToH();
+            thrust_copy(mMean->getDevicePtr(), cudaCopyMean->getDevicePtr(), mMean->size());
+        }   
+    } 
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+
+    // std::cout << "Before update mean&var" << std::endl;
+    // for (int dev=0; dev < count; ++dev) {
+    //     CHECK_CUDA_STATUS(cudaSetDevice(dev));
+    //     if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+    //         mMean->synchronizeDToH();
+    //         mVariance->synchronizeDToH();
+    //         cudaCopyMean->synchronizeDToH();
+    //         std::cout << "Mean" << dev << ": "; 
+    //         for (unsigned int i=0; i<mMean->size(); ++i) {
+    //             std::cout << (*mMean)(i) << " ";
+    //         }
+    //         std::cout << std::endl;
+    //         std::cout << "Cuda" << dev << ": " << (*cudaCopyMean)(0) << " " << (*cudaCopyMean)(1) << " " << (*cudaCopyMean)(2) << std::endl;
+    //         std::cout << "Var" << dev << ": " << (*mVariance)(0) << " " << (*mVariance)(1) << " " << (*mVariance)(2) << std::endl;
+    //     }
+    // }
+    // CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+
+    mMean->aggregateAllTo(currentDev);
+    thrust_div(mMean->getDevicePtr(), mMean->size(), nbActivateDev);
+    mMean->broadcastAllFrom(currentDev);
+
+#pragma omp parallel for if (nbActivateDev > 1)
+    for (int dev=0; dev < count; ++dev) {
+        if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+            thrust_combinedVar(
+                mVariance->getDevicePtr(),
+                mMean->getDevicePtr(),
+                cudaCopyMean->getDevicePtr(),
+                mVariance->size()
+            );
+        }
+    }
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+
+    mVariance->aggregateAllTo(currentDev);
+    thrust_div(mVariance->getDevicePtr(), mVariance->size(), nbActivateDev);
+    mVariance->broadcastAllFrom(currentDev);
+
+    // std::cout << "After update mean&var" << std::endl;
+    // for (int dev=0; dev < count; ++dev) {
+    //     CHECK_CUDA_STATUS(cudaSetDevice(dev));
+    //     if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+    //         mMean->synchronizeDToH();
+    //         mVariance->synchronizeDToH();
+    //         cudaCopyMean->synchronizeDToH();
+    //         std::cout << "Mean" << dev << ": "; 
+    //         for (unsigned int i=0; i<mMean->size(); ++i) {
+    //             std::cout << (*mMean)(i) << " ";
+    //         }
+    //         std::cout << std::endl;
+    //         std::cout << "Cuda" << dev << ": " << (*cudaCopyMean)(0) << " " << (*cudaCopyMean)(1) << " " << (*cudaCopyMean)(2) << std::endl;
+    //         std::cout << "Var" << dev << ": " << (*mVariance)(0) << " " << (*mVariance)(1) << " " << (*mVariance)(2) << std::endl;
+    //     }
+    // }
+    // CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 }
 
 template <class T>
@@ -441,6 +534,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::loadFreeParameters(const std::string
     mVariance->load(syn);
     mVariance->synchronizeHToD();
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mScale->broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
+    mMean->broadcastAllFrom(dev);
+    mVariance->broadcastAllFrom(dev);
+
     if (syn.eof())
         throw std::runtime_error(
             "End-of-file reached prematurely in parameter file (.SYN): "
@@ -480,6 +581,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::importFreeParameters(const std::string
     mBias->synchronizeHToD();
     mMean->synchronizeHToD();
     mVariance->synchronizeHToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mScale->broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
+    mMean->broadcastAllFrom(dev);
+    mVariance->broadcastAllFrom(dev);
 }
 
 template <class T>
