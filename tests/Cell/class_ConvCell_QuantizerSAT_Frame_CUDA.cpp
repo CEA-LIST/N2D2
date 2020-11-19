@@ -629,7 +629,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
              )
 {
 
-    std::cout<<"check_2conv_layers_with_SAT"<<std::endl;
+    std::cout<<"check_miniMobileNet_with_SAT"<<std::endl;
 
     CudaContext::setDevice(1);
     const unsigned int nbOutputs_conv1 = 1;
@@ -650,10 +650,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
 
+    /*
     std::cout << "in.dimB() = " << in.dimB() << std::endl;
     std::cout << "in.dimZ() = " << in.dimZ() << std::endl;
     std::cout << "in.dimX() = " << in.dimX() << std::endl;
     std::cout << "in.dimY() = " << in.dimY() << std::endl;
+    */
     ///
     //fill input image with 1s
     //int counter = 0;
@@ -680,7 +682,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    std::cout << "conv1 set "<< std::endl;
+    //std::cout << "conv1 set "<< std::endl;
 
     ConvCell_QuantizerSAT_Frame_CUDA_Test<float> conv2(dn, "conv2",
         std::vector<unsigned int>({kernelWidth2, kernelHeight2}),
@@ -692,7 +694,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::shared_ptr<Activation>());
     conv2.setParameter("NoBias", true);
 
-    std::cout << "conv2 set "<< std::endl;
+    //std::cout << "conv2 set "<< std::endl;
 
 
     ////create a map to make a conv depthwise layer
@@ -731,7 +733,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::shared_ptr<Activation>());
     conv2.setParameter("NoBias", true);
 
-    std::cout << "conv3 set "<< std::endl;
+    //std::cout << "conv3 set "<< std::endl;
 
     SATQuantizer_Frame_CUDA<float> quant1;
     quant1.setRange(range1);
@@ -740,7 +742,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     quant1.setScaling(false);
     std::shared_ptr<Quantizer> quantizer1 = std::shared_ptr<Quantizer>(&quant1, [](Quantizer *) {});
 
-    std::cout << "quant1 set "<< std::endl;
+    //std::cout << "quant1 set "<< std::endl;
 
     SATQuantizer_Frame_CUDA<float> quant2;
     quant2.setRange(range2);
@@ -749,7 +751,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     quant2.setScaling(false);
     std::shared_ptr<Quantizer> quantizer2 = std::shared_ptr<Quantizer>(&quant2, [](Quantizer *) {});
 
-    std::cout << "quant2 set "<< std::endl;
+    //std::cout << "quant2 set "<< std::endl;
 
     SATQuantizer_Frame_CUDA<float> quant3;
     quant3.setRange(range2);
@@ -758,33 +760,32 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     quant3.setScaling(false);
     std::shared_ptr<Quantizer> quantizer3 = std::shared_ptr<Quantizer>(&quant3, [](Quantizer *) {});
 
-    std::cout << "quant3 set "<< std::endl;
+    //std::cout << "quant3 set "<< std::endl;
 
     SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs_conv3, true, 0);
-    std::cout << "softmax1 "<< std::endl;
+    //std::cout << "softmax1 "<< std::endl;
 
     Tensor<float> out_diff({channelsWidth, channelsHeight, 1, batchSize});
     conv1.addInput(in, out_diff);
-    std::cout << "conv1 addInput "<< std::endl;
+    //std::cout << "conv1 addInput "<< std::endl;
     conv2.addInput(&conv1);
-    std::cout << "conv2 addInput "<< std::endl;
-    //conv3.addInput(&conv2, 0, 0, 0, 0, mapping);
+    //std::cout << "conv2 addInput "<< std::endl;
     conv3.addInput(&conv2, mapping);
-    std::cout << "conv3 addInput "<< std::endl;
+    //std::cout << "conv3 addInput "<< std::endl;
     softmax1.addInput(&conv3);
-    std::cout << "softmax add input "<< std::endl;
+    //std::cout << "softmax add input "<< std::endl;
 
     conv1.setQuantizer(quantizer1);
     conv1.initialize();
-    std::cout << "conv1 init "<< std::endl;
+    //std::cout << "conv1 init "<< std::endl;
     conv2.setQuantizer(quantizer2);
     conv2.initialize();
-    std::cout << "conv2 init "<< std::endl;
+    //std::cout << "conv2 init "<< std::endl;
     conv3.setQuantizer(quantizer3);
     conv3.initialize();
-    std::cout << "conv3 init "<< std::endl;
+    //std::cout << "conv3 init "<< std::endl;
     softmax1.initialize();
-    std::cout << "softmax init "<< std::endl;
+    //std::cout << "softmax init "<< std::endl;
 
     if(conv1.getQuantizer()){
         std::cout << "Added " <<  conv1.getQuantizer()->getType() <<
@@ -886,9 +887,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                           [0.1000, 0.1000, 0.1000]]]])
     */
 
+   weight_tmp = 0.0f;
     for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
-        for (unsigned int channel = 0; channel < nbChannels;
-             ++channel) {
             Tensor<float> kernel({kernelWidth,
                                    kernelHeight});
 
@@ -915,11 +915,20 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                     std::cout << "conv3 :: output = "<< output << ", sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
                 }
             }
-            conv3.setWeight(output, channel, kernel);
-        }
+            conv3.setWeight(output, output, kernel);
     }
 
-
+    /*
+        check init weights for conv3
+    */
+    /*
+    std::cout << "conv3 weights init (from conv cell) :" << std::endl;
+    for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
+            Tensor<float> weight;
+            conv3.getWeight(output, output, weight);
+            std::cout << "output = " << output << " , channel =  " << output << " , weight = " << weight << std::endl;
+    }
+    */
     //several iterations for propagate, backpropagate, update
     for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
 
@@ -927,10 +936,10 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         std::cout << "propagate" << std::endl;
 
-        conv1.propagate(false);
-        conv2.propagate(false);
-        conv3.propagate(false);
-        softmax1.propagate(false);
+        conv1.propagate();
+        conv2.propagate();
+        conv3.propagate();
+        softmax1.propagate();
 
         conv1.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
@@ -981,7 +990,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         for(unsigned int nout = 0; nout < nbOutputs_conv3; ++nout){
             for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos){
-                //std::cout << "out_softmax1(nout, batchPos) = " << out_softmax1(nout, batchPos) << std::endl;
                 if(nout==0) {
                     softmax1.mDiffInputs(nout, batchPos) = 1.0f;
                 }
@@ -1012,6 +1020,14 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         conv1.backPropagate();
 
         std::cout << "backpropagate" << std::endl;
+
+        quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
+        quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
+        quant3.getDiffFullPrecisionWeights(0).synchronizeDToH();
+        quant3.getFullPrecisionWeights(0).synchronizeDToH();
+        quant3.getQuantizedWeights(0).synchronizeDToH();
+        quant2.getDiffFullPrecisionActivations(0).synchronizeDToH();
+        quant3.getDiffFullPrecisionActivations(0).synchronizeDToH();
 
         //conv1, kernel1
         CudaTensor<float> my_DiffFullPrecisionWeights_conv1 = cuda_tensor_cast<float>(quant1.getDiffFullPrecisionWeights(0));
@@ -1073,6 +1089,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         quant2.getDiffFullPrecisionActivations(0).synchronizeHToD();
         quant3.getDiffFullPrecisionActivations(0).synchronizeHToD();
         
+
         std::cout << "end of backpropagate" << std::endl;
 
         std::cout << "update" << std::endl;
@@ -1093,57 +1110,29 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
         
         std::cout << "conv1 weights after update : " << std::endl;
-
-        Tensor<float> kernel1_conv1({kernelWidth, kernelHeight});
-        conv1.getWeight(0,0,kernel1_conv1);
-        for (unsigned int i=0; i<kernel1_conv1.dims().back(); ++i) {
-            std::cout << "dim i = " << i  << ", weights in kernel1 =  " << kernel1_conv1[i] << std::endl;
+        for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
+            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
+                Tensor<float> weight;
+                conv1.getWeight(output, channel, weight);
+                std::cout << "output = " << output << " , channel =  " << channel << " , weight = " << weight << std::endl;
+            }
         }
 
-        Tensor<float> kernel1_conv2({kernelWidth2, kernelHeight2});
-        Tensor<float> kernel2_conv2({kernelWidth2, kernelHeight2});
-        Tensor<float> kernel3_conv2({kernelWidth2, kernelHeight2});
-        Tensor<float> kernel4_conv2({kernelWidth2, kernelHeight2});
-        conv2.getWeight(0,0,kernel1_conv2);
-        conv2.getWeight(1,0,kernel2_conv2);
-        conv2.getWeight(2,0,kernel3_conv2);
-        conv2.getWeight(3,0,kernel4_conv2);
-
         std::cout << "conv2 weights after update :" << std::endl;
-
-        for (unsigned int i=0; i<kernel1_conv2.dims().back(); ++i) {
-            std::cout << "dim i = " << i  << ", weights in kernel1 =  " << kernel1_conv2[i] << std::endl;
-            std::cout << "dim i = " << i  << ", weights in kernel2 =  " << kernel2_conv2[i] << std::endl;
-            std::cout << "dim i = " << i  << ", weights in kernel3 =  " << kernel3_conv2[i] << std::endl;
-            std::cout << "dim i = " << i  << ", weights in kernel4 =  " << kernel4_conv2[i] << std::endl;
-        } 
-
-        Tensor<float> kernel1_conv3({kernelWidth, kernelHeight});
-        Tensor<float> kernel2_conv3({kernelWidth, kernelHeight});
-        Tensor<float> kernel3_conv3({kernelWidth, kernelHeight});
-        Tensor<float> kernel4_conv3({kernelWidth, kernelHeight});
-        conv3.getWeight(0,0,kernel1_conv3);
-        conv3.getWeight(1,0,kernel2_conv3);
-        conv3.getWeight(2,0,kernel3_conv3);
-        conv3.getWeight(3,0,kernel4_conv3);
+        for (unsigned int output = 0; output < nbOutputs_conv2; ++output) {
+            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
+                Tensor<float> weight;
+                conv2.getWeight(output, channel, weight);
+                std::cout << "output = " << output << " , channel =  " << channel << " , weight = " << weight << std::endl;
+            }
+        }
 
         std::cout << "conv3 weights after update :" << std::endl;
-
-        for (unsigned int i=0; i<kernel1_conv3.dims().back(); ++i) {
-            std::cout << "dim i = " << i  << ", weights in kernel1 =  " << kernel1_conv3[i] << std::endl;
-        } 
-
-        for (unsigned int i=0; i<kernel2_conv3.dims().back(); ++i) {
-            std::cout << "dim i = " << i  << ", weights in kernel2 =  " << kernel2_conv3[i] << std::endl;
-        } 
-
-        for (unsigned int i=0; i<kernel3_conv3.dims().back(); ++i) {
-            std::cout << "dim i = " << i  << ", weights in kernel3 =  " << kernel3_conv3[i] << std::endl;
-        } 
-
-        for (unsigned int i=0; i<kernel4_conv3.dims().back(); ++i) {
-            std::cout << "dim i = " << i  << ", weights in kernel4 =  " << kernel4_conv3[i] << std::endl;
-        } 
+        for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
+                Tensor<float> weight;
+                conv3.getWeight(output, output, weight);
+                std::cout << "output = " << output << " , channel =  " << output << " , weight = " << weight << std::endl;
+        }
 
         std::cout << "end of update" << std::endl;  
     }
