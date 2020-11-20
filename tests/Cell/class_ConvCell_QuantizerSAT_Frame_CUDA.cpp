@@ -749,10 +749,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     ////create a map to make a conv depthwise layer
     Tensor<bool> mapping;
-    mapping << "1 0 0 0\n"
-               "0 1 0 0\n"
-               "0 0 1 0\n"
-               "0 0 0 1";
+    mapping.resize({nbOutputs_conv3, nbOutputs_conv3});
+    mapping.fill(0);
+    for(size_t out = 0; out < nbOutputs_conv3; ++out)
+    {
+        mapping(out, out) = 1;
+    }
 
     ConvCell_QuantizerSAT_Frame_CUDA_Test<float> conv3(dn, "conv3",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -992,11 +994,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     
     
     //several iterations for propagate, backpropagate, update
-    for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
+    for(unsigned int iter_index = 0; iter_index < 2; ++iter_index){
 
-        std::cout << "iteration # " << iter_index << std::endl;
+        std::cout << "iteration #" << iter_index << std::endl;
+        std::cout << "===============================================================" << std::endl;
 
-        std::cout << "propagate" << std::endl;
+        std::cout << "******************PROPAGATE*******************\n\n\n" << std::endl;
 
         conv1.propagate(false);
         conv2.propagate(false);
@@ -1005,54 +1008,32 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         conv1.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
-
-        for (unsigned int b = 0; b < out_conv1.dimB(); ++b) {
-            for (unsigned int z = 0; z < out_conv1.dimZ(); ++z) {
-                for (unsigned int y = 0; y < out_conv1.dimY(); ++y) {
-                    for (unsigned int x = 0; x < out_conv1.dimX(); ++x) {
-                        std::cout << "b, z, y, x = " << b << ", " << z << ", " << y << ", " << x << ", out_conv1 = " << out_conv1(x, y, z, b) << std::endl;
-                    }
-                }
-            }
-        }
+        std::cout << "[Conv1][Outputs]" << std::endl;
+        std::cout << out_conv1 << std::endl;
         conv1.getOutputs().synchronizeHToD();
 
         conv2.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv2 = tensor_cast<float>(conv2.getOutputs());
-
-        for (unsigned int b = 0; b < out_conv2.dimB(); ++b) {
-            for (unsigned int z = 0; z < out_conv2.dimZ(); ++z) {
-                for (unsigned int y = 0; y < out_conv2.dimY(); ++y) {
-                    for (unsigned int x = 0; x < out_conv2.dimX(); ++x) {
-                        std::cout << "b, z, y, x = " << b << ", " << z << ", " << y << ", " << x  << ", out_conv2 = " << out_conv2(x, y, z, b) << std::endl;
-                    }
-                }
-            }
-        }
+        std::cout << "[Conv2][Outputs]" << std::endl;
+        std::cout << out_conv2 << std::endl;
         conv2.getOutputs().synchronizeHToD();
 
         conv3.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv3 = tensor_cast<float>(conv3.getOutputs());
-
-        for (unsigned int b = 0; b < out_conv3.dimB(); ++b) {
-            for (unsigned int z = 0; z < out_conv3.dimZ(); ++z) {
-                for (unsigned int y = 0; y < out_conv3.dimY(); ++y) {
-                    for (unsigned int x = 0; x < out_conv3.dimX(); ++x) {
-                        std::cout << "b, z, y, x = " << b << ", " << z << ", " << y << ", " << x << ", out_conv3 = " << out_conv3(x, y, z, b) << std::endl;
-                    }
-                }
-            }
-        }
+        std::cout << "[Conv3][Outputs]" << std::endl;
+        std::cout << out_conv3 << std::endl;
         conv3.getOutputs().synchronizeHToD();
 
         softmax1.mDiffInputs.synchronizeDToH();
         softmax1.getOutputs().synchronizeDToH();
         const CudaTensor<float>& out_softmax1 = cuda_tensor_cast<float>(softmax1.getOutputs());
         double loss = 0.0f;
+        std::cout << "[SoftMax][Outputs]" << std::endl;
+        std::cout << out_softmax1 << std::endl;
 
         for(unsigned int nout = 0; nout < nbOutputs_conv3; ++nout){
             for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos){
-                std::cout << "nout = " << nout << " , batchPos = " << batchPos << "softmax output = " << out_softmax1(nout, batchPos) << std::endl;
+                //std::cout << "nout = " << nout << " , batchPos = " << batchPos << "softmax output = " << out_softmax1(nout, batchPos) << std::endl;
                 if(batchPos == 0) {
                     if(nout==0) {
                         softmax1.mDiffInputs(nout, batchPos) = 1.0f;
@@ -1067,7 +1048,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                     else
                         softmax1.mDiffInputs(nout, batchPos) = 0.0f; 
                 }
-                std::cout << "softmax1.mDiffInputs(nout, batchPos) = " << softmax1.mDiffInputs(nout, batchPos) << std::endl;
+                //std::cout << "softmax1.mDiffInputs(nout, batchPos) = " << softmax1.mDiffInputs(nout, batchPos) << std::endl;
             }
         }
 
@@ -1076,7 +1057,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         softmax1.mDiffInputs.synchronizeHToD();
         softmax1.getOutputs().synchronizeHToD();
 
-        std::cout <<"end of propagate" << std::endl;
+        //std::cout <<"end of propagate" << std::endl;
 
         //backpropagate 
         softmax1.backPropagate();  
@@ -1084,7 +1065,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         conv2.backPropagate();
         conv1.backPropagate();
 
-        std::cout << "backpropagate" << std::endl;
+        std::cout << "****************BACKPROPAGATE******************" << std::endl;
 
         quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
         quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
@@ -1095,56 +1076,27 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         //conv1, kernel1
         CudaTensor<float> my_DiffFullPrecisionWeights_conv1 = cuda_tensor_cast<float>(quant1.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv1.synchronizeDToH();
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv1[0].dims().back(); ++i) {
-            std::cout << "conv1 :: k = " << 0 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv1[0][i] << std::endl;
-        }
+        std::cout << "[Conv1][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv1 << std::endl;
 
-        //conv2
+        //conv2 weights diff
         CudaTensor<float> my_DiffFullPrecisionWeights_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv2.synchronizeDToH();
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv2[0].dims().back(); ++i) {
-            std::cout << "conv2 :: k = " << 0 << " , i = " << i << "  , DiffFullPrecisionWeight = " << my_DiffFullPrecisionWeights_conv2[0][i] << std::endl;
-        }
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv2[1].dims().back(); ++i) {
-            std::cout << "conv2 :: k = " << 1 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv2[1][i] << std::endl;
-        }
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv2[2].dims().back(); ++i) {
-            std::cout << "conv2 :: k = " << 2 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv2[2][i] << std::endl;
-        }
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv2[3].dims().back(); ++i) {
-            std::cout << "conv2 :: k = " << 3 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv2[3][i] << std::endl;
-        }
-
-        //conv2, activations
+        std::cout << "[Conv2][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv2 << std::endl;
+        //conv2, activations diff
         CudaTensor<float> my_DiffFullPrecisionActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionActivations(0));
         my_DiffFullPrecisionActivations_conv2.synchronizeDToH();
-        for (unsigned int i=0; i<my_DiffFullPrecisionActivations_conv2[0].dims().back(); ++i) {
-            std::cout << "conv2 :: k = " << 0 << " , i = " << i << "  , DiffFullPrecisionActivations = " << my_DiffFullPrecisionActivations_conv2[0][i] << std::endl;
-        }
+        std::cout << "[Conv2][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv2 << std::endl;
 
-        //conv3
+
+        //conv3 weights diff
         CudaTensor<float> my_DiffFullPrecisionWeights_conv3 = cuda_tensor_cast<float>(quant3.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv3.synchronizeDToH();
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv3[0].dims().back(); ++i) {
-            std::cout << "conv3 :: k = " << 0 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv3[0][i] << std::endl;
-        }
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv3[1].dims().back(); ++i) {
-            std::cout << "conv3 :: k = " << 1 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv3[1][i] << std::endl;
-        }
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv3[2].dims().back(); ++i) {
-            std::cout << "conv3 :: k = " << 2 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv3[2][i] << std::endl;
-        }
-        for (unsigned int i=0; i<my_DiffFullPrecisionWeights_conv3[3].dims().back(); ++i) {
-            std::cout << "conv3 :: k = " << 3 << " , i = " << i << "  , DiffFullPrecisionWeights = " << my_DiffFullPrecisionWeights_conv3[3][i] << std::endl;
-        }
-
-        //conv3, activations
+        std::cout << "[Conv3][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv3 << std::endl;
+        //conv3, activations diff
         CudaTensor<float> my_DiffFullPrecisionActivations_conv3 = cuda_tensor_cast<float>(quant3.getDiffFullPrecisionActivations(0));
         my_DiffFullPrecisionActivations_conv3.synchronizeDToH();
-        for (unsigned int i=0; i<my_DiffFullPrecisionActivations_conv3[0].dims().back(); ++i) {
-            std::cout << "conv3 :: k = " << 0 << " , i = " << i << "  , DiffFullPrecisionActivations = " << my_DiffFullPrecisionActivations_conv3[0][i] << std::endl;
-        }
-        
+        std::cout << "[Conv3][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv3 << std::endl;
+
         quant1.getDiffFullPrecisionWeights(0).synchronizeHToD();
         quant2.getDiffFullPrecisionWeights(0).synchronizeHToD();
         quant3.getDiffFullPrecisionWeights(0).synchronizeHToD();
@@ -1153,7 +1105,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         std::cout << "end of backpropagate" << std::endl;
 
-        std::cout << "update" << std::endl;
+        std::cout << "*****************UPDATE***************" << std::endl;
 
         conv3.update();
         quant3.getAlpha(0).synchronizeDToH();
@@ -1185,7 +1137,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 Tensor<float> weight;
                 conv1.getWeight(output, channel, weight);
-                std::cout << "output = " << output << " , channel =  " << channel << " , weight = " << weight << std::endl;
+                std::cout << weight << std::endl;
             }
         }
 
@@ -1194,7 +1146,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
                 Tensor<float> weight;
                 conv2.getWeight(output, channel, weight);
-                std::cout << "output = " << output << " , channel =  " << channel << " , weight = " << weight << std::endl;
+                std::cout <<  weight << std::endl;
             }
         }
 
@@ -1202,7 +1154,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
                 Tensor<float> weight;
                 conv3.getWeight(output, output, weight);
-                std::cout << "output = " << output << " , channel =  " << output << " , weight = " << weight << std::endl;
+                std::cout << weight << std::endl;
         }
 
         std::cout << "end of update" << std::endl;  
