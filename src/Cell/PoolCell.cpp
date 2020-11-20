@@ -31,11 +31,14 @@ N2D2::PoolCell::PoolCell(const DeepNet& deepNet, const std::string& name,
                          const std::vector<unsigned int>& paddingDims,
                          Pooling pooling)
     : Cell(deepNet, name, nbOutputs),
-      mPoolDims(poolDims),
-      mStrideDims(strideDims),
-      mPaddingDims(paddingDims),
+      mPoolDims((poolDims.size() == 1)
+        ? std::vector<unsigned int>({poolDims[0], 1}) : poolDims),
+      mStrideDims((strideDims.size() == 1)
+        ? std::vector<unsigned int>({strideDims[0], 1}) : strideDims),
+      mPaddingDims((paddingDims.size() == 1)
+        ? std::vector<unsigned int>({paddingDims[0], 0}) : paddingDims),
       mPooling(pooling),
-      mExtPaddingDims(2 * poolDims.size(), 0)
+      mExtPaddingDims(2 * mPoolDims.size(), 0)
 {
     // ctor
 }

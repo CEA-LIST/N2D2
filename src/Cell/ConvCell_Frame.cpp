@@ -69,7 +69,7 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const DeepNet& deepNet, const std::strin
       mConvDesc(subSampleDims, strideDims, paddingDims, dilationDims)
 {
     // ctor
-    if (kernelDims.size() != 2) {
+    if (mKernelDims.size() != 2) {
         throw std::domain_error("ConvCell_Frame: only 2D convolution is"
                                 " supported");
     }
