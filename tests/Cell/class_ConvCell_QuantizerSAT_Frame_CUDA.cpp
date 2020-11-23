@@ -70,10 +70,10 @@ public:
                               activation 
                               ) {};
 
-    friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_one_layer_with_SAT;
-    friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_2conv_layers_with_SAT;
+    //friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_one_layer_with_SAT;
+    //friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_2conv_layers_with_SAT;
     friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_miniMobileNet_with_SAT;
-    friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_gradient_SAT;
+    //friend class UnitTest_ConvCell_QuantizerSAT_Frame_CUDA_float_check_gradient_SAT;
 
 
     
@@ -1044,7 +1044,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         }
 
         loss = softmax1.applyLoss();
-        std::cout << "test loss = " << loss << std::endl;
+        //std::cout << "test loss = " << loss << std::endl;
         softmax1.mDiffInputs.synchronizeHToD();
         softmax1.getOutputs().synchronizeHToD();
 
@@ -1060,12 +1060,14 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     if(doQuant){
         
-        quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
-        quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
-        quant3.getDiffFullPrecisionWeights(0).synchronizeDToH();
-        quant2.getDiffFullPrecisionActivations(0).synchronizeDToH();
-        quant3.getDiffFullPrecisionActivations(0).synchronizeDToH();
+        //quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
+        //quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
+        //quant3.getDiffFullPrecisionWeights(0).synchronizeDToH();
+        //quant2.getDiffFullPrecisionActivations(0).synchronizeDToH();
+        //quant3.getDiffFullPrecisionActivations(0).synchronizeDToH();
 
+        //quant2.getDiffQuantizedActivations(0).synchronizeDToH();
+        //quant3.getDiffQuantizedActivations(0).synchronizeDToH();
         //conv1, kernel1
         CudaTensor<float> my_DiffFullPrecisionWeights_conv1 = cuda_tensor_cast<float>(quant1.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv1.synchronizeDToH();
@@ -1076,9 +1078,19 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         my_DiffFullPrecisionWeights_conv2.synchronizeDToH();
         std::cout << "[Conv2][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv2 << std::endl;
         //conv2, activations diff
-        CudaTensor<float> my_DiffFullPrecisionActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionActivations(0));
-        my_DiffFullPrecisionActivations_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv2 << std::endl;
+        CudaTensor<float> my_DiffQuantActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffQuantizedActivations(0));
+        my_DiffQuantActivations_conv2.synchronizeDToH();
+        std::cout << "[Conv2][DiffQuantActivation]\n" << my_DiffQuantActivations_conv2 << std::endl;
+        CudaTensor<float> my_QWeights_conv2 = cuda_tensor_cast<float>(quant2.getQuantizedWeights(0));
+        my_QWeights_conv2.synchronizeDToH();
+        std::cout << "[Conv2][QuantizedWeights]\n" << my_QWeights_conv2 << std::endl;
+
+        //CudaTensor<float> my_DiffFullPrecisionActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionActivations(0));
+        //my_DiffFullPrecisionActivations_conv2.synchronizeDToH();
+        //std::cout << "[Conv2][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv2 << std::endl;
+         CudaTensor<float> my_DiffInputs_conv2 = cuda_tensor_cast<float>(conv2.getDiffInputs());
+        my_DiffInputs_conv2.synchronizeDToH();
+        std::cout << "[Conv2][DiffINputs]\n" << my_DiffInputs_conv2 << std::endl;
 
 
         //conv3 weights diff
@@ -1086,15 +1098,15 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         my_DiffFullPrecisionWeights_conv3.synchronizeDToH();
         std::cout << "[Conv3][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv3 << std::endl;
         //conv3, activations diff
-        CudaTensor<float> my_DiffFullPrecisionActivations_conv3 = cuda_tensor_cast<float>(quant3.getDiffFullPrecisionActivations(0));
-        my_DiffFullPrecisionActivations_conv3.synchronizeDToH();
-        std::cout << "[Conv3][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv3 << std::endl;
+        CudaTensor<float> my_DiffQuantActivations_conv3 = cuda_tensor_cast<float>(quant3.getDiffQuantizedActivations(0));
+        my_DiffQuantActivations_conv3.synchronizeDToH();
+        std::cout << "[Conv3][DiffQuantActivation]\n" << my_DiffQuantActivations_conv3 << std::endl;
 
-        quant1.getDiffFullPrecisionWeights(0).synchronizeHToD();
-        quant2.getDiffFullPrecisionWeights(0).synchronizeHToD();
-        quant3.getDiffFullPrecisionWeights(0).synchronizeHToD();
-        quant2.getDiffFullPrecisionActivations(0).synchronizeHToD();
-        quant3.getDiffFullPrecisionActivations(0).synchronizeHToD();
+        //quant1.getDiffFullPrecisionWeights(0).synchronizeHToD();
+        //quant2.getDiffFullPrecisionWeights(0).synchronizeHToD();
+        //quant3.getDiffFullPrecisionWeights(0).synchronizeHToD();
+        //quant2.getDiffFullPrecisionActivations(0).synchronizeHToD();
+        //quant3.getDiffFullPrecisionActivations(0).synchronizeHToD();
         
     }
 
@@ -1132,7 +1144,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             quant1.getAlpha(0).synchronizeHToD();
         }
              
-              
+    /*
         std::cout << "conv1 weights after update : " << std::endl;
         for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
             for (unsigned int channel = 0; channel < nbChannels; ++channel) {
@@ -1157,7 +1169,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                 conv3.getWeight(output, output, weight);
                 std::cout << weight << std::endl;
         }
-
+*/
         std::cout << "end of update" << std::endl;  
     }
 }
