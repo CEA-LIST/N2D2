@@ -651,15 +651,31 @@ void N2D2::FcCell_Frame_CUDA<float>::backPropagate()
             
             //mDiffOutputs[k].deviceTensor() = *diffOutputs;
         
-            mDiffOutputs[k].setValid();
+            //mDiffOutputs[k].setValid();
 
         }     
     } // Otherwise it is the first layer, no need to calculate
 
-    if(mQuantizer && mBackPropagate) {
-        mQuantizer->back_propagate();
-    }
-    if(!mDiffOutputs.empty() && mBackPropagate) {
+    if (!mDiffOutputs.empty() && mBackPropagate)
+    {
+        std::shared_ptr<CudaDeviceTensor<float> > diffOutputs;
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            if (mQuantizer) {
+                 diffOutputs = (mDiffOutputs[k].isValid())
+                    ? cuda_device_tensor_cast<float>
+                        (cuda_tensor_cast<float>(mQuantizer->getDiffQuantizedActivations(k)))
+                    : cuda_device_tensor_cast_nocopy<float>
+                        (cuda_tensor_cast<float>(mQuantizer->getDiffQuantizedActivations(k)));
+            }
+            else {
+                diffOutputs = (mDiffOutputs[k].isValid())
+                    ? cuda_device_tensor_cast<float>(mDiffOutputs[k])
+                    : cuda_device_tensor_cast_nocopy<float>(mDiffOutputs[k]);
+            }
+
+            mDiffOutputs[k].deviceTensor() = *diffOutputs;
+            mDiffOutputs[k].setValid();
+        }
         mDiffOutputs.synchronizeDToHBased();
     }
 }
