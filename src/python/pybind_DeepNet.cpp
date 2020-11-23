@@ -22,6 +22,7 @@
 #ifdef PYBIND
 #include "Monitor.hpp"
 #include "CMonitor.hpp"
+#include "StimuliProvider.hpp"
 #include "DeepNet.hpp"
 
 #include <pybind11/pybind11.h>
