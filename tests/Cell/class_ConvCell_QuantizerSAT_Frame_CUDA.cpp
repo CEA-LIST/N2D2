@@ -1,6 +1,6 @@
 /*
     (C) Copyright 2014 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+    Contributor(s): Inna KUCHER (inna.kucher@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -631,6 +631,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     std::cout<<"check_miniMobileNet_with_SAT"<<std::endl;
 
+    bool doQuant = true;
+
     CudaContext::setDevice(1);
     const unsigned int nbOutputs_conv1 = 1;
     const unsigned int nbOutputs_conv2 = 4;
@@ -721,11 +723,13 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                     }
 
                     in(x, y, z, b) = input_tmp/255.0f;
-                    std::cout  << "b, z, y, x = " << b << ", " << z << ", " << y << ", " << x << ", input = " << in(x, y, z, b) << std::endl;
+                    //std::cout  << "b, z, y, x = " << b << ", " << z << ", " << y << ", " << x << ", input = " << in(x, y, z, b) << std::endl;
                 }
             }
         }
     }
+
+    std::cout << "[Input]\n" << in << std::endl;
 
     ConvCell_QuantizerSAT_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -789,27 +793,17 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs_conv3, true, 0);
 
-
-    Tensor<bool> mappingConv3;
-    mappingConv3.resize({nbOutputs_conv3, nbOutputs_conv3});
-    mappingConv3.fill(0);
-
-    for(size_t out = 0 ; out < nbOutputs_conv3; ++out) {
-        std::cout << "out, out " << out << std::endl;
-        mappingConv3(out,out) = 1;
-    }
-
     Tensor<float> out_diff({channelsWidth, channelsHeight, 1, batchSize});
     conv1.addInput(in, out_diff);
     conv2.addInput(&conv1);
-    conv3.addInput(&conv2, mappingConv3);
+    conv3.addInput(&conv2, mapping);
     softmax1.addInput(&conv3);
 
-    conv1.setQuantizer(quantizer1);
+    if(doQuant) conv1.setQuantizer(quantizer1);
     conv1.initialize();
-    conv2.setQuantizer(quantizer2);
+    if(doQuant) conv2.setQuantizer(quantizer2);
     conv2.initialize();
-    conv3.setQuantizer(quantizer3);
+    if(doQuant) conv3.setQuantizer(quantizer3);
     conv3.initialize();
     softmax1.initialize();
 
@@ -826,8 +820,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         " quantizer to " << conv3.getName() << std::endl;
     }
     
-    //int count = 0;
-    //int count_ind = 0;
     float weight_tmp = 0.0f;
 
     // set weights for conv1
@@ -856,7 +848,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                     if (sy==2 && sx==2) weight_tmp = 0.2;
 
                     kernel(sx, sy) = weight_tmp;
-                    std::cout << "conv1 :: sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
+                    //std::cout << "conv1 :: sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
                 }
             }
             conv1.setWeight(output, channel, kernel);
@@ -887,7 +879,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                         weight_tmp = 0.01;            
                     }
                     kernel(sx, sy) = weight_tmp;
-                    std::cout << "conv2 :: sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
+                    //std::cout << "conv2 :: sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
                 }
             }
             conv2.setWeight(output, channel, kernel);
@@ -913,7 +905,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     [0.01, -0.01, 0.30]]],
     */
 
-   weight_tmp = 0.0f;
+    weight_tmp = 0.0f;
     for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
             Tensor<float> kernel({kernelWidth,
                                    kernelHeight});
@@ -974,7 +966,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                         if (sy==2 && sx==2) weight_tmp = 0.3;  
                     }
                     kernel(sx, sy) = weight_tmp;
-                    std::cout << "conv3 :: output = "<< output << ", sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
+                    //std::cout << "conv3 :: output = "<< output << ", sx = " << sx << " , sy = " << sy << " , weight = " << kernel(sx, sy) << std::endl;
                 }
             }
             conv3.setWeight(output, output, kernel);
@@ -994,7 +986,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     
     
     //several iterations for propagate, backpropagate, update
-    for(unsigned int iter_index = 0; iter_index < 2; ++iter_index){
+    for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
 
         std::cout << "iteration #" << iter_index << std::endl;
         std::cout << "===============================================================" << std::endl;
@@ -1033,7 +1025,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         for(unsigned int nout = 0; nout < nbOutputs_conv3; ++nout){
             for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos){
-                //std::cout << "nout = " << nout << " , batchPos = " << batchPos << "softmax output = " << out_softmax1(nout, batchPos) << std::endl;
                 if(batchPos == 0) {
                     if(nout==0) {
                         softmax1.mDiffInputs(nout, batchPos) = 1.0f;
@@ -1067,6 +1058,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         std::cout << "****************BACKPROPAGATE******************" << std::endl;
 
+    if(doQuant){
+        
         quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
         quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
         quant3.getDiffFullPrecisionWeights(0).synchronizeDToH();
@@ -1102,34 +1095,42 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         quant3.getDiffFullPrecisionWeights(0).synchronizeHToD();
         quant2.getDiffFullPrecisionActivations(0).synchronizeHToD();
         quant3.getDiffFullPrecisionActivations(0).synchronizeHToD();
+        
+    }
 
         std::cout << "end of backpropagate" << std::endl;
 
         std::cout << "*****************UPDATE***************" << std::endl;
 
         conv3.update();
-        quant3.getAlpha(0).synchronizeDToH();
-        CudaTensor<float> alphaEstimated3 = quant3.getAlpha(0);
-        alphaEstimated3.synchronizeDToH();
-        std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
-        quant3.getAlpha(0).synchronizeHToD();
+        if(doQuant){
+            quant3.getAlpha(0).synchronizeDToH();
+            CudaTensor<float> alphaEstimated3 = quant3.getAlpha(0);
+            alphaEstimated3.synchronizeDToH();
+            std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
+            quant3.getAlpha(0).synchronizeHToD();
+        }
         
         
 
         conv2.update();
-        quant2.getAlpha(0).synchronizeDToH();
-        CudaTensor<float> alphaEstimated2 = quant2.getAlpha(0);
-        alphaEstimated2.synchronizeDToH();
-        std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
-        quant2.getAlpha(0).synchronizeHToD();
+        if(doQuant){
+            quant2.getAlpha(0).synchronizeDToH();
+            CudaTensor<float> alphaEstimated2 = quant2.getAlpha(0);
+            alphaEstimated2.synchronizeDToH();
+            std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
+            quant2.getAlpha(0).synchronizeHToD();
+        }
         
         
-        conv1.update();   
-        quant1.getAlpha(0).synchronizeDToH();
-        CudaTensor<float> alphaEstimated1 = quant1.getAlpha(0);
-        alphaEstimated1.synchronizeDToH();
-        std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
-        quant1.getAlpha(0).synchronizeHToD();
+        conv1.update(); 
+        if(doQuant){  
+            quant1.getAlpha(0).synchronizeDToH();
+            CudaTensor<float> alphaEstimated1 = quant1.getAlpha(0);
+            alphaEstimated1.synchronizeDToH();
+            std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
+            quant1.getAlpha(0).synchronizeHToD();
+        }
              
               
         std::cout << "conv1 weights after update : " << std::endl;
