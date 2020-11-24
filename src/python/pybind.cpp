@@ -38,6 +38,19 @@ void init_Target(py::module&);
 void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
+void init_MNIST_IDX_Database(py::module&);
+void init_Random(py::module&);
+void init_Environment(py::module&);
+void init_ConvCell(py::module&);
+void init_ConvCell_Frame(py::module&);
+void init_FcCell(py::module&);
+void init_FcCell_Frame(py::module&);
+void init_TanhActivation_Frame(py::module&);
+void init_Parameterizable(py::module&);
+void init_Activation(py::module&);
+void init_TanhActivation(py::module&);
+void init_TanhActivation_Frame(py::module&);
+
 
 PYBIND11_MODULE(N2D2, m) {
     init_CudaContext(m);
@@ -54,6 +67,18 @@ PYBIND11_MODULE(N2D2, m) {
     init_TargetScore(m);
     init_DeepNet(m);
     init_DeepNetGenerator(m);
+    init_MNIST_IDX_Database(m);
+    init_Random(m);
+    init_Environment(m);
+    init_ConvCell(m);
+    init_ConvCell_Frame(m);
+    init_FcCell(m);
+    init_FcCell_Frame(m);
+    init_Parameterizable(m);
+    init_Activation(m);
+    init_TanhActivation(m);
+    init_TanhActivation_Frame(m);
+
 }
 }
 
