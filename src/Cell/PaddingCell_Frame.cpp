@@ -54,14 +54,6 @@ void N2D2::PaddingCell_Frame::initialize()
     unsigned int inputZ = mInputs[0].dimZ();
     for(unsigned int k = 1; k < mInputs.size(); ++k)
     {
-        if(inputX != mInputs[k].dimX())
-            throw std::domain_error("PaddingCell_Frame::initialize():"
-                            " Input layers must have the same width dimension for layer " + k);
-
-        if(inputY != mInputs[k].dimY())
-            throw std::domain_error("PaddingCell_Frame::initialize():"
-                            " Input layers must have the same height dimension for layer " + k);
-
         inputZ += mInputs[k].dimZ();
 
     }

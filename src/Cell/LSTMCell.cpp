@@ -922,8 +922,9 @@ void N2D2::LSTMCell::importFreeParameters(const std::string& fileName,
 }
 
 
-void N2D2::LSTMCell::logFreeParametersDistrib(const std::string
-                                                         & fileName) const
+void N2D2::LSTMCell::logFreeParametersDistrib(
+    const std::string& fileName,
+    FreeParametersType /*type*/) const
 {
     unsigned int Dirscale;
     Dirscale = (mBidirectional? 2:1);

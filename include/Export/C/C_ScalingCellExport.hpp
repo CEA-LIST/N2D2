@@ -58,6 +58,7 @@ public:
                                 const std::string& inputName,
                                 const std::string& outputName,
                                 std::ofstream& prog);
+    virtual ~C_ScalingCellExport() {};
 
 private:
     static Registrar<ScalingCellExport> mRegistrar;

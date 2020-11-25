@@ -113,6 +113,12 @@ find_package(OpenMP QUIET)
 if(OpenMP_FOUND)
     target_compile_options(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
     target_link_libraries(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
+
+    if(NOT MSVC)
+        # Fix for missing atomic lib
+        target_link_libraries(n2d2_lib PUBLIC -Wl,--as-needed -Wl,-latomic -Wl,--no-as-needed)
+    endif()
+
     target_compile_definitions(n2d2_lib PUBLIC OPENMP=1)
 endif()
 
