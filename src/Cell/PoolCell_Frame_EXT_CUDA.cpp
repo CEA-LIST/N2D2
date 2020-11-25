@@ -63,7 +63,7 @@ N2D2::PoolCell_Frame_EXT_CUDA<T>::PoolCell_Frame_EXT_CUDA(
       mPoolDesc(NULL)
 {
     // ctor
-    if (poolDims.size() != 2) {
+    if (mPoolDims.size() != 2) {
         throw std::domain_error("PoolCell_Frame_EXT_CUDA: only 2D pooling is"
                                 " supported");
     }
@@ -80,10 +80,10 @@ N2D2::PoolCell_Frame_EXT_CUDA<T>::PoolCell_Frame_EXT_CUDA(
                                 " dimensions of the pooling.");
     }
 
-    const PoolCell_Frame_Kernels::Descriptor poolDesc(poolDims.size(),
-                                                      &poolDims[0],
-                                                      &strideDims[0],
-                                                      &paddingDims[0]);
+    const PoolCell_Frame_Kernels::Descriptor poolDesc(mPoolDims.size(),
+                                                      &mPoolDims[0],
+                                                      &mStrideDims[0],
+                                                      &mPaddingDims[0]);
 
     CHECK_CUDA_STATUS(cudaMalloc((void**)&mPoolDesc, sizeof(poolDesc)));
     CHECK_CUDA_STATUS(cudaMemcpy(mPoolDesc,

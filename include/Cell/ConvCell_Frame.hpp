@@ -134,7 +134,18 @@ protected:
             = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
         channel -= mSharedSynapses.getTensorDataOffset(channel);
 
-        sharedSynapses[output][channel] = tensor_cast<T>(value);
+        if (value.nbDims() < mKernelDims.size()) {
+            for (size_t dim = 0; dim < value.nbDims(); ++dim) {
+                assert(value.dims()[dim] == mKernelDims[dim]);
+            }
+
+            Tensor<T> valueND = tensor_cast<T>(value);
+            valueND.reshape(std::vector<size_t>(mKernelDims.begin(),
+                                                mKernelDims.end()));
+            sharedSynapses[output][channel] = valueND;
+        }
+        else
+            sharedSynapses[output][channel] = tensor_cast<T>(value);
     }
     inline void setBias(unsigned int output, const BaseTensor& value)
     {
