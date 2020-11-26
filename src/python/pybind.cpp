@@ -50,6 +50,9 @@ void init_Parameterizable(py::module&);
 void init_Activation(py::module&);
 void init_TanhActivation(py::module&);
 void init_TanhActivation_Frame(py::module&);
+void init_Transformation(py::module&);
+void init_DistortionTransformation(py::module&);
+void init_PadCropTransformation(py::module&);
 
 
 PYBIND11_MODULE(N2D2, m) {
@@ -78,6 +81,9 @@ PYBIND11_MODULE(N2D2, m) {
     init_Activation(m);
     init_TanhActivation(m);
     init_TanhActivation_Frame(m);
+    init_Transformation(m);
+    init_DistortionTransformation(m);
+    init_PadCropTransformation(m);
 
 }
 }

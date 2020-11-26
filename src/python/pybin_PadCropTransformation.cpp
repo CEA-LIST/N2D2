@@ -21,30 +21,19 @@
 #ifdef CUDA
 
 #ifdef PYBIND
-#include "Cell/FcCell_Frame.hpp"
-#include "Activation/TanhActivation_Frame.hpp"
+#include "Transformation/PadCropTransformation.hpp"
+
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-template<typename T>
-void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("FcCell_Frame_" + typeStr);
-    py::class_<FcCell_Frame<T>, std::shared_ptr<FcCell_Frame<T>>, FcCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation"))
-    .def("propagate", &FcCell_Frame<T>::propagate, py::arg("inference") = false)
-    .def("backPropagate", &FcCell_Frame<T>::backPropagate)
-    .def("update", &FcCell_Frame<T>::update);
+void init_PadCropTransformation(py::module &m) {
+    py::class_<PadCropTransformation, std::shared_ptr<PadCropTransformation>, Transformation> (m, "PadCropTransformation", py::multiple_inheritance())
+    .def(py::init<int, int>(), py::arg("width"), py::arg("height"));
+    // .def("apply", &PadCropTransformation::apply, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"));
 
-}
-
-void init_FcCell_Frame(py::module &m) {
-    declare_FcCell_Frame<float>(m, "float");
-    declare_FcCell_Frame<double>(m, "double");
 }
 }
 #endif

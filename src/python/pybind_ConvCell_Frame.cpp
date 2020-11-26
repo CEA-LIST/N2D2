@@ -34,10 +34,16 @@ template<typename T>
 void declare_ConvCell_Frame(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("ConvCell_Frame_" + typeStr);
     py::class_<ConvCell_Frame<T>, std::shared_ptr<ConvCell_Frame<T>>, ConvCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init<const DeepNet&, const std::string&, const std::vector<unsigned int>&,
-         unsigned int, const std::vector<unsigned int>&, const std::vector<unsigned int>&,
-         const std::vector<int>&, const std::vector<unsigned int>&, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("kernelDims"), py::arg("nbOutputs"), py::arg("subSampleDims") = std::vector<unsigned int>(2, 1U), py::arg("strideDims") = std::vector<unsigned int>(2, 1U), py::arg("paddingDims") = std::vector<int>(2, 0), py::arg("dilationDims") = std::vector<unsigned int>(2, 1U), py::arg("activation"));
+    // TODO : Declare std::make_shared<TanhActivation_Frame<Float_T> >() as a default argument for activation if not remove the include TanhActivation
+    .def(py::init<const DeepNet&, const std::string&, const std::vector<unsigned int>&, unsigned int, const std::vector<unsigned int>&, const std::vector<unsigned int>&, const std::vector<int>&, const std::vector<unsigned int>&, const std::shared_ptr<Activation>&>(),
+         py::arg("deepNet"), py::arg("name"), py::arg("kernelDims"), py::arg("nbOutputs"), 
+         py::arg("subSampleDims") = std::vector<unsigned int>(2, 1U), py::arg("strideDims") = std::vector<unsigned int>(2, 1U), 
+         py::arg("paddingDims") = std::vector<int>(2, 0), py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
+         py::arg("activation"))
+    .def("propagate", &ConvCell_Frame<T>::propagate, py::arg("inference") = false)
+    .def("backPropagate", &ConvCell_Frame<T>::backPropagate)
+    .def("update", &ConvCell_Frame<T>::update)
+    .def("initialize", &ConvCell_Frame<T>::initialize);
 
 }
 

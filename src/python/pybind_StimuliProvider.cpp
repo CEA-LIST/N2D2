@@ -68,7 +68,9 @@ void init_StimuliProvider(py::module &m) {
     .def("getData", (const StimuliProvider::TensorData_T (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getData, py::arg("channel"), py::arg("batchPos") = 0)
     .def("getLabelsData", (const Tensor<int> (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getLabelsData, py::arg("channel"), py::arg("batchPos") = 0)
     .def("getLabelsROIs", (const std::vector<std::shared_ptr<ROI> >& (StimuliProvider::*)(unsigned int) const) &StimuliProvider::getLabelsROIs, py::arg("batchPos") = 0)
-    .def("getCachePath", &StimuliProvider::getCachePath);
+    .def("getCachePath", &StimuliProvider::getCachePath)
+    .def("addTransformation", &StimuliProvider::addTransformation, py::arg("transformation"), py::arg("setMask"))
+    .def("addOnTheFlyTransformation", &StimuliProvider::addOnTheFlyTransformation, py::arg("transformation"), py::arg("setMask"));
 }
 }
 #endif

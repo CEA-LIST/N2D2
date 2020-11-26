@@ -29,7 +29,6 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_Environment(py::module &m) {
     py::class_<Environment, std::shared_ptr<Environment>>(m, "Environment")
-        // size_t or unsigned int for the vector ...
         .def(py::init<Network&, Database&, const std::vector<size_t>&, unsigned int, bool>(),
          py::arg("network"), py::arg("database"), py::arg("size"), py::arg("batchSize") = 1, py::arg("compositeStimuli") = false);
 }
