@@ -560,7 +560,6 @@ the API cudnnGetConvolutionForwardMaxCount().
             }
         }
         else {
-            std::cout << "Empty DiffOutputs" << std::endl;
             for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
                 mQuantizer->addActivations(mInputs[k]);
             }
