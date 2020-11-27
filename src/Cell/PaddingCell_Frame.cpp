@@ -48,9 +48,6 @@ N2D2::PaddingCell_Frame::PaddingCell_Frame(const DeepNet& deepNet, const std::st
 
 void N2D2::PaddingCell_Frame::initialize()
 {
-
-    unsigned int inputX = mInputs[0].dimX();
-    unsigned int inputY = mInputs[0].dimY();
     unsigned int inputZ = mInputs[0].dimZ();
     for(unsigned int k = 1; k < mInputs.size(); ++k)
     {
