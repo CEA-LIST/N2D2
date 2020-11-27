@@ -49,7 +49,7 @@ N2D2::PoolCell_Spike::PoolCell_Spike(Network& net,
 // or loadParameters().
 {
     // ctor
-    if (poolDims.size() != 2) {
+    if (mPoolDims.size() != 2) {
         throw std::domain_error("PoolCell_Spike: only 2D pooling is"
                                 " supported");
     }
