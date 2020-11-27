@@ -12,3 +12,4 @@ doc/
 *.pyc
 *~
 *.gch
+*build
