@@ -52,7 +52,13 @@ void init_Database(py::module &m) {
     .def("loadROIsDir", &Database::loadROIsDir, py::arg("dirName"), py::arg("fileExt") = "", py::arg("depth") = 0)
     .def("saveROIs", &Database::saveROIs, py::arg("fileName"), py::arg("header") = "")
     .def("logStats", &Database::logStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
-    .def("logROIsStats", &Database::logROIsStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All);
+    .def("logROIsStats", &Database::logROIsStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
+    .def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli))
+    .def("getNbStimuli", (unsigned int (Database::*)(Database::StimuliSet) const)(&Database::getNbStimuli), py::arg("set"))
+    .def("getStimulusLabel", (int (Database::*)(Database::StimulusID) const)(&Database::getStimulusLabel), py::arg("id"))
+    .def("getStimulusLabel", (int (Database::*)(Database::StimuliSet, unsigned int) const)(&Database::getStimulusLabel), py::arg("set"), py::arg("index"))
+    ;
+
 }
 }
 #endif

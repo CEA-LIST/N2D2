@@ -31,7 +31,7 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_Parameterizable(py::module &m) {
     py::class_<Parameterizable, std::shared_ptr<Parameterizable>> (m, "Parameterizable", py::multiple_inheritance())
-    .def("setParameter", static_cast<void (Parameterizable::*)(const std::string&, const std::string&)> (&Parameterizable::setParameter), py::arg("name"), py::arg("value"));
+    .def("setParameter", (void (Parameterizable::*)(const std::string&, const std::string&)) (&Parameterizable::setParameter), py::arg("name"), py::arg("value"));
 
 }
 }

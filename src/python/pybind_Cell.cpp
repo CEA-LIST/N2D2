@@ -78,7 +78,10 @@ void init_Cell(py::module &m) {
     .def("processFreeParametersPerOutput", &Cell::processFreeParametersPerOutput, py::arg("func"), py::arg("output"), py::arg("type"))
     .def("isFullMap", &Cell::isFullMap)
     .def("groupMap", &Cell::groupMap)
-    .def("isUnitMap", &Cell::isUnitMap);
+    .def("isUnitMap", &Cell::isUnitMap)
+    .def("exportFreeParameters", &Cell::exportFreeParameters, py::arg("fileName"))
+    .def("importFreeParameters", &Cell::importFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false)
+    ;
 }
 }
 #endif
