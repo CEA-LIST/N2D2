@@ -633,7 +633,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     bool doQuant = true;
 
-    CudaContext::setDevice(1);
+    CudaContext::setDevice(4);
     const unsigned int nbOutputs_conv1 = 1;
     const unsigned int nbOutputs_conv2 = 4;
     const unsigned int nbOutputs_conv3 = 4;
@@ -771,21 +771,24 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     conv3.setParameter("NoBias", true);
 
     SATQuantizer_Frame_CUDA<float> quant1;
-    quant1.setRange(range1);
+    quant1.setWeightsRange(range1);
+    quant1.setActivationsRange(range1);
     quant1.setAlpha(alpha1);
     quant1.setQuantization(true);
     quant1.setScaling(false);
     std::shared_ptr<Quantizer> quantizer1 = std::shared_ptr<Quantizer>(&quant1, [](Quantizer *) {});
 
     SATQuantizer_Frame_CUDA<float> quant2;
-    quant2.setRange(range2);
+    quant2.setWeightsRange(range2);
+    quant2.setActivationsRange(range2);
     quant2.setAlpha(alpha2);
     quant2.setQuantization(true);
     quant2.setScaling(false);
     std::shared_ptr<Quantizer> quantizer2 = std::shared_ptr<Quantizer>(&quant2, [](Quantizer *) {});
 
     SATQuantizer_Frame_CUDA<float> quant3;
-    quant3.setRange(range2);
+    quant3.setWeightsRange(range2);
+    quant3.setActivationsRange(range2);
     quant3.setAlpha(alpha2);
     quant3.setQuantization(true);
     quant3.setScaling(false);
@@ -986,7 +989,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     
     
     //several iterations for propagate, backpropagate, update
-    for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
+    for(unsigned int iter_index = 0; iter_index < 10000; ++iter_index){
 
         std::cout << "iteration #" << iter_index << std::endl;
         std::cout << "===============================================================" << std::endl;
