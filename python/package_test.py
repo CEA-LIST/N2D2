@@ -30,83 +30,84 @@ In the following, "n2d2" refers to the python package, "N2D2" to the C++ core fu
 """
 General paradigms:
     * Merges tasks of INI files, generators and n2d2.cpp
+    * Be able to use N2D2 with as little recompilation as possible
+    * Use as much as possible pybind methods directly in objects, and avoid parameter reimplementations
+      to avoid incoherences between n2d2 and N2D2 objects
+    * Keep INI file uppercase name convention for parameters
     * Pythonic and rather similar to Pytorch (based on lists and dictionaries)
-    * Coupled modules with forward and backward methods
     * Hardware agnostic definitions of layers -> High level Python wrappers for all cell types
     * Hardware binding at network initialization time
     * Easy access to weights and activations of any layer at any time
     * Exception and error treatment at the python level
-    * Be able to use N2D2 with as little recompilation as possible
-    * Basic datatypes: n2d2.Tensor (double, float, half)
 """
 
 import n2d2
-import N2D2
 
-batch_size = 128
+batch_size = 2
 nb_epochs = 10
-epoch_size = 100
+epoch_size = 10
 
 
 print("Create database")
-database = N2D2.MNIST_IDX_Database()
-
-# Necessary to initialize random number generator; TODO: Replace
-net = N2D2.Network()
-deepNet = N2D2.DeepNet(net) # Proposition : overload the constructor to avoid passing a Network object
-
+database = n2d2.database.MNIST_IDX_Database(Validation=0.1)
 print("Load database")
-database.load("/local/is154584/cm264821/mnist")
+database.load("/nvme0/DATABASE/MNIST/raw/")
 
-print("Create stimuli")
-stimuli = n2d2.stimuli_provider.StimuliProvider(database, [24, 24, 1], batch_size, False)
-
-
+print("Create model")
 model = n2d2.deepnet.Sequential([
     [
-        n2d2.cells.FcCell(name='fc1', nbOutputs=300, activation='Tanh', NoBias=False, Backpropagate=True),
-        n2d2.cells.FcCell(name='fc2', nbOutputs=300, activation='Tanh', NoBias=False, Backpropagate=True)
+        n2d2.cells.FcCell(Name='fc1', NbOutputs=300, Activation='Tanh', NoBias=False, Backpropagate=True),
+        n2d2.cells.FcCell(Name='fc2', NbOutputs=300, Activation='Tanh', NoBias=False, Backpropagate=True)
     ],
     [
         [
-            n2d2.cells.FcCell(name='fc3', nbOutputs=200, activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(name='fc4', nbOutputs=200, activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(name='fc5', nbOutputs=200, activation='Tanh', NoBias=False, Backpropagate=True)
+            n2d2.cells.FcCell(Name='fc3', NbOutputs=200, Activation='Tanh', NoBias=False, Backpropagate=True),
+            n2d2.cells.FcCell(Name='fc4', NbOutputs=200, Activation='Tanh', NoBias=False, Backpropagate=True),
+            n2d2.cells.FcCell(Name='fc5', NbOutputs=200, Activation='Tanh', NoBias=False, Backpropagate=True)
         ],
         [
-            n2d2.cells.FcCell(name='fc6', nbOutputs=100, activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(name='fc7', nbOutputs=100, activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(name='fc8', nbOutputs=100, activation='Tanh', NoBias=False, Backpropagate=True)
+            n2d2.cells.FcCell(Name='fc6', NbOutputs=100, Activation='Tanh', NoBias=False, Backpropagate=True),
+            n2d2.cells.FcCell(Name='fc7', NbOutputs=100, Activation='Tanh', NoBias=False, Backpropagate=True),
+            n2d2.cells.FcCell(Name='fc8', NbOutputs=100, Activation='Tanh', NoBias=False, Backpropagate=True)
         ],
     ],
-    n2d2.cells.FcCell(name='fc9', nbOutputs=10, activation='Tanh', NoBias=False, Backpropagate=True),
-], model_type='Frame')
+    n2d2.cells.FcCell(Name='fc9', NbOutputs=10, Activation='Tanh', NoBias=False, Backpropagate=True),
+], DefaultModel='Frame')
 
 print(model)
 
-model.addStimulus(stimuli)
 
+print("Create stimulus")
+stimulus = n2d2.stimuli_provider.StimuliProvider(database, [28, 28, 1], batch_size, False)
 
-"""
+print("Add stimulus")
+model.add_stimulus(stimulus)
+
+print("Initialize model")
+model.initialize()
 
 for epoch in range(nb_epochs):
+
+    print("### Epoch: " + str(epoch))
+
     for i in range(epoch_size):
+
+        print("Batch: " + str(i))
+
+        # Generate target
+        stimulus.readRandomBatch(set='Learn')
+        #outputTarget = database.getStimulusLabel(id)
+        #outputTensor[iteration] = outputTarget
+
         # Propagate
-        stimuli_provider.readRandomBatch()
-        deepNet.propagate()
-        
-        # Calculate loss
-        loss_function.propagate()
-        
+        model.propagate()
+
         # Backpropagate
-        loss_function.backpropagate()
-        deepNet.backpropagate()
-        
+        model.backpropagate()
+
         # Update parameters by calling solver on gradients
-        deepNet.update()
-        
-        # This may not be necessary in current implementation
-        deepNet.reset()
-"""
-    
-    
+        model.update()
+
+
+
+

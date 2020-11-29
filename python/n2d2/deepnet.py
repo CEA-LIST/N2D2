@@ -29,9 +29,9 @@ class Deepnet():
 
     """
     def __init__(self):
-        self.cells = None
+        self._cells = None
         net = N2D2.Network(1)
-        self.deepnet = N2D2.DeepNet(net)
+        self._deepnet = N2D2.DeepNet(net)
     """
 
     # TODO: Proper exeception handling
@@ -39,16 +39,18 @@ class Deepnet():
         if not isinstance(cells, list):
             print("Error: cells not list objects")
             exit()
-        self.cells = cells
+        self._cells = cells
         net = N2D2.Network(1)
-        self.deepnet = N2D2.DeepNet(net)
+        self._deepnet = N2D2.DeepNet(net)
     
     # Prepares cells for computation and initializes certain members
-    def initialize(self):
-         self.deepnet.initialize()
+    # NOTE: In the current implementation of sequential, this does not work, since the cell see the deepnet
+    # but the deepnet does not see the cells
+    #def initialize(self):
+    #     self._deepnet.initialize()
          
     def N2D2(self):
-        return self.deepnet
+        return self._deepnet
 
     def __str__(self):
         return ""
@@ -59,22 +61,30 @@ That means also recursive (sequence of sequence etc.).
 Allows simple creation of a deepnet based on standard
 Python data structures, without using N2D2 binding functions 
     Input:
-    * (List of Python Cell objects, model_type)
-    * (List of Lists, model_type)
+    * (List of Python Cell objects, DefaultModel)
+    * (List of Lists, DefaultModel)
 """    
 class Sequential(Deepnet):
     # cells is typically a python list 
-    def __init__(self, cells, model_type='Frame'):
+    def __init__(self, cells, DefaultModel='Frame'):
         super().__init__(cells)
 
-        self._generate_model(cells, model_type)
+        # Non nested representation of cells for easier access
+        self._sequence = []
+        # Unfold nested network graph
+        self._generate_model(self._cells, DefaultModel)
 
-    def _generate_model(self, cells, model_type):
+        #for cell in self._sequence:
+        #    print(cell._Name)
+
+    def _generate_model(self, cells, DefaultModel):
         if isinstance(cells, list):
             for cell in cells:
-                self._generate_model(cell, model_type)
+                self._generate_model(cell, DefaultModel)
         elif isinstance(cells, n2d2.cells.Cell):
-            cells.generate_model(self.deepnet, model_type)
+            cells.generate_model(self._deepnet, DefaultModel)
+            # Normally this should not copy, but ony add an additional name
+            self._sequence.append(cells)
         else:
             print("Invalid argument for cells")
             exit()
@@ -83,10 +93,14 @@ class Sequential(Deepnet):
         addInput() sets recursively the Tensor dimensions
         of input and output tensors of all cells
     """
-    def addStimulus(self, stimuli_provider):
-        self._generate_cell_links(self.cells, stimuli_provider)
-        self.initialize()
+    def add_stimulus(self, stimuli_provider):
+        previous = stimuli_provider
+        for cell in self._sequence:
+            cell.N2D2().addInput(previous.N2D2())
+            previous = cell
+        #self._generate_cell_links(self._cells, stimuli_provider)
 
+    """ # Redunant when using self._sequence
     def _generate_cell_links(self, cells, previous):
         if isinstance(cells, list):
             for cell in cells:
@@ -95,15 +109,28 @@ class Sequential(Deepnet):
         else:
             cells.N2D2().addInput(previous.N2D2())
             return cells
+    """
 
-    #def propagate(self):
+    def initialize(self):
+        for cell in self._sequence:
+            cell.N2D2().initialize()
 
-    #def update(self)
+    def propagate(self):
+        for cell in self._sequence:
+            cell.N2D2().propagate()
+
+    def backpropagate(self):
+        for cell in reversed(self._sequence):
+            cell.N2D2().backPropagate()
+
+    def update(self):
+        for cell in self._sequence:
+            cell.N2D2().update()
    
     def __str__(self):
         indent_level = [0]
         output = "n2d2.deepnet.Sequential("
-        output += self._generate_str(self.cells, indent_level, [0])
+        output += self._generate_str(self._cells, indent_level, [0])
         output += "\n)"
         return output
 

@@ -24,14 +24,19 @@ import N2D2
 
 class Tensor():
     
-    tensor_generators = {
-        'float' : N2D2.Tensor_float,
-        'half' : N2D2.Tensor_float,
-        'double' : N2D2.Tensor_float
+    _tensor_generators = {
+        'float': N2D2.Tensor_float,
+        #'half': N2D2.Tensor_half,
+        #'double': N2D2.Tensor_double,
+        'int': N2D2.Tensor_int,
+        #'float': N2D2.Cuda_Tensor_float,
+        #'half': N2D2.Cuda_Tensor_half,
+        #'double': N2D2.Cuda_Tensor_double
     }
     
-    def __init__(self, dims, dtype='float'):
-        self.tensor = self.tensor_generators[dtype](dims)
+    def __init__(self, dims, DefaultModel='', DefaultDataType='float'):
+        self._model_key = DefaultModel + '<' + DefaultDataType + '>'
+        self._tensor = self._tensor_generators[self._model_key](dims)
         #else:
         #    raise ValueError("Unrecognized Tensor datatype " + str(dtype))
             
@@ -40,10 +45,10 @@ class Tensor():
     """
     
     def N2D2(self):
-        return self.tensor
+        return self._tensor
         
     def dims(self):
-        return self.tensor.dims()
+        return self._tensor.dims()
         
     #def __str__(self):
     #    return self.tensor # For pytorch tensor

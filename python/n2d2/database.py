@@ -21,8 +21,41 @@
 """
 
 import N2D2
+
 """
-class MNIST_IDX_Database():
-    def __init__(self, validation):
-        self.database = N2D2.MNIST_IDX_Database(validation)
+At the moment, this class is rather superfluous, and servers mainly for hiding
+the raw N2D2 binding class. However, in the long term it could serve as a 
+canvas for defining datasets without the need to write a N2D2 database driver.
+Alternatively, this could simply be done by the corresponding Pytorch functions
+since there is no GPU model involved.
 """
+
+class Database():
+
+    StimuliSets = {
+        'Learn': N2D2.Database.Learn,
+        'Test': N2D2.Database.Learn,
+        'Validation': N2D2.Database.Learn,
+        'Unpartitioned': N2D2.Database.Unpartitioned
+    }
+
+    def __init__(self, database):
+        self._database = database
+
+    def N2D2(self):
+        return self._database
+
+class MNIST_IDX_Database(Database):
+    def __init__(self, Validation):
+        self._Validation = Validation
+
+        super().__init__(database=N2D2.MNIST_IDX_Database(validation=self._Validation))
+
+        # Necessary to initialize random number generator; TODO: Replace
+        net = N2D2.Network()
+        deepNet = N2D2.DeepNet(net)  # Proposition : overload the constructor to avoid passing a Network object
+
+    # TODO: Can this be moved to parent class?
+    def load(self, dataPath, **kwargs):
+        self._database.load(dataPath=dataPath, **kwargs)
+
