@@ -145,6 +145,12 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
         for (size_t i = 0; i < slicelength; ++i) {
             b(start) = value; start += step;
         }
+    })
+    .def("__str__", [](Tensor<T>& b) { 
+        std::ostringstream oss;
+        oss << b;
+        std::string str = oss.str();
+        return str;
     });
 
     declare_Tensor_buffer_protocol(tensor);
