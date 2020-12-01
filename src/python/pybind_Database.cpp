@@ -1,6 +1,7 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -48,11 +49,11 @@ void init_Database(py::module &m) {
     .export_values();
 
     db.def(py::init<bool>(), py::arg("loadDataInMemory") = false)
-    .def("loadROIs", &Database::loadROIs, py::arg("fileName"), py::arg("relPath") = "", py::arg("noImageSize") = false)
-    .def("loadROIsDir", &Database::loadROIsDir, py::arg("dirName"), py::arg("fileExt") = "", py::arg("depth") = 0)
-    .def("saveROIs", &Database::saveROIs, py::arg("fileName"), py::arg("header") = "")
-    .def("logStats", &Database::logStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
-    .def("logROIsStats", &Database::logROIsStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
+    // .def("loadROIs", &Database::loadROIs, py::arg("fileName"), py::arg("relPath") = "", py::arg("noImageSize") = false)
+    // .def("loadROIsDir", &Database::loadROIsDir, py::arg("dirName"), py::arg("fileExt") = "", py::arg("depth") = 0)
+    // .def("saveROIs", &Database::saveROIs, py::arg("fileName"), py::arg("header") = "")
+    // .def("logStats", &Database::logStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
+    // .def("logROIsStats", &Database::logROIsStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
     .def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli))
     .def("getNbStimuli", (unsigned int (Database::*)(Database::StimuliSet) const)(&Database::getNbStimuli), py::arg("set"))
     .def("getStimulusLabel", (int (Database::*)(Database::StimulusID) const)(&Database::getStimulusLabel), py::arg("id"))

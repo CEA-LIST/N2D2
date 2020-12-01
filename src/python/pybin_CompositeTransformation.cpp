@@ -1,6 +1,7 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -37,16 +38,16 @@ template<class T>
 void declare_constructor(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> &m) {
     // Templated declaration of the constructor because Transformation can't be instancied thus we have to make a constructor for every Transformation class (Possibility to use a script to generate the code). Or find another workaround. 
     m.def(py::init<const T&>(), py::arg("transformation"));
+
+    // Create issues with the parametrizable methods
+    // py::implicitly_convertible<T, CompositeTransformation>();
+
 }
 
 void init_CompositeTransformation(py::module &m) {
     py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> ct(m, "CompositeTransformation", py::multiple_inheritance());
     declare_constructor<DistortionTransformation>(ct);
     declare_constructor<PadCropTransformation>(ct);
-
-    // Trying to do an implicit conversion but it doesn't solve the problem
-    // py::implicitly_convertible<Transformation, CompositeTransformation>();
-
 }
 }
 #endif

@@ -1,6 +1,7 @@
 /*
-    (C) Copyright 2015 CEA LIST. All Rights Reserved.
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
                     Victor GACOIN
 
     This software is governed by the CeCILL-C license under French law and

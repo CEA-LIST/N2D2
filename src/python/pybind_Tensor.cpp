@@ -1,6 +1,7 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -165,24 +166,25 @@ void init_Tensor(py::module &m) {
     .def("dimZ", &BaseTensor::dimZ)
     .def("dimB", &BaseTensor::dimB)
     .def("size", &BaseTensor::size)
-    .def("reserve", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::reserve, py::arg("dims"))
+    // .def("reserve", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::reserve, py::arg("dims"))
     .def("resize", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::resize, py::arg("dims"))
     .def("reshape", (void (BaseTensor::*)(const std::vector<size_t>&)) &BaseTensor::reshape, py::arg("dims"))
     .def("clear", &BaseTensor::clear)
-    .def("save", &BaseTensor::save, py::arg("data"))
-    .def("load", &BaseTensor::load, py::arg("data"))
-    .def("synchronizeDToH", (void (BaseTensor::*)() const) &BaseTensor::synchronizeDToH)
-    .def("synchronizeHToD", (void (BaseTensor::*)() const) &BaseTensor::synchronizeHToD)
-    .def("synchronizeDToHBased", &BaseTensor::synchronizeDToHBased)
-    .def("synchronizeHBasedToD", &BaseTensor::synchronizeHBasedToD)
-    .def("synchronizeDBasedToH", &BaseTensor::synchronizeDBasedToH)
-    .def("synchronizeHToDBased", &BaseTensor::synchronizeHToDBased)
+    // .def("save", &BaseTensor::save, py::arg("data"))
+    // .def("load", &BaseTensor::load, py::arg("data"))
+    // .def("synchronizeDToH", (void (BaseTensor::*)() const) &BaseTensor::synchronizeDToH)
+    // .def("synchronizeHToD", (void (BaseTensor::*)() const) &BaseTensor::synchronizeHToD)
+    // .def("synchronizeDToHBased", &BaseTensor::synchronizeDToHBased)
+    // .def("synchronizeHBasedToD", &BaseTensor::synchronizeHBasedToD)
+    // .def("synchronizeDBasedToH", &BaseTensor::synchronizeDBasedToH)
+    // .def("synchronizeHToDBased", &BaseTensor::synchronizeHToDBased)
     .def("nbDims", &BaseTensor::nbDims)
     .def("dims", &BaseTensor::dims)
-    .def("isValid", &BaseTensor::isValid)
-    .def("setValid", &BaseTensor::setValid)
-    .def("clearValid", &BaseTensor::clearValid)
-    .def("getType", &BaseTensor::getType);
+    // .def("isValid", &BaseTensor::isValid)
+    // .def("setValid", &BaseTensor::setValid)
+    // .def("clearValid", &BaseTensor::clearValid)
+    // .def("getType", &BaseTensor::getType)
+    ;
 
     declare_Tensor<float>(m, "float");
     declare_Tensor<double>(m, "double");

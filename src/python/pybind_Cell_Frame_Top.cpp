@@ -1,6 +1,7 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -40,22 +41,23 @@ void init_Cell_Frame_Top(py::module &m) {
 
     cell.def("save", &Cell_Frame_Top::save, py::arg("dirName"))
     .def("load", &Cell_Frame_Top::load, py::arg("dirName"))
-    .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
-    .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))
+    // .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
+    // .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))
     .def("propagate", &Cell_Frame_Top::propagate, py::arg("inference") = false)
     .def("backPropagate", &Cell_Frame_Top::backPropagate)
     .def("update", &Cell_Frame_Top::update)
-    .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
-    .def("discretizeSignals", &Cell_Frame_Top::discretizeSignals, py::arg("nbLevels"), py::arg("signals") = Cell_Frame_Top::In)
+    // .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
+    // .def("discretizeSignals", &Cell_Frame_Top::discretizeSignals, py::arg("nbLevels"), py::arg("signals") = Cell_Frame_Top::In)
     .def("setOutputTarget", &Cell_Frame_Top::setOutputTarget, py::arg("targets"))
     .def("setOutputTargets", &Cell_Frame_Top::setOutputTargets, py::arg("targets"))
-    .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
-    .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs)
-    .def("getDiffInputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getDiffInputs)
+    // .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
+    // .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs)
+    // .def("getDiffInputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getDiffInputs)
     .def("getMaxOutput", &Cell_Frame_Top::getMaxOutput, py::arg("batchPos") = 0)
-    .def("getActivation", &Cell_Frame_Top::getActivation)
-    .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
-    .def("isCuda", &Cell_Frame_Top::isCuda);
+    // .def("getActivation", &Cell_Frame_Top::getActivation)
+    // .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
+    // .def("isCuda", &Cell_Frame_Top::isCuda)
+    ;
 }
 }
 #endif
