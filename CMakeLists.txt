@@ -158,7 +158,7 @@ if (Protobuf_FOUND)
     INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
     PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER ${CMAKE_BINARY_DIR}/onnx.proto)
     ADD_LIBRARY(onnx_proto_lib ${PROTO_HEADER} ${PROTO_SRC})
-    target_compile_options(onnx_proto_lib PUBLIC -fPIC)
+    target_compile_options(onnx_proto_lib PUBLIC -std=c++0x -fPIC)
 
     get_filename_component("PROTO_HEADER_DIR" ${PROTO_HEADER} DIRECTORY)
     target_include_directories(n2d2_lib PUBLIC ${PROTO_HEADER_DIR})
