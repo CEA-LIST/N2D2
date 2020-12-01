@@ -76,14 +76,6 @@ public:
                      unsigned int epochSize = 0,
                      unsigned int maxSteps = 0);
 
-    // TODO: Find other way to adapt learning rate to presentation time
-    void scaleLearningRate(double scaling)
-    {
-        std::cout << "Scale learning rate from " << mLearningRate << " to ";
-        mLearningRate *= scaling;
-        std::cout << mLearningRate << std::endl;
-    };
-
     virtual ~SGDSolver() {};
 
 protected:

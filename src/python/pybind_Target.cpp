@@ -28,9 +28,27 @@
 
 namespace py = pybind11;
 
+
 namespace N2D2 {
 void init_Target(py::module &m) {
     py::class_<Target, std::shared_ptr<Target>>(m, "Target", py::multiple_inheritance())
+    .def(py::init<
+        const std::string&, 
+        const std::shared_ptr<Cell>&, 
+        const std::shared_ptr<StimuliProvider>&,
+        double,
+        double,
+        unsigned int,
+        const std::string&,
+        bool>(),
+        py::arg("name"), 
+        py::arg("cell"), 
+        py::arg("sp"), 
+        py::arg("targetValue") = 1.0,
+        py::arg("defaultValue") = 0.0, 
+        py::arg("targetTopN") = 1,
+        py::arg("labelsMapping") = "", 
+        py::arg("createMissingLabels") = false)
     .def("getName", &Target::getName)
     .def("getType", &Target::getType)
     .def("getCell", &Target::getCell)

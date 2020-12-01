@@ -34,7 +34,7 @@ void init_DeepNet(py::module &m) {
     .def(py::init<Network&>(), py::arg("net"))
     .def("addCell", &DeepNet::addCell, py::arg("cell"), py::arg("parents"))
     .def("removeCell", &DeepNet::removeCell, py::arg("cell"), py::arg("reconnect") = true)
-    .def("addTarget", &DeepNet::addTarget, py::arg("cell"))
+    .def("addTarget", &DeepNet::addTarget, py::arg("target"))
     .def("addMonitor", &DeepNet::addMonitor, py::arg("name"), py::arg("monitor"))
     .def("addCMonitor", &DeepNet::addCMonitor, py::arg("name"), py::arg("monitor"))
     .def("update", &DeepNet::update, py::arg("log"), py::arg("start"), py::arg("stop") = 0, py::arg("update") = true)

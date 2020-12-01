@@ -42,10 +42,11 @@ General paradigms:
 """
 
 import n2d2
+import N2D2
 
-batch_size = 2
+batch_size = 1
 nb_epochs = 10
-epoch_size = 10
+epoch_size = 1000
 
 
 print("Create database")
@@ -54,6 +55,7 @@ print("Load database")
 database.load("/nvme0/DATABASE/MNIST/raw/")
 
 print("Create model")
+"""
 model = n2d2.deepnet.Sequential([
     [
         n2d2.cells.FcCell(Name='fc1', NbOutputs=300, Activation='Tanh', NoBias=False, Backpropagate=True),
@@ -72,6 +74,15 @@ model = n2d2.deepnet.Sequential([
         ],
     ],
     n2d2.cells.FcCell(Name='fc9', NbOutputs=10, Activation='Tanh', NoBias=False, Backpropagate=True),
+    n2d2.cells.SoftmaxCell(Name='softmax', NbOutputs=10)
+], DefaultModel='Frame')
+"""
+model = n2d2.deepnet.Sequential([
+    [
+        n2d2.cells.FcCell(Name='fc1', NbOutputs=50, Activation='Rectifier', NoBias=False, Backpropagate=True),
+        n2d2.cells.FcCell(Name='fc2', NbOutputs=10, Activation='Rectifier', NoBias=False, Backpropagate=True)
+    ],
+    n2d2.cells.SoftmaxCell(Name='softmax', NbOutputs=10)
 ], DefaultModel='Frame')
 
 print(model)
@@ -82,6 +93,20 @@ stimulus = n2d2.stimuli_provider.StimuliProvider(database, [28, 28, 1], batch_si
 
 print("Add stimulus")
 model.add_stimulus(stimulus)
+
+print(model.getOutput())
+
+print("Create target")
+tar = N2D2.TargetScore('target', model.getOutput().N2D2(), stimulus.N2D2())
+
+#print("Add target")
+#model.add_target(tar)
+
+print(model._deepnet)
+
+
+
+#exit()
 
 print("Initialize model")
 model.initialize()
@@ -96,11 +121,14 @@ for epoch in range(nb_epochs):
 
         # Generate target
         stimulus.readRandomBatch(set='Learn')
-        #outputTarget = database.getStimulusLabel(id)
-        #outputTensor[iteration] = outputTarget
+
+        # Calls setOutputTarget of cell
+        tar.provideTargets(N2D2.Database.Learn)
 
         # Propagate
         model.propagate()
+
+        tar.process(N2D2.Database.Learn)
 
         # Backpropagate
         model.backpropagate()
@@ -108,6 +136,12 @@ for epoch in range(nb_epochs):
         # Update parameters by calling solver on gradients
         model.update()
 
+        success = tar.getAverageSuccess(N2D2.Database.Learn, 100)
+
+        print("Success: " + str(success))
+
+    model.getCell('fc1').N2D2().logFreeParameters("fc1.weights")
+    model.getCell('fc2').N2D2().logFreeParameters("fc2.weights")
 
 
 

@@ -77,6 +77,7 @@ class Sequential(Deepnet):
         #for cell in self._sequence:
         #    print(cell._Name)
 
+    # TODO: Check that cell names are unique
     def _generate_model(self, cells, DefaultModel):
         if isinstance(cells, list):
             for cell in cells:
@@ -126,7 +127,15 @@ class Sequential(Deepnet):
     def update(self):
         for cell in self._sequence:
             cell.N2D2().update()
-   
+
+    def getOutput(self):
+        return self._sequence[-1]
+
+    def getCell(self, name):
+        for cell in self._sequence:
+            if name == cell._Name:
+                return cell
+
     def __str__(self):
         indent_level = [0]
         output = "n2d2.deepnet.Sequential("

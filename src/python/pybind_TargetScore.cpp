@@ -19,6 +19,9 @@
 */
 
 #ifdef PYBIND
+#include "Cell/Cell.hpp"
+#include "StimuliProvider.hpp"
+#include "Target/Target.hpp"
 #include "Target/TargetScore.hpp"
 
 #include <pybind11/pybind11.h>
@@ -26,9 +29,30 @@
 
 namespace py = pybind11;
 
+
 namespace N2D2 {
 void init_TargetScore(py::module &m) {
-    py::class_<TargetScore, std::shared_ptr<TargetScore>, Target>(m, "TargetScore", py::multiple_inheritance());
+    py::class_<TargetScore, std::shared_ptr<TargetScore>, Target>(m, "TargetScore", py::multiple_inheritance())
+    .def(py::init<
+        const std::string&, 
+        const std::shared_ptr<Cell>&, 
+        const std::shared_ptr<StimuliProvider>&,
+        double,
+        double,
+        unsigned int,
+        const std::string&,
+        bool>(),
+        py::arg("name"), 
+        py::arg("cell"), 
+        py::arg("sp"), 
+        py::arg("targetValue") = 1.0,
+        py::arg("defaultValue") = 0.0, 
+        py::arg("targetTopN") = 1,
+        py::arg("labelsMapping") = "", 
+        py::arg("createMissingLabels") = false)
+    .def("getAverageSuccess", &TargetScore::getAverageSuccess, py::arg("set"), py::arg("avgWindow"))
+    .def("process", &TargetScore::process, py::arg("set"));
 }
 }
 #endif
+

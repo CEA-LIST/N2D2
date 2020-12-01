@@ -32,7 +32,6 @@ namespace N2D2 {
 void init_FcCell(py::module &m) {
 
     py::class_<FcCell, std::shared_ptr<FcCell>, Cell> (m, "FcCell", py::multiple_inheritance());
-
 }
 }
 #endif
