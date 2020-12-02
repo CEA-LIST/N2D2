@@ -35,7 +35,6 @@
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 #include "Quantizer/SATQuantizer_Frame_CUDA.hpp"
-#include "Quantizer/LSQQuantizer_Frame_CUDA.hpp"
 
 using namespace N2D2;
 
