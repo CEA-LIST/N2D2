@@ -26,13 +26,14 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: Python API:
+   :caption: Binding Python:
 
-   containers
-   cells
-   databases
-   stimuliprovider
-   deepnet
+   python_binding/containers
+   python_binding/cells
+   python_binding/databases
+   python_binding/deepnet
+   python_binding/stimuliprovider
+   python_binding/transformation
 
 .. toctree::
    :maxdepth: 2
