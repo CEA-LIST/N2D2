@@ -37,7 +37,7 @@ void init_StimuliProvider(py::module &m) {
     // .def("synchronize", &StimuliProvider::synchronize)
     // .def("getRandomIndex", &StimuliProvider::getRandomIndex, py::arg("set"))
     // .def("getRandomID", &StimuliProvider::getRandomID, py::arg("set"))
-    // .def("readRandomBatch", &StimuliProvider::readRandomBatch, py::arg("set"))
+    .def("readRandomBatch", &StimuliProvider::readRandomBatch, py::arg("set"))
     .def("readRandomStimulus", &StimuliProvider::readRandomStimulus, py::arg("set"), py::arg("batchPos") = 0)
     // .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0)
     // .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1)
