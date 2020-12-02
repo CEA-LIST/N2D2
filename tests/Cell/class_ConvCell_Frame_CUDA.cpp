@@ -202,7 +202,6 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
-        std::cout << "TEST N2D2 CUDA CONV DEPTHWISE " << out << std::endl;
 
     const unsigned int nbOutputs = 5;
 
