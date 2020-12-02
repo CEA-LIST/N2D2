@@ -1,6 +1,6 @@
-"""
+/*
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -18,12 +18,25 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-"""
+*/
 
 
-import n2d2.database 
-import n2d2.cell
-import n2d2.provider
-from n2d2.tensor import *
-#import n2d2.transforms 
-import n2d2.deepnet
+#ifdef CUDA
+
+#ifdef PYBIND
+#include "Activation/LinearActivation.hpp"
+
+
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+namespace N2D2 {
+void init_LinearActivation(py::module &m) {
+    py::class_<LinearActivation, std::shared_ptr<LinearActivation>, Activation> (m, "LinearActivation", py::multiple_inheritance());
+
+}
+}
+#endif
+
+#endif

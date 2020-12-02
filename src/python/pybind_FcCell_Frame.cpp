@@ -23,7 +23,6 @@
 
 #ifdef PYBIND
 #include "Cell/FcCell_Frame.hpp"
-#include "Activation/TanhActivation_Frame.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

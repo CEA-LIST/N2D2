@@ -23,7 +23,7 @@
 
 
 import N2D2
-import n2d2.cells
+import n2d2.cell
 
 class Deepnet():
 
@@ -82,7 +82,7 @@ class Sequential(Deepnet):
         if isinstance(cells, list):
             for cell in cells:
                 self._generate_model(cell, DefaultModel)
-        elif isinstance(cells, n2d2.cells.Cell):
+        elif isinstance(cells, n2d2.cell.Cell):
             cells.generate_model(self._deepnet, DefaultModel)
             # Normally this should not copy, but ony add an additional name
             self._sequence.append(cells)
@@ -94,8 +94,8 @@ class Sequential(Deepnet):
         addInput() sets recursively the Tensor dimensions
         of input and output tensors of all cells
     """
-    def add_stimulus(self, stimuli_provider):
-        previous = stimuli_provider
+    def add_provider(self, provider):
+        previous = provider
         for cell in self._sequence:
             cell.N2D2().addInput(previous.N2D2())
             previous = cell

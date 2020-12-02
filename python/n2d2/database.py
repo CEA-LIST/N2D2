@@ -45,7 +45,7 @@ class Database():
     def N2D2(self):
         return self._database
 
-class MNIST_IDX_Database(Database):
+class MNIST(Database):
     def __init__(self, Validation):
         self._Validation = Validation
 

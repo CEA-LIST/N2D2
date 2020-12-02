@@ -22,7 +22,7 @@
 
 import N2D2
 
-class StimuliProvider():
+class DataProvider():
     # Be careful to match default parameters in python and N2D2 constructor
     def __init__(self, database, Size, BatchSize=1, CompositeStimuli=False):
         self._database = database
@@ -30,7 +30,7 @@ class StimuliProvider():
         self._BatchSize = BatchSize
         self._CompositeStimuli = CompositeStimuli
 
-        self._stimuli_provider = N2D2.StimuliProvider(database=self._database.N2D2(),
+        self._provider = N2D2.StimuliProvider(database=self._database.N2D2(),
                                                       size=self._Size,
                                                       batchSize=self._BatchSize,
                                                       compositeStimuli=self._CompositeStimuli)
@@ -43,7 +43,7 @@ class StimuliProvider():
     """
 
     def readRandomBatch(self, set):
-        return self._stimuli_provider.readRandomBatch(set=self._database.StimuliSets['Learn'])
+        return self._provider.readRandomBatch(set=self._database.StimuliSets['Learn'])
 
     def N2D2(self):
-        return self._stimuli_provider
+        return self._provider

@@ -1,6 +1,8 @@
 /*
-    (C) Copyright 2019 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
+                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -45,14 +47,20 @@ void init_ConvCell(py::module&);
 void init_ConvCell_Frame(py::module&);
 void init_FcCell(py::module&);
 void init_FcCell_Frame(py::module&);
+void init_FcCell_Frame_CUDA(py::module&);
 void init_SoftmaxCell(py::module&);
 void init_SoftmaxCell_Frame(py::module&);
+void init_SoftmaxCell_Frame_CUDA(py::module&);
 void init_Parameterizable(py::module&);
 void init_Activation(py::module&);
 void init_TanhActivation(py::module&);
 void init_TanhActivation_Frame(py::module&);
 void init_RectifierActivation(py::module&);
 void init_RectifierActivation_Frame(py::module&);
+void init_RectifierActivation_Frame_CUDA(py::module&);
+void init_LinearActivation(py::module&);
+void init_LinearActivation_Frame(py::module&);
+void init_LinearActivation_Frame_CUDA(py::module&);
 void init_Transformation(py::module&);
 void init_CompositeTransformation(py::module &m);
 void init_DistortionTransformation(py::module&);
@@ -81,14 +89,20 @@ PYBIND11_MODULE(N2D2, m) {
     init_ConvCell_Frame(m);
     init_FcCell(m);
     init_FcCell_Frame(m);
+    init_FcCell_Frame_CUDA(m);
     init_SoftmaxCell(m);
     init_SoftmaxCell_Frame(m);
+    init_SoftmaxCell_Frame_CUDA(m);
     init_Parameterizable(m);
     init_Activation(m);
     init_TanhActivation(m);
     init_TanhActivation_Frame(m);
     init_RectifierActivation(m);
     init_RectifierActivation_Frame(m);
+    init_RectifierActivation_Frame_CUDA(m);
+    init_LinearActivation(m);
+    init_LinearActivation_Frame(m);
+    init_LinearActivation_Frame_CUDA(m);
     init_Transformation(m);
     init_CompositeTransformation(m);
     init_DistortionTransformation(m);

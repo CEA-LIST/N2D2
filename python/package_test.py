@@ -44,15 +44,17 @@ General paradigms:
 import n2d2
 import N2D2
 
-batch_size = 1
+batch_size = 128
 nb_epochs = 10
-epoch_size = 1000
+epoch_size = int(50000/batch_size)
 
 
 print("Create database")
-database = n2d2.database.MNIST_IDX_Database(Validation=0.1)
+database = n2d2.database.MNIST(Validation=0.1)
 print("Load database")
 database.load("/nvme0/DATABASE/MNIST/raw/")
+
+
 
 print("Create model")
 """
@@ -79,25 +81,25 @@ model = n2d2.deepnet.Sequential([
 """
 model = n2d2.deepnet.Sequential([
     [
-        n2d2.cells.FcCell(Name='fc1', NbOutputs=50, Activation='Rectifier', NoBias=False, Backpropagate=True),
-        n2d2.cells.FcCell(Name='fc2', NbOutputs=10, Activation='Rectifier', NoBias=False, Backpropagate=True)
+        n2d2.cell.Fc(Name='fc1', NbOutputs=300, Activation=n2d2.activation.Rectifier(), NoBias=False, Backpropagate=True),
+        n2d2.cell.Fc(Name='fc2', NbOutputs=10, Activation=n2d2.activation.Linear(), NoBias=False, Backpropagate=True)
     ],
-    n2d2.cells.SoftmaxCell(Name='softmax', NbOutputs=10)
-], DefaultModel='Frame')
+    n2d2.cell.Softmax(Name='softmax', NbOutputs=10)
+], DefaultModel='Frame_CUDA')
 
 print(model)
 
 
-print("Create stimulus")
-stimulus = n2d2.stimuli_provider.StimuliProvider(database, [28, 28, 1], batch_size, False)
+print("Create provider")
+provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size, False)
 
-print("Add stimulus")
-model.add_stimulus(stimulus)
+print("Add provider")
+model.add_provider(provider)
 
 print(model.getOutput())
 
 print("Create target")
-tar = N2D2.TargetScore('target', model.getOutput().N2D2(), stimulus.N2D2())
+tar = N2D2.TargetScore('target', model.getOutput().N2D2(), provider.N2D2())
 
 #print("Add target")
 #model.add_target(tar)
@@ -120,7 +122,7 @@ for epoch in range(nb_epochs):
         print("Batch: " + str(i))
 
         # Generate target
-        stimulus.readRandomBatch(set='Learn')
+        provider.readRandomBatch(set='Learn')
 
         # Calls setOutputTarget of cell
         tar.provideTargets(N2D2.Database.Learn)
