@@ -35,10 +35,10 @@ namespace py = pybind11;
 
 namespace N2D2 {
 template<class T>
-void declare_constructor(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> &m) {
+void init(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> &m) {
     // Templated declaration of the constructor because Transformation can't be instancied thus we have to make a constructor for every Transformation class (Possibility to use a script to generate the code). Or find another workaround. 
-    m.def(py::init<const T&>(), py::arg("transformation"));
-
+    m.def(py::init<const T&>(), py::arg("transformation"))
+    .def("push_back", (void (CompositeTransformation::*)(const T&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.");
     // Create issues with the parametrizable methods
     // py::implicitly_convertible<T, CompositeTransformation>();
 
@@ -46,8 +46,8 @@ void declare_constructor(py::class_<CompositeTransformation, std::shared_ptr<Com
 
 void init_CompositeTransformation(py::module &m) {
     py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> ct(m, "CompositeTransformation", py::multiple_inheritance());
-    declare_constructor<DistortionTransformation>(ct);
-    declare_constructor<PadCropTransformation>(ct);
+    init<DistortionTransformation>(ct);
+    init<PadCropTransformation>(ct);
 }
 }
 #endif

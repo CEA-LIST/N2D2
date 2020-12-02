@@ -26,9 +26,13 @@ if __name__ == "__main__":
     trans.setParameter("Rotation", "10.0")
 
     stimuli = N2D2.StimuliProvider(database, [24, 24, 1], batchSize, False)
+
+    ct = N2D2.CompositeTransformation(N2D2.PadCropTransformation(24, 24))
+    ct.push_back(trans)
     # TODO : need an implicit transformation => CompositeTransformation, need to change this
-    stimuli.addTransformation(N2D2.CompositeTransformation(N2D2.PadCropTransformation(24, 24)), database.StimuliSetMask(0))
-    stimuli.addOnTheFlyTransformation(N2D2.CompositeTransformation(trans), database.StimuliSetMask(0))
+    stimuli.addTransformation(ct, database.StimuliSetMask(0))
+    # N2D2.CompositeTransformation(), database.StimuliSetMask(0))
+    # stimuli.addOnTheFlyTransformation(trans), database.StimuliSetMask(0))
 
     # Network topology ===
     print("Defining neural network topology")
