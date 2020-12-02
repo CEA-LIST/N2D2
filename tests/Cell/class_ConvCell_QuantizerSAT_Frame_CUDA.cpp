@@ -966,12 +966,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     
     
     //several iterations for propagate, backpropagate, update
-    for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
+    for(unsigned int iter_index = 0; iter_index < 10000; ++iter_index){
 
-        std::cout << "iteration #" << iter_index << std::endl;
-        std::cout << "===============================================================" << std::endl;
+        if(iter_index==9999) std::cout << "iteration #" << iter_index << std::endl;
+        if(iter_index==9999) std::cout << "===============================================================" << std::endl;
 
-        std::cout << "******************PROPAGATE*******************\n\n\n" << std::endl;
+        if(iter_index==9999) std::cout << "******************PROPAGATE*******************\n\n\n" << std::endl;
 
         conv1.propagate(false);
         conv2.propagate(false);
@@ -980,28 +980,37 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
         conv1.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
-        std::cout << "[Conv1][Outputs]" << std::endl;
-        std::cout << out_conv1 << std::endl;
+        if(iter_index==9999){
+            std::cout << "[Conv1][Outputs]" << std::endl;
+            std::cout << out_conv1 << std::endl;
+        }
         conv1.getOutputs().synchronizeHToD();
 
         conv2.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv2 = tensor_cast<float>(conv2.getOutputs());
-        std::cout << "[Conv2][Outputs]" << std::endl;
-        std::cout << out_conv2 << std::endl;
+        if(iter_index==9999){
+            std::cout << "[Conv2][Outputs]" << std::endl;
+            std::cout << out_conv2 << std::endl;
+        }
         conv2.getOutputs().synchronizeHToD();
 
         conv3.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv3 = tensor_cast<float>(conv3.getOutputs());
-        std::cout << "[Conv3][Outputs]" << std::endl;
-        std::cout << out_conv3 << std::endl;
+        if(iter_index==9999){
+            std::cout << "[Conv3][Outputs]" << std::endl;
+            std::cout << out_conv3 << std::endl;
+        }
         conv3.getOutputs().synchronizeHToD();
 
         softmax1.mDiffInputs.synchronizeDToH();
         softmax1.getOutputs().synchronizeDToH();
         const CudaTensor<float>& out_softmax1 = cuda_tensor_cast<float>(softmax1.getOutputs());
         double loss = 0.0;
-        std::cout << "[SoftMax][Outputs]" << std::endl;
-        std::cout << out_softmax1 << std::endl;
+        if(iter_index==9999){
+            std::cout << "[SoftMax][Outputs]" << std::endl;
+            std::cout << out_softmax1 << std::endl;
+        }
+
 
         for(unsigned int nout = 0; nout < nbOutputs_conv3; ++nout){
             for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos){
@@ -1036,7 +1045,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         conv2.backPropagate();
         conv1.backPropagate();
 
-        std::cout << "****************BACKPROPAGATE******************" << std::endl;
+        if(iter_index==9999) std::cout << "****************BACKPROPAGATE******************" << std::endl;
 
     if(doQuant){
         
@@ -1051,36 +1060,36 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         //conv1, kernel1
         CudaTensor<float> my_DiffFullPrecisionWeights_conv1 = cuda_tensor_cast<float>(quant1.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv1.synchronizeDToH();
-        std::cout << "[Conv1][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv1 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv1][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv1 << std::endl;
 
         //conv2 weights diff
         CudaTensor<float> my_DiffFullPrecisionWeights_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv2 << std::endl;
         //conv2, activations diff
         CudaTensor<float> my_DiffQuantActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffQuantizedActivations(0));
         my_DiffQuantActivations_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffQuantActivation]\n" << my_DiffQuantActivations_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][DiffQuantActivation]\n" << my_DiffQuantActivations_conv2 << std::endl;
         CudaTensor<float> my_QWeights_conv2 = cuda_tensor_cast<float>(quant2.getQuantizedWeights(0));
         my_QWeights_conv2.synchronizeDToH();
-        std::cout << "[Conv2][QuantizedWeights]\n" << my_QWeights_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][QuantizedWeights]\n" << my_QWeights_conv2 << std::endl;
 
         //CudaTensor<float> my_DiffFullPrecisionActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionActivations(0));
         //my_DiffFullPrecisionActivations_conv2.synchronizeDToH();
         //std::cout << "[Conv2][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv2 << std::endl;
          CudaTensor<float> my_DiffInputs_conv2 = cuda_tensor_cast<float>(conv2.getDiffInputs());
         my_DiffInputs_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffINputs]\n" << my_DiffInputs_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][DiffINputs]\n" << my_DiffInputs_conv2 << std::endl;
 
 
         //conv3 weights diff
         CudaTensor<float> my_DiffFullPrecisionWeights_conv3 = cuda_tensor_cast<float>(quant3.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv3.synchronizeDToH();
-        std::cout << "[Conv3][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv3 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv3][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv3 << std::endl;
         //conv3, activations diff
         CudaTensor<float> my_DiffQuantActivations_conv3 = cuda_tensor_cast<float>(quant3.getDiffQuantizedActivations(0));
         my_DiffQuantActivations_conv3.synchronizeDToH();
-        std::cout << "[Conv3][DiffQuantActivation]\n" << my_DiffQuantActivations_conv3 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv3][DiffQuantActivation]\n" << my_DiffQuantActivations_conv3 << std::endl;
 
         //quant1.getDiffFullPrecisionWeights(0).synchronizeHToD();
         //quant2.getDiffFullPrecisionWeights(0).synchronizeHToD();
@@ -1090,16 +1099,16 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         
     }
 
-        std::cout << "end of backpropagate" << std::endl;
+        if(iter_index==9999)  std::cout << "end of backpropagate" << std::endl;
 
-        std::cout << "*****************UPDATE***************" << std::endl;
+        if(iter_index==9999)  std::cout << "*****************UPDATE***************" << std::endl;
 
         conv3.update();
         if(doQuant){
             quant3.getAlpha(0).synchronizeDToH();
             CudaTensor<float> alphaEstimated3 = quant3.getAlpha(0);
             alphaEstimated3.synchronizeDToH();
-            std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
+            if(iter_index==9999) std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
             quant3.getAlpha(0).synchronizeHToD();
         }
         
@@ -1110,7 +1119,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             quant2.getAlpha(0).synchronizeDToH();
             CudaTensor<float> alphaEstimated2 = quant2.getAlpha(0);
             alphaEstimated2.synchronizeDToH();
-            std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
+            if(iter_index==9999) std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
             quant2.getAlpha(0).synchronizeHToD();
         }
         
@@ -1120,7 +1129,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             quant1.getAlpha(0).synchronizeDToH();
             CudaTensor<float> alphaEstimated1 = quant1.getAlpha(0);
             alphaEstimated1.synchronizeDToH();
-            std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
+            if(iter_index==9999) std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
             quant1.getAlpha(0).synchronizeHToD();
         }
              
@@ -1151,7 +1160,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         }
         */
 
-        std::cout << "end of update" << std::endl;  
+        if(iter_index==9999) std::cout << "end of update" << std::endl;  
     }
 }
 
@@ -1198,7 +1207,10 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
     unsigned int batchSize = 2;
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, batchSize);
 
-    Tensor<Float_T>& in = env.getData();
+    //Tensor<Float_T>& in = env.getData();
+    Tensor<double> in;
+    in.resize({channelsWidth, channelsHeight, 1, batchSize});
+
     ASSERT_EQUALS(in.dimZ(), 1U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
     ASSERT_EQUALS(in.dimY(), channelsHeight);
@@ -1374,7 +1386,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
         " quantizer to " << conv3.getName() << std::endl;
     }
     
-    float weight_tmp = 0.0f;
+    float weight_tmp = 0.0;
 
     // set weights for conv1
     /*
@@ -1411,7 +1423,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
 
     // set weights for conv2
     // [[[0.01]]], [[[0.01]]], [[[0.01]]], [[[0.01]]
-    weight_tmp = 0.0f;
+    weight_tmp = 0.0;
     for (unsigned int output = 0; output < nbOutputs_conv2; ++output) {
         for (unsigned int channel = 0; channel < nbChannels;
              ++channel) {
@@ -1540,12 +1552,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
     
     
     //several iterations for propagate, backpropagate, update
-    for(unsigned int iter_index = 0; iter_index < 1; ++iter_index){
+    for(unsigned int iter_index = 0; iter_index < 10000; ++iter_index){
 
-        std::cout << "iteration #" << iter_index << std::endl;
-        std::cout << "===============================================================" << std::endl;
+        if(iter_index==9999) std::cout << "iteration #" << iter_index << std::endl;
+        if(iter_index==9999) std::cout << "===============================================================" << std::endl;
 
-        std::cout << "******************PROPAGATE*******************\n\n\n" << std::endl;
+        if(iter_index==9999) std::cout << "******************PROPAGATE*******************\n\n\n" << std::endl;
 
         conv1.propagate(false);
         conv2.propagate(false);
@@ -1554,28 +1566,36 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
 
         conv1.getOutputs().synchronizeDToH();
         const Tensor<double>& out_conv1 = tensor_cast<double>(conv1.getOutputs());
-        std::cout << "[Conv1][Outputs]" << std::endl;
-        std::cout << out_conv1 << std::endl;
+        if(iter_index==9999) {
+            std::cout << "[Conv1][Outputs]" << std::endl;
+            std::cout << out_conv1 << std::endl;
+        }
         conv1.getOutputs().synchronizeHToD();
 
         conv2.getOutputs().synchronizeDToH();
         const Tensor<double>& out_conv2 = tensor_cast<double>(conv2.getOutputs());
-        std::cout << "[Conv2][Outputs]" << std::endl;
-        std::cout << out_conv2 << std::endl;
+        if(iter_index==9999) {
+            std::cout << "[Conv2][Outputs]" << std::endl;
+            std::cout << out_conv2 << std::endl;
+        }
         conv2.getOutputs().synchronizeHToD();
 
         conv3.getOutputs().synchronizeDToH();
         const Tensor<double>& out_conv3 = tensor_cast<double>(conv3.getOutputs());
-        std::cout << "[Conv3][Outputs]" << std::endl;
-        std::cout << out_conv3 << std::endl;
+        if(iter_index==9999) {
+            std::cout << "[Conv3][Outputs]" << std::endl;
+            std::cout << out_conv3 << std::endl;
+        }
         conv3.getOutputs().synchronizeHToD();
 
         softmax1.mDiffInputs.synchronizeDToH();
         softmax1.getOutputs().synchronizeDToH();
         const CudaTensor<double>& out_softmax1 = cuda_tensor_cast<double>(softmax1.getOutputs());
         double loss = 0.0;
-        std::cout << "[SoftMax][Outputs]" << std::endl;
-        std::cout << out_softmax1 << std::endl;
+        if(iter_index==9999) {
+            std::cout << "[SoftMax][Outputs]" << std::endl;
+            std::cout << out_softmax1 << std::endl;
+        }
 
         for(unsigned int nout = 0; nout < nbOutputs_conv3; ++nout){
             for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos){
@@ -1610,7 +1630,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
         conv2.backPropagate();
         conv1.backPropagate();
 
-        std::cout << "****************BACKPROPAGATE******************" << std::endl;
+        if(iter_index==9999) std::cout << "****************BACKPROPAGATE******************" << std::endl;
 
     if(doQuant){
         
@@ -1625,36 +1645,36 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
         //conv1, kernel1
         CudaTensor<double> my_DiffFullPrecisionWeights_conv1 = cuda_tensor_cast<double>(quant1.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv1.synchronizeDToH();
-        std::cout << "[Conv1][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv1 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv1][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv1 << std::endl;
 
         //conv2 weights diff
         CudaTensor<double> my_DiffFullPrecisionWeights_conv2 = cuda_tensor_cast<double>(quant2.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv2 << std::endl;
         //conv2, activations diff
         CudaTensor<double> my_DiffQuantActivations_conv2 = cuda_tensor_cast<double>(quant2.getDiffQuantizedActivations(0));
         my_DiffQuantActivations_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffQuantActivation]\n" << my_DiffQuantActivations_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][DiffQuantActivation]\n" << my_DiffQuantActivations_conv2 << std::endl;
         CudaTensor<double> my_QWeights_conv2 = cuda_tensor_cast<double>(quant2.getQuantizedWeights(0));
         my_QWeights_conv2.synchronizeDToH();
-        std::cout << "[Conv2][QuantizedWeights]\n" << my_QWeights_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][QuantizedWeights]\n" << my_QWeights_conv2 << std::endl;
 
         //CudaTensor<float> my_DiffFullPrecisionActivations_conv2 = cuda_tensor_cast<float>(quant2.getDiffFullPrecisionActivations(0));
         //my_DiffFullPrecisionActivations_conv2.synchronizeDToH();
         //std::cout << "[Conv2][DiffFullPrecisionActivation]\n" << my_DiffFullPrecisionActivations_conv2 << std::endl;
          CudaTensor<double> my_DiffInputs_conv2 = cuda_tensor_cast<double>(conv2.getDiffInputs());
         my_DiffInputs_conv2.synchronizeDToH();
-        std::cout << "[Conv2][DiffINputs]\n" << my_DiffInputs_conv2 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv2][DiffINputs]\n" << my_DiffInputs_conv2 << std::endl;
 
 
         //conv3 weights diff
         CudaTensor<double> my_DiffFullPrecisionWeights_conv3 = cuda_tensor_cast<double>(quant3.getDiffFullPrecisionWeights(0));
         my_DiffFullPrecisionWeights_conv3.synchronizeDToH();
-        std::cout << "[Conv3][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv3 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv3][DiffFullPrecisionWeights]\n" << my_DiffFullPrecisionWeights_conv3 << std::endl;
         //conv3, activations diff
         CudaTensor<double> my_DiffQuantActivations_conv3 = cuda_tensor_cast<double>(quant3.getDiffQuantizedActivations(0));
         my_DiffQuantActivations_conv3.synchronizeDToH();
-        std::cout << "[Conv3][DiffQuantActivation]\n" << my_DiffQuantActivations_conv3 << std::endl;
+        if(iter_index==9999) std::cout << "[Conv3][DiffQuantActivation]\n" << my_DiffQuantActivations_conv3 << std::endl;
 
         //quant1.getDiffFullPrecisionWeights(0).synchronizeHToD();
         //quant2.getDiffFullPrecisionWeights(0).synchronizeHToD();
@@ -1664,16 +1684,16 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
         
     }
 
-        std::cout << "end of backpropagate" << std::endl;
+        if(iter_index==9999) std::cout << "end of backpropagate" << std::endl;
 
-        std::cout << "*****************UPDATE***************" << std::endl;
+        if(iter_index==9999) std::cout << "*****************UPDATE***************" << std::endl;
 
         conv3.update();
         if(doQuant){
             quant3.getAlpha(0).synchronizeDToH();
             CudaTensor<double> alphaEstimated3 = quant3.getAlpha(0);
             alphaEstimated3.synchronizeDToH();
-            std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
+            if(iter_index==9999) std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
             quant3.getAlpha(0).synchronizeHToD();
         }
         
@@ -1684,7 +1704,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
             quant2.getAlpha(0).synchronizeDToH();
             CudaTensor<double> alphaEstimated2 = quant2.getAlpha(0);
             alphaEstimated2.synchronizeDToH();
-            std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
+            if(iter_index==9999) std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
             quant2.getAlpha(0).synchronizeHToD();
         }
         
@@ -1694,7 +1714,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
             quant1.getAlpha(0).synchronizeDToH();
             CudaTensor<double> alphaEstimated1 = quant1.getAlpha(0);
             alphaEstimated1.synchronizeDToH();
-            std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
+            if(iter_index==9999) std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
             quant1.getAlpha(0).synchronizeHToD();
         }
              
@@ -1724,7 +1744,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
                 std::cout << weight << std::endl;
         }
 */
-        std::cout << "end of update" << std::endl;  
+        if(iter_index==9999) std::cout << "end of update" << std::endl;  
     }
 }
 
