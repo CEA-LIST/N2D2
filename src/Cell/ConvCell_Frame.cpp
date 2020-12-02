@@ -183,6 +183,26 @@ void N2D2::ConvCell_Frame<T>::initialize()
 
         mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
     }
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(*mBias, mDiffBias);
+        }
+        
+        if (!mDiffOutputs.empty()){
+            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+                mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
+            }
+        }
+        else {
+            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+                mQuantizer->addActivations(mInputs[k]);
+            }
+        }
+        mQuantizer->initialize();
+    }
 }
 
 template <class T>
@@ -231,11 +251,22 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
         if (k > 0)
             beta = 1.0;
 
-        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
+        Tensor<T> input;
+        Tensor<T> sharedSynapses;
+        // TODO: At the moment the Quantizer works only for float
+        if (mQuantizer) {
+            mQuantizer->propagate();
+            input = (tensor_cast<T>(mQuantizer->getQuantizedActivations(k)));
+            sharedSynapses = (tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
+        }
+        else {
+            input = mInputs[k];
+            sharedSynapses = mSharedSynapses[k];
+        }
 
         ConvCell_Frame_Kernels::forward<T>(&alpha,
                                         input,
-                                        mSharedSynapses[k],
+                                        sharedSynapses,
                                         mConvDesc,
                                         &beta,
                                         mOutputs,
@@ -244,9 +275,19 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
         offset += mInputs[k].dimZ();
     }
 
-    if (!mNoBias)
-        ConvCell_Frame_Kernels::forwardBias<T>(&alpha, (*mBias), &alpha, mOutputs);
+    if (!mNoBias) {
 
+        Tensor<T> biases;
+
+        if (mQuantizer) {
+            biases = (tensor_cast<T>(mQuantizer->getQuantizedBiases()));
+        }
+        else {
+            biases = *mBias;
+        }
+
+        ConvCell_Frame_Kernels::forwardBias<T>(&alpha, biases, &alpha, mOutputs);
+    }
     Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
     mDiffSharedSynapses.clearValid();
@@ -269,14 +310,26 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
         const T beta = (mWeightsSolvers[k]->isNewIteration())
             ? T(0.0) : T(1.0);
 
-        const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
+        //const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
+
+        Tensor<T> input;
+        Tensor<T> diffSharedSynapses;
+
+        if (mQuantizer) {
+            input = tensor_cast_nocopy<T>(mQuantizer->getQuantizedActivations(k));
+            diffSharedSynapses = tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k));
+        }
+        else {
+            input = tensor_cast_nocopy<T>(mInputs[k]);
+            diffSharedSynapses = tensor_cast<T>(mDiffSharedSynapses[k]); 
+        }
 
         ConvCell_Frame_Kernels::backwardFilter<T>(&alpha,
                                                input,
                                                mDiffInputs,
                                                mConvDesc,
                                                &beta,
-                                               mDiffSharedSynapses[k],
+                                               diffSharedSynapses,
                                                mMapping.rows(offset,
                                                           mInputs[k].dimZ()));
 
@@ -286,9 +339,16 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
 
     if (!mNoBias) {
         const T beta = (mBiasSolver->isNewIteration()) ? T(0.0) : T(1.0);
+        Tensor<T> diffBiases;
+        if (mQuantizer) {
+            diffBiases = tensor_cast<T>(mQuantizer->getDiffQuantizedBiases());
+        }
+        else {
+            diffBiases = tensor_cast<T>(mDiffBias);
+        }
 
         ConvCell_Frame_Kernels::backwardBias<T>(&alpha, mDiffInputs,
-                                             &beta, mDiffBias);
+                                             &beta, diffBiases);
         
         mDiffBias.setValid();
     }
@@ -299,12 +359,24 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
-            Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
-                ? tensor_cast<T>(mDiffOutputs[k])
-                : tensor_cast_nocopy<T>(mDiffOutputs[k]);
+            Tensor<T> diffOutput;
+            Tensor<T> sharedSynapses;
+
+            if (mQuantizer) {
+                sharedSynapses = (tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
+                diffOutput = (mDiffOutputs[k].isValid())
+                    ? (tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)))
+                    : (tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)));
+            }
+            else {
+                sharedSynapses = tensor_cast<T>(mSharedSynapses[k]);
+                diffOutput = (mDiffOutputs[k].isValid())
+                    ? tensor_cast<T>(mDiffOutputs[k])
+                    : tensor_cast_nocopy<T>(mDiffOutputs[k]);
+            }
 
             ConvCell_Frame_Kernels::backwardData<T>(&alpha,
-                                                 mSharedSynapses[k],
+                                                 sharedSynapses,
                                                  mDiffInputs,
                                                  mConvDesc,
                                                  &beta,
@@ -313,8 +385,30 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
                                                             mInputs[k].dimZ()));
 
             offset += mInputs[k].dimZ();
+        }
+    }
 
-            mDiffOutputs[k] = diffOutput;
+    // Calculate full precision weights and activation gradients
+    if (mQuantizer && mBackPropagate) {
+        mQuantizer->back_propagate();
+    }
+
+    if (!mDiffOutputs.empty() && mBackPropagate)
+    {
+        Tensor<T> diffOutputs;
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            if (mQuantizer) {
+                 diffOutputs = (mDiffOutputs[k].isValid())
+                    ? (tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)))
+                    : (tensor_cast_nocopy<T>(mQuantizer->getDiffQuantizedActivations(k)));
+            }
+            else {
+                diffOutputs = (mDiffOutputs[k].isValid())
+                    ? tensor_cast<T>(mDiffOutputs[k])
+                    : tensor_cast_nocopy<T>(mDiffOutputs[k]);
+            }
+
+            mDiffOutputs[k] = diffOutputs;
             mDiffOutputs[k].setValid();
         }
 
@@ -326,14 +420,27 @@ template <class T>
 void N2D2::ConvCell_Frame<T>::update()
 {
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
-        if (mDiffSharedSynapses[k].isValid()) {
+        if (mDiffSharedSynapses[k].isValid() && !mQuantizer) {
             mWeightsSolvers[k]->update(
                 mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
         }
+        else if (mDiffSharedSynapses[k].isValid() && mQuantizer) {
+            mWeightsSolvers[k]->update(
+                mSharedSynapses[k], mQuantizer->getDiffFullPrecisionWeights(k), mInputs.dimB());
+        }
     }
 
-    if (!mNoBias && mDiffBias.isValid())
-        mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+    if (!mNoBias && mDiffBias.isValid()) {
+        if(!mQuantizer) {
+            mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        } else {
+            mBiasSolver->update(*mBias, mQuantizer->getDiffFullPrecisionBiases(), mInputs.dimB());
+        }
+    }
+
+    if(mQuantizer){
+        mQuantizer->update();
+    }
 }
 
 template <class T>
