@@ -392,6 +392,9 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
             biases << bias(0) << "\n";
         }
     }
+    if(mQuantizer) {
+        mQuantizer->exportFreeParameters(fileName);
+    }
 }
 
 void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
@@ -558,6 +561,9 @@ void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
         if (biases.get() != std::fstream::traits_type::eof())
             throw std::runtime_error("Synaptic file size larger than expected: "
                                      + biasesFile);
+    }
+    if(mQuantizer) {
+        mQuantizer->importFreeParameters(fileName, ignoreNotExists);
     }
 }
 

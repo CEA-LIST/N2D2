@@ -289,8 +289,6 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
 template <class T>
 void N2D2::ConvCell_Frame<T>::backPropagate()
 {
-    std::cout << "ConvCell_Frame:backPropagate() mDiffInputs.isValid(): " << mDiffInputs.isValid() << std::endl;
-
     if (!mDiffInputs.isValid())
         return;
 
@@ -371,13 +369,11 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
 
     // Calculate full precision weights and activation gradients
     if (mQuantizer && mBackPropagate) {
-        std::cout << "ConvCellFrame: " << mQuantizer << " et " << mBackPropagate << std::endl;
         mQuantizer->back_propagate();
     }
 
     if (!mDiffOutputs.empty() && mBackPropagate)
     {
-
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const Tensor<T>& diffOutput 
                 = mQuantizer ? (mDiffOutputs[k].isValid() ? 

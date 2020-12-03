@@ -908,7 +908,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
                 diffOutputs->getCudnnTensorDesc(),
                 diffOutputs->getDevicePtr()));
 #endif
-            //mDiffOutputs[k].deviceTensor() = *diffOutput;
+            mDiffOutputs[k].deviceTensor() = *diffOutputs;
             //mDiffOutputs[k].setValid();
         }
     }
