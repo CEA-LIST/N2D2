@@ -34,12 +34,8 @@ namespace N2D2 {
 template<class T>
 void declare_TanhActivation_Frame(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("TanhActivation_Frame_" + typeStr);
-
     py::class_<TanhActivation_Frame<T>, std::shared_ptr<TanhActivation_Frame<T>>, TanhActivation> (m, pyClassName.c_str(), py::multiple_inheritance())
-    .def(py::init<>())
-    .def("create", &TanhActivation_Frame<T>::create)
-    .def("propagate", &TanhActivation_Frame<T>::propagate, py::arg("cell"), py::arg("data"), py::arg("inference") = false)
-    .def("backPropagate", &TanhActivation_Frame<T>::backPropagate, py::arg("cell"), py::arg("data"), py::arg("diffData"));
+    .def(py::init<>());
 }
 
 void init_TanhActivation_Frame(py::module &m) {

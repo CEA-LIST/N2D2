@@ -35,12 +35,8 @@ namespace N2D2 {
 template<class T>
 void declare_LinearActivation_Frame(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("LinearActivation_Frame_" + typeStr);
-
     py::class_<LinearActivation_Frame<T>, std::shared_ptr<LinearActivation_Frame<T>>, LinearActivation> (m, pyClassName.c_str(), py::multiple_inheritance())
-    .def(py::init<>())
-    .def("create", &LinearActivation_Frame<T>::create)
-    .def("propagate", &LinearActivation_Frame<T>::propagate, py::arg("cell"), py::arg("data"), py::arg("inference") = false)
-    .def("backPropagate", &LinearActivation_Frame<T>::backPropagate, py::arg("cell"), py::arg("data"), py::arg("diffData"));
+    .def(py::init<>());
 }
 
 void init_LinearActivation_Frame(py::module &m) {

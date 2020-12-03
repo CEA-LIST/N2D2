@@ -35,12 +35,8 @@ namespace N2D2 {
 template<class T>
 void declare_RectifierActivation_Frame(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("RectifierActivation_Frame_" + typeStr);
-
     py::class_<RectifierActivation_Frame<T>, std::shared_ptr<RectifierActivation_Frame<T>>, RectifierActivation> (m, pyClassName.c_str(), py::multiple_inheritance())
-    .def(py::init<>())
-    .def("create", &RectifierActivation_Frame<T>::create)
-    .def("propagate", &RectifierActivation_Frame<T>::propagate, py::arg("cell"), py::arg("data"), py::arg("inference") = false)
-    .def("backPropagate", &RectifierActivation_Frame<T>::backPropagate, py::arg("cell"), py::arg("data"), py::arg("diffData"));
+    .def(py::init<>());
 }
 
 void init_RectifierActivation_Frame(py::module &m) {
