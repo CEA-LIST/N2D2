@@ -39,7 +39,7 @@ void init_StimuliProvider(py::module &m) {
     // .def("getRandomID", &StimuliProvider::getRandomID, py::arg("set"))
     .def("readRandomBatch", &StimuliProvider::readRandomBatch, py::arg("set"))
     .def("readRandomStimulus", &StimuliProvider::readRandomStimulus, py::arg("set"), py::arg("batchPos") = 0)
-    // .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0)
+    .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0)
     // .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1)
     // .def("readStimulusBatch", (void (StimuliProvider::*)(Database::StimulusID, Database::StimuliSet)) &StimuliProvider::readStimulusBatch, py::arg("id"), py::arg("set"))
     // .def("readStimulusBatch", (Database::StimulusID (StimuliProvider::*)(Database::StimuliSet, unsigned int)) &StimuliProvider::readStimulusBatch, py::arg("set"), py::arg("index"))

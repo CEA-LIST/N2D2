@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,28 +11,30 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -52,7 +53,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> N2D2
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> N2D2
           
 
           
@@ -75,6 +76,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -103,6 +105,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformation.html">Transformation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul>
@@ -112,6 +115,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -150,7 +154,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Databases</li>
     
@@ -173,10 +177,10 @@
             
   <div class="section" id="databases">
 <h1>Databases<a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="N2D2.Database">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Database</code><a class="headerlink" href="#N2D2.Database" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="class">
+<dd><dl class="py class">
 <dt id="N2D2.Database.StimuliSet">
 <em class="property">class </em><code class="sig-name descname">StimuliSet</code><a class="headerlink" href="#N2D2.Database.StimuliSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Members:</p>
@@ -184,15 +188,14 @@
 <p>Validation</p>
 <p>Test</p>
 <p>Unpartitioned</p>
-<dl class="method">
+<dl class="py method">
 <dt id="N2D2.Database.StimuliSet.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Database.StimuliSet.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="N2D2.Database.StimuliSetMask">
 <em class="property">class </em><code class="sig-name descname">StimuliSetMask</code><a class="headerlink" href="#N2D2.Database.StimuliSetMask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Members:</p>
@@ -203,38 +206,32 @@
 <p>NoValidation</p>
 <p>NoTest</p>
 <p>All</p>
-<dl class="method">
+<dl class="py method">
 <dt id="N2D2.Database.StimuliSetMask.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Database.StimuliSetMask.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
+<dd></dd></dl>
+
 </dd></dl>
 
+<dl class="py method">
+<dt id="N2D2.Database.getNbStimuli">
+<code class="sig-name descname">getNbStimuli</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Database.getNbStimuli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getNbStimuli(self: N2D2.Database) -&gt; int</p></li>
+<li><p>getNbStimuli(self: N2D2.Database, set: N2D2.Database.StimuliSet) -&gt; int</p></li>
+</ol>
 </dd></dl>
 
-<dl class="method">
-<dt id="N2D2.Database.loadROIs">
-<code class="sig-name descname">loadROIs</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">relPath: str = ''</em>, <em class="sig-param">noImageSize: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.loadROIs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="N2D2.Database.loadROIsDir">
-<code class="sig-name descname">loadROIsDir</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">dirName: str</em>, <em class="sig-param">fileExt: str = ''</em>, <em class="sig-param">depth: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.loadROIsDir" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="N2D2.Database.logROIsStats">
-<code class="sig-name descname">logROIsStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">sizeFileName: str</em>, <em class="sig-param">labelFileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask = StimuliSetMask.All</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.logROIsStats" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="N2D2.Database.logStats">
-<code class="sig-name descname">logStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">sizeFileName: str</em>, <em class="sig-param">labelFileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask = StimuliSetMask.All</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.logStats" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="N2D2.Database.saveROIs">
-<code class="sig-name descname">saveROIs</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">header: str = ''</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.saveROIs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dl class="py method">
+<dt id="N2D2.Database.getStimulusLabel">
+<code class="sig-name descname">getStimulusLabel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Database.getStimulusLabel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getStimulusLabel(self: N2D2.Database, id: int) -&gt; int</p></li>
+<li><p>getStimulusLabel(self: N2D2.Database, set: N2D2.Database.StimuliSet, index: int) -&gt; int</p></li>
+</ol>
+</dd></dl>
 
 </dd></dl>
 
@@ -260,11 +257,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, CEA LIST
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -275,7 +280,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

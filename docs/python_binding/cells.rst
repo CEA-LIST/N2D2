@@ -18,3 +18,33 @@ Cell_Frame
 
 .. autoclass:: N2D2.Cell_Frame_CUDA_float
    :members:
+
+.. autoclass:: N2D2.ConvCell_Frame_float
+   :members:
+
+.. autoclass:: N2D2.ConvCell_Frame_double
+   :members:
+
+.. autoclass:: N2D2.FcCell_Frame_float
+   :members:
+
+.. autoclass:: N2D2.FcCell_Frame_double
+   :members:
+
+.. autoclass:: N2D2.FcCell_Frame_CUDA_float
+   :members:
+
+.. autoclass:: N2D2.FcCell_Frame_CUDA_double
+   :members:
+
+.. autoclass:: N2D2.SoftmaxCell_Frame_double
+   :members:
+
+.. autoclass:: N2D2.SoftmaxCell_Frame_float
+   :members:
+
+.. autoclass:: N2D2.SoftmaxCell_Frame_CUDA_double
+   :members:
+
+.. autoclass:: N2D2.SoftmaxCell_Frame_CUDA_float
+   :members:

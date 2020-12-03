@@ -1,5 +1,5 @@
 Transformation
-====
+==============
 
 Introduction
 ------------
@@ -24,14 +24,17 @@ Creation of different Transformation object.
     padcrop = N2D2.PadCropTransformation(24, 24)
 
     ct = N2D2.CompositeTransformation(padcrop)
-    ct.push_back(trans)
+    ct.push_back(dist)
 
-To apply Transformation to a dataset, we need an object :py:class:`N2D2.StimuliProvider` which act as a data loader.
+To apply Transformation to a dataset, we used an object :py:class:`N2D2.StimuliProvider` which acts as a data loader.
 
 .. testcode::
 
-    stimuli = N2D2.StimuliProvider(database, [24, 24, 1], batchSize, False)
-    stimuli.addTransformation(ct, database.StimuliSetMask(0))
+   N2D2.mtSeed(0)
+   database = N2D2.MNIST_IDX_Database()
+   database.load("/nvme0/DATABASE/MNIST/raw/")
+   stimuli = N2D2.StimuliProvider(database, [24, 24, 1], 10, False)
+   stimuli.addTransformation(ct, database.StimuliSetMask(0))
 
 Transformation:
 ---------------
@@ -40,19 +43,19 @@ Transformation:
    :members:
 
 CompositeTransformation:
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.CompositeTransformation
    :members:
 
 DistortionTransformation:
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.DistortionTransformation
    :members:
 
 PadCropTransformation:
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.PadCropTransformation
    :members:

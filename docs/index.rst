@@ -27,13 +27,15 @@ N2D2
 .. toctree::
    :maxdepth: 1
    :caption: Binding Python:
-
+   
+   python_binding/activation
    python_binding/containers
    python_binding/cells
    python_binding/databases
    python_binding/deepnet
    python_binding/stimuliprovider
    python_binding/transformation
+   python_binding/example
 
 .. toctree::
    :maxdepth: 2
