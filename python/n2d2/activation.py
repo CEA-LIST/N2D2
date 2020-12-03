@@ -20,7 +20,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 import N2D2
-
+import n2d2
 
 class Activation:
 
@@ -28,11 +28,12 @@ class Activation:
 
         self._activation = None
         self._activation_parameters = activation_parameters
-        self._model_parameters = None
 
         self._model_key = ""
 
     def N2D2(self):
+        if self._activation is None:
+            raise n2d2.UndefinedModelError("N2D2 activation member has not been created. Did you run generate_model?")
         return self._activation
 
     def __str__(self):
@@ -54,8 +55,8 @@ class Linear(Activation):
     # TODO: Add method that initialized based on INI file section
 
 
-    def generate_model(self, DefaultModel='Frame', DefaultDataType='float'):
-        self._model_key = DefaultModel + '<' + DefaultDataType + '>'
+    def generate_model(self, Model='Frame', DataType='float'):
+        self._model_key = Model + '<' + DataType + '>'
 
         self._activation = self._activation_generators[self._model_key]()
 
@@ -82,8 +83,8 @@ class Rectifier(Activation):
     # TODO: Add method that initialized based on INI file section
 
 
-    def generate_model(self, DefaultModel='Frame', DefaultDataType='float'):
-        self._model_key = DefaultModel + '<' + DefaultDataType + '>'
+    def generate_model(self, Model='Frame', DataType='float'):
+        self._model_key = Model + '<' + DataType + '>'
 
         self._activation = self._activation_generators[self._model_key]()
 

@@ -44,45 +44,25 @@ General paradigms:
 import n2d2
 import N2D2
 
+
 batch_size = 128
-nb_epochs = 10
+nb_epochs = 1
 epoch_size = int(50000/batch_size)
 
 
 print("Create database")
-database = n2d2.database.MNIST(Validation=0.1)
-print("Load database")
-database.load("/nvme0/DATABASE/MNIST/raw/")
+database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation=0.1)
 
+print("Create provider")
+provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size, False)
 
 
 print("Create model")
-"""
 model = n2d2.deepnet.Sequential([
     [
-        n2d2.cells.FcCell(Name='fc1', NbOutputs=300, Activation='Tanh', NoBias=False, Backpropagate=True),
-        n2d2.cells.FcCell(Name='fc2', NbOutputs=300, Activation='Tanh', NoBias=False, Backpropagate=True)
-    ],
-    [
-        [
-            n2d2.cells.FcCell(Name='fc3', NbOutputs=200, Activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(Name='fc4', NbOutputs=200, Activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(Name='fc5', NbOutputs=200, Activation='Tanh', NoBias=False, Backpropagate=True)
-        ],
-        [
-            n2d2.cells.FcCell(Name='fc6', NbOutputs=100, Activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(Name='fc7', NbOutputs=100, Activation='Tanh', NoBias=False, Backpropagate=True),
-            n2d2.cells.FcCell(Name='fc8', NbOutputs=100, Activation='Tanh', NoBias=False, Backpropagate=True)
-        ],
-    ],
-    n2d2.cells.FcCell(Name='fc9', NbOutputs=10, Activation='Tanh', NoBias=False, Backpropagate=True),
-    n2d2.cells.SoftmaxCell(Name='softmax', NbOutputs=10)
-], DefaultModel='Frame')
-"""
-model = n2d2.deepnet.Sequential([
-    [
-        n2d2.cell.Fc(Name='fc1', NbOutputs=300, Activation=n2d2.activation.Rectifier(), NoBias=False, Backpropagate=True),
-        n2d2.cell.Fc(Name='fc2', NbOutputs=10, Activation=n2d2.activation.Linear(), NoBias=False, Backpropagate=True)
+        n2d2.cell.Fc(Name='fc1', NbOutputs=300, Activation=n2d2.activation.Rectifier(), Solver=n2d2.solver.SGD(LearningRate='0.1'),
+ NoBias=False, Backpropagate=True),
+        n2d2.cell.Fc(Name='fc2', NbOutputs=10, Activation=n2d2.activation.Linear(), Solver=n2d2.solver.SGD(LearningRate='0.1'), NoBias=False, Backpropagate=True)
     ],
     n2d2.cell.Softmax(Name='softmax', NbOutputs=10)
 ], DefaultModel='Frame_CUDA')
@@ -90,60 +70,48 @@ model = n2d2.deepnet.Sequential([
 print(model)
 
 
-print("Create provider")
-provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size, False)
-
 print("Add provider")
 model.add_provider(provider)
 
-print(model.getOutput())
-
 print("Create target")
 tar = N2D2.TargetScore('target', model.getOutput().N2D2(), provider.N2D2())
-
-#print("Add target")
-#model.add_target(tar)
-
-print(model._deepnet)
-
-
-
-#exit()
 
 print("Initialize model")
 model.initialize()
 
 for epoch in range(nb_epochs):
 
-    print("### Epoch: " + str(epoch))
+    print("### Epoch: " + str(epoch) + " ###")
 
     for i in range(epoch_size):
 
-        print("Batch: " + str(i))
-
-        # Generate target
+        # Load example
         provider.readRandomBatch(set='Learn')
 
-        # Calls setOutputTarget of cell
+        # Set target of cell
         tar.provideTargets(N2D2.Database.Learn)
 
         # Propagate
         model.propagate()
 
+        # Calculate loss and error
         tar.process(N2D2.Database.Learn)
 
         # Backpropagate
         model.backpropagate()
 
-        # Update parameters by calling solver on gradients
+        # Update parameters
         model.update()
 
         success = tar.getAverageSuccess(N2D2.Database.Learn, 100)
 
-        print("Success: " + str(success))
+        print("Batch: " + str(i)  + ", train success: " + "{0:.1f}".format(100*success) + "%", end='\r')
 
-    model.getCell('fc1').N2D2().logFreeParameters("fc1.weights")
-    model.getCell('fc2').N2D2().logFreeParameters("fc2.weights")
+    print("")
+
+print("Final train success: " + "{0:.1f}".format(100*success) + "%")
+    #model.getCell('fc1').N2D2().logFreeParameters("fc1.weights")
+    #model.getCell('fc2').N2D2().logFreeParameters("fc2.weights")
 
 
 

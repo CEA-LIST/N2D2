@@ -39,6 +39,16 @@ void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
     .def("propagate", &FcCell_Frame<T>::propagate, py::arg("inference") = false)
     .def("backPropagate", &FcCell_Frame<T>::backPropagate)
     .def("update", &FcCell_Frame<T>::update);
+    
+    
+    //.def("setWeightsSolver", &FcCell_Frame<T>::setWeightsSolver, py::arg("solver"));
+    //.def("getWeightsSolver", &FcCell_Frame<T>::getWeightsSolver);
+    //.def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
+    //.def("getWeightsFiller", &FcCell::setWeightsFiller)
+    //.def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
+    //.def("getBiasSolver", &FcCell::getBiasSolver)
+    //.def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
+    //.def("getBiasFiller", &FcCell::setBiasFiller);
 
 }
 

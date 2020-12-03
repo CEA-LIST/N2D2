@@ -21,6 +21,7 @@
 """
 import N2D2
 import n2d2.activation
+import n2d2.solver
 
 class Cell():
 
@@ -35,6 +36,8 @@ class Cell():
         self._model_key = ""
         
     def N2D2(self):
+        if self._cell is None:
+            raise n2d2.UndefinedModelError("N2D2 cell member has not been created. Did you run generate_model?")
         return self._cell
 
     def __str__(self):
@@ -57,10 +60,6 @@ class Fc(Cell):
     _cell_generators = {
             'Frame<float>' : N2D2.FcCell_Frame_float,
             'Frame_CUDA<float>' : N2D2.FcCell_Frame_CUDA_float,
-            #'Frame<half>' : N2D2.FcCell_Frame_half,
-            #'Frame_CUDA<half>' : N2D2.FcCell_Frame_CUDA,
-            #'Frame<double>' : N2D2.FcCell_Frame_double,
-            #'Frame_CUDA<double>' : N2D2.FcCell_Frame_CUDA,
     }
      
 
@@ -68,6 +67,12 @@ class Fc(Cell):
         super().__init__(Name=Name, NbOutputs=NbOutputs, **cell_parameters)
 
         self._Activation = Activation
+
+        if "Solver" in cell_parameters:
+            self._Solver = cell_parameters["Solver"]
+        else:
+            print("No solver")
+            exit()
 
     #TODO: Add method that initialized based on INI file section
     """
@@ -86,10 +91,12 @@ class Fc(Cell):
         #self.cell.setParameter() # N2D2 code
     """
     
-    def generate_model(self, deepnet, DefaultModel='Frame', DefaultDataType='float', **model_parameters):
-        self._model_key = DefaultModel + '<' + DefaultDataType + '>'
+    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
+        self._model_key = Model + '<' + DataType + '>'
 
-        self._Activation.generate_model(DefaultModel, DefaultDataType)
+        self._Activation.generate_model(Model, DataType)
+        if not self._Solver == None:
+            self._Solver.generate_model(Model, DataType)
         self._cell = self._cell_generators[self._model_key](deepnet,
                                                             self._Name,
                                                             self._NbOutputs,
@@ -100,6 +107,8 @@ class Fc(Cell):
 
         # TODO: Saver to initialize this with the actual values in the N2D2 objects?
         self._model_parameters = model_parameters
+
+        self._cell.setWeightsSolver(self._Solver.N2D2())
         
         
     def __str__(self):
@@ -125,8 +134,8 @@ class Softmax(Cell):
 
     # TODO: Add method that initialized based on INI file section
 
-    def generate_model(self, deepnet, DefaultModel='Frame', DefaultDataType='float', **model_parameters):
-        self._model_key = DefaultModel + '<' + DefaultDataType + '>'
+    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
+        self._model_key = Model + '<' + DataType + '>'
 
         self._cell = self._cell_generators[self._model_key](deepnet,
                                                             self._Name,

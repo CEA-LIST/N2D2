@@ -21,6 +21,7 @@
 """
 
 import N2D2
+import n2d2
 
 """
 At the moment, this class is rather superfluous, and servers mainly for hiding
@@ -43,10 +44,14 @@ class Database():
         self._database = database
 
     def N2D2(self):
+        if self._database is None:
+            raise n2d2.UndefinedModelError("N2D2 database member has not been created")
         return self._database
 
 class MNIST(Database):
-    def __init__(self, Validation):
+    def __init__(self, datapath, Validation):
+
+        self._datapath = datapath
         self._Validation = Validation
 
         super().__init__(database=N2D2.MNIST_IDX_Database(validation=self._Validation))
@@ -54,6 +59,8 @@ class MNIST(Database):
         # Necessary to initialize random number generator; TODO: Replace
         net = N2D2.Network()
         deepNet = N2D2.DeepNet(net)  # Proposition : overload the constructor to avoid passing a Network object
+
+        self._database.load(self._datapath)
 
     # TODO: Can this be moved to parent class?
     def load(self, dataPath, **kwargs):
