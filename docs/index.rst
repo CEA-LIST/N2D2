@@ -18,11 +18,11 @@ N2D2
    :maxdepth: 1
    :caption: INI File Interface:
 
-   ini_intro
-   ini_databases
-   ini_data_analysis
-   ini_environment
-   ini_layers
+   ini/intro
+   ini/databases
+   ini/data_analysis
+   ini/environment
+   ini/layers
 
 .. toctree::
    :maxdepth: 1
