@@ -1,6 +1,6 @@
-"""
+/*
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
 
@@ -18,14 +18,36 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-"""
+*/
 
-from n2d2.misc import *
+#ifdef CUDA
 
-import n2d2.database 
-import n2d2.cell
-import n2d2.provider
-from n2d2.tensor import *
-#import n2d2.transforms 
-import n2d2.deepnet
-import n2d2.solver
+#ifdef PYBIND
+#include "Solver/SGDSolver_Frame.hpp"
+
+
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+
+namespace N2D2 {
+template<typename T>
+void declare_SGDSolver_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("SGDSolver_Frame_" + typeStr);
+    py::class_<
+        SGDSolver_Frame<T>, 
+        std::shared_ptr<SGDSolver_Frame<T>>, 
+        SGDSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
+    .def(py::init());
+}
+
+void init_SGDSolver_Frame(py::module &m) {
+    declare_SGDSolver_Frame<float>(m, "float");
+    declare_SGDSolver_Frame<double>(m, "double");
+}
+}
+
+#endif
+
+#endif

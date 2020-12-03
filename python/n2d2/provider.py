@@ -21,6 +21,7 @@
 """
 
 import N2D2
+import n2d2
 
 class DataProvider():
     # Be careful to match default parameters in python and N2D2 constructor
@@ -46,4 +47,6 @@ class DataProvider():
         return self._provider.readRandomBatch(set=self._database.StimuliSets['Learn'])
 
     def N2D2(self):
+        if self._provider is None:
+            raise n2d2.UndefinedModelError("N2D2 solver member has not been created")
         return self._provider

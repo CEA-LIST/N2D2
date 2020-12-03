@@ -65,6 +65,11 @@ void init_Transformation(py::module&);
 void init_CompositeTransformation(py::module &m);
 void init_DistortionTransformation(py::module&);
 void init_PadCropTransformation(py::module&);
+void init_Solver(py::module&);
+void init_SGDSolver(py::module&);
+void init_SGDSolver_Frame(py::module&);
+void init_SGDSolver_Frame_CUDA(py::module&);
+
 
 
 PYBIND11_MODULE(N2D2, m) {
@@ -107,6 +112,10 @@ PYBIND11_MODULE(N2D2, m) {
     init_CompositeTransformation(m);
     init_DistortionTransformation(m);
     init_PadCropTransformation(m);
+    init_Solver(m);
+    init_SGDSolver(m);
+    init_SGDSolver_Frame(m);
+    init_SGDSolver_Frame_CUDA(m);
 
 }
 }
