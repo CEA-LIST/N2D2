@@ -634,7 +634,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     bool doQuant = true;
 
-    CudaContext::setDevice(4);
+    CudaContext::setDevice(0);
     const unsigned int nbOutputs_conv1 = 1;
     const unsigned int nbOutputs_conv2 = 4;
     const unsigned int nbOutputs_conv3 = 4;
@@ -1192,7 +1192,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
 
     bool doQuant = true;
 
-    CudaContext::setDevice(4);
+    CudaContext::setDevice(0);
     const unsigned int nbOutputs_conv1 = 1;
     const unsigned int nbOutputs_conv2 = 4;
     const unsigned int nbOutputs_conv3 = 4;
