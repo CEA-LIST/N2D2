@@ -55,15 +55,30 @@ void init_FcCell_Frame_CUDA(py::module&);
 void init_SoftmaxCell(py::module&);
 void init_SoftmaxCell_Frame(py::module&);
 void init_SoftmaxCell_Frame_CUDA(py::module&);
+
+//Ativation
 void init_Activation(py::module&);
 void init_TanhActivation(py::module&);
 void init_TanhActivation_Frame(py::module&);
+void init_TanhActivation_Frame_CUDA(py::module &m);
 void init_RectifierActivation(py::module&);
 void init_RectifierActivation_Frame(py::module&);
 void init_RectifierActivation_Frame_CUDA(py::module&);
 void init_LinearActivation(py::module&);
 void init_LinearActivation_Frame(py::module&);
 void init_LinearActivation_Frame_CUDA(py::module&);
+void init_SwishActivation(py::module&);
+void init_SwishActivation_Frame(py::module&);
+void init_SwishActivation_Frame_CUDA(py::module&);
+void init_SoftplusActivation(py::module&);
+void init_SoftplusActivation_Frame(py::module&);
+void init_SoftplusActivation_Frame_CUDA(py::module&);
+void init_SaturationActivation(py::module&);
+void init_SaturationActivation_Frame(py::module&);
+void init_SaturationActivation_Frame_CUDA(py::module&);
+void init_LogisticActivation(py::module&);
+void init_LogisticActivation_Frame(py::module&);
+void init_LogisticActivation_Frame_CUDA(py::module&);
 
 // Transformation
 void init_Transformation(py::module&);
@@ -138,15 +153,31 @@ PYBIND11_MODULE(N2D2, m) {
     init_SoftmaxCell(m);
     init_SoftmaxCell_Frame(m);
     init_SoftmaxCell_Frame_CUDA(m);
+
+    //Activation
     init_Activation(m);
     init_TanhActivation(m);
     init_TanhActivation_Frame(m);
+    init_TanhActivation_Frame_CUDA(m);
     init_RectifierActivation(m);
     init_RectifierActivation_Frame(m);
     init_RectifierActivation_Frame_CUDA(m);
     init_LinearActivation(m);
     init_LinearActivation_Frame(m);
     init_LinearActivation_Frame_CUDA(m);
+    init_SwishActivation(m);
+    init_SwishActivation_Frame(m);
+    init_SwishActivation_Frame_CUDA(m);
+    init_SoftplusActivation(m);
+    init_SoftplusActivation_Frame(m);
+    init_SoftplusActivation_Frame_CUDA(m);
+    init_SaturationActivation(m);
+    init_SaturationActivation_Frame(m);
+    init_SaturationActivation_Frame_CUDA(m);
+    init_LogisticActivation(m);
+    init_LogisticActivation_Frame(m);
+    init_LogisticActivation_Frame_CUDA(m);
+
 
     // Transformation
     init_Transformation(m);
