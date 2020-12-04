@@ -27,6 +27,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_CudaContext(py::module&);
+void init_WindowFunction(py::module&);
 void init_Tensor(py::module&);
 void init_CudaTensor(py::module&);
 void init_Network(py::module&);
@@ -61,10 +62,38 @@ void init_RectifierActivation_Frame_CUDA(py::module&);
 void init_LinearActivation(py::module&);
 void init_LinearActivation_Frame(py::module&);
 void init_LinearActivation_Frame_CUDA(py::module&);
+
+// Transformation
 void init_Transformation(py::module&);
-void init_CompositeTransformation(py::module &m);
+void init_AffineTransformation(py::module&);
+void init_ApodizationTransformation(py::module&);
+void init_ChannelExtractionTransformation(py::module&);
+void init_ColorSpaceTransformation(py::module&);
+void init_CompressionNoiseTransformation(py::module&);
+void init_CompositeTransformation(py::module &);
+void init_DCTTransformation(py::module&);
+void init_DFTTransformation(py::module&);
 void init_DistortionTransformation(py::module&);
+void init_EqualizeTransformation(py::module&);
+void init_ExpandLabelTransformation(py::module&);
+void init_FlipTransformation(py::module&);
 void init_PadCropTransformation(py::module&);
+void init_GradientFilterTransformation(py::module&);
+void init_LabelExtractionTransformation(py::module&);
+void init_LabelSliceExtractionTransformation(py::module&);
+void init_MagnitudePhaseTransformation(py::module&);
+void init_MorphologicalReconstructionTransformation(py::module&);
+void init_MorphologyTransformation(py::module&);
+void init_NormalizeTransformation(py::module&);
+void init_RandomAffineTransformation(py::module&);
+void init_RangeAffineTransformation(py::module&);
+void init_RangeClippingTransformation(py::module&);
+void init_RescaleTransformation(py::module&);
+void init_ReshapeTransformation(py::module&);
+void init_SliceExtractionTransformation(py::module&);
+void init_ThresholdTransformation(py::module&);
+void init_WallisFilterTransformation(py::module&);
+
 void init_Solver(py::module&);
 void init_SGDSolver(py::module&);
 void init_SGDSolver_Frame(py::module&);
@@ -75,6 +104,7 @@ void init_SGDSolver_Frame_CUDA(py::module&);
 PYBIND11_MODULE(N2D2, m) {
     init_CudaContext(m);
     init_Tensor(m);
+    init_WindowFunction(m);
     init_CudaTensor(m);
     init_Network(m);
     init_Database(m);
@@ -108,10 +138,38 @@ PYBIND11_MODULE(N2D2, m) {
     init_LinearActivation(m);
     init_LinearActivation_Frame(m);
     init_LinearActivation_Frame_CUDA(m);
+
+    // Transformation
     init_Transformation(m);
+    init_AffineTransformation(m);
+    init_ApodizationTransformation(m);
+    init_ChannelExtractionTransformation(m);
+    init_ColorSpaceTransformation(m);
     init_CompositeTransformation(m);
+    init_CompressionNoiseTransformation(m);
+    init_DCTTransformation(m);
+    init_DFTTransformation(m);
     init_DistortionTransformation(m);
+    init_EqualizeTransformation(m);
+    init_ExpandLabelTransformation(m);
+    init_FlipTransformation(m);
     init_PadCropTransformation(m);
+    init_GradientFilterTransformation(m);
+    init_LabelExtractionTransformation(m);
+    init_LabelSliceExtractionTransformation(m);
+    init_MagnitudePhaseTransformation(m);
+    init_MorphologicalReconstructionTransformation(m);
+    init_MorphologyTransformation(m);
+    init_NormalizeTransformation(m);
+    init_RandomAffineTransformation(m);
+    init_RangeAffineTransformation(m);
+    init_RangeClippingTransformation(m);
+    init_RescaleTransformation(m);
+    init_ReshapeTransformation(m);
+    init_SliceExtractionTransformation(m);
+    init_ThresholdTransformation(m);
+    init_WallisFilterTransformation(m);
+
     init_Solver(m);
     init_SGDSolver(m);
     init_SGDSolver_Frame(m);
