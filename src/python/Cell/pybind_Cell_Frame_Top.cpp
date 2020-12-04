@@ -54,8 +54,8 @@ void init_Cell_Frame_Top(py::module &m) {
     // .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs)
     // .def("getDiffInputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getDiffInputs)
     .def("getMaxOutput", &Cell_Frame_Top::getMaxOutput, py::arg("batchPos") = 0)
-    // .def("getActivation", &Cell_Frame_Top::getActivation)
-    // .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
+    .def("getActivation", &Cell_Frame_Top::getActivation)
+    .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
     // .def("isCuda", &Cell_Frame_Top::isCuda)
     ;
 }
