@@ -35,7 +35,8 @@ void N2D2::GTSRB_DIR_Database::load(const std::string& dataPath,
 
     // Learn and validation stimuli
     loadDir(dataPath + "/Final_Training/Images", 1, "", -1);
-    loadROIsDir(labelPathDef + "/Final_Training/Images", "csv", 1);
+    loadROIsDir(labelPathDef + "/Final_Training/Images",
+                std::vector<std::string>(1, "csv"), 1);
 
     if (extractROIs)
         Database::extractROIs();

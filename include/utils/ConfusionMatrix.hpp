@@ -186,6 +186,10 @@ public:
     {
         return mFn;
     };
+    inline T relevant() const
+    {
+        return (mTp + mFp + mFn);
+    }
 
 private:
     T mTp;
@@ -458,14 +462,18 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
 
     const unsigned int nbTargetsNoEmpty = (emptySet)
         ? (nbTargets - 1) : nbTargets;
+    unsigned int nbRelevant = 0;
 
     for (unsigned int target = 0; target < nbTargetsNoEmpty; ++target) {
-        avgSensitivity += conf[target].sensitivity();
-        avgSpecificity += conf[target].specificity();
-        avgPrecision += conf[target].precision();
-        avgAccuracy += conf[target].accuracy();
-        avgF1Score += conf[target].fScore();
-        avgInformedness += conf[target].informedness();
+        if (conf[target].relevant() > 0) {
+            avgSensitivity += conf[target].sensitivity();
+            avgSpecificity += conf[target].specificity();
+            avgPrecision += conf[target].precision();
+            avgAccuracy += conf[target].accuracy();
+            avgF1Score += conf[target].fScore();
+            avgInformedness += conf[target].informedness();
+            ++nbRelevant;
+        }
 
         std::stringstream labelStr;
 
@@ -490,12 +498,14 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
             << " " << conf[target].informedness() << "\n";
     }
 
-    avgSensitivity /= nbTargetsNoEmpty;
-    avgSpecificity /= nbTargetsNoEmpty;
-    avgPrecision /= nbTargetsNoEmpty;
-    avgAccuracy /= nbTargetsNoEmpty;
-    avgF1Score /= nbTargetsNoEmpty;
-    avgInformedness /= nbTargetsNoEmpty;
+    if (nbRelevant > 0) {
+        avgSensitivity /= nbRelevant;
+        avgSpecificity /= nbRelevant;
+        avgPrecision /= nbRelevant;
+        avgAccuracy /= nbRelevant;
+        avgF1Score /= nbRelevant;
+        avgInformedness /= nbRelevant;
+    }
 
     confData << "\n";
     confData << "- AVG"

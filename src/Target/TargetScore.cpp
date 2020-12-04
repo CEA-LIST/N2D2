@@ -152,12 +152,17 @@ double N2D2::TargetScore::getAverageScore(Database::StimuliSet set,
         = confusionMatrix.getConfusionTables();
 
     double avgScore = 0.0;
+    unsigned int nbRelevant = 0;
 
-    for (unsigned int target = 0; target < conf.size(); ++target)
-        avgScore += conf[target].getMetric(metric);
+    for (unsigned int target = 0; target < conf.size(); ++target) {
+        if (conf[target].relevant() > 0) {
+            avgScore += conf[target].getMetric(metric);
+            ++nbRelevant;
+        }
+    }
 
-    if (conf.size() > 0)
-        avgScore /= conf.size();
+    if (nbRelevant > 0)
+        avgScore /= nbRelevant;
 
     return avgScore;
 }
@@ -180,12 +185,17 @@ double N2D2::TargetScore::getAverageTopNScore(Database::StimuliSet set,
         = confusionMatrix.getConfusionTables();
 
     double avgScore = 0.0;
+    unsigned int nbRelevant = 0;
 
-    for (unsigned int target = 0; target < conf.size(); ++target)
-        avgScore += conf[target].getMetric(metric);
+    for (unsigned int target = 0; target < conf.size(); ++target) {
+        if (conf[target].relevant() > 0) {
+            avgScore += conf[target].getMetric(metric);
+            ++nbRelevant;
+        }
+    }
 
-    if (conf.size() > 0)
-        avgScore /= conf.size();
+    if (nbRelevant > 0)
+        avgScore /= nbRelevant;
 
     return avgScore;
 }
@@ -783,17 +793,3 @@ void N2D2::TargetScore::clear(Database::StimuliSet set)
     clearConfusionMatrix(set);
     clearMisclassified(set);
 }
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_TargetScore(py::module &m) {
-    py::class_<TargetScore, std::shared_ptr<TargetScore>, Target>(m, "TargetScore", py::multiple_inheritance());
-}
-}
-#endif

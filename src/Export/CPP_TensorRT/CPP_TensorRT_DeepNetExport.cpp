@@ -102,7 +102,8 @@ void N2D2::CPP_TensorRT_DeepNetExport::generateProgramBegin(DeepNet& /*deepNet*/
     prog << "// N2D2 auto-generated file.\n"
             "// @ " << std::asctime(localNow)
          << "\n" // std::asctime() already appends end of line
-            "#include \"../../include/NetworkTensorRT.hpp\"\n"
+            "#include \"../../include/NetworkTensorRT.hpp\"\n" <<
+            "#include \"../../include/Scaling.hpp\"\n" <<
             "\n";
 
 }

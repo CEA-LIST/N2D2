@@ -154,7 +154,10 @@ void N2D2::StimuliProvider::addTransformation(const CompositeTransformation
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mTransformations(*it).cacheable.push_back(transformation);
+        mTransformations(*it).cacheable.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addOnTheFlyTransformation(
@@ -169,7 +172,10 @@ void N2D2::StimuliProvider::addOnTheFlyTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mTransformations(*it).onTheFly.push_back(transformation);
+        mTransformations(*it).onTheFly.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelTransformation(
@@ -186,8 +192,12 @@ void N2D2::StimuliProvider::addChannelTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations.back()(*it)
             .cacheable.push_back(transformation);
+        mChannelsTransformations.back()(*it)
+            .cacheable.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
@@ -204,7 +214,10 @@ void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations.back()(*it).onTheFly.push_back(transformation);
+        mChannelsTransformations.back()(*it).onTheFly.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelTransformation(
@@ -224,8 +237,12 @@ void N2D2::StimuliProvider::addChannelTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations[channel](*it)
             .cacheable.push_back(transformation);
+        mChannelsTransformations[channel](*it)
+            .cacheable.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
@@ -246,8 +263,12 @@ void N2D2::StimuliProvider::addChannelOnTheFlyTransformation(
          itEnd = stimuliSets.end();
          it != itEnd;
          ++it)
+    {
         mChannelsTransformations[channel](*it)
             .onTheFly.push_back(transformation);
+        mChannelsTransformations[channel](*it)
+            .onTheFly.setStimuliProvider(this);
+    }
 }
 
 void N2D2::StimuliProvider::addChannelsTransformation(
@@ -266,8 +287,10 @@ void N2D2::StimuliProvider::addChannelsTransformation(
              = mChannelsTransformations.begin(),
              itTransEnd = mChannelsTransformations.end();
              itTrans != itTransEnd;
-             ++itTrans) {
+             ++itTrans)
+        {
             (*itTrans)(*it).cacheable.push_back(transformation);
+            (*itTrans)(*it).cacheable.setStimuliProvider(this);
         }
     }
 }
@@ -288,8 +311,10 @@ void N2D2::StimuliProvider::addChannelsOnTheFlyTransformation(
              = mChannelsTransformations.begin(),
              itTransEnd = mChannelsTransformations.end();
              itTrans != itTransEnd;
-             ++itTrans) {
+             ++itTrans)
+        {
             (*itTrans)(*it).onTheFly.push_back(transformation);
+            (*itTrans)(*it).onTheFly.setStimuliProvider(this);
         }
     }
 }
@@ -1131,11 +1156,12 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
 
     unsigned int dimX = data.dimX();
     unsigned int dimY = data.dimY();
+    unsigned int dimSqrt = 0;
 
     for (unsigned int z = 0; z < data.dimZ(); ++z) {
         const Tensor<Float_T>& channel = data[z];
 
-        if (dimX > 1 && dimY > 1) {
+        if (dimSqrt == 0 && dimX > 1 && dimY > 1) {
             // 2D data
             for (unsigned int y = 0; y < dimY; ++y) {
                 for (unsigned int x = 0; x < dimX; ++x) {
@@ -1150,11 +1176,11 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
         } else {
             // 1D data
             const unsigned int size = dimX * dimY;
-            dimX = dimY = std::ceil(std::sqrt((double)size));
+            dimSqrt = std::ceil(std::sqrt((double)size));
             unsigned int index = 0;
 
-            for (unsigned int y = 0; y < dimY; ++y) {
-                for (unsigned int x = 0; x < dimX; ++x) {
+            for (unsigned int y = 0; y < dimSqrt; ++y) {
+                for (unsigned int x = 0; x < dimSqrt; ++x) {
                     if (index < size) {
                         minVal[z] = std::min(minVal[z], channel(index));
                         maxVal[z] = std::max(maxVal[z], channel(index));
@@ -1173,6 +1199,11 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     }
 
     dataFile.close();
+
+    if (dimSqrt > 0) {
+        dimX = dimSqrt;
+        dimY = dimSqrt;
+    }
 
     Gnuplot gnuplot(fileName + ".gnu");
     gnuplot.set("grid").set("key off");
@@ -1787,56 +1818,3 @@ void N2D2::StimuliProvider::saveDataCache(const std::string& fileName,
          ++it)
         BinaryCvMat::write(os, *it);
 }
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_StimuliProvider(py::module &m) {
-    py::class_<StimuliProvider, std::shared_ptr<StimuliProvider>>(m, "StimuliProvider", py::multiple_inheritance())
-    .def(py::init<Database&, const std::vector<size_t>&, unsigned int, bool>(), py::arg("database"), py::arg("size"), py::arg("batchSize") = 1, py::arg("compositeStimuli") = false)
-    .def("cloneParameters", &StimuliProvider::cloneParameters)
-    .def("logTransformations", &StimuliProvider::logTransformations, py::arg("fileName"))
-    .def("future", &StimuliProvider::future)
-    .def("synchronize", &StimuliProvider::synchronize)
-    .def("getRandomIndex", &StimuliProvider::getRandomIndex, py::arg("set"))
-    .def("getRandomID", &StimuliProvider::getRandomID, py::arg("set"))
-    .def("readRandomBatch", &StimuliProvider::readRandomBatch, py::arg("set"))
-    .def("readRandomStimulus", &StimuliProvider::readRandomStimulus, py::arg("set"), py::arg("batchPos") = 0)
-    .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0)
-    .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1)
-    .def("readStimulusBatch", &StimuliProvider::readStimulusBatch, py::arg("id"), py::arg("set"))
-    .def("readStimulus", (void (StimuliProvider::*)(Database::StimulusID, Database::StimuliSet, unsigned int)) &StimuliProvider::readStimulus, py::arg("id"), py::arg("set"), py::arg("batchPos") = 0)
-    .def("readStimulus", (Database::StimulusID (StimuliProvider::*)(Database::StimuliSet, unsigned int, unsigned int)) &StimuliProvider::readStimulus, py::arg("set"), py::arg("index"), py::arg("batchPos") = 0)
-    .def("readRawData", (Tensor<Float_T> (StimuliProvider::*)(Database::StimulusID) const) &StimuliProvider::readRawData, py::arg("id"))
-    .def("readRawData", (Tensor<Float_T> (StimuliProvider::*)(Database::StimuliSet, unsigned int) const) &StimuliProvider::readRawData, py::arg("set"), py::arg("index"))
-    .def("setBatchSize", &StimuliProvider::setBatchSize, py::arg("batchSize"))
-    .def("setCachePath", &StimuliProvider::setCachePath, py::arg("path") = "")
-    .def("getDatabase", (Database& (StimuliProvider::*)()) &StimuliProvider::getDatabase)
-    .def("getSize", &StimuliProvider::getSize)
-    .def("getSizeX", &StimuliProvider::getSizeX)
-    .def("getSizeY", &StimuliProvider::getSizeY)
-    .def("getSizeD", &StimuliProvider::getSizeD)
-    .def("getBatchSize", &StimuliProvider::getBatchSize)
-    .def("isCompositeStimuli", &StimuliProvider::isCompositeStimuli)
-    .def("getNbChannels", &StimuliProvider::getNbChannels)
-    .def("getNbTransformations", &StimuliProvider::getNbTransformations, py::arg("set"))
-    .def("getTransformation", &StimuliProvider::getTransformation, py::arg("set"))
-    .def("getOnTheFlyTransformation", &StimuliProvider::getOnTheFlyTransformation, py::arg("set"))
-    .def("getChannelTransformation", &StimuliProvider::getChannelTransformation, py::arg("channel"), py::arg("set"))
-    .def("getChannelOnTheFlyTransformation", &StimuliProvider::getChannelOnTheFlyTransformation, py::arg("channel"), py::arg("set"))
-    .def("getBatch", &StimuliProvider::getBatch)
-    .def("getData", (StimuliProvider::TensorData_T& (StimuliProvider::*)()) &StimuliProvider::getData)
-    .def("getLabelsData", (Tensor<int>& (StimuliProvider::*)()) &StimuliProvider::getLabelsData)
-    .def("getLabelsROIs", (const std::vector<std::vector<std::shared_ptr<ROI> > >& (StimuliProvider::*)() const) &StimuliProvider::getLabelsROIs)
-    .def("getData", (const StimuliProvider::TensorData_T (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getData, py::arg("channel"), py::arg("batchPos") = 0)
-    .def("getLabelsData", (const Tensor<int> (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getLabelsData, py::arg("channel"), py::arg("batchPos") = 0)
-    .def("getLabelsROIs", (const std::vector<std::shared_ptr<ROI> >& (StimuliProvider::*)(unsigned int) const) &StimuliProvider::getLabelsROIs, py::arg("batchPos") = 0)
-    .def("getCachePath", &StimuliProvider::getCachePath);
-}
-}
-#endif

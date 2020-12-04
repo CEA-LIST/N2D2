@@ -247,9 +247,10 @@ void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
     std::vector<size_t> oldOutputsDims(mOutputsDims);
     setOutputsDims();
 
-    if (mOutputsDims != oldOutputsDims) {
+    if (mInputs.size() > 1 && mOutputsDims != oldOutputsDims) {
         throw std::runtime_error("Cell_Frame_CUDA::replaceInput(): can't"
-            " replace input, the output dimension has changed!");
+            " replace input, the output dimension has changed and doesn't"
+            " match the other inputs!");
     }
 }
 
@@ -783,25 +784,4 @@ namespace N2D2 {
     template class Cell_Frame_CUDA<double>;
 }
 
-#endif
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-template<typename T>
-void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("Cell_Frame_CUDA_" + typeStr);
-    py::class_<Cell_Frame_CUDA<T>, std::shared_ptr<Cell_Frame_CUDA<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance());
-}
-
-void init_Cell_Frame_CUDA(py::module &m) {
-    declare_Cell_Frame_CUDA<float>(m, "float");
-    declare_Cell_Frame_CUDA<double>(m, "double");
-}
-}
 #endif

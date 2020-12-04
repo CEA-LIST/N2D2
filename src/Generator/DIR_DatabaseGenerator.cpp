@@ -56,8 +56,14 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
             iniConfig.getProperty<std::string>("ROIFile", ""));
         const std::string roiDir = Utils::expandEnvVars(
             iniConfig.getProperty<std::string>("ROIDir", ""));
-        const std::string roiExt = Utils::expandEnvVars(
-            iniConfig.getProperty<std::string>("ROIExtension", "json"));
+        std::vector<std::string> roiExt = iniConfig.getProperty
+            <std::vector<std::string> >("ROIExtension",
+                                        std::vector<std::string>(1, "json"));
+        std::transform(roiExt.begin(),
+                       roiExt.end(),
+                       roiExt.begin(),
+                       Utils::expandEnvVars);
+
         const bool perLabel = iniConfig.getProperty
                               <bool>("PerLabelPartitioning", true);
         const bool equivLabel = iniConfig.getProperty

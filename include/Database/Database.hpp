@@ -112,6 +112,13 @@ public:
         NoTest,
         All
     };
+    enum CompositeLabel {
+        None,
+        Auto,
+        Default,
+        Disjoint,
+        Combine
+    };
 
     /**
      * This objects contains the list of stimuli in each database stimuli set.
@@ -143,7 +150,8 @@ public:
                           const std::string& relPath = "",
                           bool noImageSize = false);
     virtual void loadROIsDir(const std::string& dirName,
-                             const std::string& fileExt = "",
+                             const std::vector<std::string>& fileExt
+                                                = std::vector<std::string>(),
                              int depth = 0);
     virtual void saveROIs(const std::string& fileName,
                           const std::string& header = "") const;
@@ -274,6 +282,7 @@ public:
                                        bool appendSlice = true) const;
     inline int getStimulusLabel(StimulusID id) const;
     inline int getStimulusLabel(StimuliSet set, unsigned int index) const;
+    StimuliSet getStimulusSet(StimulusID id) const;
     inline const ROI* getStimulusSlice(StimulusID id) const;
     inline const ROI* getStimulusSlice(StimuliSet set, unsigned int index)
         const;
@@ -290,9 +299,15 @@ public:
     bool isMatchingLabel(const std::string& labelMask) const;
     int getLabelID(const std::string& labelName) const;
     int getDefaultLabelID() const;
+    const std::vector<std::string>& getLabels() const
+    {
+        return mLabelsName;
+    }
     inline std::vector<int> getLabelsIDs(const std::vector
                                          <std::string>& names) const;
     std::vector<int> getMatchingLabelsIDs(const std::string& labelMask) const;
+    std::vector<int> getMatchingLabelsIDs(
+        const std::vector<std::string>& labelMask) const;
     inline const std::string& getLabelName(int label) const;
     int getStimuliDepth();
     cv::Mat getStimulusData(StimulusID id);
@@ -355,9 +370,35 @@ protected:
     Parameter<bool> mRandomPartitioning;
     // If true, load image label with DataFile::readLabel()
     Parameter<bool> mDataFileLabel;
-    // If true, force composite labels, discarding the stimulus label ID
-    Parameter<bool> mForceCompositeLabel;
+    // A label is said to be composite when it is not a single labelID for the 
+    // stimulus (the stimulus label is a matrix of size > 1).
+    // For the same stimulus, different type of labels can be specified,
+    // i.e. the labelID, pixel-wise data and/or ROIs.
+    // The way these different label types are handled is configured with the
+    // mCompositeLabel parameter:
+    // - None: only the labelID is used, pixel-wise data are ignored and ROIs 
+    //         are loaded but ignored as well by loadStimulusLabelsData().
+    // - Auto: the label is only composite when pixel-wise data are present
+    //         or the stimulus labelID is -1 (in which case the defaultLabel
+    //         is used for the whole label matrix). If the label is composite
+    //         ROIs, if present, are applied. Otherwise, a single ROI is
+    //         allowed and is automatically extracted when fetching the 
+    //         stimulus.
+    // - Default: the label is always composite. The labelID is ignored.
+    //            If there is no pixel-wise data, the defaultLabel is used.
+    //            ROIs, if present, are applied.
+    // - Disjoint: the label is always composite.
+    //             If there is no pixel-wise data:
+    //             - the labelID is used if there is no ROI;
+    //             - the defaultLabel is used if there is any ROI.
+    //             ROIs, if present, are applied.
+    // - Combine: the label is always composite.
+    //            If there is no pixel-wise data, the labelID is used.
+    //            ROIs, if present, are applied.
+    Parameter<CompositeLabel> mCompositeLabel;
     Parameter<std::string> mTargetDataPath;
+    Parameter<std::string> mMultiChannelMatch;
+    Parameter<std::vector<std::string> > mMultiChannelReplace;
 
     /**
      * TABLES
@@ -392,6 +433,9 @@ template <>
 const char* const EnumStrings<N2D2::Database::StimuliSetMask>::data[]
     = {"LearnOnly",    "ValidationOnly", "TestOnly", "NoLearn",
        "NoValidation", "NoTest",         "All"};
+template <>
+const char* const EnumStrings<N2D2::Database::CompositeLabel>::data[]
+    = {"None", "Auto", "Default", "Disjoint", "Combine"};
 }
 
 std::vector<N2D2::Database::StimulusID>& N2D2::Database::StimuliSets::

@@ -518,10 +518,14 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
             std::vector<std::string>::const_iterator itSection = std::find(
                 mIniSections.begin(), mIniSections.end(), sectionName);
 
-            if (itSection == mIniSections.end())
-                throw std::runtime_error("Section [" + sectionName
-                                         + "] does not exist in INI file "
-                                         + mFileName);
+            if (itSection == mIniSections.end()) {
+                // Ignore if section doesn't exist, as [] may also be used in
+                // other contexts. If a section name was intended and there is
+                // a typo, the chances are high that it will be catched in 
+                // another error later...
+                ++startPos;
+                continue;
+            }
 
             const unsigned int sectionIndex = itSection - mIniSections.begin();
 

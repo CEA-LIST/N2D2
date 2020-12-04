@@ -427,17 +427,3 @@ void N2D2::TargetMatching::clear(Database::StimuliSet /*set*/)
     mSignatures.clear();
     mROC.clear();
 }
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_TargetMatching(py::module &m) {
-    py::class_<TargetMatching, std::shared_ptr<TargetMatching>, Target>(m, "TargetMatching", py::multiple_inheritance());
-}
-}
-#endif

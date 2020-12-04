@@ -174,6 +174,9 @@ int main(int argc, char* argv[])
     N2D2::Network n2d2_dnn;
     n2d2_dnn.setPrecision(bitPrecision);
     n2d2_dnn.setDeviceID(device);
+    if(profiling) {
+        n2d2_dnn.setProfiling();
+    }
     n2d2_dnn.setIterBuild(iterBuild);
     n2d2_dnn.setMaxBatchSize(batchSize);
     n2d2_dnn.setInputEngine(modelToLoad);
@@ -184,7 +187,9 @@ int main(int argc, char* argv[])
     std::cout << "Initialization of the tensorRT network..." << std::endl;
     n2d2_dnn.initialize();
     std::cout << "Initialization of the tensorRT network done!" << std::endl;
-
+    if(profiling) {
+        n2d2_dnn.setProfiling();
+    }
     unsigned int inputSize = n2d2_dnn.getInputDimX()*n2d2_dnn.getInputDimY()*n2d2_dnn.getInputDimZ();
     float* env_data = new float[inputSize * batchSize];
 
@@ -426,7 +431,7 @@ int main(int argc, char* argv[])
         }
 #endif
 
-        //net.getProfiling(total);
+        n2d2_dnn.reportProfiling(total);
 
 
         std::cout << "---" << std::endl;

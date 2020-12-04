@@ -175,7 +175,10 @@ void N2D2::CPP_TensorRT_ElemWiseCellExport
     }
 
     std::string activationStr = isActivated ?
-                                    "LayerActivation(true, " + prefix + "_ACTIVATION_TENSORRT)"
+                                    "LayerActivation(true, " 
+                                    + prefix + "_ACTIVATION_TENSORRT, " 
+                                    + prefix + "_ALPHA_ACTIVATION_TENSORRT, "
+                                    + prefix + "_BETA_ACTIVATION_TENSORRT)"
                                     : "LayerActivation(false)";
 
     for(unsigned int k = 0; k < parentsName.size(); ++k)

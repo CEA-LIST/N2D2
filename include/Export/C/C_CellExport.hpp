@@ -74,6 +74,7 @@ public:
                                         const std::string& inputName,
                                         const std::string& outputName,
                                         std::ofstream& prog) = 0;
+    virtual ~C_CellExport() {};
 };
 }
 

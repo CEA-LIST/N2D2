@@ -26,6 +26,8 @@
 #include "utils/Gnuplot.hpp"
 #include "utils/Registrar.hpp"
 
+#include <regex>
+
 const std::locale
 N2D2::Database::csvLocale(std::locale(),
                           new N2D2::Utils::streamIgnore(",; \t"));
@@ -35,8 +37,11 @@ N2D2::Database::Database(bool loadDataInMemory)
       mROIsMargin(this, "ROIsMargin", 0U),
       mRandomPartitioning(this, "RandomPartitioning", true),
       mDataFileLabel(this, "DataFileLabel", true),
-      mForceCompositeLabel(this, "ForceCompositeLabel", false),
+      mCompositeLabel(this, "CompositeLabel", Auto),
       mTargetDataPath(this, "TargetDataPath", ""),
+      mMultiChannelMatch(this, "MultiChannelMatch", ""),
+      mMultiChannelReplace(this, "MultiChannelReplace",
+                           std::vector<std::string>()),
       mLoadDataInMemory(loadDataInMemory),
       mStimuliDepth(-1),
       mStimuliTargetDepth(-1)
@@ -107,7 +112,7 @@ void N2D2::Database::loadROIs(const std::string& fileName,
 }
 
 void N2D2::Database::loadROIsDir(const std::string& dirName,
-                                 const std::string& fileExt,
+                                 const std::vector<std::string>& fileExt,
                                  int depth)
 {
     DIR* pDir = opendir(dirName.c_str());
@@ -139,8 +144,11 @@ void N2D2::Database::loadROIsDir(const std::string& dirName,
             subDirs.push_back(filePath);
         else {
             // Ignore files with the wrong file extension
-            if (!fileExt.empty() && Utils::fileExtension(fileName) != fileExt)
+            if (!fileExt.empty() && std::find(fileExt.begin(), fileExt.end(),
+                Utils::fileExtension(fileName)) == fileExt.end())
+            {
                 continue;
+            }
 
             files.push_back(filePath);
         }
@@ -763,7 +771,9 @@ void N2D2::Database::extractSlices(unsigned int width,
                         // Copy ROI
                         ROI* roi = (*itROIs)->clonePtr();
 
-                        if (mStimuli[id].label == -1 || mForceCompositeLabel) {
+                        if (mCompositeLabel != Auto
+                            || mStimuli[id].label == -1)
+                        {
                             // Composite stimuli
                             // Crop ROI
                             roi->padCrop(x, y, width, height);
@@ -1516,6 +1526,27 @@ std::string N2D2::Database::getStimulusName(StimulusID id,
         return mStimuli[id].name;
 }
 
+N2D2::Database::StimuliSet N2D2::Database::getStimulusSet(StimulusID id)
+    const
+{
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(All);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+         = stimuliSets.begin(),
+         itSetEnd = stimuliSets.end();
+         itSet != itSetEnd;
+         ++itSet)
+    {
+        if (std::find(mStimuliSets(*itSet).begin(),
+            mStimuliSets(*itSet).end(), id) != mStimuliSets(*itSet).end())
+        {
+            return (*itSet);
+        }
+    }
+
+    return Unpartitioned;
+}
+
 std::vector<std::shared_ptr<N2D2::ROI> >
 N2D2::Database::getStimulusROIs(StimulusID id) const
 {
@@ -1527,9 +1558,9 @@ N2D2::Database::getStimulusROIs(StimulusID id) const
                    std::back_inserter(stimulusROIs),
                    std::bind(&ROI::clone, std::placeholders::_1));
 
-    if (mStimuli[id].label >= 0
-        && !stimulusROIs.empty()
-        && !mForceCompositeLabel)
+    if (mCompositeLabel == Auto
+        && mStimuli[id].label >= 0
+        && !stimulusROIs.empty())
     {
         unsigned int nbLabelROIs = 0;
 
@@ -1626,14 +1657,25 @@ bool N2D2::Database::isMatchingLabel(const std::string& labelMask) const
 std::vector<int> N2D2::Database::getMatchingLabelsIDs(
     const std::string& labelMask) const
 {
+    return getMatchingLabelsIDs(std::vector<std::string>(1, labelMask));
+}
+
+std::vector<int> N2D2::Database::getMatchingLabelsIDs(
+    const std::vector<std::string>& labelMask) const
+{
     std::vector<int> labels;
 
     for (std::vector<std::string>::const_iterator it = mLabelsName.begin(),
         itBegin = mLabelsName.begin(), itEnd = mLabelsName.end();
         it != itEnd; ++it)
     {
-        if (Utils::match(labelMask, *it))
-            labels.push_back(it - itBegin);
+        for (std::vector<std::string>::const_iterator
+            itMask = labelMask.begin(), itMaskEnd = labelMask.end();
+            itMask != itMaskEnd; ++itMask)
+        {
+            if (Utils::match(*itMask, *it))
+                labels.push_back(it - itBegin);
+        }
     }
 
     return labels;
@@ -1848,7 +1890,10 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         labels = dataFile->readLabel(mStimuli[id].name);
     }
 
-    if (mStimuli[id].label == -1 || !labels.empty() || mForceCompositeLabel) {
+    if (mCompositeLabel != None && (mCompositeLabel != Auto
+                                    || mStimuli[id].label == -1
+                                    || !labels.empty()))
+    {
         std::shared_ptr<DataFile> dataFile = Registrar
             <DataFile>::create(fileExtension)();
 
@@ -1859,9 +1904,14 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         cv::Mat stimulus = dataFile->read(mStimuli[id].name);
 
         if (labels.empty()) {
-            // means mStimuli[id].label == -1
+            const int labelID = ((mCompositeLabel == Auto
+                    && mStimuli[id].label == -1)
+                || mCompositeLabel == Default
+                || (mCompositeLabel == Disjoint && !mStimuli[id].ROIs.empty()))
+                    ? defaultLabel : mStimuli[id].label;
+
             labels = cv::Mat(stimulus.rows, stimulus.cols, CV_32SC1,
-                             cv::Scalar(defaultLabel));
+                            cv::Scalar(labelID));
         }
         else if (mStimuli[id].label >= 0) {
             // use labels as a mask for the stimulus label
@@ -1894,7 +1944,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
         return labels;
     } else {
         // Non-composite stimulus
-        if (!mStimuli[id].ROIs.empty()) {
+        if (mCompositeLabel == Auto && !mStimuli[id].ROIs.empty()) {
             if (mStimuli[id].ROIs.size() != 1) {
 #pragma omp critical(Database__loadStimulusLabelsData)
                 throw std::runtime_error("Database::loadStimulusLabelsData(): "
@@ -1959,6 +2009,49 @@ cv::Mat N2D2::Database::loadData(
         <DataFile>::create(fileExtension)();
     cv::Mat data = dataFile->read(fileName);
 
+    if (!((std::string)mMultiChannelMatch).empty()) {
+        const std::vector<std::string>& multiChannelReplace
+            = mMultiChannelReplace.get<std::vector<std::string> >();
+
+        std::vector<cv::Mat> channels;
+
+        for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
+            const std::regex regexp((std::string)mMultiChannelMatch);
+            cv::Mat chData;
+
+            if (std::regex_match(fileName, regexp)) {
+                const std::string chFileName
+                    = std::regex_replace(fileName, regexp,
+                                         multiChannelReplace[ch]);
+
+                if (chFileName == fileName)
+                    chData = data;
+                else if (std::ifstream(chFileName).good())
+                    chData = dataFile->read(chFileName);
+            }
+            //else {
+            //    std::cout << Utils::cwarning << "Warning: no match for channel "
+            //        "#" << ch << " for stimulus: " << fileName
+            //        << Utils::cdef << std::endl;
+            //}
+
+            if (chData.empty()) {
+                //std::cout << Utils::cnotice << "Notice: missing channel #"
+                //        << ch << " data for stimulus: " << fileName
+                //        << Utils::cdef << std::endl;
+
+                chData = cv::Mat(data.cols, data.rows, data.type(),
+                                 cv::Scalar(0));
+            }
+
+            channels.push_back(chData);
+        }
+
+        cv::merge(channels, data);
+    }
+    else
+        data = dataFile->read(fileName);
+
     // Check stimulus depth
     if (data.depth() != depth) {
         std::cout << Utils::cnotice << "Notice: converting depth from "
@@ -1975,9 +2068,9 @@ cv::Mat N2D2::Database::loadData(
         data = dataConverted;
     }
 
-    if (mStimuli[id].label >= 0
-        && !mStimuli[id].ROIs.empty()
-        && !mForceCompositeLabel)
+    if (mCompositeLabel == Auto
+        && mStimuli[id].label >= 0
+        && !mStimuli[id].ROIs.empty())
     {
         bool extracted = false;
 
@@ -2103,41 +2196,3 @@ N2D2::Database::~Database()
          ++it)
         std::for_each((*it).ROIs.begin(), (*it).ROIs.end(), Utils::Delete());
 }
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_Database(py::module &m) {
-    py::class_<Database, std::shared_ptr<Database>> db(m, "Database", py::multiple_inheritance());
-
-    py::enum_<Database::StimuliSet>(db, "StimuliSet")
-    .value("Learn", Database::StimuliSet::Learn)
-    .value("Validation", Database::StimuliSet::Validation)
-    .value("Test", Database::StimuliSet::Test)
-    .value("Unpartitioned", Database::StimuliSet::Unpartitioned)
-    .export_values();
-
-    py::enum_<Database::StimuliSetMask>(db, "StimuliSetMask")
-    .value("LearnOnly", Database::StimuliSetMask::LearnOnly)
-    .value("ValidationOnly", Database::StimuliSetMask::ValidationOnly)
-    .value("TestOnly", Database::StimuliSetMask::TestOnly)
-    .value("NoLearn", Database::StimuliSetMask::NoLearn)
-    .value("NoValidation", Database::StimuliSetMask::NoValidation)
-    .value("NoTest", Database::StimuliSetMask::NoTest)
-    .value("All", Database::StimuliSetMask::All)
-    .export_values();
-
-    db.def(py::init<bool>(), py::arg("loadDataInMemory") = false)
-    .def("loadROIs", &Database::loadROIs, py::arg("fileName"), py::arg("relPath") = "", py::arg("noImageSize") = false)
-    .def("loadROIsDir", &Database::loadROIsDir, py::arg("dirName"), py::arg("fileExt") = "", py::arg("depth") = 0)
-    .def("saveROIs", &Database::saveROIs, py::arg("fileName"), py::arg("header") = "")
-    .def("logStats", &Database::logStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
-    .def("logROIsStats", &Database::logROIsStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All);
-}
-}
-#endif

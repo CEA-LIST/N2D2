@@ -305,7 +305,7 @@ debug :
 
 pybind : flexlm $(OBJ) $(OBJ_CUDA)
 ifdef PYBIND
-	$(CXX) -shared -o python/N2D2`$(PYBIND)-config --extension-suffix` $(OBJ) $(OBJ_CUDA) $(LDFLAGS)
+	$(CXX) -shared -o $(word 1,$(PARENT))/python/N2D2`$(PYBIND)-config --extension-suffix` $(OBJ) $(OBJ_CUDA) $(LDFLAGS)
 endif
 
 flexlm:

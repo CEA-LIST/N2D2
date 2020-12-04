@@ -1249,6 +1249,22 @@ void N2D2::DeepNet::fusePadding() {
 
         std::shared_ptr<PaddingCell> padCell =
             std::dynamic_pointer_cast<PaddingCell>(cell);
+        const std::vector<int> paddingDims = { padCell->getLeftPad(),
+                                               padCell->getTopPad(),
+                                               padCell->getRightPad(),
+                                               padCell->getBotPad() };
+
+        // Remove padding cell before setExtendedPadding(), because 
+        // setExtendedPadding() needs the correct cell's input dimensions, 
+        // which are the dimensions before padding!
+        removeCell(cell, true);
+
+        // Here the input dims of childs are correct but their output dims
+        // is automatically changed by the reconnection in removeCell() to 
+        // take into account the padding removal.
+        // At this point the graph is therefore corrupted, because the output
+        // dims change is not automatically propagated through the graph.
+        // The correct output dims will be recomputed by setExtendedPadding().
 
         for (auto itChild = padChilds.begin(); itChild != padChilds.end();
             ++itChild)
@@ -1261,11 +1277,7 @@ void N2D2::DeepNet::fusePadding() {
                     << "\" with Conv \"" << convCell->getName() << "\""
                     << std::endl;
 
-                convCell->setExtendedPadding({
-                    padCell->getLeftPad(),
-                    padCell->getTopPad(),
-                    padCell->getRightPad(),
-                    padCell->getBotPad()});
+                convCell->setExtendedPadding(paddingDims);
             }
             else if ((*itChild)->getType() == PoolCell::Type) {
                 std::shared_ptr<PoolCell> poolCell =
@@ -1275,15 +1287,11 @@ void N2D2::DeepNet::fusePadding() {
                     << "\" with Pool \"" << poolCell->getName() << "\""
                     << std::endl;
 
-                poolCell->setExtendedPadding({
-                    padCell->getLeftPad(),
-                    padCell->getTopPad(),
-                    padCell->getRightPad(),
-                    padCell->getBotPad()});
+                poolCell->setExtendedPadding(paddingDims);
             }
         }
 
-        removeCell(cell, true);
+        // At this point the graph is correct again.
     }
 }
 
@@ -2630,76 +2638,3 @@ void N2D2::DeepNet::clear(Database::StimuliSet set)
         (*itTargets)->clear(set);
     }
 }
-
-
-#ifdef PYBIND
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_DeepNet(py::module &m) {
-    py::class_<DeepNet, std::shared_ptr<DeepNet>>(m, "DeepNet", py::multiple_inheritance())
-    .def(py::init<Network&>(), py::arg("net"))
-    .def("addCell", &DeepNet::addCell, py::arg("cell"), py::arg("parents"))
-    .def("removeCell", &DeepNet::removeCell, py::arg("cell"), py::arg("reconnect") = true)
-    .def("addTarget", &DeepNet::addTarget, py::arg("cell"))
-    .def("addMonitor", &DeepNet::addMonitor, py::arg("name"), py::arg("monitor"))
-    .def("addCMonitor", &DeepNet::addCMonitor, py::arg("name"), py::arg("monitor"))
-    .def("update", &DeepNet::update, py::arg("log"), py::arg("start"), py::arg("stop") = 0, py::arg("update") = true)
-    .def("save", &DeepNet::save, py::arg("dirName"))
-    .def("load", &DeepNet::load, py::arg("dirName"))
-    .def("saveNetworkParameters", &DeepNet::saveNetworkParameters)
-    .def("loadNetworkParameters", &DeepNet::loadNetworkParameters)
-    .def("exportNetworkFreeParameters", &DeepNet::exportNetworkFreeParameters, py::arg("dirName"))
-    .def("exportNetworkSolverParameters", &DeepNet::exportNetworkSolverParameters, py::arg("dirName"))
-    .def("importNetworkFreeParameters", (void (DeepNet::*)(const std::string&, bool)) &DeepNet::importNetworkFreeParameters, py::arg("dirName"), py::arg("ignoreNotExists") = false)
-    .def("importNetworkFreeParameters", (void (DeepNet::*)(const std::string&, const std::string&)) &DeepNet::importNetworkFreeParameters, py::arg("dirName"), py::arg("weightName"))
-    //.def("importNetworkSolverParameters", &DeepNet::importNetworkSolverParameters, py::arg("dirName"))
-    .def("checkGradient", &DeepNet::checkGradient, py::arg("epsilon") = 1.0e-4, py::arg("maxError") = 1.0e-6)
-    .def("initialize", &DeepNet::initialize)
-    .def("learn", &DeepNet::learn, py::arg("timings") = NULL)
-    .def("test", &DeepNet::test, py::arg("set"), py::arg("timings") = NULL)
-    .def("cTicks", &DeepNet::cTicks, py::arg("start"), py::arg("stop"), py::arg("timestep"), py::arg("record") = false)
-    .def("cTargetsProcess", &DeepNet::cTargetsProcess, py::arg("set"))
-    .def("cReset", &DeepNet::cReset, py::arg("timestamp") = 0)
-    .def("initializeCMonitors", &DeepNet::initializeCMonitors, py::arg("nbTimesteps"))
-    .def("spikeCodingCompare", &DeepNet::spikeCodingCompare, py::arg("dirName"), py::arg("idx"))
-    .def("fuseBatchNormWithConv", &DeepNet::fuseBatchNormWithConv)
-    .def("removeDropout", &DeepNet::removeDropout)
-    .def("setDatabase", &DeepNet::setDatabase, py::arg("database"))
-    .def("setStimuliProvider", &DeepNet::setStimuliProvider, py::arg("sp"))
-    .def("getDatabase", &DeepNet::getDatabase)
-    .def("getStimuliProvider", &DeepNet::getStimuliProvider)
-    .def("getCells", &DeepNet::getCells)
-    .def("getMonitor", &DeepNet::getMonitor, py::arg("name"))
-    .def("getCMonitor", &DeepNet::getCMonitor, py::arg("name"))
-    .def("getLayers", &DeepNet::getLayers)
-    .def("getLayer", &DeepNet::getLayer, py::arg("layer"))
-    .def("getChildCells", &DeepNet::getChildCells, py::arg("name"))
-    .def("getParentCells", &DeepNet::getParentCells, py::arg("name"))
-    .def("getTargets", &DeepNet::getTargets)
-    .def("getStats", &DeepNet::getStats)
-    //.def("getReceptiveField", &DeepNet::getReceptiveField, py::arg("name"), py::arg("outputField") = std::vector<unsigned int>())
-    .def("clearAll", &DeepNet::clearAll)
-    .def("clearActivity", &DeepNet::clearActivity)
-    .def("clearFiringRate", &DeepNet::clearFiringRate)
-    .def("clearSuccess", &DeepNet::clearSuccess)
-    .def("clear", &DeepNet::clear, py::arg("set"))
-    .def("logOutputs", &DeepNet::logOutputs, py::arg("dirName"), py::arg("batchPos") = 0)
-    .def("logDiffInputs", &DeepNet::logDiffInputs, py::arg("dirName"), py::arg("batchPos") = 0)
-    .def("logFreeParameters", &DeepNet::logFreeParameters, py::arg("dirName"))
-    .def("logSchedule", &DeepNet::logSchedule, py::arg("dirName"))
-    .def("logStats", &DeepNet::logStats, py::arg("dirName"))
-    .def("logSpikeStats", &DeepNet::logSpikeStats, py::arg("dirName"), py::arg("nbPatterns"))
-    .def("log", &DeepNet::log, py::arg("baseName"), py::arg("set"))
-    .def("logLabelsMapping", &DeepNet::logLabelsMapping, py::arg("fileName"))
-    .def("logEstimatedLabels", &DeepNet::logEstimatedLabels, py::arg("dirName"))
-    .def("logEstimatedLabelsJSON", &DeepNet::logEstimatedLabelsJSON, py::arg("dirName"))
-    .def("logLabelsLegend", &DeepNet::logLabelsLegend, py::arg("fileName"))
-    .def("logTimings", &DeepNet::logTimings, py::arg("fileName"), py::arg("timings"))
-    .def("logReceptiveFields", &DeepNet::logReceptiveFields, py::arg("fileName"));
-}
-}
-#endif

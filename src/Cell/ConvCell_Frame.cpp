@@ -66,10 +66,10 @@ N2D2::ConvCell_Frame<T>::ConvCell_Frame(const DeepNet& deepNet, const std::strin
       // setParameter() or loadParameters().
       mBias(std::make_shared<Tensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
-      mConvDesc(subSampleDims, strideDims, paddingDims, dilationDims)
+      mConvDesc(mSubSampleDims, mStrideDims, mPaddingDims, mDilationDims)
 {
     // ctor
-    if (kernelDims.size() != 2) {
+    if (mKernelDims.size() != 2) {
         throw std::domain_error("ConvCell_Frame: only 2D convolution is"
                                 " supported");
     }

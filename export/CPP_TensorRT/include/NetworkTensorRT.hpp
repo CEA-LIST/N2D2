@@ -300,6 +300,8 @@ public:
     std::vector<nvinfer1::ITensor *>
             add_activation( std::string layerName,
                             nvinfer1::ActivationType activation,
+                            double alpha,
+                            double beta,
                             std::vector<nvinfer1::ITensor *> inputs_tensor);
 
     std::vector<nvinfer1::ITensor *>

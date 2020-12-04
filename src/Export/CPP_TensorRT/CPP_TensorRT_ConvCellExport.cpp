@@ -279,7 +279,10 @@ void N2D2::CPP_TensorRT_ConvCellExport
     }
 
     std::string activationStr = isActivated ?
-                                    "LayerActivation(true, " + prefix + "_ACTIVATION_TENSORRT)"
+                                    "LayerActivation(true, " 
+                                    + prefix + "_ACTIVATION_TENSORRT, " 
+                                    + prefix + "_ALPHA_ACTIVATION_TENSORRT, "
+                                    + prefix + "_BETA_ACTIVATION_TENSORRT)"
                                     : "LayerActivation(false)";
 
     prog << "   " << "std::vector< nvinfer1::ITensor *> "

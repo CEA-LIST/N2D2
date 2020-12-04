@@ -59,15 +59,15 @@ N2D2::PoolCell_Frame<T>::PoolCell_Frame(const DeepNet& deepNet,
                paddingDims,
                pooling),
       Cell_Frame<T>(deepNet, name, nbOutputs, activation),
-      mPoolDesc(poolDims.size(),
-                &poolDims[0],
-                &strideDims[0],
-                &paddingDims[0])
+      mPoolDesc(mPoolDims.size(),
+                &mPoolDims[0],
+                &mStrideDims[0],
+                &mPaddingDims[0])
 {
     // ctor
-    assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);
+    assert(mPoolDims.size() <= POOL_KERNEL_MAX_DIMS);
 
-    if (poolDims.size() != 2) {
+    if (mPoolDims.size() != 2) {
         throw std::domain_error("PoolCell_Frame: only 2D pooling is"
                                 " supported");
     }

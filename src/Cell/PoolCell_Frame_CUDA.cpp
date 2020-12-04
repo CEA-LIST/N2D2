@@ -64,7 +64,7 @@ N2D2::PoolCell_Frame_CUDA<T>::PoolCell_Frame_CUDA(
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation)
 {
     // ctor
-    assert(poolDims.size() <= POOL_KERNEL_MAX_DIMS);
+    assert(mPoolDims.size() <= POOL_KERNEL_MAX_DIMS);
 
     if (strideDims.size() != poolDims.size()) {
         throw std::domain_error("PoolCell_Frame_CUDA: the number of dimensions"
@@ -156,8 +156,8 @@ void N2D2::PoolCell_Frame_CUDA<T>::initialize()
     CHECK_CUDNN_STATUS(cudnnSetPoolingNdDescriptor(
         mPoolingDesc,
         poolingMode,
-        CUDNN_PROPAGATE_NAN,
-        //CUDNN_NOT_PROPAGATE_NAN,
+        //CUDNN_PROPAGATE_NAN,
+        CUDNN_NOT_PROPAGATE_NAN,
         mPoolDims.size(),
         &pools[0],
         &paddings[0],

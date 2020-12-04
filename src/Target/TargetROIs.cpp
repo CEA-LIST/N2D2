@@ -809,6 +809,8 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
                            sizeof(char) * jsonDataBuffer.str().size());
         }
 
+        jsonData.close();
+
 #ifdef _OPENMP
         if (append && omp_in_parallel())
             omp_unset_lock(&appendLock);

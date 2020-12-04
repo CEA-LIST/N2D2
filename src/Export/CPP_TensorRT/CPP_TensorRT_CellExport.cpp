@@ -43,17 +43,35 @@ void N2D2::CPP_TensorRT_CellExport::
             const std::string actType = cellFrame->getActivation()->getType();
 
             if(actType != "Linear")  {
+                double alpha = 0.0;
+                double beta = 0.0;
                 header << "#define " << prefix << "_ACTIVATION_TENSORRT ";
 
                 header << "nvinfer1::ActivationType::"
                     << ((actType == "Rectifier") ? "kRELU" :
                             (actType == "Logistic") ? "kSIGMOID" :
                             (actType == "LogisticWithLoss") ? "kSIGMOID" :
-                            (actType == "Tanh") ? "kTANH": "");
+                            (actType == "Tanh") ? "kTANH": 
+                            (actType == "SoftPlus") ? "kSOFTPLUS " : "")
+                    << "\n";
+
+                if(actType == "Rectifier")  {
+                    alpha = cellFrame->getActivation()
+                        ->getParameter<double>("LeakSlope");
+                    beta = cellFrame->getActivation()
+                        ->getParameter<double>("Clipping");
+                }
+                if(actType == "SoftPlus")  {
+                    alpha = 1.0;
+                    beta = 1.0;
+                }
+                header << "#define " << prefix << "_ALPHA_ACTIVATION_TENSORRT " 
+                    << alpha << "\n";
+                header << "#define " << prefix << "_BETA_ACTIVATION_TENSORRT " 
+                    << beta << "\n";
             }
         }
     }
-    header << "\n";
 
 }
 

@@ -96,6 +96,32 @@ void cudaHSoftplus_backPropagate(half_float::half* x, half_float::half* dx,
                                  unsigned int size);
 void cudaSSoftplus_backPropagate(float* x, float* dx, unsigned int size);
 void cudaDSoftplus_backPropagate(double* x, double* dx, unsigned int size);
+
+// Swish
+void cudaHSwish_propagate(half_float::half* x,
+                          half_float::half* y,
+                          half_float::half* sigmoid,
+                          unsigned int size);
+void cudaSSwish_propagate(float* x,
+                          float* y,
+                          float* sigmoid,
+                          unsigned int size);
+void cudaDSwish_propagate(double* x,
+                          double* y,
+                          double* sigmoid,
+                          unsigned int size);
+void cudaHSwish_backPropagate(half_float::half* x,
+                              half_float::half* dx,
+                              half_float::half* sigmoid,
+                              unsigned int size);
+void cudaSSwish_backPropagate(float* x,
+                              float* dx,
+                              float* sigmoid,
+                              unsigned int size);
+void cudaDSwish_backPropagate(double* x,
+                              double* dx,
+                              double* sigmoid,
+                              unsigned int size);
 }
 
 #endif // N2D2_ACTIVATION_CUDA_KERNELS_H

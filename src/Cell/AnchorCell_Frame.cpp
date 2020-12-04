@@ -1015,7 +1015,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
                             //AvgIOU[classIdx][batchPos] += IoU;
                             //AvgConf[classIdx][batchPos] += conf;
                         }
-                        else if((mArgMaxIoU(xa, ya, k, batchPos) == -1))
+                        else if(mArgMaxIoU(xa, ya, k, batchPos) == -1)
                         {
                             negative[classIdx].push_back(std::make_pair(Tensor<int>::Index(xa, ya, k, batchPos), conf));
                         }

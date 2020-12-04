@@ -64,6 +64,7 @@ public:
     std::pair<unsigned int, unsigned int>
     getOutputsSize(unsigned int width, unsigned int height) const;
     int getOutputsDepth(int depth) const;
+    inline void setStimuliProvider(StimuliProvider* sp);
     virtual ~CompositeTransformation() {};
 
 private:
@@ -179,6 +180,20 @@ N2D2::CompositeTransformation* N2D2::CompositeTransformation::doClone() const
     }
 
     return newTrans;
+}
+
+void N2D2::CompositeTransformation::setStimuliProvider(StimuliProvider* sp)
+{
+    Transformation::setStimuliProvider(sp);
+
+    for (std::vector<std::shared_ptr<Transformation> >::const_iterator it
+         = mTransformationSet.begin(),
+         itEnd = mTransformationSet.end();
+         it != itEnd;
+         ++it)
+    {
+        (*it)->setStimuliProvider(sp);
+    }
 }
 
 #endif // N2D2_COMPOSITETRANSFORMATION_H

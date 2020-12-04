@@ -22,6 +22,8 @@
 #include "DataFile/DataFile.hpp"
 #include "utils/Registrar.hpp"
 
+#include <regex>
+
 N2D2::DIR_Database::DIR_Database(bool loadDataInMemory)
     : Database(loadDataInMemory)
 {
@@ -121,6 +123,33 @@ void N2D2::DIR_Database::loadDir(const std::string& dirPath,
                               << " does not appear to be a valid stimulus,"
                                  " ignoring." << Utils::cdef << std::endl;
                     continue;
+                }
+
+                const std::string& multiChannelMatch
+                    = getParameter<std::string>("MultiChannelMatch");
+
+                if (!multiChannelMatch.empty()) {
+                    const std::regex regexp(multiChannelMatch);
+
+                    if (!std::regex_match(filePath, regexp))
+                        continue;
+
+                    const std::vector<std::string>& multiChannelReplace
+                        = getParameter<std::vector<std::string> >
+                            ("MultiChannelReplace");
+
+                    for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
+                        const std::string chFilePath
+                            = std::regex_replace(filePath, regexp,
+                                                multiChannelReplace[ch]);
+
+                        if (!std::ifstream(chFilePath).good()) {
+                            std::cout << Utils::cnotice
+                                << "Notice: missing channel #"
+                                << ch << " data for stimulus: " << filePath
+                                << Utils::cdef << std::endl;
+                        }
+                    }
                 }
 
                 files.push_back(filePath);

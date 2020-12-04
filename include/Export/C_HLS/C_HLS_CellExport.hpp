@@ -85,6 +85,7 @@ public:
                                        const std::string& outputSizeName,
                                        std::ofstream& prog,
                                        bool isUnsigned = false) = 0;
+    virtual ~C_HLS_CellExport() {};
 };
 }
 

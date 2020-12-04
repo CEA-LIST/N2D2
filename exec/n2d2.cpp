@@ -591,10 +591,18 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                           exportDir + "/stimuli", Database::Validation);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
-
+    const std::size_t nbStimuli = (opt.calibration > 0)? 
+                                        std::min(static_cast<unsigned int>(opt.calibration),
+                                                database->getNbStimuli(Database::Validation)):
+                                        database->getNbStimuli(Database::Validation);
 
     bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
+        if (nbStimuli == 0) {
+            throw std::runtime_error("The Validation dataset to run the "
+                "calibration is empty!");
+        }
+
         // fusePadding() necessary for crossLayerEqualization()
         if(!opt.exportNoCrossLayerEqualization) {
             deepNet->fusePadding();
@@ -605,7 +613,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             dnQuantization.crossLayerEqualization();
         }
         dnQuantization.clipWeights(opt.nbBits, opt.wtClippingMode);
-
 
         const double stimuliRange = StimuliProviderExport::stimuliRange(
                                         *sp, exportDir + "/stimuli",
@@ -636,10 +643,6 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
         }
         else {
-            const std::size_t nbStimuli = (opt.calibration > 0)? 
-                                              std::min(static_cast<unsigned int>(opt.calibration),
-                                                       database->getNbStimuli(Database::Validation)):
-                                              database->getNbStimuli(Database::Validation);
             const std::size_t batchSize = sp->getBatchSize();
             const std::size_t nbBatches = std::ceil(1.0*nbStimuli/batchSize);
 
@@ -881,7 +884,8 @@ void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::shared_ptr<Database> database = deepNet->getDatabase();
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
-
+    const int nbEpochSize = database->getNbStimuli(Database::Learn);
+    std::cout << "nbEpochSize : " << nbEpochSize << std::endl;
     deepNet->exportNetworkFreeParameters("weights_init");
 
     std::chrono::high_resolution_clock::time_point startTime
@@ -961,7 +965,7 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             std::ios::fmtflags f(std::cout.flags());
 
             std::cout << "\rLearning #" << std::setw(8) << std::left << i
-                        << "   ";
+                        << "(" << ((float) i / (float)nbEpochSize) * 100.0 << "%)   ";
             std::cout << std::setw(6) << std::fixed << std::setprecision(2)
                         << std::right;
 
@@ -1125,9 +1129,15 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         << "% [" << opt.validMetric << "]\n";
 
                             deepNet->log("validation", Database::Validation);
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation");
-                            deepNet->save("net_state_validation");
+
+                            if (itTargets == deepNet->getTargets().begin()) {
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation");
+                                deepNet->save("net_state_validation");
+
+                                std::cout << "    'weights_validation' saved!"
+                                    << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- LOWER validation score: "
@@ -1203,9 +1213,15 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         << "% [" << opt.validMetric << "]\n";
 
                             deepNet->log("validation", Database::Validation);
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation");
-                            deepNet->save("net_state_validation");
+
+                            if (itTargets == deepNet->getTargets().begin()) {
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation");
+                                deepNet->save("net_state_validation");
+
+                                std::cout << "    'weights_validation' saved!"
+                                    << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- LOWER validation score: "
@@ -1254,9 +1270,14 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetMatching->getMinValidationEER())
                                         << "%\n";
 
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation_EER");
-                            deepNet->save("net_state_validation_EER");
+                            if (itTargets == deepNet->getTargets().begin()) {
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation_EER");
+                                deepNet->save("net_state_validation_EER");
+
+                                std::cout << "    'weights_validation_EER'"
+                                    " saved!" << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- HIGHER validation EER: "
@@ -1660,12 +1681,23 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         // Reconstruct some frames to see the pre-processing
         Utils::createDirectories("frames");
 
+        std::ofstream frameNames("frames/frames.txt");
+
+        if (!frameNames.good())
+            throw std::runtime_error("Unable to write: frames/frames.txt");
+
         for (unsigned int i = 0, size = std::min(10U,
                                         database->getNbStimuli(Database::Learn));
                 i < size;
-                ++i) {
+                ++i)
+        {
             std::ostringstream fileName;
             fileName << "frames/frame_" << i << ".dat";
+
+            frameNames << fileName.str()
+                << " " << database->getStimulusName(Database::Learn, i)
+                << " " << database->getStimulusLabel(Database::Learn, i)
+                << std::endl;
 
             sp->readStimulus(Database::Learn, i);
             StimuliProvider::logData(fileName.str(), sp->getData()[0]);
@@ -1695,6 +1727,11 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 ++i) {
             std::ostringstream fileName;
             fileName << "frames/test_frame_" << i << ".dat";
+
+            frameNames << fileName.str()
+                << " " << database->getStimulusName(Database::Test, i)
+                << " " << database->getStimulusLabel(Database::Test, i)
+                << std::endl;
 
             sp->readStimulus(Database::Test, i);
             StimuliProvider::logData(fileName.str(), sp->getData()[0]);

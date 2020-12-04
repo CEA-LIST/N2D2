@@ -71,11 +71,16 @@ static unsigned int prevDivisor(unsigned int target, unsigned int value)
 struct LayerActivation {
     bool status;
     nvinfer1::ActivationType type;
-
+    double alpha;
+    double beta;
     LayerActivation(bool status_,
-               nvinfer1::ActivationType type_)
+               nvinfer1::ActivationType type_,
+               double alpha_ = 0.0,
+               double beta_ = 0.0)
     : status(status_),
-      type(type_)
+      type(type_),
+      alpha(alpha_),
+      beta(beta_)
     {
     }
     LayerActivation(bool status_)

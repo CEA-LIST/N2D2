@@ -20,9 +20,9 @@
 
 #ifdef CUDA
 
+#ifdef PYBIND
 #include "containers/CudaTensor.hpp"
 
-#ifdef PYBIND
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
