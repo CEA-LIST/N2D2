@@ -43,7 +43,7 @@ class DataProvider():
         self.transformations = transformations
     """
 
-    def readRandomBatch(self, set):
+    def read_random_batch(self, set):
         return self._provider.readRandomBatch(set=self._database.StimuliSets['Learn'])
 
     def N2D2(self):

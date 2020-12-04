@@ -35,11 +35,12 @@ class Deepnet():
     """
 
     # TODO: Proper exeception handling
-    def __init__(self, cells):
+    def __init__(self, cells, model_parameters):
         if not isinstance(cells, list):
-            print("Error: cells not list objects")
-            exit()
+            raise TypeError("Error: Deepnet constructor expects a List of Cells, but got " + str(type(cells)) + " instead")
         self._cells = cells
+        self._model_parameters = model_parameters
+
         net = N2D2.Network(1)
         self._deepnet = N2D2.DeepNet(net)
     
@@ -61,34 +62,43 @@ That means also recursive (sequence of sequence etc.).
 Allows simple creation of a deepnet based on standard
 Python data structures, without using N2D2 binding functions 
     Input:
-    * (List of Python Cell objects, DefaultModel)
-    * (List of Lists, DefaultModel)
+    * (List of Python Cell objects, Model)
+    * (List of Lists, Model)
 """    
 class Sequential(Deepnet):
     # cells is typically a python list 
-    def __init__(self, cells, DefaultModel='Frame'):
-        super().__init__(cells)
+    def __init__(self, cells, Model='Frame', DataType='float', **model_parameters):
+        super().__init__(cells, model_parameters)
 
         # Non nested representation of cells for easier access
         self._sequence = []
         # Unfold nested network graph
-        self._generate_model(self._cells, DefaultModel)
+        self._generate_model(self._cells, Model, DataType)
+
+        # Check if cell associated to model parameters exists
+        # For the moment, sequence is not a dictionary with cell names.
+        names = [_.get_name() for _ in self._sequence]
+        for key in self._model_parameters:
+            if not key.replace('_model', '') in names:
+                raise RuntimeError("No matching cell for model parameter: " + key)
 
         #for cell in self._sequence:
         #    print(cell._Name)
 
     # TODO: Check that cell names are unique
-    def _generate_model(self, cells, DefaultModel):
+    def _generate_model(self, cells, Model, DataType):
         if isinstance(cells, list):
             for cell in cells:
-                self._generate_model(cell, DefaultModel)
+                self._generate_model(cell, Model, DataType)
         elif isinstance(cells, n2d2.cell.Cell):
-            cells.generate_model(self._deepnet, DefaultModel)
-            # Normally this should not copy, but ony add an additional name
+            if cells.get_name() + '_model' in self._model_parameters:
+                cells.generate_model(self._deepnet, Model, DataType, **self._model_parameters[cells.get_name() + '_model'])
+            else:
+                cells.generate_model(self._deepnet, Model, DataType)
+            # Normally this should not copy, but only add an additional name
             self._sequence.append(cells)
         else:
-            print("Invalid argument for cells")
-            exit()
+            raise TypeError("Error: Expected a Cell, but got " + str(type(cells)) + " instead")
 
     """ 
         addInput() sets recursively the Tensor dimensions
@@ -99,7 +109,6 @@ class Sequential(Deepnet):
         for cell in self._sequence:
             cell.N2D2().addInput(previous.N2D2())
             previous = cell
-        #self._generate_cell_links(self._cells, stimuli_provider)
 
     """ # Redunant when using self._sequence
     def _generate_cell_links(self, cells, previous):
@@ -120,7 +129,7 @@ class Sequential(Deepnet):
         for cell in self._sequence:
             cell.N2D2().propagate()
 
-    def backpropagate(self):
+    def back_propagate(self):
         for cell in reversed(self._sequence):
             cell.N2D2().backPropagate()
 
@@ -128,13 +137,14 @@ class Sequential(Deepnet):
         for cell in self._sequence:
             cell.N2D2().update()
 
-    def getOutput(self):
+    def get_output(self):
         return self._sequence[-1]
 
-    def getCell(self, name):
+    def get_cell(self, name):
         for cell in self._sequence:
-            if name == cell._Name:
+            if name is cell.get_name():
                 return cell
+        raise RuntimeError("Cell: " + name + " not found")
 
     def __str__(self):
         indent_level = [0]
