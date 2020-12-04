@@ -26,8 +26,12 @@
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_CudaContext(py::module&);
+//utils
+void init_Random(py::module&);
+void init_Parameterizable(py::module&);
 void init_WindowFunction(py::module&);
+void init_Kernel(py::module&);
+void init_CudaContext(py::module&);
 void init_Tensor(py::module&);
 void init_CudaTensor(py::module&);
 void init_Network(py::module&);
@@ -42,7 +46,6 @@ void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
 void init_MNIST_IDX_Database(py::module&);
-void init_Random(py::module&);
 void init_Environment(py::module&);
 void init_ConvCell(py::module&);
 void init_ConvCell_Frame(py::module&);
@@ -52,7 +55,6 @@ void init_FcCell_Frame_CUDA(py::module&);
 void init_SoftmaxCell(py::module&);
 void init_SoftmaxCell_Frame(py::module&);
 void init_SoftmaxCell_Frame_CUDA(py::module&);
-void init_Parameterizable(py::module&);
 void init_Activation(py::module&);
 void init_TanhActivation(py::module&);
 void init_TanhActivation_Frame(py::module&);
@@ -77,6 +79,7 @@ void init_DistortionTransformation(py::module&);
 void init_EqualizeTransformation(py::module&);
 void init_ExpandLabelTransformation(py::module&);
 void init_FlipTransformation(py::module&);
+void init_FilterTransformation(py::module &m);
 void init_PadCropTransformation(py::module&);
 void init_GradientFilterTransformation(py::module&);
 void init_LabelExtractionTransformation(py::module&);
@@ -92,6 +95,7 @@ void init_RescaleTransformation(py::module&);
 void init_ReshapeTransformation(py::module&);
 void init_SliceExtractionTransformation(py::module&);
 void init_ThresholdTransformation(py::module&);
+// void init_TrimTransformation(py::module &m);
 void init_WallisFilterTransformation(py::module&);
 
 void init_Solver(py::module&);
@@ -104,9 +108,14 @@ void init_HeFiller(py::module&);
 
 
 PYBIND11_MODULE(N2D2, m) {
+    //utils
+    init_WindowFunction(m);
+    init_Random(m);
+    init_Parameterizable(m);
+    init_Kernel(m);
+
     init_CudaContext(m);
     init_Tensor(m);
-    init_WindowFunction(m);
     init_CudaTensor(m);
     init_Network(m);
     init_Database(m);
@@ -120,7 +129,6 @@ PYBIND11_MODULE(N2D2, m) {
     init_DeepNet(m);
     init_DeepNetGenerator(m);
     init_MNIST_IDX_Database(m);
-    init_Random(m);
     init_Environment(m);
     init_ConvCell(m);
     init_ConvCell_Frame(m);
@@ -130,7 +138,6 @@ PYBIND11_MODULE(N2D2, m) {
     init_SoftmaxCell(m);
     init_SoftmaxCell_Frame(m);
     init_SoftmaxCell_Frame_CUDA(m);
-    init_Parameterizable(m);
     init_Activation(m);
     init_TanhActivation(m);
     init_TanhActivation_Frame(m);
@@ -155,6 +162,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_EqualizeTransformation(m);
     init_ExpandLabelTransformation(m);
     init_FlipTransformation(m);
+    init_FilterTransformation(m);
     init_PadCropTransformation(m);
     init_GradientFilterTransformation(m);
     init_LabelExtractionTransformation(m);
@@ -171,7 +179,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_SliceExtractionTransformation(m);
     init_ThresholdTransformation(m);
     init_WallisFilterTransformation(m);
-
+    // init_TrimTransformation(m);
     init_Solver(m);
     init_SGDSolver(m);
     init_SGDSolver_Frame(m);

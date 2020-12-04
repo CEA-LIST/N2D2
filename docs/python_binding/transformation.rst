@@ -59,3 +59,34 @@ PadCropTransformation:
 
 .. autoclass:: N2D2.PadCropTransformation
    :members:
+
+.. testcode::
+   :hide:
+
+   N2D2.ApodizationTransformation(N2D2.Rectangular_double(), 1)
+   # N2D2.AffineTransformation(N2D2.AffineTransformation.Operator.Plus, "") # Empty string doesn't work ...
+   N2D2.ChannelExtractionTransformation(N2D2.ChannelExtractionTransformation.Channel.Red)
+   N2D2.ColorSpaceTransformation(N2D2.ColorSpaceTransformation.ColorSpace.BGR)
+   N2D2.CompressionNoiseTransformation()
+   N2D2.DCTTransformation()
+   N2D2.DFTTransformation()
+   N2D2.EqualizeTransformation()
+   N2D2.ExpandLabelTransformation()
+   N2D2.FlipTransformation()
+   # N2D2.FilterTransformation(N2D2.Kernel_double("")) # kernel is empty ...
+   N2D2.GradientFilterTransformation()
+   N2D2.LabelExtractionTransformation("2", "2")
+   N2D2.LabelSliceExtractionTransformation(2, 2)
+   N2D2.MagnitudePhaseTransformation()
+   N2D2.MorphologicalReconstructionTransformation(N2D2.MorphologicalReconstructionTransformation.Operation.ReconstructionByErosion, 2)
+   N2D2.MorphologyTransformation(N2D2.MorphologyTransformation.Operation.Erode, 2)
+   N2D2.NormalizeTransformation()
+   N2D2.RandomAffineTransformation([[0, 0]])
+   N2D2.RangeAffineTransformation(N2D2.RangeAffineTransformation.Operator.Plus, 5)
+   N2D2.RangeClippingTransformation()
+   N2D2.RescaleTransformation(2, 2)
+   N2D2.ReshapeTransformation(2)
+   N2D2.SliceExtractionTransformation(1,1)
+   N2D2.ThresholdTransformation(5)
+   # N2D2.TrimTransformation(1)
+   N2D2.WallisFilterTransformation(10, 0.0, 1.0)

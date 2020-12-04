@@ -22,7 +22,7 @@
 #ifdef CUDA
 
 #ifdef PYBIND
-#include "Transformation/AffineTransformation.hpp"
+#include "Transformation/TrimTransformation.hpp"
 
 
 #include <pybind11/pybind11.h>
@@ -30,19 +30,11 @@
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_AffineTransformation(py::module &m) {
-    py::class_<AffineTransformation, std::shared_ptr<AffineTransformation>, Transformation> at (m, "AffineTransformation", py::multiple_inheritance());
-
-    py::enum_<AffineTransformation::Operator>(at, "Operator")
-    .value("Plus", AffineTransformation::Operator::Plus)
-    .value("Minus", AffineTransformation::Operator::Minus)
-    .value("Multiplies", AffineTransformation::Operator::Multiplies)
-    .value("Divides", AffineTransformation::Operator::Divides)
-    .export_values();
-
-    at
-    .def(py::init<AffineTransformation::Operator, const std::string, AffineTransformation::Operator, const std::string>(), py::arg("firstOperator"), py::arg("firstValue"), py::arg("secondOperator") = AffineTransformation::Operator::Plus,py::arg("secondValue") = "");
-
+void init_TrimTransformation(py::module &m) {
+    // TODO : Need to bind OpenCV, can't even create a TrimTransformation with default arg because it's not yet convertible to python.
+    py::class_<TrimTransformation, std::shared_ptr<TrimTransformation>, Transformation> (m, "TrimTransformation", py::multiple_inheritance())
+    .def(py::init<unsigned int, const cv::Mat&>(), py::arg("nbLevels"), py::arg("kernel") = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)))
+    .def(py::init<TrimTransformation&>(), py::arg("trans"));
 }
 }
 #endif

@@ -22,7 +22,7 @@
 #ifdef CUDA
 
 #ifdef PYBIND
-#include "Transformation/AffineTransformation.hpp"
+#include "Transformation/FilterTransformation.hpp"
 
 
 #include <pybind11/pybind11.h>
@@ -30,19 +30,9 @@
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_AffineTransformation(py::module &m) {
-    py::class_<AffineTransformation, std::shared_ptr<AffineTransformation>, Transformation> at (m, "AffineTransformation", py::multiple_inheritance());
-
-    py::enum_<AffineTransformation::Operator>(at, "Operator")
-    .value("Plus", AffineTransformation::Operator::Plus)
-    .value("Minus", AffineTransformation::Operator::Minus)
-    .value("Multiplies", AffineTransformation::Operator::Multiplies)
-    .value("Divides", AffineTransformation::Operator::Divides)
-    .export_values();
-
-    at
-    .def(py::init<AffineTransformation::Operator, const std::string, AffineTransformation::Operator, const std::string>(), py::arg("firstOperator"), py::arg("firstValue"), py::arg("secondOperator") = AffineTransformation::Operator::Plus,py::arg("secondValue") = "");
-
+void init_FilterTransformation(py::module &m) {
+    py::class_<FilterTransformation, std::shared_ptr<FilterTransformation>, Transformation> (m, "FilterTransformation", py::multiple_inheritance())
+    .def(py::init<const Kernel<double>&, double>(), py::arg("kernel"), py::arg("orientation") = 0.0);
 }
 }
 #endif
