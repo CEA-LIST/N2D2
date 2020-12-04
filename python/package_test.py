@@ -46,7 +46,7 @@ import N2D2
 
 
 batch_size = 128
-nb_epochs = 1
+nb_epochs = 100
 epoch_size = int(50000/batch_size)
 
 
@@ -60,9 +60,8 @@ provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size, False)
 print("Create model")
 model = n2d2.deepnet.Sequential([
     [
-        n2d2.cell.Fc(Name='fc1', NbOutputs=300, Activation=n2d2.activation.Rectifier(), Solver=n2d2.solver.SGD(LearningRate='0.1'),
- NoBias=False, Backpropagate=True),
-        n2d2.cell.Fc(Name='fc2', NbOutputs=10, Activation=n2d2.activation.Linear(), Solver=n2d2.solver.SGD(LearningRate='0.1'), NoBias=False, Backpropagate=True)
+        n2d2.cell.Fc(Name='fc1', NbOutputs=300, ActivationFunction=n2d2.activation.Rectifier(), WeightsSolver=n2d2.solver.SGD()),
+        n2d2.cell.Fc(Name='fc2', NbOutputs=10, ActivationFunction=n2d2.activation.Linear(), WeightsSolver=n2d2.solver.SGD())
     ],
     n2d2.cell.Softmax(Name='softmax', NbOutputs=10)
 ], DefaultModel='Frame_CUDA')
