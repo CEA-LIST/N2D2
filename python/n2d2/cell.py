@@ -27,13 +27,18 @@ class Cell():
 
     def __init__(self, Name, NbOutputs):
 
-        self._cell_parameters = {
+        self._constructor_parameters = {
             'Name': Name,
             'NbOutputs': NbOutputs,
         }
+
+        self._cell_parameters = {}
         
         self._cell = None
-        self._model_parameters = None
+        self._model_parameters = {}
+
+        # Keeps a trace of modified parameters for print function
+        self._modified_keys = []
                 
         self._model_key = ""
 
@@ -41,8 +46,12 @@ class Cell():
         for key, value in cell_parameters.items():
             if key in self._cell_parameters:
                 self._cell_parameters[key] = value
+                self._modified_keys.append(key)
             else:
                 raise n2d2.UndefinedParameterError(key, self)
+
+    def get_name(self):
+        return self._constructor_parameters['Name']
         
     def N2D2(self):
         if self._cell is None:
@@ -51,12 +60,12 @@ class Cell():
 
     def __str__(self):
         output = ""
-        for key, value in self._cell_parameters.items():
+        for key, value in self._constructor_parameters.items():
             output += key + ": " + str(value) + ", "
+        for key, value in self._cell_parameters.items():
+            if key in self._modified_keys:
+                output += key + ": " + str(value) + ", "
         output += "; "
-        output += "Model parameters: "
-        output += str(self._model_parameters)
-        #output += "\n"
         return output
         
    
@@ -68,16 +77,12 @@ class Fc(Cell):
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
+    """
     _weightsExportFormat = {
         'OC': N2D2.FcCell.WeightsExportFormat.OC,
         'CO': N2D2.FcCell.WeightsExportFormat.CO
     }
-
-    _frame_model_parameters = {
-        'DropConnect': 1.0
-    }
-
-    _frame_CUDA_model_parameters = {}
+    """
 
 
 
@@ -100,6 +105,9 @@ class Fc(Cell):
         })"""
 
         # TODO: Use real defaults
+        """NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
+        incoherences, but it increases readability of the library"""
+
         self._cell_parameters.update({
             'ActivationFunction': n2d2.activation.Linear(),
             'WeightsSolver': n2d2.solver.SGD(),
@@ -113,8 +121,14 @@ class Fc(Cell):
             'OutputsRemap': "",
         })
 
+        #TODO: Do this with N2D2 parameters to detect wrong settings
         self.set_cell_parameters(cell_parameters)
 
+        self._frame_model_parameters = {
+            'DropConnect': 1.0
+        }
+
+        self._frame_CUDA_model_parameters = {}
 
     #TODO: Add method that initialized based on INI file section
     """
@@ -141,8 +155,8 @@ class Fc(Cell):
         self._cell_parameters['ActivationFunction'].generate_model(Model, DataType)
 
         self._cell = self._cell_generators[self._model_key](deepnet,
-                                                            self._cell_parameters['Name'],
-                                                            self._cell_parameters['NbOutputs'],
+                                                            self._constructor_parameters['Name'],
+                                                            self._constructor_parameters['NbOutputs'],
                                                             self._cell_parameters['ActivationFunction'].N2D2())
 
         """Set and initialize here all complex cell members"""
@@ -150,38 +164,74 @@ class Fc(Cell):
             if key is 'ActivationFunction':
                 self._cell_parameters['ActivationFunction'].generate_model(Model, DataType)
                 self._cell.setActivation(self._cell_parameters['ActivationFunction'].N2D2())
-            if key is 'WeightsSolver':
+            elif key is 'WeightsSolver':
                 self._cell_parameters['WeightsSolver'].generate_model(Model, DataType)
                 self._cell.setWeightsSolver(self._cell_parameters['WeightsSolver'].N2D2())
-            if key is 'BiasSolver':
+            elif key is 'BiasSolver':
                 self._cell_parameters['BiasSolver'].generate_model(Model, DataType)
                 self._cell.setBiasSolver(self._cell_parameters['BiasSolver'].N2D2())
-            if key is 'WeightsFiller':
+            elif key is 'WeightsFiller':
                 self._cell_parameters['WeightsFiller'].generate_model(DataType)
                 self._cell.setWeightsFiller(self._cell_parameters['WeightsFiller'].N2D2())
-            if key is 'BiasFiller':
+            elif key is 'BiasFiller':
                 self._cell_parameters['BiasFiller'].generate_model(DataType)
                 self._cell.setBiasFiller(self._cell_parameters['BiasFiller'].N2D2())
-            if key is 'WeightsExportFormat':
-                self._cell_parameters['WeightsExportFormat'] = self._weightsExportFormat[value]
+            # Not necessary when parsing strings as parameters
+            #elif key is 'WeightsExportFormat':
+            #    self._cell_parameters['WeightsExportFormat'] = self._weightsExportFormat[value]
+            #    self._cell.setParameter(key, self._cell_parameters['WeightsExportFormat'])
+            else:
+                self._set_N2D2_parameter(key, value)
+
+        print(model_parameters)
+
+
 
         if Model is 'Frame':
-            for key, value in model_parameters:
-                if key in self._frame_model_parameters:
-                    self._frame_model_parameters[key] = value
-                else:
+            for key in model_parameters:
+                if key not in self._frame_model_parameters:
                     raise n2d2.UndefinedParameterError(key, self)
+
+            for key, value in self._frame_model_parameters.items():
+                if key in model_parameters:
+                    self._frame_model_parameters[key] = model_parameters[key]
+                    self._modified_keys.append(key)
+                # Set even if default did not change
+                self._set_N2D2_parameter(key, self._frame_model_parameters[key])
+
         if Model is 'Frame_CUDA':
-            for key, value in model_parameters:
-                if key in self._frame_CUDA_model_parameters:
-                    self._frame_CUDA_model_parameters[key] = value
-                else:
+            for key in model_parameters:
+                if key not in self._frame_CUDA_model_parameters:
                     raise n2d2.UndefinedParameterError(key, self)
+
+            for key, value in self._frame_CUDA_model_parameters.items():
+                if key in model_parameters:
+                    self._frame_CUDA_model_parameters[key] = model_parameters[key]
+                    self._modified_keys.append(key)
+                # Set even if default did not change
+                self._set_N2D2_parameter(key, self._frame_CUDA_model_parameters[key])
+
+        #self._model_parameters.update(model_parameters)
+
+    # Using the string parser as in the INI files
+    # NOTE: Be careful for floats (like in INI)
+    def _set_N2D2_parameter(self, key, value):
+        print(key + " " + str(value))
+        if isinstance(value, bool):
+            self._cell.setParameter(key, str(int(value)))
+        else:
+            self._cell.setParameter(key, str(value))
 
         
     def __str__(self):
         output = "FcCell(" + self._model_key + "): "
         output += super().__str__()
+        for key, value in self._frame_model_parameters.items():
+            if key in self._modified_keys:
+                output += key + ": " + str(value) + ", "
+        for key, value in self._frame_CUDA_model_parameters.items():
+            if key in self._modified_keys:
+                output += key + ": " + str(value) + ", "
         return output
 
 
@@ -217,8 +267,8 @@ class Softmax(Cell):
         self._model_key = Model + '<' + DataType + '>'
 
         self._cell = self._cell_generators[self._model_key](deepnet,
-                                                            self._cell_parameters['Name'],
-                                                            self._cell_parameters['NbOutputs'],
+                                                            self._constructor_parameters['Name'],
+                                                            self._constructor_parameters['NbOutputs'],
                                                             self._cell_parameters['WithLoss'],
                                                             self._cell_parameters['GroupSize'],
                                                             )

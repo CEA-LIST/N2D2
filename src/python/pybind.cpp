@@ -56,7 +56,7 @@ void init_SoftmaxCell(py::module&);
 void init_SoftmaxCell_Frame(py::module&);
 void init_SoftmaxCell_Frame_CUDA(py::module&);
 
-//Ativation
+//Activation
 void init_Activation(py::module&);
 void init_TanhActivation(py::module&);
 void init_TanhActivation_Frame(py::module&);
@@ -122,14 +122,13 @@ void init_Filler(py::module&);
 void init_HeFiller(py::module&);
 
 
-
+// NOTE: the order of initialization seems to matter for inheritance to work properly
 PYBIND11_MODULE(N2D2, m) {
     //utils
     init_WindowFunction(m);
     init_Random(m);
     init_Parameterizable(m);
     init_Kernel(m);
-
     init_CudaContext(m);
     init_Tensor(m);
     init_CudaTensor(m);

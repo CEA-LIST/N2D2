@@ -60,11 +60,11 @@ provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size, False)
 print("Create model")
 model = n2d2.deepnet.Sequential([
     [
-        n2d2.cell.Fc(Name='fc1', NbOutputs=300, ActivationFunction=n2d2.activation.Rectifier(), WeightsSolver=n2d2.solver.SGD()),
+        n2d2.cell.Fc(Name='fc1', NbOutputs=300, ActivationFunction=n2d2.activation.Rectifier(), WeightsSolver=n2d2.solver.SGD(), NoBias=True, WeightsExportFormat='CO'),
         n2d2.cell.Fc(Name='fc2', NbOutputs=10, ActivationFunction=n2d2.activation.Linear(), WeightsSolver=n2d2.solver.SGD())
     ],
     n2d2.cell.Softmax(Name='softmax', NbOutputs=10)
-], DefaultModel='Frame_CUDA')
+], Model='Frame', fc1_model={'DropConnect': 0.5})
 
 print(model)
 
@@ -73,7 +73,7 @@ print("Add provider")
 model.add_provider(provider)
 
 print("Create target")
-tar = N2D2.TargetScore('target', model.getOutput().N2D2(), provider.N2D2())
+tar = N2D2.TargetScore('target', model.get_output().N2D2(), provider.N2D2())
 
 print("Initialize model")
 model.initialize()
@@ -85,7 +85,7 @@ for epoch in range(nb_epochs):
     for i in range(epoch_size):
 
         # Load example
-        provider.readRandomBatch(set='Learn')
+        provider.read_random_batch(set='Learn')
 
         # Set target of cell
         tar.provideTargets(N2D2.Database.Learn)
@@ -97,7 +97,7 @@ for epoch in range(nb_epochs):
         tar.process(N2D2.Database.Learn)
 
         # Backpropagate
-        model.backpropagate()
+        model.back_propagate()
 
         # Update parameters
         model.update()

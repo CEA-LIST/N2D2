@@ -31,7 +31,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Cell(py::module &m) {
-    py::class_<Cell, std::shared_ptr<Cell>> cell(m, "Cell", py::multiple_inheritance());
+    py::class_<Cell, std::shared_ptr<Cell>, Parameterizable> cell(m, "Cell", py::multiple_inheritance());
 
     py::enum_<Cell::FreeParametersType>(cell, "FreeParametersType")
     .value("Additive", Cell::FreeParametersType::Additive)
