@@ -87,7 +87,6 @@ void init_ApodizationTransformation(py::module&);
 void init_ChannelExtractionTransformation(py::module&);
 void init_ColorSpaceTransformation(py::module&);
 void init_CompressionNoiseTransformation(py::module&);
-void init_CompositeTransformation(py::module &);
 void init_DCTTransformation(py::module&);
 void init_DFTTransformation(py::module&);
 void init_DistortionTransformation(py::module&);
@@ -112,6 +111,8 @@ void init_SliceExtractionTransformation(py::module&);
 void init_ThresholdTransformation(py::module&);
 // void init_TrimTransformation(py::module &m);
 void init_WallisFilterTransformation(py::module&);
+void init_CompositeTransformation(py::module &);
+
 
 void init_Solver(py::module&);
 void init_SGDSolver(py::module&);
@@ -185,7 +186,6 @@ PYBIND11_MODULE(N2D2, m) {
     init_ApodizationTransformation(m);
     init_ChannelExtractionTransformation(m);
     init_ColorSpaceTransformation(m);
-    init_CompositeTransformation(m);
     init_CompressionNoiseTransformation(m);
     init_DCTTransformation(m);
     init_DFTTransformation(m);
@@ -211,6 +211,9 @@ PYBIND11_MODULE(N2D2, m) {
     init_ThresholdTransformation(m);
     init_WallisFilterTransformation(m);
     // init_TrimTransformation(m);
+    init_CompositeTransformation(m);
+
+
     init_Solver(m);
     init_SGDSolver(m);
     init_SGDSolver_Frame(m);

@@ -22,10 +22,40 @@
 #ifdef CUDA
 
 #ifdef PYBIND
-#include "Transformation/CompositeTransformation.hpp"
 #include "Transformation/DistortionTransformation.hpp"
-#include "Transformation/PadCropTransformation.hpp"
 #include "Transformation/Transformation.hpp"
+#include "Transformation/PadCropTransformation.hpp"
+#include "Transformation/CompositeTransformation.hpp"
+#include "Transformation/AffineTransformation.hpp"
+#include "Transformation/ChannelExtractionTransformation.hpp"
+#include "Transformation/ColorSpaceTransformation.hpp"
+#include "Transformation/CompressionNoiseTransformation.hpp"
+#include "Transformation/DCTTransformation.hpp"
+#include "Transformation/DFTTransformation.hpp"
+#include "Transformation/EqualizeTransformation.hpp"
+#include "Transformation/ExpandLabelTransformation.hpp"
+#include "Transformation/WallisFilterTransformation.hpp"
+#include "Transformation/ThresholdTransformation.hpp"
+#include "Transformation/SliceExtractionTransformation.hpp"
+#include "Transformation/ReshapeTransformation.hpp"
+#include "Transformation/RescaleTransformation.hpp"
+#include "Transformation/RangeClippingTransformation.hpp"
+#include "Transformation/RangeAffineTransformation.hpp"
+#include "Transformation/RandomAffineTransformation.hpp"
+#include "Transformation/NormalizeTransformation.hpp"
+#include "Transformation/MorphologyTransformation.hpp"
+#include "Transformation/MorphologicalReconstructionTransformation.hpp"
+#include "Transformation/MagnitudePhaseTransformation.hpp"
+#include "Transformation/LabelSliceExtractionTransformation.hpp"
+#include "Transformation/LabelExtractionTransformation.hpp"
+#include "Transformation/GradientFilterTransformation.hpp"
+#include "Transformation/ApodizationTransformation.hpp"
+#include "Transformation/TrimTransformation.hpp"
+#include "Transformation/FilterTransformation.hpp"
+#include "Transformation/FlipTransformation.hpp"
+
+
+
 
 
 
@@ -36,11 +66,11 @@ namespace py = pybind11;
 namespace N2D2 {
 template<class T>
 void init(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> &m) {
-    // Templated declaration of the constructor because Transformation can't be instancied thus we have to make a constructor for every Transformation class (Possibility to use a script to generate the code). Or find another workaround. 
     m.def(py::init<const T&>(), py::arg("transformation"))
     .def("push_back", (void (CompositeTransformation::*)(const T&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.");
-    // Create issues with the parametrizable methods
-    // py::implicitly_convertible<T, CompositeTransformation>();
+    // Need an implicit conversion to be able to apply transformations with the StimuliProvider.
+    py::implicitly_convertible<T, CompositeTransformation>();
+    py::implicitly_convertible<CompositeTransformation, T>();
 
 }
 
@@ -48,6 +78,34 @@ void init_CompositeTransformation(py::module &m) {
     py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> ct(m, "CompositeTransformation", py::multiple_inheritance());
     init<DistortionTransformation>(ct);
     init<PadCropTransformation>(ct);
+    init<AffineTransformation>(ct);
+    init<ChannelExtractionTransformation>(ct);
+    init<ColorSpaceTransformation>(ct);
+    init<CompressionNoiseTransformation>(ct);
+    init<DCTTransformation>(ct);
+    init<DFTTransformation>(ct);
+    init<EqualizeTransformation>(ct);
+    init<ExpandLabelTransformation>(ct);
+    init<FlipTransformation>(ct);
+    init<WallisFilterTransformation>(ct);
+    init<ThresholdTransformation>(ct);
+    init<SliceExtractionTransformation>(ct);
+    init<ReshapeTransformation>(ct);
+    init<RescaleTransformation>(ct);
+    init<RangeClippingTransformation>(ct);
+    init<RangeAffineTransformation>(ct);
+    init<RandomAffineTransformation>(ct);
+    init<NormalizeTransformation>(ct);
+    init<MorphologyTransformation>(ct);
+    init<MorphologicalReconstructionTransformation>(ct);
+    init<MagnitudePhaseTransformation>(ct);
+    init<LabelSliceExtractionTransformation>(ct);
+    init<LabelExtractionTransformation>(ct);
+    init<GradientFilterTransformation>(ct);
+    init<ApodizationTransformation>(ct);
+    // init<TrimTransformation>(ct);
+    init<FilterTransformation>(ct);
+
 }
 }
 #endif
