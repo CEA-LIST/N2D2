@@ -37,24 +37,13 @@ void init_CudaTensor(py::module&);
 void init_Network(py::module&);
 void init_Database(py::module&);
 void init_StimuliProvider(py::module&);
-void init_Cell(py::module&);
-void init_Cell_Frame_Top(py::module&);
-void init_Cell_Frame(py::module&);
-void init_Cell_Frame_CUDA(py::module&);
 void init_Target(py::module&);
 void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
 void init_MNIST_IDX_Database(py::module&);
 void init_Environment(py::module&);
-void init_ConvCell(py::module&);
-void init_ConvCell_Frame(py::module&);
-void init_FcCell(py::module&);
-void init_FcCell_Frame(py::module&);
-void init_FcCell_Frame_CUDA(py::module&);
-void init_SoftmaxCell(py::module&);
-void init_SoftmaxCell_Frame(py::module&);
-void init_SoftmaxCell_Frame_CUDA(py::module&);
+
 
 //Activation
 void init_Activation(py::module&);
@@ -121,6 +110,20 @@ void init_SGDSolver_Frame_CUDA(py::module&);
 void init_Filler(py::module&);
 void init_HeFiller(py::module&);
 
+// Cell
+void init_Cell(py::module&);
+void init_Cell_Frame_Top(py::module&);
+void init_Cell_Frame(py::module&);
+void init_Cell_Frame_CUDA(py::module&);
+void init_ConvCell(py::module&);
+void init_ConvCell_Frame(py::module&);
+void init_FcCell(py::module&);
+void init_FcCell_Frame(py::module&);
+void init_FcCell_Frame_CUDA(py::module&);
+void init_SoftmaxCell(py::module&);
+void init_SoftmaxCell_Frame(py::module&);
+void init_SoftmaxCell_Frame_CUDA(py::module&);
+
 
 // NOTE: the order of initialization seems to matter for inheritance to work properly
 PYBIND11_MODULE(N2D2, m) {
@@ -135,24 +138,13 @@ PYBIND11_MODULE(N2D2, m) {
     init_Network(m);
     init_Database(m);
     init_StimuliProvider(m);
-    init_Cell(m);
-    init_Cell_Frame_Top(m);
-    init_Cell_Frame(m);
-    init_Cell_Frame_CUDA(m);
+
     init_Target(m);
     init_TargetScore(m);
     init_DeepNet(m);
     init_DeepNetGenerator(m);
     init_MNIST_IDX_Database(m);
     init_Environment(m);
-    init_ConvCell(m);
-    init_ConvCell_Frame(m);
-    init_FcCell(m);
-    init_FcCell_Frame(m);
-    init_FcCell_Frame_CUDA(m);
-    init_SoftmaxCell(m);
-    init_SoftmaxCell_Frame(m);
-    init_SoftmaxCell_Frame_CUDA(m);
 
     //Activation
     init_Activation(m);
@@ -219,6 +211,21 @@ PYBIND11_MODULE(N2D2, m) {
     init_SGDSolver_Frame_CUDA(m);
     init_Filler(m);
     init_HeFiller(m);
+
+    //Cell
+    init_Cell(m);
+    init_Cell_Frame_Top(m);
+    init_Cell_Frame(m);
+    init_Cell_Frame_CUDA(m);
+    init_ConvCell(m);
+    init_ConvCell_Frame(m);
+    init_FcCell(m);
+    init_FcCell_Frame(m);
+    init_FcCell_Frame_CUDA(m);
+    init_SoftmaxCell(m);
+    init_SoftmaxCell_Frame(m);
+    init_SoftmaxCell_Frame_CUDA(m);
+
 
 }
 }

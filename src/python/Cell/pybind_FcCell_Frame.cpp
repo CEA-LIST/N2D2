@@ -34,11 +34,9 @@ template<typename T>
 void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("FcCell_Frame_" + typeStr);
     py::class_<FcCell_Frame<T>, std::shared_ptr<FcCell_Frame<T>>, FcCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    // TODO : Declare std::make_shared<TanhActivation_Frame<Float_T> >() as a default argument for activation.
-    // Not easy because pybind can't convert it into a Python object.
-    // if not done remove the include TanhActivation
+
     .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation"))
+         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >())
     .def("propagate", &FcCell_Frame<T>::propagate, py::arg("inference") = false)
     .def("backPropagate", &FcCell_Frame<T>::backPropagate)
     .def("update", &FcCell_Frame<T>::update);

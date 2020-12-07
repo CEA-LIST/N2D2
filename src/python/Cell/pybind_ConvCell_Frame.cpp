@@ -42,7 +42,7 @@ void declare_ConvCell_Frame(py::module &m, const std::string& typeStr) {
          py::arg("deepNet"), py::arg("name"), py::arg("kernelDims"), py::arg("nbOutputs"), 
          py::arg("subSampleDims") = std::vector<unsigned int>(2, 1U), py::arg("strideDims") = std::vector<unsigned int>(2, 1U), 
          py::arg("paddingDims") = std::vector<int>(2, 0), py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
-         py::arg("activation"))
+         py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >())
     .def("propagate", &ConvCell_Frame<T>::propagate, py::arg("inference") = false)
     .def("backPropagate", &ConvCell_Frame<T>::backPropagate)
     .def("update", &ConvCell_Frame<T>::update)
