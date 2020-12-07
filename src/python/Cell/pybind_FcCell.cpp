@@ -24,7 +24,6 @@
 #ifdef PYBIND
 #include "Cell/FcCell.hpp"
 
-// These includes are necessary for the bindings using abstract classes
 #include "Solver/Solver.hpp"
 #include "Filler/Filler.hpp"
 
