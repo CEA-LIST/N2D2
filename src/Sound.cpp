@@ -116,10 +116,17 @@ void N2D2::Sound::load(const std::string& fileName, double start, double end)
             + "\"), only WAVE is supported, in file: " + fileName);
     }
 
+    const std::map<int, std::string> wav_formats = {
+        std::make_pair(0x0001, "WAVE_FORMAT_PCM"),
+        std::make_pair(0x0003, "WAVE_FORMAT_IEEE_FLOAT"),
+        std::make_pair(0x0006, "WAVE_FORMAT_ALAW"),
+        std::make_pair(0x0007, "WAVE_FORMAT_MULAW"),
+        std::make_pair(0xFFFE, "WAVE_FORMAT_EXTENSIBLE")
+    };
+
     unsigned short format;
     while (data.read(reinterpret_cast<char*>(&chunkId[0]), 4)) {
         data.read(reinterpret_cast<char*>(&chunkSize), 4);
-        const std::streampos pos_startchunk_data = data.tellg();
 
         if (chunkId == "fmt ") {
             unsigned short channels;
@@ -128,17 +135,19 @@ void N2D2::Sound::load(const std::string& fileName, double start, double end)
 
             data.read(reinterpret_cast<char*>(&format), 2);
 
-            std::map<int, std::string> wav_formats = {
-                std::make_pair(0x0001, "WAVE_FORMAT_PCM"),
-                std::make_pair(0x0003, "WAVE_FORMAT_IEEE_FLOAT"),
-                std::make_pair(0x0006, "WAVE_FORMAT_ALAW"),
-                std::make_pair(0x0007, "WAVE_FORMAT_MULAW"),
-                std::make_pair(0xFFFE, "WAVE_FORMAT_EXTENSIBLE")
-            };
-
-            if (format != 1 && format != 3)
-                throw std::runtime_error("Unknown sound file format " + wav_formats[format]  + " in file: "
-                                         + fileName);
+            if (format != 1 && format != 3) {
+                const std::map<int, std::string>::const_iterator itFormat
+                    = wav_formats.find(format);
+                
+                if (itFormat != wav_formats.end()) {
+                    throw std::runtime_error("Unsupported sound file format "
+                        + (*itFormat).second  + " in file: " + fileName);
+                }
+                else {
+                    throw std::runtime_error("Unknown sound file format \"fmt "
+                        + std::to_string(format)  + "\" in file: " + fileName);
+                }
+            }
 
             data.read(reinterpret_cast<char*>(&channels), 2);
             mData.resize(channels);
@@ -162,7 +171,15 @@ void N2D2::Sound::load(const std::string& fileName, double start, double end)
                 throw std::runtime_error("Invalid sound file (bytePerBlock != "
                                          "mData.size()*mBitPerSample/8): "
                                          + fileName);
-        } else if (chunkId == "data") {
+
+            if (format != 1) {
+                // Extra parameters, only for non-PCM
+                unsigned short cbSize;
+                data.read(reinterpret_cast<char*>(&cbSize), 2);
+                data.ignore(cbSize);
+            }
+        }
+        else if (chunkId == "data") {
             // For each channel
             for (std::vector<std::vector<double> >::iterator it = mData.begin(),
                                                              itEnd
@@ -207,11 +224,12 @@ void N2D2::Sound::load(const std::string& fileName, double start, double end)
                      = mData.begin(),
                      itEnd = mData.end();
                      it != itEnd;
-                     ++it) {
-                    data.read(reinterpret_cast<char*>(&byte),
-                              mBitPerSample / 8);
-
+                     ++it)
+                {
                     if (format == 1) {
+                        data.read(reinterpret_cast<char*>(&byte),
+                                mBitPerSample / 8);
+
                         if (mBitPerSample == 8) {
                             if (byte & 0x80)
                                 byte |= ~0xFF;
@@ -229,12 +247,16 @@ void N2D2::Sound::load(const std::string& fileName, double start, double end)
                                 byte &= 0xFFFFFF;
                         }
 
+                        // Append the sample to the channel
                         (*it).push_back(byte);
                     } else if (format == 3) {
-                        (*it).push_back(*(float*)&byte);
-                    }
+                        float flt;
+                        data.read(reinterpret_cast<char*>(&flt),
+                                mBitPerSample / 8);
 
-                    // Append the sample to the channel
+                        // Append the sample to the channel
+                        (*it).push_back(flt);
+                    }
                 }
             }
 
@@ -244,15 +266,17 @@ void N2D2::Sound::load(const std::string& fileName, double start, double end)
                     data.read(reinterpret_cast<char*>(&byte),
                               mBitPerSample / 8);
             }
-        } else {
+        }
+        else if (chunkId == "fact") {
+            unsigned int dwSampleLength;
+            data.read(reinterpret_cast<char*>(&dwSampleLength), 4);
+        }
+        else {
             std::cout << "Notice: Unsupported WAV file chunk (\""
                       << Utils::escapeBinary(chunkId)
                       << "\") in file: " << fileName << std::endl;
             data.ignore(chunkSize);
         }
-        unsigned long long chunkEndPos = (unsigned long long)pos_startchunk_data + chunkSize;
-        if (data.tellg() != chunkEndPos)
-            data.seekg(chunkEndPos);
     }
 }
 
