@@ -23,10 +23,15 @@ N2D2
    ini/data_analysis
    ini/environment
    ini/layers
+   ini/tuto
 
 .. toctree::
    :maxdepth: 1
-   :caption: Binding Python:
+   :caption: Python API:
+
+.. toctree::
+   :maxdepth: 1
+   :caption: C++/Python core:
    
    python_binding/activation
    python_binding/containers
@@ -36,12 +41,6 @@ N2D2
    python_binding/stimuliprovider
    python_binding/transformation
    python_binding/example
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Tutorials:
-
-   tuto
 
 Indices and tables
 ==================

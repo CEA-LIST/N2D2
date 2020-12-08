@@ -40,25 +40,184 @@ Transformation:
 ---------------
 
 .. autoclass:: N2D2.Transformation
-   :members:
-
-CompositeTransformation:
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: N2D2.CompositeTransformation
-   :members:
+        :members:
 
 DistortionTransformation:
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 .. autoclass:: N2D2.DistortionTransformation
-   :members:
+        :members:
+
 
 PadCropTransformation:
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 .. autoclass:: N2D2.PadCropTransformation
-   :members:
+        :members:
+
+CompositeTransformation:
+------------------------
+
+.. autoclass:: N2D2.CompositeTransformation
+        :members:
+
+AffineTransformation:
+---------------------
+
+.. autoclass:: N2D2.AffineTransformation
+        :members:
+
+ChannelExtractionTransformation:
+--------------------------------
+
+.. autoclass:: N2D2.ChannelExtractionTransformation
+        :members:
+
+ColorSpaceTransformation:
+-------------------------
+
+.. autoclass:: N2D2.ColorSpaceTransformation
+        :members:
+
+CompressionNoiseTransformation:
+-------------------------------
+
+.. autoclass:: N2D2.CompressionNoiseTransformation
+        :members:
+
+DCTTransformation:
+------------------
+
+.. autoclass:: N2D2.DCTTransformation
+        :members:
+
+DFTTransformation:
+------------------
+
+.. autoclass:: N2D2.DFTTransformation
+        :members:
+
+EqualizeTransformation:
+-----------------------
+
+.. autoclass:: N2D2.EqualizeTransformation
+        :members:
+
+ExpandLabelTransformation:
+--------------------------
+
+.. autoclass:: N2D2.ExpandLabelTransformation
+        :members:
+
+WallisFilterTransformation:
+---------------------------
+
+.. autoclass:: N2D2.WallisFilterTransformation
+        :members:
+
+ThresholdTransformation:
+------------------------
+
+.. autoclass:: N2D2.ThresholdTransformation
+        :members:
+
+SliceExtractionTransformation:
+------------------------------
+
+.. autoclass:: N2D2.SliceExtractionTransformation
+        :members:
+
+ReshapeTransformation:
+----------------------
+
+.. autoclass:: N2D2.ReshapeTransformation
+        :members:
+
+RescaleTransformation:
+----------------------
+
+.. autoclass:: N2D2.RescaleTransformation
+        :members:
+
+RangeClippingTransformation:
+----------------------------
+
+.. autoclass:: N2D2.RangeClippingTransformation
+        :members:
+
+RangeAffineTransformation:
+--------------------------
+
+.. autoclass:: N2D2.RangeAffineTransformation
+        :members:
+
+RandomAffineTransformation:
+---------------------------
+
+.. autoclass:: N2D2.RandomAffineTransformation
+        :members:
+
+NormalizeTransformation:
+------------------------
+
+.. autoclass:: N2D2.NormalizeTransformation
+        :members:
+
+MorphologyTransformation:
+-------------------------
+
+.. autoclass:: N2D2.MorphologyTransformation
+        :members:
+
+MorphologicalReconstructionTransformation:
+------------------------------------------
+
+.. autoclass:: N2D2.MorphologicalReconstructionTransformation
+        :members:
+
+MagnitudePhaseTransformation:
+-----------------------------
+
+.. autoclass:: N2D2.MagnitudePhaseTransformation
+        :members:
+
+LabelSliceExtractionTransformation:
+-----------------------------------
+
+.. autoclass:: N2D2.LabelSliceExtractionTransformation
+        :members:
+
+LabelExtractionTransformation:
+------------------------------
+
+.. autoclass:: N2D2.LabelExtractionTransformation
+        :members:
+
+GradientFilterTransformation:
+-----------------------------
+
+.. autoclass:: N2D2.GradientFilterTransformation
+        :members:
+
+ApodizationTransformation:
+--------------------------
+
+.. autoclass:: N2D2.ApodizationTransformation
+        :members:
+
+FilterTransformation:
+---------------------
+
+.. autoclass:: N2D2.FilterTransformation
+        :members:
+
+FlipTransformation:
+-------------------
+
+.. autoclass:: N2D2.FlipTransformation
+        :members:
+
+
 
 .. testcode::
    :hide:
