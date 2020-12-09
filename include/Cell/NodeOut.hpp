@@ -21,7 +21,7 @@
 #ifndef N2D2_NODEOUT_H
 #define N2D2_NODEOUT_H
 
-#include "Node.hpp"
+#include "Xnet/Node.hpp"
 
 namespace N2D2 {
 

@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "N2D2.hpp"
 #include "StimuliProvider.hpp"
 #include "Cell/Cell.hpp"

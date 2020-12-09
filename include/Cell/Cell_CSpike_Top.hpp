@@ -22,7 +22,7 @@
 #ifndef N2D2_CELL_CSPIKE_TOP_H
 #define N2D2_CELL_CSPIKE_TOP_H
 
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "FloatT.hpp"
 
 namespace N2D2 {

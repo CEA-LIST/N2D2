@@ -24,7 +24,7 @@
 #include <mutex>
 
 #include "N2D2.hpp"
-#include "Aer.hpp"
+#include "Xnet/Aer.hpp"
 #include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
 #include "Target/TargetScore.hpp"

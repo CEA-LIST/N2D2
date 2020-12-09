@@ -22,7 +22,7 @@
 
 #include "Activation/Activation.hpp"
 #include "Activation/Activation_Kernels.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

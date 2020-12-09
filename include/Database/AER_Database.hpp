@@ -23,7 +23,7 @@
 #define N2D2_AER_DATABASE_H
 
 #include "Database.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 
 namespace N2D2 {
 

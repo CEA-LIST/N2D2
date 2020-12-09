@@ -24,7 +24,7 @@
 #include "Cell_Spike.hpp"
 #include "ConvCell.hpp"
 #include "DeepNet.hpp"
-#include "Synapse_Behavioral.hpp"
+#include "Xnet/Synapse_Behavioral.hpp"
 
 namespace N2D2 {
 

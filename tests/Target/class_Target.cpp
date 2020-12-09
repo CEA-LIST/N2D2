@@ -18,11 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "N2D2.hpp"
 #include "Cell/FcCell_Frame.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "StimuliProvider.hpp"
 #include "Target/Target.hpp"
 #include "utils/UnitTest.hpp"

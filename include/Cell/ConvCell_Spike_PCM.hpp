@@ -23,7 +23,7 @@
 
 #include "ConvCell_Spike.hpp"
 #include "DeepNet.hpp"
-#include "Synapse_PCM.hpp"
+#include "Xnet/Synapse_PCM.hpp"
 
 namespace N2D2 {
 class ConvCell_Spike_PCM : public ConvCell_Spike {

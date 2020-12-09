@@ -20,8 +20,8 @@
 
 #include "Cell/ConvCell_Frame.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #include "Generator/MappingGenerator.hpp"
 #include "containers/Matrix.hpp"
 #include "utils/UnitTest.hpp"

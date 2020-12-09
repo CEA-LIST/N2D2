@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeEnv.hpp"
+#include "Xnet/NodeEnv.hpp"
 
 N2D2::NodeEnv::NodeEnv(Network& net,
                        double scale,

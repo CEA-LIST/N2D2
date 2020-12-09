@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Synapse_PCM.hpp"
+#include "Xnet/Synapse_PCM.hpp"
 
 N2D2::Synapse_PCM::ProgramMethod N2D2::Synapse_PCM::mProgramMethod = Ideal;
 unsigned int N2D2::Synapse_PCM::mSetLimit = 1000;

@@ -20,7 +20,7 @@
 
 #include "N2D2.hpp"
 
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "Activation/RectifierActivation_Frame.hpp"
 #include "Cell/BatchNormCell_Frame.hpp"
 #include "Cell/ConvCell_Frame.hpp"
@@ -28,7 +28,7 @@
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "Cell/FcCell_Frame.hpp"
 #include "utils/UnitTest.hpp"
 

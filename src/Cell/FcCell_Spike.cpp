@@ -23,7 +23,7 @@
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
 #include "DeepNet.hpp"
-#include "Synapse_Static.hpp"
+#include "Xnet/Synapse_Static.hpp"
 #include "FloatT.hpp"
 
 N2D2::Registrar<N2D2::FcCell>

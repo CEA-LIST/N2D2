@@ -13,10 +13,10 @@
 
 #include "Cell/ConvCell_Frame.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "Export/C_HLS/C_HLS_ConvCellExport.hpp"
 #include "Export/C_HLS/C_HLS_DeepNetExport.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Utils.hpp"
 

@@ -19,9 +19,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeNeuron_PCM.hpp"
-#include "SpikeEvent.hpp"
-#include "Synapse_PCM.hpp"
+#include "Xnet/NodeNeuron_PCM.hpp"
+#include "Xnet/SpikeEvent.hpp"
+#include "Xnet/Synapse_PCM.hpp"
 
 N2D2::NodeNeuron_PCM::NodeNeuron_PCM(Network& net)
     : NodeNeuron(net),

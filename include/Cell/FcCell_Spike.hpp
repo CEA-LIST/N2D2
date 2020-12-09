@@ -21,7 +21,7 @@
 #ifndef N2D2_FCCELL_SPIKE_H
 #define N2D2_FCCELL_SPIKE_H
 
-#include "Xcell.hpp"
+#include "Xnet/Xcell.hpp"
 
 #include "Cell_Spike.hpp"
 #include "DeepNet.hpp"

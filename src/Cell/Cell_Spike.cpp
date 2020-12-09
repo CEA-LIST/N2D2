@@ -20,11 +20,11 @@
 
 #include "Cell/Cell_Spike.hpp"
 
-#include "NodeEnv.hpp"
+#include "Xnet/NodeEnv.hpp"
 #include "Cell/NodeIn.hpp"
 #include "Cell/NodeOut.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "StimuliProvider.hpp"
 
 N2D2::Cell_Spike::Cell_Spike(Network& net, const DeepNet& deepNet, 

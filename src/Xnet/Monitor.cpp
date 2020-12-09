@@ -19,8 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Layer.hpp"
-#include "Monitor.hpp"
+#include "Xnet/Layer.hpp"
+#include "Xnet/Monitor.hpp"
 
 N2D2::Monitor::Monitor(Network& net)
     : mNet(net),

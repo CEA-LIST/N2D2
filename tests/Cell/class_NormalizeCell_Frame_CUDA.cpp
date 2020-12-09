@@ -24,7 +24,7 @@
 
 #include "Cell/NormalizeCell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;
