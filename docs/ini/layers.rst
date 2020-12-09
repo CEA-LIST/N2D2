@@ -1718,7 +1718,7 @@ Usage example for fully CNNs:
     Size=3
 
 
-.. bibliography:: refs.bib
+.. bibliography:: ../refs.bib
 
 Threshold
 ---------

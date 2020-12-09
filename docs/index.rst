@@ -29,10 +29,13 @@ N2D2
    :maxdepth: 1
    :caption: Python API:
 
+   python_api/intro
+
 .. toctree::
    :maxdepth: 1
    :caption: C++/Python core:
    
+   python_binding/intro
    python_binding/activation
    python_binding/containers
    python_binding/cells

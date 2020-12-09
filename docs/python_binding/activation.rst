@@ -17,6 +17,12 @@ Activation functions in N2D2 are passed as arguments to initialize :py:class:`N2
 Activation
 ----------
 
+Activation
+~~~~~~~~~~
+
+.. autoclass:: N2D2.Activation
+        :members:
+
 LinearActivation
 ~~~~~~~~~~~~~~~~
 
@@ -35,11 +41,7 @@ TanhActivation
 .. autoclass:: N2D2.TanhActivation
         :members:
 
-Activation
-~~~~~~~~~~
 
-.. autoclass:: N2D2.Activation
-        :members:
 
 SwishActivation
 ~~~~~~~~~~~~~~~

@@ -59,8 +59,8 @@ But to apply them to the data, we need :py:class:`N2D2.StimuliProvider`.
 .. testcode::
 
     stimuli = N2D2.StimuliProvider(database, [24, 24, 1], batchSize, False)
-    stimuli.addTransformation(N2D2.CompositeTransformation(N2D2.PadCropTransformation(24, 24)), database.StimuliSetMask(0))
-    stimuli.addOnTheFlyTransformation(N2D2.CompositeTransformation(trans), database.StimuliSetMask(0))
+    stimuli.addTransformation(N2D2.PadCropTransformation(24, 24), database.StimuliSetMask(0))
+    stimuli.addOnTheFlyTransformation(trans, database.StimuliSetMask(0))
 
 We can apply transformation in two ways. 
 The first one is the standard one, we apply the transformation once to the whole dataset.
@@ -68,7 +68,6 @@ This is useful for transformation like normalization or :py:class:`N2D2.PadCropT
 The other way is to add the transformation "on the fly", this mean that each time we load a data, we apply the transformation.
 This is especially adapted to random transformation like :py:class:`N2D2.DistortionTransformation` since you add more diversity to the data.
 
-You can note that we need to use :py:class:`N2D2.CompositeTransformation` to apply transformation with the :py:class:`N2D2.StimuliProvider`.
 
 Defining network topology
 -------------------------

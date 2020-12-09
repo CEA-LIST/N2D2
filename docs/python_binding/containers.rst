@@ -29,7 +29,7 @@ N2D2 have it's own Tensor implementation.
    0
 
 
-Tensor are initialisable with numpy.array object.
+Tensor can be created using numpy.array object.
 
 .. doctest::
 
@@ -50,6 +50,9 @@ Tensor
 .. autoclass:: N2D2.Tensor_double
    :members:
 
+.. autoclass:: N2D2.Tensor_bool
+   :members:
+
 CudaTensor
 ----------
 
@@ -63,4 +66,7 @@ CudaTensor
    :members:
 
 .. autoclass:: N2D2.CudaTensor_double
+   :members:
+   
+.. autoclass:: N2D2.CudaTensor_bool
    :members:

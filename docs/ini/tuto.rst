@@ -789,4 +789,4 @@ it means that the spiking version of the network is more efficient than
 its formal counterpart in terms of total number of operations!
 
 
-.. bibliography:: refs.bib
+.. bibliography:: ../refs.bib
