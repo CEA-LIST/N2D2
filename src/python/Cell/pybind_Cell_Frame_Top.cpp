@@ -39,24 +39,50 @@ void init_Cell_Frame_Top(py::module &m) {
     .value("InOut", Cell_Frame_Top::Signals::InOut)
     .export_values();
 
-    cell.def("save", &Cell_Frame_Top::save, py::arg("dirName"))
-    .def("load", &Cell_Frame_Top::load, py::arg("dirName"))
-    // .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
-    // .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))
-    .def("propagate", &Cell_Frame_Top::propagate, py::arg("inference") = false)
-    .def("backPropagate", &Cell_Frame_Top::backPropagate)
+    cell
+    .def("save", &Cell_Frame_Top::save, py::arg("dirName"),
+     R"mydelimiter(
+     Save cell configuration and free parameters to a directory
+     
+     :param dirName: Destination directory
+     :type dirName: str
+     )mydelimiter")
+    .def("load", &Cell_Frame_Top::load, py::arg("dirName"),
+     R"mydelimiter(
+     Load cell configuration and free parameters from a directory
+     
+     :param dirName: Source directory
+     :type dirName: str
+     )mydelimiter")
+
+    .def("propagate", &Cell_Frame_Top::propagate, py::arg("inference") = false,
+    R"mydelimiter(
+    Forward propagation
+
+     :param inference: If set to False we are in training mode else we are in inference mode
+     :type inference: bool, optional
+     )mydelimiter")
+
+    .def("backPropagate", &Cell_Frame_Top::backPropagate,
+    R"mydelimiter(
+    Back propagation of the error
+     )mydelimiter")
+     
     .def("update", &Cell_Frame_Top::update)
-    // .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
-    // .def("discretizeSignals", &Cell_Frame_Top::discretizeSignals, py::arg("nbLevels"), py::arg("signals") = Cell_Frame_Top::In)
+
     .def("setOutputTarget", &Cell_Frame_Top::setOutputTarget, py::arg("targets"))
     .def("setOutputTargets", &Cell_Frame_Top::setOutputTargets, py::arg("targets"))
-    // .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
-    // .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs)
-    // .def("getDiffInputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getDiffInputs)
     .def("getMaxOutput", &Cell_Frame_Top::getMaxOutput, py::arg("batchPos") = 0)
     .def("getActivation", &Cell_Frame_Top::getActivation)
     .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
     // .def("isCuda", &Cell_Frame_Top::isCuda)
+    // .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
+    // .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))
+    // .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
+    // .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs)
+    // .def("getDiffInputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getDiffInputs)
+    // .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
+    // .def("discretizeSignals", &Cell_Frame_Top::discretizeSignals, py::arg("nbLevels"), py::arg("signals") = Cell_Frame_Top::In)
     ;
 }
 }
