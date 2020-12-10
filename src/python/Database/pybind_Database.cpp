@@ -31,6 +31,16 @@ namespace N2D2 {
 void init_Database(py::module &m) {
     py::class_<Database, std::shared_ptr<Database>> db(m, "Database", py::multiple_inheritance());
 
+    db.doc() = 
+    R"mydelimiter(
+    Database specifications:
+    - Genericity: load image and sound, 1D, 2D or 3D data
+    - Associate a label for each data point or global to the stimulus, 1D or 2D
+    labels
+    - ROIs handling:
+      + Convert ROIs to data point labels
+      + Extract one or multiple ROIs from an initial dataset to create as many corresponding stimuli)mydelimiter";
+
     py::enum_<Database::StimuliSet>(db, "StimuliSet")
     .value("Learn", Database::StimuliSet::Learn)
     .value("Validation", Database::StimuliSet::Validation)
@@ -54,11 +64,64 @@ void init_Database(py::module &m) {
     // .def("saveROIs", &Database::saveROIs, py::arg("fileName"), py::arg("header") = "")
     // .def("logStats", &Database::logStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
     // .def("logROIsStats", &Database::logROIsStats, py::arg("sizeFileName"), py::arg("labelFileName"), py::arg("setMask") = Database::All)
-    .def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli))
-    .def("getNbStimuli", (unsigned int (Database::*)(Database::StimuliSet) const)(&Database::getNbStimuli), py::arg("set"))
-    .def("getStimulusLabel", (int (Database::*)(Database::StimulusID) const)(&Database::getStimulusLabel), py::arg("id"))
-    .def("getStimulusLabel", (int (Database::*)(Database::StimuliSet, unsigned int) const)(&Database::getStimulusLabel), py::arg("set"), py::arg("index"))
+    
+
+    .def("load", &Database::load, py::arg("dataPath"), py::arg("labelPath") = "", py::arg("extractROIs") = false,
+     R"mydelimiter(
+     Load data.
+     
+     :param dataPath: Path to the dataset file.
+     :type dataPath: str
+     :param labelPath: Path to the label file.
+     :type labelPath: str, optional
+     :param extractROIs: If True extract ROI
+     :type extractROIs: bool, optional
+    )mydelimiter")
     ;
+
+        // TODO : Find a better method to add description to overloaded method
+    // As mentionned here https://github.com/pybind/pybind11/issues/2619 pybind + shpinx have trouble generating docstring for overloaded method.
+    // The current best fix is to disable function signatures, this seems to be currently acceptable. 
+
+    py::options options;
+    options.disable_function_signatures(); // Apply only on this scope so no need to enable function signature again.
+
+    db.def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli),
+    R"mydelimiter(
+    Returns the total number of loaded stimuli.
+    
+    :return: Number of stimuli
+    :rtype: int
+    )mydelimiter")
+    .def("getNbStimuli", (unsigned int (Database::*)(Database::StimuliSet) const)(&Database::getNbStimuli), py::arg("set"),
+     R"mydelimiter(
+     Returns the number of stimuli in one stimuli set.
+     
+     :param set: Set of stimuli
+     :type set: :py:class:`N2D2.Database.StimuliSet`
+     :return: Number of stimuli in the set
+     :rtype: int
+    )mydelimiter")
+    .def("getStimulusLabel", (int (Database::*)(Database::StimulusID) const)(&Database::getStimulusLabel), py::arg("id"),
+     R"mydelimiter(
+     Returns the label of a stimuli.
+     
+     :param set: id of stimuli
+     :type set: :py:class:`N2D2.Database.StimulusID`
+     :return: Label of stimuli
+     :rtype: int
+    )mydelimiter")
+    .def("getStimulusLabel", (int (Database::*)(Database::StimuliSet, unsigned int) const)(&Database::getStimulusLabel), py::arg("set"), py::arg("index"),
+     R"mydelimiter(
+     Returns the label of a stimuli.
+     
+     :param set: Set of stimuli
+     :type set: :py:class:`N2D2.Database.StimuliSet`
+     :param index: Index of stimuli
+     :type index: int
+     :return: Label of stimuli
+     :rtype: int
+    )mydelimiter");
 
 }
 }
