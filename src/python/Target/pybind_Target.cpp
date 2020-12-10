@@ -66,8 +66,20 @@ void init_Target(py::module &m) {
     .def("getTargetLabels", &Target::getTargetLabels, py::arg("output"))
     .def("getTargetLabelsName", &Target::getTargetLabelsName)
     .def("logLabelsMapping", &Target::logLabelsMapping, py::arg("fileName"))
-    .def("provideTargets", &Target::provideTargets, py::arg("set"))
-    .def("process", &Target::process, py::arg("set"))
+    .def("provideTargets", &Target::provideTargets, py::arg("set"),
+     R"mydelimiter(
+     Set the output target of a cell. Also create the mapping if labelsMapping option is defined.
+     
+     :param set: Set of stimuli
+     :type set: :py:class:`N2D2.Database.StimuliSet`
+    )mydelimiter")
+    .def("process", &Target::process, py::arg("set"),
+     R"mydelimiter(
+     Apply the loss to the cell the target is bind to.
+     
+     :param set: Set of stimuli
+     :type set: :py:class:`N2D2.Database.StimuliSet`
+    )mydelimiter")
     .def("logEstimatedLabels", &Target::logEstimatedLabels, py::arg("dirName"))
     .def("logEstimatedLabelsJSON", &Target::logEstimatedLabelsJSON, py::arg("dirName"), py::arg("fileName") = "", py::arg("xOffset") = 0, py::arg("yOffset") = 0, py::arg("append") = false)
     .def("logLabelsLegend", &Target::logLabelsLegend, py::arg("fileName"))

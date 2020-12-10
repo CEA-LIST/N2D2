@@ -38,9 +38,6 @@ void declare_LinearActivation_Frame_CUDA(py::module &m, const std::string& typeS
 
     py::class_<LinearActivation_Frame_CUDA<T>, std::shared_ptr<LinearActivation_Frame_CUDA<T>>, LinearActivation> (m, pyClassName.c_str(), py::multiple_inheritance())
     .def(py::init<>());
-    //.def("create", &LinearActivation_Frame_CUDA<T>::create)
-    //.def("propagate", &LinearActivation_Frame_CUDA<T>::propagate, py::arg("cell"), py::arg("data"), py::arg("inference") = false)
-    //.def("backPropagate", &LinearActivation_Frame_CUDA<T>::backPropagate, py::arg("cell"), py::arg("data"), py::arg("diffData"));
 }
 
 void init_LinearActivation_Frame_CUDA(py::module &m) {

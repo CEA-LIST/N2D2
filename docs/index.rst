@@ -41,8 +41,11 @@ N2D2
    python_binding/cells
    python_binding/databases
    python_binding/deepnet
+   python_binding/filler
+   python_binding/solver
    python_binding/stimuliprovider
    python_binding/transformation
+   python_binding/target
    python_binding/example
 
 Indices and tables

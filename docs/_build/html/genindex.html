@@ -109,8 +109,11 @@
 <li class="toctree-l1"><a class="reference internal" href="python_binding/cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_binding/databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_binding/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_binding/filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_binding/solver.html">Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_binding/stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_binding/transformation.html">Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_binding/target.html">Target</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_binding/example.html">Example</a></li>
 </ul>
 
@@ -345,7 +348,11 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="python_binding/containers.html#N2D2.BaseTensor.clear">clear() (N2D2.BaseTensor method)</a>
+
+      <ul>
+        <li><a href="python_binding/target.html#N2D2.Target.clear">(N2D2.Target method)</a>
 </li>
+      </ul></li>
       <li><a href="python_binding/transformation.html#N2D2.ColorSpaceTransformation">ColorSpaceTransformation (class in N2D2)</a>
 </li>
       <li><a href="python_binding/transformation.html#N2D2.ColorSpaceTransformation.ColorSpace">ColorSpaceTransformation.ColorSpace (class in N2D2)</a>
@@ -488,6 +495,8 @@
 </li>
       <li><a href="python_binding/cells.html#N2D2.FcCell_Frame_float.WeightsExportFormat">FcCell_Frame_float.WeightsExportFormat (class in N2D2)</a>
 </li>
+      <li><a href="python_binding/filler.html#N2D2.Filler">Filler (class in N2D2)</a>
+</li>
       <li><a href="python_binding/transformation.html#N2D2.FilterTransformation">FilterTransformation (class in N2D2)</a>
 </li>
       <li><a href="python_binding/transformation.html#N2D2.FlipTransformation">FlipTransformation (class in N2D2)</a>
@@ -544,7 +553,23 @@
         <li><a href="python_binding/cells.html#N2D2.FcCell_Frame_float.getBiasSolver">(N2D2.FcCell_Frame_float method)</a>
 </li>
       </ul></li>
+      <li><a href="python_binding/target.html#N2D2.Target.getCell">getCell() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/containers.html#N2D2.CudaBaseDeviceTensor.getCudaTensor">getCudaTensor() (N2D2.CudaBaseDeviceTensor method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getDefaultTarget">getDefaultTarget() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getDefaultValue">getDefaultValue() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getEstimatedLabel">getEstimatedLabel() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getEstimatedLabels">getEstimatedLabels() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getEstimatedLabelsValue">getEstimatedLabelsValue() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getLabelTarget">getLabelTarget() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getLoss">getLoss() (N2D2.Target method)</a>
 </li>
       <li><a href="python_binding/cells.html#N2D2.Cell_Frame_CUDA_float.getMaxOutput">getMaxOutput() (N2D2.Cell_Frame_CUDA_float method)</a>
 
@@ -574,16 +599,36 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_binding/target.html#N2D2.Target.getName">getName() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/databases.html#N2D2.Database.getNbStimuli">getNbStimuli() (N2D2.Database method)</a>
 </li>
-      <li><a href="python_binding/deepnet.html#N2D2.DeepNet.getStimuliProvider">getStimuliProvider() (N2D2.DeepNet method)</a>
+      <li><a href="python_binding/target.html#N2D2.Target.getNbTargets">getNbTargets() (N2D2.Target method)</a>
 </li>
+      <li><a href="python_binding/deepnet.html#N2D2.DeepNet.getStimuliProvider">getStimuliProvider() (N2D2.DeepNet method)</a>
+
+      <ul>
+        <li><a href="python_binding/target.html#N2D2.Target.getStimuliProvider">(N2D2.Target method)</a>
+</li>
+      </ul></li>
       <li><a href="python_binding/databases.html#N2D2.Database.getStimulusLabel">getStimulusLabel() (N2D2.Database method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getTargetLabels">getTargetLabels() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.getTargetLabelsName">getTargetLabelsName() (N2D2.Target method)</a>
 </li>
       <li><a href="python_binding/deepnet.html#N2D2.DeepNet.getTargets">getTargets() (N2D2.DeepNet method)</a>
 </li>
-      <li><a href="python_binding/containers.html#N2D2.CudaBaseDeviceTensor.getType">getType() (N2D2.CudaBaseDeviceTensor method)</a>
+      <li><a href="python_binding/target.html#N2D2.Target.getTargetTopN">getTargetTopN() (N2D2.Target method)</a>
 </li>
+      <li><a href="python_binding/target.html#N2D2.Target.getTargetValue">getTargetValue() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/containers.html#N2D2.CudaBaseDeviceTensor.getType">getType() (N2D2.CudaBaseDeviceTensor method)</a>
+
+      <ul>
+        <li><a href="python_binding/target.html#N2D2.Target.getType">(N2D2.Target method)</a>
+</li>
+      </ul></li>
       <li><a href="python_binding/cells.html#N2D2.FcCell_Frame_CUDA_double.getWeightsFiller">getWeightsFiller() (N2D2.FcCell_Frame_CUDA_double method)</a>
 
       <ul>
@@ -688,6 +733,8 @@
 </li>
       <li><a href="python_binding/transformation.html#N2D2.LabelSliceExtractionTransformation">LabelSliceExtractionTransformation (class in N2D2)</a>
 </li>
+      <li><a href="python_binding/target.html#N2D2.Target.labelsMapping">labelsMapping() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/activation.html#N2D2.LinearActivation">LinearActivation (class in N2D2)</a>
 </li>
       <li><a href="python_binding/activation.html#N2D2.LinearActivation_Frame_CUDA_double">LinearActivation_Frame_CUDA_double (class in N2D2)</a>
@@ -708,6 +755,8 @@
         <li><a href="python_binding/cells.html#N2D2.Cell_Frame_Top.load">(N2D2.Cell_Frame_Top method)</a>
 </li>
         <li><a href="python_binding/cells.html#N2D2.ConvCell_Frame_double.load">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="python_binding/databases.html#N2D2.Database.load">(N2D2.Database method)</a>
 </li>
         <li><a href="python_binding/deepnet.html#N2D2.DeepNet.load">(N2D2.DeepNet method)</a>
 </li>
@@ -732,7 +781,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="python_binding/deepnet.html#N2D2.DeepNet.loadNetworkParameters">loadNetworkParameters() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="python_binding/target.html#N2D2.Target.log">log() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.logEstimatedLabels">logEstimatedLabels() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.logEstimatedLabelsJSON">logEstimatedLabelsJSON() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/activation.html#N2D2.LogisticActivation">LogisticActivation (class in N2D2)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.logLabelsLegend">logLabelsLegend() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.logLabelsMapping">logLabelsMapping() (N2D2.Target method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -846,6 +905,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="python_binding/transformation.html#N2D2.PadCropTransformation">PadCropTransformation (class in N2D2)</a>
 </li>
+      <li><a href="python_binding/target.html#N2D2.Target.process">process() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/cells.html#N2D2.Cell_Frame_CUDA_float.propagate">propagate() (N2D2.Cell_Frame_CUDA_float method)</a>
 
       <ul>
@@ -874,6 +935,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_binding/target.html#N2D2.Target.provideTargets">provideTargets() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/transformation.html#N2D2.CompositeTransformation.push_back">push_back() (N2D2.CompositeTransformation method)</a>
 </li>
   </ul></td>
@@ -1004,6 +1067,12 @@
         <li><a href="python_binding/cells.html#N2D2.FcCell_Frame_float.setBiasSolver">(N2D2.FcCell_Frame_float method)</a>
 </li>
       </ul></li>
+      <li><a href="python_binding/target.html#N2D2.Target.setDefaultTarget">setDefaultTarget() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.setLabelTarget">setLabelTarget() (N2D2.Target method)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target.setMaskLabelTarget">setMaskLabelTarget() (N2D2.Target method)</a>
+</li>
       <li><a href="python_binding/cells.html#N2D2.Cell_Frame_CUDA_float.setOutputTarget">setOutputTarget() (N2D2.Cell_Frame_CUDA_float method)</a>
 
       <ul>
@@ -1132,6 +1201,8 @@
 </li>
       <li><a href="python_binding/activation.html#N2D2.SoftplusActivation">SoftplusActivation (class in N2D2)</a>
 </li>
+      <li><a href="python_binding/solver.html#N2D2.Solver">Solver (class in N2D2)</a>
+</li>
       <li><a href="python_binding/stimuliprovider.html#N2D2.StimuliProvider">StimuliProvider (class in N2D2)</a>
 </li>
       <li><a href="python_binding/activation.html#N2D2.SwishActivation">SwishActivation (class in N2D2)</a>
@@ -1159,6 +1230,8 @@
       <li><a href="python_binding/activation.html#N2D2.TanhActivation_Frame_double">TanhActivation_Frame_double (class in N2D2)</a>
 </li>
       <li><a href="python_binding/activation.html#N2D2.TanhActivation_Frame_float">TanhActivation_Frame_float (class in N2D2)</a>
+</li>
+      <li><a href="python_binding/target.html#N2D2.Target">Target (class in N2D2)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>

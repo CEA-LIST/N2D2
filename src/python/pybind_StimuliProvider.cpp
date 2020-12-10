@@ -29,17 +29,18 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_StimuliProvider(py::module &m) {
-    py::class_<StimuliProvider, std::shared_ptr<StimuliProvider>>(m, "StimuliProvider", py::multiple_inheritance())
-    .def(py::init<Database&, const std::vector<size_t>&, unsigned int, bool>(), py::arg("database"), py::arg("size"), py::arg("batchSize") = 1, py::arg("compositeStimuli") = false)
+    py::class_<StimuliProvider, std::shared_ptr<StimuliProvider>>sp(m, "StimuliProvider", py::multiple_inheritance());
+    sp.doc() = "StimuliProvider is a class that acts as a data loader for the neural network.";
+    sp.def(py::init<Database&, const std::vector<size_t>&, unsigned int, bool>(), py::arg("database"), py::arg("size"), py::arg("batchSize") = 1, py::arg("compositeStimuli") = false)
     // .def("cloneParameters", &StimuliProvider::cloneParameters)
     // .def("logTransformations", &StimuliProvider::logTransformations, py::arg("fileName"))
     // .def("future", &StimuliProvider::future)
     // .def("synchronize", &StimuliProvider::synchronize)
     // .def("getRandomIndex", &StimuliProvider::getRandomIndex, py::arg("set"))
     // .def("getRandomID", &StimuliProvider::getRandomID, py::arg("set"))
-    .def("readRandomBatch", &StimuliProvider::readRandomBatch, py::arg("set"))
-    .def("readRandomStimulus", &StimuliProvider::readRandomStimulus, py::arg("set"), py::arg("batchPos") = 0)
-    .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0)
+    .def("readRandomBatch", &StimuliProvider::readRandomBatch, py::arg("set"), "Read a whole random batch from the StimuliSet, apply the transformations and set the targets.")
+    .def("readRandomStimulus", &StimuliProvider::readRandomStimulus, py::arg("set"), py::arg("batchPos") = 0, "Read a single random stimulus from the StimuliSet, apply all the transformations and setthe targets. Return StimulusID of the randomly chosen stimulus")
+    .def("readBatch", &StimuliProvider::readBatch, py::arg("set"), py::arg("startIndex") = 0, "Read a whole batch from the StimuliSet, apply all the transformations and set the targets")
     // .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1)
     // .def("readStimulusBatch", (void (StimuliProvider::*)(Database::StimulusID, Database::StimuliSet)) &StimuliProvider::readStimulusBatch, py::arg("id"), py::arg("set"))
     // .def("readStimulusBatch", (Database::StimulusID (StimuliProvider::*)(Database::StimuliSet, unsigned int)) &StimuliProvider::readStimulusBatch, py::arg("set"), py::arg("index"))
@@ -70,8 +71,8 @@ void init_StimuliProvider(py::module &m) {
     // .def("getLabelsData", (const Tensor<int> (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getLabelsData, py::arg("channel"), py::arg("batchPos") = 0)
     // .def("getLabelsROIs", (const std::vector<std::shared_ptr<ROI> >& (StimuliProvider::*)(unsigned int) const) &StimuliProvider::getLabelsROIs, py::arg("batchPos") = 0)
     // .def("getCachePath", &StimuliProvider::getCachePath)
-    .def("addTransformation", &StimuliProvider::addTransformation, py::arg("transformation"), py::arg("setMask"))
-    .def("addOnTheFlyTransformation", &StimuliProvider::addOnTheFlyTransformation, py::arg("transformation"), py::arg("setMask"));
+    .def("addTransformation", &StimuliProvider::addTransformation, py::arg("transformation"), py::arg("setMask"), "Add global CACHEABLE transformations, before applying any channel transformation")
+    .def("addOnTheFlyTransformation", &StimuliProvider::addOnTheFlyTransformation, py::arg("transformation"), py::arg("setMask"), "Add global ON-THE-FLY transformations, before applying any channel transformation. The order of transformations is: global CACHEABLE, then global ON-THE-FLY");
 }
 }
 #endif

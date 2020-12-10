@@ -31,8 +31,8 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Activation(py::module &m) {
-    py::class_<Activation, std::shared_ptr<Activation>, Parameterizable> (m, "Activation", py::multiple_inheritance());
-
+    py::class_<Activation, std::shared_ptr<Activation>, Parameterizable> a (m, "Activation", py::multiple_inheritance());
+    a.doc() = "Virtual class that is inherited by other Activation classes.";
 }
 }
 #endif
