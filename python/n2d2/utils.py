@@ -19,10 +19,12 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-class UndefinedModelError(RuntimeError):
-   def __init__(self, arg):
-      super().__init__(arg)
-
-class UndefinedParameterError(RuntimeError):
-   def __init__(self, value, obj):
-      super().__init__("Parameter \'" + str(value) + "\' does not exist in object of type " + str(type(obj)))
+def convert_to_INI(path, database, provider, deepnet, target):
+    file = open(path, 'w')
+    output = "DefaultModel=" + deepnet.get_model() + "\n\n"
+    output += database.convert_to_INI_section() + "\n"
+    output += provider.convert_to_INI_section() + "\n"
+    output += deepnet.convert_to_INI_section() + "\n"
+    output += target.convert_to_INI_section() + "\n"
+    file.write(output)
+    file.close()

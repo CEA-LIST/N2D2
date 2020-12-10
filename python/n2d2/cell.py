@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
                     Johannes THIELE (johannes.thiele@cea.fr)
-                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -23,7 +22,9 @@ import N2D2
 import n2d2.activation
 import n2d2.solver
 
-class Cell():
+class Cell:
+
+    _Type = None
 
     def __init__(self, Name, NbOutputs):
 
@@ -37,6 +38,8 @@ class Cell():
         self._cell = None
         self._model_parameters = {}
 
+        self._inputs = []
+
         # Keeps a trace of modified parameters for print function
         self._modified_keys = []
                 
@@ -49,6 +52,14 @@ class Cell():
                 self._modified_keys.append(key)
             else:
                 raise n2d2.UndefinedParameterError(key, self)
+
+    def add_input(self, cell):
+        self._inputs.append(cell)
+
+    def initialize(self):
+        for cell in self._inputs:
+            self._cell.addInput(cell.N2D2())
+        self._cell.initialize()
 
     def get_name(self):
         return self._constructor_parameters['Name']
@@ -67,10 +78,29 @@ class Cell():
                 output += key + ": " + str(value) + ", "
         output += "; "
         return output
-        
+
+    def get_type(self):
+        if self._Type is not None:
+            return self._Type
+        else:
+            raise n2d2.UndefinedModelError("Abstract Cell has no type")
+
+    def convert_to_INI_section(self):
+        output = "[" + self._constructor_parameters['Name'] + "]\n"
+        output += "Input="
+        for idx, cell in enumerate(self._inputs):
+            if idx > 0:
+                output += ","
+            output += cell.get_name()
+        output += "\n"
+        output += "Type=" + self._Type + "\n"
+        output += "NbOutputs=" + str(self._constructor_parameters['NbOutputs']) + "\n"
+        return output
    
 
 class Fc(Cell):
+
+    _Type = 'Fc'
 
     _cell_generators = {
             'Frame<float>': N2D2.FcCell_Frame_float,
@@ -109,11 +139,11 @@ class Fc(Cell):
         incoherences, but it increases readability of the library"""
 
         self._cell_parameters.update({
-            'ActivationFunction': n2d2.activation.Linear(),
+            'ActivationFunction': n2d2.activation.Tanh(),
             'WeightsSolver': n2d2.solver.SGD(),
             'BiasSolver': n2d2.solver.SGD(),
-            'WeightsFiller': n2d2.filler.He(),
-            'BiasFiller': n2d2.filler.He(),
+            'WeightsFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
+            'BiasFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
             'NoBias': False,
             'Normalize': False,
             'BackPropagate': True,
@@ -237,6 +267,9 @@ class Fc(Cell):
 
 class Softmax(Cell):
     """Static members"""
+
+    _Type = 'Softmax'
+
     _cell_generators = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
         'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float

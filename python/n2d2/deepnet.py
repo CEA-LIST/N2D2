@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
                     Johannes THIELE (johannes.thiele@cea.fr)
-                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -41,6 +40,8 @@ class Deepnet():
         self._cells = cells
         self._model_parameters = model_parameters
 
+        self._Model = None
+
         net = N2D2.Network(1)
         self._deepnet = N2D2.DeepNet(net)
     
@@ -49,8 +50,10 @@ class Deepnet():
     # but the deepnet does not see the cells
     #def initialize(self):
     #     self._deepnet.initialize()
-         
+
     def N2D2(self):
+        if self._deepnet is None:
+            raise n2d2.UndefinedModelError("N2D2 deepnet member has not been created. Did you run generate_model?")
         return self._deepnet
 
     def __str__(self):
@@ -75,6 +78,9 @@ class Sequential(Deepnet):
         # Unfold nested network graph
         self._generate_model(self._cells, Model, DataType)
 
+        self._Model = Model
+        self._DataType = DataType
+
         # Check if cell associated to model parameters exists
         # For the moment, sequence is not a dictionary with cell names.
         names = [_.get_name() for _ in self._sequence]
@@ -96,6 +102,8 @@ class Sequential(Deepnet):
             else:
                 cells.generate_model(self._deepnet, Model, DataType)
             # Normally this should not copy, but only add an additional name
+            if len(self._sequence) > 0:
+                cells.add_input(self._sequence[-1])
             self._sequence.append(cells)
         else:
             raise TypeError("Error: Expected a Cell, but got " + str(type(cells)) + " instead")
@@ -105,10 +113,11 @@ class Sequential(Deepnet):
         of input and output tensors of all cells
     """
     def add_provider(self, provider):
-        previous = provider
-        for cell in self._sequence:
-            cell.N2D2().addInput(previous.N2D2())
-            previous = cell
+        if len(self._sequence) > 0:
+            self._sequence[0].add_input(provider)
+        else:
+            raise n2d2.UndefinedModelError("No cells in deepnet")
+
 
     """ # Redunant when using self._sequence
     def _generate_cell_links(self, cells, previous):
@@ -123,7 +132,7 @@ class Sequential(Deepnet):
 
     def initialize(self):
         for cell in self._sequence:
-            cell.N2D2().initialize()
+            cell.initialize()
 
     def propagate(self):
         for cell in self._sequence:
@@ -146,6 +155,13 @@ class Sequential(Deepnet):
                 return cell
         raise RuntimeError("Cell: " + name + " not found")
 
+    def get_model(self):
+        if self._Model is None:
+            raise n2d2.UndefinedModelError("Model variable is undefined. Did you run generate_model?")
+        else:
+            return self._Model
+
+
     def __str__(self):
         indent_level = [0]
         output = "n2d2.deepnet.Sequential("
@@ -167,4 +183,11 @@ class Sequential(Deepnet):
             indent_level[0] -= 1
         else:
             output += "\n"+ (indent_level[0]*"\t") + "(" + str(block_idx[0]) + ") " + cells.__str__()
+        return output
+
+    def convert_to_INI_section(self):
+        output = ""
+        for cell in self._sequence:
+            output += cell.convert_to_INI_section()
+            output += "\n"
         return output

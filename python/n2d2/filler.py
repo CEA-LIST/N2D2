@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
-                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -31,10 +30,10 @@ class Filler:
 
         self._model_key = ""
 
-    def set_filler_parameters(self, cell_parameters):
-        for key, value in cell_parameters.items():
-            if key in self._cell_parameters:
-                self._cell_parameters[key] = value
+    def set_filler_parameters(self, filler_parameters):
+        for key, value in filler_parameters.items():
+            if key in self._filler_parameters:
+                self._filler_parameters[key] = value
             else:
                 raise n2d2.UndefinedParameterError(key, self)
 
@@ -44,7 +43,9 @@ class Filler:
         return self._filler
 
     def __str__(self):
-        output = str(self._filler_parameters)
+        output = ""
+        for key, value in self._filler_parameters.items():
+            output += key + ": " + str(value) + "; "
         # output += "\n"
         return output
 
@@ -91,8 +92,44 @@ class He(Filler):
 
     def __str__(self):
         output = "HeFiller(" + self._model_key + "): "
-        for key, value in self._filler_parameters.items():
-            output += key + ": " + str(value) + "; "
         output += super().__str__()
         return output
 
+
+
+
+class Normal(Filler):
+    """Static members"""
+    _filler_generators = {
+        '<float>': N2D2.NormalFiller_float,
+        #'<double>': N2D2.NormalFiller_float
+    }
+
+    def __init__(self, **filler_parameters):
+        super().__init__()
+
+        """Constructor arguments"""
+        self._filler_parameters.update({
+            'Mean': 0.0,
+            'StdDev': 1.0,
+        })
+
+        self.set_filler_parameters(filler_parameters)
+
+
+    # TODO: Add constructor that initialized based on INI file section
+
+
+    def generate_model(self, DataType='float'):
+        self._model_key = '<' + DataType + '>'
+
+        self._filler = self._filler_generators[self._model_key](self._filler_parameters['Mean'],
+                                                                self._filler_parameters['StdDev'])
+
+        # TODO: Code to (Re)-initialize model parameters
+
+
+    def __str__(self):
+        output = "HeFiller(" + self._model_key + "): "
+        output += super().__str__()
+        return output

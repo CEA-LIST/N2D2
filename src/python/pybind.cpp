@@ -109,6 +109,7 @@ void init_SGDSolver_Frame(py::module&);
 void init_SGDSolver_Frame_CUDA(py::module&);
 void init_Filler(py::module&);
 void init_HeFiller(py::module&);
+void init_NormalFiller(py::module&);
 
 // Cell
 void init_Cell(py::module&);
@@ -211,6 +212,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_SGDSolver_Frame_CUDA(m);
     init_Filler(m);
     init_HeFiller(m);
+    init_NormalFiller(m);
 
     //Cell
     init_Cell(m);
