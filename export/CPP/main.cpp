@@ -13,10 +13,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -28,7 +24,7 @@
 template<typename Input_T>
 void readStimulus(const N2D2::Network& network, const std::string& stimulusPath, 
                   std::vector<Input_T>& inputBuffer, 
-                  std::vector<std::int32_t>& expectedOutputBuffer)
+                  std::vector<int32_t>& expectedOutputBuffer)
 {
     envRead(stimulusPath, inputBuffer.size(),
             network.inputHeight(), network.inputWidth(),
@@ -38,8 +34,8 @@ void readStimulus(const N2D2::Network& network, const std::string& stimulusPath,
 
 template<typename Input_T>
 std::size_t processInput(const N2D2::Network& network, std::vector<Input_T>& inputBuffer, 
-                            std::vector<std::int32_t>& expectedOutputBuffer,
-                            std::vector<std::int32_t>& predictedOutputBuffer) 
+                            std::vector<int32_t>& expectedOutputBuffer,
+                            std::vector<int32_t>& predictedOutputBuffer) 
 {
     network.propagate(inputBuffer.data(), predictedOutputBuffer.data());
 
@@ -55,7 +51,7 @@ std::size_t processInput(const N2D2::Network& network, std::vector<Input_T>& inp
 }
 
 
-int main(int argc, char* argv[]) try {
+int main(int argc, char* argv[]) {
     std::string stimulus;
 
     for(int iarg = 1; iarg < argc; iarg++) {
@@ -65,13 +61,14 @@ int main(int argc, char* argv[]) try {
             iarg++;
         }
         else if(arg == "-h" || arg == "-help") {
-            std::cout << argv[0] << " [-stimulus stimulus]" << std::endl;
+            printf("%s [-stimulus stimulus]\n", argv[0]);
             std::exit(0);
         }
         else {
-            throw std::runtime_error("Unknown argument '" + arg + "' "
-                                     "or missing parameter(s) for the argument.\n"
-                                     "Try '" + std::string(argv[0]) + "' -h for more information.");
+            N2D2_THROW_OR_ABORT(std::runtime_error,
+                "Unknown argument '" + arg + "' "
+                "or missing parameter(s) for the argument.\n"
+                "Try '" + std::string(argv[0]) + "' -h for more information.");
         }
     }
 
@@ -83,8 +80,8 @@ int main(int argc, char* argv[]) try {
     std::vector<DATA_T> inputBuffer(network.inputSize());
 #endif
 
-    std::vector<std::int32_t> expectedOutputBuffer(network.outputHeight()*network.outputWidth());
-    std::vector<std::int32_t> predictedOutputBuffer(network.outputHeight()*network.outputWidth());
+    std::vector<int32_t> expectedOutputBuffer(network.outputHeight()*network.outputWidth());
+    std::vector<int32_t> predictedOutputBuffer(network.outputHeight()*network.outputWidth());
 
     double successRate;
     if(!stimulus.empty()) {
@@ -94,8 +91,7 @@ int main(int argc, char* argv[]) try {
                                                             predictedOutputBuffer);
         
         successRate = 1.0*nbValidPredictions/expectedOutputBuffer.size()*100;
-        std::cout << std::fixed << std::setprecision(2) 
-                  << 1.0*nbValidPredictions/expectedOutputBuffer.size() << "/1" << std::endl;
+        printf("%02f/1\n", 1.0*nbValidPredictions/expectedOutputBuffer.size());
     }
     else {
         const std::vector<std::string> stimuliFiles = getFilesList(STIMULI_DIRECTORY);
@@ -110,26 +106,23 @@ int main(int argc, char* argv[]) try {
                                                                 predictedOutputBuffer);
             validPredictionsRatio += 1.0*nbValidPredictions/expectedOutputBuffer.size();
 
-            std::cout << std::fixed << std::setprecision(2) 
-                      << validPredictionsRatio << "/" << (std::distance(stimuliFiles.begin(), it) + 1) 
-                      << " (" << 100.0*validPredictionsRatio/
-                                 (std::distance(stimuliFiles.begin(), it) + 1) << "%)"
-                      << std::endl;
+            printf("%02f/%d (%02f%%)\n", validPredictionsRatio,
+                (int)(std::distance(stimuliFiles.begin(), it) + 1),
+                100.0*validPredictionsRatio/
+                                 (std::distance(stimuliFiles.begin(), it) + 1));
         }
 
         successRate = validPredictionsRatio/stimuliFiles.size()*100;
-        std::cout << "\n\nScore: " << std::fixed << std::setprecision(2) << successRate << "%" << std::endl;
+        printf("\n\nScore: %02f%%\n", successRate);
     }
 
 #ifdef OUTPUTFILE
-    std::ofstream success_result("success_rate.txt");
-    if (!success_result.good()) {
-        throw std::runtime_error("Could not create file:  success_rate.txt");
+    FILE *f = fopen("success_rate.txt", "w");
+    if (f == NULL) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Could not create file:  success_rate.txt");
     }
-
-    success_result << std::fixed << std::setprecision(2) << successRate;
+    fprintf(f, "%f", successRate);
+    fclose(f);
 #endif
-}
-catch(const std::exception& ex) {
-    std::cerr << "Error: " << ex.what() << std::endl;
 }

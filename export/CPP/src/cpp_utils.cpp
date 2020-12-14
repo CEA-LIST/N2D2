@@ -21,11 +21,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -35,6 +30,8 @@
 
 #ifndef NO_DIRENT
 #include <dirent.h>
+#else
+#include <getline.hpp>
 #endif
 
 #include "cpp_utils.hpp"
@@ -57,17 +54,20 @@ void getFilesList(const std::string& dir,
     }
     closedir(pDir);
 #else
-    std::ifstream dirList((dir + ".list").c_str());
-    if (!dirList.good()) {
+    FILE *dirList = fopen((dir + ".list").c_str(), "r");
+    if (dirList == NULL) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Couldn't open the directory file list for input patterns: "
             + dir + ".list");
     }
 
-    std::string line;
-    while (std::getline(dirList, line)) {
-        if (!line.empty())
-            files.push_back(line);
+    char* line = NULL;
+    size_t len = 0;
+    int read;
+
+    while ((read = getLine(&line, &len, dirList)) != -1) {
+        if (len > 0)
+            files.push_back(std::string(line, len));
     }
 #endif
     std::sort(files.begin(), files.end());
@@ -88,15 +88,15 @@ void envRead(const std::string& fileName,
              unsigned int outputsSize,
              int32_t* outputTargets)
 {
-    std::ifstream stimuli(fileName.c_str(), std::fstream::binary);
+    FILE* stimuli = fopen(fileName.c_str(), "rb");
 
-    if (!stimuli.good()) {
+    if (stimuli == NULL) {
         N2D2_THROW_OR_ABORT(std::runtime_error, "Could not open file: "
             + fileName);
     }
 
     char header[2];
-    stimuli.read(reinterpret_cast<char*>(&header[0]), sizeof(header));
+    fread(&header[0], sizeof(header[0]), 2, stimuli);
 
     if (header[0] != 'P' || (header[1] != '5' && header[1] != '6')) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
@@ -106,21 +106,16 @@ void envRead(const std::string& fileName,
     int pixelWidth;
     int pixelHeight;
     int maxValue;
-
-    if (!(stimuli >> pixelWidth) || !(stimuli >> pixelHeight)
-        || !(stimuli >> maxValue))
-    {
-        N2D2_THROW_OR_ABORT(std::runtime_error,
-            "Error reading PGM image file: " + fileName);
-    }
-
-    stimuli.get();
+    fscanf(stimuli, "%d %d %d", &pixelWidth, &pixelHeight, &maxValue);
+    fgetc(stimuli);
 
     if (pixelWidth != (int)channelsWidth || pixelHeight != (int)channelsHeight)
     {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "PGM image size does not match array size for file: " + fileName);
     }
+
+    size_t nbRead = 0;
 
 #if NB_BITS > 0 && NB_BITS != 8 && NB_BITS != 16 && NB_BITS != 32 && NB_BITS   \
                                                                      != 64
@@ -133,43 +128,53 @@ void envRead(const std::string& fileName,
 #elif NB_BITS > 32 && NB_BITS < 64
     long long int inputsFixed[size];
 #endif
-    stimuli.read(reinterpret_cast<char*>(&inputsFixed[0]),
-                 size * sizeof(inputsFixed[0]));
+    nbRead = fread(inputsFixed, sizeof(inputsFixed[0]), nbChannels, stimuli);
 
     for (unsigned int i = 0; i < size; ++i)
         data[i] = (DATA_T)inputsFixed[i];
 #else
-    stimuli.read(reinterpret_cast<char*>(&data[0]), size * sizeof(data[0]));
+    nbRead = fread(data, sizeof(data[0]), size, stimuli);
 #endif
-    stimuli.read(reinterpret_cast<char*>(&outputTargets[0]),
-                 outputsSize * sizeof(outputTargets[0]));
+    if (nbRead != size) {
+        fprintf(stderr, "fread() number of read objects (%d) different than"
+                        " expected (%d)\n", nbRead, size);
+    }
 
-    if (stimuli.eof()) {
+    nbRead = fread(
+        outputTargets, sizeof(outputTargets[0]), outputsSize, stimuli);
+
+    if (nbRead != outputsSize) {
+        fprintf(stderr, "fread() number of read objects (%d) different than"
+                        " expected (%d)\n", nbRead, outputsSize);
+    }
+
+    if (feof(stimuli)) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "End-of-file reached prematurely in data file: " + fileName);
     }
-    else if (!stimuli.good()) {
+    else if (ferror(stimuli)) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Error while reading data file: " + fileName);
     }
-    else if (stimuli.get() != std::fstream::traits_type::eof()) {
+    else if (fgetc(stimuli) != EOF) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Data file size larger than expected: " + fileName);
     }
+
+    fclose(stimuli);
 }
 
 /**** Confusion Matrix ****/
 void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
 {
-    std::cout << "\nConfusion matrix:\n";
-    std::cout << std::string(9 + 10 * nbOutputs, '-') << "\n";
-    std::cout << "| T \\ E |";
+    printf("\nConfusion matrix:\n");
+    printf("%s\n", std::string(9 + 10 * nbOutputs, '-').c_str());
+    printf("| T \\ E |");
 
     for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated)
-        std::cout << " " << std::setfill(' ') << std::setw(7) << estimated
-                  << " |";
+        printf(" %7d |", estimated);
 
-    std::cout << "\n" << std::string(9 + 10 * nbOutputs, '-') << "\n";
+    printf("\n%s\n", std::string(9 + 10 * nbOutputs, '-').c_str());
 
     unsigned int total = 0;
     unsigned int totalCorrect = 0;
@@ -183,30 +188,26 @@ void confusion_print(unsigned int nbOutputs, unsigned int* confusion)
         total += targetCount;
         totalCorrect += confusion[target + target * nbOutputs];
 
-        std::cout << "| " << std::setfill(' ') << std::setw(5) << target
-                  << " |";
+        printf("| %5d |", target);
 
         for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated)
-            std::cout << " " << std::setfill(' ') << std::setw(7)
-                      << confusion[estimated + target * nbOutputs] << " |";
+            printf(" %7d |", confusion[estimated + target * nbOutputs]);
 
-        std::cout << "\n";
-        std::cout << "|       |";
+        printf("\n|       |");
 
         for (unsigned int estimated = 0; estimated < nbOutputs; ++estimated) {
-            std::cout << " " << ESC_BG_LIGHT_YELLOW << std::setfill(' ')
-                      << std::setw(6) << std::fixed << std::setprecision(2)
-                      << 100.0
-                         * ((targetCount > 0)
-                                ? (confusion[estimated + target * nbOutputs]
-                                   / (double)targetCount)
-                                : 0.0) << "%" << ESC_ALL_OFF << " |";
+            printf(" %s%6.2f%%%s |",
+                   ESC_BG_LIGHT_YELLOW,
+                   100.0 * ((targetCount > 0) ? (confusion[estimated + target * nbOutputs]
+                                                 / (double)targetCount)
+                                              : 0.0),
+                   ESC_ALL_OFF);
         }
-        std::cout << "\n";
+        printf("\n");
     }
 
-    std::cout << std::string(9 + 10 * nbOutputs, '-') << "\n"
-              << "T: Target    E: Estimated" << std::endl;
+    printf("%s\n", std::string(9 + 10 * nbOutputs, '-').c_str());
+    printf("T: Target    E: Estimated\n");
 }
 
 void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut, bool rescale) {
@@ -219,33 +220,32 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         PPM_BINARY = 6
     };
     
-    std::ifstream fileStream(file.c_str(), std::fstream::binary);
-    if(!fileStream.is_open()) {
+    FILE* fileStream = fopen(file.c_str(), "rb");
+    if(fileStream == NULL) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Couldn't open file '" + file + "'.");
     }
 
-    fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
-
     char header;
-    fileStream >> header;
+    fread(&header, sizeof(header), 1, fileStream);
+
     if(header != 'P') {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "The '" + file + "' file is not a valid Netpbm file.");
     }
 
     std::size_t format; 
-    fileStream >> format;
+    fread(&format, sizeof(format), 1, fileStream);
     
     std::size_t width;
-    fileStream >> width;
+    fread(&width, sizeof(width), 1, fileStream);
     
     std::size_t height;
-    fileStream >> height;
+    fread(&height, sizeof(height), 1, fileStream);
 
     std::size_t maxValue = 1;
     if(format == PGM_ASCII || format == PPM_ASCII || format == PGM_BINARY || format == PPM_BINARY) {
-        fileStream >> maxValue;
+        fread(&maxValue, sizeof(maxValue), 1, fileStream);
     }
     
     std::size_t nbChannels = 1;
@@ -258,25 +258,20 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         dataOut.resize(width*height*nbChannels);
     }
     else if(dataOut.size() != width*height*nbChannels) {
-        std::ostringstream msgStr;
-        msgStr << "dataOut (" << dataOut.size()
-            << ") should be empty or of size " << (width*height*nbChannels)
-            << ".";
-
-        N2D2_THROW_OR_ABORT(std::runtime_error, msgStr.str());
+        N2D2_THROW_OR_ABORT(std::runtime_error, "Wrong dataOut size!");
     }
     assert(dataOut.size() == width*height*nbChannels);
     
     
     // Read new line character
-    fileStream.get();
+    fgetc(fileStream);
     
     
     switch(format) {
         case PBM_ASCII:{
             char value;
             for(std::size_t i = 0; i < height*width*nbChannels; i++) {
-                fileStream >> value;
+                fread(&value, sizeof(value), 1, fileStream);
                 dataOut[i] = (value == '1');
                 
             }
@@ -287,7 +282,7 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
             for(std::size_t y = 0; y < height; y++) {
                 for(std::size_t x = 0; x < width; x += 8) {
                     unsigned char value;
-                    fileStream.read((char*) &value, sizeof(value));
+                    fread((char*) &value, sizeof(value), 1, fileStream);
                     
                     for(std::size_t xi = 0; xi < std::min(width - x, (std::size_t) 8); xi++) {
                         dataOut[i] = !((value >> (7 - xi)) & 1);
@@ -297,15 +292,14 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
             }
             break;
         }
-        case PGM_ASCII:        
+        case PGM_ASCII:
         case PPM_ASCII:
-            std::copy(std::istream_iterator<std::size_t>(fileStream),
-                      std::istream_iterator<std::size_t>(),
-                      std::back_inserter(dataOut));
+            for (std::size_t i = 0; i < dataOut.size(); ++i)
+                fscanf(fileStream, "%c", &dataOut[i]);
             break;
         case PGM_BINARY:
         case PPM_BINARY:
-            fileStream.read((char*) dataOut.data(), dataOut.size());
+            fread((char*) dataOut.data(), dataOut.size(), 1, fileStream);
             break;
         default:
             N2D2_THROW_OR_ABORT(std::runtime_error,
@@ -315,9 +309,8 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
     
     // Rescale from [0-maxValue] to [0-255]
     if(rescale && maxValue != 255) {
-        std::transform(dataOut.begin(), dataOut.end(),  dataOut.begin(), 
-                       [&](unsigned char v) { 
-                           return (unsigned char) lround(v*255.0/maxValue); 
-                        });
+        for (std::size_t i = 0; i < dataOut.size(); ++i) {
+            dataOut[i] = (unsigned char) lround(dataOut[i]*255.0/maxValue);
+        }
     }
 }

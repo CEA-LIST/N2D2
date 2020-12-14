@@ -679,7 +679,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     }
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    std::ofstream env_stream(\"env_output.txt\");\n"
+                << "    FILE* env_stream = fopen(\"env_output.txt\", \"w\");\n"
                 << "    saveOutputs("
                 << "ENV_NB_OUTPUTS, "
                 << "ENV_SIZE_Y, " 
@@ -693,7 +693,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << "env_stream, "
                 << "Network::Format::CHW"
                 << ");\n"
-                << "    env_stream.close();\n"
+                << "    fclose(env_stream);\n"
                 << "#endif\n";
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
@@ -778,7 +778,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
             << ");\n\n";
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    std::ofstream max_stream(\"max_output.txt\");\n"
+                << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
                 << "    saveOutputs("
                 << lastCellPrefix << "_NB_OUTPUTS, "
                 << lastCellPrefix << "_OUTPUTS_HEIGHT, " 
@@ -792,7 +792,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << "max_stream, "
                 << "Network::Format::CHW"
                 << ");\n"
-                << "    max_stream.close();\n"
+                << "    fclose(max_stream);\n"
                 << "#endif\n";
 
     // Write source file with includes, buffers and functionCalls
@@ -801,7 +801,6 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     networkPropagateFile << "#include \"Network.hpp\"\n"
                          << "#include \"Scaling.hpp\"\n"
                          << "#include \"env.hpp\"\n"
-                         << "#include <fstream>\n"
                          << "\n"
                          << includes.str()
                          << "\n\n";
