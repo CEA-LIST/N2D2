@@ -33,21 +33,28 @@ void readStimulus(const N2D2::Network& network, const std::string& stimulusPath,
 }
 
 template<typename Input_T>
-std::size_t processInput(const N2D2::Network& network, std::vector<Input_T>& inputBuffer, 
+double processInput(const N2D2::Network& network, std::vector<Input_T>& inputBuffer, 
                             std::vector<int32_t>& expectedOutputBuffer,
                             std::vector<int32_t>& predictedOutputBuffer) 
 {
     network.propagate(inputBuffer.data(), predictedOutputBuffer.data());
 
+    std::size_t nbPredictions = 0;
     std::size_t nbValidPredictions = 0;
+
     assert(expectedOutputBuffer.size() == predictedOutputBuffer.size());
     for(std::size_t i = 0; i < expectedOutputBuffer.size(); i++) {
-        if(predictedOutputBuffer[i] == expectedOutputBuffer[i]) {
-            nbValidPredictions++;
+        if (expectedOutputBuffer[i] >= 0) {
+            ++nbPredictions;
+
+            if(predictedOutputBuffer[i] == expectedOutputBuffer[i]) {
+                ++nbValidPredictions;
+            }
         }
     }
 
-    return nbValidPredictions;
+    return (nbPredictions > 0)
+        ? nbValidPredictions / (double)nbPredictions : 0.0;
 }
 
 
@@ -86,33 +93,33 @@ int main(int argc, char* argv[]) {
     double successRate;
     if(!stimulus.empty()) {
         readStimulus(network, stimulus, inputBuffer, expectedOutputBuffer);
-        const std::size_t nbValidPredictions = processInput(network, inputBuffer, 
+        const double success = processInput(network, inputBuffer, 
                                                             expectedOutputBuffer, 
                                                             predictedOutputBuffer);
         
-        successRate = 1.0*nbValidPredictions/expectedOutputBuffer.size()*100;
-        printf("%02f/1\n", 1.0*nbValidPredictions/expectedOutputBuffer.size());
+        successRate = success*100;
+        printf("%02f/1\n", success);
     }
     else {
         const std::vector<std::string> stimuliFiles = getFilesList(STIMULI_DIRECTORY);
 
-        double validPredictionsRatio = 0;
+        double success = 0;
         for(auto it = stimuliFiles.begin(); it != stimuliFiles.end(); ++it) {
             const std::string& file = *it;
 
             readStimulus(network, file, inputBuffer, expectedOutputBuffer);
-            const std::size_t nbValidPredictions = processInput(network, inputBuffer, 
+            const double nbValidRatio = processInput(network, inputBuffer, 
                                                                 expectedOutputBuffer, 
                                                                 predictedOutputBuffer);
-            validPredictionsRatio += 1.0*nbValidPredictions/expectedOutputBuffer.size();
+            success += nbValidRatio;
 
-            printf("%02f/%d (%02f%%)\n", validPredictionsRatio,
+            printf("%02f/%d (%02f%%)\n", success,
                 (int)(std::distance(stimuliFiles.begin(), it) + 1),
-                100.0*validPredictionsRatio/
+                100.0*success/
                                  (std::distance(stimuliFiles.begin(), it) + 1));
         }
 
-        successRate = validPredictionsRatio/stimuliFiles.size()*100;
+        successRate = success/stimuliFiles.size()*100;
         printf("\n\nScore: %02f%%\n", successRate);
     }
 
