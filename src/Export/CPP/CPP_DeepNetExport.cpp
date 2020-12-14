@@ -788,7 +788,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << lastCellPrefix << "_MEM_WRAP_OFFSET, "
                 << lastCellPrefix << "_MEM_WRAP_SIZE, "
                 << lastCellPrefix << "_MEM_STRIDE, "
-                << lastCellIdentifier << "_output, "
+                << "outputs, "
                 << "max_stream, "
                 << "Network::Format::CHW"
                 << ");\n"
