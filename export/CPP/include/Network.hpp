@@ -417,6 +417,19 @@ private:
                                                                (T(1) << (sat - 1)) - 1);
     }
 
+    template<typename T,  
+             typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static T threshold() {
+        return 0.0;
+    }
+
+    template<typename T,  
+             typename std::enable_if<!std::is_floating_point<T>::value>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static T threshold() {
+        return (std::is_unsigned<T>::value)
+            ? std::numeric_limits<T>::max() / 2 : 0;
+    }
+
     template<int NB_ITERATIONS,
              int INPUTS_INC = 1,
              int WEIGHTS_INC = 1,
@@ -1210,14 +1223,19 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::maxPropagate(
                             - INPUT_MEM_CONT_SIZE;
             }
 
-            for (int ch = 0; ch < NB_CHANNELS; ++ch) {
-                if (inputs[iOffset + ch] > maxInput) {
-                    iMaxInput = ch;
-                    maxInput = inputs[iOffset + ch];
+            if (NB_CHANNELS > 1) {
+                for (int ch = 0; ch < NB_CHANNELS; ++ch) {
+                    if (inputs[iOffset + ch] > maxInput) {
+                        iMaxInput = ch;
+                        maxInput = inputs[iOffset + ch];
+                    }
                 }
-            }
 
-            outputs[oPos] = static_cast<int32_t>(iMaxInput);
+                outputs[oPos] = static_cast<int32_t>(iMaxInput);
+            }
+            else {
+                outputs[oPos] = (inputs[iOffset] > threshold<Input_T>());
+            }
         }
     }
 }
