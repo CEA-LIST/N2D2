@@ -16,10 +16,8 @@
 #include "DeepNet.hpp"
 #include "Environment.hpp"
 #include "Network.hpp"
-#if CUDNN_VERSION >= 5000
 #include "Cell/DropoutCell_Frame.hpp"
 #include "Cell/SoftmaxCell_Frame.hpp"
-#endif
 #include "Transformation/RescaleTransformation.hpp"
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"

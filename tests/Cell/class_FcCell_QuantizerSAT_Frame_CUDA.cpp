@@ -67,10 +67,9 @@ TEST_DATASET(FcCell_QuantizerSAT_Frame_CUDA_float,
              )
 {
 
-    std::cout<<"FC layer check_quantizer_SAT"<<std::endl;
+    std::cout<<"FC::layer check_quantizer_SAT"<<std::endl;
 
-    CudaContext::setDevice(1);
-    const unsigned int nbChannels = 1;
+    CudaContext::setDevice(0);
           
     Network net;
     DeepNet dn(net);
@@ -154,7 +153,7 @@ TEST_DATASET(FcCell_QuantizerSAT_Frame_CUDA_float,
         }
     }
 
-    #if CUDNN_VERSION >= 5000
+#if CUDNN_VERSION >= 5000
     drop1.propagate(false);
 #endif
     fc1.propagate(false);
@@ -229,9 +228,9 @@ TEST_DATASET(FcCell_QuantizerSAT_Frame_CUDA_double,
              )
 {
 
-    std::cout<<"double :: FC layer check_quantizer_SAT"<<std::endl;
+    std::cout<<"Double::FC layer check_quantizer_SAT"<<std::endl;
 
-    CudaContext::setDevice(1);
+    CudaContext::setDevice(0);
     const unsigned int nbChannels = 1;
           
     Network net;
