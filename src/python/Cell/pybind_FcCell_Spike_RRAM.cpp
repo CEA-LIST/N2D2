@@ -19,37 +19,31 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
-#include "Cell/FcCell.hpp"
+#ifdef CUDA
 
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
+#ifdef PYBIND
+#include "Cell/FcCell_Spike_RRAM.hpp"
+
 
 #include <pybind11/pybind11.h>
-
+#include <pybind11/stl.h>
 namespace py = pybind11;
 
 namespace N2D2 {
-
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
-
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_FcCell_Spike_RRAM(py::module &m) {
+    py::class_<FcCell_Spike_RRAM, std::shared_ptr<FcCell_Spike_RRAM>, FcCell_Spike> (m, "FcCell_Spike_RRAM", py::multiple_inheritance())
+    .def(py::init<
+    Network&, 
+    const DeepNet&,
+    const std::string&,
+    unsigned int>(),
+    py::arg("net"),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("nbOutputs"))
+    ;
 }
 }
 #endif
- 
+
+#endif

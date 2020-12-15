@@ -18,18 +18,38 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
-#include "Cell/ConvCell.hpp"
 
 
-#include <pybind11/pybind11.h>
+// #ifdef PYBIND
+// #include "Cell/ObjectDetCell_Frame.hpp"
 
-namespace py = pybind11;
+// #include <pybind11/pybind11.h>
 
-namespace N2D2 {
-void init_ConvCell(py::module &m) {
-    py::class_<ConvCell, std::shared_ptr<ConvCell>, Cell> (m, "ConvCell", py::multiple_inheritance());
+// namespace py = pybind11;
 
-}
-}
-#endif
+// namespace N2D2 {
+// void init_ObjectDetCell_Frame(py::module &m, const std::string& typeStr) {
+//     const std::string pyClassName("ObjectDetCell_Frame_" + typeStr);
+//     py::class_<ObjectDetCell_Frame, std::shared_ptr<ObjectDetCell_Frame>, ObjectDetCell,  Cell_Frame> (m, "ObjectDetCell_Frame", py::multiple_inheritance()) 
+//     .def(py::init<
+//     const DeepNet&, 
+//     const std::string&,
+//     StimuliProvider&,
+//     const unsigned int,
+//     unsigned int,
+//     unsigned int,
+//     unsigned int,
+//     Float_T,
+//     std::vector<Float_T>,
+//     std::vector<unsigned int>,
+//     std::vector<unsigned int>,
+//     const std::vector<AnchorCell_Frame_Kernels::Anchor>&>(),
+//          py::arg("deepNet"),
+//          py::arg("name"),
+//          py::arg("nbOutputs")
+//          );
+// }
+
+// #endif
+
+

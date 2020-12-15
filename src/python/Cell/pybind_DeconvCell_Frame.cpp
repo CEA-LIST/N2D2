@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 #ifdef PYBIND
-#include "Cell/ConvCell_Frame.hpp"
+#include "Cell/DeconvCell_Frame.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -29,20 +29,32 @@ namespace py = pybind11;
 
 namespace N2D2 {
 template<typename T>
-void declare_ConvCell_Frame(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("ConvCell_Frame_" + typeStr);
-    py::class_<ConvCell_Frame<T>, std::shared_ptr<ConvCell_Frame<T>>, ConvCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init<const DeepNet&, const std::string&, const std::vector<unsigned int>&, unsigned int, const std::vector<unsigned int>&, const std::vector<unsigned int>&, const std::vector<int>&, const std::vector<unsigned int>&, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("kernelDims"), py::arg("nbOutputs"), 
-         py::arg("subSampleDims") = std::vector<unsigned int>(2, 1U), py::arg("strideDims") = std::vector<unsigned int>(2, 1U), 
-         py::arg("paddingDims") = std::vector<int>(2, 0), py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
+void declare_DeconvCell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("DeconvCell_Frame_" + typeStr);
+    py::class_<DeconvCell_Frame<T>, std::shared_ptr<DeconvCell_Frame<T>>, DeconvCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&, 
+    const std::vector<unsigned int>&, 
+    unsigned int, 
+    const std::vector<unsigned int>&, 
+    const std::vector<int>&, 
+    const std::vector<unsigned int>&, 
+    const std::shared_ptr<Activation>&>(),
+         py::arg("deepNet"),
+         py::arg("name"),
+         py::arg("kernelDims"), 
+         py::arg("nbOutputs"), 
+         py::arg("strideDims") = std::vector<unsigned int>(2, 1U), 
+         py::arg("paddingDims") = std::vector<int>(2, 0), 
+         py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
          py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >());
 
 }
 
-void init_ConvCell_Frame(py::module &m) {
-    declare_ConvCell_Frame<float>(m, "float");
-    declare_ConvCell_Frame<double>(m, "double");
+void init_DeconvCell_Frame(py::module &m) {
+    declare_DeconvCell_Frame<float>(m, "float");
+    declare_DeconvCell_Frame<double>(m, "double");
 }
 }
 #endif

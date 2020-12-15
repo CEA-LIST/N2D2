@@ -19,37 +19,37 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #ifdef PYBIND
-#include "Cell/FcCell.hpp"
-
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
-
+#include "Cell/NormalizeCell_Frame_CUDA.hpp"
+#include "DeepNet.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
-
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+template<typename T>
+void declare_NormalizeCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("NormalizeCell_Frame_CUDA_" + typeStr);
+    py::class_<NormalizeCell_Frame_CUDA<T>, std::shared_ptr<NormalizeCell_Frame_CUDA<T>>, NormalizeCell,  Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&, 
+    unsigned int,
+    NormalizeCell::Norm>(),
+         py::arg("deepNet"),
+         py::arg("name"),
+         py::arg("nbOutputs"),
+         py::arg("norm")
+         );
+}
+void init_NormalizeCell_Frame_CUDA(py::module &m) {
+    declare_NormalizeCell_Frame_CUDA<float>(m, "float"); 
+    declare_NormalizeCell_Frame_CUDA<double>(m, "double"); 
 }
 }
 #endif
- 
+
+#endif
+

@@ -19,37 +19,34 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
-#include "Cell/FcCell.hpp"
 
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
+#ifdef PYBIND
+#include "Cell/AnchorCell_Frame.hpp"
+#include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
+
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
 
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
-
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_AnchorCell_Frame(py::module &m) {
+    py::class_<AnchorCell_Frame, std::shared_ptr<AnchorCell_Frame>, AnchorCell, Cell_Frame<Float_T>> (m, "AnchorCell_Frame", py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&,
+    StimuliProvider&, 
+    const std::vector<AnchorCell_Frame_Kernels::Anchor>&, 
+    unsigned int>(), 
+    py::arg("deepNet"), 
+    py::arg("name"), 
+    py::arg("sp"), 
+    py::arg("anchors"), 
+    py::arg("scoresCls"))
+    ; 
 }
 }
 #endif
- 
+

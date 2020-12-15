@@ -19,37 +19,36 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
-#include "Cell/FcCell.hpp"
+#ifdef CUDA
 
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
+#ifdef PYBIND
+#include "Cell/ResizeCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
-
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_ResizeCell_Frame_CUDA(py::module &m) {
+    py::class_<ResizeCell_Frame_CUDA, std::shared_ptr<ResizeCell_Frame_CUDA>, ResizeCell,  Cell_Frame_CUDA<Float_T>> (m, "ResizeCell_Frame_CUDA", py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&,
+    unsigned int,
+    unsigned int,
+    unsigned int,
+    ResizeCell::ResizeMode
+    >(),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("outputsWidth"),
+    py::arg("outputsHeight"),
+    py::arg("nbOutputs"),
+    py::arg("resizeMode")
+    );
 }
 }
 #endif
- 
+
+#endif
+

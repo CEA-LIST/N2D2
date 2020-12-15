@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Damien QUERLIOZ (damien.querlioz@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,30 +19,49 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#ifdef CUDA
+
 #ifdef PYBIND
-#include "Network.hpp"
+#include "Cell/ProposalCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_Network(py::module &m) {
-    py::class_<Network>(m, "Network")
-    .def(py::init<unsigned int>(), py::arg("seed") = 0)
-    // .def("run", &Network::run, py::arg("stop") = 0, py::arg("clearActivity") = true)
-    // .def("stop", &Network::stop, py::arg("stop") = 0, py::arg("discard") = false)
-    // .def("reset", &Network::reset, py::arg("timestamp") = 0)
-    // .def("save", &Network::save, py::arg("dirName"))
-    // .def("load", &Network::load, py::arg("dirName"))
-    // .def("getSpikeRecording", (const std::unordered_map<NodeId_T, NodeEvents_T>& (Network::*)()) &Network::getSpikeRecording)
-    // .def("getSpikeRecording", (const NodeEvents_T& (Network::*)(NodeId_T)) &Network::getSpikeRecording, py::arg("nodeId"))
-    // .def("getFirstEvent", &Network::getFirstEvent)
-    // .def("getLastEvent", &Network::getLastEvent)
-    // .def("getLoadSavePath", &Network::getLoadSavePath)
-    ;
-    
-    py::class_<NetworkObserver>(m, "NetworkObserver");}
+void init_ProposalCell_Frame_CUDA(py::module &m) {
+    py::class_<ProposalCell_Frame_CUDA, std::shared_ptr<ProposalCell_Frame_CUDA>, ProposalCell,  Cell_Frame_CUDA<Float_T>> (m, "ProposalCell_Frame_CUDA", py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&,
+    StimuliProvider&, 
+    const unsigned int,
+    unsigned int,
+    unsigned int,
+    unsigned int,
+    bool,
+    std::vector<double>,
+    std::vector<double>,
+    std::vector<unsigned int>,
+    std::vector<unsigned int>
+    >(),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("sp"),
+    py::arg("nbOutputs"),
+    py::arg("nbProposals"),
+    py::arg("scoreIndex") = 0,
+    py::arg("IoUIndex") = 5,
+    py::arg("isNms") = false,
+    py::arg("meansFactor") = std::vector<double>(),
+    py::arg("stdFactor") = std::vector<double>(),
+    py::arg("numParts") = std::vector<unsigned int>(),
+    py::arg("numTemplates") = std::vector<unsigned int>()
+    );
 }
+}
+#endif
 
 #endif
+

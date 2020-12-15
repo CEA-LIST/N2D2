@@ -1,7 +1,6 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2015 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -18,18 +17,28 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
-#include "Cell/ConvCell.hpp"
 
+#ifdef PYBIND
+#include "Cell/BatchNormCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_ConvCell(py::module &m) {
-    py::class_<ConvCell, std::shared_ptr<ConvCell>, Cell> (m, "ConvCell", py::multiple_inheritance());
+template<typename T>
+void declare_BatchNormCell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("BatchNormCell_Frame_" + typeStr);
+    py::class_<BatchNormCell_Frame<T>, std::shared_ptr<BatchNormCell_Frame<T>>, BatchNormCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
+    .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
+        py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame<T> >());
+    ;
+}
 
+void init_BatchNormCell_Frame(py::module &m) {
+    declare_BatchNormCell_Frame<float>(m, "float");
+    declare_BatchNormCell_Frame<double>(m, "double");
 }
 }
 #endif

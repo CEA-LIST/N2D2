@@ -20,36 +20,37 @@
 */
 
 #ifdef PYBIND
-#include "Cell/FcCell.hpp"
+#include "Cell/ConvCell_Spike_Analog.hpp"
 
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
 
 #include <pybind11/pybind11.h>
-
+#include <pybind11/stl.h>
 namespace py = pybind11;
 
 namespace N2D2 {
-
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
-
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_ConvCell_Spike_Analog(py::module &m) {
+    py::class_<ConvCell_Spike_Analog, std::shared_ptr<ConvCell_Spike_Analog>, ConvCell_Spike> (m, "ConvCell_Spike_Analog", py::multiple_inheritance())
+    .def(py::init<
+    Network&, 
+    const DeepNet&,
+    const std::string&,
+    const std::vector<unsigned int>&, 
+    unsigned int, 
+    const std::vector<unsigned int>&, 
+    const std::vector<unsigned int>&,
+    const std::vector<int>&,
+    const std::vector<unsigned int>&>(),
+    py::arg("net"),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("kernelDims"),
+    py::arg("nbOutputs"),
+    py::arg("subSampleDims") = std::vector<unsigned int>(2, 1U),
+    py::arg("strideDims") = std::vector<unsigned int>(2, 1U),
+    py::arg("paddingDims") = std::vector<int>(2, 0),
+    py::arg("dilationDims") = std::vector<unsigned int>(2, 1U))
+    ;
 }
 }
+
 #endif
- 

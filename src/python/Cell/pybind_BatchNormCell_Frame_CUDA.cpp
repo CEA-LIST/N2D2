@@ -2,6 +2,7 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Victor GACOIN
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -19,37 +20,32 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
-#include "Cell/FcCell.hpp"
+#ifdef CUDA
 
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
+#ifdef PYBIND
+#include "Cell/BatchNormCell_Frame_CUDA.hpp"
+#include "Network.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
+template<typename T>
+void declare_BatchNormCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("BatchNormCell_Frame_CUDA_" + typeStr);
+    py::class_<BatchNormCell_Frame_CUDA<T>, std::shared_ptr<BatchNormCell_Frame_CUDA<T>>, BatchNormCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
+    .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
+         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<T> >());
+    ;
 
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
+}
 
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_BatchNormCell_Frame_CUDA(py::module &m) {
+    declare_BatchNormCell_Frame_CUDA<float>(m, "float");
+    declare_BatchNormCell_Frame_CUDA<double>(m, "double");
 }
 }
 #endif
- 
+
+#endif

@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 #ifdef PYBIND
-#include "Cell/FcCell_Frame.hpp"
+#include "Cell/PoolCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -28,18 +28,32 @@ namespace py = pybind11;
 
 namespace N2D2 {
 template<typename T>
-void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("FcCell_Frame_" + typeStr);
-    py::class_<FcCell_Frame<T>, std::shared_ptr<FcCell_Frame<T>>, FcCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-
-    .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >());
-
+void declare_PoolCell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("PoolCell_Frame_" + typeStr);
+    py::class_<PoolCell_Frame<T>, std::shared_ptr<PoolCell_Frame<T>>, PoolCell,  Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&,
+    const std::vector<unsigned int>&, 
+    unsigned int,
+    const std::vector<unsigned int>&,
+    const std::vector<unsigned int>&,
+    PoolCell::Pooling,
+    const std::shared_ptr<Activation>&
+    >(),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("poolDims"),
+    py::arg("nbOutputs"),
+    py::arg("strideDims") = std::vector<unsigned int>(2, 1U),
+    py::arg("paddingDims") = std::vector<unsigned int>(2, 0),
+    py::arg("pooling") = PoolCell::Pooling::Max,
+    py::arg("activation") = std::shared_ptr<Activation>()
+    );
 }
-
-void init_FcCell_Frame(py::module &m) {
-    declare_FcCell_Frame<float>(m, "float");
-    declare_FcCell_Frame<double>(m, "double");
+void init_PoolCell_Frame(py::module &m) {
+    declare_PoolCell_Frame<float>(m, "float"); 
+    declare_PoolCell_Frame<double>(m, "double"); 
 }
 }
 #endif

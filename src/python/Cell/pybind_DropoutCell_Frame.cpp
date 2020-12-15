@@ -20,36 +20,31 @@
 */
 
 #ifdef PYBIND
-#include "Cell/FcCell.hpp"
-
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
+#include "Cell/DropoutCell_Frame.hpp"
+#include "Activation/TanhActivation_Frame.hpp"
 
 #include <pybind11/pybind11.h>
-
 namespace py = pybind11;
 
 namespace N2D2 {
+template<typename T>
+void declare_DropoutCell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("DropoutCell_Frame_" + typeStr);
+    py::class_<DropoutCell_Frame<T>, std::shared_ptr<DropoutCell_Frame<T>>, DropoutCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&, 
+    unsigned int>(),
+         py::arg("deepNet"),
+         py::arg("name"),
+         py::arg("nbOutputs") 
+         );
 
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
+}
 
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_DropoutCell_Frame(py::module &m) {
+    declare_DropoutCell_Frame<float>(m, "float");
+    declare_DropoutCell_Frame<double>(m, "double");
 }
 }
 #endif
- 

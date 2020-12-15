@@ -26,7 +26,6 @@
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -44,10 +43,7 @@ void declare_SoftmaxCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
          py::arg("name"), 
          py::arg("nbOutputs"), 
          py::arg("withLoss") = false, 
-         py::arg("groupSize") = 0)
-    .def("propagate", &SoftmaxCell_Frame_CUDA<T>::propagate, py::arg("inference") = false)
-    .def("backPropagate", &SoftmaxCell_Frame_CUDA<T>::backPropagate)
-    .def("update", &SoftmaxCell_Frame_CUDA<T>::update);
+         py::arg("groupSize") = 0);
 
 }
 

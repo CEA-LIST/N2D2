@@ -1,7 +1,6 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2015 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -19,17 +18,26 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 #ifdef PYBIND
-#include "Cell/ConvCell.hpp"
-
+#include "Cell/TargetBiasCell_Frame.hpp"
+#include "DeepNet.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_ConvCell(py::module &m) {
-    py::class_<ConvCell, std::shared_ptr<ConvCell>, Cell> (m, "ConvCell", py::multiple_inheritance());
+template<typename T>
+void declare_TargetBiasCell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("TargetBiasCell_Frame_" + typeStr);
+    py::class_<TargetBiasCell_Frame<T>, std::shared_ptr<TargetBiasCell_Frame<T>>, TargetBiasCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
+    .def(py::init<const DeepNet&, const std::string&, unsigned int, double>(),
+        py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("bias"));
+    ;
+}
 
+void init_TargetBiasCell_Frame(py::module &m) {
+    declare_TargetBiasCell_Frame<float>(m, "float");
+    declare_TargetBiasCell_Frame<double>(m, "double");
 }
 }
 #endif

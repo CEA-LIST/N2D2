@@ -20,36 +20,43 @@
 */
 
 #ifdef PYBIND
-#include "Cell/FcCell.hpp"
-
-#include "Solver/Solver.hpp"
-#include "Filler/Filler.hpp"
+#include "Cell/ProposalCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-
-void init_FcCell(py::module &m) {
-    py::class_<FcCell, std::shared_ptr<FcCell>, Cell> fcCell(m, "FcCell", py::multiple_inheritance());
-     
-    py::enum_<FcCell::WeightsExportFormat>(fcCell, "WeightsExportFormat")
-    .value("OC", FcCell::WeightsExportFormat::OC)
-    .value("CO", FcCell::WeightsExportFormat::CO)
-    .export_values();
-
-    fcCell
-    .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
-    .def("getWeightsSolver", &FcCell::getWeightsSolver)
-    .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
-    .def("getWeightsFiller", &FcCell::setWeightsFiller)
-    .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
-    .def("getBiasSolver", &FcCell::getBiasSolver)
-    .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
-
+void init_ProposalCell_Frame(py::module &m) {
+    py::class_<ProposalCell_Frame, std::shared_ptr<ProposalCell_Frame>, ProposalCell,  Cell_Frame<Float_T>> (m, "ProposalCell_Frame", py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&,
+    StimuliProvider&, 
+    const unsigned int,
+    unsigned int,
+    unsigned int,
+    unsigned int,
+    bool,
+    std::vector<double>,
+    std::vector<double>,
+    std::vector<unsigned int>,
+    std::vector<unsigned int>
+    >(),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("sp"),
+    py::arg("nbOutputs"),
+    py::arg("nbProposals"),
+    py::arg("scoreIndex") = 0,
+    py::arg("IoUIndex") = 5,
+    py::arg("isNms") = false,
+    py::arg("meansFactor") = std::vector<double>(),
+    py::arg("stdFactor") = std::vector<double>(),
+    py::arg("numParts") = std::vector<unsigned int>(),
+    py::arg("numTemplates") = std::vector<unsigned int>()
+    );
 }
 }
 #endif
- 

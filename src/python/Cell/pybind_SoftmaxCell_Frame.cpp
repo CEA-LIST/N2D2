@@ -20,14 +20,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Cell/SoftmaxCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 namespace py = pybind11;
 
 namespace N2D2 {
@@ -56,6 +52,4 @@ void init_SoftmaxCell_Frame(py::module &m) {
     declare_SoftmaxCell_Frame<double>(m, "double");
 }
 }
-#endif
-
 #endif
