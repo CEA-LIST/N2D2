@@ -67,6 +67,3 @@ CudaTensor
 
 .. autoclass:: N2D2.CudaTensor_double
    :members:
-   
-.. autoclass:: N2D2.CudaTensor_bool
-   :members:

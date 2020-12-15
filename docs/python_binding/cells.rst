@@ -25,7 +25,7 @@ Cell_Frame
 
 .. autoclass:: N2D2.ConvCell_Frame_float
    :members:
-   :inherited-members::
+   :inherited-members:
 
 .. autoclass:: N2D2.ConvCell_Frame_double
    :members:

@@ -588,4 +588,3 @@ The ``RandomShuffle`` option, enabled by default, randomly shuffle the
 dataset after slicing. If disabled, the slices are added in order at the
 end of the dataset.
 
-.. bibliography:: ../refs.bib

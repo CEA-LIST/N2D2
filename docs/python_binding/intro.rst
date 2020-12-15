@@ -8,7 +8,7 @@ If you want to use the raw python binding, you will need to compile N2D2 using t
 
 .. code-block:: bash
 
-    make N2D2_BINDIR=./build CUDA=1 MONGODB=1 ONX=1 PYBIND=python3.7 -j12 NOWERROR=1 pybind
+    make N2D2_BINDIR=./build CUDA=1 MONGODB=1 ONNX=1 PYBIND=python3.7 -j12 pybind
 
 This command will create a '.so' file in the folder *./python*. 
 If you want to use the raw binding, you will need to have this file at the root of your project.
