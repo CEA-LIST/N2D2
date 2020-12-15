@@ -33,10 +33,10 @@ class PaddingCell_Frame : public virtual PaddingCell, public Cell_Frame<Float_T>
 public:
     PaddingCell_Frame(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
-                      int topPad,
-                      int botPad,
-                      int leftPad,
-                      int rightPad);
+                      int topPad = 0,
+                      int botPad = 0,
+                      int leftPad = 0,
+                      int rightPad = 0);
 
     static std::shared_ptr<PaddingCell> create(const DeepNet& deepNet, const std::string& name,
                                            unsigned int nbOutputs,
