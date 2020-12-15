@@ -16,6 +16,9 @@
 #include <string>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "cpp_utils.hpp"
 #include "env.hpp"
@@ -78,6 +81,10 @@ int main(int argc, char* argv[]) {
                 "Try '" + std::string(argv[0]) + "' -h for more information.");
         }
     }
+
+#ifdef _OPENMP
+    omp_set_num_threads(8);
+#endif
 
     const N2D2::Network network{};
 

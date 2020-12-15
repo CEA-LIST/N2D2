@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <assert.h>
@@ -46,6 +45,7 @@ void getFilesList(const std::string& dir,
     if (pDir == NULL) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Couldn't open the directory for input patterns: " + dir);
+        perror("The following error occurred");
     }
 
     while ((pFile = readdir(pDir)) != NULL) {
@@ -59,6 +59,7 @@ void getFilesList(const std::string& dir,
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Couldn't open the directory file list for input patterns: "
             + dir + ".list");
+        perror("The following error occurred");
     }
 
     char* line = NULL;
@@ -66,9 +67,14 @@ void getFilesList(const std::string& dir,
     int read;
 
     while ((read = getLine(&line, &len, dirList)) != -1) {
-        if (len > 0)
-            files.push_back(std::string(line, len));
+        if (len > 0) {
+            std::string fileName(line);
+            fileName = fileName.substr(0, fileName.size() - 1); // skip \n
+            files.push_back(fileName);
+        }
     }
+
+    fclose(dirList);
 #endif
     std::sort(files.begin(), files.end());
 }
@@ -91,8 +97,9 @@ void envRead(const std::string& fileName,
     FILE* stimuli = fopen(fileName.c_str(), "rb");
 
     if (stimuli == NULL) {
-        N2D2_THROW_OR_ABORT(std::runtime_error, "Could not open file: "
-            + fileName);
+        N2D2_THROW_OR_ABORT(std::runtime_error, "Could not open file: \""
+            + fileName + "\"");
+        perror("The following error occurred");
     }
 
     char header[2];
@@ -224,6 +231,7 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
     if(fileStream == NULL) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
             "Couldn't open file '" + file + "'.");
+        perror("The following error occurred");
     }
 
     char header;
@@ -306,6 +314,7 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
                 "The '" + file + "' file is not a valid Netpbm file.");
     }
 
+    fclose(fileStream);
     
     // Rescale from [0-maxValue] to [0-255]
     if(rescale && maxValue != 255) {
