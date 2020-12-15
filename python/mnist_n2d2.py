@@ -27,19 +27,20 @@ if __name__ == "__main__":
 
     stimuli = N2D2.StimuliProvider(database, [24, 24, 1], batchSize, False)
 
-    ct = N2D2.CompositeTransformation(N2D2.PadCropTransformation(24, 24))
-    ct.push_back(trans)
+    # ct = N2D2.CompositeTransformation(N2D2.PadCropTransformation(24, 24))
+    # ct.push_back(trans)
+    # stimuli.addTransformation(ct, database.StimuliSetMask(0))
+
     # TODO : need an implicit transformation => CompositeTransformation, need to change this
-    stimuli.addTransformation(ct, database.StimuliSetMask(0))
-    # N2D2.CompositeTransformation(), database.StimuliSetMask(0))
-    # stimuli.addOnTheFlyTransformation(trans), database.StimuliSetMask(0))
+    stimuli.addTransformation(N2D2.PadCropTransformation(24, 24), database.StimuliSetMask(0))
+    stimuli.addOnTheFlyTransformation(trans, database.StimuliSetMask(0))
 
     # Network topology ===
     print("Defining neural network topology")
-    conv1 = N2D2.ConvCell_Frame_float(deepNet, "conv1", [4, 4], 16, [1, 1], [2, 2], [5, 5], [1, 1], N2D2.TanhActivation_Frame_float())
-    conv2 = N2D2.ConvCell_Frame_float(deepNet, "conv2", [5, 5], 24, [1, 1], [2, 2], [5, 5], [1, 1], N2D2.TanhActivation_Frame_float())
-    fc1 = N2D2.FcCell_Frame_float(deepNet, "fc1", 150, N2D2.TanhActivation_Frame_float())
-    fc2 = N2D2.FcCell_Frame_float(deepNet, "fc2", 10, N2D2.TanhActivation_Frame_float())
+    conv1 = N2D2.ConvCell_Frame_float(deepNet, "conv1", [4, 4], 16, [1, 1], [2, 2], [5, 5], [1, 1])
+    conv2 = N2D2.ConvCell_Frame_float(deepNet, "conv2", [5, 5], 24, [1, 1], [2, 2], [5, 5], [1, 1])
+    fc1 = N2D2.FcCell_Frame_float(deepNet, "fc1", 150)
+    fc2 = N2D2.FcCell_Frame_float(deepNet, "fc2", 10)
 
     # Connect cells ===
 
