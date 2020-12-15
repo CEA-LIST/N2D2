@@ -29,10 +29,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_ObjectDetCell(py::module &m) {
-
-    py::class_<ObjectDetCell, std::shared_ptr<ObjectDetCell>, Cell> odc (m, "ObjectDetCell", py::multiple_inheritance());
-
-
+    py::class_<ObjectDetCell, std::shared_ptr<ObjectDetCell>, Cell> (m, "ObjectDetCell", py::multiple_inheritance());
 }
 }
 #endif

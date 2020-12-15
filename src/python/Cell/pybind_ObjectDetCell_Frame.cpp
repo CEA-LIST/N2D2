@@ -20,36 +20,45 @@
 */
 
 
-// #ifdef PYBIND
-// #include "Cell/ObjectDetCell_Frame.hpp"
+#ifdef PYBIND
+#include "Cell/ObjectDetCell_Frame.hpp"
 
-// #include <pybind11/pybind11.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-// namespace py = pybind11;
+namespace py = pybind11;
 
-// namespace N2D2 {
-// void init_ObjectDetCell_Frame(py::module &m, const std::string& typeStr) {
-//     const std::string pyClassName("ObjectDetCell_Frame_" + typeStr);
-//     py::class_<ObjectDetCell_Frame, std::shared_ptr<ObjectDetCell_Frame>, ObjectDetCell,  Cell_Frame> (m, "ObjectDetCell_Frame", py::multiple_inheritance()) 
-//     .def(py::init<
-//     const DeepNet&, 
-//     const std::string&,
-//     StimuliProvider&,
-//     const unsigned int,
-//     unsigned int,
-//     unsigned int,
-//     unsigned int,
-//     Float_T,
-//     std::vector<Float_T>,
-//     std::vector<unsigned int>,
-//     std::vector<unsigned int>,
-//     const std::vector<AnchorCell_Frame_Kernels::Anchor>&>(),
-//          py::arg("deepNet"),
-//          py::arg("name"),
-//          py::arg("nbOutputs")
-//          );
-// }
-
-// #endif
+namespace N2D2 {
+void init_ObjectDetCell_Frame(py::module &m) {
+    py::class_<ObjectDetCell_Frame, std::shared_ptr<ObjectDetCell_Frame>, ObjectDetCell,  Cell_Frame<Float_T>> (m, "ObjectDetCell_Frame", py::multiple_inheritance()) 
+    .def(py::init<
+    const DeepNet&, 
+    const std::string&,
+    StimuliProvider&,
+    const unsigned int,
+    unsigned int,
+    unsigned int,
+    unsigned int,
+    Float_T,
+    std::vector<Float_T>,
+    std::vector<unsigned int>,
+    std::vector<unsigned int>,
+    const std::vector<AnchorCell_Frame_Kernels::Anchor>&>(),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("sp"),
+    py::arg("nbOutputs"),
+    py::arg("nbAnchors"),
+    py::arg("nbProposals"),
+    py::arg("nbClass"),
+    py::arg("nmsThreshold") = 0.5,
+    py::arg("scoreThreshold") = std::vector<Float_T>(1, 0.5),
+    py::arg("numParts") = std::vector<unsigned int>(),
+    py::arg("numTemplates") = std::vector<unsigned int>(),
+    py::arg("anchors") = std::vector<AnchorCell_Frame_Kernels::Anchor>()        
+    );
+}
+}
+#endif
 
 

@@ -352,9 +352,9 @@ PYBIND11_MODULE(N2D2, m) {
     init_NormalizeCell(m);
     init_NormalizeCell_Frame(m);
     init_NormalizeCell_Frame_CUDA(m); 
-    // init_ObjectDetCell(m);
-    // init_ObjectDetCell_Frame(m);
-    // init_ObjectDetCell_Frame_CUDA(m);
+    init_ObjectDetCell(m);
+    init_ObjectDetCell_Frame(m);
+    init_ObjectDetCell_Frame_CUDA(m);
     init_PaddingCell(m);
     init_PaddingCell_Frame(m);
     init_PaddingCell_Frame_CUDA(m);
