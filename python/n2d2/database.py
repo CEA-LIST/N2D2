@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
                     Johannes THIELE (johannes.thiele@cea.fr)
-                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -40,6 +39,8 @@ class Database():
         'Unpartitioned': N2D2.Database.Unpartitioned
     }
 
+
+
     def __init__(self, database):
         self._database = database
 
@@ -48,7 +49,11 @@ class Database():
             raise n2d2.UndefinedModelError("N2D2 database member has not been created")
         return self._database
 
+
 class MNIST(Database):
+
+    _type = 'MNIST_IDX_Database'
+
     def __init__(self, datapath, Validation):
 
         self._datapath = datapath
@@ -65,4 +70,10 @@ class MNIST(Database):
     # TODO: Can this be moved to parent class?
     def load(self, dataPath, **kwargs):
         self._database.load(dataPath=dataPath, **kwargs)
+
+    def convert_to_INI_section(self):
+        output = "[Database]\n"
+        output += "Type=" + self._type + "\n"
+        output += "Validation=" + str(self._Validation) + "\n"
+        return output
 

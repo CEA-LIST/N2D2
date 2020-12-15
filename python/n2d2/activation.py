@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
-                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -96,3 +95,31 @@ class Rectifier(Activation):
         output += super().__str__()
         return output
 
+
+
+
+class Tanh(Activation):
+    """Static members"""
+    _activation_generators = {
+        'Frame<float>': N2D2.TanhActivation_Frame_float,
+        'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
+    }
+
+    def __init__(self, **activation_parameters):
+        super().__init__(**activation_parameters)
+
+    # TODO: Add method that initialized based on INI file section
+
+
+    def generate_model(self, Model='Frame', DataType='float'):
+        self._model_key = Model + '<' + DataType + '>'
+
+        self._activation = self._activation_generators[self._model_key]()
+
+        # TODO: Initialize model parameters
+
+
+    def __str__(self):
+        output = "TanhActivation(" + self._model_key + "): "
+        output += super().__str__()
+        return output

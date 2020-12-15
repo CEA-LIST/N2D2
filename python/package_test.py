@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
                     Johannes THIELE (johannes.thiele@cea.fr)
-                    Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -54,17 +53,17 @@ print("Create database")
 database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation=0.1)
 
 print("Create provider")
-provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size, False)
+provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
 
 
 print("Create model")
 model = n2d2.deepnet.Sequential([
     [
-        n2d2.cell.Fc(Name='fc1', NbOutputs=300, ActivationFunction=n2d2.activation.Rectifier(), WeightsSolver=n2d2.solver.SGD(), NoBias=True, WeightsExportFormat='CO'),
+        n2d2.cell.Fc(Name='fc1', NbOutputs=300, ActivationFunction=n2d2.activation.Rectifier(), WeightsSolver=n2d2.solver.SGD(), WeightsFiller=n2d2.filler.Normal(Mean=0.1, StdDev=0.5)),
         n2d2.cell.Fc(Name='fc2', NbOutputs=10, ActivationFunction=n2d2.activation.Linear(), WeightsSolver=n2d2.solver.SGD())
     ],
     n2d2.cell.Softmax(Name='softmax', NbOutputs=10)
-], Model='Frame', fc1_model={'DropConnect': 0.5})
+], Model='Frame_CUDA')
 
 print(model)
 
@@ -73,10 +72,18 @@ print("Add provider")
 model.add_provider(provider)
 
 print("Create target")
-tar = N2D2.TargetScore('target', model.get_output().N2D2(), provider.N2D2())
+tar = n2d2.target.Score('Softmax.Target', model.get_output(), provider)
 
 print("Initialize model")
 model.initialize()
+
+
+n2d2.utils.convert_to_INI("model_INI.txt", database, provider, model, tar)
+
+#exit()
+
+
+partition = 'Learn'
 
 for epoch in range(nb_epochs):
 
@@ -85,16 +92,16 @@ for epoch in range(nb_epochs):
     for i in range(epoch_size):
 
         # Load example
-        provider.read_random_batch(set='Learn')
+        provider.read_random_batch(partition=partition)
 
         # Set target of cell
-        tar.provideTargets(N2D2.Database.Learn)
+        tar.provide_targets(partition=partition)
 
         # Propagate
         model.propagate()
 
         # Calculate loss and error
-        tar.process(N2D2.Database.Learn)
+        tar.process(partition=partition)
 
         # Backpropagate
         model.back_propagate()
@@ -102,7 +109,7 @@ for epoch in range(nb_epochs):
         # Update parameters
         model.update()
 
-        success = tar.getAverageSuccess(N2D2.Database.Learn, 100)
+        success = tar.get_average_success(partition=partition, window=100)
 
         print("Batch: " + str(i)  + ", train success: " + "{0:.1f}".format(100*success) + "%", end='\r')
 
