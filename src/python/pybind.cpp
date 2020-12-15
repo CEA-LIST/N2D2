@@ -42,7 +42,6 @@ void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
 void init_MNIST_IDX_Database(py::module&);
-void init_Environment(py::module&);
 
 void init_Scaling(py::module&);
 
@@ -231,7 +230,6 @@ PYBIND11_MODULE(N2D2, m) {
     init_DeepNet(m);
     init_DeepNetGenerator(m);
     init_MNIST_IDX_Database(m);
-    init_Environment(m);
 
     //Activation
     init_Activation(m);
@@ -317,10 +315,10 @@ PYBIND11_MODULE(N2D2, m) {
     init_SoftmaxCell(m);
     init_SoftmaxCell_Frame(m);
     init_SoftmaxCell_Frame_CUDA(m);
-    // init_AnchorCell_Frame_Kernels_struct(m);
+    init_AnchorCell_Frame_Kernels_struct(m);
     init_AnchorCell(m);
     init_AnchorCell_Frame(m);
-    // init_AnchorCell_Frame_CUDA(m);
+    init_AnchorCell_Frame_CUDA(m);
 
     init_BatchNormCell(m);
     init_BatchNormCell_Frame(m);
