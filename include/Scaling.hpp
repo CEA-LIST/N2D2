@@ -127,7 +127,7 @@ private:
 class FixedPointScaling: public AbstractScaling {
 public:
     FixedPointScaling(std::size_t nbFractionalBits, std::vector<std::int32_t> scaling)
-           : mNbFractionalBits(nbFractionalBits), mScalingPerOutput(std::move(scaling))
+           : mNbFractionalBits(nbFractionalBits), mScalingPerOutput(scaling)
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
@@ -184,7 +184,7 @@ private:
  */
 class SingleShiftScaling: public AbstractScaling {
 public:
-    SingleShiftScaling(std::vector<unsigned char> scaling): mScalingPerOutput(std::move(scaling)) 
+    SingleShiftScaling(std::vector<unsigned char> scaling): mScalingPerOutput(scaling) 
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
@@ -236,7 +236,7 @@ private:
 class DoubleShiftScaling: public AbstractScaling {
 public:
     DoubleShiftScaling(std::vector<std::pair<unsigned char, unsigned char>> scaling)
-                                : mScalingPerOutput(std::move(scaling)) 
+                                : mScalingPerOutput(scaling) 
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
@@ -285,27 +285,27 @@ public:
 
     static Scaling floatingPointScaling(std::vector<Float_T> scalingPerOutput) {
         return Scaling(ScalingMode::FLOAT_MULT, 
-                       Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput)));
+                       std::make_shared<FloatingPointScaling>(std::move(scalingPerOutput)));
     }
 
     static Scaling fixedPointScaling(std::size_t nbFractionalBits, 
                                      std::vector<std::int32_t> scalingPerOutput) 
     {
         return Scaling(ScalingMode::FIXED_MULT, 
-                       Utils::make_unique<FixedPointScaling>(nbFractionalBits, 
+                       std::make_shared<FixedPointScaling>(nbFractionalBits, 
                                                              std::move(scalingPerOutput)));
     }
 
     static Scaling singleShiftScaling(std::vector<unsigned char> scalingPerOutput) {
         return Scaling(ScalingMode::SINGLE_SHIFT, 
-                       Utils::make_unique<SingleShiftScaling>(std::move(scalingPerOutput)));
+                       std::make_shared<SingleShiftScaling>(std::move(scalingPerOutput)));
     }
 
     static Scaling doubleShiftScaling(std::vector<std::pair<unsigned char, 
                                                             unsigned char>> scalingPerOutput) 
     {
         return Scaling(ScalingMode::DOUBLE_SHIFT, 
-                       Utils::make_unique<DoubleShiftScaling>(std::move(scalingPerOutput)));
+                       std::make_shared<DoubleShiftScaling>(std::move(scalingPerOutput)));
     }
 
     ScalingMode getMode() const {
@@ -353,11 +353,11 @@ public:
 #endif
 
 private:
-    Scaling(ScalingMode mode, std::unique_ptr<AbstractScaling> scaling);
+    Scaling(ScalingMode mode, std::shared_ptr<AbstractScaling> scaling);
 
 private:
     ScalingMode mMode;
-    std::unique_ptr<AbstractScaling> mScaling;
+    std::shared_ptr<AbstractScaling> mScaling;
 };
 
 template<class T>
