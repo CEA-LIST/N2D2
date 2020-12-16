@@ -44,7 +44,7 @@ void init_DeepNetGenerator(py::module&);
 void init_MNIST_IDX_Database(py::module&);
 
 void init_Scaling(py::module&);
-
+void init_ScalingMode(py::module&);
 //Activation
 void init_Activation(py::module&);
 void init_TanhActivation(py::module&);
@@ -224,6 +224,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_StimuliProvider(m);
 
     init_Scaling(m);
+    init_ScalingMode(m);
 
     init_Target(m);
     init_TargetScore(m);
@@ -375,8 +376,8 @@ PYBIND11_MODULE(N2D2, m) {
     init_ResizeCell_Frame(m);
     init_ResizeCell_Frame_CUDA(m);
     init_ScalingCell(m);
-    // init_ScalingCell_Frame(m);
-    // init_ScalingCell_Frame_CUDA(m);
+    init_ScalingCell_Frame(m);
+    init_ScalingCell_Frame_CUDA(m);
     init_TargetBiasCell(m);
     init_TargetBiasCell_Frame(m);
     init_TargetBiasCell_Frame_CUDA(m);

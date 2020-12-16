@@ -20,38 +20,25 @@
 */
 
 #ifdef CUDA
-#ifdef PYBIND
 
-#include "Cell/ScalingCell_Frame_CUDA.hpp"
+#ifdef PYBIND
 #include "Scaling.hpp"
-#include "DeepNet.hpp"
+
+
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-template<typename T>
-void declare_ScalingCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("ScalingCell_Frame_CUDA_" + typeStr);
-    py::class_<ScalingCell_Frame_CUDA<T>, std::shared_ptr<ScalingCell_Frame_CUDA<T>>, ScalingCell,  Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init<
-    const DeepNet&, 
-    const std::string&,
-    unsigned int,
-    Scaling>(),
-    py::arg("deepNet"),
-    py::arg("name"),
-    py::arg("nbOutputs"),
-    py::arg("scaling")
-    );
-}
-
-
-void init_ScalingCell_Frame_CUDA(py::module &m) {
-    declare_ScalingCell_Frame_CUDA<float>(m, "float");
-    declare_ScalingCell_Frame_CUDA<double>(m, "double");
+void init_ScalingMode(py::module &m) {
+    py::enum_<ScalingMode>(m, "ScalingMode", py::arithmetic())
+    .value("NONE", ScalingMode::NONE)
+    .value("FLOAT_MULT", ScalingMode::FLOAT_MULT)
+    .value("FIXED_MULT", ScalingMode::FIXED_MULT)
+    .value("SINGLE_SHIFT", ScalingMode::SINGLE_SHIFT)
+    .value("DOUBLE_SHIFT", ScalingMode::DOUBLE_SHIFT);
 }
 }
 #endif
-#endif
 
+#endif
