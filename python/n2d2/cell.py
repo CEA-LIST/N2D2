@@ -134,7 +134,6 @@ class Fc(Cell):
             'BiasFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
         })"""
 
-        # TODO: Use real defaults
         """NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
         incoherences, but it increases readability of the library"""
 

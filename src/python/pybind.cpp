@@ -27,11 +27,13 @@ namespace py = pybind11;
 
 namespace N2D2 {
 //utils
+void init_ConfusionMatrix(py::module&);
 void init_Random(py::module&);
 void init_Parameterizable(py::module&);
 void init_WindowFunction(py::module&);
 void init_Kernel(py::module&);
 void init_CudaContext(py::module&);
+
 void init_Tensor(py::module&);
 void init_CudaTensor(py::module&);
 void init_Network(py::module&);
@@ -212,11 +214,13 @@ void init_UnpoolCell_Frame_CUDA(py::module&);
 
 PYBIND11_MODULE(N2D2, m) {
     //utils
+    init_ConfusionMatrix(m);
     init_WindowFunction(m);
     init_Random(m);
     init_Parameterizable(m);
     init_Kernel(m);
     init_CudaContext(m);
+
     init_Tensor(m);
     init_CudaTensor(m);
     init_Network(m);

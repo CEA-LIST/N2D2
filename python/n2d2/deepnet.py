@@ -34,7 +34,7 @@ class Deepnet():
     """
 
     # TODO: Proper exeception handling
-    def __init__(self, cells, model_parameters):
+    def __init__(self, deepnet, cells, model_parameters):
         if not isinstance(cells, list):
             raise TypeError("Error: Deepnet constructor expects a List of Cells, but got " + str(type(cells)) + " instead")
         self._cells = cells
@@ -42,8 +42,8 @@ class Deepnet():
 
         self._Model = None
 
-        net = N2D2.Network(1)
-        self._deepnet = N2D2.DeepNet(net)
+        #net = N2D2.Network(1)
+        self._deepnet = deepnet #N2D2.DeepNet(net)
     
     # Prepares cells for computation and initializes certain members
     # NOTE: In the current implementation of sequential, this does not work, since the cell see the deepnet
@@ -70,8 +70,8 @@ Python data structures, without using N2D2 binding functions
 """    
 class Sequential(Deepnet):
     # cells is typically a python list 
-    def __init__(self, cells, Model='Frame', DataType='float', **model_parameters):
-        super().__init__(cells, model_parameters)
+    def __init__(self, deepnet, cells, Model='Frame', DataType='float', **model_parameters):
+        super().__init__(deepnet, cells, model_parameters)
 
         # Non nested representation of cells for easier access
         self._sequence = []
@@ -134,9 +134,9 @@ class Sequential(Deepnet):
         for cell in self._sequence:
             cell.initialize()
 
-    def propagate(self):
+    def propagate(self, inference=False):
         for cell in self._sequence:
-            cell.N2D2().propagate()
+            cell.N2D2().propagate(inference=inference)
 
     def back_propagate(self):
         for cell in reversed(self._sequence):

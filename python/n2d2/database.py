@@ -34,8 +34,8 @@ class Database():
 
     StimuliSets = {
         'Learn': N2D2.Database.Learn,
-        'Test': N2D2.Database.Learn,
-        'Validation': N2D2.Database.Learn,
+        'Test': N2D2.Database.Test,
+        'Validation': N2D2.Database.Validation,
         'Unpartitioned': N2D2.Database.Unpartitioned
     }
 
@@ -43,6 +43,10 @@ class Database():
 
     def __init__(self, database):
         self._database = database
+
+    def get_nb_stimuli(self, partition):
+        return self._database.getNbStimuli(self.StimuliSets[partition])
+
 
     def N2D2(self):
         if self._database is None:
@@ -62,8 +66,8 @@ class MNIST(Database):
         super().__init__(database=N2D2.MNIST_IDX_Database(validation=self._Validation))
 
         # Necessary to initialize random number generator; TODO: Replace
-        net = N2D2.Network()
-        deepNet = N2D2.DeepNet(net)  # Proposition : overload the constructor to avoid passing a Network object
+        #net = N2D2.Network()
+        #deepNet = N2D2.DeepNet(net)  # Proposition : overload the constructor to avoid passing a Network object
 
         self._database.load(self._datapath)
 
@@ -72,7 +76,7 @@ class MNIST(Database):
         self._database.load(dataPath=dataPath, **kwargs)
 
     def convert_to_INI_section(self):
-        output = "[Database]\n"
+        output = "[database]\n"
         output += "Type=" + self._type + "\n"
         output += "Validation=" + str(self._Validation) + "\n"
         return output

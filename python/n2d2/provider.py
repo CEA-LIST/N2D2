@@ -70,6 +70,9 @@ class DataProvider():
     def read_random_batch(self, partition):
         return self._provider.readRandomBatch(set=self._constructor_parameters['Database'].StimuliSets[partition])
 
+    def read_batch(self, partition, idx):
+        return self._provider.readBatch(set=self._constructor_parameters['Database'].StimuliSets[partition], startIndex=idx)
+
     def N2D2(self):
         if self._provider is None:
             raise n2d2.UndefinedModelError("N2D2 solver member has not been created")
