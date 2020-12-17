@@ -51,7 +51,7 @@ The initial weights distribution for each layer can be checked in the
 *weights\_init* folder, with an example shown in figure
 [fig:weightsInitDistrib].
 
-.. figure:: _static/weightsInitDistrib.png
+.. figure:: ../_static/weightsInitDistrib.png
    :alt: Initial weights distribution of a layer using a normal
          distribution (``NormalFiller``) with a 0 mean and a 0.05 standard
          deviation.
@@ -1318,7 +1318,7 @@ element of the sequence or scaled at the sequence itself:
 
 #. The sequence itself has only one label :
 
-   .. figure:: _static/Tvar_P1.png
+   .. figure:: ../_static/Tvar_P1.png
       :alt: RNN model : variable sequence length and labeling scaled at
             the sequence
 
@@ -1331,7 +1331,7 @@ element of the sequence or scaled at the sequence itself:
 
 #. Every elements of a sequence is labelled :
 
-   .. figure:: _static/Tvar_Pi.png
+   .. figure:: ../_static/Tvar_Pi.png
       :alt: RNN model : variable sequence length and labeling scaled at
             each element of the sequence
 

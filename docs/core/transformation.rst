@@ -28,184 +28,185 @@ Creation of different Transformation object.
 
 To apply Transformation to a dataset, we use an object :py:class:`N2D2.StimuliProvider` which acts as a data loader.
 
-
-Transformation:
+Transformations
 ---------------
+
+Transformation
+~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.Transformation
         :members:
 
-DistortionTransformation:
--------------------------
+DistortionTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.DistortionTransformation
         :members:
 
-
-PadCropTransformation:
-----------------------
+PadCropTransformation
+~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.PadCropTransformation
         :members:
 
-CompositeTransformation:
-------------------------
+CompositeTransformation
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.CompositeTransformation
         :members:
 
-AffineTransformation:
----------------------
+AffineTransformation
+~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.AffineTransformation
         :members:
 
-ChannelExtractionTransformation:
---------------------------------
+ChannelExtractionTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.ChannelExtractionTransformation
         :members:
 
-ColorSpaceTransformation:
--------------------------
+ColorSpaceTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.ColorSpaceTransformation
         :members:
 
-CompressionNoiseTransformation:
--------------------------------
+CompressionNoiseTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.CompressionNoiseTransformation
         :members:
 
-DCTTransformation:
-------------------
+DCTTransformation
+~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.DCTTransformation
         :members:
 
-DFTTransformation:
-------------------
+DFTTransformation
+~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.DFTTransformation
         :members:
 
-EqualizeTransformation:
------------------------
+EqualizeTransformation
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.EqualizeTransformation
         :members:
 
-ExpandLabelTransformation:
---------------------------
+ExpandLabelTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.ExpandLabelTransformation
         :members:
 
-WallisFilterTransformation:
----------------------------
+WallisFilterTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.WallisFilterTransformation
         :members:
 
-ThresholdTransformation:
-------------------------
+ThresholdTransformation
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.ThresholdTransformation
         :members:
 
-SliceExtractionTransformation:
-------------------------------
+SliceExtractionTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.SliceExtractionTransformation
         :members:
 
-ReshapeTransformation:
-----------------------
+ReshapeTransformation
+~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.ReshapeTransformation
         :members:
 
-RescaleTransformation:
-----------------------
+RescaleTransformation
+~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.RescaleTransformation
         :members:
 
-RangeClippingTransformation:
-----------------------------
+RangeClippingTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.RangeClippingTransformation
         :members:
 
-RangeAffineTransformation:
---------------------------
+RangeAffineTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.RangeAffineTransformation
         :members:
 
-RandomAffineTransformation:
----------------------------
+RandomAffineTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.RandomAffineTransformation
         :members:
 
-NormalizeTransformation:
-------------------------
+NormalizeTransformation
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.NormalizeTransformation
         :members:
 
-MorphologyTransformation:
--------------------------
+MorphologyTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.MorphologyTransformation
         :members:
 
-MorphologicalReconstructionTransformation:
-------------------------------------------
+MorphologicalReconstructionTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.MorphologicalReconstructionTransformation
         :members:
 
-MagnitudePhaseTransformation:
------------------------------
+MagnitudePhaseTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.MagnitudePhaseTransformation
         :members:
 
-LabelSliceExtractionTransformation:
------------------------------------
+LabelSliceExtractionTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.LabelSliceExtractionTransformation
         :members:
 
-LabelExtractionTransformation:
-------------------------------
+LabelExtractionTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.LabelExtractionTransformation
         :members:
 
-GradientFilterTransformation:
------------------------------
+GradientFilterTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.GradientFilterTransformation
         :members:
 
-ApodizationTransformation:
---------------------------
+ApodizationTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.ApodizationTransformation
         :members:
 
-FilterTransformation:
----------------------
+FilterTransformation
+~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.FilterTransformation
         :members:
 
-FlipTransformation:
--------------------
+FlipTransformation
+~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: N2D2.FlipTransformation
         :members:

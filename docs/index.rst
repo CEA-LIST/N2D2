@@ -35,18 +35,18 @@ N2D2
    :maxdepth: 1
    :caption: C++/Python core:
    
-   python_binding/intro
-   python_binding/activation
-   python_binding/containers
-   python_binding/cells
-   python_binding/databases
-   python_binding/deepnet
-   python_binding/filler
-   python_binding/solver
-   python_binding/stimuliprovider
-   python_binding/transformation
-   python_binding/target
-   python_binding/example
+   core/intro
+   core/activation
+   core/containers
+   core/cells
+   core/databases
+   core/deepnet
+   core/filler
+   core/solver
+   core/stimuliprovider
+   core/transformation
+   core/target
+   core/example
 
 Indices and tables
 ==================
@@ -54,8 +54,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-Bibliography
-============
-
-.. bibliography:: ./refs.bib
+* :ref:`references`

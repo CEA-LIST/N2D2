@@ -33,7 +33,7 @@ shown in figure [fig:findLrRange]. The loss change during this phase is
 then plotted in function of the learning rate, as shown in figure
 [fig:findLr].
 
-.. figure:: _static/find_lr-range.png
+.. figure:: ../_static/find_lr-range.png
    :alt: Exponential increase of the learning rate over the specified
          number of iterations, equals to the number of steps divided by the
          batch size (here: 24).
@@ -42,7 +42,7 @@ then plotted in function of the learning rate, as shown in figure
    of iterations, equals to the number of steps divided by the batch
    size (here: 24).
 
-.. figure:: _static/find_lr.png
+.. figure:: ../_static/find_lr.png
    :alt: Loss change as a function of the learning rate.
 
    Loss change as a function of the learning rate.
@@ -608,7 +608,7 @@ stimulus is also generated automatically for the test dataset and can be
 visualized with the *./test.py* helper tool. An example is shown in
 figure [fig:targetvisu].
 
-.. figure:: _static/target_visu.png
+.. figure:: ../_static/target_visu.png
    :alt: Example of the target visualization helper tool.
 
    Example of the target visualization helper tool.

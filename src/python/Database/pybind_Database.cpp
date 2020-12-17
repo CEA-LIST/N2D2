@@ -34,12 +34,17 @@ void init_Database(py::module &m) {
     db.doc() = 
     R"mydelimiter(
     Database specifications:
+
     - Genericity: load image and sound, 1D, 2D or 3D data
-    - Associate a label for each data point or global to the stimulus, 1D or 2D
-    labels
+
+    - Associate a label for each data point or global to the stimulus, 1D or 2D labels
+
     - ROIs handling:
-      + Convert ROIs to data point labels
-      + Extract one or multiple ROIs from an initial dataset to create as many corresponding stimuli)mydelimiter";
+    
+    + Convert ROIs to data point labels
+
+    + Extract one or multiple ROIs from an initial dataset to create as many corresponding stimuli
+    )mydelimiter";
 
     py::enum_<Database::StimuliSet>(db, "StimuliSet")
     .value("Learn", Database::StimuliSet::Learn)
