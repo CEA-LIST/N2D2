@@ -35,13 +35,38 @@ void init_CudaContext(py::module&);
 void init_Tensor(py::module&);
 void init_CudaTensor(py::module&);
 void init_Network(py::module&);
-void init_Database(py::module&);
 void init_StimuliProvider(py::module&);
 void init_Target(py::module&);
 void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
+void init_CaltechPedestrian_Database(py::module&);
+//Database
+void init_Database(py::module&);
+void init_DIR_Database(py::module&);
+void init_AER_Database(py::module&);
 void init_MNIST_IDX_Database(py::module&);
+void init_Actitracker_Database(py::module&);
+void init_Caltech101_DIR_Database(py::module&);
+void init_Caltech256_DIR_Database(py::module&);
+void init_CelebA_Database(py::module&);
+void init_CIFAR_Database(py::module&);
+void init_CKP_Database(py::module&);
+void init_Cityscapes_Database(py::module&);
+void init_GTSDB_DIR_Database(py::module&);
+void init_GTSRB_DIR_Database(py::module&);
+void init_ILSVRC2012_Database(py::module&);
+void init_IDX_Database(py::module&);
+void init_IMDBWIKI_Database(py::module&);
+void init_KITTI_Database(py::module&);
+void init_KITTI_Object_Database(py::module&);
+void init_KITTI_Road_Database(py::module&);
+void init_LITISRouen_Database(py::module&);
+void init_N_MNIST_Database(py::module&);
+void init_DOTA_Database(py::module&);
+void init_Fashion_MNIST_IDX_Database(py::module&);
+void init_FDDB_Database(py::module&);
+void init_Daimler_Database(py::module&);
 
 void init_Scaling(py::module&);
 void init_ScalingMode(py::module&);
@@ -220,17 +245,43 @@ PYBIND11_MODULE(N2D2, m) {
     init_Tensor(m);
     init_CudaTensor(m);
     init_Network(m);
-    init_Database(m);
+    
     init_StimuliProvider(m);
 
+    // Database
+    init_Database(m);
+    init_DIR_Database(m);
+    init_AER_Database(m);
+    init_MNIST_IDX_Database(m);
+    init_Actitracker_Database(m);
+    init_Caltech101_DIR_Database(m);
+    init_Caltech256_DIR_Database(m);
     init_Scaling(m);
     init_ScalingMode(m);
+    init_CaltechPedestrian_Database(m);
+    init_CelebA_Database(m);
+    init_CIFAR_Database(m);
+    init_CKP_Database(m);
+    // init_Cityscapes_Database(m);
+    init_GTSDB_DIR_Database(m);
+    init_GTSRB_DIR_Database(m);
+    init_ILSVRC2012_Database(m);
+    init_IDX_Database(m);
+    init_IMDBWIKI_Database(m);
+    init_KITTI_Database(m);
+    init_KITTI_Object_Database(m);
+    init_KITTI_Road_Database(m);
+    init_LITISRouen_Database(m);
+    init_N_MNIST_Database(m);
+    init_DOTA_Database(m);
+    init_Fashion_MNIST_IDX_Database(m);
+    init_FDDB_Database(m);
+    init_Daimler_Database(m);
 
     init_Target(m);
     init_TargetScore(m);
     init_DeepNet(m);
     init_DeepNetGenerator(m);
-    init_MNIST_IDX_Database(m);
 
     //Activation
     init_Activation(m);
