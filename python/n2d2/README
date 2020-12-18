@@ -1,1 +1,16 @@
-# n2d2 python package based on N2D2 binding
+n2d2 python package based on N2D2 binding
+
+In package, "n2d2" refers to the python package, "N2D2" to the bound C++ core functions
+
+
+General paradigms:
+    * Merges tasks of INI files, generators and n2d2.cpp
+    * Be able to use N2D2 with as little recompilation as possible
+    * Use as much as possible pybind methods directly in objects, and avoid parameter reimplementations
+      to avoid incoherences between n2d2 and N2D2 objects
+    * Keep INI file uppercase name convention for parameters
+    * Pythonic and rather similar to Pytorch (based on lists and dictionaries)
+    * Hardware agnostic definitions of layers -> High level Python wrappers for all cell types
+    * Topologies and layers can be defined independent of the hardware model
+    * Easy access to network parameters and activations for python based analysis
+

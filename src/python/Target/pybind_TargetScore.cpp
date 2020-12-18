@@ -53,6 +53,9 @@ void init_TargetScore(py::module &m) {
         py::arg("createMissingLabels") = false)
     .def("getAverageSuccess", &TargetScore::getAverageSuccess, py::arg("set"), py::arg("avgWindow")=0)
     .def("getAverageScore", &TargetScore::getAverageScore, py::arg("set"), py::arg("metric"))
+    .def("clearSuccess", &TargetScore::clearSuccess, py::arg("set"))
+    .def("clearScore", &TargetScore::clearScore, py::arg("set"))
+    .def("clear", &TargetScore::clearScore, py::arg("set"))
     .def("process", &TargetScore::process, py::arg("set"));
 }
 }

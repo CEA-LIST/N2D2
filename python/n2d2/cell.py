@@ -22,14 +22,38 @@ import N2D2
 import n2d2.activation
 import n2d2.solver
 
-class Cell:
+
+class Block:
+    def __init__(self, blocks, Name=None):
+        if Name is not None:
+            assert isinstance(Name, str)
+        self._Name = Name
+        assert isinstance(blocks, list)
+        self._blocks = blocks
+
+    def get_name(self):
+        return self._Name
+
+    def set_name(self, Name):
+        self._Name = Name
+
+    def get_blocks(self):
+        return self._blocks
+
+
+
+class Cell(Block):
 
     _Type = None
 
-    def __init__(self, Name, NbOutputs):
+    def __init__(self, NbOutputs, Name):
+
+        #super().__init__(self, Name)
+
+        self._Name = Name
+        self._blocks = self
 
         self._constructor_parameters = {
-            'Name': Name,
             'NbOutputs': NbOutputs,
         }
 
@@ -44,6 +68,12 @@ class Cell:
         self._modified_keys = []
                 
         self._model_key = ""
+
+    def generate_model(self, Model, DataType):
+        if self._Name is None:
+            raise RuntimeError("Trying to run generate_model on Cell of type " + str(type(self)) + " without name.")
+        self._model_key = Model + '<' + DataType + '>'
+
 
     def set_cell_parameters(self, cell_parameters):
         for key, value in cell_parameters.items():
@@ -60,9 +90,6 @@ class Cell:
         for cell in self._inputs:
             self._cell.addInput(cell.N2D2())
         self._cell.initialize()
-
-    def get_name(self):
-        return self._constructor_parameters['Name']
         
     def N2D2(self):
         if self._cell is None:
@@ -86,7 +113,10 @@ class Cell:
             raise n2d2.UndefinedModelError("Abstract Cell has no type")
 
     def convert_to_INI_section(self):
-        output = "[" + self._constructor_parameters['Name'] + "]\n"
+        output = ""
+        """Possible to create section without name"""
+        if self._Name is not None:
+            output = "[" + self._Name + "]\n"
         output += "Input="
         for idx, cell in enumerate(self._inputs):
             if idx > 0:
@@ -116,8 +146,8 @@ class Fc(Cell):
 
 
 
-    def __init__(self, Name, NbOutputs, **cell_parameters):
-        super().__init__(Name=Name, NbOutputs=NbOutputs)
+    def __init__(self, NbOutputs, Name=None, **cell_parameters):
+        super().__init__(NbOutputs=NbOutputs, Name=Name)
 
         """Equivalent to N2D2 class generator defaults. 
            NOTE: These are not necessarily the default values of the constructors!
@@ -177,14 +207,15 @@ class Fc(Cell):
     """
     
     def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
-        self._model_key = Model + '<' + DataType + '>'
+
+        super().generate_model(Model, DataType)
 
         """TODO: This is  necessary at the moment because the default argument in the binding constructor
         cannot be set. """
         self._cell_parameters['ActivationFunction'].generate_model(Model, DataType)
 
         self._cell = self._cell_generators[self._model_key](deepnet,
-                                                            self._constructor_parameters['Name'],
+                                                            self._Name,
                                                             self._constructor_parameters['NbOutputs'],
                                                             self._cell_parameters['ActivationFunction'].N2D2())
 
@@ -212,7 +243,7 @@ class Fc(Cell):
             else:
                 self._set_N2D2_parameter(key, value)
 
-        print(model_parameters)
+        #print(model_parameters)
 
 
 
@@ -245,7 +276,7 @@ class Fc(Cell):
     # Using the string parser as in the INI files
     # NOTE: Be careful for floats (like in INI)
     def _set_N2D2_parameter(self, key, value):
-        print(key + " " + str(value))
+        #print(key + " " + str(value))
         if isinstance(value, bool):
             self._cell.setParameter(key, str(int(value)))
         else:
@@ -274,8 +305,8 @@ class Softmax(Cell):
         'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float
     }
 
-    def __init__(self, Name, NbOutputs, **cell_parameters):
-        super().__init__(Name=Name, NbOutputs=NbOutputs)
+    def __init__(self, NbOutputs, Name=None, **cell_parameters):
+        super().__init__(NbOutputs=NbOutputs, Name=Name)
 
         """
             Equivalent to N2D2 class constructor defaults. 
@@ -296,10 +327,11 @@ class Softmax(Cell):
     # TODO: Add method that initialized based on INI file section
 
     def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
-        self._model_key = Model + '<' + DataType + '>'
+
+        super().generate_model(Model, DataType)
 
         self._cell = self._cell_generators[self._model_key](deepnet,
-                                                            self._constructor_parameters['Name'],
+                                                            self._Name,
                                                             self._constructor_parameters['NbOutputs'],
                                                             self._cell_parameters['WithLoss'],
                                                             self._cell_parameters['GroupSize'],

@@ -23,24 +23,18 @@
 
 import N2D2
 import n2d2.cell
+import collections
 
-class Deepnet():
+"""
+Abstract class that stores the computation graph and the N2D2 deepnet object
+"""
+class Deepnet:
 
-    """
-    def __init__(self):
-        self._cells = None
-        net = N2D2.Network(1)
-        self._deepnet = N2D2.DeepNet(net)
-    """
-
-    # TODO: Proper exeception handling
-    def __init__(self, deepnet, cells, model_parameters):
-        if not isinstance(cells, list):
-            raise TypeError("Error: Deepnet constructor expects a List of Cells, but got " + str(type(cells)) + " instead")
-        self._cells = cells
+    def __init__(self, deepnet, block_descriptor, model_parameters):
+        if not isinstance(block_descriptor, n2d2.cell.Block):
+            raise TypeError("Error: Deepnet constructor expects a Cell Block, but got " + str(type(block)) + " instead")
+        self._block_descriptor = block_descriptor
         self._model_parameters = model_parameters
-
-        self._Model = None
 
         #net = N2D2.Network(1)
         self._deepnet = deepnet #N2D2.DeepNet(net)
@@ -52,38 +46,40 @@ class Deepnet():
     #     self._deepnet.initialize()
 
     def N2D2(self):
-        if self._deepnet is None:
-            raise n2d2.UndefinedModelError("N2D2 deepnet member has not been created. Did you run generate_model?")
         return self._deepnet
 
     def __str__(self):
         return ""
-    
+
+
 """
-This should be usable similar to torch.nn.Sequential.
-That means also recursive (sequence of sequence etc.).
-Allows simple creation of a deepnet based on standard
-Python data structures, without using N2D2 binding functions 
-    Input:
-    * (List of Python Cell objects, Model)
-    * (List of Lists, Model)
+Allows  creation of a deepnet based on a nested Block object. 
+Hardware model and datatype are given at construction time
 """    
 class Sequential(Deepnet):
     # cells is typically a python list 
-    def __init__(self, deepnet, cells, Model='Frame', DataType='float', **model_parameters):
-        super().__init__(deepnet, cells, model_parameters)
+    def __init__(self, deepnet, block_descriptor, Model='Frame', DataType='float', **model_parameters):
+        super().__init__(deepnet, block_descriptor, model_parameters)
 
         # Non nested representation of cells for easier access
+        # We do not use OrderedDict since names are already members of cells
+        # and we want redundancy between dict keys and cell names
         self._sequence = []
+
+        self._blocks = {}
         # Unfold nested network graph
-        self._generate_model(self._cells, Model, DataType)
+        block_name = ''
+
+        self._generate_model(self._block_descriptor, Model, DataType, block_name)
+
+        print(self._blocks)
 
         self._Model = Model
         self._DataType = DataType
 
-        # Check if cell associated to model parameters exists
-        # For the moment, sequence is not a dictionary with cell names.
         names = [_.get_name() for _ in self._sequence]
+
+        # Check if cell associated to model parameters exists
         for key in self._model_parameters:
             if not key.replace('_model', '') in names:
                 raise RuntimeError("No matching cell for model parameter: " + key)
@@ -91,22 +87,32 @@ class Sequential(Deepnet):
         #for cell in self._sequence:
         #    print(cell._Name)
 
-    # TODO: Check that cell names are unique
-    def _generate_model(self, cells, Model, DataType):
-        if isinstance(cells, list):
-            for cell in cells:
-                self._generate_model(cell, Model, DataType)
-        elif isinstance(cells, n2d2.cell.Cell):
-            if cells.get_name() + '_model' in self._model_parameters:
-                cells.generate_model(self._deepnet, Model, DataType, **self._model_parameters[cells.get_name() + '_model'])
+    """Goes recursively through blocks"""
+    def _generate_model(self, block, Model, DataType, block_name):
+
+        if block_name is not "" and block.get_name() is None:
+            block.set_name(block_name)
+
+        if block.get_name() in self._blocks:
+            raise RuntimeError("Block with name \'" + block.get_name() + "\' already exists")
+        else:
+            self._blocks[block.get_name()] = block
+
+        if isinstance(block.get_blocks(), list):
+            if block_name is not "":
+                block_name += "."
+            for idx, sub_block in enumerate(block.get_blocks()):
+                self._generate_model(sub_block, Model, DataType, block_name + str(idx))
+        else:
+            if block.get_name() + '_model' in self._model_parameters:
+                block.generate_model(self._deepnet, Model, DataType, **self._model_parameters[block.get_name() + '_model'])
             else:
-                cells.generate_model(self._deepnet, Model, DataType)
+                block.generate_model(self._deepnet, Model, DataType)
             # Normally this should not copy, but only add an additional name
             if len(self._sequence) > 0:
-                cells.add_input(self._sequence[-1])
-            self._sequence.append(cells)
-        else:
-            raise TypeError("Error: Expected a Cell, but got " + str(type(cells)) + " instead")
+                block.add_input(self._sequence[-1])
+            self._sequence.append(block)
+
 
     """ 
         addInput() sets recursively the Tensor dimensions
@@ -151,38 +157,41 @@ class Sequential(Deepnet):
 
     def get_cell(self, name):
         for cell in self._sequence:
-            if name is cell.get_name():
+            if name == cell.get_name():
                 return cell
         raise RuntimeError("Cell: " + name + " not found")
 
+    def get_sequence(self):
+        return self._sequence
+
     def get_model(self):
-        if self._Model is None:
-            raise n2d2.UndefinedModelError("Model variable is undefined. Did you run generate_model?")
-        else:
-            return self._Model
+        return self._Model
 
 
     def __str__(self):
         indent_level = [0]
         output = "n2d2.deepnet.Sequential("
-        output += self._generate_str(self._cells, indent_level, [0])
+        output += self._generate_str(self._block_descriptor, indent_level, [0])
         output += "\n)"
         return output
 
     # TODO: Do without artificial mutable objects
-    def _generate_str(self, cells, indent_level, block_idx):
+    # TODO: This should be moved to Block
+    def _generate_str(self, block, indent_level, block_idx):
         output = ""
-        if isinstance(cells, list):
+        if isinstance(block.get_blocks(), list):
             if indent_level[0] > 0:
-                output += "\n"+ (indent_level[0]*"\t") + "(" + str(block_idx[0]) + ") " +"'Block'"
+                output += "\n"+ (indent_level[0]*"\t") + "Block_" + block.get_name() + ": ["
             indent_level[0] += 1
             local_block_idx = [0]
-            for idx, cell in enumerate(cells):
-                output += self._generate_str(cell, indent_level, local_block_idx)
+            for idx, block in enumerate(block.get_blocks()):
+                output += self._generate_str(block, indent_level, local_block_idx)
                 local_block_idx[0] += 1
             indent_level[0] -= 1
+            if indent_level[0] > 0:
+                output += "\n"+ (indent_level[0]*"\t") + "]"
         else:
-            output += "\n"+ (indent_level[0]*"\t") + "(" + str(block_idx[0]) + ") " + cells.__str__()
+            output += "\n"+ (indent_level[0]*"\t") + "Block_" + block.get_name() + ": " + block.__str__()
         return output
 
     def convert_to_INI_section(self):
