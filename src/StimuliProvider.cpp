@@ -1156,11 +1156,12 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
 
     unsigned int dimX = data.dimX();
     unsigned int dimY = data.dimY();
+    unsigned int dimSqrt = 0;
 
     for (unsigned int z = 0; z < data.dimZ(); ++z) {
         const Tensor<Float_T>& channel = data[z];
 
-        if (dimX > 1 && dimY > 1) {
+        if (dimSqrt == 0 && dimX > 1 && dimY > 1) {
             // 2D data
             for (unsigned int y = 0; y < dimY; ++y) {
                 for (unsigned int x = 0; x < dimX; ++x) {
@@ -1175,11 +1176,11 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
         } else {
             // 1D data
             const unsigned int size = dimX * dimY;
-            dimX = dimY = std::ceil(std::sqrt((double)size));
+            dimSqrt = std::ceil(std::sqrt((double)size));
             unsigned int index = 0;
 
-            for (unsigned int y = 0; y < dimY; ++y) {
-                for (unsigned int x = 0; x < dimX; ++x) {
+            for (unsigned int y = 0; y < dimSqrt; ++y) {
+                for (unsigned int x = 0; x < dimSqrt; ++x) {
                     if (index < size) {
                         minVal[z] = std::min(minVal[z], channel(index));
                         maxVal[z] = std::max(maxVal[z], channel(index));
@@ -1198,6 +1199,11 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     }
 
     dataFile.close();
+
+    if (dimSqrt > 0) {
+        dimX = dimSqrt;
+        dimY = dimSqrt;
+    }
 
     Gnuplot gnuplot(fileName + ".gnu");
     gnuplot.set("grid").set("key off");

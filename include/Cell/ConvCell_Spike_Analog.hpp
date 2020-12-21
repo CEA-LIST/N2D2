@@ -23,7 +23,7 @@
 
 #include "ConvCell_Spike.hpp"
 #include "DeepNet.hpp"
-#include "Synapse_Behavioral.hpp"
+#include "Xnet/Synapse_Behavioral.hpp"
 
 namespace N2D2 {
 class ConvCell_Spike_Analog : public ConvCell_Spike {

@@ -28,8 +28,8 @@
 #include <string>
 #include <vector>
 
-#include "Network.hpp"
-#include "SpikeGenerator.hpp"
+#include "Xnet/Network.hpp"
+#include "Xnet/SpikeGenerator.hpp"
 #include "StimuliProvider.hpp"
 #include "utils/Parameterizable.hpp"
 #include "Database/AER_Database.hpp"

@@ -19,13 +19,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Xcell.hpp"
-#include "Environment.hpp"
-#include "HeteroEnvironment.hpp"
-#include "Node.hpp"
-#include "NodeEnv.hpp"
-#include "NodeNeuron.hpp"
-#include "NodeSync.hpp"
+#include "Xnet/Xcell.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/HeteroEnvironment.hpp"
+#include "Xnet/Node.hpp"
+#include "Xnet/NodeEnv.hpp"
+#include "Xnet/NodeNeuron.hpp"
+#include "Xnet/NodeSync.hpp"
 
 unsigned int N2D2::Xcell::mIdCnt = 1;
 

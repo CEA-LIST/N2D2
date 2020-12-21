@@ -23,7 +23,7 @@
 
 #include "Cell/PaddingCell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Random.hpp"
 

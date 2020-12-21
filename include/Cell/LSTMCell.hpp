@@ -326,7 +326,8 @@ public:
     virtual void importFreeParameters(const std::string& /*fileName*/,bool /*ignoreNotExists = false*/);
 	/*virtual void logFreeParameters(const std::string& fileName,
                                    unsigned int output) const;*/
-	virtual void logFreeParametersDistrib(const std::string& /*fileName*/) const;
+	virtual void logFreeParametersDistrib(const std::string& fileName,
+                                          FreeParametersType /*type*/ = All) const;
 
 
 

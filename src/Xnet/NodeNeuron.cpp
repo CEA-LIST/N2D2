@@ -19,10 +19,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeNeuron.hpp"
+#include "Xnet/NodeNeuron.hpp"
 
-#include "NodeNeuron_Reflective.hpp"
-#include "NodeSync.hpp"
+#include "Xnet/NodeNeuron_Reflective.hpp"
+#include "Xnet/NodeSync.hpp"
 
 N2D2::NodeNeuron::NodeNeuron(Network& net)
     : Node(net),

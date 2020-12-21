@@ -17,7 +17,6 @@
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
-#include <iostream>
 #include <chrono>
 #include <map>
 #include <numeric>
@@ -312,7 +311,7 @@ private:
         int OUTPUT_MEM_WRAP_SIZE,
         int OUTPUT_MEM_STRIDE,
         const Output_T* __restrict outputs,
-        std::ostream& ostream,
+        FILE* pFile,
         Format format) const;
 
 private:
@@ -416,6 +415,19 @@ private:
         return std::is_unsigned<Output_T>::value?clamp(value, T(0), (T(1) << sat) - 1):
                                                  clamp(value, -(T(1) << (sat - 1)), 
                                                                (T(1) << (sat - 1)) - 1);
+    }
+
+    template<typename T,  
+             typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static T threshold() {
+        return 0.0;
+    }
+
+    template<typename T,  
+             typename std::enable_if<!std::is_floating_point<T>::value>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static T threshold() {
+        return (std::is_unsigned<T>::value)
+            ? std::numeric_limits<T>::max() / 2 : 0;
     }
 
     template<int NB_ITERATIONS,
@@ -1107,16 +1119,16 @@ inline void N2D2::Network::saveOutputs(
     int OUTPUT_MEM_WRAP_SIZE,
     int OUTPUT_MEM_STRIDE,
     const Output_T* __restrict outputs,
-    std::ostream& ostream,
+    FILE* pFile,
     Format format) const
 {
     if (format == Format::HWC) {
-        ostream << "(";
+        fprintf(pFile, "(");
         for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
-            ostream << "(";
+            fprintf(pFile, "(");
 
             for(int ox = 0; ox < OUTPUTS_WIDTH; ox++) {
-                ostream << "(";
+                fprintf(pFile, "(");
 
                 const int oPos = (ox + OUTPUTS_WIDTH * oy);
                 int oOffset = OUTPUT_MEM_STRIDE * oPos;
@@ -1129,25 +1141,29 @@ inline void N2D2::Network::saveOutputs(
                 }
 
                 for (int output = 0; output < NB_OUTPUTS; output++) {
-                    ostream.operator<<(outputs[oOffset + output]);
-                    ostream << ", ";
+                    if (std::is_floating_point<Output_T>::value)
+                        fprintf(pFile, "%f", outputs[oOffset + output]);
+                    else
+                        fprintf(pFile, "%d", outputs[oOffset + output]);
+
+                    fprintf(pFile, ", ");
                 }
 
-                ostream << "), \n";
+                fprintf(pFile, "), \n");
             }
 
-            ostream << "), \n";
+            fprintf(pFile, "), \n");
         }
 
-        ostream << ")\n";
+        fprintf(pFile, ")\n");
     }
     else if (format == Format::CHW) {
-        ostream << "(";
+        fprintf(pFile, "(");
         for(int output = 0; output < NB_OUTPUTS; output++) {
-            ostream << "(";
+            fprintf(pFile, "(");
 
             for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
-                ostream << "(";
+                fprintf(pFile, "(");
 
                 for(int ox = 0; ox < OUTPUTS_WIDTH; ox++) {
                     const int oPos = (ox + OUTPUTS_WIDTH * oy);
@@ -1160,17 +1176,21 @@ inline void N2D2::Network::saveOutputs(
                             - OUTPUT_MEM_CONT_OFFSET - OUTPUT_MEM_CONT_SIZE;
                     }
 
-                    ostream.operator<<(outputs[oOffset + output]);
-                    ostream << ", ";
+                    if (std::is_floating_point<Output_T>::value)
+                        fprintf(pFile, "%f", outputs[oOffset + output]);
+                    else
+                        fprintf(pFile, "%d", outputs[oOffset + output]);
+
+                    fprintf(pFile, ", ");
                 }
 
-                ostream << "), \n";
+                fprintf(pFile, "), \n");
             }
 
-            ostream << "), \n";
+            fprintf(pFile, "), \n");
         }
 
-        ostream << ")\n";
+        fprintf(pFile, ")\n");
     }
     else {
         N2D2_THROW_OR_ABORT(std::runtime_error, "Unknown format.");
@@ -1203,14 +1223,19 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::maxPropagate(
                             - INPUT_MEM_CONT_SIZE;
             }
 
-            for (int ch = 0; ch < NB_CHANNELS; ++ch) {
-                if (inputs[iOffset + ch] > maxInput) {
-                    iMaxInput = ch;
-                    maxInput = inputs[iOffset + ch];
+            if (NB_CHANNELS > 1) {
+                for (int ch = 0; ch < NB_CHANNELS; ++ch) {
+                    if (inputs[iOffset + ch] > maxInput) {
+                        iMaxInput = ch;
+                        maxInput = inputs[iOffset + ch];
+                    }
                 }
-            }
 
-            outputs[oPos] = static_cast<int32_t>(iMaxInput);
+                outputs[oPos] = static_cast<int32_t>(iMaxInput);
+            }
+            else {
+                outputs[oPos] = (inputs[iOffset] > threshold<Input_T>());
+            }
         }
     }
 }
@@ -1348,8 +1373,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::benchmark(const char* name,
                             const std::map<std::string, double>::value_type& p)
                    { return value + p.second; });
 
-    std::cout << name << " timing = " << timing.mean << " us -- "
-        << cumMeanTiming << " us" << std::endl;
+    printf("%s timing = %.02f us -- %.02f us\n", name, timing.mean, cumMeanTiming);
 }
 
 #endif

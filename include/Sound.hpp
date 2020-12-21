@@ -38,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/WindowFunction.hpp"
 
 namespace N2D2 {

@@ -26,8 +26,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "NodeEnv.hpp"
-#include "Synapse.hpp"
+#include "Xnet/NodeEnv.hpp"
+#include "Xnet/Synapse.hpp"
 #include "Cell/NodeOut.hpp"
 #include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
 #include "Cell/PoolCell_Frame_Kernels.hpp"

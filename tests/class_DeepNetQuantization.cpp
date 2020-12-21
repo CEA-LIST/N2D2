@@ -25,7 +25,7 @@
 #include "DeepNetQuantization.hpp"
 #include "N2D2.hpp"
 #include "Histogram.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "RangeStats.hpp"
 #include "StimuliProvider.hpp"
 #include "Cell/Cell_Frame_Top.hpp"

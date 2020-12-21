@@ -19,8 +19,8 @@
 */
 
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #include "Generator/ConvCellGenerator.hpp"
 #include "utils/UnitTest.hpp"
 

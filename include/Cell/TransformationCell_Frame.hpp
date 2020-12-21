@@ -46,14 +46,8 @@ public:
             <TransformationCell_Frame>(deepNet, name, nbOutputs, transformation);
     }
 
-    virtual double setOutputTarget(const Tensor<int>& /*targets*/,
-                                   double /*targetVal*/ = 1.0,
-                                   double /*defaultVal*/ = 0.0) { return 0.0; };
-    virtual double setOutputTargets(const Tensor<int>& /*targets*/,
-                                    double /*targetVal*/ = 1.0,
-                                    double /*defaultVal*/ = 0.0) { return 0.0; };
-    virtual double setOutputTargets(const Tensor<Float_T>& /*targets*/)
-        { return 0.0; };
+    virtual void setOutputTarget(const Tensor<int>& /*targets*/) {};
+    virtual void setOutputTargets(const BaseTensor& /*targets*/) {};
     virtual void propagate(bool inference = false);
     virtual void backPropagate() {};
     virtual void update() {};

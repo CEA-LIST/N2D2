@@ -19,8 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeNeuron_RRAM.hpp"
-#include "SpikeEvent.hpp"
+#include "Xnet/NodeNeuron_RRAM.hpp"
+#include "Xnet/SpikeEvent.hpp"
 
 N2D2::NodeNeuron_RRAM::NodeNeuron_RRAM(Network& net)
     : NodeNeuron(net),

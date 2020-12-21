@@ -19,8 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Environment.hpp"
-#include "NodeEnv.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/NodeEnv.hpp"
 #include "Transformation/FilterTransformation.hpp"
 
 namespace N2D2 {

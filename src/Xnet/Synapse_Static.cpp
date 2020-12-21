@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Synapse_Static.hpp"
+#include "Xnet/Synapse_Static.hpp"
 
 bool N2D2::Synapse_Static::mCheckWeightRange = true;
 

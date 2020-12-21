@@ -13,7 +13,7 @@
 #include "DeepNetQuantization.hpp"
 #include "Histogram.hpp"
 #include "N2D2.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "RangeStats.hpp"
 #include "ScalingMode.hpp"
 #include "Database/MNIST_IDX_Database.hpp"

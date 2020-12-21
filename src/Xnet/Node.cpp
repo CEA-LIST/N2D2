@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Node.hpp"
+#include "Xnet/Node.hpp"
 
 unsigned int N2D2::Node::mIdCnt = 1;
 
