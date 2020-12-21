@@ -39,12 +39,6 @@ deepnet = N2D2.DeepNet(net)
 
 N2D2.CudaContext.setDevice(3)
 
-print("Create database")
-database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
-
-print("Create provider")
-provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
-
 model = n2d2.models.fc_base()
 
 print(model)
@@ -61,79 +55,56 @@ print(model)
 #print(model.get_cell('fc2')._cell_parameters['WeightsFiller'])
 
 
-print("Add provider")
-model.add_provider(provider)
-
-print("Initialize model")
-model.initialize()
-
-print("Create target")
-tar = n2d2.target.Score('softmax.Target', model.get_output(), provider)
 
 
+print("Create database")
+database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
 
+print("Create provider")
+provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
 
-n2d2.utils.convert_to_INI("model_INI", database, provider, model, tar)
+print("Create classifier")
+classifier = n2d2.application.Classifier(provider, model)
+
+classifier.convert_to_INI("model_INI")
 
 
 for epoch in range(nb_epochs):
 
     print("\n### Train Epoch: " + str(epoch) + " ###")
 
-    partition = 'Learn'
+    classifier.set_mode('Learn')
 
-    for i in range(math.ceil(database.get_nb_stimuli(partition)/batch_size)):
+    for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
         # Load example
-        provider.read_random_batch(partition=partition)
+        classifier.read_random_batch()
 
-        # Set target of cell
-        tar.provide_targets(partition=partition)
+        classifier.process()
 
-        # Propagate
-        model.propagate()
+        classifier.optimize()
 
-        # Calculate loss and error
-        tar.process(partition=partition)
-
-        # Backpropagate
-        model.back_propagate()
-
-        # Update parameters
-        model.update()
-
-        success = tar.get_average_success(partition=partition, window=avg_window)
-
-        print("Example: " + str(i*batch_size)  + ", train success: " + "{0:.2f}".format(100*success) + "%", end='\r')
-
+        print("Example: " + str(i*batch_size) + ", train success: "
+              + "{0:.2f}".format(100*classifier.get_average_success(window=avg_window)) + "%", end='\r')
 
 
     print("\n### Validate Epoch: " + str(epoch) + " ###")
 
-    partition = "Validation"
+    classifier.set_mode('Validation')
 
-    for i in range(math.ceil(database.get_nb_stimuli(partition)/batch_size)):
+    for i in range(math.ceil(database.get_nb_stimuli('Validation')/batch_size)):
 
         batch_idx = i*batch_size
 
         # Load example
-        provider.read_batch(partition=partition, idx=batch_idx)
+        classifier.read_batch(idx=batch_idx)
 
-        # Set target of cell
-        tar.provide_targets(partition=partition)
+        classifier.process()
 
-        # Propagate
-        model.propagate(inference=True)
+        print("Example: " + str(i*batch_size) + ", val success: "
+              + "{0:.2f}".format(100 * classifier.get_average_score(metric='Sensitivity')) + "%", end='\r')
 
-        # Calculate loss and error
-        tar.process(partition=partition)
-
-        success = tar.get_average_score(partition=partition, metric='Sensitivity')
-        #success = tar.get_average_success(partition=partition)
-
-        print("Example: " + str(i*batch_size) + ", val success: " + "{0:.2f}".format(100 * success) + "%", end='\r')
-
-        tar.N2D2().clearScore(set=N2D2.Database.Validation)
+        #target.N2D2().clearScore(set=N2D2.Database.Validation)
         #tar.N2D2().clearSuccess(set=N2D2.Database.Validation)
 
 
@@ -142,29 +113,20 @@ for epoch in range(nb_epochs):
 
 print("\n### Test ###")
 
-partition = "Test"
+classifier.set_mode('Test')
 
-for i in range(math.ceil(database.get_nb_stimuli(partition)/batch_size)):
+for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
 
     batch_idx = i*batch_size
 
     # Load example
-    provider.read_batch(partition=partition, idx=batch_idx)
+    classifier.read_batch(idx=batch_idx)
 
-    # Set target of cell
-    tar.provide_targets(partition=partition)
+    classifier.process()
 
-    # Propagate
-    model.propagate(inference=True)
+    print("Example: " + str(i*batch_size) + ", test success: "
+          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
 
-    # Calculate loss and error
-    tar.process(partition=partition)
-
-    success = tar.get_average_success(partition=partition)
-
-    print("Example: " + str(i*batch_size) + ", test success: " + "{0:.2f}".format(100 * success) + "%", end='\r')
-
-    #print(tar.N2D2().getEstimatedLabels)
 
 
 

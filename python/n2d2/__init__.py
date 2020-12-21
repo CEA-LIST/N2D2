@@ -31,4 +31,5 @@ import n2d2.solver
 import n2d2.filler
 import n2d2.target
 import n2d2.models
+import n2d2.application
 
