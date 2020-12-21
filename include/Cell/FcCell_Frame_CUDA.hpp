@@ -26,7 +26,7 @@
 #include "CudaUtils.hpp"
 #include "DeepNet.hpp"
 #include "FcCell.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor.hpp"
 

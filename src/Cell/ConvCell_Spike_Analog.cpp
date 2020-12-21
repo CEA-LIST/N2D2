@@ -46,12 +46,12 @@ N2D2::ConvCell_Spike_Analog::ConvCell_Spike_Analog(Network& net, const DeepNet& 
                dilationDims),
       ConvCell_Spike(net, deepNet, 
                      name,
-                     kernelDims,
+                     mKernelDims,
                      nbOutputs,
-                     subSampleDims,
-                     strideDims,
-                     paddingDims,
-                     dilationDims),
+                     mSubSampleDims,
+                     mStrideDims,
+                     mPaddingDims,
+                     mDilationDims),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
       mWeightsMinMean(this, "WeightsMinMean", 1, 0.1),

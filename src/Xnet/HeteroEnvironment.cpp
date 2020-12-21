@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "HeteroEnvironment.hpp"
-#include "Environment.hpp"
+#include "Xnet/HeteroEnvironment.hpp"
+#include "Xnet/Environment.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 
 N2D2::HeteroEnvironment::HeteroEnvironment(const Environment& item)

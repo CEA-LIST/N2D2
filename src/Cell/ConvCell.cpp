@@ -42,12 +42,17 @@ N2D2::ConvCell::ConvCell(const DeepNet& deepNet,
       mWeightsExportFormat(this, "WeightsExportFormat", OCHW),
       mWeightsExportFlip(this, "WeightsExportFlip", false),
       mOutputsRemap(this, "OutputsRemap", ""),
-      mKernelDims(kernelDims),
-      mSubSampleDims(subSampleDims),
-      mStrideDims(strideDims),
-      mPaddingDims(paddingDims),
-      mDilationDims(dilationDims),
-      mExtPaddingDims(2 * kernelDims.size(), 0)
+      mKernelDims((kernelDims.size() == 1)
+        ? std::vector<unsigned int>({kernelDims[0], 1}) : kernelDims),
+      mSubSampleDims((subSampleDims.size() == 1)
+        ? std::vector<unsigned int>({subSampleDims[0], 1}) : subSampleDims),
+      mStrideDims((strideDims.size() == 1)
+        ? std::vector<unsigned int>({strideDims[0], 1}) : strideDims),
+      mPaddingDims((paddingDims.size() == 1)
+        ? std::vector<int>({paddingDims[0], 0}) : paddingDims),
+      mDilationDims((dilationDims.size() == 1)
+        ? std::vector<unsigned int>({dilationDims[0], 1}) : dilationDims),
+      mExtPaddingDims(2 * mKernelDims.size(), 0)
 {
     // ctor
 }

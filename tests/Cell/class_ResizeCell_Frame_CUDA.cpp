@@ -25,7 +25,7 @@
 #include "Cell/ResizeCell_Frame_CUDA.hpp"
 #include "containers/Tensor.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 
 #include <limits>

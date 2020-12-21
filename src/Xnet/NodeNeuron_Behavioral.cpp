@@ -19,10 +19,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeNeuron_Behavioral.hpp"
-#include "SpikeEvent.hpp"
-#include "Synapse.hpp"
-#include "Synapse_Behavioral.hpp"
+#include "Xnet/NodeNeuron_Behavioral.hpp"
+#include "Xnet/SpikeEvent.hpp"
+#include "Xnet/Synapse.hpp"
+#include "Xnet/Synapse_Behavioral.hpp"
 #include "utils/Gnuplot.hpp"
 
 N2D2::NodeNeuron_Behavioral::NodeNeuron_Behavioral(Network& net)

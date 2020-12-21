@@ -24,7 +24,7 @@ macro(set_globals)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
     set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
     set(CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --coverage")
     set(CMAKE_SHARED_LINKER_FLAGS_COVERAGE "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} --coverage")
@@ -113,6 +113,12 @@ find_package(OpenMP QUIET)
 if(OpenMP_FOUND)
     target_compile_options(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
     target_link_libraries(n2d2_lib PUBLIC ${OpenMP_CXX_FLAGS})
+
+    if(NOT MSVC)
+        # Fix for missing atomic lib
+        target_link_libraries(n2d2_lib PUBLIC -Wl,--as-needed -Wl,-latomic -Wl,--no-as-needed)
+    endif()
+
     target_compile_definitions(n2d2_lib PUBLIC OPENMP=1)
 endif()
 
@@ -152,7 +158,7 @@ if (Protobuf_FOUND)
     INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
     PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER ${CMAKE_BINARY_DIR}/onnx.proto)
     ADD_LIBRARY(onnx_proto_lib ${PROTO_HEADER} ${PROTO_SRC})
-    target_compile_options(onnx_proto_lib PUBLIC -fPIC)
+    target_compile_options(onnx_proto_lib PUBLIC -std=c++0x -fPIC)
 
     get_filename_component("PROTO_HEADER_DIR" ${PROTO_HEADER} DIRECTORY)
     target_include_directories(n2d2_lib PUBLIC ${PROTO_HEADER_DIR})
@@ -205,7 +211,18 @@ cotire(n2d2_lib)
 
 
 # n2d2_lib_cuda target
-find_package(CUDA)
+if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
+    # For CMake < 3.9.0, use our own provided FindCUDA.cmake
+    # in order to support "CUDA_LINK_LIBRARIES_KEYWORD"
+    find_package(CUDA)
+else()
+    # For CMake >= 3.9.0, use the default FindCUDA provided by CMake
+    # => in this case, we need to prevent find_package() to use our own.
+    list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+    find_package(CUDA)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+endif()
+
 if(CUDA_FOUND)
     set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
     find_package(CuDNN REQUIRED)

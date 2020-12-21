@@ -22,7 +22,7 @@
 #define N2D2_NODEIN_H
 
 #include "Cell_Spike.hpp"
-#include "Node.hpp"
+#include "Xnet/Node.hpp"
 
 namespace N2D2 {
 

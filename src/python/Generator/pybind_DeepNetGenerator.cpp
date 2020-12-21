@@ -21,7 +21,7 @@
 */
 
 #ifdef PYBIND
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "containers/Tensor.hpp"
 #include "DeepNet.hpp"
 #include "Generator/DeepNetGenerator.hpp"

@@ -23,8 +23,8 @@
 #include "Cell/BatchNormCell_Frame.hpp"
 #include "Cell/ConvCell_Frame.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 
 using namespace N2D2;

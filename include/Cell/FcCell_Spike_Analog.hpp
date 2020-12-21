@@ -23,7 +23,7 @@
 
 #include "DeepNet.hpp"
 #include "FcCell_Spike.hpp"
-#include "Synapse_Behavioral.hpp"
+#include "Xnet/Synapse_Behavioral.hpp"
 
 namespace N2D2 {
 class FcCell_Spike_Analog : public FcCell_Spike {

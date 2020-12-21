@@ -45,6 +45,7 @@ cache:
 
 before_build:
   - cmd: SET PATH=C:\Program Files\gnuplot\bin;%PATH%
+  - git submodule update --init --recursive
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G"%BUILD_TARGET%" .. 

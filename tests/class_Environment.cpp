@@ -19,9 +19,9 @@
 */
 
 #include "Database/MNIST_IDX_Database.hpp"
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "N2D2.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "utils/UnitTest.hpp"
 

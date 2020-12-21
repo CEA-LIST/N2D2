@@ -19,9 +19,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeSync.hpp"
+#include "Xnet/NodeSync.hpp"
 
-#include "Xcell.hpp"
+#include "Xnet/Xcell.hpp"
 
 N2D2::NodeSync::NodeSync(Network& net, Xcell& cell)
     : Node(net), mCell(cell), mLink(NULL)

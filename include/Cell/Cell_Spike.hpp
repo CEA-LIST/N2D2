@@ -22,8 +22,8 @@
 #define N2D2_CELL_SPIKE_H
 
 #include "Cell.hpp"
-#include "Network.hpp"
-#include "Synapse.hpp"
+#include "Xnet/Network.hpp"
+#include "Xnet/Synapse.hpp"
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {

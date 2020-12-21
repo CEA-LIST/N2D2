@@ -20,7 +20,7 @@
 """
 
 def convert_to_INI(path, database, provider, deepnet, target):
-    file = open(path, 'w')
+    file = open(path+".ini", 'w')
     output = "DefaultModel=" + deepnet.get_model() + "\n\n"
     output += database.convert_to_INI_section() + "\n"
     output += provider.convert_to_INI_section() + "\n"

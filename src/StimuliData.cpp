@@ -302,9 +302,9 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
 
         unsigned int loaded = 0;
         unsigned int progress = 0, progressPrev = 0;
-        /**Get correct device ID **/
-        int dev = 0;
+
 #ifdef CUDA
+        int dev = 0;
         CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 #endif
         // First loop: compute frame stats + global mean
@@ -322,9 +322,8 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
 // min and max reduction not supported by MSVC, using double-checked locking instead.
 //reduction(min:minSizeX,minSizeY,minSizeZ,globalValueMin) reduction(max:maxSizeX,maxSizeY,maxSizeZ,globalValueMax)
             for (int index = 0; index < (int)nbStimuli; ++index) {
-        /**Set correct device ID **/
 #ifdef CUDA
-            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                CHECK_CUDA_STATUS(cudaSetDevice(dev));
 #endif 
                 StimuliProvider provider = mProvider.cloneParameters();
 

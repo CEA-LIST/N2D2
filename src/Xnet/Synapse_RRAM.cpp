@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Synapse_RRAM.hpp"
+#include "Xnet/Synapse_RRAM.hpp"
 
 N2D2::Synapse_RRAM::ProgramMethod N2D2::Synapse_RRAM::mProgramMethod = Ideal;
 

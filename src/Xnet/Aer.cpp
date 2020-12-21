@@ -18,10 +18,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Aer.hpp"
-#include "Environment.hpp"
-#include "HeteroEnvironment.hpp"
-#include "NodeEnv.hpp"
+#include "Xnet/Aer.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/HeteroEnvironment.hpp"
+#include "Xnet/NodeEnv.hpp"
 #include "Transformation/FilterTransformation.hpp"
 
 N2D2::Aer::Aer(const std::shared_ptr<HeteroEnvironment>& environment)

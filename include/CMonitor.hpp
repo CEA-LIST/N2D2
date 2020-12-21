@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "FloatT.hpp"
 #include "containers/Tensor.hpp"
 #include "controler/Interface.hpp"

@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "AerEvent.hpp"
+#include "Xnet/AerEvent.hpp"
 
 N2D2::AerEvent::AerEvent(double version)
     : time(0),

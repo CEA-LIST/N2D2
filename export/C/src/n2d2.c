@@ -238,9 +238,10 @@ void env_read(char* fileName,
     nbRead = fread(
         outputTargets, sizeof(outputTargets[0]), outputsHeight, filePtr);
 
-    if (nbRead != outputsHeight)
-        fprintf(stderr,
-                "fread() number of read objects different than expected\n");
+    if (nbRead != outputsHeight) {
+        fprintf(stderr, "fread() number of read objects (%d) different than"
+                        " expected (%d)\n", nbRead, outputsHeight);
+    }
 
     if (feof(filePtr))
         fprintf(stderr,

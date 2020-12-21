@@ -28,7 +28,7 @@
 
 #ifdef NO_EXCEPT
 #define N2D2_THROW_OR_ABORT(ex, msg) \
-do { std::cout << msg << std::endl; abort(); } while (false)
+do { printf("%s\n", std::string(msg).c_str()); abort(); } while (false)
 #else
 #include <stdexcept>
 #define N2D2_THROW_OR_ABORT(ex, msg) throw ex(msg)

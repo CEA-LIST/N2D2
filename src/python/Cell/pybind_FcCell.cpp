@@ -47,7 +47,9 @@ void init_FcCell(py::module &m) {
     .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
     .def("getBiasSolver", &FcCell::getBiasSolver)
     .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
-    .def("getBiasFiller", &FcCell::setBiasFiller);
+    .def("getBiasFiller", &FcCell::setBiasFiller)
+    .def("importFreeParameters", &FcCell::importFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists")=false)
+    .def("exportFreeParameters", &FcCell::exportFreeParameters, py::arg("fileName"));
 
 }
 }

@@ -51,6 +51,23 @@ class Score(Target):
 
     _type = 'TargetScore'
 
+
+    _confusion_table_metrics = {
+        'Sensitivity': N2D2.ConfusionTableMetric.Sensitivity,
+        'Specificity': N2D2.ConfusionTableMetric.Specificity,
+        'Precision': N2D2.ConfusionTableMetric.Precision,
+        'NegativePredictiveValue': N2D2.ConfusionTableMetric.NegativePredictiveValue,
+        'MissRate': N2D2.ConfusionTableMetric.MissRate,
+        'FallOut': N2D2.ConfusionTableMetric.FallOut,
+        'FalseDiscoveryRate': N2D2.ConfusionTableMetric.FalseDiscoveryRate,
+        'FalseOmissionRate': N2D2.ConfusionTableMetric.FalseOmissionRate,
+        'Accuracy': N2D2.ConfusionTableMetric.Accuracy,
+        'F1Score': N2D2.ConfusionTableMetric.F1Score,
+        'Informedness': N2D2.ConfusionTableMetric.Informedness,
+        'Markedness': N2D2.ConfusionTableMetric.Markedness
+    }
+
+
     def __init__(self, Name, Cell, Provider, **target_parameters):
 
         super().__init__(Name, Cell, Provider)
@@ -88,8 +105,13 @@ class Score(Target):
     def process(self, partition):
         self._target.process(self._constructor_parameters['Provider'].get_database().StimuliSets[partition])
 
-    def get_average_success(self, partition, window):
+    def get_average_success(self, partition, window=0):
         return self._target.getAverageSuccess(self._constructor_parameters['Provider'].get_database().StimuliSets[partition], window)
+
+    def get_average_score(self, partition, metric):
+        return self._target.getAverageScore(
+            self._constructor_parameters['Provider'].get_database().StimuliSets[partition],
+            self._confusion_table_metrics[metric])
 
     def convert_to_INI_section(self):
         output = "[" + self._constructor_parameters['Name'] + "]\n"
