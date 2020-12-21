@@ -31,6 +31,18 @@ def fc_base():
     ])
     return net
 
+
+
+def fc_base_named():
+    net = n2d2.cell.Block([
+        n2d2.cell.Block([
+            n2d2.cell.Fc(NbOutputs=300, Name='fc1'),
+            n2d2.cell.Fc(NbOutputs=10, Name='fc2')
+        ]),
+        n2d2.cell.Softmax(NbOutputs=10, Name='softmax')
+    ])
+    return net
+
 def fc_one_layer():
 
     first_block = n2d2.cell.Fc(NbOutputs=10)
@@ -43,23 +55,55 @@ def fc_one_layer():
     return net
 
 
-def fc_nested():
-    first_block = n2d2.cell.Fc(NbOutputs=10, Name='fc1')
+def fc_nested_named():
+    first_block = n2d2.cell.Fc(NbOutputs=100, Name='fc1')
     second_block = n2d2.cell.Block([
-        n2d2.cell.Fc(NbOutputs=10, Name='fc2'),
+        n2d2.cell.Fc(NbOutputs=100, Name='fc2'),
     ], Name='block1')
     third_block = n2d2.cell.Block([
         n2d2.cell.Block([
-            n2d2.cell.Fc(NbOutputs=10, Name='fc3'),
-            n2d2.cell.Fc(NbOutputs=10, Name='fc4'),
+            n2d2.cell.Fc(NbOutputs=100, Name='fc3'),
+            n2d2.cell.Fc(NbOutputs=100, Name='fc4'),
         ], Name='block21'),
         n2d2.cell.Block([
-            n2d2.cell.Fc(NbOutputs=10, Name='fc5'),
-            n2d2.cell.Fc(NbOutputs=10, Name='fc6'),
-            n2d2.cell.Fc(NbOutputs=10, Name='fc7'),
+            n2d2.cell.Fc(NbOutputs=100, Name='fc5'),
+            n2d2.cell.Fc(NbOutputs=100, Name='fc6'),
+            n2d2.cell.Fc(NbOutputs=100, Name='fc7'),
         ], Name='block22'),
     ], Name='block2')
     fourth_block = n2d2.cell.Fc(NbOutputs=10, Name='fc8')
+    top_block = n2d2.cell.Softmax(NbOutputs=10)
+
+    net = n2d2.cell.Block([
+        first_block,
+        second_block,
+        third_block,
+        fourth_block,
+        top_block,
+    ])
+    return net
+
+
+
+
+
+def fc_nested():
+    first_block = n2d2.cell.Fc(NbOutputs=100)
+    second_block = n2d2.cell.Block([
+        n2d2.cell.Fc(NbOutputs=100),
+    ])
+    third_block = n2d2.cell.Block([
+        n2d2.cell.Block([
+            n2d2.cell.Fc(NbOutputs=100),
+            n2d2.cell.Fc(NbOutputs=100),
+        ]),
+        n2d2.cell.Block([
+            n2d2.cell.Fc(NbOutputs=100),
+            n2d2.cell.Fc(NbOutputs=100),
+            n2d2.cell.Fc(NbOutputs=100),
+        ]),
+    ])
+    fourth_block = n2d2.cell.Fc(NbOutputs=10)
     top_block = n2d2.cell.Softmax(NbOutputs=10)
 
     net = n2d2.cell.Block([

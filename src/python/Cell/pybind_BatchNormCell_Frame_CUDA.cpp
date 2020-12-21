@@ -24,7 +24,6 @@
 
 #ifdef PYBIND
 #include "Cell/BatchNormCell_Frame_CUDA.hpp"
-#include "Network.hpp"
 
 #include <pybind11/pybind11.h>
 

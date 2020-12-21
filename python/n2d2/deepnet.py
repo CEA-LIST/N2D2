@@ -30,10 +30,10 @@ Abstract class that stores the computation graph and the N2D2 deepnet object
 """
 class Deepnet:
 
-    def __init__(self, deepnet, block_descriptor, model_parameters):
-        if not isinstance(block_descriptor, n2d2.cell.Block):
+    def __init__(self, deepnet, block, model_parameters):
+        if not isinstance(block, n2d2.cell.Block):
             raise TypeError("Error: Deepnet constructor expects a Cell Block, but got " + str(type(block)) + " instead")
-        self._block_descriptor = block_descriptor
+        self._block = block
         self._model_parameters = model_parameters
 
         #net = N2D2.Network(1)
@@ -58,37 +58,48 @@ Hardware model and datatype are given at construction time
 """    
 class Sequential(Deepnet):
     # cells is typically a python list 
-    def __init__(self, deepnet, block_descriptor, Model='Frame', DataType='float', **model_parameters):
-        super().__init__(deepnet, block_descriptor, model_parameters)
+    def __init__(self, deepnet, block, Model='Frame', DataType='float', **model_parameters):
+        super().__init__(deepnet, block, model_parameters)
 
-        # Non nested representation of cells for easier access
-        # We do not use OrderedDict since names are already members of cells
-        # and we want redundancy between dict keys and cell names
-        self._sequence = []
+        self._cells = self._block.get_cells()
 
-        self._blocks = {}
-        # Unfold nested network graph
-        block_name = ''
+        names = []
+        # N2D2 requires unique cell names for each cell. Check if names exist and set to default name otherwise
+        for cell in self._cells:
+            name = cell.get_name()
+            if name is None:
+                name = cell.get_type() + "_" + cell.get_block_idx()
+                cell.set_name(name)
+            else:
+                if name in names:
+                    raise RuntimeError("Duplicate cell name: " + name)
+            names.append(name)
 
-        self._generate_model(self._block_descriptor, Model, DataType, block_name)
+        #self._generate_model(self._block_descriptor, Model, DataType)
 
-        print(self._blocks)
-
-        self._Model = Model
-        self._DataType = DataType
-
-        names = [_.get_name() for _ in self._sequence]
+        print(names)
+        print(self._cells)
 
         # Check if cell associated to model parameters exists
         for key in self._model_parameters:
             if not key.replace('_model', '') in names:
                 raise RuntimeError("No matching cell for model parameter: " + key)
 
-        #for cell in self._sequence:
+        self._Model = Model
+        self._DataType = DataType
+
+        for cell in self._cells:
+            if cell.get_name() + '_model' in self._model_parameters:
+                cell.generate_model(self._deepnet, self._Model, self._DataType,
+                                    **self._model_parameters[cell.get_name() + '_model'])
+            else:
+                cell.generate_model(self._deepnet, self._Model, self._DataType)
+
+        #for cell in self._cells:
         #    print(cell._Name)
 
     """Goes recursively through blocks"""
-    def _generate_model(self, block, Model, DataType, block_name):
+    """def _generate_model(self, block, Model, DataType, block_name):
 
         if block_name is not "" and block.get_name() is None:
             block.set_name(block_name)
@@ -109,9 +120,9 @@ class Sequential(Deepnet):
             else:
                 block.generate_model(self._deepnet, Model, DataType)
             # Normally this should not copy, but only add an additional name
-            if len(self._sequence) > 0:
-                block.add_input(self._sequence[-1])
-            self._sequence.append(block)
+            if len(self._cells) > 0:
+                block.add_input(self._cells[-1])
+            self._cells.append(block)"""
 
 
     """ 
@@ -119,13 +130,13 @@ class Sequential(Deepnet):
         of input and output tensors of all cells
     """
     def add_provider(self, provider):
-        if len(self._sequence) > 0:
-            self._sequence[0].add_input(provider)
+        if len(self._cells) > 0:
+            self._cells[0].add_input(provider)
         else:
             raise n2d2.UndefinedModelError("No cells in deepnet")
 
 
-    """ # Redunant when using self._sequence
+    """ # Redunant when using self._cells
     def _generate_cell_links(self, cells, previous):
         if isinstance(cells, list):
             for cell in cells:
@@ -137,66 +148,46 @@ class Sequential(Deepnet):
     """
 
     def initialize(self):
-        for cell in self._sequence:
+        for cell in self._cells:
             cell.initialize()
 
     def propagate(self, inference=False):
-        for cell in self._sequence:
+        for cell in self._cells:
             cell.N2D2().propagate(inference=inference)
 
     def back_propagate(self):
-        for cell in reversed(self._sequence):
+        for cell in reversed(self._cells):
             cell.N2D2().backPropagate()
 
     def update(self):
-        for cell in self._sequence:
+        for cell in self._cells:
             cell.N2D2().update()
 
     def get_output(self):
-        return self._sequence[-1]
+        return self._cells[-1]
 
     def get_cell(self, name):
-        for cell in self._sequence:
+        for cell in self._cells:
             if name == cell.get_name():
                 return cell
         raise RuntimeError("Cell: " + name + " not found")
 
-    def get_sequence(self):
-        return self._sequence
+    def get_cells(self):
+        return self._cells
 
     def get_model(self):
         return self._Model
 
 
     def __str__(self):
-        indent_level = [0]
         output = "n2d2.deepnet.Sequential("
-        output += self._generate_str(self._block_descriptor, indent_level, [0])
-        output += "\n)"
-        return output
-
-    # TODO: Do without artificial mutable objects
-    # TODO: This should be moved to Block
-    def _generate_str(self, block, indent_level, block_idx):
-        output = ""
-        if isinstance(block.get_blocks(), list):
-            if indent_level[0] > 0:
-                output += "\n"+ (indent_level[0]*"\t") + "Block_" + block.get_name() + ": ["
-            indent_level[0] += 1
-            local_block_idx = [0]
-            for idx, block in enumerate(block.get_blocks()):
-                output += self._generate_str(block, indent_level, local_block_idx)
-                local_block_idx[0] += 1
-            indent_level[0] -= 1
-            if indent_level[0] > 0:
-                output += "\n"+ (indent_level[0]*"\t") + "]"
-        else:
-            output += "\n"+ (indent_level[0]*"\t") + "Block_" + block.get_name() + ": " + block.__str__()
+        output += self._block.__str__()
+        output += ")"
         return output
 
     def convert_to_INI_section(self):
         output = ""
-        for cell in self._sequence:
+        for cell in self._cells:
             output += cell.convert_to_INI_section()
             output += "\n"
         return output
