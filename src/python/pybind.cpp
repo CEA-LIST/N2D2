@@ -202,6 +202,7 @@ void init_PaddingCell_Frame(py::module&);
 void init_PaddingCell_Frame_CUDA(py::module&);
 void init_PaddingCell_Frame_Kernels(py::module&);
 void init_PoolCell(py::module&);
+void init_PoolCell_Spike(py::module&);
 void init_PoolCell_Frame(py::module&);
 void init_PoolCell_Frame_CUDA(py::module&);
 void init_PoolCell_Frame_EXT_CUDA(py::module&);
@@ -415,6 +416,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_PaddingCell_Frame(m);
     init_PaddingCell_Frame_CUDA(m);
     init_PoolCell(m);
+    init_PoolCell_Spike(m);
     init_PoolCell_Frame(m);
     init_PoolCell_Frame_CUDA(m);
     init_PoolCell_Frame_EXT_CUDA(m);

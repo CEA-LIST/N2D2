@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Victor GACOIN
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,31 +19,38 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
 
 #ifdef PYBIND
-#include "Cell/BatchNormCell_Frame_CUDA.hpp"
+#include "Cell/PoolCell_Spike.hpp"
+
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-template<typename T>
-void declare_BatchNormCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("BatchNormCell_Frame_CUDA_" + typeStr);
-    py::class_<BatchNormCell_Frame_CUDA<T>, std::shared_ptr<BatchNormCell_Frame_CUDA<T>>, BatchNormCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
-    .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<T> >());
-    ;
-
+void init_PoolCell_Spike(py::module &m) {
+    py::class_<PoolCell_Spike, std::shared_ptr<PoolCell_Spike>, PoolCell, Cell_Spike> (m, "PoolCell_Spike", py::multiple_inheritance())
+    .def(py::init<
+    Network&, 
+    const DeepNet&,
+    const std::string&,
+    const std::vector<unsigned int>&,
+    unsigned int,
+    const std::vector<unsigned int>&,
+    const std::vector<unsigned int>&,
+    PoolCell::Pooling
+    >(),
+    py::arg("net"),
+    py::arg("deepNet"),
+    py::arg("name"),
+    py::arg("poolDims"),
+    py::arg("nbOutputs"),
+    py::arg("strideDims") = std::vector<unsigned int>(2, 1U),
+    py::arg("paddingDims") = std::vector<unsigned int>(2, 0),
+    py::arg("pooling") = PoolCell::Pooling::Max    
+    );
 }
-
-void init_BatchNormCell_Frame_CUDA(py::module &m) {
-    declare_BatchNormCell_Frame_CUDA<float>(m, "float");
-    declare_BatchNormCell_Frame_CUDA<double>(m, "double");
 }
-}
-#endif
-
 #endif

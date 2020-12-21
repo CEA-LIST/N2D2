@@ -789,9 +789,28 @@ FcCell_Spike_RRAM
 	:members:
 	:inherited-members:
 
-.. testcode::
-   :hide:
+PoolCell_Spike
+~~~~~~~~~~~~~~
 
+.. autoclass:: N2D2.PoolCell_Spike
+	:members:
+	:inherited-members:
+
+
+.. testsetup:: *
+
+   import N2D2
+   path = "/nvme0/DATABASE/MNIST/raw/"
+
+.. testcode::
+	:hide:
+
+	net = N2D2.Network()
+	deepNet = N2D2.DeepNet(net)
+	transform = N2D2.DCTTransformation()
+	database = N2D2.MNIST_IDX_Database()
+	database.load(path)
+	stimuli = N2D2.StimuliProvider(database, [24, 24, 1], 1, False)
 	N2D2.AnchorCell_Frame(deepNet, "name", stimuli, [N2D2.Anchor()], 1)
 	N2D2.AnchorCell_Frame_CUDA(deepNet, "name", stimuli, [N2D2.Anchor()], 1)
 	N2D2.BatchNormCell_Frame_float(deepNet, "name", 10)
@@ -821,6 +840,7 @@ FcCell_Spike_RRAM
 	N2D2.ObjectDetCell_Frame_CUDA(deepNet, "name", stimuli, 1, 1, 1, 1)
 	N2D2.PaddingCell_Frame(deepNet, "name", 10)
 	N2D2.PaddingCell_Frame_CUDA(deepNet, "name", 10)
+	N2D2.PoolCell_Spike(net, deepNet, "name", [0,0], 10)
 	N2D2.PoolCell_Frame_float(deepNet, "name", [1,1], 10)
 	N2D2.PoolCell_Frame_CUDA_float(deepNet, "name", [1,1], 10)
 	# Some times fail beause of out of memory ?
