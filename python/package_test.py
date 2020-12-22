@@ -45,8 +45,12 @@ database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation
 print("Create provider")
 provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
 
+model = n2d2.models.fc_base()
+
+print(model)
+
 print("Create model")
-model = n2d2.deepnet.Sequential(deepnet, n2d2.models.fc_nested(), Model='Frame_CUDA')
+model = n2d2.deepnet.Sequential(deepnet, model, Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.models.fc_one_layer(), Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.models.fc_base(), Model='Frame_CUDA')
 
@@ -60,11 +64,13 @@ print(model)
 print("Add provider")
 model.add_provider(provider)
 
+print("Initialize model")
+model.initialize()
+
 print("Create target")
 tar = n2d2.target.Score('softmax.Target', model.get_output(), provider)
 
-print("Initialize model")
-model.initialize()
+
 
 
 n2d2.utils.convert_to_INI("model_INI", database, provider, model, tar)

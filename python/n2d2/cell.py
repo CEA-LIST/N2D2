@@ -22,14 +22,69 @@ import N2D2
 import n2d2.activation
 import n2d2.solver
 
-
+"""
+Structure that is organised sequentially. 
+"""
 class Block:
     def __init__(self, blocks, Name=None):
         if Name is not None:
             assert isinstance(Name, str)
         self._Name = Name
         assert isinstance(blocks, list)
+
+        self._block_idx = ''
+        self._block_dict = {}
+        self._cells = []
         self._blocks = blocks
+        # Unfold nested network graph
+
+        self._generate_graph(self, self._block_idx)
+
+        for idx, block in enumerate(self._blocks):
+            if idx > 0:
+                block.get_input_cell().add_input(previous.get_output_cell())
+                #print("Adding " + previous.get_output_cell().get_block_idx() + " to " + block.get_input_cell().get_block_idx())
+            previous = block
+
+
+    """Goes recursively through blocks"""
+
+    def _generate_graph(self, block, block_idx):
+
+        #if block_name is not "" and block.get_name() is None:
+        #    block.set_name(block_name)
+
+        #for blk in self._blocks:
+        #    if block.get_name() == blk.get_name():
+        #        raise RuntimeError("Block with name \'" + block.get_name() + "\' already exists")
+
+        #if block.get_name() in self._blocks:
+        #    raise RuntimeError("Block with name \'" + block.get_name() + "\' already exists")
+        #else:
+        #    self._blocks[block.get_name()] = block
+
+        #print(block_idx)
+
+        self._block_dict[block_idx] = block
+        block.set_block_idx(block_idx)
+
+        #if block.get_name() is None:
+        #block.set_name(block.get_block_idx())
+
+        if isinstance(block.get_blocks(), list):
+            if not block_idx == "":
+                block_idx += "."
+            for idx, sub_block in enumerate(block.get_blocks()):
+                self._generate_graph(sub_block, block_idx + str(idx))
+                #if len(self._sequence) > 0:
+                #    sub_block
+        else:
+            self._cells.append(block)
+            # Normally this should not copy, but only add an additional name
+            #if len(self._sequence) > 0:
+            #    block.add_input(self._sequence[-1])
+            #self._sequence.append(block)
+
 
     def get_name(self):
         return self._Name
@@ -37,8 +92,62 @@ class Block:
     def set_name(self, Name):
         self._Name = Name
 
+    def get_block_idx(self):
+        return self._block_idx
+
+    def set_block_idx(self, idx):
+        self._block_idx = idx
+
     def get_blocks(self):
         return self._blocks
+
+    def get_output_cell(self):
+        return self._blocks[-1].get_output_cell()
+
+    def get_input_cell(self):
+        return self._blocks[0].get_input_cell()
+
+    def get_cells(self):
+        return self._cells
+
+
+    def __str__(self):
+        indent_level = [0]
+        output = "n2d2.cell.Block("
+        output += self._generate_str(self, indent_level, [0])
+        output += "\n)"
+        return output
+
+    # TODO: Do without artificial mutable objects
+
+    def _generate_str(self, block, indent_level, block_idx):
+        output = ""
+        if isinstance(block.get_blocks(), list):
+            if indent_level[0] > 0:
+                output += "\n" + (indent_level[0] * "\t") + "(" + str(block.get_block_idx()) + ")"
+                if block.get_name() is not None:
+                    output += " \'" + block.get_name() + "\' "
+                output += ": ["
+            indent_level[0] += 1
+            local_block_idx = [0]
+            for idx, block in enumerate(block.get_blocks()):
+                output += self._generate_str(block, indent_level, local_block_idx)
+                local_block_idx[0] += 1
+            indent_level[0] -= 1
+            if indent_level[0] > 0:
+                output += "\n" + (indent_level[0] * "\t") + "]"
+        else:
+            output += "\n" + (indent_level[0] * "\t") + "(" + str(block.get_block_idx()) + ")"
+            if block.get_name() is not None:
+                output += " \'" + block.get_name() + "\' "
+            output += ": " + block.__str__()
+        return output
+    """
+    def _generate_str(self, block, indent_level, block_idx):
+        output = ""
+        for key, value in self._blocks.items():
+            output += key.count(".")*"\t" + key + " " + str(value) + "\n"
+        return output"""
 
 
 
@@ -53,6 +162,8 @@ class Cell(Block):
         self._Name = Name
         self._blocks = self
 
+        self._inputs = []
+
         self._constructor_parameters = {
             'NbOutputs': NbOutputs,
         }
@@ -62,12 +173,16 @@ class Cell(Block):
         self._cell = None
         self._model_parameters = {}
 
-        self._inputs = []
-
         # Keeps a trace of modified parameters for print function
         self._modified_keys = []
                 
         self._model_key = ""
+
+    def get_output_cell(self):
+        return self
+
+    def get_input_cell(self):
+        return self
 
     def generate_model(self, Model, DataType):
         if self._Name is None:
@@ -150,21 +265,16 @@ class Fc(Cell):
         super().__init__(NbOutputs=NbOutputs, Name=Name)
 
         """Equivalent to N2D2 class generator defaults. 
-           NOTE: These are not necessarily the default values of the constructors!
            The default objects are only abstract n2d2 objects with small memory footprint.
            ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
            validity of **cell_parameters entries. For easier compatibility with INI files, we 
            use the same name convention and parameter names.
         """
-        """self._cell_parameters.update({
-            'ActivationFunction': n2d2.activation.Tanh(),
-            'WeightsSolver': n2d2.solver.SGD(),
-            'BiasSolver': n2d2.solver.SGD(),
-            'WeightsFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
-            'BiasFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
-        })"""
 
-        """NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
+
+        """
+        These are the FcCell parameters.
+        NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
         incoherences, but it increases readability of the library"""
 
         self._cell_parameters.update({
@@ -180,7 +290,6 @@ class Fc(Cell):
             'OutputsRemap': "",
         })
 
-        #TODO: Do this with N2D2 parameters to detect wrong settings
         self.set_cell_parameters(cell_parameters)
 
         self._frame_model_parameters = {
@@ -284,14 +393,14 @@ class Fc(Cell):
 
         
     def __str__(self):
-        output = "FcCell(" + self._model_key + "): "
+        output = "FcCell(" + self._model_key + "), "
         output += super().__str__()
         for key, value in self._frame_model_parameters.items():
             if key in self._modified_keys:
-                output += key + ": " + str(value) + ", "
+                output += key + "=" + str(value) + ", "
         for key, value in self._frame_CUDA_model_parameters.items():
             if key in self._modified_keys:
-                output += key + ": " + str(value) + ", "
+                output += key + "=" + str(value) + ", "
         return output
 
 
@@ -309,8 +418,8 @@ class Softmax(Cell):
         super().__init__(NbOutputs=NbOutputs, Name=Name)
 
         """
-            Equivalent to N2D2 class constructor defaults. 
-            NOTE: These are not necessarily the default values set by the generators!
+            SoftmaxCell parameters.
+            Equivalent to N2D2 class generator defaults. 
             The default objects are only abstract n2d2 objects with small memory footprint.
             ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
             validity of **cell_parameters entries. For easier compatibility with INI files, we 
@@ -334,14 +443,10 @@ class Softmax(Cell):
                                                             self._Name,
                                                             self._constructor_parameters['NbOutputs'],
                                                             self._cell_parameters['WithLoss'],
-                                                            self._cell_parameters['GroupSize'],
-                                                            )
-        # NOTE: There might be a special case for certain Spike models that take different parameters
-
-        # TODO: Initialize model parameters
-
-        # TODO: Saver to initialize this with the actual values in the N2D2 objects?
+                                                            self._cell_parameters['GroupSize'])
+        # NOTE: No model parameters for SoftmaxCell
         self._model_parameters = model_parameters
+
 
     def __str__(self):
         output = "SoftmaxCell(" + self._model_key + "): "

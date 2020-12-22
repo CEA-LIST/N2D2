@@ -53,7 +53,7 @@ def test_graph():
 
 def deepnet_sequential_constructor_test(verbose=False):
 
-    neuron_checks = ['0', '1.0', '2.0.0', '2.0.1', '2.1.0', '2.1.1', '2.1.2', '3', '4']
+    neuron_checks = ['Fc_0', 'Fc_1.0', 'Fc_2.0.0', 'Fc_2.0.1', 'Fc_2.1.0', 'Fc_2.1.1', 'Fc_2.1.2', 'Fc_3', 'Softmax_4']
 
     net = N2D2.Network()
     deepnet = N2D2.DeepNet(net)
@@ -63,7 +63,7 @@ def deepnet_sequential_constructor_test(verbose=False):
     if verbose:
         print(model)
 
-    seq = model.get_sequence()
+    seq = model.get_cells()
 
     for idx, name in enumerate(neuron_checks):
         # Test access by name
