@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -19,17 +19,4 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.misc import *
-import n2d2.utils
-import n2d2.database 
-import n2d2.cell
-import n2d2.provider
-from n2d2.tensor import *
-#import n2d2.transforms 
-import n2d2.deepnet
-import n2d2.solver
-import n2d2.filler
-import n2d2.target
-import n2d2.model
-import n2d2.application
-
+from n2d2.model.example import *

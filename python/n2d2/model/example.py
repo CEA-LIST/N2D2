@@ -43,6 +43,19 @@ def fc_base_named():
     ])
     return net
 
+
+def conv_base():
+    net = n2d2.cell.Block([
+        n2d2.cell.Block([
+            n2d2.cell.Conv(NbOutputs=4, KernelDims=[5, 5]),
+            n2d2.cell.Fc(NbOutputs=10)
+        ]),
+        n2d2.cell.Softmax(NbOutputs=10)
+    ])
+    return net
+
+
+
 def fc_one_layer():
 
     first_block = n2d2.cell.Fc(NbOutputs=10)

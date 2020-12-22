@@ -29,7 +29,7 @@ print(b.dims())
 print(numpy.array(b))
 
 net = N2D2.Network(1)
-deepNet = N2D2.DeepNetGenerator.generate(net, "../models/mnist24_16c4s2_24c5s2_150_10.ini")
+deepNet = N2D2.DeepNetGenerator.generate(net, "../model/mnist24_16c4s2_24c5s2_150_10.ini")
 deepNet.initialize()
 sp = deepNet.getStimuliProvider()
 sp.readBatch(N2D2.Database.Test, 0)

@@ -2,6 +2,7 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -21,6 +22,8 @@
 #ifdef PYBIND
 #include "Cell/ConvCell.hpp"
 
+#include "Solver/Solver.hpp"
+#include "Filler/Filler.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -28,8 +31,26 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_ConvCell(py::module &m) {
-    py::class_<ConvCell, std::shared_ptr<ConvCell>, Cell> (m, "ConvCell", py::multiple_inheritance());
+    py::class_<ConvCell, std::shared_ptr<ConvCell>, Cell> convCell (m, "ConvCell", py::multiple_inheritance());
+
+    py::enum_<ConvCell::WeightsExportFormat>(convCell, "WeightsExportFormat")
+    .value("OCHW", ConvCell::WeightsExportFormat::OCHW)
+    .value("HWCO", ConvCell::WeightsExportFormat::HWCO)
+    .export_values();
+
+     convCell
+    .def("setWeightsSolver", &ConvCell::setWeightsSolver, py::arg("solver"))
+    .def("getWeightsSolver", &ConvCell::getWeightsSolver)
+    .def("setWeightsFiller", &ConvCell::setWeightsFiller, py::arg("filler"))
+    .def("getWeightsFiller", &ConvCell::setWeightsFiller)
+    .def("setBiasSolver", &ConvCell::setBiasSolver, py::arg("solver"))
+    .def("getBiasSolver", &ConvCell::getBiasSolver)
+    .def("setBiasFiller", &ConvCell::setBiasFiller, py::arg("filler"))
+    .def("getBiasFiller", &ConvCell::setBiasFiller)
+    .def("importFreeParameters", &ConvCell::importFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists")=false)
+    .def("exportFreeParameters", &ConvCell::exportFreeParameters, py::arg("fileName"));
 
 }
 }
 #endif
+

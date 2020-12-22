@@ -39,14 +39,14 @@ deepnet = N2D2.DeepNet(net)
 
 N2D2.CudaContext.setDevice(3)
 
-model = n2d2.models.fc_base()
+model = n2d2.model.conv_base()
 
 print(model)
 
 print("Create model")
 model = n2d2.deepnet.Sequential(deepnet, model, Model='Frame_CUDA')
-#model = n2d2.deepnet.Sequential(deepnet, n2d2.models.fc_one_layer(), Model='Frame_CUDA')
-#model = n2d2.deepnet.Sequential(deepnet, n2d2.models.fc_base(), Model='Frame_CUDA')
+#model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_one_layer(), Model='Frame_CUDA')
+#model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_base(), Model='Frame_CUDA')
 
 
 print(model)

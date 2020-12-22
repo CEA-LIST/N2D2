@@ -36,14 +36,12 @@ class Block:
         self._block_dict = {}
         self._cells = []
         self._blocks = blocks
-        # Unfold nested network graph
 
         self._generate_graph(self, self._block_idx)
 
         for idx, block in enumerate(self._blocks):
             if idx > 0:
                 block.get_input_cell().add_input(previous.get_output_cell())
-                #print("Adding " + previous.get_output_cell().get_block_idx() + " to " + block.get_input_cell().get_block_idx())
             previous = block
 
 
@@ -51,40 +49,16 @@ class Block:
 
     def _generate_graph(self, block, block_idx):
 
-        #if block_name is not "" and block.get_name() is None:
-        #    block.set_name(block_name)
-
-        #for blk in self._blocks:
-        #    if block.get_name() == blk.get_name():
-        #        raise RuntimeError("Block with name \'" + block.get_name() + "\' already exists")
-
-        #if block.get_name() in self._blocks:
-        #    raise RuntimeError("Block with name \'" + block.get_name() + "\' already exists")
-        #else:
-        #    self._blocks[block.get_name()] = block
-
-        #print(block_idx)
-
         self._block_dict[block_idx] = block
         block.set_block_idx(block_idx)
-
-        #if block.get_name() is None:
-        #block.set_name(block.get_block_idx())
 
         if isinstance(block.get_blocks(), list):
             if not block_idx == "":
                 block_idx += "."
             for idx, sub_block in enumerate(block.get_blocks()):
                 self._generate_graph(sub_block, block_idx + str(idx))
-                #if len(self._sequence) > 0:
-                #    sub_block
         else:
             self._cells.append(block)
-            # Normally this should not copy, but only add an additional name
-            #if len(self._sequence) > 0:
-            #    block.add_input(self._sequence[-1])
-            #self._sequence.append(block)
-
 
     def get_name(self):
         return self._Name
@@ -142,12 +116,6 @@ class Block:
                 output += " \'" + block.get_name() + "\' "
             output += ": " + block.__str__()
         return output
-    """
-    def _generate_str(self, block, indent_level, block_idx):
-        output = ""
-        for key, value in self._blocks.items():
-            output += key.count(".")*"\t" + key + " " + str(value) + "\n"
-        return output"""
 
 
 
@@ -167,6 +135,8 @@ class Cell(Block):
         self._constructor_parameters = {
             'NbOutputs': NbOutputs,
         }
+
+        self._optional_constructor_parameters = {}
 
         self._cell_parameters = {}
         
@@ -215,6 +185,9 @@ class Cell(Block):
         output = ""
         for key, value in self._constructor_parameters.items():
             output += key + ": " + str(value) + ", "
+        for key, value in self._optional_constructor_parameters.items():
+            if key in self._modified_keys:
+                output += key + ": " + str(value) + ", "
         for key, value in self._cell_parameters.items():
             if key in self._modified_keys:
                 output += key + ": " + str(value) + ", "
@@ -319,14 +292,9 @@ class Fc(Cell):
 
         super().generate_model(Model, DataType)
 
-        """TODO: This is  necessary at the moment because the default argument in the binding constructor
-        cannot be set. """
-        self._cell_parameters['ActivationFunction'].generate_model(Model, DataType)
-
         self._cell = self._cell_generators[self._model_key](deepnet,
                                                             self._Name,
-                                                            self._constructor_parameters['NbOutputs'],
-                                                            self._cell_parameters['ActivationFunction'].N2D2())
+                                                            self._constructor_parameters['NbOutputs'])
 
         """Set and initialize here all complex cell members"""
         for key, value in self._cell_parameters.items():
@@ -402,6 +370,190 @@ class Fc(Cell):
             if key in self._modified_keys:
                 output += key + "=" + str(value) + ", "
         return output
+
+
+class Conv(Cell):
+    _Type = 'Conv'
+
+    _cell_generators = {
+        'Frame<float>': N2D2.ConvCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
+    }
+
+    """
+    _weightsExportFormat = {
+        'OC': N2D2.ConvCell.WeightsExportFormat.OC,
+        'CO': N2D2.Convell.WeightsExportFormat.CO
+    }
+    """
+
+    def __init__(self,
+                 NbOutputs,
+                 KernelDims,
+                 SubSampleDims=[1, 1],
+                 StrideDims=[1, 1],
+                 PaddingDims=[0, 0],
+                 DilationDims=[1, 1],
+                 Name=None,
+                 **cell_parameters):
+        super().__init__(NbOutputs=NbOutputs, Name=Name)
+
+        """Equivalent to N2D2 class generator defaults. 
+           The default objects are only abstract n2d2 objects with small memory footprint.
+           ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
+           validity of **cell_parameters entries. For easier compatibility with INI files, we 
+           use the same name convention and parameter names.
+        """
+
+        """
+        These are the ConvCell parameters.
+        NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
+        incoherences, but it increases readability of the library. It also allows to check that no invalid
+        parameters are passed
+        """
+
+        """
+        NOTE: For the moment only list definition of KernelDims, SubSampleDims, StrideDims, PaddingDims, DilationDims
+        allowed (in contrast to ConvCellGenerator in N2D2)
+        """
+        self._constructor_parameters.update({
+            'KernelDims': KernelDims,
+        })
+
+        self._optional_constructor_parameters.update({
+            'SubSampleDims': [1, 1],
+            'StrideDims': [1, 1],
+            'PaddingDims': [0, 0],
+            'DilationDims': [1, 1],
+        })
+
+        if not SubSampleDims == self._optional_constructor_parameters['SubSampleDims']:
+            self._optional_constructor_parameters['SubSampleDims'] = SubSampleDims
+            self._modified_keys.append('SubSampleDims')
+        if not StrideDims == self._optional_constructor_parameters['StrideDims']:
+            self._optional_constructor_parameters['StrideDims'] = StrideDims
+            self._modified_keys.append('StrideDims')
+        if not PaddingDims == self._optional_constructor_parameters['PaddingDims']:
+            self._optional_constructor_parameters['PaddingDims'] = PaddingDims
+            self._modified_keys.append('PaddingDims')
+        if not DilationDims == self._optional_constructor_parameters['DilationDims']:
+            self._optional_constructor_parameters['DilationDims'] = DilationDims
+            self._modified_keys.append('DilationDims')
+
+        self._cell_parameters.update({
+            'ActivationFunction': n2d2.activation.Tanh(),
+            'WeightsSolver': n2d2.solver.SGD(),
+            'BiasSolver': n2d2.solver.SGD(),
+            'WeightsFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
+            'BiasFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
+            'NoBias': False,
+            'BackPropagate': True,
+            'WeightsExportFormat': 'OCHW',
+            'WeightsExportFlip': False,
+            'OutputsRemap': "",
+        })
+
+        self.set_cell_parameters(cell_parameters)
+
+        self._frame_model_parameters = {}
+
+        self._frame_CUDA_model_parameters = {}
+
+    # TODO: Add method that initialized based on INI file section
+
+    """
+    # Optional for the moment. Has to assure coherence between n2d2 and N2D2 values
+    def set_model_parameter(self, key, value):
+        self._model_parameters[key] = value
+        #self.cell.setParameter() # N2D2 code
+    """
+
+    # TODO: There is a lot of duplicate code between fc cell and conv cell. Implement additional parent class?
+    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
+
+        super().generate_model(Model, DataType)
+
+        self._cell = self._cell_generators[self._model_key](deepnet,
+                                                            self._Name,
+                                                            self._constructor_parameters['KernelDims'],
+                                                            self._constructor_parameters['NbOutputs'],
+                                                            self._optional_constructor_parameters['SubSampleDims'],
+                                                            self._optional_constructor_parameters['StrideDims'],
+                                                            self._optional_constructor_parameters['PaddingDims'],
+                                                            self._optional_constructor_parameters['DilationDims'])
+
+        """Set and initialize here all complex cell members"""
+        for key, value in self._cell_parameters.items():
+            if key is 'ActivationFunction':
+                self._cell_parameters['ActivationFunction'].generate_model(Model, DataType)
+                self._cell.setActivation(self._cell_parameters['ActivationFunction'].N2D2())
+            elif key is 'WeightsSolver':
+                self._cell_parameters['WeightsSolver'].generate_model(Model, DataType)
+                self._cell.setWeightsSolver(self._cell_parameters['WeightsSolver'].N2D2())
+            elif key is 'BiasSolver':
+                self._cell_parameters['BiasSolver'].generate_model(Model, DataType)
+                self._cell.setBiasSolver(self._cell_parameters['BiasSolver'].N2D2())
+            elif key is 'WeightsFiller':
+                self._cell_parameters['WeightsFiller'].generate_model(DataType)
+                self._cell.setWeightsFiller(self._cell_parameters['WeightsFiller'].N2D2())
+            elif key is 'BiasFiller':
+                self._cell_parameters['BiasFiller'].generate_model(DataType)
+                self._cell.setBiasFiller(self._cell_parameters['BiasFiller'].N2D2())
+            # Not necessary when parsing strings as parameters
+            # elif key is 'WeightsExportFormat':
+            #    self._cell_parameters['WeightsExportFormat'] = self._weightsExportFormat[value]
+            #    self._cell.setParameter(key, self._cell_parameters['WeightsExportFormat'])
+            else:
+                self._set_N2D2_parameter(key, value)
+
+        # print(model_parameters)
+
+        if Model is 'Frame':
+            for key in model_parameters:
+                if key not in self._frame_model_parameters:
+                    raise n2d2.UndefinedParameterError(key, self)
+
+            for key, value in self._frame_model_parameters.items():
+                if key in model_parameters:
+                    self._frame_model_parameters[key] = model_parameters[key]
+                    self._modified_keys.append(key)
+                # Set even if default did not change
+                self._set_N2D2_parameter(key, self._frame_model_parameters[key])
+
+        if Model is 'Frame_CUDA':
+            for key in model_parameters:
+                if key not in self._frame_CUDA_model_parameters:
+                    raise n2d2.UndefinedParameterError(key, self)
+
+            for key, value in self._frame_CUDA_model_parameters.items():
+                if key in model_parameters:
+                    self._frame_CUDA_model_parameters[key] = model_parameters[key]
+                    self._modified_keys.append(key)
+                # Set even if default did not change
+                self._set_N2D2_parameter(key, self._frame_CUDA_model_parameters[key])
+
+        # self._model_parameters.update(model_parameters)
+
+    # Using the string parser as in the INI files
+    # NOTE: Be careful for floats (like in INI)
+    def _set_N2D2_parameter(self, key, value):
+        # print(key + " " + str(value))
+        if isinstance(value, bool):
+            self._cell.setParameter(key, str(int(value)))
+        else:
+            self._cell.setParameter(key, str(value))
+
+    def __str__(self):
+        output = "ConvCell(" + self._model_key + "), "
+        output += super().__str__()
+        for key, value in self._frame_model_parameters.items():
+            if key in self._modified_keys:
+                output += key + "=" + str(value) + ", "
+        for key, value in self._frame_CUDA_model_parameters.items():
+            if key in self._modified_keys:
+                output += key + "=" + str(value) + ", "
+        return output
+
 
 
 class Softmax(Cell):
