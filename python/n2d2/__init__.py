@@ -25,7 +25,7 @@ import n2d2.database
 import n2d2.cell
 import n2d2.provider
 from n2d2.tensor import *
-#import n2d2.transforms 
+import n2d2.transform
 import n2d2.deepnet
 import n2d2.solver
 import n2d2.filler

@@ -52,7 +52,6 @@ if __name__ == "__main__":
     # ct.push_back(trans)
     # stimuli.addTransformation(ct, database.StimuliSetMask(0))
 
-    # TODO : need an implicit transformation => CompositeTransformation, need to change this
     stimuli.addTransformation(N2D2.PadCropTransformation(24, 24), database.StimuliSetMask(0))
     stimuli.addOnTheFlyTransformation(trans, database.StimuliSetMask(0))
 

@@ -1,5 +1,4 @@
-import numpy
-import pylab
+# import pylab
 import N2D2
 
 a = N2D2.Tensor_float([1, 2, 3])

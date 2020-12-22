@@ -56,12 +56,20 @@ print(model)
 
 
 
-
 print("Create database")
 database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
 
 print("Create provider")
 provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
+
+print("Create transformation")
+trans = n2d2.transform.Transformation([
+    n2d2.transform.DistortionTransformation(ElasticGaussianSize = 21, ElasticSigma = 6, ElasticScaling = 36, Scaling = 10),
+    n2d2.transform.DistortionTransformation()
+])
+print("Add transformation")
+provider.addOnTheFlyTransformation(trans)
+# provider.addTansformation(trans)
 
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model)

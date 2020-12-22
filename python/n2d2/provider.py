@@ -73,6 +73,12 @@ class DataProvider():
     def read_batch(self, partition, idx):
         return self._provider.readBatch(set=self._constructor_parameters['Database'].StimuliSets[partition], startIndex=idx)
 
+    def addTransformation(self, transformation):
+        self._provider.addTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
+
+    def addOnTheFlyTransformation(self, transformation):
+        self._provider.addOnTheFlyTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
+
     def N2D2(self):
         if self._provider is None:
             raise n2d2.UndefinedModelError("N2D2 solver member has not been created")

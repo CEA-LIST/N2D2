@@ -53,3 +53,28 @@ class PadCropTransformation():
     def __call__(self, x):
         return self.trans.apply(x)
 """
+class Transformation():
+    def __init__(self, transformations):
+        if not isinstance(transformations, list):
+            raise TypeError("Wanted ", type(list), " got ", type(transformations))
+        if not transformations:
+            raise ValueError("Parameter transformations must not be empty")
+        self._transformation = N2D2.CompositeTransformation(transformations[0].N2D2())
+        for transformation in transformations[1:]:
+            self._transformation.push_back(transformation.N2D2())
+        
+    def N2D2(self):
+        return self._transformation
+
+class PadCropTransformation(Transformation):
+    def __init__(self, dimX, dimY):
+        self._transformation = N2D2.PadCropTransformation(dimX, dimY)
+
+class DistortionTransformation(Transformation):
+    def __init__(self, ElasticGaussianSize=0, ElasticSigma=0, ElasticScaling=0,Scaling=0, Rotation=0):
+        self._transformation = N2D2.DistortionTransformation()
+        self._transformation.setParameter("ElasticGaussianSize", str(ElasticGaussianSize))
+        self._transformation.setParameter("ElasticSigma", str(ElasticSigma))
+        self._transformation.setParameter("ElasticScaling", str(ElasticScaling))
+        self._transformation.setParameter("Scaling", str(Scaling))
+        self._transformation.setParameter("Rotation", str(Rotation))
