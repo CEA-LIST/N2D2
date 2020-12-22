@@ -76,6 +76,10 @@ void init(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransform
 
 void init_CompositeTransformation(py::module &m) {
     py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> ct(m, "CompositeTransformation", py::multiple_inheritance());
+    
+    ct.def(py::init<const CompositeTransformation&>(), py::arg("transformation"))
+    .def("push_back", (void (CompositeTransformation::*)(const CompositeTransformation&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.");
+    
     init<DistortionTransformation>(ct);
     init<PadCropTransformation>(ct);
     init<AffineTransformation>(ct);
