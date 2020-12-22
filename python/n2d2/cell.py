@@ -390,10 +390,10 @@ class Conv(Cell):
     def __init__(self,
                  NbOutputs,
                  KernelDims,
-                 SubSampleDims=[1, 1],
-                 StrideDims=[1, 1],
-                 PaddingDims=[0, 0],
-                 DilationDims=[1, 1],
+                 SubSampleDims=None,
+                 StrideDims=None,
+                 PaddingDims=None,
+                 DilationDims=None,
                  Name=None,
                  **cell_parameters):
         super().__init__(NbOutputs=NbOutputs, Name=Name)
@@ -427,16 +427,16 @@ class Conv(Cell):
             'DilationDims': [1, 1],
         })
 
-        if not SubSampleDims == self._optional_constructor_parameters['SubSampleDims']:
+        if SubSampleDims is not None:
             self._optional_constructor_parameters['SubSampleDims'] = SubSampleDims
             self._modified_keys.append('SubSampleDims')
-        if not StrideDims == self._optional_constructor_parameters['StrideDims']:
+        if StrideDims is not None:
             self._optional_constructor_parameters['StrideDims'] = StrideDims
             self._modified_keys.append('StrideDims')
-        if not PaddingDims == self._optional_constructor_parameters['PaddingDims']:
+        if PaddingDims is not None:
             self._optional_constructor_parameters['PaddingDims'] = PaddingDims
             self._modified_keys.append('PaddingDims')
-        if not DilationDims == self._optional_constructor_parameters['DilationDims']:
+        if DilationDims is not None:
             self._optional_constructor_parameters['DilationDims'] = DilationDims
             self._modified_keys.append('DilationDims')
 
