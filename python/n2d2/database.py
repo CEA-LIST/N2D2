@@ -53,6 +53,9 @@ class Database():
             raise n2d2.UndefinedModelError("N2D2 database member has not been created")
         return self._database
 
+    def load(self, dataPath, **kwargs):
+        self._database.load(dataPath=dataPath, **kwargs)
+
 
 class MNIST(Database):
 
@@ -71,9 +74,7 @@ class MNIST(Database):
 
         self._database.load(self._datapath)
 
-    # TODO: Can this be moved to parent class?
-    def load(self, dataPath, **kwargs):
-        self._database.load(dataPath=dataPath, **kwargs)
+    
 
     def convert_to_INI_section(self):
         output = "[database]\n"
