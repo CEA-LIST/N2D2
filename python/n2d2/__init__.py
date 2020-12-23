@@ -33,3 +33,9 @@ import n2d2.target
 import n2d2.model
 import n2d2.application
 
+"""
+Packages that exist, but should not be used directly in API
+"""
+#import n2d2.parameterizable
+
+
