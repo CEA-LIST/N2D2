@@ -62,6 +62,17 @@ database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation
 print("Create provider")
 provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
 
+# class voidTransform(N2D2.CustomTransformation):
+#     def __init__(self):
+#         super().__init__()
+
+#     def apply():
+#         pass
+#         # TODO
+
+# v = voidTransform()
+# c = n2d2.transform.CustomTransformation(v)
+
 print("Create transformation")
 trans = n2d2.transform.Composite([
     n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10),

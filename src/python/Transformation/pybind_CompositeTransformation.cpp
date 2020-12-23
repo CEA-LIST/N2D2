@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/DistortionTransformation.hpp"
 #include "Transformation/Transformation.hpp"
@@ -53,7 +51,7 @@
 #include "Transformation/TrimTransformation.hpp"
 #include "Transformation/FilterTransformation.hpp"
 #include "Transformation/FlipTransformation.hpp"
-
+#include "Transformation/CustomTransformation.hpp"
 
 
 
@@ -110,8 +108,8 @@ void init_CompositeTransformation(py::module &m) {
     // init<TrimTransformation>(ct);
     init<FilterTransformation>(ct);
 
-}
-}
-#endif
+    init<CustomTransformation>(ct);
 
+}
+}
 #endif

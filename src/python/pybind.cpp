@@ -127,6 +127,7 @@ void init_SliceExtractionTransformation(py::module&);
 void init_ThresholdTransformation(py::module&);
 // void init_TrimTransformation(py::module &m);
 void init_WallisFilterTransformation(py::module&);
+void init_CustomTransformation(py::module&);
 void init_CompositeTransformation(py::module &);
 
 // Solver
@@ -344,6 +345,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_ThresholdTransformation(m);
     init_WallisFilterTransformation(m);
     // init_TrimTransformation(m);
+    init_CustomTransformation(m);
     init_CompositeTransformation(m);
 
     // Sovler
