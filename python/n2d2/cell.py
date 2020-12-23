@@ -200,6 +200,16 @@ class Cell(Block):
         else:
             raise n2d2.UndefinedModelError("Abstract Cell has no type")
 
+        # Using the string parser as in the INI files
+        # NOTE: Be careful for floats (like in INI)
+
+    def _set_N2D2_parameter(self, key, value):
+        # print(key + " " + str(value))
+        if isinstance(value, bool):
+            self._cell.setParameter(key, str(int(value)))
+        else:
+            self._cell.setParameter(key, str(value))
+
     def convert_to_INI_section(self):
         output = ""
         """Possible to create section without name"""
@@ -350,15 +360,6 @@ class Fc(Cell):
 
         #self._model_parameters.update(model_parameters)
 
-    # Using the string parser as in the INI files
-    # NOTE: Be careful for floats (like in INI)
-    def _set_N2D2_parameter(self, key, value):
-        #print(key + " " + str(value))
-        if isinstance(value, bool):
-            self._cell.setParameter(key, str(int(value)))
-        else:
-            self._cell.setParameter(key, str(value))
-
         
     def __str__(self):
         output = "FcCell(" + self._model_key + "), "
@@ -382,8 +383,8 @@ class Conv(Cell):
 
     """
     _weightsExportFormat = {
-        'OC': N2D2.ConvCell.WeightsExportFormat.OC,
-        'CO': N2D2.Convell.WeightsExportFormat.CO
+        'OCHW': N2D2.ConvCell.WeightsExportFormat.OCHW,
+        'HWCO': N2D2.Convell.WeightsExportFormat.HWCO
     }
     """
 
@@ -534,14 +535,6 @@ class Conv(Cell):
 
         # self._model_parameters.update(model_parameters)
 
-    # Using the string parser as in the INI files
-    # NOTE: Be careful for floats (like in INI)
-    def _set_N2D2_parameter(self, key, value):
-        # print(key + " " + str(value))
-        if isinstance(value, bool):
-            self._cell.setParameter(key, str(int(value)))
-        else:
-            self._cell.setParameter(key, str(value))
 
     def __str__(self):
         output = "ConvCell(" + self._model_key + "), "
@@ -554,6 +547,143 @@ class Conv(Cell):
                 output += key + "=" + str(value) + ", "
         return output
 
+
+class ElemWise(Cell):
+    _Type = 'ElemWise'
+
+    _cell_generators = {
+        'Frame': N2D2.ElemWiseCell_Frame,
+        'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
+    }
+
+
+    _operation= {
+        'Sum': N2D2.ElemWiseCell.Operation.Sum,
+        'AbsSum': N2D2.ElemWiseCell.Operation.AbsSum,
+        'EuclideanSum': N2D2.ElemWiseCell.Operation.EuclideanSum,
+        'Prod': N2D2.ElemWiseCell.Operation.Prod,
+        'Max': N2D2.ElemWiseCell.Operation.Max,
+    }
+
+
+    def __init__(self, NbOutputs, Operation=None, Weights=None, Shifts=None, Name=None, **cell_parameters):
+        super().__init__(NbOutputs=NbOutputs, Name=Name)
+
+        """Equivalent to N2D2 class generator defaults. 
+           The default objects are only abstract n2d2 objects with small memory footprint.
+           ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
+           validity of **cell_parameters entries. For easier compatibility with INI files, we 
+           use the same name convention and parameter names.
+        """
+
+        """
+        These are the FcCell parameters.
+        NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
+        incoherences, but it increases readability of the library"""
+
+        self._optional_constructor_parameters.update({
+            'Operation': self._operation['Sum'],
+            'Weights': [],
+            'Shifts': [],
+        })
+
+        if Operation is not None:
+            self._optional_constructor_parameters['Operation'] = Operation
+            self._modified_keys.append('Operation')
+        if Weights is not None:
+            self._optional_constructor_parameters['Weights'] = Weights
+            self._modified_keys.append('Weights')
+        if Shifts is not None:
+            self._optional_constructor_parameters['Shifts'] = Shifts
+            self._modified_keys.append('Shifts')
+
+        # TODO: What is the default value in N2D2?
+        self._cell_parameters.update({
+            'ActivationFunction': None
+        })
+
+        self.set_cell_parameters(cell_parameters)
+
+        self._frame_model_parameters = {}
+
+        self._frame_CUDA_model_parameters = {}
+
+    # TODO: Add method that initialized based on INI file section
+    """
+    The n2d2 FcCell type could this way serve as a wrapper for both the FcCell constructor and the
+    #FcCellGenerator bindings. 
+    """
+    """
+    def __init__(self, file_INI):
+        self._cell = N2D2.FcCellGenerator(file=file_INI)
+    """
+
+    """
+    # Optional for the moment. Has to assure coherence between n2d2 and N2D2 values
+    def set_model_parameter(self, key, value):
+        self._model_parameters[key] = value
+        #self.cell.setParameter() # N2D2 code
+    """
+
+    def generate_model(self, deepnet, Model='Frame', DataType=None, **model_parameters):
+
+        super().generate_model(Model, DataType)
+
+        # ElemWise cell has no DataType
+        self._cell = self._cell_generators[Model](deepnet,
+                                                self._Name,
+                                                self._constructor_parameters['NbOutputs'],
+                                                self._optional_constructor_parameters['Operation'],
+                                                self._optional_constructor_parameters['Weights'],
+                                                self._optional_constructor_parameters['Shifts'])
+
+        """Set and initialize here all complex cell members"""
+        for key, value in self._cell_parameters.items():
+            if key is 'ActivationFunction' and self._cell_parameters['ActivationFunction'] is not None:
+                self._cell_parameters['ActivationFunction'].generate_model(Model, DataType)
+                self._cell.setActivation(self._cell_parameters['ActivationFunction'].N2D2())
+            else:
+                self._set_N2D2_parameter(key, value)
+
+        # print(model_parameters)
+
+        # NOTE: ElemWiseCell currently has no model parameters
+        if Model is 'Frame':
+            for key in model_parameters:
+                if key not in self._frame_model_parameters:
+                    raise n2d2.UndefinedParameterError(key, self)
+
+            for key, value in self._frame_model_parameters.items():
+                if key in model_parameters:
+                    self._frame_model_parameters[key] = model_parameters[key]
+                    self._modified_keys.append(key)
+                # Set even if default did not change
+                self._set_N2D2_parameter(key, self._frame_model_parameters[key])
+
+        if Model is 'Frame_CUDA':
+            for key in model_parameters:
+                if key not in self._frame_CUDA_model_parameters:
+                    raise n2d2.UndefinedParameterError(key, self)
+
+            for key, value in self._frame_CUDA_model_parameters.items():
+                if key in model_parameters:
+                    self._frame_CUDA_model_parameters[key] = model_parameters[key]
+                    self._modified_keys.append(key)
+                # Set even if default did not change
+                self._set_N2D2_parameter(key, self._frame_CUDA_model_parameters[key])
+
+        # self._model_parameters.update(model_parameters)
+
+    def __str__(self):
+        output = "ElemWiseCell(" + self._model_key + "), "
+        output += super().__str__()
+        for key, value in self._frame_model_parameters.items():
+            if key in self._modified_keys:
+                output += key + "=" + str(value) + ", "
+        for key, value in self._frame_CUDA_model_parameters.items():
+            if key in self._modified_keys:
+                output += key + "=" + str(value) + ", "
+        return output
 
 
 class Softmax(Cell):

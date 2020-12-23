@@ -63,16 +63,16 @@ print("Create provider")
 provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
 
 print("Create transformation")
-trans = n2d2.transform.Transformation([
-    n2d2.transform.DistortionTransformation(ElasticGaussianSize = 21, ElasticSigma = 6, ElasticScaling = 36, Scaling = 10),
-    n2d2.transform.DistortionTransformation(),
-    n2d2.transform.Transformation([
-        n2d2.transform.DistortionTransformation()
+trans = n2d2.transform.Composite([
+    n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10),
+    n2d2.transform.Distortion(),
+    n2d2.transform.Composite([
+        n2d2.transform.Distortion()
     ])
 ])
 print("Add transformation")
-provider.addOnTheFlyTransformation(trans)
-# provider.addTansformation(trans)
+provider.add_on_the_fly_transformation(trans)
+# provider.add_transformation(trans)
 
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model)

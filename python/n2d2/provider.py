@@ -73,10 +73,10 @@ class DataProvider():
     def read_batch(self, partition, idx):
         return self._provider.readBatch(set=self._constructor_parameters['Database'].StimuliSets[partition], startIndex=idx)
 
-    def addTransformation(self, transformation):
+    def add_transformation(self, transformation):
         self._provider.addTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
 
-    def addOnTheFlyTransformation(self, transformation):
+    def add_on_the_fly_transformation(self, transformation):
         self._provider.addOnTheFlyTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
 
     def N2D2(self):

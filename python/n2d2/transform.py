@@ -20,7 +20,7 @@
 """
 
 import N2D2
-
+import n2d2
 
 """
 For the tranformations, it is relatively important to be able to write custom 
@@ -53,28 +53,75 @@ class PadCropTransformation():
     def __call__(self, x):
         return self.trans.apply(x)
 """
-class Transformation():
+class Transformation:
+    def __init__(self):
+        self._trans_parameters = {}
+        self._modified_keys = []
+        self._transformation = None
+
+    def _set_parameters(self, parameters):
+        for key, value in parameters.items():
+            if key in self._trans_parameters:
+                self._trans_parameters[key] = value
+                self._modified_keys.append(key)
+            else:
+                raise n2d2.UndefinedParameterError(key, self)
+
+    def _set_N2D2_parameters(self, parameters):
+        for key, value in parameters.items():
+            if isinstance(value, bool):
+                self._transformation.setParameter(key, str(int(value)))
+            else:
+                self._transformation.setParameter(key, str(value))
+
+    def N2D2(self):
+        if self._transformation is None:
+            raise n2d2.UndefinedModelError("N2D2 transformation member has not been created")
+        return self._transformation
+
+
+class Composite(Transformation):
     def __init__(self, transformations):
+        # NOTE: At the moment superfluous in this class
+        super().__init__()
+
         if not isinstance(transformations, list):
             raise TypeError("Wanted ", type(list), " got ", type(transformations))
+        # TODO: This cannot be empty anyways since compulsory argument?
         if not transformations:
             raise ValueError("Parameter transformations must not be empty")
         self._transformation = N2D2.CompositeTransformation(transformations[0].N2D2())
         for transformation in transformations[1:]:
+            print(transformation.N2D2())
             self._transformation.push_back(transformation.N2D2())
-        
-    def N2D2(self):
-        return self._transformation
 
-class PadCropTransformation(Transformation):
-    def __init__(self, dimX, dimY):
-        self._transformation = N2D2.PadCropTransformation(dimX, dimY)
 
-class DistortionTransformation(Transformation):
-    def __init__(self, ElasticGaussianSize=0, ElasticSigma=0, ElasticScaling=0,Scaling=0, Rotation=0):
+class PadCrop(Transformation):
+    # INI file parameters have same upper case name convention
+    def __init__(self, Width, Height):
+        super().__init__()
+
+        self._trans_parameters = {
+            'Width': Width,
+            'Height': Height,
+        }
+
+        self._transformation = N2D2.PadCropTransformation(self._trans_parameters['Width'],
+                                                          self._trans_parameters['Height'])
+
+
+class Distortion(Transformation):
+    def __init__(self, **trans_parameters):
+        super().__init__()
+
+        self._trans_parameters = {
+            'ElasticGaussianSize': 0,
+            'ElasticSigma': 0,
+            'ElasticScaling': 0,
+            'Scaling': 0,
+            'Rotation': 0
+        }
+
+        self._set_parameters(trans_parameters)
         self._transformation = N2D2.DistortionTransformation()
-        self._transformation.setParameter("ElasticGaussianSize", str(ElasticGaussianSize))
-        self._transformation.setParameter("ElasticSigma", str(ElasticSigma))
-        self._transformation.setParameter("ElasticScaling", str(ElasticScaling))
-        self._transformation.setParameter("Scaling", str(Scaling))
-        self._transformation.setParameter("Rotation", str(Rotation))
+        self._set_N2D2_parameters(self._trans_parameters)
