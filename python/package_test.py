@@ -31,15 +31,13 @@ batch_size = 128
 nb_epochs = 10
 avg_window = int(10000/batch_size)
 
-print(avg_window)
-
 #N2D2.mtSeed(1)
 net = N2D2.Network(1)
 deepnet = N2D2.DeepNet(net)
 
 N2D2.CudaContext.setDevice(3)
 
-model = n2d2.model.conv_base()
+model = n2d2.model.fc_base_named()
 
 print(model)
 
@@ -62,12 +60,16 @@ database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation
 print("Create provider")
 provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
 
+
+print(n2d2.transform.PadCrop(Width=28, Height=28))
+print(n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10))
+
 print("Create transformation")
 trans = n2d2.transform.Composite([
     n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10),
     n2d2.transform.Distortion(),
     n2d2.transform.Composite([
-        n2d2.transform.Distortion()
+        n2d2.transform.PadCrop(Width=28, Height=28)
     ])
 ])
 print("Add transformation")

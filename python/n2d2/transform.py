@@ -54,7 +54,9 @@ class PadCropTransformation():
         return self.trans.apply(x)
 """
 class Transformation:
+
     def __init__(self):
+        self._constructor_parameters = {}
         self._trans_parameters = {}
         self._modified_keys = []
         self._transformation = None
@@ -71,6 +73,11 @@ class Transformation:
         for key, value in parameters.items():
             if isinstance(value, bool):
                 self._transformation.setParameter(key, str(int(value)))
+            elif isinstance(value, list):
+                list_string = ""
+                for elem in value:
+                    list_string += str(elem) + " "
+                self._transformation.setParameter(key, list_string)
             else:
                 self._transformation.setParameter(key, str(value))
 
@@ -79,8 +86,22 @@ class Transformation:
             raise n2d2.UndefinedModelError("N2D2 transformation member has not been created")
         return self._transformation
 
+    def __str__(self):
+        output = self._Type + "Transformation("
+        for key, value in self._constructor_parameters.items():
+            output += key + "=" + str(value) + ", "
+        for key, value in self._trans_parameters.items():
+            if key in self._modified_keys:
+                output += key + "=" + str(value) + ", "
+        output = output[:len(output)-2]
+        output += ")"
+        return output
+
 
 class Composite(Transformation):
+
+    _Type = "Composite"
+
     def __init__(self, transformations):
         # NOTE: At the moment superfluous in this class
         super().__init__()
@@ -89,37 +110,63 @@ class Composite(Transformation):
             raise TypeError("Wanted ", type(list), " got ", type(transformations))
         # TODO: This cannot be empty anyways since compulsory argument?
         if not transformations:
-            raise ValueError("Parameter transformations must not be empty")
+            raise ValueError("Got empty list as input. List must contain at least one element")
         self._transformation = N2D2.CompositeTransformation(transformations[0].N2D2())
         for transformation in transformations[1:]:
-            print(transformation.N2D2())
             self._transformation.push_back(transformation.N2D2())
 
 
 class PadCrop(Transformation):
+
+    _Type = "PadCrop"
+
+    """
+    # Currently not necessary since configured with N2D2.set_Parameter(string)
+    _border_type = {
+        "ConstantBorder", N2D2.PadCropTransformation.BorderType.ConstantBorder,
+        "ReplicateBorder", N2D2.PadCropTransformation.BorderType.ReplicateBorder,
+        "ReflectBorder", N2D2.PadCropTransformation.BorderType.ReflectBorder,
+        "WrapBorder", N2D2.PadCropTransformation.BorderType.WrapBorder,
+        "MinusOneReflectBorder", N2D2.PadCropTransformation.BorderType.MinusOneReflectBorder,
+        "MeanBorder", N2D2.PadCropTransformation.BorderType.MeanBorder
+    }
+    """
+
     # INI file parameters have same upper case name convention
-    def __init__(self, Width, Height):
+    def __init__(self, Width, Height, **trans_parameters):
         super().__init__()
 
-        self._trans_parameters = {
+        self._constructor_parameters = {
             'Width': Width,
             'Height': Height,
         }
 
-        self._transformation = N2D2.PadCropTransformation(self._trans_parameters['Width'],
-                                                          self._trans_parameters['Height'])
+        self._trans_parameters = {
+            'AdditiveWH': False,
+            'BorderType': 'MinusOneReflectBorder',
+            'BorderValue': []
+        }
+
+        self._set_parameters(trans_parameters)
+        self._transformation = N2D2.PadCropTransformation(self._constructor_parameters['Width'],
+                                                          self._constructor_parameters['Height'])
+        self._set_N2D2_parameters(self._trans_parameters)
 
 
 class Distortion(Transformation):
+
+    _Type = "Distortion"
+
     def __init__(self, **trans_parameters):
         super().__init__()
 
         self._trans_parameters = {
-            'ElasticGaussianSize': 0,
-            'ElasticSigma': 0,
-            'ElasticScaling': 0,
-            'Scaling': 0,
-            'Rotation': 0
+            'ElasticGaussianSize': 15,
+            'ElasticSigma': 6.0,
+            'ElasticScaling': 0.0,
+            'Scaling': 0.0,
+            'Rotation': 0.0,
+            'IgnoreMissingData': False
         }
 
         self._set_parameters(trans_parameters)

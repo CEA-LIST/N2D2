@@ -31,6 +31,8 @@ class Block:
             assert isinstance(Name, str)
         self._Name = Name
         assert isinstance(blocks, list)
+        if not blocks:
+            raise ValueError("Got empty list as input. List must contain at least one element")
 
         self._block_idx = ''
         self._block_dict = {}
@@ -84,7 +86,6 @@ class Block:
     def get_cells(self):
         return self._cells
 
-
     def __str__(self):
         indent_level = [0]
         output = "n2d2.cell.Block("
@@ -100,8 +101,8 @@ class Block:
             if indent_level[0] > 0:
                 output += "\n" + (indent_level[0] * "\t") + "(" + str(block.get_block_idx()) + ")"
                 if block.get_name() is not None:
-                    output += " \'" + block.get_name() + "\' "
-                output += ": ["
+                    output += " \'" + block.get_name() + "\'"
+                output += ": n2d2.cell.Block("
             indent_level[0] += 1
             local_block_idx = [0]
             for idx, block in enumerate(block.get_blocks()):
@@ -109,11 +110,11 @@ class Block:
                 local_block_idx[0] += 1
             indent_level[0] -= 1
             if indent_level[0] > 0:
-                output += "\n" + (indent_level[0] * "\t") + "]"
+                output += "\n" + (indent_level[0] * "\t") + ")"
         else:
             output += "\n" + (indent_level[0] * "\t") + "(" + str(block.get_block_idx()) + ")"
             if block.get_name() is not None:
-                output += " \'" + block.get_name() + "\' "
+                output += " \'" + block.get_name() + "\'"
             output += ": " + block.__str__()
         return output
 
@@ -182,16 +183,18 @@ class Cell(Block):
         return self._cell
 
     def __str__(self):
-        output = ""
+        output = self.get_type()+"Cell(" + self._model_key + ")"
+        output += "("
         for key, value in self._constructor_parameters.items():
-            output += key + ": " + str(value) + ", "
+            output += key + "=" + str(value) + ", "
         for key, value in self._optional_constructor_parameters.items():
             if key in self._modified_keys:
-                output += key + ": " + str(value) + ", "
+                output += key + "=" + str(value) + ", "
         for key, value in self._cell_parameters.items():
             if key in self._modified_keys:
-                output += key + ": " + str(value) + ", "
-        output += "; "
+                output += key + "=" + str(value) + ", "
+        output = output[:len(output) - 2]
+        output += ")"
         return output
 
     def get_type(self):
@@ -362,8 +365,7 @@ class Fc(Cell):
 
         
     def __str__(self):
-        output = "FcCell(" + self._model_key + "), "
-        output += super().__str__()
+        output = super().__str__()
         for key, value in self._frame_model_parameters.items():
             if key in self._modified_keys:
                 output += key + "=" + str(value) + ", "
@@ -537,8 +539,7 @@ class Conv(Cell):
 
 
     def __str__(self):
-        output = "ConvCell(" + self._model_key + "), "
-        output += super().__str__()
+        output = super().__str__()
         for key, value in self._frame_model_parameters.items():
             if key in self._modified_keys:
                 output += key + "=" + str(value) + ", "
@@ -675,8 +676,7 @@ class ElemWise(Cell):
         # self._model_parameters.update(model_parameters)
 
     def __str__(self):
-        output = "ElemWiseCell(" + self._model_key + "), "
-        output += super().__str__()
+        output = super().__str__()
         for key, value in self._frame_model_parameters.items():
             if key in self._modified_keys:
                 output += key + "=" + str(value) + ", "
@@ -731,6 +731,5 @@ class Softmax(Cell):
 
 
     def __str__(self):
-        output = "SoftmaxCell(" + self._model_key + "): "
-        output += super().__str__()
+        output = super().__str__()
         return output
