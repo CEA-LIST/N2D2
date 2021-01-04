@@ -289,6 +289,52 @@ TEST_DATASET(StimuliProvider,
     }
 }
 
+TEST_DATASET(StimuliProvider, databasePermutation,
+            (unsigned int seed, unsigned int nbEpoch),
+            std::make_tuple(10U, 1U),
+            std::make_tuple(200U, 2U),
+            std::make_tuple(1400U, 150U))
+{
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
+    Random::mtSeed(seed);
+
+    MNIST_IDX_Database database;
+    database.load(N2D2_DATA("mnist"));
+
+    StimuliProvider sp(database, {32, 32, 1}, 1, false);
+    sp.addTransformation(RescaleTransformation(32, 32));
+    sp.setCachePath();
+
+    const unsigned int nbStimuliIndexed 
+        = sp.SetStimuliIndexes( Database::Learn, nbEpoch, true);
+    const unsigned int nbStimuli = database.getNbStimuli(Database::Learn);
+    ASSERT_EQUALS(nbStimuliIndexed, nbStimuli);
+    
+    for(unsigned int n = 0; n < nbEpoch; ++n)
+    {
+        std::vector<unsigned int> epochShuffling = sp.getDatabaseLearnIndex(n);
+        std::vector<unsigned int> tmpVector;
+        tmpVector.resize(nbStimuli);
+        std::iota(  std::begin(tmpVector),
+                    std::end(tmpVector),
+                    0U);
+    
+        for(unsigned int sample = 0; sample < nbStimuli; ++sample)
+        {
+            std::vector<unsigned int>::iterator it;
+
+            it = find (tmpVector.begin(), tmpVector.end(), epochShuffling[sample]);
+            if (it != tmpVector.end())
+            {
+                unsigned int idx = it - tmpVector.begin() ;
+                tmpVector.erase (tmpVector.begin() + idx);
+            }
+        }
+        ASSERT_EQUALS(tmpVector.size(), 0U);
+    }
+
+}
+
 TEST(StimuliProvider, readRandomBatch)
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
