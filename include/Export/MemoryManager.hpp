@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_RCAR_MEMORY_MANAGER_H
-#define N2D2_RCAR_MEMORY_MANAGER_H
+#ifndef N2D2_MEMORY_MANAGER_H
+#define N2D2_MEMORY_MANAGER_H
 
 #include <memory>
 #include <vector>
@@ -78,17 +78,19 @@ public:
             memSpace(memSpace_),
             allocated(clock_),
             offset(offset_),
-            // limit must be a multiple of (stride * length)
-            // uses floor() to stay below memSpace_->size
-            limit((count_ > 1)
-                ? std::floor((memSpace_->size - offset)
-                        / (double)(std::max(size_, stride_) * length_))
-                    * (std::max(size_, stride_) * length_)
-                : memSpace_->size - offset_),
             size(size_),
             stride(std::max(size_, stride_)),
             length(length_),
-            count(count_) {}
+            count(count_)
+        {
+            assert(offset < memSpace->size);
+            assert(getContiguousOffset() >= memSpace->offset);
+            assert(getWrappedOffset() >= memSpace->offset);
+            assert(getContiguousOffset() + getContiguousSize()
+                <= memSpace->offset + memSpace->size);
+            assert(getWrappedOffset() + getWrappedSize()
+                <= memSpace->offset + memSpace->size);
+        }
 
         inline unsigned int getSize() const {
             return stride * length * count;
@@ -127,14 +129,20 @@ public:
         std::shared_ptr<MemorySpace> memSpace;
         Clock_T allocated;
         unsigned int offset;
-        unsigned int limit;
         unsigned int size;
         unsigned int stride;
         unsigned int length;
         unsigned int count;
 
     private:
+        // Limit is computed dynamically, as memSpace->size may increase after
+        // the creation of this memory space. This is actually necessary to
+        // ensure that the memory wrapping works correctly, because when 
+        // computing the margin required for the wrapping, it is assumed that
+        // the previous layer wrapping extends to the full memory space size.
         inline unsigned int getLimit() const {
+            // limit must be a multiple of (stride * length)
+            // uses floor() to stay below memSpace->size
             return (count > 1)
                 ? std::floor((memSpace->size - offset)
                         / (double)(stride * length)) * (stride * length)
@@ -300,4 +308,4 @@ const char* const EnumStrings<N2D2::MemoryManager::OptimizeStrategy>::data[]
        "OptimizeMaxHoleMaxLifetimeFirst"};
 }
 
-#endif // N2D2_RCAR_MEMORY_MANAGER_H
+#endif // N2D2_MEMORY_MANAGER_H

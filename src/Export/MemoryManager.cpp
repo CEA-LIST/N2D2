@@ -673,9 +673,6 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
 
     memData << std::setfill('0');
 
-    std::map<std::shared_ptr<MemorySpace>,
-             std::pair<unsigned int, unsigned int> > memSpaceCount;
-
     for (std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
         ::const_iterator it = mMemPlanes.begin(), itEnd = mMemPlanes.end();
         it != itEnd; ++it)
