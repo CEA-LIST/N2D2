@@ -115,7 +115,7 @@ class PadCrop(Transformation):
             'BorderValue': []
         })
 
-        self._set_config_parameters(config_parameters)
+        self._set_parameters(self._config_parameters, config_parameters)
         self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['Width'],
                                                        self._constructor_arguments['Height'])
         self._set_N2D2_parameters(self._config_parameters)
@@ -137,7 +137,7 @@ class Distortion(Transformation):
             'IgnoreMissingData': False
         })
 
-        self._set_config_parameters(config_parameters)
+        self._set_parameters(self._config_parameters, config_parameters)
         self._N2D2_object = N2D2.DistortionTransformation()
         self._set_N2D2_parameters(self._config_parameters)
         

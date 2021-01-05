@@ -35,7 +35,6 @@ class Parameterizable:
         Parameters are set post N2D2 object creation. Reconfigurable
         """
         self._config_parameters = {}
-        #self._model_parameters = {}
 
         # Keeps a trace of modified parameters for print function
         self._modified_keys = []
@@ -47,10 +46,11 @@ class Parameterizable:
             raise n2d2.UndefinedModelError("N2D2 object member has not been created")
         return self._N2D2_object
 
-    def _set_config_parameters(self, config_parameters):
-        for key, value in config_parameters.items():
-            if key in self._config_parameters:
-                self._config_parameters[key] = value
+    # Parameters can only be modified by passing dictionaries
+    def _set_parameters(self, target_dict, input_dict):
+        for key, value in input_dict.items():
+            if key in target_dict:
+                target_dict[key] = value
                 self._modified_keys.append(key)
             else:
                 raise n2d2.UndefinedParameterError(key, self)
