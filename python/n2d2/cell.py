@@ -145,8 +145,11 @@ class Cell(Block, Parameterizable):
 
         # Keeps a trace of modified parameters for print function
         #self._modified_keys = []
-                
+
+        self._model_config_parameters = {}
+        self._model_parameter_definitions = {}
         self._model_key = ""
+
 
     def get_output_cell(self):
         return self
@@ -159,6 +162,12 @@ class Cell(Block, Parameterizable):
             raise RuntimeError("Trying to run generate_model on Cell of type " + str(type(self)) + " without name.")
         self._model_key = Model + '<' + DataType + '>'
 
+    def _set_model_config_parameters(self, Model, model_config_parameters):
+        if Model in self._model_parameter_definitions:
+            self._model_config_parameters = self._model_parameter_definitions[Model]
+        self._set_parameters(self._model_config_parameters, model_config_parameters)
+        self._set_N2D2_parameters(self._model_config_parameters)
+
     def add_input(self, cell):
         self._inputs.append(cell)
 
@@ -168,9 +177,17 @@ class Cell(Block, Parameterizable):
         self._N2D2_object.initialize()
 
 
+
     def __str__(self):
         output = self.get_type()+"Cell(" + self._model_key + ")"
         output += Parameterizable.__str__(self)
+        if len(self._model_config_parameters.items()) > 0:
+            output += "["
+            for key, value in self._model_config_parameters.items():
+                if key in self._modified_keys:
+                    output += key + "=" + str(value) + ", "
+            output = output[:len(output) - 2]
+            output += "]"
         return output
 
     def get_type(self):
@@ -217,7 +234,7 @@ class Fc(Cell):
 
 
 
-    def __init__(self, NbOutputs, Name=None, **cell_parameters):
+    def __init__(self, NbOutputs, Name=None, **config_parameters):
         Cell.__init__(self, NbOutputs=NbOutputs, Name=Name)
 
         """Equivalent to N2D2 class generator defaults. 
@@ -246,32 +263,26 @@ class Fc(Cell):
             'OutputsRemap': "",
         })
 
-        self._set_config_parameters(cell_parameters)
+        self._set_parameters(self._config_parameters, config_parameters)
 
-        self._frame_model_parameters = {
+        # Set model specific parameters
+        self._frame_model_config_parameters = {
             'DropConnect': 1.0
         }
 
-        self._frame_CUDA_model_parameters = {}
+        self._model_parameter_definitions['Frame'] = self._frame_model_config_parameters
 
-    #TODO: Add method that initialized based on INI file section
-    """
-    The n2d2 FcCell type could this way serve as a wrapper for both the FcCell constructor and the
-    #FcCellGenerator bindings. 
-    """
-    """
-    def __init__(self, file_INI):
-        self._N2D2_object = N2D2.FcCellGenerator(file=file_INI)
-    """
+        # NOTE: Other models have to be added, for example spike models
+
          
     """
     # Optional for the moment. Has to assure coherence between n2d2 and N2D2 values
     def set_model_parameter(self, key, value):
-        self._model_parameters[key] = value
+        self._model_config_parameters[key] = value
         #self.cell.setParameter() # N2D2 code
     """
     
-    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
+    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_config_parameters):
 
         Cell.generate_model(self, Model, DataType)
 
@@ -303,46 +314,7 @@ class Fc(Cell):
             else:
                 self._set_N2D2_parameter(key, value)
 
-        #print(model_parameters)
-
-
-        # TODO: Move to Parameterizable and delete
-        if Model is 'Frame':
-            for key in model_parameters:
-                if key not in self._frame_model_parameters:
-                    raise n2d2.UndefinedParameterError(key, self)
-
-            for key, value in self._frame_model_parameters.items():
-                if key in model_parameters:
-                    self._frame_model_parameters[key] = model_parameters[key]
-                    self._modified_keys.append(key)
-                # Set even if default did not change
-                self._set_N2D2_parameter(key, self._frame_model_parameters[key])
-
-        if Model is 'Frame_CUDA':
-            for key in model_parameters:
-                if key not in self._frame_CUDA_model_parameters:
-                    raise n2d2.UndefinedParameterError(key, self)
-
-            for key, value in self._frame_CUDA_model_parameters.items():
-                if key in model_parameters:
-                    self._frame_CUDA_model_parameters[key] = model_parameters[key]
-                    self._modified_keys.append(key)
-                # Set even if default did not change
-                self._set_N2D2_parameter(key, self._frame_CUDA_model_parameters[key])
-
-        #self._model_parameters.update(model_parameters)
-
-    # TODO: Move to Parameterizable and delete
-    def __str__(self):
-        output = Cell.__str__(self)
-        for key, value in self._frame_model_parameters.items():
-            if key in self._modified_keys:
-                output += key + "=" + str(value) + ", "
-        for key, value in self._frame_CUDA_model_parameters.items():
-            if key in self._modified_keys:
-                output += key + "=" + str(value) + ", "
-        return output
+        self._set_model_config_parameters(Model, model_config_parameters)
 
 
 class Conv(Cell):
@@ -426,23 +398,13 @@ class Conv(Cell):
             'OutputsRemap': "",
         })
 
-        self._set_config_parameters(config_parameters)
+        self._set_parameters(self._config_parameters, config_parameters)
 
-        self._frame_model_parameters = {}
+        # No model specific parameters for the moment
 
-        self._frame_CUDA_model_parameters = {}
-
-    # TODO: Add method that initialized based on INI file section
-
-    """
-    # Optional for the moment. Has to assure coherence between n2d2 and N2D2 values
-    def set_model_parameter(self, key, value):
-        self._model_parameters[key] = value
-        #self.cell.setParameter() # N2D2 code
-    """
 
     # TODO: There is a lot of duplicate code between fc cell and conv cell. Implement additional parent class?
-    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
+    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_config_parameters):
 
         Cell.generate_model(self, Model, DataType)
 
@@ -479,44 +441,8 @@ class Conv(Cell):
             else:
                 self._set_N2D2_parameter(key, value)
 
-        # print(model_parameters)
+        self._set_model_config_parameters(Model, model_config_parameters)
 
-        if Model is 'Frame':
-            for key in model_parameters:
-                if key not in self._frame_model_parameters:
-                    raise n2d2.UndefinedParameterError(key, self)
-
-            for key, value in self._frame_model_parameters.items():
-                if key in model_parameters:
-                    self._frame_model_parameters[key] = model_parameters[key]
-                    self._modified_keys.append(key)
-                # Set even if default did not change
-                self._set_N2D2_parameter(key, self._frame_model_parameters[key])
-
-        if Model is 'Frame_CUDA':
-            for key in model_parameters:
-                if key not in self._frame_CUDA_model_parameters:
-                    raise n2d2.UndefinedParameterError(key, self)
-
-            for key, value in self._frame_CUDA_model_parameters.items():
-                if key in model_parameters:
-                    self._frame_CUDA_model_parameters[key] = model_parameters[key]
-                    self._modified_keys.append(key)
-                # Set even if default did not change
-                self._set_N2D2_parameter(key, self._frame_CUDA_model_parameters[key])
-
-        # self._model_parameters.update(model_parameters)
-
-
-    def __str__(self):
-        output = Cell.__str__(self)
-        for key, value in self._frame_model_parameters.items():
-            if key in self._modified_keys:
-                output += key + "=" + str(value) + ", "
-        for key, value in self._frame_CUDA_model_parameters.items():
-            if key in self._modified_keys:
-                output += key + "=" + str(value) + ", "
-        return output
 
 
 class ElemWise(Cell):
@@ -573,30 +499,12 @@ class ElemWise(Cell):
             'ActivationFunction': None
         })
 
-        self._set_config_parameters(config_parameters)
+        self._set_parameters(self._config_parameters, config_parameters)
 
-        self._frame_model_parameters = {}
+        # No model specific parameters for the moment
 
-        self._frame_CUDA_model_parameters = {}
 
-    # TODO: Add method that initialized based on INI file section
-    """
-    The n2d2 FcCell type could this way serve as a wrapper for both the FcCell constructor and the
-    #FcCellGenerator bindings. 
-    """
-    """
-    def __init__(self, file_INI):
-        self._N2D2_object = N2D2.FcCellGenerator(file=file_INI)
-    """
-
-    """
-    # Optional for the moment. Has to assure coherence between n2d2 and N2D2 values
-    def set_model_parameter(self, key, value):
-        self._model_parameters[key] = value
-        #self.cell.setParameter() # N2D2 code
-    """
-
-    def generate_model(self, deepnet, Model='Frame', DataType=None, **model_parameters):
+    def generate_model(self, deepnet, Model='Frame', DataType=None, **model_config_parameters):
 
         Cell.generate_model(self, Model, DataType)
 
@@ -616,44 +524,8 @@ class ElemWise(Cell):
             else:
                 self._set_N2D2_parameter(key, value)
 
-        # print(model_parameters)
+        self._set_model_config_parameters(Model, model_config_parameters)
 
-        # NOTE: ElemWiseCell currently has no model parameters
-        if Model is 'Frame':
-            for key in model_parameters:
-                if key not in self._frame_model_parameters:
-                    raise n2d2.UndefinedParameterError(key, self)
-
-            for key, value in self._frame_model_parameters.items():
-                if key in model_parameters:
-                    self._frame_model_parameters[key] = model_parameters[key]
-                    self._modified_keys.append(key)
-                # Set even if default did not change
-                self._set_N2D2_parameter(key, self._frame_model_parameters[key])
-
-        if Model is 'Frame_CUDA':
-            for key in model_parameters:
-                if key not in self._frame_CUDA_model_parameters:
-                    raise n2d2.UndefinedParameterError(key, self)
-
-            for key, value in self._frame_CUDA_model_parameters.items():
-                if key in model_parameters:
-                    self._frame_CUDA_model_parameters[key] = model_parameters[key]
-                    self._modified_keys.append(key)
-                # Set even if default did not change
-                self._set_N2D2_parameter(key, self._frame_CUDA_model_parameters[key])
-
-        # self._model_parameters.update(model_parameters)
-
-    def __str__(self):
-        output = Cell.__str__(self)
-        for key, value in self._frame_model_parameters.items():
-            if key in self._modified_keys:
-                output += key + "=" + str(value) + ", "
-        for key, value in self._frame_CUDA_model_parameters.items():
-            if key in self._modified_keys:
-                output += key + "=" + str(value) + ", "
-        return output
 
 
 class Softmax(Cell):
@@ -682,12 +554,12 @@ class Softmax(Cell):
             'GroupSize': 0,
         })
 
-        self._set_config_parameters(config_parameters)
+        self._set_parameters(self._config_parameters, config_parameters)
+
+        # No model specific parameters for the moment
 
 
-    # TODO: Add method that initialized based on INI file section
-
-    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_parameters):
+    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_config_parameters):
 
         Cell.generate_model(self, Model, DataType)
 
@@ -697,7 +569,4 @@ class Softmax(Cell):
                                                             self._config_parameters['WithLoss'],
                                                             self._config_parameters['GroupSize'])
 
-
-    def __str__(self):
-        output = Cell.__str__(self)
-        return output
+        self._set_model_config_parameters(Model, model_config_parameters)

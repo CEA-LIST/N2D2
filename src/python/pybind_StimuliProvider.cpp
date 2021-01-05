@@ -29,7 +29,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_StimuliProvider(py::module &m) {
-    py::class_<StimuliProvider, std::shared_ptr<StimuliProvider>>sp(m, "StimuliProvider", py::multiple_inheritance());
+    py::class_<StimuliProvider, std::shared_ptr<StimuliProvider>, Parameterizable>sp(m, "StimuliProvider", py::multiple_inheritance());
     sp.doc() = "StimuliProvider is a class that acts as a data loader for the neural network.";
     sp.def(py::init<Database&, const std::vector<size_t>&, unsigned int, bool>(), py::arg("database"), py::arg("size"), py::arg("batchSize") = 1, py::arg("compositeStimuli") = false)
     // .def("cloneParameters", &StimuliProvider::cloneParameters)
