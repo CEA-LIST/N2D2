@@ -77,9 +77,6 @@ class Sequential(Deepnet):
 
         #self._generate_model(self._block_descriptor, Model, DataType)
 
-        print(names)
-        print(self._cells)
-
         # Check if cell associated to model parameters exists
         for key in self._model_parameters:
             if not key.replace('_model', '') in names:

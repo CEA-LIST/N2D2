@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
 
 #ifdef PYBIND
 #include "Transformation/PadCropTransformation.hpp"
@@ -31,12 +30,22 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_PadCropTransformation(py::module &m) {
-    py::class_<PadCropTransformation, std::shared_ptr<PadCropTransformation>, Transformation> (m, "PadCropTransformation", py::multiple_inheritance())
+    py::class_<PadCropTransformation, std::shared_ptr<PadCropTransformation>, Transformation> trans (m, "PadCropTransformation", py::multiple_inheritance());
+
+    //py::enum_<PadCropTransformation::BorderType>(trans, "BorderType")
+    //.value("ConstantBorder", PadCropTransformation::BorderType::ConstantBorder)
+    //.value("ReplicateBorder", PadCropTransformation::BorderType::ReplicateBorder)
+    //.value("ReflectBorder", PadCropTransformation::BorderType::ReflectBorder)
+    //.value("WrapBorder", PadCropTransformation::BorderType::WrapBorder)
+    //.value("MinusOneReflectBorder", PadCropTransformation::BorderType::MinusOneReflectBorder)
+    //.value("MeanBorder", PadCropTransformation::BorderType::MeanBorder)
+    //.export_values();
+
+    trans
     .def(py::init<int, int>(), py::arg("width"), py::arg("height"));
+
     // .def("apply", &PadCropTransformation::apply, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"));
 
 }
 }
-#endif
-
 #endif

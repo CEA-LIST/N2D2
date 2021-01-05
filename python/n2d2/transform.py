@@ -21,6 +21,7 @@
 
 import N2D2
 import n2d2
+from n2d2.parameterizable import Parameterizable
 
 """
 For the tranformations, it is relatively important to be able to write custom 
@@ -53,81 +54,95 @@ class PadCropTransformation():
     def __call__(self, x):
         return self.trans.apply(x)
 """
-class Transformation:
+
+
+class Transformation(Parameterizable):
+
+    # TODO: Is there any way to check that no abstract Transformation object is generated?
     def __init__(self):
-        self._trans_parameters = {}
-        self._modified_keys = []
-        self._transformation = None
+        Parameterizable.__init__(self)
 
-    def _set_parameters(self, parameters):
-        for key, value in parameters.items():
-            if key in self._trans_parameters:
-                self._trans_parameters[key] = value
-                self._modified_keys.append(key)
-            else:
-                raise n2d2.UndefinedParameterError(key, self)
-
-    def _set_N2D2_parameters(self, parameters):
-        for key, value in parameters.items():
-            if isinstance(value, bool):
-                self._transformation.setParameter(key, str(int(value)))
-            else:
-                self._transformation.setParameter(key, str(value))
-
-    def N2D2(self):
-        if self._transformation is None:
-            raise n2d2.UndefinedModelError("N2D2 transformation member has not been created")
-        return self._transformation
+    def __str__(self):
+        output = self._Type + "Transformation"
+        output += Parameterizable.__str__(self)
+        return output
 
 
 class Composite(Transformation):
+
+    _Type = "Composite"
+
     def __init__(self, transformations):
-        # NOTE: At the moment superfluous in this class
-        super().__init__()
+        Transformation.__init__(self)
 
         if not isinstance(transformations, list):
             raise TypeError("Wanted ", type(list), " got ", type(transformations))
-        # TODO: This cannot be empty anyways since compulsory argument?
         if not transformations:
-            raise ValueError("Parameter transformations must not be empty")
-        self._transformation = N2D2.CompositeTransformation(transformations[0].N2D2())
+            raise ValueError("Got empty list as input. List must contain at least one element")
+        self._N2D2_object = N2D2.CompositeTransformation(transformations[0].N2D2())
         for transformation in transformations[1:]:
-            print(transformation.N2D2())
-            self._transformation.push_back(transformation.N2D2())
+            self._N2D2_object.push_back(transformation.N2D2())
 
 
 class PadCrop(Transformation):
-    # INI file parameters have same upper case name convention
-    def __init__(self, Width, Height):
-        super().__init__()
 
-        self._trans_parameters = {
+    _Type = "PadCrop"
+
+    """
+    # Currently not necessary since configured with N2D2.set_Parameter(string)
+    _border_type = {
+        "ConstantBorder", N2D2.PadCropTransformation.BorderType.ConstantBorder,
+        "ReplicateBorder", N2D2.PadCropTransformation.BorderType.ReplicateBorder,
+        "ReflectBorder", N2D2.PadCropTransformation.BorderType.ReflectBorder,
+        "WrapBorder", N2D2.PadCropTransformation.BorderType.WrapBorder,
+        "MinusOneReflectBorder", N2D2.PadCropTransformation.BorderType.MinusOneReflectBorder,
+        "MeanBorder", N2D2.PadCropTransformation.BorderType.MeanBorder
+    }
+    """
+
+    # INI file parameters have same upper case name convention
+    def __init__(self, Width, Height, **config_parameters):
+        Transformation.__init__(self)
+
+        self._constructor_arguments.update({
             'Width': Width,
             'Height': Height,
-        }
+        })
 
-        self._transformation = N2D2.PadCropTransformation(self._trans_parameters['Width'],
-                                                          self._trans_parameters['Height'])
+        self._config_parameters.update({
+            'AdditiveWH': False,
+            'BorderType': 'MinusOneReflectBorder',
+            'BorderValue': []
+        })
+
+        self._set_config_parameters(config_parameters)
+        self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['Width'],
+                                                       self._constructor_arguments['Height'])
+        self._set_N2D2_parameters(self._config_parameters)
 
 
 class Distortion(Transformation):
-    def __init__(self, **trans_parameters):
-        super().__init__()
 
-        self._trans_parameters = {
-            'ElasticGaussianSize': 0,
-            'ElasticSigma': 0,
-            'ElasticScaling': 0,
-            'Scaling': 0,
-            'Rotation': 0
-        }
-        self._set_parameters(trans_parameters)
-        self._transformation = N2D2.DistortionTransformation()
-        self._set_N2D2_parameters(self._trans_parameters)
+    _Type = "Distortion"
 
+    def __init__(self, **config_parameters):
+        Transformation.__init__(self)
+
+        self._config_parameters.update({
+            'ElasticGaussianSize': 15,
+            'ElasticSigma': 6.0,
+            'ElasticScaling': 0.0,
+            'Scaling': 0.0,
+            'Rotation': 0.0,
+            'IgnoreMissingData': False
+        })
+
+        self._set_config_parameters(config_parameters)
+        self._N2D2_object = N2D2.DistortionTransformation()
+        self._set_N2D2_parameters(self._config_parameters)
+        
 # TODO : Change binding to expose apply method 
 # class CustomTransformation(Transformation):
 #     def __init__(self, custom_transformation):
 #         super().__init__()
 #         self._transformation = custom_transformation
-

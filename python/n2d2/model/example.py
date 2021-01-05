@@ -38,7 +38,7 @@ def fc_base_named():
         n2d2.cell.Block([
             n2d2.cell.Fc(NbOutputs=300, Name='fc1'),
             n2d2.cell.Fc(NbOutputs=10, Name='fc2')
-        ]),
+        ], Name='block1'),
         n2d2.cell.Softmax(NbOutputs=10, Name='softmax')
     ])
     return net
