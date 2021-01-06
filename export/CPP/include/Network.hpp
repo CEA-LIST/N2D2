@@ -26,6 +26,16 @@
 #define N2D2_THROW_OR_ABORT(ex, msg) throw ex(msg)
 #define N2D2_ALWAYS_INLINE __attribute__((always_inline))
 
+#ifndef N2D2_SECTION_NN_MEMORY
+#define N2D2_SECTION_NN_MEMORY ".nn_memory"
+#endif
+#ifndef N2D2_SECTION_NN_WEIGHTS
+#define N2D2_SECTION_NN_WEIGHTS ".nn_weights"
+#endif
+#ifndef N2D2_SECTION_NN_BIASSES
+#define N2D2_SECTION_NN_BIASSES ".nn_biasses"
+#endif
+#define N2D2_SECTION_ATTRIBUTE(sec) __attribute__((section(sec)))
 
 namespace N2D2 {
 
