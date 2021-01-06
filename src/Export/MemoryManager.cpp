@@ -578,13 +578,13 @@ N2D2::MemoryManager::getPlanes(const std::shared_ptr<Cell>& cell) const
     return (*it).second;
 }
 
-std::map<std::shared_ptr<N2D2::Cell>, std::vector<N2D2::MemoryManager::MemoryPlane> >
-N2D2::MemoryManager::getPlanes(std::shared_ptr<MemorySpace> memSpace) const
+N2D2::MemoryManager::MemMap_T
+N2D2::MemoryManager::getPlanes(std::shared_ptr<MemorySpace> memSpace)
+    const
 {
-    std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> > planes;
+    MemMap_T planes;
 
-    for (std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
-        ::const_iterator itCell = mMemPlanes.begin(),
+    for (MemMap_T::const_iterator itCell = mMemPlanes.begin(),
         itCellEnd = mMemPlanes.end(); itCell != itCellEnd; ++itCell)
     {
         for (std::vector<MemoryPlane>::const_iterator itPlane

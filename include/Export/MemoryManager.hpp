@@ -179,6 +179,18 @@ public:
                         const std::shared_ptr<MemorySpace>& p1);
     };
 
+    struct CompByCellName {
+        bool operator()(const std::shared_ptr<Cell>& lhs,
+                        const std::shared_ptr<Cell>& rhs) const
+        {
+            return ((lhs) ? lhs->getName() : "env")
+                        < ((rhs) ? rhs->getName() : "env");
+        }
+    };
+
+    typedef std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane>,
+        CompByCellName> MemMap_T;
+
     MemoryManager(): mClock(0) {}
     /// Generates a new MemorySpace
     std::shared_ptr<MemorySpace> reserve(unsigned int size,
@@ -273,10 +285,8 @@ public:
     Clock_T getMaxLifetime() const;
     const std::vector<MemoryPlane>& getPlanes(const std::shared_ptr<Cell>& cell)
         const;
-    const std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >&
-        getPlanes() const { return mMemPlanes; }
-    std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
-        getPlanes(std::shared_ptr<MemorySpace> memSpace) const;
+    const MemMap_T& getPlanes() const { return mMemPlanes; }
+    MemMap_T getPlanes(std::shared_ptr<MemorySpace> memSpace) const;
     unsigned int getNbPlanes(std::shared_ptr<MemorySpace> memSpace) const;
     void tick(bool autoRelease = true);
     void log(const std::string& fileName) const;
@@ -294,7 +304,7 @@ private:
 
     std::map<unsigned int, unsigned int> mMemStack;
     std::vector<std::shared_ptr<MemorySpace> > mMemSpaces;
-    std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> > mMemPlanes;
+    MemMap_T mMemPlanes;
     Clock_T mClock;
 };
 }
