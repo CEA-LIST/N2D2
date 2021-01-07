@@ -610,7 +610,7 @@ void N2D2::StimuliProvider::synchronize()
     }
 }
 unsigned int
-    N2D2::StimuliProvider::SetStimuliIndexes(   Database::StimuliSet set,   
+    N2D2::StimuliProvider::setStimuliIndexes(   Database::StimuliSet set,   
                                                 const unsigned int nbEpochs,
                                                 bool randPermutation)
 {
@@ -629,7 +629,7 @@ unsigned int
 
     if(nMax == 0)
     {
-        std::cout << Utils::cwarning << "SetStimuliIndexes for set " << set <<
+        std::cout << Utils::cwarning << "setStimuliIndexes for set " << set <<
             " is empty" << Utils::cdef
             << std::endl;
         return 0U;
@@ -756,6 +756,48 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         batchRef[batchPos]
             = mDatabase.getStimulusID(set, startIndex + batchPos);
 
+#pragma omp parallel for schedule(dynamic) if (batchSize > 1)
+    for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
+        readStimulus(batchRef[batchPos], set, batchPos);
+
+    std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
+}
+
+void N2D2::StimuliProvider::readEpochBatch( Database::StimuliSet set,
+                                            unsigned int startIndex,
+                                            unsigned int epochIndex)
+{
+    const std::vector<std::vector<unsigned int > >& indexes =
+                (set == Database::StimuliSet::Learn) ? mDatabaseLearnIndexes :
+                (set == Database::StimuliSet::Validation) ? mDatabaseValIndexes :
+                mDatabaseTestIndexes;
+
+    if (startIndex >= mDatabase.getNbStimuli(set)) {
+        std::stringstream msg;
+        msg << "StimuliProvider::readEpochBatch(): startIndex (" << startIndex
+            << ") is higher than the number of stimuli in the " << set
+            << " set (" << mDatabase.getNbStimuli(set) << ")";
+
+        throw std::runtime_error(msg.str());
+    }
+    if (epochIndex >= indexes.size()) {
+        std::stringstream msg;
+        msg << "StimuliProvider::readEpochBatch(): epochIndex (" << epochIndex
+            << ") is higher than the number of intialized epoch in the " << set
+            << " set (" << mDatabase.getNbStimuli(set) << ")";
+
+        throw std::runtime_error(msg.str());
+    }
+
+    const unsigned int batchSize
+        = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+    {
+        batchRef[batchPos]
+            = mDatabase.getStimulusID(set, indexes[epochIndex][startIndex + batchPos]);
+    }
 #pragma omp parallel for schedule(dynamic) if (batchSize > 1)
     for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
         readStimulus(batchRef[batchPos], set, batchPos);

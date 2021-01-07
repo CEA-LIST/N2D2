@@ -174,6 +174,14 @@ public:
     /// mData and mLabelsData
     virtual void readRandomBatch(Database::StimuliSet set);
 
+    /// Read a whole batch from the StimuliSet @p set and 
+    /// the specific data indexes, apply all the
+    /// transformations and put the results in
+    /// mData and mLabelsData
+    virtual void readEpochBatch( Database::StimuliSet set,
+                                 unsigned int startIndex,
+                                 unsigned int epochIndex);
+
 //TODO: Required for spiking neural network batch parallelization
 /*
     /// Read a whole random batch from the StimuliSet @p set, apply all the
@@ -362,7 +370,7 @@ public:
                         const double maxValue);
     //static void logRgbData(const std::string& fileName,
     //                    const Tensor4d<Float_T>& data);
-    unsigned int SetStimuliIndexes( Database::StimuliSet set,   
+    unsigned int setStimuliIndexes( Database::StimuliSet set,   
                                         const unsigned int nbEpochs = 1,
                                         const bool randPermutation = false); 
 protected:

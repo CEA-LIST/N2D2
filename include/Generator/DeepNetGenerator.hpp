@@ -44,12 +44,14 @@ public:
     static std::shared_ptr<DeepNet> generateFromONNX(Network& network,
         const std::string& fileName,
         IniParser& iniConfig,
-        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>());
+        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>(),
+        const bool ONNXInitializer = true);
 
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
         const onnx::GraphProto& graph,
-        IniParser& iniConfig);
+        IniParser& iniConfig,
+        const bool ONNXInitializer = true);
     template <class T>
     static Tensor<T> ONNX_unpackTensor(const onnx::TensorProto* tensor,
                                        const std::vector<unsigned int>& expectedDims

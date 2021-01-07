@@ -306,7 +306,7 @@ TEST_DATASET(StimuliProvider, databasePermutation,
     sp.setCachePath();
 
     const unsigned int nbStimuliIndexed 
-        = sp.SetStimuliIndexes( Database::Learn, nbEpoch, true);
+        = sp.setStimuliIndexes( Database::Learn, nbEpoch, true);
     const unsigned int nbStimuli = database.getNbStimuli(Database::Learn);
     ASSERT_EQUALS(nbStimuliIndexed, nbStimuli);
     
