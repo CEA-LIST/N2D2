@@ -135,7 +135,7 @@ void envRead(const std::string& fileName,
 #elif NB_BITS > 32 && NB_BITS < 64
     long long int inputsFixed[size];
 #endif
-    nbRead = fread(inputsFixed, sizeof(inputsFixed[0]), nbChannels, stimuli);
+    nbRead = fread(inputsFixed, sizeof(inputsFixed[0]), size, stimuli);
 
     for (unsigned int i = 0; i < size; ++i)
         data[i] = (DATA_T)inputsFixed[i];
