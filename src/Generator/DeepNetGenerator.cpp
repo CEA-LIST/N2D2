@@ -320,8 +320,14 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
                     = iniConfig.getProperty<std::string>("File");
                 std::string fullFileName 
                     = Utils::expandEnvVars(fileName);
+                const bool ONNXInitializer = 
+                    iniConfig.getProperty<bool>("AsInitializer", true);
 
-                generateFromONNX(network, fullFileName, iniConfig, deepNet);
+                generateFromONNX(   network, 
+                                    fullFileName, 
+                                    iniConfig, 
+                                    deepNet, 
+                                    ONNXInitializer);
 
                 const std::vector<std::string> targets
                     = iniConfig.getSections("*.Target*");
@@ -506,7 +512,8 @@ std::shared_ptr<N2D2::DeepNet>
 N2D2::DeepNetGenerator::generateFromONNX(Network& network,
                                          const std::string& fileName,
                                          IniParser& iniConfig,
-                                         std::shared_ptr<DeepNet> deepNet)
+                                         std::shared_ptr<DeepNet> deepNet,
+                                         const bool ONNXInitializer)
 {
     if (!deepNet) {
         deepNet = std::shared_ptr<DeepNet>(new DeepNet(network));
@@ -556,9 +563,10 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
         "  producer_version = " << onnxModel.producer_version() << "\n"
         "  domain = " << onnxModel.domain() << "\n"
         "  model_version = " << onnxModel.model_version() << "\n"
-        "  doc_string = " << onnxModel.doc_string() << std::endl;
+        "  doc_string = " << onnxModel.doc_string() << 
+        "  ONNX parameters as initializer = " << ONNXInitializer <<std::endl;
 
-    ONNX_processGraph(deepNet, onnxModel.graph(), iniConfig);
+    ONNX_processGraph(deepNet, onnxModel.graph(), iniConfig, ONNXInitializer);
 
     return deepNet;
 }
@@ -566,7 +574,8 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
 void N2D2::DeepNetGenerator::ONNX_processGraph(
     std::shared_ptr<DeepNet> deepNet,
     const onnx::GraphProto& graph,
-    IniParser& iniConfig)
+    IniParser& iniConfig,
+    const bool ONNXInitializer)
 {
     const std::string onnxName = iniConfig.getCurrentSection();
     const std::string model = CellGenerator::mDefaultModel;
@@ -1105,76 +1114,83 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 */
             // Free parameters
-            if ((itInit = initializer.find(node.input(1))) != initializer.end())
+            if(ONNXInitializer) 
             {
-                Tensor<Float_T> scale
-                    = ONNX_unpackTensor<Float_T>((*itInit).second,
-                        {(unsigned int)batchNormCell->getNbOutputs()});
-                scale.reshape({1, batchNormCell->getNbOutputs()});
-
-                for (unsigned int output = 0;
-                    output < batchNormCell->getNbOutputs(); ++output)
+                if ((itInit = initializer.find(node.input(1))) != initializer.end())
                 {
-                    batchNormCell->setScale(output, scale[output]);
+                    Tensor<Float_T> scale
+                        = ONNX_unpackTensor<Float_T>((*itInit).second,
+                            {(unsigned int)batchNormCell->getNbOutputs()});
+                    scale.reshape({1, batchNormCell->getNbOutputs()});
+
+                    for (unsigned int output = 0;
+                        output < batchNormCell->getNbOutputs(); ++output)
+                    {
+                        batchNormCell->setScale(output, scale[output]);
+                    }
+                }
+                else {
+                    std::cout << "  No initializer for \"" << node.input(1)
+                        << "\"" << std::endl;
+                }
+
+                if ((itInit = initializer.find(node.input(2))) != initializer.end())
+                {
+                    Tensor<Float_T> bias
+                        = ONNX_unpackTensor<Float_T>((*itInit).second,
+                            {(unsigned int)batchNormCell->getNbOutputs()});
+                    bias.reshape({1, batchNormCell->getNbOutputs()});
+
+                    for (unsigned int output = 0;
+                        output < batchNormCell->getNbOutputs(); ++output)
+                    {
+                        batchNormCell->setBias(output, bias[output]);
+                    }
+                }
+                else {
+                    std::cout << "  No initializer for \"" << node.input(2)
+                        << "\"" << std::endl;
+                }
+
+                if ((itInit = initializer.find(node.input(3))) != initializer.end())
+                {
+                    Tensor<Float_T> mean
+                        = ONNX_unpackTensor<Float_T>((*itInit).second,
+                            {(unsigned int)batchNormCell->getNbOutputs()});
+                    mean.reshape({1, batchNormCell->getNbOutputs()});
+
+                    for (unsigned int output = 0;
+                        output < batchNormCell->getNbOutputs(); ++output)
+                    {
+                        batchNormCell->setMean(output, mean[output]);
+                    }
+                }
+                else {
+                    std::cout << "  No initializer for \"" << node.input(3)
+                        << "\"" << std::endl;
+                }
+
+                if ((itInit = initializer.find(node.input(4))) != initializer.end())
+                {
+                    Tensor<Float_T> variance
+                        = ONNX_unpackTensor<Float_T>((*itInit).second,
+                            {(unsigned int)batchNormCell->getNbOutputs()});
+                    variance.reshape({1, batchNormCell->getNbOutputs()});
+
+                    for (unsigned int output = 0;
+                        output < batchNormCell->getNbOutputs(); ++output)
+                    {
+                        batchNormCell->setVariance(output, variance[output]);
+                    }
+                }
+                else {
+                    std::cout << "  No initializer for \"" << node.input(4)
+                        << "\"" << std::endl;
                 }
             }
             else {
-                std::cout << "  No initializer for \"" << node.input(1)
-                    << "\"" << std::endl;
-            }
-
-            if ((itInit = initializer.find(node.input(2))) != initializer.end())
-            {
-                Tensor<Float_T> bias
-                    = ONNX_unpackTensor<Float_T>((*itInit).second,
-                        {(unsigned int)batchNormCell->getNbOutputs()});
-                bias.reshape({1, batchNormCell->getNbOutputs()});
-
-                for (unsigned int output = 0;
-                    output < batchNormCell->getNbOutputs(); ++output)
-                {
-                    batchNormCell->setBias(output, bias[output]);
-                }
-            }
-            else {
-                std::cout << "  No initializer for \"" << node.input(2)
-                    << "\"" << std::endl;
-            }
-
-            if ((itInit = initializer.find(node.input(3))) != initializer.end())
-            {
-                Tensor<Float_T> mean
-                    = ONNX_unpackTensor<Float_T>((*itInit).second,
-                        {(unsigned int)batchNormCell->getNbOutputs()});
-                mean.reshape({1, batchNormCell->getNbOutputs()});
-
-                for (unsigned int output = 0;
-                    output < batchNormCell->getNbOutputs(); ++output)
-                {
-                    batchNormCell->setMean(output, mean[output]);
-                }
-            }
-            else {
-                std::cout << "  No initializer for \"" << node.input(3)
-                    << "\"" << std::endl;
-            }
-
-            if ((itInit = initializer.find(node.input(4))) != initializer.end())
-            {
-                Tensor<Float_T> variance
-                    = ONNX_unpackTensor<Float_T>((*itInit).second,
-                        {(unsigned int)batchNormCell->getNbOutputs()});
-                variance.reshape({1, batchNormCell->getNbOutputs()});
-
-                for (unsigned int output = 0;
-                    output < batchNormCell->getNbOutputs(); ++output)
-                {
-                    batchNormCell->setVariance(output, variance[output]);
-                }
-            }
-            else {
-                std::cout << "  No initializer for \"" << node.input(4)
-                    << "\"" << std::endl;
+                std::cout << "  No ONNX initializer for BatchNormalization " 
+                << " specifics parameters" << std::endl;
             }
         }
         //BitShift
@@ -1507,52 +1523,59 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             //convCell->writeMap("map/" + node.output(0) + "_map.dat");
 
             // Free parameters
-            if (node.input_size() > 1
-                && (itInit = initializer.find(node.input(1)))
-                    != initializer.end())
+            if(ONNXInitializer) 
             {
-                kernelDims.push_back(nbInputs);
-                kernelDims.push_back(convCell->getNbOutputs());
-
-                const Tensor<Float_T> kernels
-                    = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
-
-                for (unsigned int output = 0;
-                    output < convCell->getNbOutputs(); ++output)
+                if (node.input_size() > 1
+                    && (itInit = initializer.find(node.input(1)))
+                        != initializer.end())
                 {
-                    for (unsigned int channel = 0;
-                        channel < convCell->getNbChannels(); ++channel)
-                    {
-                        if (!convCell->isConnection(channel, output))
-                            continue;
+                    kernelDims.push_back(nbInputs);
+                    kernelDims.push_back(convCell->getNbOutputs());
 
-                        convCell->setWeight(output, channel,
-                                            kernels[output][channel / group]);
+                    const Tensor<Float_T> kernels
+                        = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+
+                    for (unsigned int output = 0;
+                        output < convCell->getNbOutputs(); ++output)
+                    {
+                        for (unsigned int channel = 0;
+                            channel < convCell->getNbChannels(); ++channel)
+                        {
+                            if (!convCell->isConnection(channel, output))
+                                continue;
+
+                            convCell->setWeight(output, channel,
+                                                kernels[output][channel / group]);
+                        }
                     }
                 }
-            }
-            else if (node.input_size() > 1) {
-                std::cout << "  No initializer for \"" << node.input(1)
-                    << "\"" << std::endl;
-            }
+                else if (node.input_size() > 1) {
+                    std::cout << "  No initializer for \"" << node.input(1)
+                        << "\"" << std::endl;
+                }
 
-            if (node.input_size() > 2
-                && (itInit = initializer.find(node.input(2)))
-                    != initializer.end())
-            {
-                Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
-                    (*itInit).second, {(unsigned int)convCell->getNbOutputs()});
-                biases.reshape({1, convCell->getNbOutputs()});
-
-                for (unsigned int output = 0;
-                    output < convCell->getNbOutputs(); ++output)
+                if (node.input_size() > 2
+                    && (itInit = initializer.find(node.input(2)))
+                        != initializer.end())
                 {
-                    convCell->setBias(output, biases[output]);
+                    Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
+                        (*itInit).second, {(unsigned int)convCell->getNbOutputs()});
+                    biases.reshape({1, convCell->getNbOutputs()});
+
+                    for (unsigned int output = 0;
+                        output < convCell->getNbOutputs(); ++output)
+                    {
+                        convCell->setBias(output, biases[output]);
+                    }
+                }
+                else if (node.input_size() > 2) {
+                    std::cout << "  No initializer for \"" << node.input(2)
+                        << "\"" << std::endl;
                 }
             }
-            else if (node.input_size() > 2) {
-                std::cout << "  No initializer for \"" << node.input(2)
-                    << "\"" << std::endl;
+            else {
+                std::cout << "  No ONNX initializer for Convolution " 
+                << " specifics parameters" << std::endl;
             }
         }
         //ConvInteger
@@ -1676,6 +1699,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Floor
         //GRU
         //Gather
+        else if (node.op_type() == "Gather") {
+            std::cout << Utils::cnotice << "  Ignore Gather operation"
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         //GatherElements
         //GatherND
         else if (node.op_type() == "Gemm" || node.op_type() == "MatMul") {
@@ -1781,7 +1813,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
                 std::cout << "  # Synapses: " << fcCell->getNbSynapses()
                     << std::endl;
-    
+
                 if (fcCell->getInputsSize() != weights.size() / nbOutputs)
                 {
                     std::ostringstream errorStr;
@@ -1795,57 +1827,64 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
 
                 // Init weights
-                if (transB) {
-                    weights.reshape({1, fcCell->getInputsSize(),
-                                    fcCell->getNbOutputs()});
-                }
-                else {
-                    weights.reshape({1, fcCell->getNbOutputs(),
-                                    fcCell->getInputsSize()});
-                }
-
-                for (unsigned int output = 0;
-                    output < fcCell->getNbOutputs(); ++output)
+                if(ONNXInitializer) 
                 {
-                    for (unsigned int channel = 0;
-                        channel < fcCell->getInputsSize(); ++channel)
-                    {
-                        Tensor<Float_T> w = (transB)
-                            ? weights[output][channel]
-                            : weights[channel][output];
-
-                        if (alpha != 1.0) {
-                            for (unsigned int i = 0; i < w.size(); ++i)
-                                w(i) *= alpha;
-                        }
-
-                        fcCell->setWeight(output, channel, w);
-                    }
-                }
-
-                // Init bias (Gemm only)
-                if (node.op_type() == "Gemm" && node.input_size() > 2) {
-                    if ((itInit = initializer.find(node.input(2)))
-                        != initializer.end())
-                    {
-                        Tensor<Float_T> bias
-                            = ONNX_unpackTensor<Float_T>((*itInit).second,
-                                {(unsigned int)fcCell->getNbOutputs()});
-                        bias.reshape({1, fcCell->getNbOutputs()});
-
-                        for (unsigned int output = 0;
-                            output < fcCell->getNbOutputs(); ++output)
-                        {
-                            if (beta != 1.0)
-                                bias[output](0) *= beta;
-
-                            fcCell->setBias(output, bias[output]);
-                        }
+                    if (transB) {
+                        weights.reshape({1, fcCell->getInputsSize(),
+                                        fcCell->getNbOutputs()});
                     }
                     else {
-                        std::cout << "  No initializer for \"" << node.input(2)
-                            << "\"" << std::endl;
+                        weights.reshape({1, fcCell->getNbOutputs(),
+                                        fcCell->getInputsSize()});
                     }
+
+                    for (unsigned int output = 0;
+                        output < fcCell->getNbOutputs(); ++output)
+                    {
+                        for (unsigned int channel = 0;
+                            channel < fcCell->getInputsSize(); ++channel)
+                        {
+                            Tensor<Float_T> w = (transB)
+                                ? weights[output][channel]
+                                : weights[channel][output];
+
+                            if (alpha != 1.0) {
+                                for (unsigned int i = 0; i < w.size(); ++i)
+                                    w(i) *= alpha;
+                            }
+
+                            fcCell->setWeight(output, channel, w);
+                        }
+                    }
+
+                    // Init bias (Gemm only)
+                    if (node.op_type() == "Gemm" && node.input_size() > 2) {
+                        if ((itInit = initializer.find(node.input(2)))
+                            != initializer.end())
+                        {
+                            Tensor<Float_T> bias
+                                = ONNX_unpackTensor<Float_T>((*itInit).second,
+                                    {(unsigned int)fcCell->getNbOutputs()});
+                            bias.reshape({1, fcCell->getNbOutputs()});
+
+                            for (unsigned int output = 0;
+                                output < fcCell->getNbOutputs(); ++output)
+                            {
+                                if (beta != 1.0)
+                                    bias[output](0) *= beta;
+
+                                fcCell->setBias(output, bias[output]);
+                            }
+                        }
+                        else {
+                            std::cout << "  No initializer for \"" << node.input(2)
+                                << "\"" << std::endl;
+                        }
+                    }
+                }
+                else {
+                    std::cout << "  No ONNX initializer for FC " 
+                    << " specifics parameters" << std::endl;
                 }
             }
             else {
@@ -1992,6 +2031,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Or
         //PRelu
         else if (node.op_type() == "Pad") {
+            /*
             std::string mode = "constant";
 
             if ((itAttr = attribute.find("mode")) != attribute.end())
@@ -2085,6 +2125,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             deepNet->addCell(paddingCell, parentCells);
             paddingCell->initialize();
             cell = paddingCell;
+            */
+            std::cout << Utils::cnotice << "  Ignore Pad operation"
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
         }
         //Pow
         //QLinearConv
