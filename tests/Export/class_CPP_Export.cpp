@@ -325,7 +325,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv11).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().size, 8);
-    ASSERT_EQUALS(memManager.getPlanes(conv11).back().getLimit(), 32*32*aligned);
+    ASSERT_EQUALS(memManager.getPlanes(conv11).back().getLimit(), 32*32*aligned + 32*16 + marginCorrection);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().stride, aligned);
