@@ -126,15 +126,6 @@ public:
             return (getContiguousOffset() + getContiguousSize());
         }
 
-        std::shared_ptr<MemorySpace> memSpace;
-        Clock_T allocated;
-        unsigned int offset;
-        unsigned int size;
-        unsigned int stride;
-        unsigned int length;
-        unsigned int count;
-
-    private:
         // Limit is computed dynamically, as memSpace->size may increase after
         // the creation of this memory space. This is actually necessary to
         // ensure that the memory wrapping works correctly, because when 
@@ -148,6 +139,14 @@ public:
                         / (double)(stride * length)) * (stride * length)
                 : memSpace->size - offset;
         }
+
+        std::shared_ptr<MemorySpace> memSpace;
+        Clock_T allocated;
+        unsigned int offset;
+        unsigned int size;
+        unsigned int stride;
+        unsigned int length;
+        unsigned int count;
     };
 
     struct MaxLifetimeMinSizeFirst {
