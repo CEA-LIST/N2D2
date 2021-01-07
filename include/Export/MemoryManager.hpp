@@ -132,12 +132,16 @@ public:
         // computing the margin required for the wrapping, it is assumed that
         // the previous layer wrapping extends to the full memory space size.
         inline unsigned int getLimit() const {
-            // limit must be a multiple of (stride * length)
+            // limit must be a multiple of (stride * length) if count > 1
+            // or stride if length > 1
             // uses floor() to stay below memSpace->size
             return (count > 1)
                 ? std::floor((memSpace->size - offset)
                         / (double)(stride * length)) * (stride * length)
-                : memSpace->size - offset;
+                : (length > 1)
+                    ? std::floor((memSpace->size - offset)
+                            / (double)stride) * stride
+                    : memSpace->size - offset;
         }
 
         std::shared_ptr<MemorySpace> memSpace;

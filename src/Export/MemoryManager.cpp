@@ -131,6 +131,13 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
                     / (double)(std::max(size, stride) * length))
                         * (std::max(size, stride) * length);
         }
+        else if (length > 1) {
+            // (requiredSize - offset) must be a multiple of stride
+            requiredSize = offset
+                + std::ceil((requiredSize - offset)
+                    / (double)std::max(size, stride))
+                        * std::max(size, stride);
+        }
     }
 
     if (requiredSize > memSpace->size || memSpace->released >= 0) {
@@ -173,15 +180,28 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
                     / (double)(std::max(size, stride) * length))
                         * (std::max(size, stride) * length);
         }
+        else if (length > 1) {
+            // (requiredSize - offset) must be a multiple of stride
+            requiredSize = initialOffset
+                + std::ceil((requiredSize - initialOffset)
+                    / (double)std::max(size, stride))
+                        * std::max(size, stride);
+        }
 
+        // Make sure that the intended margin with previous memPlane will be
+        // respected, as it may actually be lower because of the floor()
+        // in the memPlane getLimit() function.
         if (memPlane.count > 1) {
-            // Make sure that the intended margin with previous memPlane will be
-            // respected, as it may actually be lower because of the floor()
-            // in the memPlane getLimit() function.
             requiredSize = memPlane.offset
                 + std::ceil((requiredSize - memPlane.offset)
                     / (double)(memPlane.stride * memPlane.length))
                         * (memPlane.stride * memPlane.length);
+        }
+        else if (memPlane.length > 1) {
+            requiredSize = memPlane.offset
+                + std::ceil((requiredSize - memPlane.offset)
+                    / (double)memPlane.stride)
+                        * memPlane.stride;
         }
     }
 
