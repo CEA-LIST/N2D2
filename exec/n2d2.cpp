@@ -952,22 +952,19 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 std::ios::fmtflags f(std::cout.flags());
 
-                std::cout << std::setw(2) << std::fixed << std::setprecision(2) 
-                    << std::right;
                 const int progress = std::floor( (( (float)index / nbLearnedStimuli) * 50.0) );
-
-                for(int p = 0; p < 50; ++p) {
-                   if(p%50)
-                   progressBar[p] = '=';
+                int p = 0;
+                for(; p < progress%50; ++p) {
+                    progressBar[p] = '=';
                 }
                 progressBar[p] = '>';
                 for(p = p+1 ;p < 50; ++p) {
                     progressBar[p] = ' ';
                 }   
-
-            
-                std::cout << "\rLearning [" << progressBar << "] #epoch " 
+                std::cout << "\rLearning [" << std::string(progressBar,50) << "] #epoch " 
                     << epoch << " ";
+                std::cout << std::setw(2) << std::fixed << std::setprecision(2) 
+                    << std::right;
 
                 for (std::vector<std::shared_ptr<Target> >::const_iterator
                             itTargets = deepNet->getTargets().begin(),
