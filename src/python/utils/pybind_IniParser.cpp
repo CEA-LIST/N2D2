@@ -1,8 +1,7 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,24 +19,23 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
-#ifdef ONNX
+#ifdef CUDA
 
-#include "Xnet/Network.hpp"
-#include "containers/Tensor.hpp"
-#include "DeepNet.hpp"
-#include "Generator/DeepNetGenerator.hpp"
+#ifdef PYBIND
 #include "utils/IniParser.hpp"
+
+
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_DeepNetGenerator(py::module &m) {
-    py::class_<DeepNetGenerator>(m, "DeepNetGenerator")
-    .def_static("generateFromONNX", &DeepNetGenerator::generateFromONNX, py::arg("network"), py::arg("fileName"), py::arg("iniConifg"), py::arg("deepNet"));
-}
-}
 
+void init_IniParser(py::module &m) {
+    py::class_<IniParser, std::shared_ptr<IniParser>> (m, "IniParser")
+    .def(py::init<>());
+}
+}
 #endif
+
 #endif
