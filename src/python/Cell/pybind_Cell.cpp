@@ -185,7 +185,11 @@ void init_Cell(py::module &m) {
     // .def("loadFreeParameters", &Cell::loadFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false)
     // .def("getId", &Cell::getId)
     // .def("getName", &Cell::getName)
-    // .def("getType", &Cell::getType)
+     .def("getType", &Cell::getType,
+      R"mydelimiter(
+     Get basic cell type
+
+     )mydelimiter")
     // .def("getNbChannels", &Cell::getNbChannels)
     // .def("getChannelsWidth", &Cell::getChannelsWidth)
     // .def("getChannelsHeight", &Cell::getChannelsHeight)

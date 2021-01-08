@@ -21,7 +21,7 @@
 import N2D2
 import n2d2.activation
 import n2d2.solver
-from n2d2.parameterizable import Parameterizable
+from n2d2.n2d2_interface import N2D2_Interface
 
 """
 Structure that is organised sequentially. 
@@ -120,14 +120,23 @@ class Block:
         return output
 
 
-class Cell(Block, Parameterizable):
+class Cell(Block, N2D2_Interface):
 
-    _Type = None
+    def __init__(self, NbOutputs, Name, **config_parameters):
 
-    def __init__(self, NbOutputs, Name):
+        if 'Model' in config_parameters:
+            self._Model = config_parameters.pop('Model')
+        else:
+            self._Model = n2d2.global_variables.default_Model
+        if 'DataType' in config_parameters:
+            self._DataType = config_parameters.pop('DataType')
+        else:
+            self._DataType = n2d2.global_variables.default_DataType
+
+        self._model_key = self._Model + '<' + self._DataType + '>'
 
         #Block.__init__(self, Name)
-        Parameterizable.__init__(self)
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._Name = Name
         self._blocks = self
@@ -138,17 +147,8 @@ class Cell(Block, Parameterizable):
             'NbOutputs': NbOutputs,
         })
 
-        #self._optional_constructor_arguments = {}
-
-        #self._cell = None
-        #self._model_parameters = {}
-
-        # Keeps a trace of modified parameters for print function
-        #self._modified_keys = []
-
-        self._model_config_parameters = {}
-        self._model_parameter_definitions = {}
-        self._model_key = ""
+        net = N2D2.Network()
+        self._deepnet = N2D2.DeepNet(net)
 
 
     def get_output_cell(self):
@@ -157,16 +157,8 @@ class Cell(Block, Parameterizable):
     def get_input_cell(self):
         return self
 
-    def generate_model(self, Model, DataType):
-        if self._Name is None:
-            raise RuntimeError("Trying to run generate_model on Cell of type " + str(type(self)) + " without name.")
-        self._model_key = Model + '<' + DataType + '>'
-
-    def _set_model_config_parameters(self, Model, model_config_parameters):
-        if Model in self._model_parameter_definitions:
-            self._model_config_parameters = self._model_parameter_definitions[Model]
-        self._set_parameters(self._model_config_parameters, model_config_parameters)
-        self._set_N2D2_parameters(self._model_config_parameters)
+    def get_type(self):
+        return self._N2D2_object.getType()
 
     def add_input(self, cell):
         self._inputs.append(cell)
@@ -177,27 +169,10 @@ class Cell(Block, Parameterizable):
         self._N2D2_object.initialize()
 
 
-
     def __str__(self):
         output = self.get_type()+"Cell(" + self._model_key + ")"
-        output += Parameterizable.__str__(self)
-        if len(self._model_config_parameters.items()) > 0:
-            output += "["
-            for key, value in self._model_config_parameters.items():
-                if key in self._modified_keys:
-                    output += key + "=" + str(value) + ", "
-            output = output[:len(output) - 2]
-            output += "]"
+        output += N2D2_Interface.__str__(self)
         return output
-
-    def get_type(self):
-        if self._Type is not None:
-            return self._Type
-        else:
-            raise n2d2.UndefinedModelError("Abstract Cell has no type")
-
-        # Using the string parser as in the INI files
-        # NOTE: Be careful for floats (like in INI)
 
 
     def convert_to_INI_section(self):
@@ -211,327 +186,111 @@ class Cell(Block, Parameterizable):
                 output += ","
             output += cell.get_name()
         output += "\n"
-        output += "Type=" + self._Type + "\n"
+        output += "Type=" + self.get_type() + "\n"
         output += "NbOutputs=" + str(self._constructor_arguments['NbOutputs']) + "\n"
         return output
    
 
 class Fc(Cell):
 
-    _Type = 'Fc'
-
     _cell_constructors = {
             'Frame<float>': N2D2.FcCell_Frame_float,
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
-    """
-    _weightsExportFormat = {
-        'OC': N2D2.FcCell.WeightsExportFormat.OC,
-        'CO': N2D2.FcCell.WeightsExportFormat.CO
-    }
-    """
-
-
-
     def __init__(self, NbOutputs, Name=None, **config_parameters):
-        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name)
+        Cell.__init__(self, NbOutputs, Name, **config_parameters)
 
-        """Equivalent to N2D2 class generator defaults. 
-           The default objects are only abstract n2d2 objects with small memory footprint.
-           ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
-           validity of **cell_parameters entries. For easier compatibility with INI files, we 
-           use the same name convention and parameter names.
-        """
-
-
-        """
-        These are the FcCell parameters.
-        NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
-        incoherences, but it increases readability of the library"""
-
-        self._config_parameters.update({
-            'ActivationFunction': n2d2.activation.Tanh(),
-            'WeightsSolver': n2d2.solver.SGD(),
-            'BiasSolver': n2d2.solver.SGD(),
-            'WeightsFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
-            'BiasFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
-            'NoBias': False,
-            'Normalize': False,
-            'BackPropagate': True,
-            'WeightsExportFormat': 'OC',
-            'OutputsRemap': "",
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
-
-        # Set model specific parameters
-        self._frame_model_config_parameters = {
-            'DropConnect': 1.0
-        }
-
-        self._model_parameter_definitions['Frame'] = self._frame_model_config_parameters
-
-        # NOTE: Other models have to be added, for example spike models
-
-         
-    """
-    # Optional for the moment. Has to assure coherence between n2d2 and N2D2 values
-    def set_model_parameter(self, key, value):
-        self._model_config_parameters[key] = value
-        #self.cell.setParameter() # N2D2 code
-    """
-    
-    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_config_parameters):
-
-        Cell.generate_model(self, Model, DataType)
-
-        self._N2D2_object = self._cell_constructors[self._model_key](deepnet,
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet,
                                                             self._Name,
                                                             self._constructor_arguments['NbOutputs'])
 
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
-                self._config_parameters['ActivationFunction'].generate_model(Model, DataType)
                 self._N2D2_object.setActivation(self._config_parameters['ActivationFunction'].N2D2())
             elif key is 'WeightsSolver':
-                self._config_parameters['WeightsSolver'].generate_model(Model, DataType)
                 self._N2D2_object.setWeightsSolver(self._config_parameters['WeightsSolver'].N2D2())
             elif key is 'BiasSolver':
-                self._config_parameters['BiasSolver'].generate_model(Model, DataType)
                 self._N2D2_object.setBiasSolver(self._config_parameters['BiasSolver'].N2D2())
             elif key is 'WeightsFiller':
-                self._config_parameters['WeightsFiller'].generate_model(DataType)
                 self._N2D2_object.setWeightsFiller(self._config_parameters['WeightsFiller'].N2D2())
             elif key is 'BiasFiller':
-                self._config_parameters['BiasFiller'].generate_model(DataType)
                 self._N2D2_object.setBiasFiller(self._config_parameters['BiasFiller'].N2D2())
-            # Not necessary when parsing strings as parameters
-            #elif key is 'WeightsExportFormat':
-            #    self._config_parameters['WeightsExportFormat'] = self._weightsExportFormat[value]
-            #    self._N2D2_object.setParameter(key, self._config_parameters['WeightsExportFormat'])
             else:
                 self._set_N2D2_parameter(key, value)
 
-        self._set_model_config_parameters(Model, model_config_parameters)
 
 
 class Conv(Cell):
-    _Type = 'Conv'
 
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
     }
 
-    """
-    _weightsExportFormat = {
-        'OCHW': N2D2.ConvCell.WeightsExportFormat.OCHW,
-        'HWCO': N2D2.Convell.WeightsExportFormat.HWCO
-    }
-    """
-
     def __init__(self,
                  NbOutputs,
                  KernelDims,
-                 SubSampleDims=None,
-                 StrideDims=None,
-                 PaddingDims=None,
-                 DilationDims=None,
                  Name=None,
                  **config_parameters):
-        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name)
+        Cell.__init__(self, NbOutputs, Name, **config_parameters)
 
-        """Equivalent to N2D2 class generator defaults. 
-           The default objects are only abstract n2d2 objects with small memory footprint.
-           ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
-           validity of **config_parameters entries. For easier compatibility with INI files, we 
-           use the same name convention and parameter names.
-        """
-
-        """
-        These are the ConvCell parameters.
-        NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
-        incoherences, but it increases readability of the library. It also allows to check that no invalid
-        parameters are passed
-        """
-
-        """
-        NOTE: For the moment only list definition of KernelDims, SubSampleDims, StrideDims, PaddingDims, DilationDims
-        allowed (in contrast to ConvCellGenerator in N2D2)
-        """
         self._constructor_arguments.update({
             'KernelDims': KernelDims,
         })
 
-        self._optional_constructor_arguments.update({
-            'SubSampleDims': [1, 1],
-            'StrideDims': [1, 1],
-            'PaddingDims': [0, 0],
-            'DilationDims': [1, 1],
-        })
+        self._parse_optional_arguments(['SubSampleDims', 'StrideDims', 'PaddingDims', 'DilationDims'])
 
-        if SubSampleDims is not None:
-            self._optional_constructor_arguments['SubSampleDims'] = SubSampleDims
-            self._modified_keys.append('SubSampleDims')
-        if StrideDims is not None:
-            self._optional_constructor_arguments['StrideDims'] = StrideDims
-            self._modified_keys.append('StrideDims')
-        if PaddingDims is not None:
-            self._optional_constructor_arguments['PaddingDims'] = PaddingDims
-            self._modified_keys.append('PaddingDims')
-        if DilationDims is not None:
-            self._optional_constructor_arguments['DilationDims'] = DilationDims
-            self._modified_keys.append('DilationDims')
-
-        self._config_parameters.update({
-            'ActivationFunction': n2d2.activation.Tanh(),
-            'WeightsSolver': n2d2.solver.SGD(),
-            'BiasSolver': n2d2.solver.SGD(),
-            'WeightsFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
-            'BiasFiller': n2d2.filler.Normal(Mean=0.0, StdDev=0.05),
-            'NoBias': False,
-            'BackPropagate': True,
-            'WeightsExportFormat': 'OCHW',
-            'WeightsExportFlip': False,
-            'OutputsRemap': "",
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
-
-        # No model specific parameters for the moment
-
-
-    # TODO: There is a lot of duplicate code between fc cell and conv cell. Implement additional parent class?
-    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_config_parameters):
-
-        Cell.generate_model(self, Model, DataType)
-
-        self._N2D2_object = self._cell_constructors[self._model_key](deepnet,
-                                                            self._Name,
-                                                            self._constructor_arguments['KernelDims'],
-                                                            self._constructor_arguments['NbOutputs'],
-                                                            self._optional_constructor_arguments['SubSampleDims'],
-                                                            self._optional_constructor_arguments['StrideDims'],
-                                                            self._optional_constructor_arguments['PaddingDims'],
-                                                            self._optional_constructor_arguments['DilationDims'])
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet,
+                                                                     self._Name,
+                                                                     self._constructor_arguments['KernelDims'],
+                                                                     self._constructor_arguments['NbOutputs'],
+                                                                     **self._optional_constructor_arguments)
 
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
-                self._config_parameters['ActivationFunction'].generate_model(Model, DataType)
                 self._N2D2_object.setActivation(self._config_parameters['ActivationFunction'].N2D2())
             elif key is 'WeightsSolver':
-                self._config_parameters['WeightsSolver'].generate_model(Model, DataType)
                 self._N2D2_object.setWeightsSolver(self._config_parameters['WeightsSolver'].N2D2())
             elif key is 'BiasSolver':
-                self._config_parameters['BiasSolver'].generate_model(Model, DataType)
                 self._N2D2_object.setBiasSolver(self._config_parameters['BiasSolver'].N2D2())
             elif key is 'WeightsFiller':
-                self._config_parameters['WeightsFiller'].generate_model(DataType)
                 self._N2D2_object.setWeightsFiller(self._config_parameters['WeightsFiller'].N2D2())
             elif key is 'BiasFiller':
-                self._config_parameters['BiasFiller'].generate_model(DataType)
                 self._N2D2_object.setBiasFiller(self._config_parameters['BiasFiller'].N2D2())
-            # Not necessary when parsing strings as parameters
-            # elif key is 'WeightsExportFormat':
-            #    self._config_parameters['WeightsExportFormat'] = self._weightsExportFormat[value]
-            #    self._N2D2_object.setParameter(key, self._config_parameters['WeightsExportFormat'])
             else:
                 self._set_N2D2_parameter(key, value)
-
-        self._set_model_config_parameters(Model, model_config_parameters)
 
 
 
 class ElemWise(Cell):
-    _Type = 'ElemWise'
 
     _cell_constructors = {
         'Frame': N2D2.ElemWiseCell_Frame,
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
 
+    def __init__(self, NbOutputs, Name=None, **config_parameters):
+        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
 
-    _operation= {
-        'Sum': N2D2.ElemWiseCell.Operation.Sum,
-        'AbsSum': N2D2.ElemWiseCell.Operation.AbsSum,
-        'EuclideanSum': N2D2.ElemWiseCell.Operation.EuclideanSum,
-        'Prod': N2D2.ElemWiseCell.Operation.Prod,
-        'Max': N2D2.ElemWiseCell.Operation.Max,
-    }
-
-
-    def __init__(self, NbOutputs, Operation=None, Weights=None, Shifts=None, Name=None, **config_parameters):
-        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name)
-
-        """Equivalent to N2D2 class generator defaults. 
-           The default objects are only abstract n2d2 objects with small memory footprint.
-           ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
-           validity of **config_parameters entries. For easier compatibility with INI files, we 
-           use the same name convention and parameter names.
-        """
-
-        """
-        These are the FcCell parameters.
-        NOTE: Setting the default parameters explicitly is potentially superfluous and risks to produce 
-        incoherences, but it increases readability of the library"""
-
-        self._optional_constructor_arguments.update({
-            'Operation': self._operation['Sum'],
-            'Weights': [],
-            'Shifts': [],
-        })
-
-        if Operation is not None:
-            self._optional_constructor_arguments['Operation'] = Operation
-            self._modified_keys.append('Operation')
-        if Weights is not None:
-            self._optional_constructor_arguments['Weights'] = Weights
-            self._modified_keys.append('Weights')
-        if Shifts is not None:
-            self._optional_constructor_arguments['Shifts'] = Shifts
-            self._modified_keys.append('Shifts')
-
-        # TODO: What is the default value in N2D2?
-        self._config_parameters.update({
-            'ActivationFunction': None
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
-
-        # No model specific parameters for the moment
-
-
-    def generate_model(self, deepnet, Model='Frame', DataType=None, **model_config_parameters):
-
-        Cell.generate_model(self, Model, DataType)
-
-        # ElemWise cell has no DataType
-        self._N2D2_object = self._cell_constructors[Model](deepnet,
+        self._parse_optional_arguments(['Operation', 'Weights', 'Shifts'])
+        self._N2D2_object = self._cell_constructors[self._Model](self._deepnet,
                                                 self._Name,
                                                 self._constructor_arguments['NbOutputs'],
-                                                self._optional_constructor_arguments['Operation'],
-                                                self._optional_constructor_arguments['Weights'],
-                                                self._optional_constructor_arguments['Shifts'])
+                                                **self._optional_constructor_arguments)
 
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
-            if key is 'ActivationFunction' and self._config_parameters['ActivationFunction'] is not None:
-                self._config_parameters['ActivationFunction'].generate_model(Model, DataType)
+            if key is 'ActivationFunction':
                 self._N2D2_object.setActivation(self._config_parameters['ActivationFunction'].N2D2())
             else:
                 self._set_N2D2_parameter(key, value)
 
-        self._set_model_config_parameters(Model, model_config_parameters)
-
 
 
 class Softmax(Cell):
-    """Static members"""
-
-    _Type = 'Softmax'
 
     _cell_constructors = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
@@ -539,34 +298,13 @@ class Softmax(Cell):
     }
 
     def __init__(self, NbOutputs, Name=None, **config_parameters):
-        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name)
+        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
 
-        """
-            SoftmaxCell parameters.
-            Equivalent to N2D2 class generator defaults. 
-            The default objects are only abstract n2d2 objects with small memory footprint.
-            ALL existing cell parameters (in N2D2) are declared here, which also permits to check 
-            validity of **config_parameters entries. For easier compatibility with INI files, we 
-            use the same name convention and parameter names.
-        """
-        self._config_parameters.update({
-            'WithLoss': False,
-            'GroupSize': 0,
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
-
-        # No model specific parameters for the moment
+        self._parse_optional_arguments(['WithLoss', 'GroupSize'])
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet,
+                                                                     self._Name,
+                                                                     self._constructor_arguments['NbOutputs'],
+                                                                     **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
 
-    def generate_model(self, deepnet, Model='Frame', DataType='float', **model_config_parameters):
-
-        Cell.generate_model(self, Model, DataType)
-
-        self._N2D2_object = self._cell_constructors[self._model_key](deepnet,
-                                                            self._Name,
-                                                            self._constructor_arguments['NbOutputs'],
-                                                            self._config_parameters['WithLoss'],
-                                                            self._config_parameters['GroupSize'])
-
-        self._set_model_config_parameters(Model, model_config_parameters)

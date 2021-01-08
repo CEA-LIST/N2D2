@@ -20,116 +20,57 @@
 """
 import N2D2
 import n2d2
+from n2d2.n2d2_interface import N2D2_Interface
 
-class Filler:
+class Filler(N2D2_Interface):
 
-    def __init__(self):
+    def __init__(self, **config_parameters):
 
-        self._filler = None
-        self._filler_parameters = {}
+        if 'DataType' in config_parameters:
+            self._DataType = config_parameters.pop('DataType')
+        else:
+            self._DataType = n2d2.global_variables.default_DataType
 
-        self._model_key = ""
+        self._model_key = '<' + self._DataType + '>'
 
-    def set_filler_parameters(self, filler_parameters):
-        for key, value in filler_parameters.items():
-            if key in self._filler_parameters:
-                self._filler_parameters[key] = value
-            else:
-                raise n2d2.UndefinedParameterError(key, self)
-
-    def N2D2(self):
-        if self._filler is None:
-            raise n2d2.UndefinedModelError("N2D2 filler member has not been created. Did you run generate_model?")
-        return self._filler
+        N2D2_Interface.__init__(self, **config_parameters)
 
     def __str__(self):
-        output = ""
-        for key, value in self._filler_parameters.items():
-            output += key + ": " + str(value) + "; "
-        # output += "\n"
+        output = self._type
+        output += N2D2_Interface.__str__(self)
         return output
 
 
 class He(Filler):
-    """Static members"""
+
+    _INI_type = 'HeFiller'
+    _type = "HeFiller"
+
     _filler_generators = {
         '<float>': N2D2.HeFiller_float,
-        #'<double>': N2D2.HeFiller_float
     }
 
-    def __init__(self, **filler_parameters):
-        super().__init__()
+    def __init__(self, **config_parameters):
+        Filler.__init__(self, **config_parameters)
 
-        """Constructor arguments"""
-        self._filler_parameters.update({
-            'VarianceNorm': 'FanIn',
-            'MeanNorm': 0.0,
-            'Scaling': 1.0
-        })
-
-        self.set_filler_parameters(filler_parameters)
-
-
-    # TODO: Add constructor that initialized based on INI file section
-
-
-    def generate_model(self, DataType='float'):
-        self._model_key = '<' + DataType + '>'
-
-        _variance_norm_generator = {
-            'FanIn': self._filler_generators[self._model_key].FanIn,
-            'Average': self._filler_generators[self._model_key].Average,
-            'FanOut': self._filler_generators[self._model_key].FanOut
-        }
-
-        self._filler = self._filler_generators[self._model_key](_variance_norm_generator[
-                                                                    self._filler_parameters['VarianceNorm']],
-                                                                self._filler_parameters['MeanNorm'],
-                                                                self._filler_parameters['Scaling'])
-
-        # TODO: Code to (Re)-initialize model parameters
-
-
-    def __str__(self):
-        output = "HeFiller(" + self._model_key + "): "
-        output += super().__str__()
-        return output
-
-
+        self._parse_optional_arguments(['VarianceNorm', 'MeanNorm', 'Scaling'])
+        self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
 
 class Normal(Filler):
+
+    _INI_type = 'NormalFiller'
+    _type = "NormalFiller"
+
     """Static members"""
     _filler_generators = {
         '<float>': N2D2.NormalFiller_float,
-        #'<double>': N2D2.NormalFiller_float
     }
 
-    def __init__(self, **filler_parameters):
-        super().__init__()
+    def __init__(self, **config_parameters):
+        Filler.__init__(self, **config_parameters)
 
-        """Constructor arguments"""
-        self._filler_parameters.update({
-            'Mean': 0.0,
-            'StdDev': 1.0,
-        })
-
-        self.set_filler_parameters(filler_parameters)
-
-
-    # TODO: Add constructor that initialized based on INI file section
-
-
-    def generate_model(self, DataType='float'):
-        self._model_key = '<' + DataType + '>'
-
-        self._filler = self._filler_generators[self._model_key](self._filler_parameters['Mean'],
-                                                                self._filler_parameters['StdDev'])
-
-        # TODO: Code to (Re)-initialize model parameters
-
-
-    def __str__(self):
-        output = "HeFiller(" + self._model_key + "): "
-        output += super().__str__()
-        return output
+        self._parse_optional_arguments(['Mean', 'StdDev'])
+        self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)

@@ -33,8 +33,8 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Solver(py::module &m) {
-    py::class_<Solver, std::shared_ptr<Solver>, Parameterizable> (m, "Solver", py::multiple_inheritance());
-
+    py::class_<Solver, std::shared_ptr<Solver>, Parameterizable> (m, "Solver", py::multiple_inheritance())
+    .def("getType", &Solver::getType);
 }
 }
 #endif
