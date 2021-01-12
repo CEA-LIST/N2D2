@@ -133,8 +133,12 @@ class Cell(Block, N2D2_Interface):
         else:
             self._DataType = n2d2.global_variables.default_DataType
 
-        self._model_key = self._Model + '<' + self._DataType + '>'
-
+        # Some cells such as ElemWise doesn't need a default DataType.
+        if self._DataType:
+            self._model_key = self._Model + '<' + self._DataType + '>'
+        else:
+            self._model_key = self._Model 
+    
         #Block.__init__(self, Name)
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -307,4 +311,10 @@ class Softmax(Cell):
                                                                      **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
-
+# TODO : Does this already exist @Johannes ?
+cell_dict = {
+    "Fc" : Fc,
+    "Conv": Conv,
+    "ElemWise" : ElemWise,
+    "Softmax" : Softmax
+}

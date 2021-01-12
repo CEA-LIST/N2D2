@@ -33,7 +33,7 @@ import n2d2.target
 import n2d2.model
 import n2d2.application
 import n2d2.global_variables
-
+import n2d2.converter
 """
 Packages that exist, but should not be used directly in API
 """
