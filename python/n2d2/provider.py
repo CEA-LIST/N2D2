@@ -21,58 +21,33 @@
 
 import N2D2
 import n2d2
-from n2d2.parameterizable import Parameterizable
+from n2d2.n2d2_interface import N2D2_Interface
 
 
-class DataProvider(Parameterizable):
-
-    _name = 'sp'
+class DataProvider(N2D2_Interface):
+    _INI_type = 'sp'
+    _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
-    def __init__(self, Database, Size, BatchSize=None, CompositeStimuli=None, **config_parameters):
-        Parameterizable.__init__(self)
+    def __init__(self, Database, Size, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'Database': Database,
             'Size': Size
         })
 
-        self._optional_constructor_arguments.update({
-            'BatchSize': 1,
-            'CompositeStimuli': False,
-        })
-
-        if BatchSize is not None:
-            self._optional_constructor_arguments['BatchSize'] = BatchSize
-            self._modified_keys.append('BatchSize')
-        if CompositeStimuli is not None:
-            self._optional_constructor_arguments['CompositeStimuli'] = CompositeStimuli
-            self._modified_keys.append('CompositeStimuli')
-
-        self._config_parameters.update({
-            "DataSignedMapping": False,
-            "QuantizationLevels": 0,
-            "QuantizationMin": 0.0,
-            "QuantizationMax": 1.0
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
+        self._parse_optional_arguments(['BatchSize', 'CompositeStimuli'])
 
         self._N2D2_object = N2D2.StimuliProvider(database=self._constructor_arguments['Database'].N2D2(),
-                                              size=self._constructor_arguments['Size'],
-                                              batchSize=self._optional_constructor_arguments['BatchSize'],
-                                              compositeStimuli=self._optional_constructor_arguments['CompositeStimuli'])
+                                                 size=self._constructor_arguments['Size'],
+                                                 **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
         # Dictionary of transformation objects
         self._transformations = []
         self._otf_transformations = []
 
-        self._set_N2D2_parameters(self._config_parameters)
-        
-
-
-    def get_name(self):
-        return self._name
 
     def get_database(self):
         return self._constructor_arguments['Database']
@@ -81,8 +56,10 @@ class DataProvider(Parameterizable):
         return self._N2D2_object.readRandomBatch(set=self._constructor_arguments['Database'].StimuliSets[partition])
 
     def read_batch(self, partition, idx):
-        return self._N2D2_object.readBatch(set=self._constructor_arguments['Database'].StimuliSets[partition], startIndex=idx)
+        return self._N2D2_object.readBatch(set=self._constructor_arguments['Database'].StimuliSets[partition],
+                                           startIndex=idx)
 
+    # TODO: Remove second arguments which should use binding default
     def add_transformation(self, transformation):
         self._N2D2_object.addTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
         self._transformations.append(transformation)
@@ -91,8 +68,11 @@ class DataProvider(Parameterizable):
         self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
         self._otf_transformations.append(transformation)
 
+    def __str__(self):
+        return self._type + N2D2_Interface.__str__(self)
+
     def convert_to_INI_section(self):
-        output = "[" + self._name + "]\n"
+        output = "[" + self._INI_type + "]\n"
         output += "Size="
         for idx, dim in enumerate(self._constructor_arguments['Size']):
             if idx > 0:

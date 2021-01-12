@@ -21,7 +21,7 @@
 
 import N2D2
 import n2d2
-from n2d2.parameterizable import Parameterizable
+from n2d2.n2d2_interface import N2D2_Interface
 
 """
 For the tranformations, it is relatively important to be able to write custom 
@@ -56,15 +56,15 @@ class PadCropTransformation():
 """
 
 
-class Transformation(Parameterizable):
+class Transformation(N2D2_Interface):
 
     # TODO: Is there any way to check that no abstract Transformation object is generated?
-    def __init__(self):
-        Parameterizable.__init__(self)
+    def __init__(self, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
 
     def __str__(self):
         output = self._Type + "Transformation"
-        output += Parameterizable.__str__(self)
+        output += N2D2_Interface.__str__(self)
         return output
 
 
@@ -72,8 +72,8 @@ class Composite(Transformation):
 
     _Type = "Composite"
 
-    def __init__(self, transformations):
-        Transformation.__init__(self)
+    def __init__(self, transformations, **config_parameters):
+        Transformation.__init__(self, **config_parameters)
 
         if not isinstance(transformations, list):
             raise TypeError("Wanted ", type(list), " got ", type(transformations))
@@ -88,34 +88,15 @@ class PadCrop(Transformation):
 
     _Type = "PadCrop"
 
-    """
-    # Currently not necessary since configured with N2D2.set_Parameter(string)
-    _border_type = {
-        "ConstantBorder", N2D2.PadCropTransformation.BorderType.ConstantBorder,
-        "ReplicateBorder", N2D2.PadCropTransformation.BorderType.ReplicateBorder,
-        "ReflectBorder", N2D2.PadCropTransformation.BorderType.ReflectBorder,
-        "WrapBorder", N2D2.PadCropTransformation.BorderType.WrapBorder,
-        "MinusOneReflectBorder", N2D2.PadCropTransformation.BorderType.MinusOneReflectBorder,
-        "MeanBorder", N2D2.PadCropTransformation.BorderType.MeanBorder
-    }
-    """
-
     # INI file parameters have same upper case name convention
     def __init__(self, Width, Height, **config_parameters):
-        Transformation.__init__(self)
+        Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'Width': Width,
             'Height': Height,
         })
 
-        self._config_parameters.update({
-            'AdditiveWH': False,
-            'BorderType': 'MinusOneReflectBorder',
-            'BorderValue': []
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
         self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['Width'],
                                                        self._constructor_arguments['Height'])
         self._set_N2D2_parameters(self._config_parameters)
@@ -126,18 +107,8 @@ class Distortion(Transformation):
     _Type = "Distortion"
 
     def __init__(self, **config_parameters):
-        Transformation.__init__(self)
+        Transformation.__init__(self, **config_parameters)
 
-        self._config_parameters.update({
-            'ElasticGaussianSize': 15,
-            'ElasticSigma': 6.0,
-            'ElasticScaling': 0.0,
-            'Scaling': 0.0,
-            'Rotation': 0.0,
-            'IgnoreMissingData': False
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
         self._N2D2_object = N2D2.DistortionTransformation()
         self._set_N2D2_parameters(self._config_parameters)
         

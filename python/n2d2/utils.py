@@ -19,6 +19,16 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
+class ConfigSection(dict):
+    def __init__(self, **kwargs):
+        self._config_params = kwargs
+
+    def get(self):
+        return self._config_params
+
+    def __str__(self):
+        print(self._config_params)
+
 def convert_to_INI(path, database, provider, deepnet, target):
     file = open(path+".ini", 'w')
     output = "DefaultModel=" + deepnet.get_model() + "\n\n"

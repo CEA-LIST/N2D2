@@ -21,6 +21,7 @@
 
 import N2D2
 import n2d2
+from n2d2.n2d2_interface import N2D2_Interface
 
 """
 At the moment, this class is rather superfluous, and servers mainly for hiding
@@ -30,7 +31,8 @@ Alternatively, this could simply be done by the corresponding Pytorch functions
 since there is no GPU model involved.
 """
 
-class Database():
+# TODO: Abstract classes?
+class Database(N2D2_Interface):
 
     StimuliSets = {
         'Learn': N2D2.Database.Learn,
@@ -39,46 +41,39 @@ class Database():
         'Unpartitioned': N2D2.Database.Unpartitioned
     }
 
-
-
-    def __init__(self, database):
-        self._database = database
+    def __init__(self, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
 
     def get_nb_stimuli(self, partition):
-        return self._database.getNbStimuli(self.StimuliSets[partition])
-
-
-    def N2D2(self):
-        if self._database is None:
-            raise n2d2.UndefinedModelError("N2D2 database member has not been created")
-        return self._database
+        return self._N2D2_object.getNbStimuli(self.StimuliSets[partition])
 
     def load(self, dataPath, **kwargs):
-        self._database.load(dataPath=dataPath, **kwargs)
+        self._N2D2_object.load(dataPath=dataPath, **kwargs)
+
+    def __str__(self):
+        return self._type + N2D2_Interface.__str__(self)
 
 
 class MNIST(Database):
 
-    _type = 'MNIST_IDX_Database'
+    _INI_type = 'MNIST_IDX_Database'
+    _type = "MNIST"
 
-    def __init__(self, datapath, Validation):
+    def __init__(self, DataPath, **config_parameters):
+        Database.__init__(self, **config_parameters)
 
-        self._datapath = datapath
-        self._Validation = Validation
+        self._constructor_arguments.update({
+            'DataPath': DataPath,
+        })
+        self._parse_optional_arguments(['LabelPath', 'ExtractROIs', 'Validation'])
+        self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['DataPath'],
+                                                    **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
-        super().__init__(database=N2D2.MNIST_IDX_Database(validation=self._Validation))
-
-        # Necessary to initialize random number generator; TODO: Replace
-        #net = N2D2.Network()
-        #deepNet = N2D2.DeepNet(net)  # Proposition : overload the constructor to avoid passing a Network object
-
-        self._database.load(self._datapath)
-
-    
 
     def convert_to_INI_section(self):
         output = "[database]\n"
-        output += "Type=" + self._type + "\n"
-        output += "Validation=" + str(self._Validation) + "\n"
+        output += "Type=" + self._INI_type + "\n"
+        #N2D2_Interface.create_INI_section()
         return output
 

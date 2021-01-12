@@ -42,20 +42,16 @@ model = n2d2.model.fc_base_named()
 print(model)
 
 print("Create model")
-model = n2d2.deepnet.Sequential(deepnet, model, Model='Frame_CUDA')
+model = n2d2.deepnet.Sequential(deepnet, model)
+#model = n2d2.deepnet.Sequential(deepnet, model, Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_one_layer(), Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_base(), Model='Frame_CUDA')
 
-
 print(model)
 
-#print(model.get_cell('fc1')._cell_parameters['WeightsFiller'])
-#print(model.get_cell('fc2')._cell_parameters['WeightsFiller'])
-
-
-
 print("Create database")
-database = n2d2.database.MNIST(datapath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
+database = n2d2.database.MNIST(DataPath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
+print(database)
 
 print("Create provider")
 provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
@@ -75,13 +71,9 @@ print(n2d2.transform.PadCrop(Width=28, Height=28))
 print(n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10))
 
 print("Create transformation")
-trans = n2d2.transform.Composite([
-    n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10),
-    n2d2.transform.Distortion(),
-    n2d2.transform.Composite([
-        n2d2.transform.PadCrop(Width=28, Height=28)
-    ])
-])
+trans = n2d2.model.nested_transform()
+print(trans)
+
 print("Add transformation")
 provider.add_on_the_fly_transformation(trans)
 # provider.add_transformation(trans)
@@ -89,7 +81,7 @@ provider.add_on_the_fly_transformation(trans)
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model)
 
-classifier.convert_to_INI("model_INI")
+#classifier.convert_to_INI("model_INI")
 
 
 for epoch in range(nb_epochs):

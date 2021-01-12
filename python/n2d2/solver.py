@@ -20,69 +20,44 @@
 """
 import N2D2
 import n2d2
-from n2d2.parameterizable import Parameterizable
+from n2d2.n2d2_interface import N2D2_Interface
 
-class Solver(Parameterizable):
+class Solver(N2D2_Interface):
 
-    def __init__(self):
-        Parameterizable.__init__(self)
-        self._model_config_parameters = {}
-        self._model_parameter_definitions = {}
-        self._model_key = ""
+    def __init__(self, **config_parameters):
 
+        if 'Model' in config_parameters:
+            self._Model = config_parameters.pop('Model')
+        else:
+            self._Model = n2d2.global_variables.default_Model
+        if 'DataType' in config_parameters:
+            self._DataType = config_parameters.pop('DataType')
+        else:
+            self._DataType = n2d2.global_variables.default_DataType
+
+        N2D2_Interface.__init__(self, **config_parameters)
+        self._model_key = self._Model + '<' + self._DataType + '>'
+
+    def get_type(self):
+        return self._N2D2_object.getType()
 
     def __str__(self):
-        output = Parameterizable.__str__(self)
-        if len(self._model_config_parameters.items()) > 0:
-            output += "["
-            for key, value in self._model_config_parameters.items():
-                if key in self._modified_keys:
-                    output += key + "=" + str(value) + ", "
-            output = output[:len(output) - 2]
-            output += "]"
+        output = self.get_type() + "Solver"
+        output += N2D2_Interface.__str__(self)
         return output
 
 
 class SGD(Solver):
-    """Static members"""
+
     _solver_generators = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
         'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float
     }
 
     def __init__(self, **config_parameters):
-        Solver.__init__(self)
-
-        self._config_parameters.update({
-            "LearningRate": 0.01,
-            "Momentum": 0.0,
-            "Decay": 0.0,
-            "Power": 0.0,
-            "IterationSize": 1,
-            "MaxIterations": 0,
-            "WarmUpDuration": 0,
-            "LearningRatePolicy": 'None',
-            "LearningRateStepSize": 1,
-            "LearningRateDecay": 0.1,
-            "QuantizationLevels": 0,
-            "Clamping": ""
-        })
-
-        self._set_parameters(self._config_parameters, config_parameters)
-
-    # TODO: Add method that initialized based on INI file section
-
-
-    def generate_model(self, Model='Frame', DataType='float', **model_config_parameters):
-        self._model_key = Model + '<' + DataType + '>'
-
+        Solver.__init__(self, **config_parameters)
         self._N2D2_object = self._solver_generators[self._model_key]()
+        self._set_N2D2_parameters(self._config_parameters)
 
-        self._set_N2D2_parameters(model_config_parameters)
-
-    def __str__(self):
-        output = "SGDSolver(" + self._model_key + "): "
-        output += Solver.__str__(self)
-        return output
 
 

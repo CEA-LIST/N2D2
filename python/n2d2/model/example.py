@@ -20,6 +20,7 @@
 """
 
 import n2d2
+import n2d2.utils
 
 def fc_base():
     net = n2d2.cell.Block([
@@ -34,12 +35,27 @@ def fc_base():
 
 
 def fc_base_named():
+    #model_config = n2d2.utils.ConfigSection(Model='Frame_CUDA', DataType='float')
+
+    n2d2.global_variables.default_Model = 'Frame_CUDA'
+
+    """Common object members can be defined for several cells without being copied by using the generator objects
+    When they are passed to a cell, the instances are initialized using the constructor with parameters
+    """
+    activation = n2d2.activation.Linear
+    filler = n2d2.filler.Normal
+    solver = n2d2.solver.SGD
+
+    """
+    """
+    solver_config = n2d2.utils.ConfigSection(LearningRate=0.01)
+
     net = n2d2.cell.Block([
         n2d2.cell.Block([
-            n2d2.cell.Fc(NbOutputs=300, Name='fc1'),
+            n2d2.cell.Fc(NbOutputs=300, Name='fc1', ActivationFunction=activation(), WeightsFiller=n2d2.filler.He(), BiasFiller=filler(), WeightsSolver=solver(**solver_config.get()), BiasSolver=solver()),
             n2d2.cell.Fc(NbOutputs=10, Name='fc2')
         ], Name='block1'),
-        n2d2.cell.Softmax(NbOutputs=10, Name='softmax')
+        n2d2.cell.Softmax(NbOutputs=10, Name='softmax', WithLoss=True)
     ])
     return net
 
@@ -97,9 +113,6 @@ def fc_nested_named():
     return net
 
 
-
-
-
 def fc_nested():
     first_block = n2d2.cell.Fc(NbOutputs=100)
     second_block = n2d2.cell.Block([
@@ -127,3 +140,14 @@ def fc_nested():
         top_block,
     ])
     return net
+
+
+def nested_transform():
+    trans = n2d2.transform.Composite([
+        n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10),
+        n2d2.transform.Distortion(),
+        n2d2.transform.Composite([
+            n2d2.transform.PadCrop(Width=28, Height=28)
+        ])
+    ])
+    return trans

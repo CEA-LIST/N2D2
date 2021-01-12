@@ -29,7 +29,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Database(py::module &m) {
-    py::class_<Database, std::shared_ptr<Database>> db(m, "Database", py::multiple_inheritance());
+    py::class_<Database, std::shared_ptr<Database>, Parameterizable> db(m, "Database", py::multiple_inheritance());
 
     db.doc() = 
     R"mydelimiter(

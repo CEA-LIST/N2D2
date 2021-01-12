@@ -20,96 +20,72 @@
 """
 import N2D2
 import n2d2
-from n2d2.parameterizable import Parameterizable
+from n2d2.n2d2_interface import N2D2_Interface
 
-class Activation(Parameterizable):
+class Activation(N2D2_Interface):
 
-    def __init__(self):
-        Parameterizable.__init__(self)
-        self._model_config_parameters = {}
-        self._model_parameter_definitions = {}
-        self._model_key = ""
+    def __init__(self, **config_parameters):
+        if 'Model' in config_parameters:
+            self._Model = config_parameters.pop('Model')
+        else:
+            self._Model = n2d2.global_variables.default_Model
+        if 'DataType' in config_parameters:
+            self._DataType = config_parameters.pop('DataType')
+        else:
+            self._DataType = n2d2.global_variables.default_DataType
 
-    def _set_model_config_parameters(self, Model, model_config_parameters):
-        if Model in self._model_parameter_definitions:
-            self._model_config_parameters = self._model_parameter_definitions[Model]
-        self._set_parameters(self._model_config_parameters, model_config_parameters)
-        self._set_N2D2_parameters(self._model_config_parameters)
+        self._model_key = self._Model + '<' + self._DataType + '>'
 
+        N2D2_Interface.__init__(self, **config_parameters)
+
+
+    def get_type(self):
+        return self._N2D2_object.getType()
 
     def __str__(self):
-        output = str(self._activation_parameters)
-        # output += "\n"
+        output = self.get_type()
+        output += N2D2_Interface.__str__(self)
         return output
 
 
 class Linear(Activation):
-    """Static members"""
+
     _linear_activation_generators = {
         'Frame<float>': N2D2.LinearActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float
     }
 
     def __init__(self, **config_parameters):
-        Activation.__init__(self)
-
-        # No model specific parameters
-
-    def generate_model(self, Model='Frame', DataType='float', **model_config_parameters):
-        self._model_key = Model + '<' + DataType + '>'
-
+        Activation.__init__(self, **config_parameters)
+        # No optional constructor arguments
         self._N2D2_object = self._linear_activation_generators[self._model_key]()
-
-        self._set_model_config_parameters(Model, model_config_parameters)
-
-    def __str__(self):
-        output = "LinearActivation(" + self._model_key + "): "
-        output += Activation.__str__(self)
-        return output
+        self._set_N2D2_parameters(self._config_parameters)
 
 
 class Rectifier(Activation):
-    """Static members"""
-    _relu_activation_generators = {
+
+    _rectifier_activation_generators = {
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
     }
 
     def __init__(self, **config_parameters):
-        Activation.__init__(self)
-
-    def generate_model(self, Model='Frame', DataType='float', **model_config_parameters):
-        self._model_key = Model + '<' + DataType + '>'
-
-        self._N2D2_object = self._relu_activation_generators[self._model_key]()
-
-        self._set_model_config_parameters(Model, model_config_parameters)
-
-    def __str__(self):
-        output = "RectifierActivation(" + self._model_key + "): "
-        output += Activation.__str__(self)
-        return output
+        Activation.__init__(self, **config_parameters)
+        # No optional constructor arguments
+        self._N2D2_object = self._rectifier_activation_generators[self._model_key]()
+        self._set_N2D2_parameters(self._config_parameters)
 
 
 class Tanh(Activation):
-    """Static members"""
+
     _tanh_activation_generators = {
         'Frame<float>': N2D2.TanhActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
     }
 
     def __init__(self, **config_parameters):
-        Activation.__init__(self)
-
-
-    def generate_model(self, Model='Frame', DataType='float', **model_config_parameters):
-        self._model_key = Model + '<' + DataType + '>'
-
+        Activation.__init__(self, **config_parameters)
+        # No optional constructor arguments
         self._N2D2_object = self._tanh_activation_generators[self._model_key]()
+        self._set_N2D2_parameters(self._config_parameters)
 
-        self._set_model_config_parameters(Model, model_config_parameters)
-
-    def __str__(self):
-        output = "TanhActivation(" + self._model_key + "): "
-        output += Activation.__str__(self)
-        return output

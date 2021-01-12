@@ -30,11 +30,10 @@ Abstract class that stores the computation graph and the N2D2 deepnet object
 """
 class Deepnet:
 
-    def __init__(self, deepnet, block, model_parameters):
+    def __init__(self, deepnet, block):
         if not isinstance(block, n2d2.cell.Block):
             raise TypeError("Error: Deepnet constructor expects a Cell Block, but got " + str(type(block)) + " instead")
         self._block = block
-        self._model_parameters = model_parameters
 
         #net = N2D2.Network(1)
         self._deepnet = deepnet #N2D2.DeepNet(net)
@@ -58,8 +57,8 @@ Hardware model and datatype are given at construction time
 """    
 class Sequential(Deepnet):
     # cells is typically a python list 
-    def __init__(self, deepnet, block, Model='Frame', DataType='float', **model_parameters):
-        super().__init__(deepnet, block, model_parameters)
+    def __init__(self, deepnet, block, Model='Frame', DataType='float'):
+        super().__init__(deepnet, block)
 
         self._cells = self._block.get_cells()
 
@@ -74,6 +73,8 @@ class Sequential(Deepnet):
                 if name in names:
                     raise RuntimeError("Duplicate cell name: " + name)
             names.append(name)
+
+        """
 
         #self._generate_model(self._block_descriptor, Model, DataType)
 
@@ -93,33 +94,8 @@ class Sequential(Deepnet):
                 cell.generate_model(self._deepnet, self._Model, self._DataType)
 
         #for cell in self._cells:
-        #    print(cell._Name)
+        #    print(cell._Name)"""
 
-    """Goes recursively through blocks"""
-    """def _generate_model(self, block, Model, DataType, block_name):
-
-        if block_name is not "" and block.get_name() is None:
-            block.set_name(block_name)
-
-        if block.get_name() in self._blocks:
-            raise RuntimeError("Block with name \'" + block.get_name() + "\' already exists")
-        else:
-            self._blocks[block.get_name()] = block
-
-        if isinstance(block.get_blocks(), list):
-            if block_name is not "":
-                block_name += "."
-            for idx, sub_block in enumerate(block.get_blocks()):
-                self._generate_model(sub_block, Model, DataType, block_name + str(idx))
-        else:
-            if block.get_name() + '_model' in self._model_parameters:
-                block.generate_model(self._deepnet, Model, DataType, **self._model_parameters[block.get_name() + '_model'])
-            else:
-                block.generate_model(self._deepnet, Model, DataType)
-            # Normally this should not copy, but only add an additional name
-            if len(self._cells) > 0:
-                block.add_input(self._cells[-1])
-            self._cells.append(block)"""
 
 
     """ 

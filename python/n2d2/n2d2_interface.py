@@ -1,0 +1,110 @@
+"""
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
+
+    This software is governed by the CeCILL-C license under French law and
+    abiding by the rules of distribution of free software.  You can  use,
+    modify and/ or redistribute the software under the terms of the CeCILL-C
+    license as circulated by CEA, CNRS and INRIA at the following URL
+    "http://www.cecill.info".
+
+    As a counterpart to the access to the source code and  rights to copy,
+    modify and redistribute granted by the license, users are provided only
+    with a limited warranty  and the software's author,  the holder of the
+    economic rights,  and the successive licensors  have only  limited
+    liability.
+
+    The fact that you are presently reading this means that you have had
+    knowledge of the CeCILL-C license and that you accept its terms.
+"""
+
+import N2D2
+import n2d2
+
+
+class N2D2_Interface:
+
+    _default_Model = 'Frame'
+    _default_DataType = 'float'
+
+    def __init__(self, **config_parameters):
+
+        """
+        Arguments that have to be known at N2D2 object creation time. Configurable in python API constructor
+        """
+        self._constructor_arguments = {}
+        self._optional_constructor_arguments = {}
+
+        """
+        Parameters are set post N2D2 object creation. Reconfigurable
+        """
+        self._config_parameters = config_parameters
+        self._N2D2_object = None
+
+    def N2D2(self):
+        if self._N2D2_object is None:
+            raise n2d2.UndefinedModelError("N2D2 object member has not been created")
+        return self._N2D2_object
+
+    def _set_N2D2_parameter(self, key, value):
+        parsed_parameter = self._parse_py_to_INI_(value)
+        self._N2D2_object.setParameter(key, parsed_parameter)
+        #returned_parameter = self._N2D2_object.getParameter(name=str(key)
+        #if not parsed_parameter == returned_parameter:
+        #    raise RuntimeError("Parameter incoherence detected. Injected value is \'" + parsed_parameter +
+        #                       "\', while returned value is \'" + returned_parameter + "\'.")
+
+
+    def _set_N2D2_parameters(self, parameters):
+        for key, value in parameters.items():
+            self._set_N2D2_parameter(key, value)
+
+    def set_parameter(self, key, value):
+        self._config_parameters[key] = value
+        self._set_N2D2_parameter(key, value)
+
+    def _parse_optional_arguments(self, optional_argument_keys):
+        for key in optional_argument_keys:
+            if key in self._config_parameters:
+                self._optional_constructor_arguments[self._parameter_to_constructor_convention(key)] = self._config_parameters[key]
+                del self._config_parameters[key]
+
+    # Cast first character to lowercase to be compatible with N2D2 constructor name convention
+    def _parameter_to_constructor_convention(self, key):
+        return key[0].lower() + key[1:]
+
+    # Cast first character to uppercase to be compatible with N2D2 parameter name convention
+    def _constructor_to_parameter_convention(self, key):
+        return key[0].upper() + key[1:]
+
+    def _parse_py_to_INI_(self, value):
+        if isinstance(value, bool):
+            return str(int(value))
+        elif isinstance(value, list):
+            list_string = ""
+            for elem in value:
+                list_string += str(elem) + " "
+            return list_string
+        else:
+            return str(value)
+
+
+    def __str__(self):
+        output = "("
+        for key, value in self._constructor_arguments.items():
+            output += key + "=" + str(value) + ", "
+        for key, value in self._optional_constructor_arguments.items():
+            #output += key + "=" + str(value) + ", "
+            output += self._constructor_to_parameter_convention(key) + "=" + str(value) + ", "
+        #print(self._N2D2_object.getParameters())
+        #for key, value in self._N2D2_object.getParameters().items():
+        for key, value in self._config_parameters.items():
+            output += key + "=" + str(value) + ", "
+        if output is not "(":
+            output = output[:len(output) - 2]
+            output += ")"
+        else:
+            output = ""
+        return output
+
