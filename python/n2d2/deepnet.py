@@ -23,144 +23,30 @@
 
 import N2D2
 import n2d2.cell
-import collections
-
-"""
-Abstract class that stores the computation graph and the N2D2 deepnet object
-"""
-class Deepnet:
-
-    def __init__(self, deepnet, block):
-        if not isinstance(block, n2d2.cell.Block):
-            raise TypeError("Error: Deepnet constructor expects a Cell Block, but got " + str(type(block)) + " instead")
-        self._block = block
-
-        #net = N2D2.Network(1)
-        self._deepnet = deepnet #N2D2.DeepNet(net)
-    
-    # Prepares cells for computation and initializes certain members
-    # NOTE: In the current implementation of sequential, this does not work, since the cell see the deepnet
-    # but the deepnet does not see the cells
-    #def initialize(self):
-    #     self._deepnet.initialize()
-
-    def N2D2(self):
-        return self._deepnet
-
-    def __str__(self):
-        return ""
+from n2d2.n2d2_interface import N2D2_Interface
 
 
-"""
-Allows  creation of a deepnet based on a nested Block object. 
-Hardware model and datatype are given at construction time
-"""    
-class Sequential(Deepnet):
-    # cells is typically a python list 
-    def __init__(self, deepnet, block, Model='Frame', DataType='float'):
-        super().__init__(deepnet, block)
+class DeepNet(N2D2_Interface):
 
-        self._cells = self._block.get_cells()
+    def __init__(self, network, Model, DataType, **config_parameters):
 
-        names = []
-        # N2D2 requires unique cell names for each cell. Check if names exist and set to default name otherwise
-        for cell in self._cells:
-            name = cell.get_name()
-            if name is None:
-                name = cell.get_type() + "_" + cell.get_block_idx()
-                cell.set_name(name)
-            else:
-                if name in names:
-                    raise RuntimeError("Duplicate cell name: " + name)
-            names.append(name)
-
-        """
-
-        #self._generate_model(self._block_descriptor, Model, DataType)
-
-        # Check if cell associated to model parameters exists
-        for key in self._model_parameters:
-            if not key.replace('_model', '') in names:
-                raise RuntimeError("No matching cell for model parameter: " + key)
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._Model = Model
         self._DataType = DataType
 
-        for cell in self._cells:
-            if cell.get_name() + '_model' in self._model_parameters:
-                cell.generate_model(self._deepnet, self._Model, self._DataType,
-                                    **self._model_parameters[cell.get_name() + '_model'])
-            else:
-                cell.generate_model(self._deepnet, self._Model, self._DataType)
-
-        #for cell in self._cells:
-        #    print(cell._Name)"""
+        self._N2D2_object = N2D2.DeepNet(network)
 
 
-
-    """ 
-        addInput() sets recursively the Tensor dimensions
-        of input and output tensors of all cells
-    """
-    def add_provider(self, provider):
-        if len(self._cells) > 0:
-            self._cells[0].add_input(provider)
-        else:
-            raise n2d2.UndefinedModelError("No cells in deepnet")
-
-
-    """ # Redunant when using self._cells
-    def _generate_cell_links(self, cells, previous):
-        if isinstance(cells, list):
-            for cell in cells:
-                previous = self._generate_cell_links(cell, previous)
-            return previous
-        else:
-            cells.N2D2().addInput(previous.N2D2())
-            return cells
-    """
-
-    def initialize(self):
-        for cell in self._cells:
-            cell.initialize()
-
-    def propagate(self, inference=False):
-        for cell in self._cells:
-            cell.N2D2().propagate(inference=inference)
-
-    def back_propagate(self):
-        for cell in reversed(self._cells):
-            cell.N2D2().backPropagate()
-
-    def update(self):
-        for cell in self._cells:
-            cell.N2D2().update()
-
-    def get_output(self):
-        return self._cells[-1]
-
-    def get_cell(self, name):
-        for cell in self._cells:
-            if name == cell.get_name():
-                return cell
-        raise RuntimeError("Cell: " + name + " not found")
-
-    def get_cells(self):
-        return self._cells
+    def __str__(self):
+        output = "Deepnet" + "(" + self._Model + "<" + self._DataType + ">" + ")"
+        output += N2D2_Interface.__str__(self)
 
     def get_model(self):
         return self._Model
 
+    def get_datatype(self):
+        return self._DataType
 
-    def __str__(self):
-        output = "n2d2.deepnet.Sequential("
-        output += self._block.__str__()
-        output += ")"
-        return output
 
-    def convert_to_INI_section(self):
-        output = ""
-        for cell in self._cells:
-            output += cell.convert_to_INI_section()
-            output += "\n"
-        return output
+

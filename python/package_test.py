@@ -31,23 +31,21 @@ batch_size = 128
 nb_epochs = 10
 avg_window = int(10000/batch_size)
 
-#N2D2.mtSeed(1)
-net = N2D2.Network(1)
-deepnet = N2D2.DeepNet(net)
-
 N2D2.CudaContext.setDevice(3)
+
+n2d2.global_variables.default_DeepNet = n2d2.deepnet.DeepNet(N2D2.Network(n2d2.global_variables.default_seed), 'Frame_CUDA', n2d2.global_variables.default_DataType)
 
 model = n2d2.model.fc_base_named()
 
 print(model)
 
-print("Create model")
-model = n2d2.deepnet.Sequential(deepnet, model)
+#print("Create model")
+#model = n2d2.deepnet.Sequential(deepnet, model)
 #model = n2d2.deepnet.Sequential(deepnet, model, Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_one_layer(), Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_base(), Model='Frame_CUDA')
 
-print(model)
+#print(model)
 
 print("Create database")
 database = n2d2.database.MNIST(DataPath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)

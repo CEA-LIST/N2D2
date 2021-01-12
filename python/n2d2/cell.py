@@ -23,6 +23,13 @@ import n2d2.activation
 import n2d2.solver
 from n2d2.n2d2_interface import N2D2_Interface
 
+
+"""
+We should be able to create cells and blocks of cell incrementally
+We should be able to extract cell and blocks and run these subnetworks easily
+"""
+
+
 """
 Structure that is organised sequentially. 
 """
@@ -37,7 +44,7 @@ class Block:
 
         self._block_idx = ''
         self._block_dict = {}
-        self._cells = []
+        self._sequential_representation = []
         self._blocks = blocks
 
         self._generate_graph(self, self._block_idx)
@@ -61,10 +68,40 @@ class Block:
             for idx, sub_block in enumerate(block.get_blocks()):
                 self._generate_graph(sub_block, block_idx + str(idx))
         else:
-            self._cells.append(block)
+            self._sequential_representation.append(block)
+
+
+    def add_provider(self, provider):
+        self._blocks[0].get_input_cell().add_input(provider)
+
+    def initialize(self):
+        for cell in self._sequential_representation:
+            cell.initialize()
+
+    def propagate(self, inference=False):
+        for cell in self._sequential_representation:
+            cell.N2D2().propagate(inference=inference)
+
+    def back_propagate(self):
+        for cell in reversed(self._sequential_representation):
+            cell.N2D2().backPropagate()
+
+    def update(self):
+        for cell in self._sequential_representation:
+            cell.N2D2().update()
+
+
+    def get_cell(self, name):
+        for cell in self._sequential_representation:
+            if name == cell.get_name():
+                return cell
+        raise RuntimeError("Cell: " + name + " not found")
 
     def get_name(self):
-        return self._Name
+        if self._Name is None:
+            return str(self.get_block_idx())
+        else:
+            return self._Name
 
     def set_name(self, Name):
         self._Name = Name
@@ -85,13 +122,20 @@ class Block:
         return self._blocks[0].get_input_cell()
 
     def get_cells(self):
-        return self._cells
+        return self._sequential_representation
 
     def __str__(self):
         indent_level = [0]
         output = "n2d2.cell.Block("
         output += self._generate_str(self, indent_level, [0])
         output += "\n)"
+        return output
+
+    def convert_to_INI_section(self):
+        output = ""
+        for cell in self._sequential_representation:
+            output += cell.convert_to_INI_section()
+            output += "\n"
         return output
 
     # TODO: Do without artificial mutable objects
@@ -124,14 +168,13 @@ class Cell(Block, N2D2_Interface):
 
     def __init__(self, NbOutputs, Name, **config_parameters):
 
-        if 'Model' in config_parameters:
-            self._Model = config_parameters.pop('Model')
+        if 'DeepNet' in config_parameters:
+            self._deepnet = config_parameters.pop('DeepNet')
         else:
-            self._Model = n2d2.global_variables.default_Model
-        if 'DataType' in config_parameters:
-            self._DataType = config_parameters.pop('DataType')
-        else:
-            self._DataType = n2d2.global_variables.default_DataType
+            self._deepnet = n2d2.global_variables.default_DeepNet
+
+        self._Model = self._deepnet.get_model()
+        self._DataType = self._deepnet.get_datatype()
 
         self._model_key = self._Model + '<' + self._DataType + '>'
 
@@ -147,8 +190,6 @@ class Cell(Block, N2D2_Interface):
             'NbOutputs': NbOutputs,
         })
 
-        net = N2D2.Network()
-        self._deepnet = N2D2.DeepNet(net)
 
 
     def get_output_cell(self):
@@ -201,7 +242,7 @@ class Fc(Cell):
     def __init__(self, NbOutputs, Name=None, **config_parameters):
         Cell.__init__(self, NbOutputs, Name, **config_parameters)
 
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet,
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                             self._Name,
                                                             self._constructor_arguments['NbOutputs'])
 
@@ -242,7 +283,7 @@ class Conv(Cell):
 
         self._parse_optional_arguments(['SubSampleDims', 'StrideDims', 'PaddingDims', 'DilationDims'])
 
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet,
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self._Name,
                                                                      self._constructor_arguments['KernelDims'],
                                                                      self._constructor_arguments['NbOutputs'],
@@ -276,7 +317,7 @@ class ElemWise(Cell):
         Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
 
         self._parse_optional_arguments(['Operation', 'Weights', 'Shifts'])
-        self._N2D2_object = self._cell_constructors[self._Model](self._deepnet,
+        self._N2D2_object = self._cell_constructors[self._Model](self._deepnet.N2D2(),
                                                 self._Name,
                                                 self._constructor_arguments['NbOutputs'],
                                                 **self._optional_constructor_arguments)
@@ -301,7 +342,7 @@ class Softmax(Cell):
         Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
 
         self._parse_optional_arguments(['WithLoss', 'GroupSize'])
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet,
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self._Name,
                                                                      self._constructor_arguments['NbOutputs'],
                                                                      **self._optional_constructor_arguments)
