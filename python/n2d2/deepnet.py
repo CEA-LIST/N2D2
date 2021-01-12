@@ -23,6 +23,7 @@
 
 import N2D2
 import n2d2.cell
+import n2d2.converter
 import collections
 
 """
@@ -164,3 +165,17 @@ class Sequential(Deepnet):
             output += cell.convert_to_INI_section()
             output += "\n"
         return output
+
+
+
+def load_from_ONNX(model_path, database, stimuliProvider):
+    network = N2D2.Network(1)
+    deepNet = N2D2.DeepNet(network)
+    iniParser = N2D2.IniParser()
+    deepNet.setDatabase(database)
+    deepNet.setStimuliProvider(stimuliProvider)
+    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, iniParser, deepNet)
+    firstCellName = deepNet.getFirstCellName()
+    cells = deepNet.getCells()
+    for cell in cells.values():
+        n2d2.converter.cell_converter(cell)

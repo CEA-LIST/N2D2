@@ -184,7 +184,11 @@ void init_Cell(py::module &m) {
     // .def("saveFreeParameters", &Cell::saveFreeParameters, py::arg("fileName"))
     // .def("loadFreeParameters", &Cell::loadFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false)
     // .def("getId", &Cell::getId)
-    // .def("getName", &Cell::getName)
+    .def("getName", &Cell::getName,
+      R"mydelimiter(
+     Get the cell name
+
+     )mydelimiter")
      .def("getType", &Cell::getType,
       R"mydelimiter(
      Get basic cell type
@@ -196,7 +200,7 @@ void init_Cell(py::module &m) {
     // .def("getInputsDim", &Cell::getInputsDim, py::arg("dim"))
     // .def("getInputsDims", &Cell::getInputsDims)
     // .def("getInputsSize", &Cell::getInputsSize)
-    // .def("getNbOutputs", &Cell::getNbOutputs)
+    .def("getNbOutputs", &Cell::getNbOutputs)
     // .def("getOutputsWidth", &Cell::getOutputsWidth)
     // .def("getOutputsHeight", &Cell::getOutputsHeight)
     // .def("getOutputsDim", &Cell::getOutputsDim, py::arg("dim"))
