@@ -584,23 +584,29 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                   ((opt.nbBits > 0) ? "int" : "float") +
                                   std::to_string(std::abs(opt.nbBits));
 
+    Database::StimuliSet dbSet
+        = (database->getNbStimuli(Database::Validation) > 0)
+            ? Database::Validation : Database::Test;
 
     // TODO Avoid these global variables.
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
     DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::unsignedStimuli(*sp, 
-                                          exportDir + "/stimuli", Database::Validation);
+                                          exportDir + "/stimuli", dbSet);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     const std::size_t nbStimuli = (opt.calibration > 0)? 
                                         std::min(static_cast<unsigned int>(opt.calibration),
-                                                database->getNbStimuli(Database::Validation)):
-                                        database->getNbStimuli(Database::Validation);
+                                                database->getNbStimuli(dbSet)):
+                                        database->getNbStimuli(dbSet);
 
     bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
         if (nbStimuli == 0) {
-            throw std::runtime_error("The Validation dataset to run the "
-                "calibration is empty!");
+            std::stringstream msgStr;
+            msgStr << "The " << dbSet
+                << " dataset to run the calibration is empty!";
+
+            throw std::runtime_error(msgStr.str());
         }
 
         // fusePadding() necessary for crossLayerEqualization()
@@ -616,7 +622,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         const double stimuliRange = StimuliProviderExport::stimuliRange(
                                         *sp, exportDir + "/stimuli",
-                                        Database::Validation);
+                                        dbSet);
         if (stimuliRange != 1.0) {
             sp->addTopTransformation(
                 RangeAffineTransformation(RangeAffineTransformation::Divides, stimuliRange),
@@ -654,7 +660,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             // correct range and shifting required for layers with logistic
             LogisticActivationDisabled = true;
 
-            sp->readBatch(Database::Validation, 0);
+            sp->readBatch(dbSet, 0);
             for(std::size_t b = 1; b <= nbBatches; ++b) {
                 const std::size_t istimulus = b * batchSize;
 
@@ -665,7 +671,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 #ifdef CUDA
                     CudaContext::setDevice(cudaDevice);
 #endif
-                    deepNet->test(Database::Validation);
+                    deepNet->test(dbSet);
                     dnQuantization.reportOutputsRange(outputsRange);
                     dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 
                                                           opt.nbBits, opt.actClippingMode);
@@ -673,7 +679,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 if(b < nbBatches) {
                     sp->future();
-                    sp->readBatch(Database::Validation, istimulus);
+                    sp->readBatch(dbSet, istimulus);
                 }
 
                 reportTask.wait();
