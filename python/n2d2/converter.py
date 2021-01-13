@@ -22,7 +22,7 @@
 import N2D2
 import n2d2.cell
 
-def cell_converter(cell):
+def cell_converter(cell, deepNet):
     l_type = ["float", 
             "int"]
 
@@ -30,6 +30,9 @@ def cell_converter(cell):
                "Frame",
                "Spike"]
 
+    for i, j in cell.mParameters.items():
+        print(i, j.getType()) 
+    # print("object :",cell.mParameters["BackPropagate"], " value :", cell.mParameters["BackPropagate"].mValue)
     # Retrieving global parameters from the N2D2 object. 
     name = cell.getName()
     NbOutputs = cell.getNbOutputs()
@@ -51,11 +54,17 @@ def cell_converter(cell):
         # TODO : find KernelDims param. Doesn't work at the moment ! 
         params = cell.getParameters()
         kernelDims = params['KernelDims']
-        n2d2_cell = n2d2.cell.cell_dict[CellType](NbOutputs, Name=name, Model=Model, KernelDims=kernelDims, DataType=DataType)
+        n2d2_cell = n2d2.cell.cell_dict[CellType](NbOutputs, Name=name, DeepNet=deepNet, KernelDims=kernelDims, DataType=DataType)
         input('')
     else:
-        n2d2_cell = n2d2.cell.cell_dict[CellType](NbOutputs, Name=name, Model=Model, DataType=DataType)
+        n2d2_cell = n2d2.cell.cell_dict[CellType](NbOutputs, Name=name, DeepNet=deepNet, DataType=DataType)
 
     n2d2_cell._N2D2_object = cell
 
     return n2d2_cell
+
+def deepNet_converter(deepNet):
+    cells = deepNet.getCells()
+    for cell in cells.values():
+        # TODO : Need to work on cell converter
+        cell_converter(cell, deepNet)

@@ -50,14 +50,15 @@ public:
 
     friend std::ostream& operator<<(std::ostream&, const Parameter_T&);
     friend std::istream& operator>>(std::istream&, const Parameter_T&);
+    void* mValue;
+    const std::type_info* mType;
 
 private:
     typedef void (Parameter_T::*Copy_PT)(const Parameter_T&);
     typedef std::ostream& (Parameter_T::*Print_PT)(std::ostream&) const;
     typedef std::istream& (Parameter_T::*Read_PT)(std::istream&) const;
 
-    void* mValue;
-    const std::type_info* mType;
+    
     Copy_PT mCopy;
     Print_PT mPrint;
     Read_PT mRead;
@@ -257,7 +258,6 @@ public:
     template <class T> friend class Parameter;
     template <class T> friend class ParameterWithSpread;
 
-private:
     std::map<std::string, Parameter_T*> mParameters;
 };
 

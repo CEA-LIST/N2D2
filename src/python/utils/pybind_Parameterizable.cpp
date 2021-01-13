@@ -32,12 +32,26 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Parameterizable(py::module &m) {
+    py::class_<Parameter_T, std::shared_ptr<Parameter_T>> (m, "Parameter_T", py::multiple_inheritance())
+    // .def_readwrite("mValue", &Parameter_T::mValue) // => Doesn't give values (Capsule NULL)
+    .def("getType",
+    [](Parameter_T& param){
+        const char* type = param.mType->name();
+        return type;
+    })
+    ;
+
     py::class_<Parameterizable, std::shared_ptr<Parameterizable>> (m, "Parameterizable", py::multiple_inheritance())
     .def("setParameter", (void (Parameterizable::*)(const std::string&, const std::string&)) (&Parameterizable::setParameter), py::arg("name"), py::arg("value"))
     // .def("getParameter", &Parameterizable::getParameter<std::string>, py::arg("name")) //Compiling but error during excetution
     .def("getParameters", &Parameterizable::getParameters)
+    .def_readwrite("mParameters", &Parameterizable::mParameters)
+    // .def("getTypeParameters",
+    // [](const Parameterizable& p, const std::string& name){
+    //     return py::type::of<p.getParameter(name)>();
+    // })
     ;
-
+    
 }
 }
 #endif
