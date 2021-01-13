@@ -680,7 +680,7 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
     gnuplot.setXrange(0, maxLifetime + 1);
     gnuplot.setYrange(0, 1.05 * (peakUsage / 1024.0));
     gnuplot.setXlabel("Time");
-    gnuplot.setYlabel("Memory usage (KB)");
+    gnuplot.setYlabel("Memory usage (KWords)");
     gnuplot.set("style fill solid");
     gnuplot.set("grid");
     gnuplot.set("xtics", 1);
@@ -849,7 +849,7 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
 
     setStr.str(std::string());
     setStr << "set label " << labelId << " 'Peak usage = "
-        << (peakUsage / 1024.0) << " KB' at 0," << (peakUsage / 1024.0)
+        << (peakUsage / 1024.0) << " KWords' at 0," << (peakUsage / 1024.0)
         << " textcolor lt 1 offset char 0.5,0.5";
     gnuplot << setStr.str();
 
