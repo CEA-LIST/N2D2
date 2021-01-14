@@ -51,14 +51,10 @@ class DeepNet(N2D2_Interface):
 
 
 def load_from_ONNX(model_path, database, stimuliProvider):
-    # TODO : add this code into a deepNet_converter function
     network = N2D2.Network(1)
     deepNet = N2D2.DeepNet(network)
     iniParser = N2D2.IniParser()
     deepNet.setDatabase(database)
     deepNet.setStimuliProvider(stimuliProvider)
     deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, iniParser, deepNet)
-    cells = deepNet.getCells()
-    for cell in cells.values():
-        # TODO : Need to work on cell converter
-        n2d2.converter.cell_converter(cell)
+    return n2d2.converter.deepNet_converter(deepNet)
