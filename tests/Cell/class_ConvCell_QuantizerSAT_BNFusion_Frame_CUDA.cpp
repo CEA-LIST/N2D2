@@ -224,7 +224,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
         std::vector<int>({(int)paddingX, (int)paddingY}),
         std::vector<unsigned int>({1U, 1U}),
         std::shared_ptr<Activation>());
-    conv1_fused.setParameter("NoBias", false);
+    conv1_fused.setParameter("NoBias", true);
 
     BatchNormCell_Frame_CUDA<float> bn1(dn, "bn1", nbOutputs_conv1, std::shared_ptr<Activation>());
 
@@ -354,7 +354,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
     bn1.propagate(true);
     conv2.propagate(true);
 
-    /*
+    std::cout << "********************CONV1_AND_BN_OUTPUTS********************" << std::endl;
     conv1.getOutputs().synchronizeDToH();
     const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
     std::cout << "[Conv1][Outputs]" << std::endl;
@@ -366,7 +366,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
     std::cout << "[BN1][Outputs]" << std::endl;
     std::cout << out_bn1 << std::endl;
     bn1.getOutputs().synchronizeHToD();
-    */
+    std::cout << "********************CONV1_AND_BN_OUTPUTS_END********************\n\n" << std::endl;
+    
 
     std::cout << "********************CONV2_QUANT_INPUT********************" << std::endl; 
     quant2.getQuantizedActivations(0).synchronizeDToH();
@@ -381,7 +382,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
     // a1 and alpha1 are from conv1; a2 and alpha2 are from conv2;
     // beta and gamma are from bn1
 
-    // 0. create conv1_quant layer with inputs in range [0,255] and quantized weights from conv1 rescaled to [-127, 128]
+    // 0. create conv1_fused layer with inputs in range [0,255] and quantized weights from conv1 rescaled to [-127, 128]
     //set input and init
 
     std::cout << "********************SET_INPUT_8-BITS********************" << std::endl; 
@@ -419,7 +420,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
 
     std::cout << "********************SET_WEIGHTS_8-BITS_END********************\n\n" << std::endl; 
 
-    // 2. propagate
+    // 1. propagate
     std::cout << "********************PROPAGATE********************" << std::endl; 
     conv1_fused.propagate(true);
 
@@ -431,7 +432,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
 
     std::cout << "********************PROPAGATE_END********************\n\n" << std::endl; 
 
-    // 3. get BN gamma and beta (as done in DeepNet.cpp fuseBatchNormWithConv)
+    // 2. get BN gamma and beta (as done in DeepNet.cpp fuseBatchNormWithConv)
     std::cout << "********************BETA_GAMMA_COMPUTE********************" << std::endl; 
 
     const bool noBias = conv1.getParameter<bool>("NoBias");
@@ -474,7 +475,10 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
         float factor = bnScales(output)
                 / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
                             ? bnVariances(output) : meanVariance));
-        
+        /*
+        std::cout << "bnScales(output) = " << bnScales(output) << " , bnBiases(output) = " << bnBiases(output) << 
+        " , bnMeans(output) = " << bnMeans(output) << " , bnVariances(output) = " << bnVariances(output) << std::endl;
+        */
         gamma(output) = factor;
         std::cout << "gamma = " << gamma(output) << std::endl;
 
@@ -513,15 +517,15 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
                     float out_tmp = out_conv1_fused_prop(ox, oy, output, batch);
 
                     // 3. add bias : beta/gamma *  a1/alpha1
-                    bias_fusion(output) = beta(output)/gamma(output) * range1/alpha1;
+                    bias_fusion(output) = beta(output)/gamma(output) * (float)range1/alpha1;
                     float out_tmp_bias = out_tmp + bias_fusion(output);
 
                     // 4. clip the output between : [0, alpha2/gamma * a1/alpha1]
-                    float clipping_factor = alpha2/gamma(output) * range1/alpha1;
+                    float clipping_factor = alpha2/gamma(output) * (float)range1/alpha1;
                     float out_tmp_clipped = (out_tmp_bias < 0.0f) ? 0.0f : (out_tmp_bias < clipping_factor) ? out_tmp_bias : clipping_factor;
 
                     // 5. scale : alpha1/a1 * a2/alpha2 * gamma
-                    float scaling_factor = alpha1/range1 * range2/alpha2 * gamma(output);
+                    float scaling_factor = alpha1/(float)range1 * (float)range2/alpha2 * gamma(output);
                     float out_tmp_scaled = out_tmp_clipped*scaling_factor;
 
                     // 6. round
@@ -529,7 +533,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
                     conv1_out_fused(ox, oy, output, batch) = out_tmp_round;
 
                     // to compare the result after "round" with quant_act_conv2 :: rounded/255 and * alpha2/a2
-                    float out_tmp_comp = (float)out_tmp_round/range1 * alpha2/range2;
+                    float out_tmp_comp = (float)out_tmp_round/(float)range1 * alpha2/(float)range2;
                     conv1_out_fused_comp(ox, oy, output, batch) = out_tmp_comp;
 
                     std::cout << "conv_out = " << out_tmp << " + " << bias_fusion(output) << " = " << out_tmp_bias << std::endl;
