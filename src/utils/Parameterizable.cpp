@@ -214,6 +214,20 @@ std::string N2D2::Parameterizable::getParameter(const std::string& name) const
         throw std::runtime_error("Parameter does not exist: " + name);
 }
 
+
+std::pair<std::string, std::string> N2D2::Parameterizable::getParameterAndType(const std::string& name) const
+{
+    const std::map<std::string, Parameter_T*>::const_iterator it
+        = mParameters.find(name);
+
+    if (it != mParameters.end()) {
+        std::ostringstream value;
+        value << std::showpoint << (*((*it).second));
+        return std::pair<std::string, std::string>(((*it).second)->getPyType(), value.str());
+    } else
+        throw std::runtime_error("Parameter does not exist: " + name);
+}
+
 std::map<std::string, std::string> N2D2::Parameterizable::getParameters() const
 {
     std::map<std::string, std::string> params;
@@ -371,4 +385,25 @@ void N2D2::Parameterizable::copyParameters(const Parameterizable& from)
          ++it) {
         (*mParameters.at((*it).first)) = (*((*it).second));
     }
+}
+
+
+template<>
+std::string N2D2::Parameter<int>::getPyType() {
+    return std::string("int");
+}
+
+template<>
+std::string N2D2::Parameter<unsigned int>::getPyType() {
+    return std::string("unsigned int");
+}
+
+template<>
+std::string N2D2::Parameter<float>::getPyType() {
+    return std::string("float");
+}
+
+template<>
+std::string N2D2::Parameter<double>::getPyType() {
+    return std::string("double");
 }

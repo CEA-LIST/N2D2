@@ -28,11 +28,11 @@ class Activation(N2D2_Interface):
         if 'Model' in config_parameters:
             self._Model = config_parameters.pop('Model')
         else:
-            self._Model = n2d2.global_variables.default_Model
+            self._Model = n2d2.global_variables.default_DeepNet.get_model()
         if 'DataType' in config_parameters:
             self._DataType = config_parameters.pop('DataType')
         else:
-            self._DataType = n2d2.global_variables.default_DataType
+            self._DataType = n2d2.global_variables.default_DeepNet.get_datatype()
 
         self._model_key = self._Model + '<' + self._DataType + '>'
 

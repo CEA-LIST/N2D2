@@ -27,8 +27,9 @@ import N2D2
 
 import math
 
+
 batch_size = 128
-nb_epochs = 10
+nb_epochs = 1
 avg_window = int(10000/batch_size)
 
 N2D2.CudaContext.setDevice(3)
@@ -45,7 +46,6 @@ print(model)
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_one_layer(), Model='Frame_CUDA')
 #model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_base(), Model='Frame_CUDA')
 
-#print(model)
 
 print("Create database")
 database = n2d2.database.MNIST(DataPath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
@@ -141,8 +141,53 @@ for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
           + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
 
 
+# Transfer Learning
+print("")
+
+sub = model.get_subsequence('0')
+new_model = n2d2.deepnet.Sequence([sub, n2d2.cell.Softmax(NbOutputs=10, Name='softmax', WithLoss=True)])
+print(new_model)
+
+# Clear provider, otherwise second provider will be added in Classifier constructor
+new_model.clear_provider()
+new_classifier = n2d2.application.Classifier(provider, new_model)
+
+
+print("\n### Test ###")
+
+new_classifier.set_mode('Test')
+
+for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
+
+    batch_idx = i*batch_size
+
+    # Load example
+    new_classifier.read_batch(idx=batch_idx)
+
+    new_classifier.process()
+
+    print("Example: " + str(i*batch_size) + ", test success: "
+          + "{0:.2f}".format(100 * new_classifier.get_average_success()) + "%", end='\r')
 
 
 
+for epoch in range(1):
+
+    print("\n### Train Epoch: " + str(epoch) + " ###")
+
+    new_classifier.set_mode('Learn')
+
+    for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
+
+        # Load example
+        new_classifier.read_random_batch()
+
+        new_classifier.process()
+
+        new_classifier.optimize()
+
+        print("Example: " + str(i*batch_size) + ", train success: "
+              + "{0:.2f}".format(100*new_classifier.get_average_success(window=avg_window)) + "%", end='\r')
 
 
+    print("\n### Validate Epoch: " + str(epoch) + " ###")

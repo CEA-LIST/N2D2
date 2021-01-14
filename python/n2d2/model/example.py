@@ -23,8 +23,8 @@ import n2d2
 import n2d2.utils
 
 def fc_base():
-    net = n2d2.cell.Block([
-        n2d2.cell.Block([
+    net = n2d2.deepnet.Sequence([
+        n2d2.deepnet.Sequence([
             n2d2.cell.Fc(NbOutputs=300),
             n2d2.cell.Fc(NbOutputs=10)
         ]),
@@ -37,8 +37,6 @@ def fc_base():
 def fc_base_named():
     #model_config = n2d2.utils.ConfigSection(Model='Frame_CUDA', DataType='float')
 
-    n2d2.global_variables.default_Model = 'Frame_CUDA'
-
     """Common object members can be defined for several cells without being copied by using the generator objects
     When they are passed to a cell, the instances are initialized using the constructor with parameters
     """
@@ -50,9 +48,9 @@ def fc_base_named():
     """
     solver_config = n2d2.utils.ConfigSection(LearningRate=0.01)
 
-    net = n2d2.cell.Block([
-        n2d2.cell.Block([
-            n2d2.cell.Fc(NbOutputs=300, Name='fc1', ActivationFunction=activation(), WeightsFiller=n2d2.filler.He(), BiasFiller=filler(), WeightsSolver=solver(**solver_config.get()), BiasSolver=solver()),
+    net = n2d2.deepnet.Sequence([
+        n2d2.deepnet.Sequence([
+            n2d2.cell.Fc(NbOutputs=50, Name='fc1', ActivationFunction=activation(), WeightsFiller=n2d2.filler.He(), BiasFiller=filler(), WeightsSolver=solver(**solver_config.get()), BiasSolver=solver()),
             n2d2.cell.Fc(NbOutputs=10, Name='fc2')
         ], Name='block1'),
         n2d2.cell.Softmax(NbOutputs=10, Name='softmax', WithLoss=True)
@@ -61,8 +59,8 @@ def fc_base_named():
 
 
 def conv_base():
-    net = n2d2.cell.Block([
-        n2d2.cell.Block([
+    net = n2d2.deepnet.Sequence([
+        n2d2.deepnet.Sequence([
             n2d2.cell.Conv(NbOutputs=4, KernelDims=[5, 5]),
             n2d2.cell.Fc(NbOutputs=10)
         ]),
@@ -77,7 +75,7 @@ def fc_one_layer():
     first_block = n2d2.cell.Fc(NbOutputs=10)
     second_block = n2d2.cell.Softmax(NbOutputs=10)
 
-    net = n2d2.cell.Block([
+    net = n2d2.deepnet.Sequence([
         first_block,
         second_block,
     ])
@@ -86,15 +84,15 @@ def fc_one_layer():
 
 def fc_nested_named():
     first_block = n2d2.cell.Fc(NbOutputs=100, Name='fc1')
-    second_block = n2d2.cell.Block([
+    second_block = n2d2.deepnet.Sequence([
         n2d2.cell.Fc(NbOutputs=100, Name='fc2'),
     ], Name='block1')
-    third_block = n2d2.cell.Block([
-        n2d2.cell.Block([
+    third_block = n2d2.deepnet.Sequence([
+        n2d2.deepnet.Sequence([
             n2d2.cell.Fc(NbOutputs=100, Name='fc3'),
             n2d2.cell.Fc(NbOutputs=100, Name='fc4'),
         ], Name='block21'),
-        n2d2.cell.Block([
+        n2d2.deepnet.Sequence([
             n2d2.cell.Fc(NbOutputs=100, Name='fc5'),
             n2d2.cell.Fc(NbOutputs=100, Name='fc6'),
             n2d2.cell.Fc(NbOutputs=100, Name='fc7'),
@@ -103,7 +101,7 @@ def fc_nested_named():
     fourth_block = n2d2.cell.Fc(NbOutputs=10, Name='fc8')
     top_block = n2d2.cell.Softmax(NbOutputs=10)
 
-    net = n2d2.cell.Block([
+    net = n2d2.deepnet.Sequence([
         first_block,
         second_block,
         third_block,
@@ -115,15 +113,15 @@ def fc_nested_named():
 
 def fc_nested():
     first_block = n2d2.cell.Fc(NbOutputs=100)
-    second_block = n2d2.cell.Block([
+    second_block = n2d2.deepnet.Sequence([
         n2d2.cell.Fc(NbOutputs=100),
     ])
-    third_block = n2d2.cell.Block([
-        n2d2.cell.Block([
+    third_block = n2d2.deepnet.Sequence([
+        n2d2.deepnet.Sequence([
             n2d2.cell.Fc(NbOutputs=100),
             n2d2.cell.Fc(NbOutputs=100),
         ]),
-        n2d2.cell.Block([
+        n2d2.deepnet.Sequence([
             n2d2.cell.Fc(NbOutputs=100),
             n2d2.cell.Fc(NbOutputs=100),
             n2d2.cell.Fc(NbOutputs=100),
@@ -132,7 +130,7 @@ def fc_nested():
     fourth_block = n2d2.cell.Fc(NbOutputs=10)
     top_block = n2d2.cell.Softmax(NbOutputs=10)
 
-    net = n2d2.cell.Block([
+    net = n2d2.deepnet.Sequence([
         first_block,
         second_block,
         third_block,

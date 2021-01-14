@@ -44,6 +44,7 @@ void init_Parameterizable(py::module &m) {
     py::class_<Parameterizable, std::shared_ptr<Parameterizable>> (m, "Parameterizable", py::multiple_inheritance())
     .def("setParameter", (void (Parameterizable::*)(const std::string&, const std::string&)) (&Parameterizable::setParameter), py::arg("name"), py::arg("value"))
     // .def("getParameter", &Parameterizable::getParameter<std::string>, py::arg("name")) //Compiling but error during excetution
+    .def("getParameterAndType", &Parameterizable::getParameterAndType, py::arg("name")) 
     .def("getParameters", &Parameterizable::getParameters)
     .def_readwrite("mParameters", &Parameterizable::mParameters)
     // .def("getTypeParameters",

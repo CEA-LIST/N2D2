@@ -43,7 +43,6 @@ class Classifier(Application):
         print("Create target")
         self._target = n2d2.target.Score('softmax.Target', self._model.get_output_cell(), self._provider)
 
-        print("Initialize model")
         self._model.initialize()
 
         self._mode = 'Test'
