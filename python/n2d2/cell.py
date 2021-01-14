@@ -24,147 +24,8 @@ import n2d2.solver
 from n2d2.n2d2_interface import N2D2_Interface
 
 
-"""
-We should be able to create cells and blocks of cell incrementally
-We should be able to extract cell and blocks and run these subnetworks easily
-"""
 
-
-"""
-Structure that is organised sequentially. 
-"""
-class Block:
-    def __init__(self, blocks, Name=None):
-        if Name is not None:
-            assert isinstance(Name, str)
-        self._Name = Name
-        assert isinstance(blocks, list)
-        if not blocks:
-            raise ValueError("Got empty list as input. List must contain at least one element")
-
-        self._block_idx = ''
-        self._block_dict = {}
-        self._sequential_representation = []
-        self._blocks = blocks
-
-        self._generate_graph(self, self._block_idx)
-
-        for idx, block in enumerate(self._blocks):
-            if idx > 0:
-                block.get_input_cell().add_input(previous.get_output_cell())
-            previous = block
-
-
-    """Goes recursively through blocks"""
-
-    def _generate_graph(self, block, block_idx):
-
-        self._block_dict[block_idx] = block
-        block.set_block_idx(block_idx)
-
-        if isinstance(block.get_blocks(), list):
-            if not block_idx == "":
-                block_idx += "."
-            for idx, sub_block in enumerate(block.get_blocks()):
-                self._generate_graph(sub_block, block_idx + str(idx))
-        else:
-            self._sequential_representation.append(block)
-
-
-    def add_provider(self, provider):
-        self._blocks[0].get_input_cell().add_input(provider)
-
-    def initialize(self):
-        for cell in self._sequential_representation:
-            cell.initialize()
-
-    def propagate(self, inference=False):
-        for cell in self._sequential_representation:
-            cell.N2D2().propagate(inference=inference)
-
-    def back_propagate(self):
-        for cell in reversed(self._sequential_representation):
-            cell.N2D2().backPropagate()
-
-    def update(self):
-        for cell in self._sequential_representation:
-            cell.N2D2().update()
-
-
-    def get_cell(self, name):
-        for cell in self._sequential_representation:
-            if name == cell.get_name():
-                return cell
-        raise RuntimeError("Cell: " + name + " not found")
-
-    def get_name(self):
-        if self._Name is None:
-            return str(self.get_block_idx())
-        else:
-            return self._Name
-
-    def set_name(self, Name):
-        self._Name = Name
-
-    def get_block_idx(self):
-        return self._block_idx
-
-    def set_block_idx(self, idx):
-        self._block_idx = idx
-
-    def get_blocks(self):
-        return self._blocks
-
-    def get_output_cell(self):
-        return self._blocks[-1].get_output_cell()
-
-    def get_input_cell(self):
-        return self._blocks[0].get_input_cell()
-
-    def get_cells(self):
-        return self._sequential_representation
-
-    def __str__(self):
-        indent_level = [0]
-        output = "n2d2.cell.Block("
-        output += self._generate_str(self, indent_level, [0])
-        output += "\n)"
-        return output
-
-    def convert_to_INI_section(self):
-        output = ""
-        for cell in self._sequential_representation:
-            output += cell.convert_to_INI_section()
-            output += "\n"
-        return output
-
-    # TODO: Do without artificial mutable objects
-
-    def _generate_str(self, block, indent_level, block_idx):
-        output = ""
-        if isinstance(block.get_blocks(), list):
-            if indent_level[0] > 0:
-                output += "\n" + (indent_level[0] * "\t") + "(" + str(block.get_block_idx()) + ")"
-                if block.get_name() is not None:
-                    output += " \'" + block.get_name() + "\'"
-                output += ": n2d2.cell.Block("
-            indent_level[0] += 1
-            local_block_idx = [0]
-            for idx, block in enumerate(block.get_blocks()):
-                output += self._generate_str(block, indent_level, local_block_idx)
-                local_block_idx[0] += 1
-            indent_level[0] -= 1
-            if indent_level[0] > 0:
-                output += "\n" + (indent_level[0] * "\t") + ")"
-        else:
-            output += "\n" + (indent_level[0] * "\t") + "(" + str(block.get_block_idx()) + ")"
-            if block.get_name() is not None:
-                output += " \'" + block.get_name() + "\'"
-            output += ": " + block.__str__()
-        return output
-
-
-class Cell(Block, N2D2_Interface):
+class Cell(N2D2_Interface):
 
     def __init__(self, NbOutputs, Name, **config_parameters):
 
@@ -176,13 +37,8 @@ class Cell(Block, N2D2_Interface):
         self._Model = self._deepnet.get_model()
         self._DataType = self._deepnet.get_datatype()
 
-        # Some cells such as ElemWise doesn't need a default DataType.
-        if self._DataType:
-            self._model_key = self._Model + '<' + self._DataType + '>'
-        else:
-            self._model_key = self._Model 
-    
-        #Block.__init__(self, Name)
+        self._model_key = self._Model + '<' + self._DataType + '>'
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._Name = Name
@@ -193,6 +49,8 @@ class Cell(Block, N2D2_Interface):
         self._constructor_arguments.update({
             'NbOutputs': NbOutputs,
         })
+
+        self._initialized = False
 
 
 
@@ -208,10 +66,16 @@ class Cell(Block, N2D2_Interface):
     def add_input(self, cell):
         self._inputs.append(cell)
 
+    def clear_input(self):
+        self._inputs = []
+
     def initialize(self):
+        self._N2D2_object.clearInputs()
         for cell in self._inputs:
             self._N2D2_object.addInput(cell.N2D2())
+        #if not self._initialized:
         self._N2D2_object.initialize()
+        self._initialized = True
 
 
     def __str__(self):
@@ -253,15 +117,15 @@ class Fc(Cell):
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
-                self._N2D2_object.setActivation(self._config_parameters['ActivationFunction'].N2D2())
+                self._N2D2_object.setActivation(value.N2D2())
             elif key is 'WeightsSolver':
-                self._N2D2_object.setWeightsSolver(self._config_parameters['WeightsSolver'].N2D2())
+                self._N2D2_object.setWeightsSolver(value.N2D2())
             elif key is 'BiasSolver':
-                self._N2D2_object.setBiasSolver(self._config_parameters['BiasSolver'].N2D2())
+                self._N2D2_object.setBiasSolver(value.N2D2())
             elif key is 'WeightsFiller':
-                self._N2D2_object.setWeightsFiller(self._config_parameters['WeightsFiller'].N2D2())
+                self._N2D2_object.setWeightsFiller(value.N2D2())
             elif key is 'BiasFiller':
-                self._N2D2_object.setBiasFiller(self._config_parameters['BiasFiller'].N2D2())
+                self._N2D2_object.setBiasFiller(value.N2D2())
             else:
                 self._set_N2D2_parameter(key, value)
 
@@ -272,6 +136,8 @@ class Conv(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.ConvCell_Frame_double,
+        'Frame_CUDA<double>': N2D2.ConvCell_Frame_CUDA_double,
     }
 
     def __init__(self,
@@ -296,15 +162,15 @@ class Conv(Cell):
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
-                self._N2D2_object.setActivation(self._config_parameters['ActivationFunction'].N2D2())
+                self._N2D2_object.setActivation(value.N2D2())
             elif key is 'WeightsSolver':
-                self._N2D2_object.setWeightsSolver(self._config_parameters['WeightsSolver'].N2D2())
+                self._N2D2_object.setWeightsSolver(value.N2D2())
             elif key is 'BiasSolver':
-                self._N2D2_object.setBiasSolver(self._config_parameters['BiasSolver'].N2D2())
+                self._N2D2_object.setBiasSolver(value.N2D2())
             elif key is 'WeightsFiller':
-                self._N2D2_object.setWeightsFiller(self._config_parameters['WeightsFiller'].N2D2())
+                self._N2D2_object.setWeightsFiller(value.N2D2())
             elif key is 'BiasFiller':
-                self._N2D2_object.setBiasFiller(self._config_parameters['BiasFiller'].N2D2())
+                self._N2D2_object.setBiasFiller(value.N2D2())
             else:
                 self._set_N2D2_parameter(key, value)
 
@@ -329,7 +195,7 @@ class ElemWise(Cell):
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
-                self._N2D2_object.setActivation(self._config_parameters['ActivationFunction'].N2D2())
+                self._N2D2_object.setActivation(value.N2D2())
             else:
                 self._set_N2D2_parameter(key, value)
 
@@ -339,7 +205,9 @@ class Softmax(Cell):
 
     _cell_constructors = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float
+        'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.SoftmaxCell_Frame_double,
+        'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
     }
 
     def __init__(self, NbOutputs, Name=None, **config_parameters):
@@ -352,10 +220,109 @@ class Softmax(Cell):
                                                                      **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
-# TODO : Does this already exist @Johannes ?
-cell_dict = {
-    "Fc" : Fc,
-    "Conv": Conv,
-    "ElemWise" : ElemWise,
-    "Softmax" : Softmax
-}
+class Dropout(Cell):
+    _cell_constructors = {
+        'Frame<float>': N2D2.DropoutCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.DropoutCell_Frame_double,
+        'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
+    }
+    def __init__(self, NbOutputs, Name=None, **config_parameters):
+        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
+        # No optionnal arg ?
+        self._parse_optional_arguments([])
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                        self._Name,
+                                                        self._constructor_arguments['NbOutputs'],
+                                                        **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
+class Padding(Cell):
+
+    _cell_constructors = {
+        'Frame': N2D2.PaddingCell_Frame,
+        'Frame_CUDA': N2D2.PaddingCell_Frame_CUDA,
+    }
+
+    def __init__(self,
+                 NbOutputs,
+                 topPad,
+                 botPad,
+                 leftPad,
+                 rightPad,
+                 Name=None,
+                 **config_parameters):
+        Cell.__init__(self, NbOutputs, Name, **config_parameters)
+
+        self._constructor_arguments.update({
+                 "topPad": topPad,
+                 "botPad": botPad,
+                 "leftPad": leftPad,
+                 "rightPad": rightPad
+        })
+
+        self._parse_optional_arguments([])
+
+        self._N2D2_object = self._cell_constructors[self._Model](self._deepnet.N2D2(),
+                                                                     self._Name,
+                                                                     self._constructor_arguments['topPad'],
+                                                                     self._constructor_arguments['botPad'],
+                                                                     self._constructor_arguments['leftPad'],
+                                                                     self._constructor_arguments['rightPad'],
+                                                                     **self._optional_constructor_arguments)
+
+class Pool(Cell):
+
+    _cell_constructors = {
+        'Frame<float>': N2D2.PoolCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
+    }
+
+    def __init__(self,
+                 NbOutputs,
+                 poolDims,
+                 Name=None,
+                 **config_parameters):
+        Cell.__init__(self, NbOutputs, Name, **config_parameters)
+
+        self._constructor_arguments.update({
+            'poolDims': poolDims,
+
+        })
+
+        self._parse_optional_arguments(['strideDims', 'paddingDims', 'pooling'])
+
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                     self._Name,
+                                                                     self._constructor_arguments['poolDims'],
+                                                                     self._constructor_arguments['NbOutputs'],
+                                                                     **self._optional_constructor_arguments)
+
+        """Set and initialize here all complex cell members"""
+        for key, value in self._config_parameters.items():
+            if key is 'Pooling':
+                # TODO : Need to create a n2d2 version of Pooling
+                self._N2D2_object.setPooling(value.N2D2())
+            else:
+                self._set_N2D2_parameter(key, value)
+
+
+class LRN(Cell):
+
+    _cell_constructors = {
+        'Frame<float>': N2D2.LRNCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.LRNCell_Frame_CUDA_float,
+    }
+
+
+
+    def __init__(self, NbOutputs, Name=None, **config_parameters):
+        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                self._Name,
+                                                self._constructor_arguments['NbOutputs'],
+                                                **self._optional_constructor_arguments)
+

@@ -30,7 +30,11 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_PaddingCell(py::module &m) {
 
-    py::class_<PaddingCell, std::shared_ptr<PaddingCell>, Cell> (m, "PaddingCell", py::multiple_inheritance());
+    py::class_<PaddingCell, std::shared_ptr<PaddingCell>, Cell> (m, "PaddingCell", py::multiple_inheritance())
+    .def("getTopPad", &PaddingCell::getTopPad)
+    .def("getBotPad", &PaddingCell::getBotPad)
+    .def("getLeftPad", &PaddingCell::getLeftPad)
+    .def("getRightPad", &PaddingCell::getRightPad);
 
 
 }

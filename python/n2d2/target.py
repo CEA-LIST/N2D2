@@ -21,14 +21,17 @@
 
 import n2d2
 import N2D2
+from n2d2.n2d2_interface import N2D2_Interface
 
-class Target:
+class Target(N2D2_Interface):
+
+    INI_type = 'Target'
 
     """Provider is not a parameter in the INI file in the case of Target class,
     but usually inferred from the deepnet in N2D2. Name and Cell are parts of the section name"""
-    def __init__(self, Name, Cell, Provider):
+    def __init__(self, Name, Cell, Provider, **config_parameters):
 
-        self._modified_keys = []
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {
             'Name': Name,
@@ -41,16 +44,9 @@ class Target:
         return self._constructor_parameters['Name']
 
 
-    def N2D2(self):
-        if self._target is None:
-            raise n2d2.UndefinedModelError("N2D2 target member has not been created")
-        return self._target
-
-
 class Score(Target):
 
-    _type = 'TargetScore'
-
+    INI_type = 'TargetScore'
 
     _confusion_table_metrics = {
         'Sensitivity': N2D2.ConfusionTableMetric.Sensitivity,
@@ -67,59 +63,32 @@ class Score(Target):
         'Markedness': N2D2.ConfusionTableMetric.Markedness
     }
 
+    def __init__(self, Name, Cell, Provider, **config_parameters):
 
-    def __init__(self, Name, Cell, Provider, **target_parameters):
+        Target.__init__(self, Name, Cell, Provider, **config_parameters)
 
-        super().__init__(Name, Cell, Provider)
+        self._parse_optional_arguments(['TargetValue', 'DefaultValue', 'TopN', 'LabelsMapping', 'CreateMissingLabels'])
+        self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['Name'],
+                                             self._constructor_parameters['Cell'].N2D2(),
+                                             self._constructor_parameters['Provider'].N2D2(),
+                                             **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
-        self._target_parameters = {
-            'TargetValue': 1.0,
-            'DefaultValue': 0.0,
-            'TopN': 1,
-            'LabelsMapping': "",
-            'CreateMissingLabels': False
-        }
-
-        for key, value in target_parameters.items():
-            if key in self._target_parameters:
-                self._target_parameters[key] = value
-                self._modified_keys.append(key)
-            else:
-                raise n2d2.UndefinedParameterError(key, self)
-
-        self._target = N2D2.TargetScore(
-            name=self._constructor_parameters['Name'],
-            cell=self._constructor_parameters['Cell'].N2D2(),
-            sp=self._constructor_parameters['Provider'].N2D2(),
-            targetValue=self._target_parameters['TargetValue'],
-            defaultValue=self._target_parameters['DefaultValue'],
-            targetTopN=self._target_parameters['TopN'],
-            labelsMapping=self._target_parameters['LabelsMapping'],
-            createMissingLabels=self._target_parameters['CreateMissingLabels'])
-
-        # TODO: Add post generation parameters
 
     def provide_targets(self, partition):
-        self._target.provideTargets(self._constructor_parameters['Provider'].get_database().StimuliSets[partition])
+        self._N2D2_object.provideTargets(self._constructor_parameters['Provider'].get_database().StimuliSets[partition])
 
     def process(self, partition):
-        self._target.process(self._constructor_parameters['Provider'].get_database().StimuliSets[partition])
+        self._N2D2_object.process(self._constructor_parameters['Provider'].get_database().StimuliSets[partition])
 
     def get_average_success(self, partition, window=0):
-        return self._target.getAverageSuccess(self._constructor_parameters['Provider'].get_database().StimuliSets[partition], window)
+        return self._N2D2_object.getAverageSuccess(self._constructor_parameters['Provider'].get_database().StimuliSets[partition], window)
 
     def get_average_score(self, partition, metric):
-        return self._target.getAverageScore(
+        return self._N2D2_object.getAverageScore(
             self._constructor_parameters['Provider'].get_database().StimuliSets[partition],
             self._confusion_table_metrics[metric])
 
     def convert_to_INI_section(self):
         output = "[" + self._constructor_parameters['Name'] + "]\n"
-        #output += "Type=" + self._type + "\n"
-        for key, value in self._target_parameters.items():
-            if key in self._modified_keys:
-                if isinstance(value, bool):
-                    output += key + "=" + str(int(value)) + "\n"
-                else:
-                    output += key + "=" + str(value) + "\n"
         return output

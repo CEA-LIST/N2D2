@@ -22,7 +22,27 @@
 import N2D2
 import n2d2.cell
 
-def cell_converter(cell, deepNet):
+type_converter = {
+    "int" : int,
+    "unsigned int": int,
+    "float": float,
+    "double": float,
+    "bool": bool,
+    "string": str,
+    "other": str,  # Maybe put an error message ?
+}
+cell_dict = {
+    "Fc" : n2d2.cell.Fc,
+    "Conv": n2d2.cell.Conv,
+    "ElemWise" : n2d2.cell.ElemWise,
+    "Softmax" : n2d2.cell.Softmax,
+    "Dropout": n2d2.cell.Dropout,
+    "Padding": n2d2.cell.Padding,
+    "Pool": n2d2.cell.Pool,
+    "LRN": n2d2.cell.LRN,
+}
+
+def cell_converter(cell):
     l_type = ["float", 
             "int"]
 
@@ -30,9 +50,7 @@ def cell_converter(cell, deepNet):
                "Frame",
                "Spike"]
 
-    for i, j in cell.mParameters.items():
-        print(i, j.getType()) 
-    # print("object :",cell.mParameters["BackPropagate"], " value :", cell.mParameters["BackPropagate"].mValue)
+
     # Retrieving global parameters from the N2D2 object. 
     name = cell.getName()
     NbOutputs = cell.getNbOutputs()
@@ -50,21 +68,52 @@ def cell_converter(cell, deepNet):
             DataType = t
 
     # Creating n2d2 object.
+    print("CellType: ", CellType)
+    str_params = cell.getParameters()
+    parameters = {}
+    for param in str_params:
+        parameters[param] = type_converter[cell.getParameterAndType(param)[0]](cell.getParameterAndType(param)[1])
+        print(param, ":", type_converter[cell.getParameterAndType(param)[0]](cell.getParameterAndType(param)[1]))
     if CellType == "Conv":
-        # TODO : find KernelDims param. Doesn't work at the moment ! 
-        params = cell.getParameters()
-        kernelDims = params['KernelDims']
-        n2d2_cell = n2d2.cell.cell_dict[CellType](NbOutputs, Name=name, DeepNet=deepNet, KernelDims=kernelDims, DataType=DataType)
-        input('')
+        kernelDims = [cell.getKernelWidth(), cell.getKernelHeight()]
+        n2d2_cell = cell_dict[CellType](NbOutputs, 
+                                        kernelDims,
+                                        Name=name,
+                                        **parameters)
+    elif CellType == "Padding":
+        topPad = cell.getTopPad()
+        botPad = cell.getBotPad()
+        leftPad = cell.getLeftPad()
+        rightPad = cell.getRightPad()
+        n2d2_cell = cell_dict[CellType](NbOutputs, 
+                                        topPad, 
+                                        botPad, 
+                                        leftPad, 
+                                        rightPad,
+                                        Name=name,
+                                        **parameters)
+    elif CellType == "Pool":
+        poolDims = [cell.getPoolHeight(), cell.getPoolWidth()]
+        n2d2_cell = cell_dict[CellType](NbOutputs, 
+                                        poolDims,
+                                        Name=name,
+                                        **parameters)      
     else:
-        n2d2_cell = n2d2.cell.cell_dict[CellType](NbOutputs, Name=name, DeepNet=deepNet, DataType=DataType)
+        n2d2_cell = cell_dict[CellType](NbOutputs, Name=name, **parameters)
 
+    # WARNING : By putting here a reference of the imported cell we have to make sure
+    # the N2D2.DeepNet it's linked to is the same as in the n2d2.DeepNet
     n2d2_cell._N2D2_object = cell
 
     return n2d2_cell
 
 def deepNet_converter(deepNet):
     cells = deepNet.getCells()
+    print(cells)
     for cell in cells.values():
         # TODO : Need to work on cell converter
-        cell_converter(cell, deepNet)
+        cell_converter(cell)
+    n2d2_deepNet = None
+    # TODO : After creating the n2d2 object 
+    # n2d2_deepNet._N2D2_object = deepNet
+    return n2d2_deepNet

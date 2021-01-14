@@ -46,6 +46,11 @@ public:
     template <class T> void copy(const Parameter_T& value);
     template <class T> std::ostream& print(std::ostream& os) const;
     template <class T> std::istream& read(std::istream& is) const;
+    
+    virtual std::string getPyType() {
+        return std::string("other");
+    }
+
     virtual ~Parameter_T() {};
 
     friend std::ostream& operator<<(std::ostream&, const Parameter_T&);
@@ -226,6 +231,7 @@ public:
                                        bool ignoreUnknown = false);
     template <class T> T getParameter(const std::string& name) const;
     std::string getParameter(const std::string& name) const;
+    std::pair<std::string, std::string> getParameterAndType(const std::string& name) const;
     std::map<std::string, std::string> getParameters() const;
 
     /**
@@ -275,7 +281,14 @@ public:
             throw std::runtime_error("Parameter already exists: " + name);
 
         (*p).mParameters[name] = this;
+
+        //mPyType = getPyType();
     }
+
+    virtual std::string getPyType() {
+        return std::string("other");
+    }
+
 
     Parameter& operator=(const T& value)
     {
@@ -334,6 +347,7 @@ private:
 
     Parameter(const Parameter&); // non construction-copyable
 };
+
 
 template <class T> class ParameterWithSpread : public Parameter_T {
 public:
@@ -463,6 +477,7 @@ private:
     Spread<T> mValue;
 };
 }
+
 
 template <class T>
 N2D2::Parameter_T::Parameter_T(T& value)

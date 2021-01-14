@@ -47,6 +47,8 @@ void init_ConvCell(py::module &m) {
     .def("getBiasSolver", &ConvCell::getBiasSolver)
     .def("setBiasFiller", &ConvCell::setBiasFiller, py::arg("filler"))
     .def("getBiasFiller", &ConvCell::setBiasFiller)
+    .def("getKernelWidth", &ConvCell::getKernelWidth)
+    .def("getKernelHeight", &ConvCell::getKernelHeight)
     //.def("importFreeParameters", &ConvCell::importFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists")=false)
     //.def("exportFreeParameters", &ConvCell::exportFreeParameters, py::arg("fileName"))
     ;

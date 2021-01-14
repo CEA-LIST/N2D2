@@ -111,6 +111,11 @@ void init_Cell(py::module &m) {
      :type width: int, optional
      :param height: Height
      :type height: int, optional
+     )mydelimiter")
+     
+    .def("clearInputs", &Cell::clearInputs,
+    R"mydelimiter(
+     Clear input Cells
      )mydelimiter");
     options.enable_function_signatures();
 

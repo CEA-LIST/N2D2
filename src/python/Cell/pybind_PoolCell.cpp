@@ -31,6 +31,9 @@ namespace N2D2 {
 void init_PoolCell(py::module &m) {
 
     py::class_<PoolCell, std::shared_ptr<PoolCell>, Cell> pool (m, "PoolCell", py::multiple_inheritance());
+    pool.def("getPoolHeight", &PoolCell::getPoolHeight)
+    .def("getPoolWidth", &PoolCell::getPoolWidth)
+    ;
     py::enum_<PoolCell::Pooling>(pool, "Pooling")
     .value("Max", PoolCell::Pooling::Max)
     .value("Average", PoolCell::Pooling::Average)

@@ -50,7 +50,8 @@ class N2D2_Interface:
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self._parse_py_to_INI_(value)
         self._N2D2_object.setParameter(key, parsed_parameter)
-        #returned_parameter = self._N2D2_object.getParameter(name=str(key)
+        returned_parameter = self._N2D2_object.getParameterAndType(key)
+        print(key + str(returned_parameter))
         #if not parsed_parameter == returned_parameter:
         #    raise RuntimeError("Parameter incoherence detected. Injected value is \'" + parsed_parameter +
         #                       "\', while returned value is \'" + returned_parameter + "\'.")
