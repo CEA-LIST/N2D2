@@ -55,15 +55,35 @@ import n2d2
 #     deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, path, iniParser, deepNet)
 #     return deepNet
 
-def onnx_lib():
+def onnx_googlenet():
     N2D2.mtSeed(0) # Need to create random seed not elegant ...
     batchSize = 1
     path = "/local/is154584/cm264821/MODELS/ONNX/googlenet/bvlc_googlenet/model.onnx"
-    database = N2D2.ILSVRC2012_Database(0.2)
+    database = n2d2.database.ILSVRC2012(0.2)
     database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
-    stimuli = N2D2.StimuliProvider(database, [224, 224, 3], batchSize, False)    
-    n2d2.deepnet.load_from_ONNX(path, database, stimuli)
+    stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
+    n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
+
+def onnx_mobilenet():
+    N2D2.mtSeed(0) # Need to create random seed not elegant ...
+    batchSize = 1
+    path = "/local/is154584/cm264821/MODELS/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
+    database = n2d2.database.ILSVRC2012(0.2)
+    database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
+    stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
+    n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
+
+def onnx_resnet():
+    N2D2.mtSeed(0) # Need to create random seed not elegant ...
+    batchSize = 1
+    path = "/local/is154584/cm264821/MODELS/ONNX/resnet-101-v1/resnet101v1.onnx"
+    database = n2d2.database.ILSVRC2012(0.2)
+    database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
+    stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
+    n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
 
 # load_ILSVRC2012_model()
 # load_MNIST_model()
-onnx_lib()
+# onnx_googlenet()
+# onnx_mobilenet()
+onnx_resnet()

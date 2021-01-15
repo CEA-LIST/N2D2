@@ -53,6 +53,11 @@ class Database(N2D2_Interface):
     def __str__(self):
         return self._type + N2D2_Interface.__str__(self)
 
+    def convert_to_INI_section(self):
+        output = "[database]\n"
+        output += "Type=" + self._INI_type + "\n"
+        #N2D2_Interface.create_INI_section()
+        return output
 
 class MNIST(Database):
 
@@ -70,10 +75,22 @@ class MNIST(Database):
                                                     **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
+class ILSVRC2012(Database):
 
-    def convert_to_INI_section(self):
-        output = "[database]\n"
-        output += "Type=" + self._INI_type + "\n"
-        #N2D2_Interface.create_INI_section()
-        return output
+    _INI_type = 'ILSVRC2012_Database'
+    _type = "ILSVRC2012"
+
+    def __init__(self, Learn, **config_parameters):
+        Database.__init__(self, **config_parameters)
+        self._constructor_arguments.update({
+            'Learn': Learn,
+        })
+        self._parse_optional_arguments(['useValidationForTest', 'backgroundClass'])
+        self._N2D2_object = N2D2.ILSVRC2012_Database(self._constructor_arguments['Learn'],
+                                                    **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
+
+
+
 

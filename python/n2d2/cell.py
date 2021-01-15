@@ -284,12 +284,10 @@ class Pool(Cell):
                  Name=None,
                  **config_parameters):
         Cell.__init__(self, NbOutputs, Name, **config_parameters)
-
         self._constructor_arguments.update({
             'poolDims': poolDims,
 
         })
-
         self._parse_optional_arguments(['strideDims', 'paddingDims', 'pooling'])
 
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
@@ -297,7 +295,6 @@ class Pool(Cell):
                                                                      self._constructor_arguments['poolDims'],
                                                                      self._constructor_arguments['NbOutputs'],
                                                                      **self._optional_constructor_arguments)
-
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'Pooling':
@@ -308,14 +305,10 @@ class Pool(Cell):
 
 
 class LRN(Cell):
-
     _cell_constructors = {
         'Frame<float>': N2D2.LRNCell_Frame_float,
         'Frame_CUDA<float>': N2D2.LRNCell_Frame_CUDA_float,
     }
-
-
-
     def __init__(self, NbOutputs, Name=None, **config_parameters):
         Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
 
@@ -326,3 +319,16 @@ class LRN(Cell):
                                                 self._constructor_arguments['NbOutputs'],
                                                 **self._optional_constructor_arguments)
 
+class BatchNorm(Cell):
+    _cell_constructors = {
+        'Frame<float>': N2D2.BatchNormCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
+    }
+    def __init__(self, NbOutputs, Name=None, **config_parameters):
+        Cell.__init__(self, NbOutputs=NbOutputs, Name=Name, **config_parameters)
+        # No optional parameter
+        self._parse_optional_arguments([])
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                self._Name,
+                                                self._constructor_arguments['NbOutputs'],
+                                                **self._optional_constructor_arguments)

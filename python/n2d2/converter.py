@@ -40,6 +40,7 @@ cell_dict = {
     "Padding": n2d2.cell.Padding,
     "Pool": n2d2.cell.Pool,
     "LRN": n2d2.cell.LRN,
+    "BatchNorm": n2d2.cell.BatchNorm,
 }
 
 def cell_converter(cell):
@@ -103,6 +104,7 @@ def cell_converter(cell):
 
     # WARNING : By putting here a reference of the imported cell we have to make sure
     # the N2D2.DeepNet it's linked to is the same as in the n2d2.DeepNet
+    # TODO : link the good deepNet once the deepNet converter is done
     n2d2_cell._N2D2_object = cell
 
     return n2d2_cell
