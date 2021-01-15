@@ -590,7 +590,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     quant_conv2_unscaled.resize({quant_act_conv2.dimX(),quant_act_conv2.dimY(),quant_act_conv2.dimZ(),batchSize}, 0.0);
     for(unsigned int i = 0; i < dimsQ2; ++i)
     {
-        quant_conv2_unscaled(i) = quant_act_conv2(i) * ((float)range2/alpha2);
+        quant_conv2_unscaled(i) = rintf(quant_act_conv2(i) * ((float)range2/alpha2));
     }
     //std::cout << "[EXPECTED RESULT]" << std::endl;
     //std::cout << quant_conv2_unscaled << std::endl;
