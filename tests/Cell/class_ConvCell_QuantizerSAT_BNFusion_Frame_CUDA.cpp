@@ -336,6 +336,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
     }
 
     for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
+           
         Tensor<float> scale({1}, Random::randNormal(1.0, 0.5));
         Tensor<float> bias({1}, Random::randUniform(-0.5, 0.5));
         Tensor<float> mean({1}, Random::randUniform(-0.5, 0.5));
@@ -377,6 +378,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
     quant2.getQuantizedActivations(0).synchronizeHToD();
     std::cout << "********************CONV2_QUANT_INPUT_END********************\n\n" << std::endl;
 
+    
+
     // ===> fuse BN by hands following SAT paper logic in S7.
 
     // a1 and alpha1 are from conv1; a2 and alpha2 are from conv2;
@@ -387,6 +390,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
 
     std::cout << "********************SET_INPUT_8-BITS********************" << std::endl; 
     std::cout << "[Input for fused conv]\n" << in_fused << std::endl;
+    //std::cout << "[Input for fused conv]\n" << in << std::endl;
     conv1_fused.addInput(in_fused, out_diff);
     conv1_fused.initialize();
     std::cout << "********************SET_INPUT_8-BITS_END********************\n\n" << std::endl; 
@@ -410,11 +414,21 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
             for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                 for (unsigned int sy = 0; sy < kernelHeight; ++sy){
                     kernel_rescaled(sx, sy) = 0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1);
+                    //kernel_rescaled(sx, sy) = quant_weights_conv1[output][channel](sx, sy);
                     std::cout << "conv1_fused :: sx = " << sx << " , sy = " << sy << " , weight = " << quant_weights_conv1[output][channel](sx, sy) << 
                     " ==> " << kernel_rescaled(sx, sy) << std::endl;
                 }
             }
             conv1_fused.setWeight(output, channel, kernel_rescaled);
+        }
+    }
+
+    std::cout << "conv1_fused weights after rescale : " << std::endl;
+    for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
+        for (unsigned int channel = 0; channel < nbChannels; ++channel) {
+            Tensor<float> weight;
+            conv1_fused.getWeight(output, channel, weight);
+            std::cout << weight << std::endl;
         }
     }
 
@@ -475,10 +489,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
         float factor = bnScales(output)
                 / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
                             ? bnVariances(output) : meanVariance));
-        /*
-        std::cout << "bnScales(output) = " << bnScales(output) << " , bnBiases(output) = " << bnBiases(output) << 
-        " , bnMeans(output) = " << bnMeans(output) << " , bnVariances(output) = " << bnVariances(output) << std::endl;
-        */
         gamma(output) = factor;
         std::cout << "gamma = " << gamma(output) << std::endl;
 
@@ -547,7 +557,17 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
         }
     }
 
+    std::cout << "[Conv1][FUSED]" << std::endl;
+    std::cout << conv1_out_fused << std::endl;
+
+    std::cout << "[Conv1][FUSED_TO_COMP]" << std::endl;
+    std::cout << conv1_out_fused_comp << std::endl;
+
+    std::cout << "[Conv2][QUANT_INPUT]" << std::endl;
+    std::cout << quant_act_conv2 << std::endl;
+
     std::cout << "********************BN_FUSION_END********************" << std::endl;
+    
 }
 
 
