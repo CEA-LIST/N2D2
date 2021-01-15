@@ -484,14 +484,13 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
     Tensor<float> bias_fusion;
     bias_fusion.resize({nbOutputs_conv1}, 0.0);
 
-    for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
-        //factor for weights adjustments
-        float factor = bnScales(output)
-                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
-                            ? bnVariances(output) : meanVariance));
-        gamma(output) = factor;
-        std::cout << "gamma = " << gamma(output) << std::endl;
+    //tensor for comparison with the reference
+    Tensor<float> clipPerOutput;
+    clipPerOutput.resize({nbOutputs_conv1}, 0.0);
+    Tensor<float> scalePerOutput;
+    scalePerOutput.resize({nbOutputs_conv1}, 0.0);
 
+    for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
         //Biases adjustments
         Tensor<float> bias;
         if (noBias)
@@ -499,21 +498,43 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
         else
             conv1.getBias(output, bias);
 
-        bias(0) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
-        beta(output) = bias(0);
-        std::cout << "beta = " << beta(output) << std::endl;
+        //factor for weights adjustments
+        float factor = bnScales(output)
+                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
+                            ? bnVariances(output) : meanVariance));
+        gamma(output) = factor;
+        beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
+
+        bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1);
+        clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1);
+        scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output);
     }  
 
     std::cout << "********************BETA_GAMMA_COMPUTE_END********************\n\n" << std::endl; 
+    std::cout << "bias" << std::endl;
+    std::cout << bias_fusion << std::endl;
+    std::cout << "clipPerOutput" << std::endl;
+    std::cout << clipPerOutput << std::endl;
+    std::cout << "scalePerOutput" << std::endl;
+    std::cout << scalePerOutput << std::endl;
 
 
-    //fused output 
-    Tensor<float> conv1_out_fused;
-    conv1_out_fused.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
 
-    //tensor for comparison with the reference
-    Tensor<float> conv1_out_fused_comp;
-    conv1_out_fused_comp.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+    //not cliped, with bias 
+    Tensor<float> conv1_add_bias;
+    conv1_add_bias.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    //cliped output 
+    Tensor<float> conv1_clipped;
+    conv1_clipped.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    //scaled output 
+    Tensor<float> conv1_scaled;
+    conv1_scaled.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    //round output 
+    Tensor<float> conv1_rounded;
+    conv1_rounded.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
 
     std::cout << "********************BN_FUSION********************" << std::endl;
 
@@ -521,50 +542,42 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Frame_CUDA_float,
         for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
             for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
+                    //Add bias term
+                    float value = out_conv1_fused_prop(ox, oy, output, batch) 
+                                    + bias_fusion(output);
+                    conv1_add_bias(ox, oy, output, batch) = value;
 
-                    std::cout << "batch = " << batch << " , x = " << ox << " , y = " << oy << std::endl;
+                    //Clip the value with a clip factor par output
+                    float clippedValue = (value < 0.0f) ? 0.0f 
+                                        : (value < clipPerOutput(output)) ? value 
+                                        : clipPerOutput(output);
+                    conv1_clipped(ox, oy, output, batch) = clippedValue;
+                    conv1_scaled(ox, oy, output, batch) = clippedValue*scalePerOutput(output);
 
-                    float out_tmp = out_conv1_fused_prop(ox, oy, output, batch);
-
-                    // 3. add bias : beta/gamma *  a1/alpha1
-                    bias_fusion(output) = beta(output)/gamma(output) * (float)range1/alpha1;
-                    float out_tmp_bias = out_tmp + bias_fusion(output);
-
-                    // 4. clip the output between : [0, alpha2/gamma * a1/alpha1]
-                    float clipping_factor = alpha2/gamma(output) * (float)range1/alpha1;
-                    float out_tmp_clipped = (out_tmp_bias < 0.0f) ? 0.0f : (out_tmp_bias < clipping_factor) ? out_tmp_bias : clipping_factor;
-
-                    // 5. scale : alpha1/a1 * a2/alpha2 * gamma
-                    float scaling_factor = alpha1/(float)range1 * (float)range2/alpha2 * gamma(output);
-                    float out_tmp_scaled = out_tmp_clipped*scaling_factor;
-
-                    // 6. round
-                    int out_tmp_round = rint(out_tmp_scaled);
-                    conv1_out_fused(ox, oy, output, batch) = out_tmp_round;
-
-                    // to compare the result after "round" with quant_act_conv2 :: rounded/255 and * alpha2/a2
-                    float out_tmp_comp = (float)out_tmp_round/(float)range1 * alpha2/(float)range2;
-                    conv1_out_fused_comp(ox, oy, output, batch) = out_tmp_comp;
-
-                    std::cout << "conv_out = " << out_tmp << " + " << bias_fusion(output) << " = " << out_tmp_bias << std::endl;
-                    std::cout << "clip[0, " << clipping_factor << "] = " << out_tmp_clipped << " * " << scaling_factor  << " = " 
-                    << out_tmp_scaled << " , rounded = " << out_tmp_round << std::endl;
-                    std::cout << " >>> rounded / " << range1 << " * " << alpha2/range2 << " = " << out_tmp_comp << " vs " << quant_act_conv2(ox, oy, output, batch) << std::endl;
-                    std::cout << "*****************************************************" << std::endl;
-
+                    //scale and round the result
+                    conv1_rounded(ox, oy, output, batch) = rintf(clippedValue*scalePerOutput(output));
                 }
             }
         }
     }
+    std::cout << "[QConv1][NOT CLIPED]" << std::endl;
+    std::cout << conv1_add_bias << std::endl;
+    std::cout << "[QConv1][CLIPPED]" << std::endl;
+    std::cout << conv1_clipped << std::endl;
+    std::cout << "[QConv1][SCALED]" << std::endl;
+    std::cout << conv1_scaled << std::endl;
+    std::cout << "[QConv1][ROUNDED]" << std::endl;
+    std::cout << conv1_rounded << std::endl;
 
-    std::cout << "[Conv1][FUSED]" << std::endl;
-    std::cout << conv1_out_fused << std::endl;
-
-    std::cout << "[Conv1][FUSED_TO_COMP]" << std::endl;
-    std::cout << conv1_out_fused_comp << std::endl;
-
-    std::cout << "[Conv2][QUANT_INPUT]" << std::endl;
-    std::cout << quant_act_conv2 << std::endl;
+    size_t dimsQ2 = quant_act_conv2.dimX()*quant_act_conv2.dimY()*quant_act_conv2.dimZ()*batchSize;
+    Tensor<float> quant_conv2_unscaled;
+    quant_conv2_unscaled.resize({quant_act_conv2.dimX(),quant_act_conv2.dimY(),quant_act_conv2.dimZ(),batchSize}, 0.0);
+    for(unsigned int i = 0; i < dimsQ2; ++i)
+    {
+        quant_conv2_unscaled(i) = quant_act_conv2(i) * (range2/alpha2);
+    }
+    std::cout << "[EXPECTED RESULT]" << std::endl;
+    std::cout << quant_conv2_unscaled << std::endl;
 
     std::cout << "********************BN_FUSION_END********************" << std::endl;
     
