@@ -351,8 +351,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             
             for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                 for (unsigned int sy = 0; sy < kernelHeight; ++sy){
-                    //kernel_rescaled(sx, sy) = 0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1);
-                    kernel_rescaled(sx, sy) = quant_weights_conv1[output][channel](sx, sy);
+                    kernel_rescaled(sx, sy) = 0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1);
+                    //kernel_rescaled(sx, sy) = quant_weights_conv1[output][channel](sx, sy);
                     std::cout << "conv1_fused :: sx = " << sx << " , sy = " << sy << " , weight = " << quant_weights_conv1[output][channel](sx, sy) << 
                     " ==> " << kernel_rescaled(sx, sy) << std::endl;
                 }
@@ -442,10 +442,11 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
                             ? bnVariances(output) : meanVariance));
         gamma(output) = factor;
         beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
-
-        bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1);
-        clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1);
-        scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output);
+       
+        bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
+        clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
+        scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)range1);
+        
     }  
 
     std::cout << "********************BETA_GAMMA_COMPUTE_END********************\n\n" << std::endl; 
@@ -498,12 +499,14 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             }
         }
     }
+    /*
     std::cout << "[QConv1][NOT CLIPED]" << std::endl;
     std::cout << conv1_add_bias << std::endl;
     std::cout << "[QConv1][CLIPPED]" << std::endl;
     std::cout << conv1_clipped << std::endl;
     std::cout << "[QConv1][SCALED]" << std::endl;
     std::cout << conv1_scaled << std::endl;
+    */
     std::cout << "[QConv1][ROUNDED]" << std::endl;
     std::cout << conv1_rounded << std::endl;
 
@@ -512,10 +515,23 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     quant_conv2_unscaled.resize({quant_act_conv2.dimX(),quant_act_conv2.dimY(),quant_act_conv2.dimZ(),batchSize}, 0.0);
     for(unsigned int i = 0; i < dimsQ2; ++i)
     {
-        quant_conv2_unscaled(i) = quant_act_conv2(i) * (range2/alpha2);
+        quant_conv2_unscaled(i) = quant_act_conv2(i) * ((float)range2/alpha2);
     }
     std::cout << "[EXPECTED RESULT]" << std::endl;
     std::cout << quant_conv2_unscaled << std::endl;
+
+    
+    for (unsigned int batch = 0; batch < batchSize; ++batch) {
+        for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
+            for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
+                for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
+                    ASSERT_EQUALS_DELTA(quant_conv2_unscaled(ox, oy, output, batch),
+                                        conv1_rounded(ox, oy, output, batch),
+                                        10.0);
+                }
+            }
+        }
+    }
 
     std::cout << "********************BN_FUSION_END********************" << std::endl;
     
