@@ -596,19 +596,29 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     //std::cout << quant_conv2_unscaled << std::endl;
 
     double mse = 0.0, mse_r = 0.0;
+    double max_error = 0.0;
     for (unsigned int batch = 0; batch < batchSize; ++batch) {
         for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
             for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
-                    mse += std::pow(conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch), 2);
-                    mse_r += std::pow(conv1_rounded_r(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch), 2);
+                    double error = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
+                    double error_r = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
+
+                    mse += std::pow(error, 2);
+                    mse_r += std::pow(error_r, 2);
+
+                    if(error_r > max_error)
+                        max_error = error_r;
                 }
             }
         }
     }
     mse /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
     mse_r /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
-    std::cout << "MeanSquareError: [NoRound] " << mse << " [Round] " << mse_r<< std::endl;
+    std::cout << "MeanSquareError: [NoRound] " << mse 
+            << " [Round] " << mse_r 
+            << " Max error value: " << max_error
+            << std::endl;
     std::cout << "********************BN_FUSION_END********************" << std::endl;
     
   
