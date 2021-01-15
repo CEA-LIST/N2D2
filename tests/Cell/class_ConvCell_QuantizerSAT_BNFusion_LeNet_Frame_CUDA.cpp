@@ -376,7 +376,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             
             for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                 for (unsigned int sy = 0; sy < kernelHeight; ++sy){
-                    kernel_rescaled(sx, sy) = 0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1);
+                    kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
                     //kernel_rescaled(sx, sy) = quant_weights_conv1[output][channel](sx, sy);
                     std::cout << "conv1_fused :: sx = " << sx << " , sy = " << sy << " , weight = " << quant_weights_conv1[output][channel](sx, sy) << 
                     " ==> " << kernel_rescaled(sx, sy) << std::endl;
