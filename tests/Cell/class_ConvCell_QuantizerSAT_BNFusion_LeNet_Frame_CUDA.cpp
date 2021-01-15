@@ -209,22 +209,47 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
         " quantizer to " << conv2.getName() << std::endl;
     }
 
-    std::vector<float> v_w11 = {0.184185, 0.173881, 0.112021, 0.0815895, -0.173858, -0.0106287, -0.112002, -0.343679, -0.312961, -0.0172239, -0.171215, -0.291387, -0.217766, -0.177112, 0.37201, -0.144616, -0.24736, -0.0290122, 0.000954552, 0.390555, -0.226636, -0.0951204, 0.231468, 0.144098, 0.367307};
+    std::vector<float> v_w11 = {0.184185, 0.173881, 0.112021, 0.0815895, -0.173858, 
+                                -0.0106287, -0.112002, -0.343679, -0.312961, -0.0172239, 
+                                -0.171215, -0.291387, -0.217766, -0.177112, 0.37201, 
+                                -0.144616, -0.24736, -0.0290122, 0.000954552, 0.390555, 
+                                -0.226636, -0.0951204, 0.231468, 0.144098, 0.367307};
+
     Tensor<float> conv1_w1({kernelWidth, kernelHeight}, v_w11.begin(),v_w11.end());
 
-    std::vector<float> v_w12 = {-0.177018, 0.139442, 0.288037, 0.158078, 0.0445046, -0.385413, -0.191178, -5.84598e-07, 0.0907883, 0.11398, 0.0205704, -0.352544, -0.278075, -0.0861968, -0.0952327, 0.283583, -0.0489072, -0.09156, -0.126722, -0.179714, 0.034634, 0.0141254, -0.00935394, -0.071578, -0.11565};
+    std::vector<float> v_w12 = {-0.177018, 0.139442, 0.288037, 0.158078, 0.0445046, 
+                                -0.385413, -0.191178, -5.84598e-07, 0.0907883, 0.11398, 
+                                0.0205704, -0.352544, -0.278075, -0.0861968, -0.0952327, 
+                                0.283583, -0.0489072, -0.09156, -0.126722, -0.179714, 
+                                0.034634, 0.0141254, -0.00935394, -0.071578, -0.11565};
     Tensor<float> conv1_w2({kernelWidth, kernelHeight}, v_w12.begin(),v_w12.end());
 
-    std::vector<float> v_w13 = {-0.159753, 0.0313658, 0.145843, -0.228753, 0.153917, 0.0871841, 0.216748, -0.0137101, -0.62059, -0.337779, -0.0262911, 0.179648, -0.0586273, -0.625386, -0.0737472, -0.193735, 0.309977, 0.441459, 0.304995, 0.221394, 0.0382392, -0.158866, 0.486351, 0.351878, -0.0907166};
+    std::vector<float> v_w13 = {-0.159753, 0.0313658, 0.145843, -0.228753, 0.153917, 
+                                0.0871841, 0.216748, -0.0137101, -0.62059, -0.337779, 
+                                -0.0262911, 0.179648, -0.0586273, -0.625386, -0.0737472, 
+                                -0.193735, 0.309977, 0.441459, 0.304995, 0.221394, 
+                                0.0382392, -0.158866, 0.486351, 0.351878, -0.0907166};
     Tensor<float> conv1_w3({kernelWidth, kernelHeight}, v_w13.begin(),v_w13.end());
 
-    std::vector<float> v_w14 = {-0.0414309, -0.0289402, 0.0325286, -0.0799899, 0.0532336, -0.209418, 0.0343616, -0.156739, -0.1015, -0.133251, -0.178087, -0.0740313, -0.0604055, -0.0632791, -0.115115, -0.0816227, -0.155578, -0.00729363, -0.167025, -0.322911, -0.254545, -0.244077, -0.056426, -0.273549, -0.363163};
+    std::vector<float> v_w14 = {-0.0414309, -0.0289402, 0.0325286, -0.0799899, 0.0532336, 
+                                -0.209418, 0.0343616, -0.156739, -0.1015, -0.133251, 
+                                -0.178087, -0.0740313, -0.0604055, -0.0632791, -0.115115, 
+                                -0.0816227, -0.155578, -0.00729363, -0.167025, -0.322911, 
+                                -0.254545, -0.244077, -0.056426, -0.273549, -0.363163};
     Tensor<float> conv1_w4({kernelWidth, kernelHeight}, v_w14.begin(),v_w14.end());
 
-    std::vector<float> v_w15 = {0.309687, -0.197089, 0.0191584, 3.49737e-05, 0.0382037, 0.0226852, 0.0331087, 0.122251, 0.0578961, -0.0379796, -0.0278929, 0.387234, 0.387587, 0.105464, -0.186279, 0.0619652, 0.0902182, 0.0114893, -0.315561, -0.476871, 0.233503, -0.0460472, 0.0427327, -0.177359, -0.13211};
+    std::vector<float> v_w15 = {0.309687, -0.197089, 0.0191584, 3.49737e-05, 0.0382037, 
+                                0.0226852, 0.0331087, 0.122251, 0.0578961, -0.0379796, 
+                                -0.0278929, 0.387234, 0.387587, 0.105464, -0.186279, 
+                                0.0619652, 0.0902182, 0.0114893, -0.315561, -0.476871, 
+                                0.233503, -0.0460472, 0.0427327, -0.177359, -0.13211};
     Tensor<float> conv1_w5({kernelWidth, kernelHeight}, v_w15.begin(),v_w15.end());
 
-    std::vector<float> v_w16 = {-0.205494, -0.252992, -0.149511, -0.141254, -0.220744, -0.115654, -0.094326, -0.207501, -0.0156246, -0.2556, -0.0641069, -0.108896, -0.0255057, -0.126213, -0.0662551, -0.0450158, 0.0129077, 0.0074881, -0.0830555, -0.282294, 0.0423633, -0.141093, -0.247252, -0.151985, -0.224323};
+    std::vector<float> v_w16 = {-0.205494, -0.252992, -0.149511, -0.141254, -0.220744, 
+                                -0.115654, -0.094326, -0.207501, -0.0156246, -0.2556, 
+                                -0.0641069, -0.108896, -0.0255057, -0.126213, -0.0662551, 
+                                -0.0450158, 0.0129077, 0.0074881, -0.0830555, -0.282294, 
+                                0.0423633, -0.141093, -0.247252, -0.151985, -0.224323};
     Tensor<float> conv1_w6({kernelWidth, kernelHeight}, v_w16.begin(),v_w16.end());
 
     for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
@@ -298,14 +323,14 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     std::cout << "********************CONV1_AND_BN_OUTPUTS********************" << std::endl;
     conv1.getOutputs().synchronizeDToH();
     const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
-    std::cout << "[Conv1][Outputs]" << std::endl;
-    std::cout << out_conv1 << std::endl;
+    //std::cout << "[Conv1][Outputs]" << std::endl;
+    //std::cout << out_conv1 << std::endl;
     conv1.getOutputs().synchronizeHToD();
 
     bn1.getOutputs().synchronizeDToH();
     const Tensor<float>& out_bn1 = tensor_cast<float>(bn1.getOutputs());
-    std::cout << "[BN1][Outputs]" << std::endl;
-    std::cout << out_bn1 << std::endl;
+    //std::cout << "[BN1][Outputs]" << std::endl;
+    //std::cout << out_bn1 << std::endl;
     bn1.getOutputs().synchronizeHToD();
     std::cout << "********************CONV1_AND_BN_OUTPUTS_END********************\n\n" << std::endl;
     
@@ -313,8 +338,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     std::cout << "********************CONV2_QUANT_INPUT********************" << std::endl; 
     quant2.getQuantizedActivations(0).synchronizeDToH();
     const Tensor<float>& quant_act_conv2 = tensor_cast<float>(quant2.getQuantizedActivations(0));
-    std::cout << "[Conv2][Quant Input]" << std::endl;
-    std::cout << quant_act_conv2 << std::endl;
+    //std::cout << "[Conv2][Quant Input]" << std::endl;
+    //std::cout << quant_act_conv2 << std::endl;
     quant2.getQuantizedActivations(0).synchronizeHToD();
     std::cout << "********************CONV2_QUANT_INPUT_END********************\n\n" << std::endl;
    
@@ -378,8 +403,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
 
     conv1_fused.getOutputs().synchronizeDToH();
     const Tensor<float>& out_conv1_fused_prop = tensor_cast<float>(conv1_fused.getOutputs());
-    std::cout << "[Conv1 Fusion][Output after propagate]" << std::endl;
-    std::cout << out_conv1_fused_prop << std::endl;
+    //std::cout << "[Conv1 Fusion][Output after propagate]" << std::endl;
+    //std::cout << out_conv1_fused_prop << std::endl;
     conv1_fused.getOutputs().synchronizeHToD();
 
     std::cout << "********************PROPAGATE_END********************\n\n" << std::endl; 
@@ -427,6 +452,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     clipPerOutput.resize({nbOutputs_conv1}, 0.0);
     Tensor<float> scalePerOutput;
     scalePerOutput.resize({nbOutputs_conv1}, 0.0);
+    //tensor rounded in biases and cliping values
+    Tensor<float> clipPerOutputRound;
+    clipPerOutputRound.resize({nbOutputs_conv1}, 0.0);
+
+    Tensor<float> bias_fusion_rounded;
+    bias_fusion_rounded.resize({nbOutputs_conv1}, 0.0);
 
     for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
         //Biases adjustments
@@ -442,9 +473,11 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
                             ? bnVariances(output) : meanVariance));
         gamma(output) = factor;
         beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
-       
         bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
         clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
+
+        bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
+        clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
         scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)range1);
         
     }  
@@ -499,6 +532,48 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             }
         }
     }
+
+    //not cliped, with bias 
+    Tensor<float> conv1_add_bias_r;
+    conv1_add_bias_r.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    //cliped output 
+    Tensor<float> conv1_clipped_r;
+    conv1_clipped_r.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    //scaled output 
+    Tensor<float> conv1_scaled_r;
+    conv1_scaled_r.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    //round output 
+    Tensor<float> conv1_rounded_r;
+    conv1_rounded_r.resize({conv1_fused.getOutputsWidth(),conv1_fused.getOutputsHeight(),nbOutputs_conv1,batchSize}, 0.0);
+
+    std::cout << "********************BN_FUSION********************" << std::endl;
+
+    for (unsigned int batch = 0; batch < batchSize; ++batch) {
+        for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
+            for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
+                for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
+                    //Add bias term
+                    float value = out_conv1_fused_prop(ox, oy, output, batch) 
+                                    + bias_fusion_rounded(output);
+                    conv1_add_bias_r(ox, oy, output, batch) = value;
+
+                    //Clip the value with a clip factor par output
+                    float clippedValue = (value < 0.0f) ? 0.0f 
+                                        : (value < clipPerOutputRound(output)) ? value 
+                                        : clipPerOutputRound(output);
+                    conv1_clipped_r(ox, oy, output, batch) = clippedValue;
+                    conv1_scaled_r(ox, oy, output, batch) = clippedValue*scalePerOutput(output);
+
+                    //scale and round the result
+                    conv1_rounded_r(ox, oy, output, batch) = rintf(clippedValue*scalePerOutput(output));
+                }
+            }
+        }
+    }
+
     /*
     std::cout << "[QConv1][NOT CLIPED]" << std::endl;
     std::cout << conv1_add_bias << std::endl;
@@ -517,22 +592,23 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     {
         quant_conv2_unscaled(i) = quant_act_conv2(i) * ((float)range2/alpha2);
     }
-    std::cout << "[EXPECTED RESULT]" << std::endl;
-    std::cout << quant_conv2_unscaled << std::endl;
+    //std::cout << "[EXPECTED RESULT]" << std::endl;
+    //std::cout << quant_conv2_unscaled << std::endl;
 
-    
+    double mse = 0.0, mse_r = 0.0;
     for (unsigned int batch = 0; batch < batchSize; ++batch) {
         for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
             for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
-                    ASSERT_EQUALS_DELTA(quant_conv2_unscaled(ox, oy, output, batch),
-                                        conv1_rounded(ox, oy, output, batch),
-                                        10.0);
+                    mse += std::pow(conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch), 2);
+                    mse_r += std::pow(conv1_rounded_r(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch), 2);
                 }
             }
         }
     }
-
+    mse /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
+    mse_r /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
+    std::cout << "MeanSquareError: [NoRound] " << mse << " [Round] " << mse_r<< std::endl;
     std::cout << "********************BN_FUSION_END********************" << std::endl;
     
   
